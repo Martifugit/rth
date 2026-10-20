@@ -1,0 +1,20 @@
+{
+    "name": "Rth.Client.Editor",
+    "rootNamespace": "Rth.Client.Editor",
+    "references": [
+        "Rth.Client",
+        "Rth.MapTools",
+        "Rth.MapTools.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

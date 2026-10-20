@@ -24,3 +24,6 @@ obj/
 /client/.vsconfig
 /client/Assets/Plugins/Rth/
 /client/Assets/Plugins/Rth.meta
+
+/client/.vscode/
+

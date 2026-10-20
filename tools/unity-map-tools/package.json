@@ -1,0 +1,7 @@
+{
+  "name": "com.rth.map-tools",
+  "version": "0.1.0",
+  "displayName": "R'th Map Tools",
+  "description": "Marker components for designing R'th maps in Unity scenes, and the exporter that writes the server's collision map.",
+  "unity": "6000.0"
+}
