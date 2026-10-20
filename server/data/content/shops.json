@@ -1,0 +1,43 @@
+[
+  {
+    "id": "corvins_apothecary",
+    "name": "Sallow's Apothecary",
+    "currency": "marks",
+    "sellPercent": 40,
+    "stock": [
+      { "item": "riverbread", "price": 6, "quantity": 30, "restockTicks": 20 },
+      { "item": "smoked_eel", "price": 15, "quantity": 15, "restockTicks": 40 },
+      { "item": "saltfig", "price": 12, "quantity": 10, "restockTicks": 60 },
+      { "item": "phlegm_tonic", "price": 40, "quantity": 5, "restockTicks": 200 },
+      { "item": "cooling_draught", "price": 40, "quantity": 5, "restockTicks": 200 },
+      { "item": "choleric_salts", "price": 12, "quantity": 40, "restockTicks": 30 },
+      { "item": "melancholic_tincture", "price": 12, "quantity": 40, "restockTicks": 30 },
+      { "item": "empty_vial", "price": 3, "quantity": 20, "restockTicks": 20 },
+      { "item": "skinning_knife", "price": 20, "quantity": 3, "restockTicks": 300 }
+    ]
+  },
+  {
+    "id": "corvins_back_room",
+    "name": "Corvin's Back Room",
+    "currency": "points:corvins_favour",
+    "stock": [
+      { "item": "vitriol_salts", "price": 3 },
+      { "item": "cooling_draught", "price": 4 },
+      { "item": "apothecary_gloves", "price": 45 },
+      { "item": "cracked_moonstone_ring", "price": 60 },
+      { "item": "gallstone_amulet", "price": 80 }
+    ]
+  },
+  {
+    "id": "skinning_yard",
+    "name": "The Skinning Yard",
+    "currency": "points:yard_tokens",
+    "stock": [
+      { "item": "smoked_eel", "price": 2 },
+      { "item": "glass_flensing_hook", "price": 25 },
+      { "item": "hide_wrapped_hood", "price": 30 },
+      { "item": "sewn_hide_boots", "price": 20 },
+      { "item": "yard_apron", "price": 70 }
+    ]
+  }
+]

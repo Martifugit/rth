@@ -14,13 +14,35 @@ namespace Rth.Server.Items
     {
         private readonly ItemSlot[] _slots;
 
-        public ItemContainer(int size)
+        /// <param name="stackEverything">Banks stack every item, stackable or not.</param>
+        public ItemContainer(int size, bool stackEverything = false)
         {
             _slots = new ItemSlot[size];
             for (int i = 0; i < size; i++) _slots[i] = new ItemSlot { ItemId = "", Count = 0 };
+            StackEverything = stackEverything;
         }
 
         public int Size => _slots.Length;
+        public bool StackEverything { get; }
+
+        private bool Stacks(ItemDef def) => def.Stackable || StackEverything;
+
+        /// <summary>Shifts items down over empty slots, keeping their order (banks).</summary>
+        public void Compact()
+        {
+            int write = 0;
+            for (int read = 0; read < _slots.Length; read++)
+            {
+                if (_slots[read].IsEmpty) continue;
+                if (read != write)
+                {
+                    _slots[write] = _slots[read];
+                    _slots[read] = new ItemSlot { ItemId = "", Count = 0 };
+                    Dirty = true;
+                }
+                write++;
+            }
+        }
 
         /// <summary>Changed since the client was last told.</summary>
         public bool Dirty { get; set; } = true;
@@ -71,7 +93,7 @@ namespace Rth.Server.Items
         public int Add(ItemDef def, int count)
         {
             if (count <= 0) return 0;
-            if (def.Stackable)
+            if (Stacks(def))
             {
                 for (int i = 0; i < _slots.Length; i++)
                 {
@@ -100,7 +122,7 @@ namespace Rth.Server.Items
         /// <summary>Whether all of <paramref name="count"/> would fit.</summary>
         public bool CanAdd(ItemDef def, int count)
         {
-            if (def.Stackable)
+            if (Stacks(def))
             {
                 foreach (ItemSlot s in _slots)
                     if (s.ItemId == def.Id) return (long)s.Count + count <= int.MaxValue;

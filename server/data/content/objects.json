@@ -10,5 +10,24 @@
     "name": "Lye vat",
     "examine": "A glazed vat of lye. Scald creatures come apart in it without taking your hands with them.",
     "actions": [ { "id": "process", "label": "Butcher" } ]
+  },
+  {
+    "id": "synod_strongbox",
+    "name": "Synod strongbox",
+    "examine": "Iron, red paint and the seal of the Sanguine Synod. Whatever goes in is recorded in a ledger somewhere.",
+    "actions": [ { "id": "bank", "label": "Bank" } ]
+  },
+  {
+    "id": "apothecary_still",
+    "name": "Apothecary's still",
+    "examine": "Copper coils under the counter, warm to the touch. Not the kind of thing an honest apothecary owns.",
+    "actions": [
+      {
+        "id": "process",
+        "label": "Distil",
+        "requiresFlag": "corvin_still",
+        "lockedMessage": "That's Corvin's, and it's behind his counter. Perhaps ask him about it."
+      }
+    ]
   }
 ]

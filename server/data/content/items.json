@@ -164,6 +164,67 @@
     "tags": [ "tool", "butchering" ]
   },
   {
+    "id": "rat_gall",
+    "name": "Rat gall",
+    "examine": "A little bag of black bile. Render it down and it keeps for years.",
+    "stackable": true,
+    "value": 3,
+    "color": "#2f2a3d",
+    "tags": [ "reagent-base", "melancholic" ]
+  },
+  {
+    "id": "choleric_salts",
+    "name": "Choleric salts",
+    "examine": "Yellow bile, dried and cut with salt. Burns the tongue; feeds the hotter workings.",
+    "stackable": true,
+    "value": 6,
+    "color": "#e0b84a",
+    "tags": [ "reagent", "choleric" ]
+  },
+  {
+    "id": "melancholic_tincture",
+    "name": "Melancholic tincture",
+    "examine": "Black bile drawn into spirit. Cold, slow and patient, like the workings it feeds.",
+    "stackable": true,
+    "value": 6,
+    "color": "#3e2f57",
+    "tags": [ "reagent", "melancholic" ]
+  },
+  {
+    "id": "vitriol_salts",
+    "name": "Vitriol salts",
+    "examine": "The salt of the Scald. Use a grain too many and the working takes you with it.",
+    "stackable": true,
+    "value": 30,
+    "color": "#9bd14a",
+    "tags": [ "reagent", "choleric", "vitriol" ]
+  },
+  {
+    "id": "hide_wrapped_hood",
+    "name": "Hide-wrapped hood",
+    "examine": "Stitched in the skinning yard from offcuts nobody else wanted. It shows. It works.",
+    "value": 50,
+    "color": "#8c7253",
+    "equipment": { "slot": "Head", "stats": { "ward": 3, "maxBlood": 20 }, "requirements": [ { "skill": "butchering", "level": 5 } ] }
+  },
+  {
+    "id": "yard_apron",
+    "name": "Yardmaster's apron",
+    "examine": "Heavy leather, scrubbed and stained and scrubbed again. Wenna only gives these to people she'd trust with her racks.",
+    "value": 120,
+    "color": "#5e4b38",
+    "equipment": { "slot": "Body", "stats": { "ward": 5, "maxBlood": 60 }, "requirements": [ { "skill": "butchering", "level": 10 } ] }
+  },
+  {
+    "id": "apothecary_gloves",
+    "name": "Apothecary's gloves",
+    "examine": "Thin, oiled, and stained to the wrist in colours that shouldn't go together.",
+    "value": 90,
+    "color": "#6d7b4c",
+    "tags": [ "occult" ],
+    "equipment": { "slot": "Hands", "stats": { "accuracy": 4, "damageBonus": 3 }, "requirements": [ { "skill": "distillation", "level": 10 } ] }
+  },
+  {
     "id": "rat_pelt",
     "name": "Rat pelt",
     "examine": "Fen rat. Not much of it.",

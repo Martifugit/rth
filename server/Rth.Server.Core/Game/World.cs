@@ -67,6 +67,7 @@ namespace Rth.Server.Game
         public static IEnumerable<GameSystem> StandardSystems(MapPlacements placements) => new GameSystem[]
         {
             new SkillSystem(),
+            new FlagSystem(),
             new ItemSystem(),
             new CombatSystem(),
             new DeathSystem(),
@@ -75,6 +76,12 @@ namespace Rth.Server.Game
             new LootSystem(),
             new ObjectSystem(placements.Objects),
             new RecipeSystem(),
+            new InterfaceSystem(),
+            new DialogueSystem(),
+            new BankSystem(),
+            new ShopSystem(),
+            new PointsSystem(),
+            new TaskSystem(),
         };
 
         public ServerConfig Config => _config;

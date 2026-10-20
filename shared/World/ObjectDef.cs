@@ -13,15 +13,19 @@ namespace Rth.Shared.World
         public string Id = "";
         public string Name = "";
         public string Examine = "";
-        public List<ObjectActionDef> Actions = new List<ObjectActionDef>();
+        public List<ActionDef> Actions = new List<ActionDef>();
     }
 
-    public sealed class ObjectActionDef
+    public sealed class ActionDef
     {
         /// <summary>What the server dispatches on ("process", later "mine", "open"...).</summary>
         public string Id = "";
         /// <summary>What the menu shows ("Butcher", "Distil").</summary>
         public string Label = "";
+        /// <summary>Only works once the player has this flag (set by dialogue or quests), e.g. a secret still.</summary>
+        public string? RequiresFlag;
+        /// <summary>Said when the flag is missing.</summary>
+        public string? LockedMessage;
     }
 
     /// <summary>One placed object, as exported from the scene (<c>&lt;map&gt;.objects.json</c>).</summary>

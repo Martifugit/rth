@@ -11,7 +11,7 @@ namespace Rth.Shared.Net
     public static class Protocol
     {
         /// <summary>Bump whenever a message layout changes, so mismatched builds are refused at login.</summary>
-        public const int Version = 4;
+        public const int Version = 5;
         public const int DefaultPort = 43600;
         /// <summary>Sanity limits on a single frame's length, in bytes.</summary>
         public const int MaxClientFrame = 4 * 1024;
@@ -31,6 +31,13 @@ namespace Rth.Shared.Net
         MoveItem = 8,
         Pickup = 9,
         ObjectAction = 10,
+        NpcAction = 11,
+        DialogueChoice = 12,
+        CloseInterface = 13,
+        BankDeposit = 14,
+        BankWithdraw = 15,
+        ShopBuy = 16,
+        ShopSell = 17,
 
         // Server to client: state.
         LoginOk = 100,
@@ -42,6 +49,10 @@ namespace Rth.Shared.Net
         Container = 106,
         Stats = 107,
         Skills = 108,
+        Dialogue = 109,
+        Interface = 110,
+        Shop = 111,
+        Task = 112,
     }
 
     public abstract class Message
@@ -175,6 +186,8 @@ namespace Rth.Shared.Net
         public int Id;
         public EntityKind Kind;
         public string Name = "";
+        /// <summary>The NPC type id (empty for players), so the client can look up its menu.</summary>
+        public string TypeId = "";
         public int Plane;
         public TileCoord Position;
         public EntityShape Shape;
@@ -257,6 +270,7 @@ namespace Rth.Shared.Net
                 w.Write(a.Id);
                 w.Write((byte)a.Kind);
                 w.Write(a.Name);
+                w.Write(a.TypeId ?? "");
                 w.Write((byte)a.Plane);
                 WriteTile(w, a.Position);
                 w.Write((byte)a.Shape);
@@ -322,6 +336,7 @@ namespace Rth.Shared.Net
                     Id = r.ReadInt32(),
                     Kind = (EntityKind)r.ReadByte(),
                     Name = r.ReadString(),
+                    TypeId = r.ReadString(),
                     Plane = r.ReadByte(),
                     Position = ReadTile(r),
                     Shape = (EntityShape)r.ReadByte(),
@@ -468,6 +483,7 @@ namespace Rth.Shared.Net
         public List<SkillDef> Skills = new List<SkillDef>();
         public XpCurve XpCurve = new XpCurve();
         public List<ObjectDef> Objects = new List<ObjectDef>();
+        public List<NpcInfo> Npcs = new List<NpcInfo>();
         public int BileLimit;
         public int BilePassiveThreshold;
         public int BileExtreme;

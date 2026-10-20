@@ -26,5 +26,42 @@
     "extraRollEveryLevels": 15,
     "ticks": 5,
     "xp": 45
+  },
+
+  {
+    "id": "distil_vitriol_salts",
+    "name": "vitriol bead and mite gland",
+    "verb": "distil",
+    "skill": "distillation",
+    "level": 15,
+    "station": "apothecary_still",
+    "inputs": [ { "item": "vitriol_bead", "count": 1 }, { "item": "mite_gland", "count": 1 } ],
+    "outputs": [ { "item": "vitriol_salts", "count": 3 } ],
+    "ticks": 4,
+    "xp": 40
+  },
+  {
+    "id": "distil_choleric_salts",
+    "name": "mite gland",
+    "verb": "distil",
+    "skill": "distillation",
+    "level": 1,
+    "station": "apothecary_still",
+    "inputs": [ { "item": "mite_gland", "count": 1 } ],
+    "outputs": [ { "item": "choleric_salts", "count": 4 } ],
+    "ticks": 3,
+    "xp": 14
+  },
+  {
+    "id": "distil_melancholic_tincture",
+    "name": "rat gall",
+    "verb": "distil",
+    "skill": "distillation",
+    "level": 1,
+    "station": "apothecary_still",
+    "inputs": [ { "item": "rat_gall", "count": 1 } ],
+    "outputs": [ { "item": "melancholic_tincture", "count": 3 } ],
+    "ticks": 3,
+    "xp": 10
   }
 ]

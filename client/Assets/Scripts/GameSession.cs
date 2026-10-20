@@ -355,7 +355,7 @@ namespace Rth.Client
             {
                 string type = objectDef.Id;
                 TileCoord tile = new TileCoord(mapObject.Tile.x, mapObject.Tile.y);
-                foreach (ObjectActionDef action in objectDef.Actions)
+                foreach (ActionDef action in objectDef.Actions)
                 {
                     string actionId = action.Id;
                     options.Add((action.Label + " " + objectDef.Name, () => ObjectAction(type, tile, actionId)));

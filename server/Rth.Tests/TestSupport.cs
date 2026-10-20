@@ -170,8 +170,8 @@ internal static class TestContent
 
     public static List<ObjectDef> Objects() => new()
     {
-        new ObjectDef { Id = "rack", Name = "Rack", Examine = "A rack.", Actions = { new ObjectActionDef { Id = "process", Label = "Butcher" } } },
-        new ObjectDef { Id = "vat", Name = "Vat", Actions = { new ObjectActionDef { Id = "process", Label = "Butcher" } } },
+        new ObjectDef { Id = "rack", Name = "Rack", Examine = "A rack.", Actions = { new ActionDef { Id = "process", Label = "Butcher" } } },
+        new ObjectDef { Id = "vat", Name = "Vat", Actions = { new ActionDef { Id = "process", Label = "Butcher" } } },
     };
 
     public static List<RecipeDef> Recipes() => new()
@@ -189,8 +189,85 @@ internal static class TestContent
         },
     };
 
+    public static List<NpcDef> TownNpcs() => new()
+    {
+        new NpcDef { Id = "banker", Name = "Banker", Attackable = false, Attacks = false, WanderRadius = 0, Actions = { new ActionDef { Id = "bank", Label = "Bank" } } },
+        new NpcDef { Id = "merchant", Name = "Merchant", Attackable = false, Attacks = false, WanderRadius = 0, Shop = "general", Dialogue = "merchant",
+            Actions = { new ActionDef { Id = "talk", Label = "Talk-to" }, new ActionDef { Id = "trade", Label = "Trade" }, new ActionDef { Id = "secret", Label = "Whisper", RequiresFlag = "trusted", LockedMessage = "Not yet." } } },
+    };
+
+    /// <summary>A small conversation exercising branches, conditions, actions and tokens.</summary>
+    public static DialogueDef MerchantDialogue() => new()
+    {
+        Id = "merchant",
+        Nodes =
+        {
+            ["start"] = new DialogueNode
+            {
+                Branches = { new DialogueBranch { Conditions = { new DialogueCondition { Type = "flag", Key = "met", Not = true } }, Next = "intro" } },
+                Next = "greet",
+            },
+            ["intro"] = new DialogueNode { Text = "Welcome, {player}.", Actions = { new DialogueAction { Type = "setFlag", Key = "met" } }, Next = "greet" },
+            ["greet"] = new DialogueNode
+            {
+                Text = "What'll it be? You have {points:tokens} tokens.",
+                Options =
+                {
+                    new DialogueOption { Text = "Trade", Actions = { new DialogueAction { Type = "openShop", Id = "general" } } },
+                    new DialogueOption { Text = "Work", Next = "work" },
+                    new DialogueOption { Text = "Rich option", Conditions = { new DialogueCondition { Type = "hasItem", Item = "coins", Count = 100 } }, Next = "rich" },
+                    new DialogueOption { Text = "Bank", Actions = { new DialogueAction { Type = "openBank" } } },
+                    new DialogueOption { Text = "Bye" },
+                },
+            },
+            ["rich"] = new DialogueNode { Text = "Ooh.", Actions = { new DialogueAction { Type = "giveItem", Item = "gem" } } },
+            ["work"] = new DialogueNode
+            {
+                Branches =
+                {
+                    new DialogueBranch { Conditions = { new DialogueCondition { Type = "hasTask" } }, Next = "busy" },
+                    new DialogueBranch { Conditions = { new DialogueCondition { Type = "canTakeTask", Id = "boss" } }, Next = "assign" },
+                },
+                Text = "{whyNoTask:boss}",
+            },
+            ["assign"] = new DialogueNode { Text = "Go: {task}", Actions = { new DialogueAction { Type = "assignTask", Id = "boss" } } },
+            ["busy"] = new DialogueNode { Text = "Busy with {task} for {taskGiver}." },
+        },
+    };
+
+    public static List<ShopDef> Shops() => new()
+    {
+        new ShopDef
+        {
+            Id = "general", Name = "General", Currency = "coins", SellPercent = 50,
+            Stock = { new ShopStockDef { Item = "bread", Price = 5, Quantity = 2, RestockTicks = 10 }, new ShopStockDef { Item = "gem", Price = 50 } },
+        },
+        new ShopDef { Id = "token_shop", Name = "Tokens", Currency = "points:tokens", Stock = { new ShopStockDef { Item = "sword", Price = 10 } } },
+    };
+
+    public static TasksFile Tasks() => new()
+    {
+        Pools = { new PointPoolDef { Id = "tokens", Name = "Tokens" } },
+        Givers =
+        {
+            new TaskGiverDef
+            {
+                Id = "boss", Name = "Boss", Pool = "tokens", StreakEvery = 3, StreakMultiplier = 2, CancelCost = 2,
+                Tasks = { new TaskDef { Id = "rats", Kind = "kill", Target = "rat", Min = 2, Max = 2, Points = 5, Description = "Kill {count} rats." } },
+            },
+            new TaskGiverDef
+            {
+                Id = "elite", Name = "Elite", Pool = "tokens", Requirements = { new SkillRequirement { Skill = "butchering", Level = 5 } },
+                Tasks = { new TaskDef { Id = "butcher", Kind = "recipe", Target = "rat", Min = 1, Max = 1, Points = 3, Description = "Butcher {count}." } },
+            },
+        },
+    };
+
     public static ContentParts Parts(CombatRules? rules = null, List<AbilityDef>? abilities = null) => new()
     {
+        Dialogues = { MerchantDialogue() },
+        Shops = Shops(),
+        Tasks = Tasks(),
         Skills = Skills(),
         Objects = Objects(),
         Recipes = Recipes(),
@@ -198,7 +275,7 @@ internal static class TestContent
         Abilities = abilities ?? Abilities(),
         AutoAttack = "zap",
         ActionBar = new List<string> { "spark", "draught", "still", "flare", "shroud", "ult", "poke", "secret" },
-        Npcs = Npcs(),
+        Npcs = Npcs().Concat(TownNpcs()).ToList(),
         Assayer = Assayer(),
         Items = Items(),
         DropTables = DropTables(),

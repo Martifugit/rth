@@ -33,11 +33,15 @@ namespace Rth.Server.Game
         /// <summary>Leashed: walking home and ignoring everyone until it gets there.</summary>
         public bool Returning { get; set; }
 
+        /// <summary>Holds still (no wandering) until this tick, e.g. while someone talks to it.</summary>
+        public uint BusyUntilTick { get; set; }
+
         public override EntityAdded Describe() => new EntityAdded
         {
             Id = Id,
             Kind = EntityKind.Npc,
             Name = Name,
+            TypeId = Def.Id,
             Plane = Plane,
             Position = Position,
             Shape = Def.Shape,

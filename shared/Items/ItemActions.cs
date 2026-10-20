@@ -8,6 +8,7 @@ namespace Rth.Shared.Items
     {
         Inventory = 0,
         Equipment = 1,
+        Bank = 2,
     }
 
     /// <summary>A menu option on an item. <see cref="Id"/> is what the server dispatches on; <see cref="Label"/> is shown.</summary>

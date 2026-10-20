@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Rth.Server.Persistence;
 using Rth.Shared.Combat;
+using Rth.Shared.Items;
 using Rth.Shared.Net;
 using Rth.Shared.World;
 
@@ -80,6 +81,7 @@ namespace Rth.Server.Game
                 World.Tell(player, TextKind.Warning, "You can't attack other players.");
                 return;
             }
+            if (target is Npc npc && !npc.Def.Attackable) return;
             if (player.Interaction is AttackInteraction current && current.TargetId == targetId) return;
             StartAttack(player, target);
         }
@@ -115,9 +117,10 @@ namespace Rth.Server.Game
         private string? Requirements(Player player, AbilityDef ability)
         {
             SkillSystem? skills = World.Find<SkillSystem>();
-            return skills == null
-                ? ability.CheckRequirements(player.Phlegm, player.Bile)
-                : ability.CheckRequirements(player.Phlegm, player.Bile, s => skills.Level(player, s), skills.Name);
+            ItemSystem? items = World.Find<ItemSystem>();
+            return ability.CheckRequirements(player.Phlegm, player.Bile,
+                skills == null ? (Func<string, int>?)null : s => skills.Level(player, s), skills == null ? null : (Func<string, string>)skills.Name,
+                items == null ? (Func<string, int>?)null : i => items.CountOf(player, i), i => World.Content.Item(i)?.Name ?? i);
         }
 
         private void HandleDeflect(Player player, CombatStyle style)
@@ -255,6 +258,9 @@ namespace Rth.Server.Game
                     AddPhlegm(player, -ability.PhlegmCost);
                     break;
             }
+            ItemSystem? items = World.Find<ItemSystem>();
+            if (items != null)
+                foreach (ItemCost reagent in ability.Reagents) items.Take(player, reagent.Item, reagent.Count);
 
             ShiftBile(player, ability.BileShift);
             if (ability.BileTowardZero > 0) SettleBile(player, ability.BileTowardZero);

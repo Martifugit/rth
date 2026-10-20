@@ -93,6 +93,7 @@ namespace Rth.Server.Game
                 if (left > 0 && ground != null) ground.Spawn(drop.ItemId, left, player.Plane, player.Position, player);
             }
             Skills.AddXp(player, recipe.Skill, recipe.Xp);
+            World.Events.Publish(new RecipeCompleted(player, recipe));
         }
     }
 
@@ -109,7 +110,7 @@ namespace Rth.Server.Game
             RecipeSystem recipes = world.Get<RecipeSystem>();
             if (_current == null)
             {
-                _current = recipes.Choose(player, Target.Type, out string? problem, out _);
+                _current = recipes.Choose(player, Object.Type, out string? problem, out _);
                 if (_current == null)
                 {
                     world.Tell(player, TextKind.Warning, problem ?? "You can't do anything here.");
@@ -124,7 +125,7 @@ namespace Rth.Server.Game
             recipes.Complete(player, _current);
 
             // Carry on with whatever is still possible here: the same recipe, or the next one.
-            RecipeDef? next = recipes.Choose(player, Target.Type, out string? stop, out bool ranOut);
+            RecipeDef? next = recipes.Choose(player, Object.Type, out string? stop, out bool ranOut);
             if (next == null)
             {
                 world.Tell(player, TextKind.Info, ranOut ? "You have nothing left to " + _current.Verb + "." : stop ?? "You stop.");

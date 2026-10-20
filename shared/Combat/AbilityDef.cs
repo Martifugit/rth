@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Rth.Shared.Items;
 using Rth.Shared.Skills;
 
 namespace Rth.Shared.Combat
@@ -74,16 +75,26 @@ namespace Rth.Shared.Combat
         /// <summary>Skill levels needed to use it at all (e.g. occultism 5 for a threshold).</summary>
         public List<SkillRequirement> Requirements = new List<SkillRequirement>();
 
+        /// <summary>Items used up each time it's cast (Distillation's salts and tinctures).</summary>
+        public List<ItemCost> Reagents = new List<ItemCost>();
+
         /// <summary>
-        /// Why the ability can't be used with these resources and levels, or null if it can.
-        /// Without <paramref name="levelOf"/>, level requirements are ignored.
+        /// Why the ability can't be used with these resources, levels and items, or null if it can.
+        /// Level and reagent checks are skipped when their lookups aren't given.
         /// </summary>
-        public string? CheckRequirements(int phlegm, int bile, Func<string, int>? levelOf = null, Func<string, string>? skillName = null)
+        public string? CheckRequirements(int phlegm, int bile, Func<string, int>? levelOf = null, Func<string, string>? skillName = null,
+            Func<string, int>? countOf = null, Func<string, string>? itemName = null)
         {
             if (levelOf != null)
             {
                 string? level = SkillRequirement.Check(Requirements, levelOf, skillName ?? (s => s), "use " + Name);
                 if (level != null) return level;
+            }
+            if (countOf != null)
+            {
+                foreach (ItemCost r in Reagents)
+                    if (countOf(r.Item) < r.Count)
+                        return Name + " needs " + r.Count + " " + (itemName?.Invoke(r.Item) ?? r.Item).ToLowerInvariant() + ".";
             }
             if (phlegm < PhlegmRequired) return Name + " needs " + PhlegmRequired + "% phlegm.";
             if (bile < BileMin) return Name + " needs your bile at " + Signed(BileMin) + " or higher.";

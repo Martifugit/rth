@@ -27,6 +27,13 @@ namespace Rth.Shared.Items
         public ConsumableDef? Consumable;
     }
 
+    /// <summary>A number of one item: a cost, an ingredient, a reward.</summary>
+    public sealed class ItemCost
+    {
+        public string Item = "";
+        public int Count = 1;
+    }
+
     public enum EquipSlot : byte
     {
         Head = 0,

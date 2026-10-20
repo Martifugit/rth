@@ -6,7 +6,9 @@
     { "item": "riverbread", "count": 6 },
     { "item": "saltfig", "count": 2 },
     { "item": "phlegm_tonic", "count": 1 },
-    { "item": "skinning_knife", "count": 1 }
+    { "item": "skinning_knife", "count": 1 },
+    { "item": "choleric_salts", "count": 15 },
+    { "item": "melancholic_tincture", "count": 15 }
   ],
   "starterEquipment": [ "apprentice_athame", "occultist_robe" ]
 }

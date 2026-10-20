@@ -1,0 +1,231 @@
+[
+  {
+    "id": "wenna",
+    "start": "start",
+    "nodes": {
+      "start": {
+        "branches": [
+          { "conditions": [ { "type": "flag", "key": "met_wenna", "not": true } ], "next": "intro" },
+          { "conditions": [ { "type": "hasTask", "id": "wenna" } ], "next": "progress" }
+        ],
+        "next": "greet"
+      },
+      "intro": {
+        "text": "You're the one who woke. Half the town's whispering about you and the other half's lying about it. I'm Wenna. I run the skinning yard.",
+        "actions": [ { "type": "setFlag", "key": "met_wenna" } ],
+        "next": "intro2"
+      },
+      "intro2": {
+        "text": "Everything that crawls out of the fens ends up on my racks sooner or later. Pelts, gall, fat. None of it's worth a mark until it's been properly taken apart.",
+        "next": "intro3"
+      },
+      "intro3": {
+        "speaker": "player",
+        "text": "And you'd like me to do the taking apart.",
+        "next": "intro4"
+      },
+      "intro4": {
+        "text": "I'd like somebody to. You've got two hands and nobody to answer to. Kill a rat, bring the carcass to the rack, and don't make a mess of the pelt.",
+        "next": "greet"
+      },
+      "greet": {
+        "text": "Back again. Hands clean? Doesn't matter. What do you want?",
+        "options": [
+          { "text": "Got any work for me?", "next": "work" },
+          { "text": "What do your tokens buy?", "actions": [ { "type": "openShop", "id": "skinning_yard" } ] },
+          { "text": "Tell me about the yard.", "next": "about" },
+          { "text": "Where does the Scald stuff go?", "next": "scald" },
+          { "text": "Nothing. Just looking." }
+        ]
+      },
+      "work": {
+        "branches": [
+          { "conditions": [ { "type": "hasTask" } ], "next": "busy" },
+          { "conditions": [ { "type": "canTakeTask", "id": "wenna" } ], "next": "assign" }
+        ],
+        "text": "{whyNoTask:wenna}",
+        "next": "greet"
+      },
+      "assign": {
+        "actions": [ { "type": "assignTask", "id": "wenna" } ],
+        "text": "Right. {task} Take them to the rack and do it properly. Tokens when you're done, and a bonus if you keep coming back.",
+        "next": null
+      },
+      "busy": {
+        "text": "You're already working for {taskGiver}. Finish that first. I don't share my hands with anybody.",
+        "next": null
+      },
+      "progress": {
+        "text": "How's it going? You're on: {task}. The rack won't work itself.",
+        "options": [
+          { "text": "What do your tokens buy?", "actions": [ { "type": "openShop", "id": "skinning_yard" } ] },
+          { "text": "I want to drop this one. (5 tokens)", "next": "cancel" },
+          { "text": "I'll get back to it." }
+        ]
+      },
+      "cancel": {
+        "actions": [ { "type": "cancelTask" } ],
+        "text": "Fine. Your streak goes with it, mind. Come back when you're ready to finish something.",
+        "next": null
+      },
+      "about": {
+        "text": "Basin wildlife comes in whole and goes out in pieces. The rack's by the path. Keep your knife sharp, work quick, and the better you get the more you'll pull out of each carcass.",
+        "next": "greet"
+      },
+      "scald": {
+        "text": "Not on my racks. Mites from the Scald eat through iron, never mind hide. There's a lye vat out past the fence. You'll want a glass hook, and you'll want to know what you're doing first.",
+        "next": "greet"
+      }
+    }
+  },
+
+  {
+    "id": "corvin",
+    "start": "start",
+    "nodes": {
+      "start": {
+        "branches": [
+          { "conditions": [ { "type": "flag", "key": "met_corvin", "not": true } ], "next": "intro" },
+          { "conditions": [ { "type": "hasTask", "id": "corvin" } ], "next": "progress" }
+        ],
+        "next": "greet"
+      },
+      "intro": {
+        "text": "Ah! You must be the one who woke up. Corvin Sallow: apothecary, tooth-puller, listener. Sit, if you like. Sleepers who wake are rarer than you'd think.",
+        "actions": [ { "type": "setFlag", "key": "met_corvin" } ],
+        "next": "intro2"
+      },
+      "intro2": {
+        "speaker": "player",
+        "text": "Everyone keeps telling me that.",
+        "next": "intro3"
+      },
+      "intro3": {
+        "text": "Then everyone is right, for once. You'll want food and the odd draught; I keep both. And if you ever find yourself curious about the humours, well. I'm a good listener.",
+        "next": "greet"
+      },
+      "greet": {
+        "text": "My favourite sleeper. Bread, bandages, things for the bile. What can I find for you?",
+        "options": [
+          { "text": "Let's see what you've got.", "actions": [ { "type": "openShop", "id": "corvins_apothecary" } ] },
+          { "text": "Do you have any work?", "next": "work" },
+          {
+            "text": "You said something about the humours...",
+            "conditions": [ { "type": "flag", "key": "corvin_still", "not": true } ],
+            "next": "still_hint"
+          },
+          {
+            "text": "About that still of yours.",
+            "conditions": [ { "type": "flag", "key": "corvin_still" } ],
+            "next": "still_access"
+          },
+          {
+            "text": "Show me the back room.",
+            "conditions": [ { "type": "flag", "key": "corvin_still" } ],
+            "actions": [ { "type": "openShop", "id": "corvins_back_room" } ]
+          },
+          { "text": "Goodbye, Corvin." }
+        ]
+      },
+      "still_hint": {
+        "text": "The humours, yes. Most folk only know bile as the thing that gives them fevers. Handled properly, it does rather more than that.",
+        "options": [
+          { "text": "Handled how?", "next": "still_how" },
+          { "text": "Never mind.", "next": "greet" }
+        ]
+      },
+      "still_how": {
+        "branches": [
+          { "conditions": [ { "type": "level", "skill": "butchering", "level": 5 } ], "next": "still_offer" }
+        ],
+        "text": "Ha! Get some blood on your hands first. Come back when Wenna trusts you with a knife and we'll talk about what comes out of a carcass besides pelts.",
+        "next": null
+      },
+      "still_offer": {
+        "text": "You've the hands for it now, I see. I keep a little still under the counter. Galls and glands go in; salts and tinctures come out. The Synod calls that a crime. Let's you and I call it medicine.",
+        "options": [
+          { "text": "Medicine it is.", "actions": [ { "type": "setFlag", "key": "corvin_still" } ], "next": "still_access" },
+          { "text": "I'd rather not get involved.", "next": "still_refused" }
+        ]
+      },
+      "still_refused": {
+        "text": "Of course. Sensible. The offer doesn't spoil, you know. Very little I keep does.",
+        "next": "greet"
+      },
+      "still_access": {
+        "text": "Use it whenever you like. Rat gall makes a decent tincture, and mite glands give you salts. The hotter workings burn the salts, the colder ones the tincture. Mind you don't run short in a fight.",
+        "next": "greet"
+      },
+      "work": {
+        "branches": [
+          { "conditions": [ { "type": "hasTask" } ], "next": "busy" },
+          { "conditions": [ { "type": "canTakeTask", "id": "corvin" } ], "next": "assign" }
+        ],
+        "text": "{whyNoTask:corvin} What I need comes from the Scald, and it bites. Let the skinning yard make a butcher of you first.",
+        "next": "greet"
+      },
+      "assign": {
+        "actions": [ { "type": "assignTask", "id": "corvin" } ],
+        "text": "Wonderful. {task} Bring everything through the back, and keep your gloves on.",
+        "next": null
+      },
+      "busy": {
+        "text": "You're spoken for: {taskGiver} has you. Finish that first. I'm patient. It's my best quality.",
+        "next": null
+      },
+      "progress": {
+        "text": "How are my errands coming along? {task}",
+        "options": [
+          {
+            "text": "Show me the back room.",
+            "conditions": [ { "type": "flag", "key": "corvin_still" } ],
+            "actions": [ { "type": "openShop", "id": "corvins_back_room" } ]
+          },
+          { "text": "Let's see your shelves.", "actions": [ { "type": "openShop", "id": "corvins_apothecary" } ] },
+          { "text": "I'd like out of this one. (4 favour)", "next": "cancel" },
+          { "text": "Still working on it." }
+        ]
+      },
+      "cancel": {
+        "actions": [ { "type": "cancelTask" } ],
+        "text": "Never mind, never mind. Something else will turn up. Something always does.",
+        "next": null
+      }
+    }
+  },
+
+  {
+    "id": "ambrose",
+    "start": "start",
+    "nodes": {
+      "start": {
+        "branches": [
+          { "conditions": [ { "type": "flag", "key": "met_ambrose", "not": true } ], "next": "intro" }
+        ],
+        "next": "greet"
+      },
+      "intro": {
+        "text": "Name? ...{player}. Yes. You're in the ledger. Everyone is, eventually. The Synod keeps what you give it, and gives it back when you ask. Mostly.",
+        "actions": [ { "type": "setFlag", "key": "met_ambrose" } ],
+        "next": "greet"
+      },
+      "greet": {
+        "text": "Treasury of the Sanguine Synod, riverside office. Deposits, withdrawals. No questions about the vault.",
+        "options": [
+          { "text": "I'd like to use my bank.", "actions": [ { "type": "openBank" } ] },
+          { "text": "What does the Synod do with it all?", "next": "synod" },
+          { "text": "Why is your ledger chained to you?", "next": "chain" },
+          { "text": "Good day." }
+        ]
+      },
+      "synod": {
+        "text": "Keeps it. That's the covenant, the way Brazenhithe reads it: we are keepers. Noonhaven would tell you everything is a debt that comes due one day. I prefer Brazenhithe's arithmetic.",
+        "next": "greet"
+      },
+      "chain": {
+        "text": "Because the last clerk's ledger walked off on its own. Well. With help. Not everyone in this town is what they sell themselves as, sleeper. Remember that when you're buying.",
+        "next": "greet"
+      }
+    }
+  }
+]

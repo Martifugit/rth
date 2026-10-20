@@ -11,6 +11,11 @@
       "id": "butchering",
       "name": "Butchering",
       "description": "Taking carcasses apart at the right station with the right tool. Higher levels get more out of each one."
+    },
+    {
+      "id": "distillation",
+      "name": "Distillation",
+      "description": "Rendering galls and glands into the salts and tinctures occult workings burn. The Synod calls it a crime."
     }
   ],
   "damageXp": [

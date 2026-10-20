@@ -20,11 +20,45 @@ namespace Rth.Server.Game
             _spawns = spawns.ToList();
         }
 
+        public const string Examine = "examine";
+
+        private readonly Dictionary<string, Action<Player, Npc>> _actions = new Dictionary<string, Action<Player, Npc>>();
+
         private CombatSystem Combat => World.Get<CombatSystem>();
+
+        /// <summary>
+        /// What an NPC menu action does once the player is standing beside the NPC (the dialogue
+        /// system registers "talk", the bank "bank", shops "trade"). "examine" is built in.
+        /// </summary>
+        public void RegisterAction(string actionId, Action<Player, Npc> handler) => _actions[actionId] = handler;
 
         protected override void OnAttach()
         {
             foreach (NpcSpawn spawn in _spawns) Spawn(spawn);
+            World.OnMessage<NpcActionMessage>(HandleAction);
+        }
+
+        private void HandleAction(Player player, NpcActionMessage m)
+        {
+            if (player.IsDead || !(World.FindEntity(m.NpcId) is Npc npc) || npc.IsDead || !World.CanSee(player, npc)) return;
+            if (m.ActionId == Examine)
+            {
+                World.Tell(player, TextKind.Info, string.IsNullOrEmpty(npc.Def.Examine) ? "It's a " + npc.Name.ToLowerInvariant() + "." : npc.Def.Examine);
+                return;
+            }
+            ActionDef? action = npc.Def.Actions.FirstOrDefault(a => a.Id == m.ActionId);
+            if (action == null || !ObjectSystem.Unlocked(World, player, action)) return;
+            if (!_actions.TryGetValue(m.ActionId, out Action<Player, Npc>? handler))
+            {
+                World.Log("No handler for NPC action '" + m.ActionId + "'.");
+                return;
+            }
+            World.StartInteraction(player, new NpcInteraction(npc.Id, (p, n) =>
+            {
+                n.BusyUntilTick = World.CurrentTick + 20;
+                n.Waypoints.Clear();
+                handler(p, n);
+            }));
         }
 
         public Npc? Spawn(NpcSpawn spawn)
@@ -120,6 +154,7 @@ namespace Rth.Server.Game
             if (def.Regenerates && !npc.InCombat(World.CurrentTick, World.Rules.CombatTimeoutTicks) && npc.Blood < npc.MaxBlood)
                 ResetHealth(npc);
 
+            if (World.CurrentTick < npc.BusyUntilTick) return; // someone is talking to it
             Wander(npc);
         }
 

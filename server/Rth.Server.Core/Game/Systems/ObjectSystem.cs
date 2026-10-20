@@ -27,6 +27,14 @@ namespace Rth.Server.Game
 
         public void RegisterAction(string actionId, Action<Player, PlacedObject, ObjectDef> handler) => _actions[actionId] = handler;
 
+        /// <summary>Whether a flag-gated action is available to this player; tells them why not if it isn't.</summary>
+        public static bool Unlocked(World world, Player player, ActionDef action)
+        {
+            if (action.RequiresFlag == null || world.Find<FlagSystem>()?.IsSet(player, action.RequiresFlag) == true) return true;
+            world.Tell(player, TextKind.Warning, action.LockedMessage ?? "You can't do that yet.");
+            return false;
+        }
+
         public PlacedObject? At(int plane, TileCoord tile, string type) =>
             _placed.FirstOrDefault(o => o.Plane == plane && o.X == tile.X && o.Y == tile.Y && o.Type == type);
 
@@ -51,42 +59,11 @@ namespace Rth.Server.Game
                 World.Tell(player, TextKind.Info, string.IsNullOrEmpty(def.Examine) ? "It's a " + def.Name.ToLowerInvariant() + "." : def.Examine);
                 return;
             }
-            if (!def.Actions.Any(a => a.Id == m.ActionId)) return;
+            ActionDef? action = def.Actions.FirstOrDefault(a => a.Id == m.ActionId);
+            if (action == null) return;
+            if (!Unlocked(World, player, action)) return;
             if (_actions.TryGetValue(m.ActionId, out Action<Player, PlacedObject, ObjectDef>? handler)) handler(player, placed, def);
             else World.Log("No handler for object action '" + m.ActionId + "'.");
         }
-    }
-
-    /// <summary>
-    /// Base for "go to that object and work at it": walks the player beside the object, then calls
-    /// <see cref="Work"/> each tick until it returns false.
-    /// </summary>
-    public abstract class ObjectInteraction : Interaction
-    {
-        protected ObjectInteraction(PlacedObject target)
-        {
-            Target = target;
-        }
-
-        public PlacedObject Target { get; }
-
-        public sealed override bool Tick(World world, Player player)
-        {
-            if (!world.IsBeside(player, Target.Plane, Target.Tile))
-            {
-                if (player.Waypoints.Count == 0 && !world.PathBeside(player, Target.Plane, Target.Tile))
-                {
-                    world.Tell(player, TextKind.Warning, "You can't reach that.");
-                    return false;
-                }
-                world.ProcessMovement(player);
-                if (!world.IsBeside(player, Target.Plane, Target.Tile)) return true;
-                player.Waypoints.Clear();
-            }
-            return Work(world, player);
-        }
-
-        /// <summary>One tick of work while standing beside the object. Return false when done.</summary>
-        protected abstract bool Work(World world, Player player);
     }
 }

@@ -40,6 +40,16 @@ namespace Rth.Server.Content
         /// <summary>Drop table rolled when it dies (drops.json), or null for none.</summary>
         public string? DropTable;
 
+        public string Examine = "";
+        /// <summary>Whether players can attack it at all (townsfolk can't).</summary>
+        public bool Attackable = true;
+        /// <summary>Menu options besides Attack ("talk", "bank", "trade"), dispatched to whichever system registered them.</summary>
+        public List<ActionDef> Actions = new List<ActionDef>();
+        /// <summary>Conversation started by "talk" (dialogues.json).</summary>
+        public string? Dialogue;
+        /// <summary>Shop opened by "trade" (shops.json).</summary>
+        public string? Shop;
+
         public EntityShape Shape = EntityShape.Capsule;
         public string Color = "#888888";
         public double Scale = 1.0;
@@ -78,6 +88,7 @@ namespace Rth.Server.Content
     public sealed class WorldSettings
     {
         public int InventorySize = 28;
+        public int BankSize = 400;
         /// <summary>Loot and dropped items are only visible to their owner for this long.</summary>
         public int GroundItemPrivateTicks = 100;
         /// <summary>Ground items vanish this long after appearing.</summary>
@@ -148,6 +159,9 @@ namespace Rth.Server.Content
         public SkillsFile Skills = new SkillsFile();
         public List<ObjectDef> Objects = new List<ObjectDef>();
         public List<RecipeDef> Recipes = new List<RecipeDef>();
+        public List<DialogueDef> Dialogues = new List<DialogueDef>();
+        public List<ShopDef> Shops = new List<ShopDef>();
+        public TasksFile Tasks = new TasksFile();
     }
 
     /// <summary>
@@ -177,6 +191,10 @@ namespace Rth.Server.Content
         public IReadOnlyList<DamageXpRule> DamageXp { get; private set; } = new List<DamageXpRule>();
         public IReadOnlyDictionary<string, ObjectDef> Objects { get; private set; } = new Dictionary<string, ObjectDef>();
         public IReadOnlyDictionary<string, RecipeDef> Recipes { get; private set; } = new Dictionary<string, RecipeDef>();
+        public IReadOnlyDictionary<string, DialogueDef> Dialogues { get; private set; } = new Dictionary<string, DialogueDef>();
+        public IReadOnlyDictionary<string, ShopDef> Shops { get; private set; } = new Dictionary<string, ShopDef>();
+        public IReadOnlyDictionary<string, PointPoolDef> PointPools { get; private set; } = new Dictionary<string, PointPoolDef>();
+        public IReadOnlyDictionary<string, TaskGiverDef> TaskGivers { get; private set; } = new Dictionary<string, TaskGiverDef>();
 
         public ItemDef? Item(string? id) => id != null && Items.TryGetValue(id, out ItemDef? def) ? def : null;
 
@@ -199,6 +217,9 @@ namespace Rth.Server.Content
                 Skills = ReadJson<SkillsFile>(directory, "skills.json"),
                 Objects = ReadJson<List<ObjectDef>>(directory, "objects.json"),
                 Recipes = ReadJson<List<RecipeDef>>(directory, "recipes.json"),
+                Dialogues = ReadJson<List<DialogueDef>>(directory, "dialogues.json"),
+                Shops = ReadJson<List<ShopDef>>(directory, "shops.json"),
+                Tasks = ReadJson<TasksFile>(directory, "tasks.json"),
             });
         }
 
@@ -261,7 +282,12 @@ namespace Rth.Server.Content
                 foreach (SkillRequirement r in reqs)
                     if (!skills.ContainsKey(r.Skill)) problems.Add(where + ": requires unknown skill '" + r.Skill + "'.");
             }
-            foreach (AbilityDef a in parts.Abilities) CheckRequirements(a.Requirements, "Ability '" + a.Id + "'");
+            foreach (AbilityDef a in parts.Abilities)
+            {
+                CheckRequirements(a.Requirements, "Ability '" + a.Id + "'");
+                foreach (ItemCost r in a.Reagents)
+                    if (!items.ContainsKey(r.Item) || r.Count < 1) problems.Add("Ability '" + a.Id + "': bad reagent '" + r.Item + "' x" + r.Count + ".");
+            }
             foreach (ItemDef i in parts.Items)
                 if (i.Equipment != null) CheckRequirements(i.Equipment.Requirements, "Item '" + i.Id + "'");
 
@@ -279,6 +305,52 @@ namespace Rth.Server.Content
                     if (!items.ContainsKey(tool)) problems.Add(where + "tool '" + tool + "' doesn't exist.");
                 if (r.OutputTable != null && !tables.ContainsKey(r.OutputTable)) problems.Add(where + "output table '" + r.OutputTable + "' doesn't exist.");
                 if (r.Ticks < 1) problems.Add(where + "ticks must be at least 1.");
+            }
+
+            Dictionary<string, DialogueDef> dialogues = Index(parts.Dialogues, d => d.Id, "dialogue", problems);
+            foreach (DialogueDef d in parts.Dialogues) ValidateDialogue(d, problems);
+
+            Dictionary<string, PointPoolDef> pools = Index(parts.Tasks.Pools, p => p.Id, "point pool", problems);
+            Dictionary<string, ShopDef> shops = Index(parts.Shops, s => s.Id, "shop", problems);
+            foreach (ShopDef s in parts.Shops)
+            {
+                string where = "Shop '" + s.Id + "': ";
+                bool pointsCurrency = s.Currency.StartsWith("points:");
+                if (pointsCurrency ? !pools.ContainsKey(s.Currency.Substring(7)) : !items.ContainsKey(s.Currency))
+                    problems.Add(where + "currency '" + s.Currency + "' is neither an item nor a known points pool.");
+                if (pointsCurrency && s.SellPercent > 0) problems.Add(where + "shops paying in points can't buy items.");
+                foreach (ShopStockDef stock in s.Stock)
+                {
+                    if (!items.ContainsKey(stock.Item)) problems.Add(where + "item '" + stock.Item + "' doesn't exist.");
+                    if (stock.Price < 1) problems.Add(where + "'" + stock.Item + "' needs a price of at least 1.");
+                    if (stock.Quantity == 0 || stock.Quantity < -1) problems.Add(where + "'" + stock.Item + "' quantity must be positive or -1.");
+                }
+                if (s.SellPercent < 0 || s.SellPercent > 100) problems.Add(where + "sellPercent must be 0-100.");
+            }
+
+            Dictionary<string, TaskGiverDef> givers = Index(parts.Tasks.Givers, g => g.Id, "task giver", problems);
+            foreach (TaskGiverDef g in parts.Tasks.Givers)
+            {
+                string where = "Task giver '" + g.Id + "': ";
+                if (!pools.ContainsKey(g.Pool)) problems.Add(where + "pool '" + g.Pool + "' doesn't exist.");
+                CheckRequirements(g.Requirements, where.TrimEnd(' ', ':'));
+                if (g.Tasks.Count == 0) problems.Add(where + "has no tasks.");
+                foreach (TaskDef t in g.Tasks)
+                {
+                    if (t.Kind == "recipe" && !recipes.ContainsKey(t.Target)) problems.Add(where + "task '" + t.Id + "' targets unknown recipe '" + t.Target + "'.");
+                    else if (t.Kind == "kill" && !parts.Npcs.Any(n => n.Id == t.Target)) problems.Add(where + "task '" + t.Id + "' targets unknown NPC '" + t.Target + "'.");
+                    else if (t.Kind != "recipe" && t.Kind != "kill") problems.Add(where + "task '" + t.Id + "' has unknown kind '" + t.Kind + "'.");
+                    if (t.Min < 1 || t.Max < t.Min) problems.Add(where + "task '" + t.Id + "' has a bad count range.");
+                    CheckRequirements(t.Requirements, where + "task '" + t.Id + "'");
+                }
+            }
+
+            foreach (NpcDef n in parts.Npcs)
+            {
+                if (n.Dialogue != null && !dialogues.ContainsKey(n.Dialogue)) problems.Add("NPC '" + n.Id + "': dialogue '" + n.Dialogue + "' doesn't exist.");
+                if (n.Shop != null && !shops.ContainsKey(n.Shop)) problems.Add("NPC '" + n.Id + "': shop '" + n.Shop + "' doesn't exist.");
+                if (n.Actions.Any(a => a.Id == "talk") && n.Dialogue == null) problems.Add("NPC '" + n.Id + "': has Talk-to but no dialogue.");
+                if (n.Actions.Any(a => a.Id == "trade") && n.Shop == null) problems.Add("NPC '" + n.Id + "': has Trade but no shop.");
             }
 
             CombatRules rules = parts.Rules;
@@ -303,6 +375,10 @@ namespace Rth.Server.Content
                 DamageXp = parts.Skills.DamageXp,
                 Objects = objects,
                 Recipes = recipes,
+                Dialogues = dialogues,
+                Shops = shops,
+                PointPools = pools,
+                TaskGivers = givers,
             };
         }
 
@@ -329,6 +405,33 @@ namespace Rth.Server.Content
                     if (!KnownEffectOps.Contains(op.Op)) problems.Add(where + "unknown effect op '" + op.Op + "'.");
                 if (item.Consumable.Leaves != null && !items.ContainsKey(item.Consumable.Leaves))
                     problems.Add(where + "leaves '" + item.Consumable.Leaves + "', which doesn't exist.");
+            }
+        }
+
+        /// <summary>Structure only: every jump lands on a node, every condition and action has a type.
+        /// Whether a type has a handler is checked at runtime (and by tests), since systems register them.</summary>
+        private static void ValidateDialogue(DialogueDef d, List<string> problems)
+        {
+            string where = "Dialogue '" + d.Id + "': ";
+            if (!d.Nodes.ContainsKey(d.Start)) problems.Add(where + "start node '" + d.Start + "' doesn't exist.");
+            foreach (KeyValuePair<string, DialogueNode> pair in d.Nodes)
+            {
+                DialogueNode node = pair.Value;
+                string at = where + "node '" + pair.Key + "': ";
+                if (node.Next != null && !d.Nodes.ContainsKey(node.Next)) problems.Add(at + "next '" + node.Next + "' doesn't exist.");
+                foreach (DialogueBranch b in node.Branches)
+                {
+                    if (!d.Nodes.ContainsKey(b.Next)) problems.Add(at + "branch to '" + b.Next + "' doesn't exist.");
+                    if (b.Conditions.Any(c => string.IsNullOrEmpty(c.Type))) problems.Add(at + "a branch condition has no type.");
+                }
+                foreach (DialogueOption o in node.Options)
+                {
+                    if (o.Next != null && !d.Nodes.ContainsKey(o.Next)) problems.Add(at + "option '" + o.Text + "' goes to '" + o.Next + "', which doesn't exist.");
+                    if (o.Conditions.Any(c => string.IsNullOrEmpty(c.Type)) || o.Actions.Any(a => string.IsNullOrEmpty(a.Type)))
+                        problems.Add(at + "option '" + o.Text + "' has a condition or action without a type.");
+                }
+                if (node.Actions.Any(a => string.IsNullOrEmpty(a.Type))) problems.Add(at + "an action has no type.");
+                if (node.Speaker != "npc" && node.Speaker != "player") problems.Add(at + "speaker must be npc or player.");
             }
         }
 
@@ -403,6 +506,7 @@ namespace Rth.Server.Content
             Skills = Skills.Values.ToList(),
             XpCurve = XpCurve,
             Objects = Objects.Values.ToList(),
+            Npcs = Npcs.Values.Select(n => new NpcInfo { Id = n.Id, Name = n.Name, Examine = n.Examine, Attackable = n.Attackable, Actions = n.Actions }).ToList(),
             BileLimit = Rules.BileLimit,
             BilePassiveThreshold = Rules.BilePassiveThreshold,
             BileExtreme = Rules.BileExtreme,

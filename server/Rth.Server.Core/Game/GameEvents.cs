@@ -40,6 +40,19 @@ namespace Rth.Server.Game
         public Entity? Killer { get; }
     }
 
+    /// <summary>A player finished one go of a recipe (butchered a carcass, distilled a batch...).</summary>
+    public sealed class RecipeCompleted
+    {
+        public RecipeCompleted(Player player, Content.RecipeDef recipe)
+        {
+            Player = player;
+            Recipe = recipe;
+        }
+
+        public Player Player { get; }
+        public Content.RecipeDef Recipe { get; }
+    }
+
     /// <summary>Damage was dealt (after reductions). Useful for XP, contribution tracking, achievements.</summary>
     public sealed class DamageDealt
     {

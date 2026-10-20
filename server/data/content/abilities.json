@@ -58,6 +58,7 @@
     "phlegmGain": 8,
     "bileShift": 5,
     "bileMin": 20,
+    "reagents": [ { "item": "choleric_salts", "count": 1 } ],
     "requirements": [ { "skill": "occultism", "level": 3 } ]
   },
   {
@@ -73,6 +74,7 @@
     "phlegmCost": 15,
     "bileShift": 15,
     "bileMin": 30,
+    "reagents": [ { "item": "choleric_salts", "count": 2 } ],
     "requirements": [ { "skill": "occultism", "level": 5 } ]
   },
   {
@@ -91,6 +93,7 @@
     "effect": "Ward",
     "effectMagnitude": 30,
     "effectTicks": 10,
+    "reagents": [ { "item": "melancholic_tincture", "count": 2 } ],
     "requirements": [ { "skill": "occultism", "level": 5 } ]
   },
   {
@@ -106,6 +109,7 @@
     "phlegmCost": 100,
     "bileShift": 20,
     "bileMin": 60,
+    "reagents": [ { "item": "vitriol_salts", "count": 2 } ],
     "requirements": [ { "skill": "occultism", "level": 10 } ]
   },
   {
@@ -125,6 +129,7 @@
     "effect": "Ward",
     "effectMagnitude": 20,
     "effectTicks": 10,
+    "reagents": [ { "item": "melancholic_tincture", "count": 4 } ],
     "requirements": [ { "skill": "occultism", "level": 10 } ]
   }
 ]

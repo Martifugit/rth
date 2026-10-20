@@ -1,0 +1,90 @@
+{
+  "pools": [
+    { "id": "yard_tokens", "name": "Yard tokens" },
+    { "id": "corvins_favour", "name": "Corvin's favour" }
+  ],
+  "givers": [
+    {
+      "id": "wenna",
+      "name": "Wenna Thole",
+      "pool": "yard_tokens",
+      "streakEvery": 10,
+      "streakMultiplier": 3,
+      "cancelCost": 5,
+      "tasks": [
+        {
+          "id": "fen_rats",
+          "kind": "recipe",
+          "target": "butcher_fen_rat",
+          "min": 6,
+          "max": 12,
+          "points": 6,
+          "description": "Butcher {count} fen rat carcasses at the skinning rack."
+        },
+        {
+          "id": "fen_rats_big",
+          "kind": "recipe",
+          "target": "butcher_fen_rat",
+          "min": 15,
+          "max": 20,
+          "weight": 1,
+          "points": 12,
+          "description": "Butcher {count} fen rat carcasses. The tanners have an order in.",
+          "requirements": [ { "skill": "butchering", "level": 8 } ]
+        },
+        {
+          "id": "mites_for_the_yard",
+          "kind": "recipe",
+          "target": "butcher_vitriol_mite",
+          "min": 4,
+          "max": 8,
+          "weight": 2,
+          "points": 14,
+          "description": "Butcher {count} vitriol mite carcasses in the lye vat.",
+          "requirements": [ { "skill": "butchering", "level": 10 } ]
+        }
+      ]
+    },
+    {
+      "id": "corvin",
+      "name": "Corvin Sallow",
+      "pool": "corvins_favour",
+      "requirements": [ { "skill": "butchering", "level": 10 } ],
+      "streakEvery": 5,
+      "streakMultiplier": 2,
+      "cancelCost": 4,
+      "tasks": [
+        {
+          "id": "mite_glands",
+          "kind": "recipe",
+          "target": "butcher_vitriol_mite",
+          "min": 4,
+          "max": 8,
+          "weight": 3,
+          "points": 8,
+          "description": "Butcher {count} vitriol mite carcasses. Corvin wants the glands fresh."
+        },
+        {
+          "id": "salts_for_corvin",
+          "kind": "recipe",
+          "target": "distil_choleric_salts",
+          "min": 8,
+          "max": 15,
+          "weight": 2,
+          "points": 6,
+          "description": "Distil {count} batches of choleric salts at the still."
+        },
+        {
+          "id": "thin_the_mites",
+          "kind": "kill",
+          "target": "vitriol_mite",
+          "min": 5,
+          "max": 10,
+          "weight": 1,
+          "points": 7,
+          "description": "Kill {count} vitriol mites. They're getting into the cellars."
+        }
+      ]
+    }
+  ]
+}
