@@ -216,6 +216,52 @@ namespace Rth.Shared.Net
         }
     }
 
+    public enum QuestState : byte
+    {
+        NotStarted = 0,
+        InProgress = 1,
+        Complete = 2,
+    }
+
+    public struct QuestEntry
+    {
+        public string Name;
+        public QuestState State;
+        /// <summary>Summary, current stage's journal text, or the completion text.</summary>
+        public string Journal;
+        /// <summary>"2/3" for a counted objective, else empty.</summary>
+        public string Progress;
+    }
+
+    /// <summary>The player's quest journal. Sent at login and whenever a quest changes.</summary>
+    public sealed class QuestsMessage : Message
+    {
+        public List<QuestEntry> Quests = new List<QuestEntry>();
+
+        public override MessageType Type => MessageType.Quests;
+
+        internal override void WriteBody(BinaryWriter w)
+        {
+            w.Write((byte)Quests.Count);
+            foreach (QuestEntry q in Quests)
+            {
+                w.Write(q.Name ?? "");
+                w.Write((byte)q.State);
+                w.Write(q.Journal ?? "");
+                w.Write(q.Progress ?? "");
+            }
+        }
+
+        internal static QuestsMessage Read(BinaryReader r)
+        {
+            var m = new QuestsMessage();
+            int count = r.ReadByte();
+            for (int i = 0; i < count; i++)
+                m.Quests.Add(new QuestEntry { Name = r.ReadString(), State = (QuestState)r.ReadByte(), Journal = r.ReadString(), Progress = r.ReadString() });
+            return m;
+        }
+    }
+
     /// <summary>The player's current task (if any) and their point balances. Sent whenever they change.</summary>
     public sealed class TaskMessage : Message
     {

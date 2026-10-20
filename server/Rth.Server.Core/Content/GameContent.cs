@@ -162,6 +162,7 @@ namespace Rth.Server.Content
         public List<DialogueDef> Dialogues = new List<DialogueDef>();
         public List<ShopDef> Shops = new List<ShopDef>();
         public TasksFile Tasks = new TasksFile();
+        public List<QuestDef> Quests = new List<QuestDef>();
     }
 
     /// <summary>
@@ -195,6 +196,7 @@ namespace Rth.Server.Content
         public IReadOnlyDictionary<string, ShopDef> Shops { get; private set; } = new Dictionary<string, ShopDef>();
         public IReadOnlyDictionary<string, PointPoolDef> PointPools { get; private set; } = new Dictionary<string, PointPoolDef>();
         public IReadOnlyDictionary<string, TaskGiverDef> TaskGivers { get; private set; } = new Dictionary<string, TaskGiverDef>();
+        public IReadOnlyDictionary<string, QuestDef> Quests { get; private set; } = new Dictionary<string, QuestDef>();
 
         public ItemDef? Item(string? id) => id != null && Items.TryGetValue(id, out ItemDef? def) ? def : null;
 
@@ -220,6 +222,7 @@ namespace Rth.Server.Content
                 Dialogues = ReadJson<List<DialogueDef>>(directory, "dialogues.json"),
                 Shops = ReadJson<List<ShopDef>>(directory, "shops.json"),
                 Tasks = ReadJson<TasksFile>(directory, "tasks.json"),
+                Quests = ReadJson<List<QuestDef>>(directory, "quests.json"),
             });
         }
 
@@ -345,6 +348,33 @@ namespace Rth.Server.Content
                 }
             }
 
+            Dictionary<string, QuestDef> quests = Index(parts.Quests, q => q.Id, "quest", problems);
+            foreach (QuestDef q in parts.Quests)
+            {
+                string where = "Quest '" + q.Id + "': ";
+                if (q.Stages.Count == 0) problems.Add(where + "has no stages.");
+                var numbers = new HashSet<int>();
+                foreach (QuestStage s in q.Stages)
+                {
+                    if (s.Stage < 1 || !numbers.Add(s.Stage)) problems.Add(where + "stage numbers must be unique and at least 1.");
+                    if (s.Next != null && !q.Stages.Any(o => o.Stage == s.Next)) problems.Add(where + "stage " + s.Stage + " moves to missing stage " + s.Next + ".");
+                    if (s.Objective != null)
+                    {
+                        QuestObjective o = s.Objective;
+                        bool ok = o.Kind == "kill" ? parts.Npcs.Any(n => n.Id == o.Target)
+                            : o.Kind == "recipe" ? recipes.ContainsKey(o.Target)
+                            : o.Kind == "item" && items.ContainsKey(o.Target);
+                        if (!ok) problems.Add(where + "stage " + s.Stage + " has a bad objective (" + o.Kind + " " + o.Target + ").");
+                        if (s.Next == null) problems.Add(where + "stage " + s.Stage + " has an objective but no next stage.");
+                    }
+                }
+                CheckRequirements(q.Requirements, where.TrimEnd(' ', ':'));
+                foreach (SkillXp xp in q.Rewards.Xp)
+                    if (!skills.ContainsKey(xp.Skill)) problems.Add(where + "rewards XP in unknown skill '" + xp.Skill + "'.");
+                foreach (ItemCost item in q.Rewards.Items)
+                    if (!items.ContainsKey(item.Item)) problems.Add(where + "rewards unknown item '" + item.Item + "'.");
+            }
+
             foreach (NpcDef n in parts.Npcs)
             {
                 if (n.Dialogue != null && !dialogues.ContainsKey(n.Dialogue)) problems.Add("NPC '" + n.Id + "': dialogue '" + n.Dialogue + "' doesn't exist.");
@@ -379,6 +409,7 @@ namespace Rth.Server.Content
                 Shops = shops,
                 PointPools = pools,
                 TaskGivers = givers,
+                Quests = quests,
             };
         }
 

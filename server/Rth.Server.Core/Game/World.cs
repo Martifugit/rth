@@ -82,6 +82,7 @@ namespace Rth.Server.Game
             new ShopSystem(),
             new PointsSystem(),
             new TaskSystem(),
+            new QuestSystem(),
         };
 
         public ServerConfig Config => _config;

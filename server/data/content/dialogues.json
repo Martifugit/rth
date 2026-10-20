@@ -108,6 +108,16 @@
         "text": "My favourite sleeper. Bread, bandages, things for the bile. What can I find for you?",
         "options": [
           { "text": "Let's see what you've got.", "actions": [ { "type": "openShop", "id": "corvins_apothecary" } ] },
+          {
+            "text": "Edda Marsh wants a draught to stop her dreaming.",
+            "conditions": [ { "type": "questStage", "id": "dreamless", "count": 1 } ],
+            "next": "edda1"
+          },
+          {
+            "text": "I've brought what you need for Edda's draught.",
+            "conditions": [ { "type": "questStage", "id": "dreamless", "count": 3 } ],
+            "next": "brew"
+          },
           { "text": "Do you have any work?", "next": "work" },
           {
             "text": "You said something about the humours...",
@@ -126,6 +136,46 @@
           },
           { "text": "Goodbye, Corvin." }
         ]
+      },
+      "edda1": {
+        "text": "The Marsh girl? Walking by the pond again, is she. Dreams, you say. Not dreams of her own, I'd wager.",
+        "next": "edda2"
+      },
+      "edda2": {
+        "text": "I can brew something that makes her sleep like a stone. Bring me three rat galls and a Lammas saltfig. And tell me: did she say anything? About where she goes?",
+        "actions": [ { "type": "setQuestStage", "id": "dreamless", "count": 2 } ],
+        "options": [
+          { "text": "Something about a grey place, and threads.", "next": "edda_curious" },
+          { "text": "Nothing that made sense." , "next": "edda_shrug" }
+        ]
+      },
+      "edda_curious": {
+        "text": "Threads. Of course there were. Well. Bring me the galls, and we'll see her right.",
+        "next": null
+      },
+      "edda_shrug": {
+        "text": "No. It never does, at first. Bring me the galls.",
+        "next": null
+      },
+      "brew": {
+        "branches": [
+          {
+            "conditions": [ { "type": "hasItem", "item": "rat_gall", "count": 3 }, { "type": "hasItem", "item": "saltfig" } ],
+            "next": "brew_done"
+          }
+        ],
+        "text": "Three rat galls and a Lammas saltfig, I said. Not a crumb less. I'm generous, not careless.",
+        "next": null
+      },
+      "brew_done": {
+        "actions": [
+          { "type": "takeItem", "item": "rat_gall", "count": 3 },
+          { "type": "takeItem", "item": "saltfig", "count": 1 },
+          { "type": "giveItem", "item": "dreamless_draught", "count": 1 },
+          { "type": "setQuestStage", "id": "dreamless", "count": 4 }
+        ],
+        "text": "There. A dreamless draught. Give it to her yourself; she trusts you, apparently. And if she says anything as she drinks it, anything at all, you'll tell me. Won't you?",
+        "next": null
       },
       "still_hint": {
         "text": "The humours, yes. Most folk only know bile as the thing that gives them fevers. Handled properly, it does rather more than that.",
@@ -189,6 +239,83 @@
       "cancel": {
         "actions": [ { "type": "cancelTask" } ],
         "text": "Never mind, never mind. Something else will turn up. Something always does.",
+        "next": null
+      }
+    }
+  },
+
+  {
+    "id": "edda",
+    "start": "start",
+    "nodes": {
+      "start": {
+        "branches": [
+          { "conditions": [ { "type": "questComplete", "id": "dreamless" } ], "next": "after" },
+          { "conditions": [ { "type": "questStage", "id": "dreamless", "count": 4 }, { "type": "hasItem", "item": "dreamless_draught" } ], "next": "give" },
+          { "conditions": [ { "type": "questStarted", "id": "dreamless" } ], "next": "waiting" }
+        ],
+        "next": "first"
+      },
+      "first": {
+        "text": "...the tide is wrong. It comes in twice and only goes out once. Somebody should tell them.",
+        "next": "first2"
+      },
+      "first2": {
+        "speaker": "player",
+        "text": "Hello? Are you awake?",
+        "next": "first3"
+      },
+      "first3": {
+        "text": "Awake? No. No, I don't think so. You're the one who came back. They talk about you, in the place I go at night. They say you took something with you when you woke.",
+        "options": [
+          { "text": "What place?", "next": "place" },
+          { "text": "Can I help you?", "next": "help" }
+        ]
+      },
+      "place": {
+        "text": "Grey. Threads everywhere, like a loom left out in the rain. Somebody counting, very patiently. I don't like it there. I'd like to stop going.",
+        "next": "help"
+      },
+      "help": {
+        "text": "The apothecary gives my mother draughts for her chest. Maybe he has one for dreams. One that makes them stop.",
+        "options": [
+          { "text": "I'll ask Corvin for you.", "actions": [ { "type": "startQuest", "id": "dreamless" } ], "next": "promised" },
+          { "text": "I can't help right now." }
+        ]
+      },
+      "promised": {
+        "text": "Thank you. Please don't be long. Last night it was a long table, with scales on it, and somebody weighing something of mine.",
+        "next": null
+      },
+      "waiting": {
+        "text": "Did he have it? The draught? ...I was at the table again. They weighed something of mine and wrote it down.",
+        "next": null
+      },
+      "give": {
+        "actions": [ { "type": "takeItem", "item": "dreamless_draught" } ],
+        "text": "Is that it? It smells like the pond.",
+        "next": "give2"
+      },
+      "give2": {
+        "speaker": "player",
+        "text": "Corvin says it'll stop the dreams.",
+        "next": "give3"
+      },
+      "give3": {
+        "text": "Then I'll drink it now, before I lose my nerve.",
+        "next": "give4"
+      },
+      "give4": {
+        "text": "...the weaver says you left the door open.",
+        "next": "give5"
+      },
+      "give5": {
+        "text": "What? Did I say something? ...I feel heavy. The good kind of heavy. Thank you, {player}.",
+        "actions": [ { "type": "completeQuest", "id": "dreamless" } ],
+        "next": null
+      },
+      "after": {
+        "text": "I slept all night. No table, no threads, nothing. My mother cried. Thank you.",
         "next": null
       }
     }

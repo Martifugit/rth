@@ -78,6 +78,7 @@ namespace Rth.Client
         public List<ItemSlot> Bank { get; } = new List<ItemSlot>();
         public ShopMessage Shop { get; private set; }
         public TaskMessage CurrentTask { get; private set; }
+        public List<QuestEntry> Quests { get; } = new List<QuestEntry>();
 
         public int Level(string skill) =>
             Content == null ? 1 : Content.XpCurve.LevelForXp(SkillXp.TryGetValue(skill, out long xp) ? xp : 0);
@@ -294,6 +295,10 @@ namespace Rth.Client
                         break;
                     case TaskMessage task:
                         CurrentTask = task;
+                        break;
+                    case QuestsMessage quests:
+                        Quests.Clear();
+                        Quests.AddRange(quests.Quests);
                         break;
                     case StatsMessage stats:
                         Stats.Clear();
@@ -572,6 +577,7 @@ namespace Rth.Client
             OpenInterface = InterfaceKind.None;
             Shop = null;
             CurrentTask = null;
+            Quests.Clear();
             _state = State.Login;
             _status = "Logged out.";
         }

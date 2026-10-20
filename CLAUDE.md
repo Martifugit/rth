@@ -212,11 +212,21 @@ stockpile carcasses, and old-blood.
 - [x] Client: dialogue box (number keys / space), bank and shop windows, pack clicks deposit or
       sell while those are open, task and points in the Stats tab.
 
-Not yet: quests proper (flags are ready for them), item-on-object/item-on-NPC "use", noted items,
-the other butchering tiers, a larger map.
+## Milestone 6: quests (done)
+
+- [x] `QuestSystem` (quests.json): stages with journal text; stage objectives (kill, recipe,
+      item) that auto-advance; rewards (XP, items); level requirements; saved per player;
+      `QuestStageChanged` event. Dialogue conditions `questStage`/`questStarted`/`questComplete`,
+      actions `startQuest`/`setQuestStage`/`completeQuest`, token `{questProgress:id}`.
+- [x] Client Quests tab (red / yellow / green, hover for the journal entry).
+- [x] First quest, **Dreamless**: Edda Marsh sleepwalks by the pond; Corvin brews her a
+      dreamless draught from rat galls and a saltfig; she says something she shouldn't know.
+      Touches the Assayer and the Dreamweaver threads from the lore, and Corvin's curiosity.
+
+Not yet: item-on-object/item-on-NPC "use", noted items, the other butchering tiers, a larger map.
 
 **Next: not chosen yet.** Candidates: a bigger starting map (the riverside town from the lore),
-the first quest using flags and dialogue, a second combat style, or Medicine (more recipes).
+more quests (the missing survey, the moonfall), a second combat style, or Medicine.
 
 ---
 
@@ -227,7 +237,7 @@ and saving. Everything else is a `GameSystem` listed in `World.StandardSystems` 
 systems run in that order within each phase, and a system may use those before it while
 attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `DeathSystem`,
 `NpcSystem`, `GroundItemSystem`, `LootSystem`, `ObjectSystem`, `RecipeSystem`, `InterfaceSystem`,
-`DialogueSystem`, `BankSystem`, `ShopSystem`, `PointsSystem`, `TaskSystem`.
+`DialogueSystem`, `BankSystem`, `ShopSystem`, `PointsSystem`, `TaskSystem`, `QuestSystem`.
 
 | To add... | Use |
 |---|---|
@@ -245,6 +255,7 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | A new object behaviour (mine, open, pray) | An action on the object def, a handler via `ObjectSystem.RegisterAction`, usually starting an `ObjectInteraction`. |
 | An NPC menu option (pickpocket, follow) | An action on the NPC def; a handler via `NpcSystem.RegisterAction` (runs once the player is beside the NPC). |
 | Something said or done in dialogue | `DialogueSystem.RegisterCondition` / `RegisterAction` / `RegisterToken`. Conversations themselves are data. |
+| A quest | An entry in quests.json (stages, objectives, rewards) and dialogue that starts/advances/completes it. New objective kinds: count an event in `QuestSystem`. |
 | Remembering story progress | `FlagSystem` (persistent per-player key/values); gate actions with `requiresFlag`. |
 | A window the server opens | A value in `InterfaceKind`; `InterfaceSystem.Open/IsOpen/Close`; draw it in the client's `TownWindows`. |
 | A currency | `ShopSystem.RegisterCurrency(prefix, ICurrency)`; shops then price in "prefix:id". |

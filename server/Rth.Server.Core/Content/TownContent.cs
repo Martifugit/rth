@@ -137,6 +137,56 @@ namespace Rth.Server.Content
         public List<SkillRequirement> Requirements = new List<SkillRequirement>();
     }
 
+    // ------------------------------------------------------------------ quests (quests.json)
+
+    /// <summary>
+    /// A story with stages. Dialogue moves it forward ("startQuest", "setQuestStage",
+    /// "completeQuest"); a stage can also have an objective that advances it automatically.
+    /// </summary>
+    public sealed class QuestDef
+    {
+        public string Id = "";
+        public string Name = "";
+        /// <summary>Shown in the journal before the quest is started.</summary>
+        public string Summary = "";
+        public List<SkillRequirement> Requirements = new List<SkillRequirement>();
+        public List<QuestStage> Stages = new List<QuestStage>();
+        public QuestRewards Rewards = new QuestRewards();
+        /// <summary>Journal text once it's done.</summary>
+        public string Completed = "";
+    }
+
+    public sealed class QuestStage
+    {
+        /// <summary>Stage number (from 1, ascending in the order they happen).</summary>
+        public int Stage;
+        /// <summary>What the journal says while at this stage.</summary>
+        public string Journal = "";
+        public QuestObjective? Objective;
+        /// <summary>Stage to move to when the objective is met; null means dialogue moves it on.</summary>
+        public int? Next;
+    }
+
+    /// <summary>"kill" an NPC type, complete a "recipe", or have an "item" in the pack.</summary>
+    public sealed class QuestObjective
+    {
+        public string Kind = "";
+        public string Target = "";
+        public int Count = 1;
+    }
+
+    public sealed class QuestRewards
+    {
+        public List<SkillXp> Xp = new List<SkillXp>();
+        public List<Rth.Shared.Items.ItemCost> Items = new List<Rth.Shared.Items.ItemCost>();
+    }
+
+    public sealed class SkillXp
+    {
+        public string Skill = "";
+        public double Amount;
+    }
+
     public sealed class TasksFile
     {
         public List<PointPoolDef> Pools = new List<PointPoolDef>();

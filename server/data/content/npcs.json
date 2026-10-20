@@ -83,6 +83,20 @@
     "scale": 1.05
   },
   {
+    "id": "edda_marsh",
+    "name": "Edda Marsh",
+    "examine": "Her eyes are open. She isn't.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 2,
+    "actions": [ { "id": "talk", "label": "Talk-to" } ],
+    "dialogue": "edda",
+    "shape": "Capsule",
+    "color": "#b7b3c9",
+    "scale": 0.9
+  },
+  {
     "id": "straw_penitent",
     "name": "Straw penitent",
     "blood": 5000,

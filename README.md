@@ -51,6 +51,8 @@ Press Play. The Editor exports the scene's map and starts a local server in the 
 - Occult thresholds and ultimates burn **reagents** (choleric salts, melancholic tincture,
   vitriol salts). You start with some; Corvin sells them; **Distillation** makes them from the
   galls and glands butchering yields.
+- **Quests**: someone is talking in her sleep by the pond. The **Quests** tab tracks what you've
+  started (hover a quest for its journal entry).
 - The **Skills** tab shows your levels. Occultism (from fighting) unlocks thresholds at 5 and
   ultimates at 10, and adds ability damage per level.
 - Arrow keys or middle-drag rotate the camera; the scroll wheel zooms.

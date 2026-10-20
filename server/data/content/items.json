@@ -225,6 +225,22 @@
     "equipment": { "slot": "Hands", "stats": { "accuracy": 4, "damageBonus": 3 }, "requirements": [ { "skill": "distillation", "level": 10 } ] }
   },
   {
+    "id": "dreamless_draught",
+    "name": "Dreamless draught",
+    "examine": "Corvin's brew for Edda. It smells like the pond and something sweeter underneath.",
+    "value": 0,
+    "color": "#9aa6c2",
+    "tags": [ "quest" ]
+  },
+  {
+    "id": "sleepers_ribbon",
+    "name": "Sleeper's ribbon",
+    "examine": "Edda's mother tied it round your wrist and said it would keep the bad nights off. It smells faintly of lavender.",
+    "value": 40,
+    "color": "#b7a3d6",
+    "equipment": { "slot": "Neck", "stats": { "maxBreath": 40, "ward": 1 } }
+  },
+  {
     "id": "rat_pelt",
     "name": "Rat pelt",
     "examine": "Fen rat. Not much of it.",

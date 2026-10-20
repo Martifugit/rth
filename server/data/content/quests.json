@@ -1,0 +1,32 @@
+[
+  {
+    "id": "dreamless",
+    "name": "Dreamless",
+    "summary": "A young woman wanders by the pond, asleep on her feet, talking to someone who isn't there.",
+    "stages": [
+      {
+        "stage": 1,
+        "journal": "Edda Marsh walks by the pond in her sleep. She says she goes somewhere grey at night, full of threads and someone counting, and she wants it to stop. She thought the apothecary, Corvin Sallow, might have a draught for it."
+      },
+      {
+        "stage": 2,
+        "journal": "Corvin can brew a dreamless draught. He wants three rat galls and a Lammas saltfig. He was very interested in where Edda goes at night.",
+        "objective": { "kind": "item", "target": "rat_gall", "count": 3 },
+        "next": 3
+      },
+      {
+        "stage": 3,
+        "journal": "I have three rat galls. I should take them, and a Lammas saltfig, to Corvin."
+      },
+      {
+        "stage": 4,
+        "journal": "Corvin brewed the dreamless draught and asked me to tell him anything Edda says. I should take it to her by the pond."
+      }
+    ],
+    "completed": "Edda sleeps without dreaming now. Before she drank, she spoke in a voice that wasn't hers: \"The weaver says you left the door open.\" I don't know what that means. I suspect Corvin would very much like to.",
+    "rewards": {
+      "xp": [ { "skill": "distillation", "amount": 250 }, { "skill": "occultism", "amount": 150 } ],
+      "items": [ { "item": "sleepers_ribbon", "count": 1 }, { "item": "marks", "count": 60 } ]
+    }
+  }
+]

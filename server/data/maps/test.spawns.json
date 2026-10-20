@@ -7,5 +7,6 @@
   { "npc": "vitriol_mite", "plane": 0, "x": 28, "y": 17, "wander": -1 },
   { "npc": "clerk_ambrose", "plane": 0, "x": 9, "y": 11, "wander": -1 },
   { "npc": "corvin_sallow", "plane": 0, "x": 15, "y": 16, "wander": -1 },
-  { "npc": "wenna_thole", "plane": 0, "x": 11, "y": 9, "wander": -1 }
+  { "npc": "wenna_thole", "plane": 0, "x": 11, "y": 9, "wander": -1 },
+  { "npc": "edda_marsh", "plane": 0, "x": 10, "y": 23, "wander": -1 }
 ]

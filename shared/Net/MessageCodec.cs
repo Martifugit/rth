@@ -68,6 +68,7 @@ namespace Rth.Shared.Net
                     MessageType.Interface => InterfaceMessage.Read(r),
                     MessageType.Shop => ShopMessage.Read(r),
                     MessageType.Task => TaskMessage.Read(r),
+                    MessageType.Quests => QuestsMessage.Read(r),
                     _ => throw new InvalidDataException("Unknown message type " + (int)type + "."),
                 };
                 if (ms.Position != count) throw new InvalidDataException("Trailing bytes after " + type + " message.");

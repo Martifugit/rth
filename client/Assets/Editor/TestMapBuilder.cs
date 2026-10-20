@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using Rth.MapTools;
 using Rth.MapTools.Editor;
 using UnityEditor;
@@ -158,7 +158,7 @@ namespace Rth.Client.Editor
 
             var town = new GameObject("Townsfolk").transform;
             town.SetParent(mapRoot);
-            (string id, int x, int y)[] folk = { ("clerk_ambrose", 9, 11), ("corvin_sallow", 15, 16), ("wenna_thole", 11, 9) };
+            (string id, int x, int y)[] folk = { ("clerk_ambrose", 9, 11), ("corvin_sallow", 15, 16), ("wenna_thole", 11, 9), ("edda_marsh", 10, 23) };
             foreach ((string id, int x, int y) in folk)
             {
                 var go = new GameObject(id);

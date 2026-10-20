@@ -27,6 +27,8 @@ namespace Rth.Client
         private GUIStyle _assayer;
         private GUIStyle _count;
         private GUIStyle _itemName;
+        private GUIStyle _questName;
+        private GUIStyle _tabLabel;
         private GUIStyle _hover;
 
         /// <summary>Whether a screen position (bottom-left origin, as the Input System reports) is over the HUD.</summary>
@@ -284,6 +286,7 @@ namespace Rth.Client
             Worn,
             Stats,
             Skills,
+            Quests,
         }
 
         private ItemTab _tab;
@@ -300,14 +303,14 @@ namespace Rth.Client
             Rect panel = Claim(new Rect(Screen.width - width - 10f, Screen.height - height - 10f, width, height));
             GUI.Box(panel, GUIContent.none);
 
-            string[] tabs = { "Pack", "Worn", "Stats", "Skills" };
+            string[] tabs = { "Pack", "Worn", "Stats", "Skills", "Quests" };
             float tabW = (width - 10f) / tabs.Length;
             for (int i = 0; i < tabs.Length; i++)
             {
                 var tabRect = new Rect(panel.x + 5f + i * tabW, panel.y + 4f, tabW - 2f, 18f);
                 Fill(tabRect, (int)_tab == i ? new Color(0.45f, 0.35f, 0.2f) : new Color(0.18f, 0.16f, 0.14f));
                 if (GUI.Button(tabRect, GUIContent.none, GUIStyle.none)) _tab = (ItemTab)i;
-                GUI.Label(tabRect, tabs[i], _center);
+                GUI.Label(tabRect, tabs[i], _tabLabel);
             }
 
             var body = new Rect(panel.x + 5f, panel.y + 26f, width - 10f, height - 30f);
@@ -319,6 +322,9 @@ namespace Rth.Client
                     break;
                 case ItemTab.Worn:
                     tooltip = DrawWorn(body);
+                    break;
+                case ItemTab.Quests:
+                    tooltip = DrawQuests(body);
                     break;
                 case ItemTab.Skills:
                     tooltip = DrawSkills(body, content);
@@ -428,6 +434,26 @@ namespace Rth.Client
                     y += 18f;
                 }
             }
+        }
+
+        /// <summary>The quest journal: names coloured by state (red not started, yellow in progress, green done); hover for the entry.</summary>
+        private string DrawQuests(Rect body)
+        {
+            string tooltip = null;
+            float y = body.y;
+            foreach (QuestEntry quest in session.Quests)
+            {
+                var row = new Rect(body.x, y, body.width, 22f);
+                Fill(row, new Color(0.14f, 0.13f, 0.12f));
+                _questName.normal.textColor = quest.State == QuestState.Complete ? new Color(0.4f, 0.9f, 0.4f)
+                    : quest.State == QuestState.InProgress ? new Color(1f, 0.9f, 0.3f)
+                    : new Color(0.95f, 0.4f, 0.35f);
+                GUI.Label(new Rect(row.x + 4f, row.y + 2f, row.width - 8f, 18f), quest.Name + (string.IsNullOrEmpty(quest.Progress) ? "" : "  (" + quest.Progress + ")"), _questName);
+                if (row.Contains(Event.current.mousePosition)) tooltip = quest.Name + "\n\n" + quest.Journal;
+                y += 24f;
+            }
+            if (session.Quests.Count == 0) GUI.Label(new Rect(body.x + 4f, y, body.width - 8f, 18f), "No quests yet.", _small);
+            return tooltip;
         }
 
         /// <summary>Each skill's level, with a bar of progress through the current level.</summary>
@@ -591,6 +617,9 @@ namespace Rth.Client
             _log = new GUIStyle(GUI.skin.label) { fontSize = 12, clipping = TextClipping.Clip };
             _itemName = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 8, wordWrap = true, clipping = TextClipping.Clip, padding = new RectOffset(0, 0, 0, 0) };
             _itemName.normal.textColor = Color.white;
+            _questName = new GUIStyle(GUI.skin.label) { fontSize = 11, fontStyle = FontStyle.Bold };
+            _tabLabel = new GUIStyle(GUI.skin.label) { fontSize = 10, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter, wordWrap = false, clipping = TextClipping.Overflow, padding = new RectOffset(0, 0, 0, 0) };
+            _tabLabel.normal.textColor = Color.white;
             _count = new GUIStyle(GUI.skin.label) { fontSize = 10, fontStyle = FontStyle.Bold };
             _count.normal.textColor = new Color(1f, 1f, 0.3f);
             _hover = new GUIStyle(GUI.skin.label) { fontSize = 13, fontStyle = FontStyle.Bold };
