@@ -1,0 +1,8 @@
+[
+  { "npc": "straw_penitent", "plane": 0, "x": 18, "y": 9, "wander": -1 },
+  { "npc": "fen_rat", "plane": 0, "x": 6, "y": 3, "wander": -1 },
+  { "npc": "fen_rat", "plane": 0, "x": 9, "y": 7, "wander": -1 },
+  { "npc": "fen_rat", "plane": 0, "x": 4, "y": 11, "wander": -1 },
+  { "npc": "vitriol_mite", "plane": 0, "x": 25, "y": 21, "wander": -1 },
+  { "npc": "vitriol_mite", "plane": 0, "x": 28, "y": 17, "wander": -1 }
+]

@@ -26,6 +26,8 @@ public sealed class IntegrationTests : IDisposable
             TickMillis = 20,
             MapPath = mapPath,
             SaveDirectory = Path.Combine(_dir, "saves"),
+            ContentDirectory = Repo.ContentDirectory,
+            HotReloadContent = false,
         });
         _host.Start();
     }

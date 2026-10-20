@@ -26,6 +26,14 @@ namespace Rth.Server
         /// <summary>Per-player cap on messages handled per tick. A sanity limit, not anti-cheat.</summary>
         public int MaxMessagesPerTick = 25;
 
+        /// <summary>Fixed seed for combat rolls and NPC wandering, for repeatable tests. Null = random.</summary>
+        public int? RandomSeed;
+
+        public string ContentDirectory = "data/content";
+
+        /// <summary>Reload content files when they change (development).</summary>
+        public bool HotReloadContent = true;
+
         /// <summary>Where log lines go. Defaults to nowhere.</summary>
         public Action<string> Log = _ => { };
     }

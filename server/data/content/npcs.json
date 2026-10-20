@@ -1,0 +1,52 @@
+[
+  {
+    "id": "fen_rat",
+    "name": "Fen rat",
+    "blood": 150,
+    "style": "Melee",
+    "attackRange": 1,
+    "attackTicks": 4,
+    "maxHit": 30,
+    "accuracy": 0.6,
+    "evasion": 0.05,
+    "aggressive": false,
+    "wanderRadius": 4,
+    "leashRadius": 10,
+    "respawnTicks": 20,
+    "shape": "Box",
+    "color": "#6b5a43",
+    "scale": 0.6
+  },
+  {
+    "id": "vitriol_mite",
+    "name": "Vitriol mite",
+    "blood": 350,
+    "style": "Occult",
+    "attackRange": 5,
+    "attackTicks": 5,
+    "maxHit": 70,
+    "accuracy": 0.7,
+    "evasion": 0.1,
+    "aggressive": true,
+    "aggroRadius": 4,
+    "wanderRadius": 2,
+    "leashRadius": 10,
+    "respawnTicks": 30,
+    "shape": "Sphere",
+    "color": "#c9b62f",
+    "scale": 0.7
+  },
+  {
+    "id": "straw_penitent",
+    "name": "Straw penitent",
+    "blood": 5000,
+    "attacks": false,
+    "regenerates": true,
+    "wanderRadius": 0,
+    "evasion": 0,
+    "respawnTicks": 5,
+    "shape": "Cylinder",
+    "color": "#d8c47c",
+    "scale": 1.0
+  }
+]

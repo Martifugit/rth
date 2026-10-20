@@ -1,0 +1,42 @@
+{
+  "rules": {
+    "globalCooldownTicks": 3,
+    "playerAbilityDamage": 100,
+    "playerMaxBlood": 1000,
+    "playerMaxBreath": 300,
+    "playerAccuracy": 0.9,
+    "maxPhlegm": 100,
+
+    "bileLimit": 100,
+    "bilePassiveThreshold": 30,
+    "bileExtreme": 80,
+    "cholericMinBonusPercent": 5,
+    "cholericMaxBonusPercent": 20,
+    "melancholicMinWardPercent": 5,
+    "melancholicMaxWardPercent": 15,
+    "feverBloodPercentPerTick": 0.5,
+    "torporPhlegmMultiplier": 0.5,
+
+    "combatTimeoutTicks": 10,
+    "bileDecayPerTick": 1,
+    "phlegmDecayPerTick": 2,
+    "bloodRegenPercentPerTick": 0.5,
+    "breathRegenPerTick": 1,
+
+    "breathDrainPerTick": 1,
+    "deflectReductionPercent": 50,
+
+    "respawnDelayTicks": 4
+  },
+  "autoAttack": "bile_lash",
+  "actionBar": [
+    "gall_spark",
+    "black_draught",
+    "still_the_humours",
+    "bitter_salt",
+    "choleric_flare",
+    "melancholy_shroud",
+    "vitriol_rain",
+    "black_sun"
+  ]
+}

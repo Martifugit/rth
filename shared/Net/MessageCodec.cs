@@ -41,9 +41,15 @@ namespace Rth.Shared.Net
                     MessageType.Login => LoginMessage.Read(r),
                     MessageType.WalkTo => WalkToMessage.Read(r),
                     MessageType.Logout => new LogoutMessage(),
+                    MessageType.Attack => AttackMessage.Read(r),
+                    MessageType.UseAbility => UseAbilityMessage.Read(r),
+                    MessageType.SetDeflect => SetDeflectMessage.Read(r),
                     MessageType.LoginOk => LoginOkMessage.Read(r),
                     MessageType.LoginRejected => LoginRejectedMessage.Read(r),
                     MessageType.WorldUpdate => WorldUpdateMessage.Read(r),
+                    MessageType.PlayerState => PlayerStateMessage.Read(r),
+                    MessageType.ContentInfo => ContentInfoMessage.Read(r),
+                    MessageType.GameText => GameTextMessage.Read(r),
                     _ => throw new InvalidDataException("Unknown message type " + (int)type + "."),
                 };
                 if (ms.Position != count) throw new InvalidDataException("Trailing bytes after " + type + " message.");

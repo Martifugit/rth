@@ -1,0 +1,25 @@
+{
+  "first": [
+    "A long table. Scales of every size. The Assayer does not look up. \"First time? Sit. This won't take long, and it will not hurt more than it already has.\"",
+    "The Assayer sets your blood on the smallest scale and makes a note. \"{name}. New ledger. Everyone gets one eventually.\""
+  ],
+  "choleric": [
+    "The Assayer weighs your yellow bile and the needle runs hot. \"You died angry. Most do. I'll put a little less of that back.\"",
+    "\"Choleric to the last.\" The Assayer fans the pan to cool it. \"You burn bright and you burn short, {name}.\"",
+    "\"Too much yellow.\" The Assayer pours some off into a jar already full of it. \"Everyone thinks the fire is the strong part.\""
+  ],
+  "melancholic": [
+    "The black bile settles in the pan like ink. \"So heavy,\" says the Assayer, not unkindly. \"Were you guarding something, or just tired?\"",
+    "\"Melancholic.\" The Assayer tips the scale back towards level. \"The cold kept you alive longer than you think. Not long enough, clearly.\"",
+    "The Assayer holds your black bile up to a light that isn't there. \"Dense. I'll lend you some warmth. You'll want to give it back eventually.\""
+  ],
+  "balanced": [
+    "The scales settle almost level. The Assayer frowns at them. \"Balanced, and dead anyway. Annoying for both of us.\"",
+    "\"Even measures.\" The Assayer writes something short. \"Try again with the same recipe. Or don't. I only keep the books.\"",
+    "The Assayer weighs each humour in turn, and hands them back in the same order. \"Mind the doorway. It's lower than it looks.\""
+  ],
+  "frequent": [
+    "\"{name}.\" The Assayer turns a page without looking. \"Death number {deaths}. I've started keeping your ledger closer to hand.\"",
+    "The Assayer has your scales out before you arrive. \"I took the liberty.\""
+  ]
+}

@@ -55,9 +55,40 @@ namespace Rth.MapTools.Editor
             MapData map = Build(area);
             string path = OutputPathFor(area);
             map.Save(path);
+            int npcs = ExportNpcSpawns(area, map, Path.ChangeExtension(path, null) + ".spawns.json");
             CollisionPreview.Show(map, area.plane);
-            Debug.Log($"[R'th] Exported '{area.exportName}' ({map.Width}x{map.Height}, spawn {map.Spawn}) to {path}");
+            Debug.Log($"[R'th] Exported '{area.exportName}' ({map.Width}x{map.Height}, spawn {map.Spawn}, {npcs} NPCs) to {path}");
             return path;
+        }
+
+        /// <summary>Writes the creature spawns as JSON next to the map. Returns how many.</summary>
+        private static int ExportNpcSpawns(MapArea area, MapData map, string path)
+        {
+            var sb = new System.Text.StringBuilder("[\n");
+            int count = 0;
+            foreach (MapNpcSpawn spawn in area.GetComponentsInChildren<MapNpcSpawn>())
+            {
+                Vector3 p = spawn.transform.position;
+                int x = Mathf.FloorToInt(p.x);
+                int y = Mathf.FloorToInt(p.z);
+                if (string.IsNullOrWhiteSpace(spawn.npcId))
+                {
+                    Debug.LogWarning($"[R'th] MapNpcSpawn '{spawn.name}' has no npcId; skipped.", spawn);
+                    continue;
+                }
+                if (map.IsBlocked(area.plane, x, y))
+                    Debug.LogWarning($"[R'th] NPC spawn '{spawn.name}' stands on a blocked tile ({x}, {y}).", spawn);
+                if (count++ > 0) sb.Append(",\n");
+                sb.Append("  { \"npc\": \"").Append(spawn.npcId.Trim().Replace("\"", ""))
+                  .Append("\", \"plane\": ").Append(area.plane)
+                  .Append(", \"x\": ").Append(x)
+                  .Append(", \"y\": ").Append(y)
+                  .Append(", \"wander\": ").Append(spawn.wanderRadius)
+                  .Append(" }");
+            }
+            sb.Append("\n]\n");
+            File.WriteAllText(path, sb.ToString());
+            return count;
         }
 
         public static MapData Build(MapArea area)

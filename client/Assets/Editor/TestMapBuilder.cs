@@ -77,6 +77,8 @@ namespace Rth.Client.Editor
             Fence("Fence W", fence, 20f, 24f, 8f, wood);
             Fence("Fence E", fence, 25f, 30f, 8f, wood);
 
+            AddNpcSpawns(root.transform);
+
             var spawn = new GameObject("Spawn");
             spawn.transform.SetParent(root.transform);
             spawn.transform.position = new Vector3(15.5f, 0f, 9.5f);
@@ -88,12 +90,35 @@ namespace Rth.Client.Editor
             var session = game.AddComponent<GameSession>();
             session.world = world;
             session.cameraRig = rig;
+            var hud = game.AddComponent<CombatHud>();
+            hud.session = session;
+            hud.world = world;
 
             Directory.CreateDirectory(Path.GetDirectoryName(ScenePath));
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
             MapExporter.Export(area);
             Debug.Log("[R'th] Built " + ScenePath);
+        }
+
+        /// <summary>The Milestone 2 creatures: rats in the south-west, mites in the north-east, a training effigy by the spawn.</summary>
+        public static void AddNpcSpawns(Transform mapRoot)
+        {
+            var parent = new GameObject("Creatures").transform;
+            parent.SetParent(mapRoot);
+            (string id, int x, int y)[] spawns =
+            {
+                ("straw_penitent", 18, 9),
+                ("fen_rat", 6, 3), ("fen_rat", 9, 7), ("fen_rat", 4, 11),
+                ("vitriol_mite", 25, 21), ("vitriol_mite", 28, 17),
+            };
+            foreach ((string id, int x, int y) in spawns)
+            {
+                var go = new GameObject(id);
+                go.transform.SetParent(parent);
+                go.transform.position = new Vector3(x + 0.5f, 0f, y + 0.5f);
+                go.AddComponent<MapNpcSpawn>().npcId = id;
+            }
         }
 
         private static void SetUpCameraAndLight(out CameraRig rig)

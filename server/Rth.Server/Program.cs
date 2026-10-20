@@ -6,7 +6,8 @@ using Rth.Server;
 using Rth.Server.Game;
 
 // Standalone R'th server. Usage:
-//   dotnet run --project server/Rth.Server -- [--port N] [--map path] [--saves dir] [--tick-ms N]
+//   dotnet run --project server/Rth.Server -- [--port N] [--map path] [--saves dir] [--content dir]
+//                                             [--tick-ms N] [--no-hot-reload]
 // Paths default to server/data/maps/test.rthmap and server/saves (found from the working directory).
 
 var config = new ServerConfig
@@ -17,6 +18,7 @@ var config = new ServerConfig
 string serverDir = FindServerDirectory();
 config.MapPath = Path.Combine(serverDir, "data", "maps", "test.rthmap");
 config.SaveDirectory = Path.Combine(serverDir, "saves");
+config.ContentDirectory = Path.Combine(serverDir, "data", "content");
 
 for (int i = 0; i < args.Length; i++)
 {
@@ -26,6 +28,8 @@ for (int i = 0; i < args.Length; i++)
         case "--port": config.Port = int.Parse(Next()); break;
         case "--map": config.MapPath = Next(); break;
         case "--saves": config.SaveDirectory = Next(); break;
+        case "--content": config.ContentDirectory = Next(); break;
+        case "--no-hot-reload": config.HotReloadContent = false; break;
         case "--tick-ms": config.TickMillis = int.Parse(Next()); break;
         default:
             Console.Error.WriteLine("Unknown argument " + args[i]);

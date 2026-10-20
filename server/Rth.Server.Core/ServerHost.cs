@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using Rth.Server.Content;
 using Rth.Server.Game;
 using Rth.Server.Net;
 using Rth.Server.Persistence;
@@ -16,6 +18,7 @@ namespace Rth.Server
         private readonly ServerConfig _config;
         private NetworkServer? _network;
         private TickLoop? _loop;
+        private ContentWatcher? _watcher;
 
         public ServerHost(ServerConfig config)
         {
@@ -32,18 +35,22 @@ namespace Rth.Server
         {
             if (IsRunning) throw new InvalidOperationException("Server already running.");
             MapData map = MapData.Load(_config.MapPath);
+            GameContent content = GameContent.Load(_config.ContentDirectory);
+            var spawns = GameContent.LoadSpawns(GameContent.SpawnsPathFor(_config.MapPath));
             var store = new JsonPlayerStore(_config.SaveDirectory);
-            var world = new World(_config, map, store);
+            var world = new World(_config, map, store, content, spawns);
 
             var network = new NetworkServer(_config.Port, world.AcceptConnection, _config.Log);
             network.Start();
 
             World = world;
             _network = network;
+            if (_config.HotReloadContent) _watcher = new ContentWatcher(_config.ContentDirectory, world.QueueContent, _config.Log);
             _loop = new TickLoop(world.Tick, TimeSpan.FromMilliseconds(_config.TickMillis), new SystemClock(), _config.Log);
             _loop.Start();
             IsRunning = true;
-            _config.Log("Server listening on port " + Port + ", map " + map.Width + "x" + map.Height + ", tick " + _config.TickMillis + " ms.");
+            _config.Log("Server listening on port " + Port + ", map " + map.Width + "x" + map.Height + ", " +
+                        world.Npcs.Count() + " NPCs, tick " + _config.TickMillis + " ms.");
         }
 
         /// <summary>Stops accepting players, finishes the current tick, then saves and disconnects everyone.</summary>
@@ -52,6 +59,8 @@ namespace Rth.Server
             if (!IsRunning) return;
             IsRunning = false;
             _network?.Stop();
+            _watcher?.Dispose();
+            _watcher = null;
             _loop?.Stop();
             World?.Shutdown();
             _config.Log("Server stopped.");
