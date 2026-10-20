@@ -26,40 +26,57 @@ namespace Rth.Client.Ui
         public static string StatUnit(string stat) =>
             stat == StatIds.Accuracy || stat == StatIds.DamageBonus || stat == StatIds.Ward ? "%" : "";
 
+        /// <summary>A tooltip card for an item (rich text).</summary>
         public static string Describe(ItemDef def, int count)
         {
-            var lines = new List<string> { def.Name + (count > 1 ? " x" + count : "") };
+            var lines = new List<string> { UiKit.Title(def.Name) + (count > 1 ? UiKit.Colour("  x" + count.ToString("N0"), UiKit.Value) : "") };
+            string kind = def.Equipment != null ? def.Equipment.Slot.ToString() : def.Consumable != null ? def.Consumable.Verb == "Drink" ? "Drink" : "Food" : def.Stackable ? "Stackable" : "";
+            if (kind.Length > 0) lines.Add(UiKit.Colour(kind, UiKit.Muted));
             if (!string.IsNullOrEmpty(def.Examine)) lines.Add(def.Examine);
-            if (def.Equipment != null)
+            if (def.Equipment != null && def.Equipment.Stats.Count > 0)
             {
-                var stats = new List<string>();
+                lines.Add("");
                 foreach (KeyValuePair<string, int> s in def.Equipment.Stats)
-                    stats.Add((s.Value > 0 ? "+" : "") + s.Value + StatUnit(s.Key) + " " + StatLabel(s.Key).ToLowerInvariant());
-                lines.Add(def.Equipment.Slot + ": " + string.Join(", ", stats));
+                    lines.Add(StatLabel(s.Key) + ": " + UiKit.Colour((s.Value > 0 ? "+" : "") + s.Value + StatUnit(s.Key), s.Value >= 0 ? UiKit.Good : UiKit.Bad));
             }
-            if (def.Consumable != null)
+            if (def.Consumable != null && def.Consumable.Effects.Count > 0)
             {
-                var effects = new List<string>();
-                foreach (EffectOp op in def.Consumable.Effects) effects.Add(op.Op + " " + op.Amount);
-                lines.Add(def.Consumable.Verb + ": " + string.Join(", ", effects));
+                lines.Add("");
+                foreach (EffectOp op in def.Consumable.Effects) lines.Add(UiKit.Colour(EffectLabel(op), UiKit.Good));
             }
+            if (def.Value > 0) lines.Add(UiKit.Colour("Worth " + def.Value.ToString("N0") + " marks", UiKit.Muted));
             return string.Join("\n", lines);
         }
 
-        public static string Describe(AbilityDef a, float tickSeconds)
+        private static string EffectLabel(EffectOp op) => op.Op switch
         {
-            var lines = new List<string> { a.Name + "  (" + a.Type + ")", a.Description };
-            var costs = new List<string>();
-            if (a.PhlegmGain > 0) costs.Add("+" + a.PhlegmGain + " phlegm");
-            if (a.PhlegmRequired > 0) costs.Add("needs " + a.PhlegmRequired + "% phlegm, spends " + a.PhlegmCost);
-            if (a.BileShift != 0) costs.Add("bile " + (a.BileShift > 0 ? "+" : "") + a.BileShift);
-            if (a.BileTowardZero > 0) costs.Add("bile " + a.BileTowardZero + " towards balance");
-            if (a.BileMin > -100) costs.Add("bile at least " + (a.BileMin > 0 ? "+" : "") + a.BileMin);
-            if (a.BileMax < 100) costs.Add("bile at most " + a.BileMax);
-            costs.Add(a.DamageMin + "-" + a.DamageMax + "% damage");
-            costs.Add("range " + a.Range + ", cooldown " + (a.CooldownTicks * tickSeconds).ToString("0.#") + "s");
-            foreach (Rth.Shared.Skills.SkillRequirement r in a.Requirements) costs.Add("needs " + r.Skill + " " + r.Level);
-            lines.Add(string.Join(" | ", costs));
+            "healBlood" => "Heals " + op.Amount + " blood",
+            "restoreBreath" => "Restores " + op.Amount + " breath",
+            "addPhlegm" => "+" + op.Amount + " phlegm",
+            "shiftBile" => "Bile " + (op.Amount > 0 ? "+" : "") + op.Amount,
+            _ => op.Op + " " + op.Amount,
+        };
+
+        /// <summary>A tooltip card for an ability (rich text): what it does, what it costs, what it needs.</summary>
+        public static string Describe(AbilityDef a, float tickSeconds, string problem = null)
+        {
+            var lines = new List<string>
+            {
+                UiKit.Title(a.Name),
+                UiKit.Colour(a.Type + " ability, " + a.Style.ToString().ToLowerInvariant(), UiKit.Muted),
+                a.Description,
+                "",
+                "Damage: " + UiKit.Colour(a.DamageMin + "-" + a.DamageMax + "%", UiKit.Value) + "   Range: " + UiKit.Colour(a.Range.ToString(), UiKit.Value),
+                "Cooldown: " + UiKit.Colour((a.CooldownTicks * tickSeconds).ToString("0.#") + "s", UiKit.Value),
+            };
+            if (a.PhlegmGain > 0) lines.Add("Builds " + UiKit.Colour(a.PhlegmGain + " phlegm", UiKit.Good));
+            if (a.PhlegmRequired > 0) lines.Add("Needs " + UiKit.Colour(a.PhlegmRequired + "% phlegm", UiKit.Value) + ", spends " + a.PhlegmCost);
+            if (a.BileShift != 0) lines.Add("Bile " + UiKit.Colour((a.BileShift > 0 ? "+" : "") + a.BileShift, a.BileShift > 0 ? new Color(0.95f, 0.8f, 0.2f) : new Color(0.72f, 0.55f, 0.95f)));
+            if (a.BileTowardZero > 0) lines.Add("Bile " + a.BileTowardZero + " towards balance");
+            if (a.BileMin > -100) lines.Add("Needs bile of at least " + (a.BileMin > 0 ? "+" : "") + a.BileMin);
+            if (a.BileMax < 100) lines.Add("Needs bile of at most " + a.BileMax);
+            foreach (Rth.Shared.Skills.SkillRequirement r in a.Requirements) lines.Add("Needs " + r.Skill + " level " + r.Level);
+            if (problem != null) lines.Add("\n" + UiKit.Colour(problem, UiKit.Bad));
             return string.Join("\n", lines);
         }
 

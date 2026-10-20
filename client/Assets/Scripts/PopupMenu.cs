@@ -1,99 +1,81 @@
 using System;
 using System.Collections.Generic;
+using Rth.Client.Ui;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.UIElements;
 
 namespace Rth.Client
 {
     /// <summary>
-    /// The right-click menu: a list of labelled options at the pointer. Anything can open one
-    /// (the world, inventory slots, later NPC dialogue or bank items). Picking an option or
-    /// clicking elsewhere closes it.
+    /// The right-click menu: a title and a list of options at the pointer, in the classic style.
+    /// Anything can open one (the world, item slots, bank and shop slots, skill tiles). Picking an
+    /// option or clicking anywhere else closes it. Drawn in the interface document (<see cref="UiRoot"/>).
     /// </summary>
     public sealed class PopupMenu : MonoBehaviour
     {
-        private const float Width = 190f;
-        private const float RowHeight = 20f;
-
         private static PopupMenu _instance;
 
-        private readonly List<(string Label, Action Action)> _options = new List<(string, Action)>();
-        private string _title = "";
-        private Vector2 _position;
-        private bool _open;
-        private GUIStyle _row;
-        private GUIStyle _header;
+        private VisualElement _menu;
+        private int _openedFrame;
 
-        public static bool IsOpen => _instance != null && _instance._open;
-
-        /// <summary>Screen rect of the open menu in GUI coordinates (top-left origin), or empty.</summary>
-        public static Rect OpenRect => IsOpen ? _instance.MenuRect : Rect.zero;
-
-        private Rect MenuRect => new Rect(_position.x, _position.y, Width, RowHeight * (_options.Count + 1) + 4f);
+        public static bool IsOpen => _instance != null && _instance._menu != null && _instance._menu.parent != null;
 
         private void Awake() => _instance = this;
+        private void OnEnable() => _instance = this;
 
-        /// <summary>Opens a menu at a GUI position (top-left origin).</summary>
+        /// <summary>Opens a menu at a GUI position (top-left origin, screen pixels).</summary>
         public static void Open(Vector2 guiPosition, string title, List<(string Label, Action Action)> options)
         {
-            if (_instance == null || options.Count == 0) return;
-            PopupMenu m = _instance;
-            m._options.Clear();
-            m._options.AddRange(options);
-            m._title = title;
-            Rect r = new Rect(guiPosition.x - Width / 2f, guiPosition.y - 4f, Width, RowHeight * (options.Count + 1) + 4f);
-            r.x = Mathf.Clamp(r.x, 0f, Screen.width - r.width);
-            r.y = Mathf.Clamp(r.y, 0f, Screen.height - r.height);
-            m._position = r.position;
-            m._open = true;
+            UiRoot ui = UiRoot.Instance;
+            if (_instance == null || ui == null || options.Count == 0) return;
+            _instance.Show(ui, guiPosition, title, options);
         }
 
         public static void Close()
         {
-            if (_instance != null) _instance._open = false;
+            if (_instance != null && _instance._menu != null) _instance._menu.RemoveFromHierarchy();
         }
 
-        private void OnGUI()
+        private void Show(UiRoot ui, Vector2 guiPosition, string title, List<(string Label, Action Action)> options)
         {
-            if (!_open) return;
-            GUI.depth = -10; // above everything else
-            if (_row == null)
+            Close();
+            _openedFrame = Time.frameCount;
+            _menu = new VisualElement();
+            _menu.AddToClassList("menu");
+            Label header = UiKit.Text(_menu, title, "menu__title");
+            header.pickingMode = PickingMode.Ignore;
+            foreach ((string label, Action action) in options)
             {
-                _row = new GUIStyle(GUI.skin.label) { fontSize = 12, padding = new RectOffset(6, 4, 2, 2) };
-                _row.normal.textColor = Color.white;
-                _row.hover.textColor = new Color(1f, 0.85f, 0.3f);
-                _header = new GUIStyle(_row) { fontStyle = FontStyle.Bold };
-                _header.normal.textColor = new Color(0.8f, 0.75f, 0.6f);
+                Action act = action;
+                Label row = UiKit.Text(_menu, label, "menu__option");
+                row.RegisterCallback<ClickEvent>(e =>
+                {
+                    Close();
+                    act();
+                    e.StopPropagation();
+                });
             }
+            Vector2 at = ui.GuiToPanel(guiPosition);
+            ui.ShowMenu(_menu, at);
+        }
 
-            Rect r = MenuRect;
-            Event e = Event.current;
-            if (e.type == EventType.MouseDown && !r.Contains(e.mousePosition))
+        private void Update()
+        {
+            if (!IsOpen || Time.frameCount == _openedFrame) return;
+            Mouse mouse = Mouse.current;
+            Keyboard keyboard = Keyboard.current;
+            if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame)
             {
-                _open = false;
+                Close();
                 return;
             }
-
-            Fill(r, new Color(0.08f, 0.07f, 0.06f, 0.96f));
-            GUI.Label(new Rect(r.x, r.y + 2f, r.width, RowHeight), _title, _header);
-            for (int i = 0; i < _options.Count; i++)
-            {
-                var row = new Rect(r.x, r.y + 2f + RowHeight * (i + 1), r.width, RowHeight);
-                if (row.Contains(e.mousePosition)) Fill(row, new Color(1f, 1f, 1f, 0.08f));
-                if (GUI.Button(row, _options[i].Label, _row))
-                {
-                    _open = false;
-                    _options[i].Action();
-                    return;
-                }
-            }
-        }
-
-        private static void Fill(Rect r, Color c)
-        {
-            Color old = GUI.color;
-            GUI.color = c;
-            GUI.DrawTexture(r, Texture2D.whiteTexture);
-            GUI.color = old;
+            if (mouse == null || !(mouse.leftButton.wasPressedThisFrame || mouse.rightButton.wasPressedThisFrame)) return;
+            // A press anywhere but on the menu closes it (a press on an option is handled by its click).
+            Vector2 screen = mouse.position.ReadValue();
+            Vector2 gui = new Vector2(screen.x, Screen.height - screen.y);
+            UiRoot ui = UiRoot.Instance;
+            if (ui == null || !_menu.worldBound.Contains(ui.GuiToPanel(gui))) Close();
         }
     }
 }

@@ -16,7 +16,7 @@ namespace Rth.Client.Ui
     /// </summary>
     public sealed class UiRoot : MonoBehaviour
     {
-        private const string LayoutPref = "rth.ui.layout.v1";
+        private const string LayoutPref = "rth.ui.layout.v2";
         private const string LockedPref = "rth.ui.locked";
         private const string ScalePref = "rth.ui.scale";
 
@@ -32,7 +32,10 @@ namespace Rth.Client.Ui
         private VisualElement _root;
         private VisualElement _windowLayer;
         private Label _tooltip;
-        private Label _ghost;
+        private Label _hover;
+        private VisualElement _ghost;
+        private VisualElement _ghostIcon;
+        private Label _ghostText;
         private readonly List<UiPanel> _panels = new List<UiPanel>();
         private readonly List<UiWindow> _windows = new List<UiWindow>();
         private Vector2 _lastScreen;
@@ -69,6 +72,9 @@ namespace Rth.Client.Ui
 
         private void Awake() => Instance = this;
 
+        // A script reload during Play resets statics but keeps this object: register again.
+        private void OnEnable() => Instance = this;
+
         private void Start()
         {
             _settings = ScriptableObject.CreateInstance<PanelSettings>();
@@ -84,6 +90,8 @@ namespace Rth.Client.Ui
             var sheet = Resources.Load<StyleSheet>("UI/Rth");
             if (sheet != null) _root.styleSheets.Add(sheet);
             _root.AddToClassList("rth-root");
+            var font = Resources.Load<Font>("UI/Fonts/PixelifySans");
+            if (font != null) _root.style.unityFontDefinition = FontDefinition.FromFont(font);
             _root.pickingMode = PickingMode.Ignore;
             _root.EnableInClassList("rth-root--locked", Locked);
             // IMGUI windows and menus (bank, shop, dialogue, right-click) draw over these windows:
@@ -97,12 +105,19 @@ namespace Rth.Client.Ui
             _windowLayer.style.left = _windowLayer.style.top = _windowLayer.style.right = _windowLayer.style.bottom = 0;
             _root.Add(_windowLayer);
 
+            // What a left-click would do, top left, as in the classic games.
+            _hover = UiKit.Text(_root, "", "hover-text");
+            _hover.pickingMode = PickingMode.Ignore;
+
             _tooltip = UiKit.Text(_root, "", "tooltip");
             _tooltip.pickingMode = PickingMode.Ignore;
             _tooltip.style.display = DisplayStyle.None;
-            _ghost = UiKit.Text(_root, "", "drag-ghost");
+            _ghost = UiKit.El(_root, "drag-ghost");
             _ghost.pickingMode = PickingMode.Ignore;
             _ghost.style.display = DisplayStyle.None;
+            _ghostIcon = UiKit.Icon(_ghost, null, 22f);
+            _ghostIcon.style.marginRight = 4f;
+            _ghostText = UiKit.Text(_ghost, "");
 
             foreach (Type type in typeof(UiPanel).Assembly.GetTypes())
             {
@@ -140,8 +155,13 @@ namespace Rth.Client.Ui
                 foreach (UiWindow w in _windows) w.Apply(screen);
             }
 
+            _hover.text = PopupMenu.IsOpen ? "" : session.HoverText;
+
             foreach (UiPanel panel in _panels)
             {
+                bool? serverOpen = panel.ServerOpen;
+                if (serverOpen == true && panel.Window == null) Open(panel);
+                else if (serverOpen == false && panel.Window != null) Close(panel, byPlayer: false);
                 panel.Observe();
                 if (panel.IsVisible) panel.Refresh();
             }
@@ -184,6 +204,28 @@ namespace Rth.Client.Ui
         public void Menu(Vector2 panelPosition, string title, List<(string Label, Action Action)> options) =>
             PopupMenu.Open(PanelToGui(panelPosition), title, options);
 
+        /// <summary>Converts an IMGUI position (top-left origin, screen pixels) to a panel position.</summary>
+        public Vector2 GuiToPanel(Vector2 gui) => gui / (_settings != null ? _settings.scale : 1f);
+
+        /// <summary>Shows a menu element at a panel position, kept on screen, above everything.</summary>
+        public void ShowMenu(VisualElement menu, Vector2 at)
+        {
+            HideTooltip();
+            _root.Add(menu);
+            menu.style.position = Position.Absolute;
+            menu.style.left = at.x;
+            menu.style.top = at.y;
+            menu.BringToFront();
+            // Once laid out, nudge it back on screen and centre it under the pointer like the classic menu.
+            menu.RegisterCallback<GeometryChangedEvent>(_ =>
+            {
+                Vector2 screen = ScreenSize;
+                Vector2 size = menu.layout.size;
+                menu.style.left = Mathf.Clamp(at.x - size.x / 2f, 0f, Mathf.Max(0f, screen.x - size.x));
+                menu.style.top = Mathf.Clamp(at.y - 4f, 0f, Mathf.Max(0f, screen.y - size.y));
+            });
+        }
+
         /// <summary>Converts a panel position (top-left origin, panel pixels) to an IMGUI position for <see cref="PopupMenu"/>.</summary>
         public Vector2 PanelToGui(Vector2 panelPosition) => panelPosition * (_settings != null ? _settings.scale : 1f);
 
@@ -213,10 +255,13 @@ namespace Rth.Client.Ui
             if (_tooltip != null) _tooltip.style.display = DisplayStyle.None;
         }
 
-        public void ShowDragGhost(string text, Vector2 at)
+        public void ShowDragGhost(string text, Texture2D icon, Vector2 at)
         {
             HideTooltip();
-            _ghost.text = text;
+            _ghostText.text = text;
+            _ghostText.style.display = string.IsNullOrEmpty(text) ? DisplayStyle.None : DisplayStyle.Flex;
+            UiKit.SetIcon(_ghostIcon, icon);
+            _ghostIcon.style.display = icon != null ? DisplayStyle.Flex : DisplayStyle.None;
             _ghost.style.display = DisplayStyle.Flex;
             _ghost.BringToFront();
             _ghost.style.left = at.x + 8f;
@@ -256,6 +301,10 @@ namespace Rth.Client.Ui
                 home.Add(panel);
                 home.Root.BringToFront();
             }
+            else if (_placements.TryGetValue(panel.Id, out SavedWindow last))
+            {
+                CreateWindow(last.anchor, last.offset, last.size, panel);
+            }
             else
             {
                 UiDefaultLayout.Placement place = UiDefaultLayout.Windows.TryGetValue(panel.DefaultWindow, out UiDefaultLayout.Placement p)
@@ -265,21 +314,34 @@ namespace Rth.Client.Ui
             SaveLayout();
         }
 
-        public void Close(UiPanel panel)
+        public void Close(UiPanel panel, bool byPlayer = true)
         {
             UiWindow window = panel.Window;
             if (window == null) return;
+            if (window.Panels.Count == 1) Remember(window);
             window.Remove(panel);
             if (window.Panels.Count == 0) RemoveWindow(window);
+            if (byPlayer) panel.OnClosedByPlayer();
             SaveLayout();
         }
 
         public void CloseWindow(UiWindow window)
         {
-            foreach (UiPanel p in window.Panels.ToList()) window.Remove(p);
+            if (window.Panels.Count == 1) Remember(window);
+            foreach (UiPanel p in window.Panels.ToList())
+            {
+                window.Remove(p);
+                p.OnClosedByPlayer();
+            }
             RemoveWindow(window);
             SaveLayout();
         }
+
+        /// <summary>Where a panel last stood on its own, so it reopens there.</summary>
+        private readonly Dictionary<string, SavedWindow> _placements = new Dictionary<string, SavedWindow>();
+
+        private void Remember(UiWindow window) =>
+            _placements[window.Panels[0].Id] = new SavedWindow { panels = new List<string> { window.Panels[0].Id }, anchor = window.Anchor, offset = window.Offset, size = window.Size };
 
         private UiWindow CreateWindow(Vector2 anchor, Vector2 offset, Vector2 size, params UiPanel[] panels)
         {
@@ -330,6 +392,7 @@ namespace Rth.Client.Ui
 
         public void ResetLayout()
         {
+            _placements.Clear();
             foreach (UiWindow w in _windows.ToList())
             {
                 foreach (UiPanel p in w.Panels.ToList()) w.Remove(p);
@@ -341,7 +404,7 @@ namespace Rth.Client.Ui
 
         private void DefaultLayout()
         {
-            foreach (IGrouping<string, UiPanel> group in _panels.Where(p => p.OpenByDefault).GroupBy(p => p.DefaultWindow))
+            foreach (IGrouping<string, UiPanel> group in _panels.Where(p => p.OpenByDefault && p.ServerOpen == null).GroupBy(p => p.DefaultWindow))
             {
                 UiPanel first = group.First();
                 UiDefaultLayout.Placement place = UiDefaultLayout.Windows.TryGetValue(group.Key, out UiDefaultLayout.Placement p)
@@ -366,13 +429,22 @@ namespace Rth.Client.Ui
             public List<SavedWindow> windows = new List<SavedWindow>();
             /// <summary>Every panel that existed when saved: a panel added since opens by default.</summary>
             public List<string> known = new List<string>();
+            /// <summary>Where closed panels last stood.</summary>
+            public List<SavedWindow> placements = new List<SavedWindow>();
         }
 
         public void SaveLayout()
         {
             if (!_built) return;
-            var layout = new SavedLayout { known = _panels.Select(p => p.Id).ToList() };
+            var layout = new SavedLayout { known = _panels.Select(p => p.Id).ToList(), placements = _placements.Values.ToList() };
             foreach (UiWindow w in _windows)
+            {
+                // Server windows reopen when the server says, not at login.
+                if (w.Panels.Any(p => p.ServerOpen != null))
+                {
+                    if (w.Panels.Count == 1) Remember(w);
+                    continue;
+                }
                 layout.windows.Add(new SavedWindow
                 {
                     panels = w.Panels.Select(p => p.Id).ToList(),
@@ -381,6 +453,8 @@ namespace Rth.Client.Ui
                     offset = w.Offset,
                     size = w.Size,
                 });
+            }
+            layout.placements = _placements.Values.ToList();
             PlayerPrefs.SetString(LayoutPref, JsonUtility.ToJson(layout));
         }
 
@@ -400,6 +474,9 @@ namespace Rth.Client.Ui
             if (layout?.windows == null) return false;
 
             var byId = _panels.ToDictionary(p => p.Id);
+            if (layout.placements != null)
+                foreach (SavedWindow placed in layout.placements)
+                    if (placed.panels.Count == 1) _placements[placed.panels[0]] = placed;
             foreach (SavedWindow saved in layout.windows)
             {
                 UiPanel[] panels = saved.panels.Where(byId.ContainsKey).Select(id => byId[id]).Where(p => p.Window == null).ToArray();
@@ -408,7 +485,7 @@ namespace Rth.Client.Ui
                 if (saved.active != null && byId.TryGetValue(saved.active, out UiPanel active) && active.Window == window) window.Activate(active);
             }
             foreach (UiPanel panel in _panels)
-                if (panel.OpenByDefault && panel.Window == null && !layout.known.Contains(panel.Id)) Open(panel);
+                if (panel.OpenByDefault && panel.ServerOpen == null && panel.Window == null && !layout.known.Contains(panel.Id)) Open(panel);
             return true;
         }
 

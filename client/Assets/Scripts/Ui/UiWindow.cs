@@ -5,10 +5,12 @@ using UnityEngine.UIElements;
 namespace Rth.Client.Ui
 {
     /// <summary>
-    /// A movable window holding one or more panels as tabs. Drag the title bar to move it (edges
-    /// snap to the screen and to other windows), the corner to resize it, a tab to pull that panel
-    /// out into its own window or drop it onto another window. A window with a single bare panel
-    /// (bars, the minimap) has no frame, just a handle that shows on hover.
+    /// A movable window holding one or more panels. With one panel the title bar shows its icon
+    /// and name; with several it shows a strip of icon tabs, and the active panel's name heads the
+    /// body. Drag the title bar to move the window (edges snap to the screen and other windows),
+    /// the corner to resize it, a tab (or a lone panel's icon) to pull the panel out or drop it on
+    /// another window. A window with a single bare panel (bars, the minimap) has no frame, just a
+    /// handle that shows on hover.
     ///
     /// Position is kept relative to an anchor (a corner, an edge's middle, or the centre), so
     /// layouts survive a change of resolution.
@@ -20,9 +22,12 @@ namespace Rth.Client.Ui
 
         private readonly UiRoot _ui;
         private readonly VisualElement _titleBar;
+        private readonly VisualElement _titleIcon;
+        private readonly Label _title;
         private readonly VisualElement _tabs;
+        private readonly Label _header;
         private readonly VisualElement _body;
-        private readonly Dictionary<UiPanel, Label> _tabLabels = new Dictionary<UiPanel, Label>();
+        private readonly Dictionary<UiPanel, VisualElement> _tabElements = new Dictionary<UiPanel, VisualElement>();
 
         public readonly VisualElement Root;
         public readonly List<UiPanel> Panels = new List<UiPanel>();
@@ -53,18 +58,30 @@ namespace Rth.Client.Ui
             Root.RegisterCallback<PointerDownEvent>(_ => Root.BringToFront(), TrickleDown.TrickleDown);
 
             _titleBar = UiKit.El(Root, "window__titlebar");
+            _titleIcon = UiKit.El(_titleBar, "window__title-icon");
+            _title = UiKit.Text(_titleBar, "", "window__title");
+            _title.pickingMode = PickingMode.Ignore;
             _tabs = UiKit.El(_titleBar, "window__tabs");
-            Label close = UiKit.Text(_titleBar, "x", "window__button", "window__close");
+            VisualElement close = UiKit.El(_titleBar, "window__button", "window__close");
+            UiKit.SetIcon(close, IconLibrary.Get("close"));
             close.RegisterCallback<ClickEvent>(_ => _ui.CloseWindow(this));
+            UiKit.Tooltip(close, () => "Close");
             _titleBar.RegisterCallback<PointerDownEvent>(BeginMove);
 
+            // A lone panel's icon is its tab: drag it onto another window to combine them.
+            _titleIcon.RegisterCallback<PointerDownEvent>(e => { if (Panels.Count == 1) PressTab(Panels[0], e); });
+            _titleIcon.RegisterCallback<PointerMoveEvent>(DragTab);
+            _titleIcon.RegisterCallback<PointerUpEvent>(e => { if (Panels.Count == 1) ReleaseTab(_titleIcon, Panels[0], e); });
+
             _body = UiKit.El(Root, "window__body");
+            _header = UiKit.Text(_body, "", "window__header");
 
             VisualElement grip = UiKit.El(Root, "window__grip");
             grip.RegisterCallback<PointerDownEvent>(BeginResize);
 
             VisualElement handle = UiKit.El(Root, "window__handle");
             handle.RegisterCallback<PointerDownEvent>(BeginMove);
+            UiKit.Tooltip(handle, () => _ui.Locked ? null : "Drag to move");
 
             foreach (VisualElement e in new[] { _titleBar, grip, handle })
             {
@@ -82,12 +99,13 @@ namespace Rth.Client.Ui
             Panels.Add(panel);
             panel.Window = this;
 
-            Label tab = UiKit.Text(_tabs, panel.Tab, "tab");
+            VisualElement tab = UiKit.El(_tabs, "tab");
+            UiKit.Icon(tab, IconLibrary.Get(panel.Icon), 22f, "tab__icon").pickingMode = PickingMode.Ignore;
             UiKit.Tooltip(tab, () => panel.Title);
             tab.RegisterCallback<PointerDownEvent>(e => PressTab(panel, e));
-            tab.RegisterCallback<PointerMoveEvent>(e => DragTab(tab, e));
+            tab.RegisterCallback<PointerMoveEvent>(DragTab);
             tab.RegisterCallback<PointerUpEvent>(e => ReleaseTab(tab, panel, e));
-            _tabLabels[panel] = tab;
+            _tabElements[panel] = tab;
 
             if (activate || Active == null) Activate(panel);
             UpdateFrame();
@@ -98,8 +116,8 @@ namespace Rth.Client.Ui
             if (!Panels.Remove(panel)) return;
             panel.Window = null;
             panel.Root.RemoveFromHierarchy();
-            if (_tabLabels.TryGetValue(panel, out Label tab)) tab.RemoveFromHierarchy();
-            _tabLabels.Remove(panel);
+            if (_tabElements.TryGetValue(panel, out VisualElement tab)) tab.RemoveFromHierarchy();
+            _tabElements.Remove(panel);
             if (Active == panel) Activate(Panels.Count > 0 ? Panels[0] : null);
             UpdateFrame();
         }
@@ -109,15 +127,26 @@ namespace Rth.Client.Ui
             if (Active != null) Active.Root.RemoveFromHierarchy();
             Active = panel;
             if (panel != null) _body.Add(panel.Root);
-            foreach (KeyValuePair<UiPanel, Label> t in _tabLabels)
+            foreach (KeyValuePair<UiPanel, VisualElement> t in _tabElements)
                 t.Value.EnableInClassList("tab--active", t.Key == panel);
+            _header.text = panel?.Title ?? "";
+            if (Panels.Count == 1 && panel != null) _title.text = panel.Title;
         }
 
         private void UpdateFrame()
         {
             bool bare = IsBare;
+            bool single = Panels.Count == 1;
             Root.EnableInClassList("window--bare", bare);
             _titleBar.style.display = bare ? DisplayStyle.None : DisplayStyle.Flex;
+            _tabs.style.display = single ? DisplayStyle.None : DisplayStyle.Flex;
+            _titleIcon.style.display = _title.style.display = single ? DisplayStyle.Flex : DisplayStyle.None;
+            _header.style.display = single ? DisplayStyle.None : DisplayStyle.Flex;
+            if (single)
+            {
+                UiKit.SetIcon(_titleIcon, IconLibrary.Get(Panels[0].Icon));
+                _title.text = Panels[0].Title;
+            }
             // A bare window has no frame to click: only what its panel draws catches the pointer.
             Root.pickingMode = _body.pickingMode = bare ? PickingMode.Ignore : PickingMode.Position;
         }
@@ -163,7 +192,7 @@ namespace Rth.Client.Ui
 
         private void BeginMove(PointerDownEvent e)
         {
-            if (_ui.Locked || e.button != 0 || e.target != e.currentTarget && !(e.target is VisualElement t && t.ClassListContains("window__tabs"))) return;
+            if (_ui.Locked || e.button != 0) return;
             _moving = true;
             _pointerStart = e.position;
             _rectStart = new Vector2(Root.resolvedStyle.left, Root.resolvedStyle.top);
@@ -262,14 +291,14 @@ namespace Rth.Client.Ui
             e.StopPropagation();
         }
 
-        private void DragTab(Label tab, PointerMoveEvent e)
+        private void DragTab(PointerMoveEvent e)
         {
             if (_tabPressed == null || _ui.Locked) return;
             if (!_tabDragging && ((Vector2)e.position - _tabPressedAt).magnitude > TabDragThreshold) _tabDragging = true;
-            if (_tabDragging) _ui.ShowDragGhost(_tabPressed.Title, e.position);
+            if (_tabDragging) _ui.ShowDragGhost(_tabPressed.Title, IconLibrary.Get(_tabPressed.Icon), e.position);
         }
 
-        private void ReleaseTab(Label tab, UiPanel panel, PointerUpEvent e)
+        private void ReleaseTab(VisualElement tab, UiPanel panel, PointerUpEvent e)
         {
             tab.ReleasePointer(e.pointerId);
             bool dragged = _tabDragging;
@@ -279,7 +308,7 @@ namespace Rth.Client.Ui
             if (dragged) _ui.DropPanel(panel, e.position);
         }
 
-        /// <summary>Whether a point (panel space) is over this window's tab strip, where panels can be dropped.</summary>
+        /// <summary>Whether a point (panel space) is over this window's title bar, where panels can be dropped.</summary>
         public bool AcceptsDropAt(Vector2 point) => !IsBare && _titleBar.worldBound.Contains(point);
     }
 }

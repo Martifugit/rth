@@ -21,8 +21,8 @@ namespace Rth.Client.Ui
         /// <summary>Full name: "Backpack".</summary>
         public abstract string Title { get; }
 
-        /// <summary>Short label for a tab strip: "Pack".</summary>
-        public virtual string Tab => Title;
+        /// <summary>Icon id for its tab and title bar (see <see cref="IconLibrary"/>).</summary>
+        public virtual string Icon => "menu";
 
         /// <summary>Which default window this panel starts in (see <see cref="UiDefaultLayout"/>).</summary>
         public virtual string DefaultWindow => Id;
@@ -40,6 +40,17 @@ namespace Rth.Client.Ui
 
         /// <summary>Size of a window made just for this panel.</summary>
         public virtual Vector2 DefaultSize => new Vector2(260f, 320f);
+
+        /// <summary>
+        /// For windows the server opens (bank, shop, dialogue): whether it is open right now, and
+        /// the interface follows. Null (the default) means the player opens and closes it.
+        /// </summary>
+        public virtual bool? ServerOpen => null;
+
+        /// <summary>The player closed it (the X, a hotkey, the panel menu). Server windows tell the server here.</summary>
+        public virtual void OnClosedByPlayer()
+        {
+        }
 
         /// <summary>A key that opens it, brings it forward, or closes it again.</summary>
         public virtual Key Hotkey => Key.None;

@@ -9,6 +9,8 @@ namespace Rth.Shared.Skills
         public string Id = "";
         public string Name = "";
         public string Description = "";
+        /// <summary>Icon id (the client's icon library).</summary>
+        public string Icon = "";
         /// <summary>Stat id to amount gained per level above 1 (e.g. occultism raises ability damage).</summary>
         public Dictionary<string, int> StatsPerLevel = new Dictionary<string, int>();
     }

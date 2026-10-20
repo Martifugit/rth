@@ -136,7 +136,6 @@ namespace Rth.Client
         private void Start()
         {
             if (GetComponent<PopupMenu>() == null) gameObject.AddComponent<PopupMenu>();
-            if (GetComponent<TownWindows>() == null) gameObject.AddComponent<TownWindows>().session = this;
             if (cameraRig != null && cameraRig.GetComponent<CameraOcclusion>() == null) cameraRig.gameObject.AddComponent<CameraOcclusion>().world = world;
             if (regions == null) regions = GetComponent<RegionStreamer>();
             if (regions == null) regions = gameObject.AddComponent<RegionStreamer>();

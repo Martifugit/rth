@@ -101,6 +101,9 @@ Friends connect on TCP port **43600**, so open that port on your router if they'
 
 Player saves are plain JSON files in `server/saves/`, one per player.
 
+The interface font is Pixelify Sans, used under the SIL Open Font License
+(`client/Assets/Resources/UI/Fonts/OFL.txt`). Every icon is original pixel art.
+
 ## Editing the map
 
 The world is made of **regions**: each is one Unity scene with one `MapArea`, placed at absolute

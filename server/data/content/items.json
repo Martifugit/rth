@@ -2,6 +2,7 @@
   {
     "id": "marks",
     "name": "Marks",
+    "icon": "coins",
     "examine": "Synod-minted coin. Accepted almost everywhere, trusted almost nowhere.",
     "stackable": true,
     "value": 1,
@@ -12,6 +13,7 @@
   {
     "id": "riverbread",
     "name": "Riverbread",
+    "icon": "bread",
     "examine": "A dense loaf baked with river water. Better than it sounds.",
     "value": 4,
     "color": "#c9a45c",
@@ -22,6 +24,7 @@
   {
     "id": "smoked_eel",
     "name": "Smoked eel",
+    "icon": "fish",
     "examine": "Caught where the river spreads into the Wash. Nobody asks what it was eating.",
     "value": 12,
     "color": "#6e5236",
@@ -32,6 +35,7 @@
   {
     "id": "saltfig",
     "name": "Sere saltfig",
+    "icon": "fig",
     "examine": "Dried in the salt pans of Sere. Makes you thirsty, and somehow calmer.",
     "value": 9,
     "color": "#8a5a7a",
@@ -43,6 +47,7 @@
   {
     "id": "phlegm_tonic",
     "name": "Phlegm tonic",
+    "icon": "potion",
     "examine": "Thick, pale and faintly salty. Settles the mind for the next thing you do.",
     "value": 20,
     "color": "#b9d3b0",
@@ -53,6 +58,7 @@
   {
     "id": "cooling_draught",
     "name": "Cooling draught",
+    "icon": "potion",
     "examine": "Bitter as regret. Draws whichever bile you're running back towards level.",
     "value": 20,
     "color": "#7fa6c4",
@@ -63,6 +69,7 @@
   {
     "id": "empty_vial",
     "name": "Empty vial",
+    "icon": "vial",
     "examine": "Someone will want this back.",
     "value": 1,
     "color": "#cfd8dc",
@@ -72,6 +79,7 @@
   {
     "id": "apprentice_athame",
     "name": "Apprentice's athame",
+    "icon": "dagger",
     "examine": "A ritual knife, blunt on purpose. The point is where you put it.",
     "value": 40,
     "color": "#9e9e9e",
@@ -81,6 +89,7 @@
   {
     "id": "occultist_robe",
     "name": "Occultist's robe",
+    "icon": "robe",
     "examine": "Plain on the outside, stitched with notes on the inside.",
     "value": 60,
     "color": "#4a3b5c",
@@ -90,6 +99,7 @@
   {
     "id": "fen_leather_hood",
     "name": "Fen-leather hood",
+    "icon": "hood",
     "examine": "Smells of the fens. So will you.",
     "value": 45,
     "color": "#5d6b3f",
@@ -98,6 +108,7 @@
   {
     "id": "bile_stained_gloves",
     "name": "Bile-stained gloves",
+    "icon": "gloves",
     "examine": "Whatever stained them, they held up.",
     "value": 55,
     "color": "#a39337",
@@ -107,6 +118,7 @@
   {
     "id": "sewn_hide_boots",
     "name": "Sewn-hide boots",
+    "icon": "boots",
     "examine": "Rat hide, mostly. Warm, mostly.",
     "value": 30,
     "color": "#7a6248",
@@ -115,6 +127,7 @@
   {
     "id": "cracked_moonstone_ring",
     "name": "Cracked moonstone ring",
+    "icon": "ring",
     "examine": "A sliver of the second moon, set badly. You breathe easier wearing it.",
     "value": 120,
     "color": "#c7d4e8",
@@ -124,6 +137,7 @@
   {
     "id": "gallstone_amulet",
     "name": "Gallstone amulet",
+    "icon": "amulet",
     "examine": "A polished gallstone on a cord. It makes your temper sharper and your blood thinner.",
     "value": 150,
     "color": "#b07f2a",
@@ -134,6 +148,7 @@
   {
     "id": "fen_rat_carcass",
     "name": "Fen rat carcass",
+    "icon": "carcass",
     "examine": "Worth more skinned than whole. Take it to a skinning rack.",
     "value": 3,
     "color": "#7d6a52",
@@ -142,6 +157,7 @@
   {
     "id": "vitriol_mite_carcass",
     "name": "Vitriol mite carcass",
+    "icon": "carcass",
     "examine": "Still fizzing. It wants a lye vat and a glass hook, not your bare hands.",
     "value": 10,
     "color": "#b5a63a",
@@ -150,6 +166,7 @@
   {
     "id": "skinning_knife",
     "name": "Skinning knife",
+    "icon": "knife",
     "examine": "Short, curved and sharper than it looks. For basin wildlife.",
     "value": 15,
     "color": "#b0a99a",
@@ -158,6 +175,7 @@
   {
     "id": "glass_flensing_hook",
     "name": "Glass flensing hook",
+    "icon": "hook",
     "examine": "Acid won't touch glass. Your fingers are another matter. For Scald creatures.",
     "value": 40,
     "color": "#a8d8d0",
@@ -166,6 +184,7 @@
   {
     "id": "rat_gall",
     "name": "Rat gall",
+    "icon": "organ",
     "examine": "A little bag of black bile. Render it down and it keeps for years.",
     "stackable": true,
     "value": 3,
@@ -175,6 +194,7 @@
   {
     "id": "choleric_salts",
     "name": "Choleric salts",
+    "icon": "salts",
     "examine": "Yellow bile, dried and cut with salt. Burns the tongue; feeds the hotter workings.",
     "stackable": true,
     "value": 6,
@@ -184,6 +204,7 @@
   {
     "id": "melancholic_tincture",
     "name": "Melancholic tincture",
+    "icon": "tincture",
     "examine": "Black bile drawn into spirit. Cold, slow and patient, like the workings it feeds.",
     "stackable": true,
     "value": 6,
@@ -193,6 +214,7 @@
   {
     "id": "vitriol_salts",
     "name": "Vitriol salts",
+    "icon": "salts",
     "examine": "The salt of the Scald. Use a grain too many and the working takes you with it.",
     "stackable": true,
     "value": 30,
@@ -202,6 +224,7 @@
   {
     "id": "hide_wrapped_hood",
     "name": "Hide-wrapped hood",
+    "icon": "hood",
     "examine": "Stitched in the skinning yard from offcuts nobody else wanted. It shows. It works.",
     "value": 50,
     "color": "#8c7253",
@@ -210,6 +233,7 @@
   {
     "id": "yard_apron",
     "name": "Yardmaster's apron",
+    "icon": "robe",
     "examine": "Heavy leather, scrubbed and stained and scrubbed again. Wenna only gives these to people she'd trust with her racks.",
     "value": 120,
     "color": "#5e4b38",
@@ -218,6 +242,7 @@
   {
     "id": "apothecary_gloves",
     "name": "Apothecary's gloves",
+    "icon": "gloves",
     "examine": "Thin, oiled, and stained to the wrist in colours that shouldn't go together.",
     "value": 90,
     "color": "#6d7b4c",
@@ -227,6 +252,7 @@
   {
     "id": "dreamless_draught",
     "name": "Dreamless draught",
+    "icon": "potion",
     "examine": "Corvin's brew for Edda. It smells like the pond and something sweeter underneath.",
     "value": 0,
     "color": "#9aa6c2",
@@ -235,6 +261,7 @@
   {
     "id": "sleepers_ribbon",
     "name": "Sleeper's ribbon",
+    "icon": "amulet",
     "examine": "Edda's mother tied it round your wrist and said it would keep the bad nights off. It smells faintly of lavender.",
     "value": 40,
     "color": "#b7a3d6",
@@ -243,6 +270,7 @@
   {
     "id": "rat_pelt",
     "name": "Rat pelt",
+    "icon": "pelt",
     "examine": "Fen rat. Not much of it.",
     "value": 2,
     "color": "#6b5a43",
@@ -251,6 +279,7 @@
   {
     "id": "mite_gland",
     "name": "Mite gland",
+    "icon": "organ",
     "examine": "Still sour. The distillers will want this.",
     "stackable": true,
     "value": 8,
@@ -260,6 +289,7 @@
   {
     "id": "vitriol_bead",
     "name": "Vitriol bead",
+    "icon": "bead",
     "examine": "A hard bead of the stuff. Handle with gloves.",
     "stackable": true,
     "value": 25,

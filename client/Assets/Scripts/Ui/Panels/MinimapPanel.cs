@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Rth.Shared.Combat;
 using Rth.Shared.Net;
-using Rth.Shared.World;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UIElements;
@@ -9,30 +9,36 @@ using UnityEngine.UIElements;
 namespace Rth.Client.Ui.Panels
 {
     /// <summary>
-    /// The minimap: a top-down view around the player that turns with the camera, dots for
-    /// creatures (yellow) and players (white), click to walk. Around it: the compass (click to
-    /// face north), the run orb (click to toggle running; run energy comes with the breath
-    /// skill), the world map, settings, a menu of every panel, and the clock.
+    /// The minimap, laid out like the classic one: a round top-down view that turns with the
+    /// camera (dots: yellow creatures, white players; click to walk), the compass on its rim
+    /// (click to face north), orbs down its left side for blood, breath (opens Focuses) and run
+    /// (click to toggle; run energy comes with the breath skill), buttons for the world map,
+    /// settings and every panel, and the clock.
     /// </summary>
     public sealed class MinimapPanel : UiPanel
     {
         private const int TextureSize = 256;
         private const float ViewTiles = 22f;
-        private const float MapPixels = 180f;
+        private const float MapLeft = 52f;
+        private const float MapTop = 6f;
+        private const float MapPixels = 164f; // inside the frame's 4px rim
         private const float GameDayRealSeconds = 3600f;
 
         public override string Id => "minimap";
         public override string Title => "Minimap";
+        public override string Icon => "map";
         public override string DefaultWindow => UiDefaultLayout.Minimap;
         public override bool Bare => true;
-        public override Vector2 MinSize => new Vector2(210f, 210f);
+        public override Vector2 MinSize => new Vector2(230f, 212f);
 
         private Camera _camera;
         private RenderTexture _texture;
         private VisualElement _map;
         private VisualElement _dots;
-        private VisualElement _compassNeedle;
-        private Label _run;
+        private VisualElement _compass;
+        private Orb _blood;
+        private Orb _breath;
+        private Orb _run;
         private Label _clock;
         private readonly List<VisualElement> _dotPool = new List<VisualElement>();
         private bool _fogWas;
@@ -40,17 +46,48 @@ namespace Rth.Client.Ui.Panels
         private float Yaw => Ui.cameraRig != null ? Ui.cameraRig.yaw : 0f;
         private float PixelsPerTile => MapPixels / 2f / ViewTiles;
 
+        /// <summary>A classic orb: the number on a dark tab, and a round gauge that fills from the bottom.</summary>
+        private sealed class Orb
+        {
+            public readonly VisualElement Root;
+            public readonly VisualElement Circle;
+            private readonly Label _number;
+            private readonly VisualElement _fill;
+
+            public Orb(VisualElement parent, float left, float top, string icon, Color colour)
+            {
+                Root = UiKit.El(parent, "orb");
+                Root.style.left = left;
+                Root.style.top = top;
+                _number = UiKit.Text(Root, "", "orb__number");
+                _number.pickingMode = PickingMode.Ignore;
+                Circle = UiKit.El(Root, "orb__circle");
+                _fill = UiKit.El(Circle, "orb__fill");
+                _fill.style.backgroundColor = colour;
+                _fill.pickingMode = PickingMode.Ignore;
+                UiKit.Icon(Circle, IconLibrary.Get(icon), 20f, "orb__icon").pickingMode = PickingMode.Ignore;
+            }
+
+            public void Set(float fraction, string number, Color numberColour)
+            {
+                _fill.style.height = Length.Percent(Mathf.Clamp01(fraction) * 100f);
+                _number.text = number;
+                _number.style.color = numberColour;
+            }
+        }
+
         protected override void Build(VisualElement root)
         {
             root.pickingMode = PickingMode.Ignore;
             CreateCamera();
 
-            _map = UiKit.El(root, "minimap");
-            _map.style.position = Position.Absolute;
-            _map.style.left = 22f;
-            _map.style.top = 22f;
+            VisualElement frame = UiKit.El(root, "minimap-frame");
+            frame.style.left = MapLeft;
+            frame.style.top = MapTop;
+            _map = UiKit.El(frame, "minimap");
             _map.style.backgroundImage = Background.FromRenderTexture(_texture);
             _map.RegisterCallback<PointerDownEvent>(OnMapClick);
+            UiKit.Tooltip(_map, () => UiKit.Colour("Click to walk there.", UiKit.Muted));
             _dots = UiKit.El(_map);
             _dots.pickingMode = PickingMode.Ignore;
             _dots.style.position = Position.Absolute;
@@ -62,43 +99,44 @@ namespace Rth.Client.Ui.Panels
             you.style.width = you.style.height = 6f;
             you.style.backgroundColor = Color.white;
 
-            // The compass: the needle points north, so it turns as the camera turns.
-            Label compass = Orb(root, "", 0f, 0f, "Face north", () => { if (Ui.cameraRig != null) Ui.cameraRig.yaw = 0f; });
-            _compassNeedle = UiKit.Text(compass, "N");
-            _compassNeedle.pickingMode = PickingMode.Ignore;
-            _compassNeedle.style.position = Position.Absolute;
-            _compassNeedle.style.left = _compassNeedle.style.right = _compassNeedle.style.top = _compassNeedle.style.bottom = 0f;
-            _compassNeedle.style.unityTextAlign = TextAnchor.MiddleCenter;
-            _compassNeedle.style.color = new Color(1f, 0.35f, 0.25f);
-            _compassNeedle.style.fontSize = 14;
+            // The compass sits on the rim; its face turns so north stays north.
+            VisualElement compassButton = RoundButton(root, MapLeft - 8f, MapTop - 4f, null, "Face north", () => { if (Ui.cameraRig != null) Ui.cameraRig.yaw = 0f; });
+            _compass = UiKit.Icon(compassButton, IconLibrary.Get("compass"), 26f);
+            _compass.pickingMode = PickingMode.Ignore;
 
-            _run = Orb(root, "Run", 0f, 170f, "Toggle running (R)", () => Session.ToggleRun());
-            Orb(root, "Map", 170f, 170f, "World map (M)", () => Ui.Toggle(Ui.Panel<WorldMapPanel>()));
-            Orb(root, "Set", 170f, 0f, "Settings", () => Ui.Toggle(Ui.Panel<SettingsPanel>()));
-            Label menu = Orb(root, "...", 170f, 42f, "Every interface: open or close", null);
+            _blood = new Orb(root, 0f, 44f, "blood", new Color(0.62f, 0.08f, 0.06f));
+            UiKit.Tooltip(_blood.Circle, () => UiKit.Title("Blood") + "\nYour life.");
+            _breath = new Orb(root, 0f, 84f, "focus", new Color(0.25f, 0.45f, 0.72f));
+            _breath.Circle.RegisterCallback<ClickEvent>(_ => Ui.Open(Ui.Panel<FocusesPanel>()));
+            UiKit.Tooltip(_breath.Circle, () => UiKit.Title("Breath") + "\nHeld focuses spend it.\n" + UiKit.Colour("Click to open Focuses.", UiKit.Muted));
+            _run = new Orb(root, 0f, 124f, "run", new Color(0.62f, 0.5f, 0.12f));
+            _run.Circle.RegisterCallback<ClickEvent>(_ => Session.ToggleRun());
+            UiKit.Tooltip(_run.Circle, () => UiKit.Title("Run") + "\nRunning moves two tiles a tick.\n" + UiKit.Colour("Click or press R to toggle.", UiKit.Muted));
+
+            RoundButton(root, MapLeft + MapPixels - 18f, MapTop + MapPixels - 14f, "map", "World map (M)", () => Ui.Toggle(Ui.Panel<WorldMapPanel>()));
+            // Under the orbs, in the corner the map's curve leaves free.
+            RoundButton(root, 6f, 166f, "settings", "Settings", () => Ui.Toggle(Ui.Panel<SettingsPanel>()));
+            VisualElement menu = RoundButton(root, 40f, 180f, "menu", "Open or close any window", null);
             menu.RegisterCallback<PointerDownEvent>(e => Ui.Menu(e.position, "Interface", PanelOptions()));
 
-            _clock = UiKit.Text(root, "", "muted");
-            _clock.style.position = Position.Absolute;
-            _clock.style.left = 0f;
-            _clock.style.right = 0f;
-            _clock.style.top = 206f;
-            _clock.style.unityTextAlign = TextAnchor.MiddleCenter;
-            _clock.style.fontSize = 10;
-            UiKit.Tooltip(_clock, () => "The time of day in R'th. A day passes every real hour.");
+            _clock = UiKit.Text(root, "", "clock");
+            _clock.style.left = MapLeft + MapPixels / 2f - 18f;
+            _clock.style.top = MapTop + MapPixels + 10f;
+            UiKit.Tooltip(_clock, () => UiKit.Title("Time in R'th") + "\nA day passes every real hour.");
 
             RenderPipelineManager.beginCameraRendering += BeforeRender;
             RenderPipelineManager.endCameraRendering += AfterRender;
         }
 
-        private Label Orb(VisualElement parent, string text, float left, float top, string tooltip, Action onClick)
+        private VisualElement RoundButton(VisualElement parent, float left, float top, string icon, string tooltip, Action onClick)
         {
-            Label orb = UiKit.Text(parent, text, "orb");
-            orb.style.left = left;
-            orb.style.top = top;
-            if (onClick != null) orb.RegisterCallback<ClickEvent>(_ => onClick());
-            UiKit.Tooltip(orb, () => tooltip);
-            return orb;
+            VisualElement button = UiKit.El(parent, "round-button");
+            button.style.left = left;
+            button.style.top = top;
+            if (icon != null) UiKit.Icon(button, IconLibrary.Get(icon), 20f).pickingMode = PickingMode.Ignore;
+            if (onClick != null) button.RegisterCallback<ClickEvent>(_ => onClick());
+            UiKit.Tooltip(button, () => tooltip);
+            return button;
         }
 
         private void CreateCamera()
@@ -140,9 +178,17 @@ namespace Rth.Client.Ui.Panels
                 _camera.transform.SetPositionAndRotation(new Vector3(p.x, p.y + 80f, p.z), Quaternion.Euler(90f, Yaw, 0f));
                 UpdateDots(local);
             }
-            _compassNeedle.style.rotate = new Rotate(-Yaw);
-            _run.text = Session.Running ? "Run\non" : "Run\noff";
-            _run.EnableInClassList("orb--on", Session.Running);
+            _compass.style.rotate = new Rotate(-Yaw);
+
+            PlayerStateMessage state = Session.PlayerState;
+            if (state != null)
+            {
+                float blood = state.Blood / (float)Mathf.Max(1, state.MaxBlood);
+                _blood.Set(blood, Mathf.RoundToInt(blood * 100f).ToString(), Color.Lerp(UiKit.Bad, UiKit.Good, blood));
+                float breath = state.Breath / (float)Mathf.Max(1, state.MaxBreath);
+                _breath.Set(breath, Mathf.RoundToInt(breath * 100f).ToString(), state.Deflect != CombatStyle.None ? new Color(0.6f, 0.85f, 1f) : Color.Lerp(UiKit.Bad, UiKit.Good, breath));
+            }
+            _run.Set(Session.Running ? 1f : 0f, Session.Running ? "On" : "Off", Session.Running ? UiKit.Value : UiKit.Muted);
 
             double seconds = (DateTime.UtcNow - DateTime.UtcNow.Date).TotalSeconds % GameDayRealSeconds;
             int minutes = (int)(seconds / GameDayRealSeconds * 24 * 60);

@@ -6,33 +6,54 @@ using UnityEngine.UIElements;
 namespace Rth.Client.Ui.Panels
 {
     /// <summary>
-    /// XP gained this session, per skill and per hour, and time to each skill's target at the
-    /// current rate. Tracks from the first XP the server reports after logging in.
+    /// An XP tracker: what you've gained this session, per skill and per hour, and how long to
+    /// each skill's target at that rate. Tracks from the XP the server reports after logging in.
     /// </summary>
     public sealed class MetricsPanel : UiPanel
     {
         public override string Id => "metrics";
-        public override string Title => "Metrics";
-        public override string Tab => "XP";
+        public override string Title => "XP tracker";
+        public override string Icon => "xp";
         public override string DefaultWindow => UiDefaultLayout.Side;
         public override int Order => 7;
 
         private readonly Dictionary<string, long> _baseline = new Dictionary<string, long>();
         private readonly Dictionary<string, float> _firstGainTime = new Dictionary<string, float>();
+        private readonly Dictionary<string, Row> _rows = new Dictionary<string, Row>();
         private float _sessionStart;
         private string _player;
-        private Label _summary;
-        private Label _lines;
+        private Label _total;
+        private Label _time;
+        private VisualElement _list;
+        private Label _empty;
+
+        private sealed class Row
+        {
+            public VisualElement Root;
+            public Label Gained;
+            public Label Rate;
+            public UiKit.Bar Target;
+        }
 
         protected override void Build(VisualElement root)
         {
-            _summary = UiKit.Text(root, "", "heading");
+            VisualElement summary = UiKit.El(root, "raised", "row");
+            summary.style.paddingLeft = summary.style.paddingRight = summary.style.paddingTop = summary.style.paddingBottom = 4f;
+            UiKit.Icon(summary, IconLibrary.Get("xp"), 32f).style.marginRight = 6f;
+            VisualElement text = UiKit.El(summary);
+            _total = UiKit.Text(text, "", "value");
+            _time = UiKit.Text(text, "", "muted", "small");
+            UiKit.El(summary, "spacer");
+            UiKit.Button(summary, "Reset", Reset);
+
+            VisualElement well = UiKit.El(root, "well");
+            well.style.flexGrow = 1;
+            well.style.marginTop = 4f;
             var scroll = new ScrollView();
             scroll.AddToClassList("scroll");
-            root.Add(scroll);
-            _lines = UiKit.Text(scroll, "");
-            _lines.style.whiteSpace = WhiteSpace.Normal;
-            UiKit.Button(root, "Reset", Reset);
+            well.Add(scroll);
+            _list = scroll.contentContainer;
+            _empty = UiKit.Text(scroll, "Gain some XP and it shows here.", "muted", "small");
         }
 
         public override void Observe()
@@ -62,33 +83,56 @@ namespace Rth.Client.Ui.Panels
             var content = Session.Content;
             if (content == null) return;
             long totalGained = 0;
-            var lines = new List<string>();
             foreach (SkillDef skill in content.Skills)
             {
                 Session.SkillXp.TryGetValue(skill.Id, out long xp);
                 long gained = _baseline.TryGetValue(skill.Id, out long start) ? xp - start : 0;
+                Row row = RowFor(skill);
+                row.Root.style.display = gained > 0 ? DisplayStyle.Flex : DisplayStyle.None;
                 if (gained <= 0) continue;
                 totalGained += gained;
+
                 float since = _firstGainTime.TryGetValue(skill.Id, out float t) ? t : _sessionStart;
                 float hours = Mathf.Max((Time.time - since) / 3600f, 1f / 120f); // at least 30 s, so early rates aren't absurd
                 float perHour = gained / hours;
-                string line = skill.Name + ": +" + UiKit.FormatXp(gained) + " xp (" + UiKit.FormatXp((long)perHour) + "/h)";
+                row.Gained.text = "+" + UiKit.FormatXp(gained);
+                row.Rate.text = UiKit.FormatXp((long)perHour) + "/h";
 
                 int level = content.XpCurve.LevelForXp(xp);
                 int target = SkillTargets.Get(Session.PlayerName, skill.Id);
-                if (target > level && perHour > 0f)
+                row.Target.Root.style.display = target > level ? DisplayStyle.Flex : DisplayStyle.None;
+                if (target > level)
                 {
-                    float hoursLeft = (content.XpCurve.XpForLevel(target) - xp) / perHour;
-                    line += "\n   level " + target + " in " + FormatHours(hoursLeft);
+                    long from = content.XpCurve.XpForLevel(level);
+                    long goal = content.XpCurve.XpForLevel(target);
+                    float hoursLeft = perHour > 0f ? (goal - xp) / perHour : float.PositiveInfinity;
+                    row.Target.Set((xp - from) / (float)Mathf.Max(1, goal - from), "Level " + target + " in " + FormatHours(hoursLeft));
                 }
-                lines.Add(line);
             }
-            float minutes = (Time.time - _sessionStart) / 60f;
-            _summary.text = "This session: +" + UiKit.FormatXp(totalGained) + " xp in " + Mathf.FloorToInt(minutes) + " min";
-            _lines.text = lines.Count > 0 ? string.Join("\n", lines) : "No XP gained yet.";
+            _empty.style.display = totalGained > 0 ? DisplayStyle.None : DisplayStyle.Flex;
+            _total.text = "+" + UiKit.FormatXp(totalGained) + " xp";
+            int minutes = Mathf.FloorToInt((Time.time - _sessionStart) / 60f);
+            _time.text = "this session, " + (minutes >= 60 ? minutes / 60 + "h " + minutes % 60 + "m" : minutes + " min");
+        }
+
+        private Row RowFor(SkillDef skill)
+        {
+            if (_rows.TryGetValue(skill.Id, out Row row)) return row;
+            row = new Row { Root = UiKit.El(_list) };
+            row.Root.style.marginBottom = 4f;
+            VisualElement line = UiKit.El(row.Root, "row");
+            UiKit.Icon(line, IconLibrary.Get(skill.Icon), 16f).style.marginRight = 4f;
+            UiKit.Text(line, skill.Name, "small");
+            UiKit.El(line, "spacer");
+            row.Gained = UiKit.Text(line, "", "value", "small");
+            row.Rate = UiKit.Text(line, "", "muted", "small");
+            row.Rate.style.marginLeft = 6f;
+            row.Target = new UiKit.Bar(row.Root, UiKit.Heading, null, 12f);
+            _rows[skill.Id] = row;
+            return row;
         }
 
         private static string FormatHours(float hours) =>
-            hours < 1f ? Mathf.CeilToInt(hours * 60f) + " min" : hours.ToString("0.#") + " h";
+            float.IsInfinity(hours) ? "-" : hours < 1f ? Mathf.CeilToInt(hours * 60f) + " min" : hours.ToString("0.#") + " h";
     }
 }

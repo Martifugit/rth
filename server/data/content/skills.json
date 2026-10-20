@@ -4,17 +4,20 @@
     {
       "id": "occultism",
       "name": "Occultism",
+      "icon": "eye",
       "description": "Working the humours as weapons. Trained by dealing occult damage.",
       "statsPerLevel": { "abilityDamage": 2 }
     },
     {
       "id": "butchering",
       "name": "Butchering",
+      "icon": "cleaver",
       "description": "Taking carcasses apart at the right station with the right tool. Higher levels get more out of each one."
     },
     {
       "id": "distillation",
       "name": "Distillation",
+      "icon": "alembic",
       "description": "Rendering galls and glands into the salts and tinctures occult workings burn. The Synod calls it a crime."
     }
   ],

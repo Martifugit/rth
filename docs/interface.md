@@ -4,8 +4,21 @@ The game looks like Old School RuneScape but plays like RS3, with more combat re
 either. That means more interface than OSRS has. This file lists every piece and how they are
 organised.
 
-**Built (Milestone 8):** the window system and the panels marked ✓ below. Bank, shop and
-dialogue are still the old IMGUI placeholders (`TownWindows`).
+**Built (Milestone 8):** the window system and the panels marked ✓ below, plus the bank,
+shop, conversation box, the Assayer and the right-click menu, all in one style.
+
+## Look
+
+- **Theme:** `client/Assets/Resources/UI/Rth.uss`. Bevelled stone-brown frames, recessed wells
+  for slots and lists, raised tiles, glossy bars, OSRS colour roles (orange headings, yellow
+  numbers, parchment body text, a red-brown active tab), drop-shadowed pixel text. Panels
+  compose the classes in `UiKit` rather than styling by hand.
+- **Font:** Pixelify Sans (SIL Open Font License, `Resources/UI/Fonts/OFL.txt`).
+- **Icons:** original 16x16 pixel art, written as text in `Resources/UI/pixelicons.txt` and
+  drawn by `IconLibrary` (point-filtered, scaled by whole steps). Item icons are tinted with the
+  item's colour. Items, abilities and skills name their icon in the content files (`"icon"`).
+  A PNG at `Resources/Icons/<id>.png` replaces the icon of the same id, so real art can
+  arrive one icon at a time.
 
 ## Always on screen
 
@@ -46,7 +59,9 @@ dialogue are still the old IMGUI placeholders (`TownWindows`).
 - **Skill unlocks:** what each skill unlocks at each level.
 - **Ability reference:** a fuller view of each style's abilities.
 - **Player examine:** a summary of another player.
-- Already exist as placeholders: bank, shop, dialogue.
+- **Bank** ✓ (search, withdraw menus, deposit pack), **shop** ✓ (stock, prices), the
+  **conversation box** ✓ and **the Assayer** ✓. The server opens these (`UiPanel.ServerOpen`);
+  closing one tells the server.
 
 ## Layout (decided)
 

@@ -20,6 +20,8 @@ namespace Rth.Shared.Items
         public int Value;
         /// <summary>#RRGGBB tint for the placeholder icon until items have real art.</summary>
         public string Color = "#a0a0a0";
+        /// <summary>Icon id (the client's icon library); empty means a guess from what the item is.</summary>
+        public string Icon = "";
         /// <summary>Free-form labels other systems can match on ("food", "reagent", "occult"...).</summary>
         public List<string> Tags = new List<string>();
 

@@ -7,26 +7,35 @@ using UnityEngine.UIElements;
 namespace Rth.Client.Ui.Panels
 {
     /// <summary>
-    /// The main action bar: the combat resources (blood, phlegm, breath, the bile axis and what
-    /// the current bile does) over the ability slots, keys 1-9. Further bars will be more
-    /// instances of the slot row once bars can be arranged by the player.
+    /// The main action bar. On top, the combat resources: blood across the full width, phlegm and
+    /// breath side by side, then the bile axis between its two poles. Below, the ability slots
+    /// (keys 1-9) with cooldowns, and a line of chips saying what the current bile and any
+    /// effects are doing. More bars will be further instances of the slot row.
     /// </summary>
     public sealed class ActionBarPanel : UiPanel
     {
         public override string Id => "actionbar";
         public override string Title => "Action bar";
+        public override string Icon => "book";
         public override string DefaultWindow => UiDefaultLayout.ActionBar;
         public override bool Bare => true;
-        public override Vector2 MinSize => new Vector2(300f, 140f);
+        public override Vector2 MinSize => new Vector2(320f, 140f);
+
+        private static readonly Color BloodColour = new Color(0.78f, 0.1f, 0.08f);
+        private static readonly Color PhlegmColour = new Color(0.45f, 0.66f, 0.4f);
+        private static readonly Color BreathColour = new Color(0.42f, 0.66f, 0.92f);
+        private static readonly Color YellowBile = new Color(0.92f, 0.74f, 0.14f);
+        private static readonly Color BlackBile = new Color(0.42f, 0.24f, 0.6f);
 
         private UiKit.Bar _blood;
         private UiKit.Bar _phlegm;
         private UiKit.Bar _breath;
         private BileAxis _bile;
-        private Label _summary;
         private VisualElement _slotRow;
+        private VisualElement _chips;
         private readonly List<Slot> _slots = new List<Slot>();
         private string _barSignature = "";
+        private string _chipSignature = "";
 
         private sealed class Slot
         {
@@ -38,22 +47,35 @@ namespace Rth.Client.Ui.Panels
 
         protected override void Build(VisualElement root)
         {
-            root.style.backgroundColor = new Color(0.24f, 0.21f, 0.16f, 0.92f);
-            root.style.borderTopLeftRadius = root.style.borderTopRightRadius = 4f;
-            root.style.paddingLeft = root.style.paddingRight = root.style.paddingTop = 4f;
+            root.pickingMode = PickingMode.Ignore;
+            VisualElement frame = UiKit.El(root, "actionbar");
+            frame.style.flexGrow = 1;
 
-            _blood = new UiKit.Bar(root, new Color(0.72f, 0.1f, 0.1f));
-            _phlegm = new UiKit.Bar(root, new Color(0.5f, 0.68f, 0.5f));
-            _breath = new UiKit.Bar(root, new Color(0.5f, 0.72f, 0.95f));
-            _bile = new BileAxis(root);
-            _summary = UiKit.Text(root, "", "muted");
-            _summary.style.fontSize = 10;
-            _summary.style.unityTextAlign = TextAnchor.MiddleCenter;
-            _slotRow = UiKit.El(root, "row");
+            _blood = new UiKit.Bar(frame, BloodColour, IconLibrary.Get("blood"), 16f);
+            UiKit.Tooltip(_blood.Root, () => UiKit.Title("Blood") + "\nYour life. Food restores it.");
+
+            VisualElement pair = UiKit.El(frame, "row");
+            _phlegm = new UiKit.Bar(pair, PhlegmColour, IconLibrary.Get("potion", PhlegmColour), 14f);
+            _phlegm.Root.style.flexGrow = 1;
+            _phlegm.Root.style.marginRight = 6f;
+            UiKit.Tooltip(_phlegm.Root, () => UiKit.Title("Phlegm") + "\nBuilt by basic abilities, spent by thresholds and ultimates. Fades out of combat.");
+            _breath = new UiKit.Bar(pair, BreathColour, IconLibrary.Get("focus"), 14f);
+            _breath.Root.style.flexGrow = 1;
+            UiKit.Tooltip(_breath.Root, () => UiKit.Title("Breath") + "\nSpent by focuses such as deflection (F). Recovers out of combat.");
+
+            _bile = new BileAxis(frame);
+            UiKit.Tooltip(_bile.Root, () => UiKit.Title("Bile") +
+                "\n" + UiKit.Colour("Black bile", BlackBile) + " to the left: melancholic, warding." +
+                "\n" + UiKit.Colour("Yellow bile", YellowBile) + " to the right: choleric, harder hitting." +
+                "\nPale marks: where passives begin. Red marks: fever and torpor.");
+
+            _slotRow = UiKit.El(frame, "row");
             _slotRow.style.justifyContent = Justify.Center;
-            UiKit.Tooltip(_bile.Root, () => "Bile: black (melancholic) to the left, yellow (choleric) to the right.\nWhite marks: passives. Red marks: fever and torpor.");
-            UiKit.Tooltip(_breath.Root, () => "Breath: spent by focuses such as deflection (see the Focus tab).");
-            UiKit.Tooltip(_phlegm.Root, () => "Phlegm: built by basic abilities, spent by thresholds and ultimates.");
+            _slotRow.style.marginTop = 4f;
+
+            _chips = UiKit.El(frame, "row");
+            _chips.style.justifyContent = Justify.Center;
+            _chips.style.marginTop = 3f;
         }
 
         public override void Refresh()
@@ -62,16 +84,16 @@ namespace Rth.Client.Ui.Panels
             ClientContent content = Session.Content;
             if (state == null || content == null) return;
 
-            _blood.Set(state.Blood / (float)Mathf.Max(1, state.MaxBlood), "Blood " + state.Blood + " / " + state.MaxBlood);
-            _phlegm.Set(state.Phlegm / (float)Mathf.Max(1, content.MaxPhlegm), "Phlegm " + state.Phlegm + "%");
-            string deflect = state.Deflect == CombatStyle.None ? "" : "  - deflecting " + state.Deflect.ToString().ToLowerInvariant();
-            _breath.Set(state.Breath / (float)Mathf.Max(1, state.MaxBreath), "Breath " + state.Breath + " / " + state.MaxBreath + deflect);
+            _blood.Set(state.Blood / (float)Mathf.Max(1, state.MaxBlood), state.Blood + " / " + state.MaxBlood);
+            _phlegm.Set(state.Phlegm / (float)Mathf.Max(1, content.MaxPhlegm), state.Phlegm + "%");
+            _breath.Set(state.Breath / (float)Mathf.Max(1, state.MaxBreath), state.Breath + " / " + state.MaxBreath);
+            _breath.Color = state.Deflect != CombatStyle.None ? new Color(0.65f, 0.82f, 1f) : BreathColour;
             _bile.Set(state.Bile, content);
-            _summary.text = BileSummary(state, content, Session.TickSeconds);
 
             string signature = string.Join(",", content.ActionBar);
             if (signature != _barSignature) RebuildSlots(content);
             UpdateSlots(state);
+            UpdateChips(state, content);
         }
 
         private void RebuildSlots(ClientContent content)
@@ -83,21 +105,22 @@ namespace Rth.Client.Ui.Panels
             {
                 AbilityDef ability = Session.Ability(content.ActionBar[i]);
                 if (ability == null) continue;
-                var slot = new Slot { AbilityId = ability.Id, Root = UiKit.El(_slotRow, "ability") };
-                slot.Root.style.backgroundColor = GameText.AbilityColor(ability);
-                UiKit.Text(slot.Root, (i + 1).ToString(), "ability__key");
-                UiKit.Text(slot.Root, ability.Type == AbilityType.Threshold ? "T" : ability.Type == AbilityType.Ultimate ? "U" : "", "ability__kind");
-                UiKit.Text(slot.Root, ability.Name, "ability__name");
-                slot.Cooldown = UiKit.El(slot.Root, "ability__cooldown");
-                slot.Timer = UiKit.Text(slot.Root, "", "ability__timer");
                 string id = ability.Id;
+                var slot = new Slot { AbilityId = id, Root = UiKit.El(_slotRow, "ability") };
+                slot.Root.style.backgroundColor = Color.Lerp(GameText.AbilityColor(ability), Color.black, 0.45f);
+                UiKit.Icon(slot.Root, IconLibrary.ForAbility(ability), 32f, "slot__icon").pickingMode = PickingMode.Ignore;
+                slot.Cooldown = UiKit.El(slot.Root, "ability__cooldown");
+                slot.Cooldown.pickingMode = PickingMode.Ignore;
+                string kind = ability.Type == AbilityType.Threshold ? "T" : ability.Type == AbilityType.Ultimate ? "U" : "";
+                UiKit.Text(slot.Root, kind, "ability__kind").pickingMode = PickingMode.Ignore;
+                UiKit.Text(slot.Root, (i + 1).ToString(), "ability__key").pickingMode = PickingMode.Ignore;
+                slot.Timer = UiKit.Text(slot.Root, "", "ability__timer");
+                slot.Timer.pickingMode = PickingMode.Ignore;
                 slot.Root.RegisterCallback<ClickEvent>(_ => Session.UseAbility(id));
                 UiKit.Tooltip(slot.Root, () =>
                 {
                     AbilityDef a = Session.Ability(id);
-                    if (a == null) return null;
-                    string problem = Session.AbilityProblem(a);
-                    return GameText.Describe(a, Session.TickSeconds) + (problem != null ? "\n\n" + problem : "");
+                    return a == null ? null : GameText.Describe(a, Session.TickSeconds, Session.AbilityProblem(a));
                 });
                 _slots.Add(slot);
             }
@@ -110,8 +133,7 @@ namespace Rth.Client.Ui.Panels
             {
                 AbilityDef ability = Session.Ability(slot.AbilityId);
                 if (ability == null) continue;
-                bool usable = Session.AbilityProblem(ability) == null;
-                slot.Root.style.backgroundColor = usable ? GameText.AbilityColor(ability) : Color.Lerp(GameText.AbilityColor(ability), Color.black, 0.6f);
+                slot.Root.EnableInClassList("ability--unusable", Session.AbilityProblem(ability) != null);
                 slot.Root.EnableInClassList("ability--queued", state.QueuedAbility == ability.Id);
 
                 // Cooldown: whichever is later, the ability's own or the global one.
@@ -121,11 +143,13 @@ namespace Rth.Client.Ui.Panels
                 float remaining = ready - now;
                 float total = Mathf.Max(ability.CooldownTicks, 3);
                 slot.Cooldown.style.height = Length.Percent(remaining > 0f ? Mathf.Clamp01(remaining / total) * 100f : 0f);
-                slot.Timer.text = remaining * Session.TickSeconds > 0.95f ? Mathf.CeilToInt(remaining * Session.TickSeconds) + "s" : "";
+                float seconds = remaining * Session.TickSeconds;
+                slot.Timer.text = seconds > 0.95f ? Mathf.CeilToInt(seconds).ToString() : "";
             }
         }
 
-        private static string BileSummary(PlayerStateMessage state, ClientContent content, float tickSeconds)
+        /// <summary>Small labels for what is happening to you: the bile state, fever or torpor, effects, combat.</summary>
+        private void UpdateChips(PlayerStateMessage state, ClientContent content)
         {
             var rules = new CombatRules
             {
@@ -133,25 +157,37 @@ namespace Rth.Client.Ui.Panels
                 BilePassiveThreshold = content.BilePassiveThreshold,
                 BileExtreme = content.BileExtreme,
             };
-            var parts = new List<string>();
-            if (rules.IsCholeric(state.Bile)) parts.Add("Choleric: +" + rules.CholericBonusPercent(state.Bile) + "% damage");
-            else if (rules.IsMelancholic(state.Bile)) parts.Add("Melancholic: " + rules.MelancholicWardPercent(state.Bile) + "% less damage taken");
-            else parts.Add("Balanced");
-            if (rules.IsFevered(state.Bile)) parts.Add("FEVER: your blood is burning");
-            if (rules.IsTorpid(state.Bile)) parts.Add("TORPOR: phlegm builds slowly");
+            var chips = new List<(string Text, Color Colour)>();
+            if (rules.IsCholeric(state.Bile)) chips.Add(("Choleric +" + rules.CholericBonusPercent(state.Bile) + "% damage", YellowBile));
+            else if (rules.IsMelancholic(state.Bile)) chips.Add(("Melancholic -" + rules.MelancholicWardPercent(state.Bile) + "% damage taken", new Color(0.75f, 0.6f, 1f)));
+            else chips.Add(("Balanced", UiKit.Muted));
+            if (rules.IsFevered(state.Bile)) chips.Add(("Fever", UiKit.Bad));
+            if (rules.IsTorpid(state.Bile)) chips.Add(("Torpor", new Color(0.6f, 0.6f, 1f)));
             foreach (EffectState e in state.Effects)
             {
-                float secs = Mathf.Max(0f, (e.EndTick - (float)state.Tick) * tickSeconds);
-                parts.Add(e.Effect + " " + e.Magnitude + "% (" + secs.ToString("0") + "s)");
+                int secs = Mathf.Max(0, Mathf.CeilToInt((e.EndTick - (float)state.Tick) * Session.TickSeconds));
+                chips.Add((e.Effect + " " + e.Magnitude + "% " + secs + "s", UiKit.Good));
             }
-            if (state.InCombat) parts.Add("in combat");
-            return string.Join("   ", parts);
+            if (state.Deflect != CombatStyle.None) chips.Add(("Deflecting " + state.Deflect.ToString().ToLowerInvariant(), BreathColour));
+            if (state.InCombat) chips.Add(("In combat", UiKit.Bad));
+
+            var sb = new System.Text.StringBuilder();
+            foreach ((string text, Color _) in chips) sb.Append(text).Append('|');
+            if (sb.ToString() == _chipSignature) return;
+            _chipSignature = sb.ToString();
+            _chips.Clear();
+            foreach ((string text, Color colour) in chips)
+            {
+                Label chip = UiKit.Text(_chips, text, "chip");
+                chip.style.color = colour;
+            }
         }
 
-        /// <summary>The bile axis: centred, black bile to the left, yellow to the right, marks at the thresholds.</summary>
+        /// <summary>The bile axis: centred, black bile filling left, yellow filling right, with threshold marks and pole icons.</summary>
         private sealed class BileAxis
         {
             public readonly VisualElement Root;
+            private readonly VisualElement _track;
             private readonly VisualElement _fill;
             private readonly Label _label;
             private readonly List<VisualElement> _marks = new List<VisualElement>();
@@ -159,16 +195,27 @@ namespace Rth.Client.Ui.Panels
 
             public BileAxis(VisualElement parent)
             {
-                Root = UiKit.El(parent, "bar");
-                _fill = UiKit.El(Root, "bar__fill");
-                var centre = UiKit.El(Root);
+                Root = UiKit.El(parent, "bar-row");
+                UiKit.Icon(Root, IconLibrary.Get("draught"), 16f, "bar-row__icon");
+                _track = UiKit.El(Root, "bar");
+                _track.style.height = 14f;
+                _fill = UiKit.El(_track, "bar__fill");
+                UiKit.El(_track, "bar__gloss");
+                VisualElement centre = UiKit.El(_track);
                 centre.style.position = Position.Absolute;
                 centre.style.left = Length.Percent(50f);
                 centre.style.width = 2f;
-                centre.style.top = -2f;
-                centre.style.bottom = -2f;
-                centre.style.backgroundColor = Color.white;
-                _label = UiKit.Text(Root, "", "bar__label");
+                centre.style.marginLeft = -1f;
+                centre.style.top = 0f;
+                centre.style.bottom = 0f;
+                centre.style.backgroundColor = new Color(1f, 1f, 1f, 0.85f);
+                // The value sits to the left so the centre line never runs through it.
+                _label = UiKit.Text(_track, "", "bar__label");
+                _label.style.unityTextAlign = TextAnchor.MiddleLeft;
+                _label.style.paddingLeft = 4f;
+                VisualElement right = UiKit.Icon(Root, IconLibrary.Get("flare"), 16f, "bar-row__icon");
+                right.style.marginLeft = 3f;
+                right.style.marginRight = 0f;
             }
 
             public void Set(int bile, ClientContent content)
@@ -177,7 +224,7 @@ namespace Rth.Client.Ui.Panels
                 float half = Mathf.Abs(bile) / limit * 50f;
                 _fill.style.left = Length.Percent(bile >= 0 ? 50f : 50f - half);
                 _fill.style.width = Length.Percent(half);
-                _fill.style.backgroundColor = bile > 0 ? new Color(0.9f, 0.75f, 0.15f) : new Color(0.35f, 0.2f, 0.5f);
+                _fill.style.backgroundColor = bile > 0 ? YellowBile : BlackBile;
                 _label.text = "Bile " + (bile > 0 ? "+" : "") + bile;
 
                 int key = content.BilePassiveThreshold * 1000 + content.BileExtreme;
@@ -189,14 +236,14 @@ namespace Rth.Client.Ui.Panels
                 {
                     foreach (int sign in new[] { -1, 1 })
                     {
-                        var m = new VisualElement();
+                        var m = new VisualElement { pickingMode = PickingMode.Ignore };
                         m.style.position = Position.Absolute;
                         m.style.left = Length.Percent(50f + sign * mark / limit * 50f);
-                        m.style.width = 2f;
+                        m.style.width = 1f;
                         m.style.top = 0f;
                         m.style.bottom = 0f;
-                        m.style.backgroundColor = mark == content.BileExtreme ? new Color(1f, 0.35f, 0.25f) : new Color(1f, 1f, 1f, 0.7f);
-                        Root.Insert(1, m);
+                        m.style.backgroundColor = mark == content.BileExtreme ? new Color(1f, 0.3f, 0.2f, 0.9f) : new Color(1f, 1f, 1f, 0.45f);
+                        _track.Insert(2, m);
                         _marks.Add(m);
                     }
                 }

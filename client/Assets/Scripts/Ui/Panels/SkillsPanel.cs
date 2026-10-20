@@ -7,23 +7,29 @@ using UnityEngine.UIElements;
 namespace Rth.Client.Ui.Panels
 {
     /// <summary>
-    /// Every skill at a glance, with the total level. Hover for XP; right-click to set a level
-    /// target, which shows as a bar under the skill and in Metrics.
+    /// Every skill at a glance, as raised tiles of icon and level, three across, with a total-level
+    /// tile at the end. A thin bar under each level shows progress to the next. Hover for XP;
+    /// right-click to set a level target, shown as an orange bar and in Metrics.
     /// </summary>
     public sealed class SkillsPanel : UiPanel
     {
+        private const float TileWidth = 74f;
+        private const float TileHeight = 34f;
+
         public override string Id => "skills";
         public override string Title => "Skills";
+        public override string Icon => "skills";
         public override string DefaultWindow => UiDefaultLayout.Side;
         public override int Order => 4;
         public override Key Hotkey => Key.K;
+        public override Vector2 MinSize => new Vector2(240f, 160f);
 
         private VisualElement _grid;
         private Label _total;
         private int _builtFor = -1;
-        private readonly List<Cell> _cells = new List<Cell>();
+        private readonly List<Tile> _tiles = new List<Tile>();
 
-        private sealed class Cell
+        private sealed class Tile
         {
             public string Skill;
             public Label Level;
@@ -34,9 +40,8 @@ namespace Rth.Client.Ui.Panels
         protected override void Build(VisualElement root)
         {
             _grid = UiKit.El(root, "slot-grid");
-            _total = UiKit.Text(root, "", "heading");
-            _total.style.marginTop = 6f;
-            _total.style.unityTextAlign = TextAnchor.MiddleCenter;
+            _grid.style.width = 3 * (TileWidth + 2f);
+            _grid.style.alignSelf = Align.Center;
         }
 
         public override void Refresh()
@@ -46,75 +51,84 @@ namespace Rth.Client.Ui.Panels
             if (content.Skills.Count != _builtFor) Rebuild();
 
             int total = 0;
-            foreach (Cell cell in _cells)
+            foreach (Tile tile in _tiles)
             {
-                Session.SkillXp.TryGetValue(cell.Skill, out long xp);
+                Session.SkillXp.TryGetValue(tile.Skill, out long xp);
                 int level = content.XpCurve.LevelForXp(xp);
                 total += level;
                 long from = content.XpCurve.XpForLevel(level);
                 long to = content.XpCurve.XpForLevel(level + 1);
-                cell.Level.text = level.ToString();
-                cell.Progress.style.width = Length.Percent(to > from ? (xp - from) * 100f / (to - from) : 100f);
+                tile.Level.text = level + "/" + level;
+                tile.Progress.style.width = Length.Percent(to > from ? (xp - from) * 100f / (to - from) : 100f);
 
-                int target = SkillTargets.Get(Session.PlayerName, cell.Skill);
-                cell.Target.style.display = target > level ? DisplayStyle.Flex : DisplayStyle.None;
+                int target = SkillTargets.Get(Session.PlayerName, tile.Skill);
+                tile.Target.style.display = target > level ? DisplayStyle.Flex : DisplayStyle.None;
                 if (target > level)
                 {
-                    long start = content.XpCurve.XpForLevel(level);
                     long goal = content.XpCurve.XpForLevel(target);
-                    cell.Target.style.width = Length.Percent(goal > start ? (xp - start) * 100f / (goal - start) : 100f);
+                    tile.Target.style.width = Length.Percent(goal > from ? (xp - from) * 100f / (goal - from) : 100f);
                 }
             }
-            _total.text = "Total level: " + total;
+            _total.text = "Total level:\n" + total;
+        }
+
+        private VisualElement NewTile()
+        {
+            VisualElement tile = UiKit.El(_grid, "raised", "row");
+            tile.style.width = TileWidth;
+            tile.style.height = TileHeight;
+            tile.style.marginRight = tile.style.marginBottom = 2f;
+            tile.style.paddingLeft = 3f;
+            return tile;
         }
 
         private void Rebuild()
         {
             _builtFor = Session.Content.Skills.Count;
             _grid.Clear();
-            _cells.Clear();
+            _tiles.Clear();
             foreach (SkillDef skill in Session.Content.Skills)
             {
                 string id = skill.Id;
-                VisualElement box = UiKit.El(_grid);
-                box.style.width = 70f;
-                box.style.height = 40f;
-                box.style.marginLeft = box.style.marginRight = box.style.marginTop = box.style.marginBottom = 1f;
-                box.style.paddingLeft = box.style.paddingRight = 3f;
-                box.style.backgroundColor = new Color(0.17f, 0.15f, 0.12f);
-                box.style.borderTopWidth = box.style.borderBottomWidth = box.style.borderLeftWidth = box.style.borderRightWidth = 1f;
-                box.style.borderTopColor = box.style.borderBottomColor = box.style.borderLeftColor = box.style.borderRightColor = new Color(0.1f, 0.09f, 0.07f);
-                Label name = UiKit.Text(box, skill.Name);
-                name.style.fontSize = 9;
-                name.style.overflow = Overflow.Hidden;
-                Label level = UiKit.Text(box, "1");
-                level.style.fontSize = 15;
-                level.style.color = new Color(1f, 1f, 0f);
-                level.style.unityFontStyleAndWeight = FontStyle.Bold;
+                VisualElement tile = NewTile();
+                UiKit.Icon(tile, IconLibrary.Get(skill.Icon), 24f).pickingMode = PickingMode.Ignore;
+                Label level = UiKit.Text(tile, "1/1", "value");
+                level.pickingMode = PickingMode.Ignore;
+                level.style.flexGrow = 1;
                 level.style.unityTextAlign = TextAnchor.MiddleRight;
-                VisualElement bar = UiKit.El(box);
-                bar.style.position = Position.Absolute;
-                bar.style.left = bar.style.right = 0f;
-                bar.style.bottom = 0f;
-                bar.style.height = 3f;
-                bar.style.backgroundColor = new Color(0.1f, 0.09f, 0.07f);
-                VisualElement progress = UiKit.El(bar);
+                level.style.paddingRight = 4f;
+
+                VisualElement track = UiKit.El(tile);
+                track.pickingMode = PickingMode.Ignore;
+                track.style.position = Position.Absolute;
+                track.style.left = 30f;
+                track.style.right = 4f;
+                track.style.bottom = 3f;
+                track.style.height = 3f;
+                track.style.backgroundColor = new Color(0.09f, 0.07f, 0.05f);
+                VisualElement progress = UiKit.El(track);
                 progress.style.height = Length.Percent(100f);
-                progress.style.backgroundColor = new Color(0.35f, 0.6f, 0.3f);
-                VisualElement target = UiKit.El(box);
+                progress.style.backgroundColor = new Color(0.3f, 0.75f, 0.25f);
+                VisualElement target = UiKit.El(tile);
+                target.pickingMode = PickingMode.Ignore;
                 target.style.position = Position.Absolute;
                 target.style.left = 0f;
                 target.style.top = 0f;
                 target.style.height = 2f;
-                target.style.backgroundColor = new Color(1f, 0.6f, 0.1f);
+                target.style.backgroundColor = UiKit.Heading;
 
-                box.RegisterCallback<PointerDownEvent>(e =>
+                tile.RegisterCallback<PointerDownEvent>(e =>
                 {
                     if (e.button == 1) Ui.Menu(e.position, skill.Name, TargetOptions(id));
                 });
-                UiKit.Tooltip(box, () => Describe(skill));
-                _cells.Add(new Cell { Skill = id, Level = level, Progress = progress, Target = target });
+                UiKit.Tooltip(tile, () => Describe(skill));
+                _tiles.Add(new Tile { Skill = id, Level = level, Progress = progress, Target = target });
             }
+
+            VisualElement totalTile = NewTile();
+            _total = UiKit.Text(totalTile, "", "value", "small");
+            _total.style.flexGrow = 1;
+            _total.style.unityTextAlign = TextAnchor.MiddleCenter;
         }
 
         private List<(string Label, System.Action Action)> TargetOptions(string skill)
@@ -138,12 +152,15 @@ namespace Rth.Client.Ui.Panels
             var curve = Session.Content.XpCurve;
             Session.SkillXp.TryGetValue(skill.Id, out long xp);
             int level = curve.LevelForXp(xp);
-            string text = skill.Name + " " + level + "\n" + xp.ToString("N0") + " xp";
-            if (level < curve.MaxLevel) text += "\n" + (curve.XpForLevel(level + 1) - xp).ToString("N0") + " to level " + (level + 1);
+            var lines = new List<string> { UiKit.Title(skill.Name + " " + level) };
+            if (!string.IsNullOrEmpty(skill.Description)) lines.Add(skill.Description);
+            lines.Add("");
+            lines.Add("XP: " + UiKit.Colour(xp.ToString("N0"), UiKit.Value));
+            if (level < curve.MaxLevel) lines.Add("Next level at: " + UiKit.Colour(curve.XpForLevel(level + 1).ToString("N0"), UiKit.Value) + "\nRemaining: " + UiKit.Colour((curve.XpForLevel(level + 1) - xp).ToString("N0"), UiKit.Value));
             int target = SkillTargets.Get(Session.PlayerName, skill.Id);
-            if (target > level) text += "\nTarget " + target + ": " + (curve.XpForLevel(target) - xp).ToString("N0") + " xp to go";
-            if (!string.IsNullOrEmpty(skill.Description)) text += "\n\n" + skill.Description;
-            return text + "\n\nRight-click to set a target.";
+            if (target > level) lines.Add("Target " + target + ": " + UiKit.Colour((curve.XpForLevel(target) - xp).ToString("N0") + " to go", UiKit.Heading));
+            lines.Add(UiKit.Colour("Right-click to set a target.", UiKit.Muted));
+            return string.Join("\n", lines);
         }
     }
 }

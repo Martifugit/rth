@@ -277,8 +277,11 @@ RS3-style movable windows with an OSRS look; see `docs/interface.md`.
       worn + bonuses, ability book, focuses (deflection), skills (total level, targets),
       quests, task, XP metrics, chat, world map (regions to scale), settings.
 - [x] Public chat: `ChatSystem` (protocol 8), overhead text, Enter to type.
-- [x] The old IMGUI HUD is reduced to hover text and the Assayer; bank, shop, dialogue and
-      right-click menus are still IMGUI, and a guard stops their clicks reaching windows below.
+- [x] Visual pass: theme stylesheet, pixel font (OFL), original pixel-art icon library with
+      tinting, OSRS-style inner layouts (paper-doll equipment, spellbook-style ability and
+      focus books, skill tiles, orbs, parchment chat with filters). Bank, shop, conversation,
+      the Assayer and the right-click menu moved into the window system too; only the login
+      box and world labels are still IMGUI.
 
 Not yet: player-arranged action bars (needs a server-saved bar layout), secondary bars, run
 energy, friends/group/private chat, the larger windows (bestiary, diary, skill unlocks, quest
@@ -325,7 +328,8 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | Something per region (music, rules, title) | A field on `WorldRegion`, written to `<name>.region.json` by `MapExporter`; it reaches clients in `RegionsMessage` as JSON. |
 | "Who is near this tile" | `World.EntitiesNear(plane, tile, radius)` (zone index), not a scan of every entity. |
 | A sign, notice or flavour action | An object action with a `message` in objects.json (no handler needed). |
-| An interface panel | A `UiPanel` subclass in `client/Assets/Scripts/Ui/Panels/` (id, title, default window, `Build`, `Refresh`); it registers itself. A new default spot goes in `UiDefaultLayout`. |
+| An interface panel | A `UiPanel` subclass in `client/Assets/Scripts/Ui/Panels/` (id, title, icon, default window, `Build`, `Refresh`); it registers itself. Build it from `UiKit` pieces so it matches the theme (`Resources/UI/Rth.uss`). A new default spot goes in `UiDefaultLayout`. A window the server opens overrides `ServerOpen` and `OnClosedByPlayer`. |
+| An icon | 16 rows of pixel art in `client/Assets/Resources/UI/pixelicons.txt` (or a PNG at `Resources/Icons/<id>.png`); name it with `"icon"` on the item, ability or skill. |
 | A chat channel (private, group) | A `ChatChannel` value and its routing in `ChatSystem`; the chat panel shows `ChatLineMessage`s. |
 | A new kind of content file | A field on `ContentParts`, load it in `GameContent.Load`, validate in `Create`. Client-visible content goes in `ClientContent` (sent as JSON, so no codec changes). |
 | A client message | A message class in `shared/Net/Messages.cs`, a case in `MessageCodec.Decode`, bump `Protocol.Version`. |

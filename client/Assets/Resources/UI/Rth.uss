@@ -1,33 +1,63 @@
-/* R'th interface theme: OSRS-style stone and leather. Original styling only. */
+/*
+ * R'th interface theme. The look of Old School RuneScape (bevelled stone-brown frames, chunky
+ * pixel text with drop shadows, orange headings, yellow numbers) in original styling.
+ *
+ * Colour roles
+ *   surface   #3b3227   window body          well      #2a231b   recessed areas (slots, lists)
+ *   bevel hi  #6b5a41   top/left edges       bevel lo  #17120d   bottom/right edges
+ *   heading   #ff981f   titles               value     #ffff00   numbers
+ *   text      #e8dcc0   body                 muted     #a8987a   hints
+ *   active    #6e2a1a   selected tab / on    good      #3cd83c   bad       #ff4a3a
+ */
 
 .rth-root {
-    font-size: 12px;
-    color: rgb(232, 216, 176);
+    font-size: 13px;
+    color: rgb(232, 220, 192);
+    text-shadow: 1px 1px 0 rgb(0, 0, 0);
 }
 
 /* ---------------------------------------------------------------- windows */
 
 .window {
     position: absolute;
-    background-color: rgb(62, 53, 41);
+    background-color: rgb(59, 50, 39);
     border-width: 2px;
-    border-color: rgb(20, 17, 12);
-    border-radius: 3px;
+    border-top-color: rgb(107, 90, 65);
+    border-left-color: rgb(107, 90, 65);
+    border-bottom-color: rgb(23, 18, 13);
+    border-right-color: rgb(23, 18, 13);
+    border-radius: 2px;
 }
 
 .window--bare {
     background-color: rgba(0, 0, 0, 0);
+    background-image: none;
     border-width: 0;
 }
 
 .window__titlebar {
     flex-direction: row;
-    align-items: flex-end;
-    min-height: 22px;
-    background-color: rgb(40, 34, 26);
+    align-items: center;
+    min-height: 26px;
+    background-color: rgb(42, 35, 27);
     border-bottom-width: 1px;
-    border-bottom-color: rgb(20, 17, 12);
-    padding-left: 2px;
+    border-bottom-color: rgb(23, 18, 13);
+    padding: 0 2px 0 2px;
+}
+
+.window__title-icon {
+    width: 20px;
+    height: 20px;
+    margin: 0 4px 0 2px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.window__title {
+    flex-grow: 1;
+    color: rgb(255, 152, 31);
+    -unity-font-style: bold;
+    font-size: 13px;
+    -unity-text-align: middle-left;
 }
 
 .window__tabs {
@@ -35,46 +65,69 @@
     flex-wrap: wrap;
     flex-grow: 1;
     flex-shrink: 1;
+    align-items: flex-end;
 }
 
 .tab {
-    padding: 3px 6px 3px 6px;
-    margin: 2px 1px 0 1px;
-    background-color: rgb(54, 46, 36);
-    color: rgb(185, 165, 125);
+    width: 28px;
+    height: 26px;
+    margin: 2px 1px 0 0;
+    background-color: rgb(52, 44, 34);
+    border-width: 1px;
+    border-bottom-width: 0;
+    border-top-color: rgb(96, 81, 59);
+    border-left-color: rgb(96, 81, 59);
+    border-right-color: rgb(23, 18, 13);
     border-top-left-radius: 3px;
     border-top-right-radius: 3px;
-    -unity-font-style: bold;
-    font-size: 11px;
+    align-items: center;
+    justify-content: center;
 }
 
 .tab:hover {
-    color: rgb(255, 210, 120);
+    background-color: rgb(70, 60, 46);
 }
 
 .tab--active {
-    background-color: rgb(92, 78, 58);
-    color: rgb(255, 152, 31);
+    background-color: rgb(110, 42, 26);
+    border-top-color: rgb(170, 80, 50);
+    border-left-color: rgb(170, 80, 50);
+}
+
+.tab__icon {
+    width: 22px;
+    height: 22px;
+    -unity-background-scale-mode: scale-to-fit;
 }
 
 .window__button {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     margin: 2px;
-    -unity-text-align: middle-center;
-    -unity-font-style: bold;
-    color: rgb(200, 180, 140);
-    background-color: rgb(54, 46, 36);
-    border-radius: 2px;
+    background-color: rgb(52, 44, 34);
+    border-width: 1px;
+    border-top-color: rgb(96, 81, 59);
+    border-left-color: rgb(96, 81, 59);
+    border-bottom-color: rgb(23, 18, 13);
+    border-right-color: rgb(23, 18, 13);
+    -unity-background-scale-mode: scale-to-fit;
 }
 
 .window__button:hover {
+    background-color: rgb(110, 42, 26);
+}
+
+.window__header {
     color: rgb(255, 152, 31);
+    -unity-font-style: bold;
+    font-size: 13px;
+    -unity-text-align: middle-center;
+    margin: 0 0 4px 0;
 }
 
 .window__body {
     flex-grow: 1;
-    padding: 4px;
+    padding: 5px;
     overflow: hidden;
 }
 
@@ -84,24 +137,24 @@
 
 .window__grip {
     position: absolute;
-    right: 0;
-    bottom: 0;
-    width: 12px;
-    height: 12px;
-    border-right-width: 3px;
-    border-bottom-width: 3px;
-    border-color: rgb(120, 100, 70);
+    right: 1px;
+    bottom: 1px;
+    width: 10px;
+    height: 10px;
+    border-right-width: 2px;
+    border-bottom-width: 2px;
+    border-color: rgb(130, 110, 80);
 }
 
 .window__handle {
     position: absolute;
-    left: -2px;
-    top: -2px;
+    left: -3px;
+    top: -3px;
     width: 14px;
     height: 14px;
-    background-color: rgb(92, 78, 58);
+    background-color: rgb(110, 42, 26);
     border-width: 1px;
-    border-color: rgb(20, 17, 12);
+    border-color: rgb(23, 18, 13);
     border-radius: 7px;
     opacity: 0;
 }
@@ -120,36 +173,111 @@
     border-color: rgb(255, 152, 31);
 }
 
-/* ---------------------------------------------------------------- common pieces */
+/* ---------------------------------------------------------------- surfaces and text */
+
+/* A recessed area: slot grids, lists, tables. */
+.well {
+    background-color: rgb(42, 35, 27);
+    border-width: 1px;
+    border-top-color: rgb(23, 18, 13);
+    border-left-color: rgb(23, 18, 13);
+    border-bottom-color: rgb(84, 71, 52);
+    border-right-color: rgb(84, 71, 52);
+    padding: 3px;
+}
+
+/* A raised box: tiles, cards. */
+.raised {
+    background-color: rgb(66, 56, 43);
+    border-width: 1px;
+    border-top-color: rgb(107, 90, 65);
+    border-left-color: rgb(107, 90, 65);
+    border-bottom-color: rgb(23, 18, 13);
+    border-right-color: rgb(23, 18, 13);
+}
+
+.heading {
+    color: rgb(255, 152, 31);
+    -unity-font-style: bold;
+    margin: 4px 0 3px 0;
+}
+
+.value {
+    color: rgb(255, 255, 0);
+}
+
+.muted {
+    color: rgb(168, 152, 122);
+}
+
+.good {
+    color: rgb(60, 216, 60);
+}
+
+.bad {
+    color: rgb(255, 74, 58);
+}
+
+.small {
+    font-size: 11px;
+}
+
+.row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.spacer {
+    flex-grow: 1;
+}
+
+.scroll {
+    flex-grow: 1;
+}
+
+.icon {
+    -unity-background-scale-mode: scale-to-fit;
+    flex-shrink: 0;
+}
 
 .tooltip {
     position: absolute;
-    max-width: 280px;
-    padding: 5px 7px;
-    background-color: rgba(18, 15, 12, 0.96);
+    max-width: 300px;
+    padding: 6px 8px;
+    background-color: rgba(20, 16, 12, 0.97);
     border-width: 1px;
-    border-color: rgb(120, 100, 70);
-    color: rgb(240, 230, 200);
+    border-top-color: rgb(130, 110, 80);
+    border-left-color: rgb(130, 110, 80);
+    border-bottom-color: rgb(60, 50, 38);
+    border-right-color: rgb(60, 50, 38);
+    color: rgb(232, 220, 192);
     white-space: normal;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .drag-ghost {
     position: absolute;
     padding: 3px 8px;
-    background-color: rgba(92, 78, 58, 0.9);
+    background-color: rgba(110, 42, 26, 0.9);
     color: rgb(255, 152, 31);
     -unity-font-style: bold;
     border-width: 1px;
-    border-color: rgb(20, 17, 12);
+    border-color: rgb(23, 18, 13);
+    flex-direction: row;
+    align-items: center;
 }
+
+/* ---------------------------------------------------------------- bars */
 
 .bar {
     height: 16px;
-    background-color: rgb(22, 19, 15);
+    background-color: rgb(20, 16, 12);
     border-width: 1px;
-    border-color: rgb(14, 12, 9);
-    margin-bottom: 3px;
+    border-top-color: rgb(10, 8, 6);
+    border-left-color: rgb(10, 8, 6);
+    border-bottom-color: rgb(84, 71, 52);
+    border-right-color: rgb(84, 71, 52);
+    flex-grow: 1;
 }
 
 .bar__fill {
@@ -159,60 +287,97 @@
     bottom: 0;
 }
 
-.bar__label {
+.bar__gloss {
     position: absolute;
     left: 0;
     right: 0;
     top: 0;
-    bottom: 0;
-    -unity-text-align: middle-center;
-    -unity-font-style: bold;
-    font-size: 11px;
-    color: rgb(255, 255, 255);
-    text-shadow: 1px 1px 0 rgb(0, 0, 0);
+    height: 45%;
+    background-color: rgba(255, 255, 255, 0.16);
 }
 
+.bar__label {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -1px;
+    bottom: 0;
+    -unity-text-align: middle-center;
+    font-size: 12px;
+    color: rgb(255, 255, 255);
+}
+
+.bar-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 3px;
+}
+
+.bar-row__icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 3px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+/* ---------------------------------------------------------------- buttons and toggles */
+
 .button {
-    padding: 4px 8px;
+    padding: 3px 8px;
     margin: 2px;
-    background-color: rgb(80, 67, 50);
+    background-color: rgb(78, 66, 50);
     border-width: 1px;
-    border-color: rgb(20, 17, 12);
-    border-radius: 2px;
+    border-top-color: rgb(120, 101, 74);
+    border-left-color: rgb(120, 101, 74);
+    border-bottom-color: rgb(23, 18, 13);
+    border-right-color: rgb(23, 18, 13);
     color: rgb(255, 152, 31);
-    -unity-font-style: bold;
     -unity-text-align: middle-center;
 }
 
 .button:hover {
-    background-color: rgb(100, 85, 62);
+    background-color: rgb(98, 83, 62);
+}
+
+.button:active {
+    border-top-color: rgb(23, 18, 13);
+    border-left-color: rgb(23, 18, 13);
+    border-bottom-color: rgb(120, 101, 74);
+    border-right-color: rgb(120, 101, 74);
 }
 
 .button--on {
-    background-color: rgb(60, 90, 140);
-    color: rgb(230, 240, 255);
+    background-color: rgb(110, 42, 26);
+    color: rgb(255, 255, 0);
 }
 
-.heading {
-    color: rgb(255, 152, 31);
-    -unity-font-style: bold;
-    margin-bottom: 4px;
-}
-
-.muted {
-    color: rgb(160, 145, 115);
-}
-
-.row {
+.check {
     flex-direction: row;
     align-items: center;
+    padding: 3px 2px;
 }
 
-.scroll {
-    flex-grow: 1;
+.check:hover {
+    background-color: rgba(255, 255, 255, 0.05);
 }
 
-/* ---------------------------------------------------------------- slots (pack, worn, abilities) */
+.check__box {
+    width: 14px;
+    height: 14px;
+    margin-right: 6px;
+    background-color: rgb(20, 16, 12);
+    border-width: 1px;
+    border-top-color: rgb(10, 8, 6);
+    border-left-color: rgb(10, 8, 6);
+    border-bottom-color: rgb(84, 71, 52);
+    border-right-color: rgb(84, 71, 52);
+}
+
+.check--on > .check__box {
+    background-color: rgb(255, 152, 31);
+}
+
+/* ---------------------------------------------------------------- slots: pack, worn, books */
 
 .slot-grid {
     flex-direction: row;
@@ -220,156 +385,279 @@
 }
 
 .slot {
-    width: 44px;
-    height: 38px;
-    margin: 1px;
-    background-color: rgb(44, 38, 30);
-    border-width: 1px;
-    border-color: rgb(30, 26, 20);
+    width: 42px;
+    height: 36px;
+    align-items: center;
+    justify-content: center;
 }
 
 .slot:hover {
-    border-color: rgb(160, 135, 90);
+    background-color: rgba(255, 255, 255, 0.06);
 }
 
 .slot__icon {
-    position: absolute;
-    left: 4px;
-    right: 4px;
-    top: 4px;
-    bottom: 4px;
-    border-radius: 3px;
-}
-
-.slot__name {
-    position: absolute;
-    left: 1px;
-    right: 1px;
-    top: 8px;
-    bottom: 1px;
-    font-size: 8px;
-    white-space: normal;
-    -unity-text-align: middle-center;
-    color: rgb(255, 255, 255);
-    text-shadow: 1px 1px 0 rgb(0, 0, 0);
+    width: 32px;
+    height: 32px;
+    -unity-background-scale-mode: scale-to-fit;
 }
 
 .slot__count {
     position: absolute;
-    left: 2px;
-    top: 0;
-    font-size: 10px;
-    -unity-font-style: bold;
+    left: 1px;
+    top: -2px;
+    font-size: 12px;
     color: rgb(255, 255, 0);
-    text-shadow: 1px 1px 0 rgb(0, 0, 0);
 }
 
-.slot--dragging {
-    opacity: 0.4;
+.slot--dragging > .slot__icon {
+    opacity: 0.35;
+}
+
+/* A framed slot (worn equipment, ability and focus icons). */
+.socket {
+    width: 40px;
+    height: 40px;
+    margin: 2px;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(42, 35, 27);
+    border-width: 2px;
+    border-top-color: rgb(23, 18, 13);
+    border-left-color: rgb(23, 18, 13);
+    border-bottom-color: rgb(96, 81, 59);
+    border-right-color: rgb(96, 81, 59);
+}
+
+.socket:hover {
+    border-bottom-color: rgb(255, 152, 31);
+    border-right-color: rgb(255, 152, 31);
+}
+
+.socket--empty > .slot__icon {
+    opacity: 0.5;
+}
+
+.socket--on {
+    background-color: rgb(110, 42, 26);
+    border-bottom-color: rgb(255, 200, 80);
+    border-right-color: rgb(255, 200, 80);
+}
+
+.socket--locked > .slot__icon {
+    opacity: 0.3;
+}
+
+.socket__badge {
+    position: absolute;
+    right: 1px;
+    top: -2px;
+    font-size: 11px;
+    color: rgb(255, 210, 120);
+}
+
+.socket__level {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    font-size: 11px;
+    -unity-text-align: middle-center;
+    color: rgb(255, 74, 58);
+}
+
+.socket-caption {
+    width: 44px;
+    font-size: 10px;
+    -unity-text-align: upper-center;
+    white-space: normal;
+    color: rgb(232, 220, 192);
 }
 
 /* ---------------------------------------------------------------- action bar */
 
-.ability {
-    width: 52px;
-    height: 52px;
-    margin: 2px;
+.actionbar {
+    background-color: rgb(59, 50, 39);
     border-width: 2px;
-    border-color: rgb(20, 17, 12);
-    border-radius: 3px;
+    border-top-color: rgb(107, 90, 65);
+    border-left-color: rgb(107, 90, 65);
+    border-bottom-color: rgb(23, 18, 13);
+    border-right-color: rgb(23, 18, 13);
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    padding: 5px 6px 4px 6px;
+}
+
+.ability {
+    width: 44px;
+    height: 44px;
+    margin: 0 1px;
+    align-items: center;
+    justify-content: center;
+    border-width: 2px;
+    border-top-color: rgb(23, 18, 13);
+    border-left-color: rgb(23, 18, 13);
+    border-bottom-color: rgb(96, 81, 59);
+    border-right-color: rgb(96, 81, 59);
+}
+
+.ability:hover {
+    border-bottom-color: rgb(255, 152, 31);
+    border-right-color: rgb(255, 152, 31);
 }
 
 .ability--queued {
-    border-color: rgb(255, 150, 30);
+    border-color: rgb(255, 170, 40);
+}
+
+.ability--unusable > .slot__icon {
+    opacity: 0.35;
 }
 
 .ability__key {
     position: absolute;
-    left: 3px;
-    top: 1px;
-    font-size: 10px;
-    -unity-font-style: bold;
+    right: 2px;
+    bottom: -1px;
+    font-size: 11px;
     color: rgb(255, 255, 255);
 }
 
 .ability__kind {
     position: absolute;
-    right: 3px;
-    top: 1px;
-    font-size: 10px;
-    -unity-font-style: bold;
-    color: rgb(255, 220, 120);
-}
-
-.ability__name {
-    position: absolute;
     left: 2px;
-    right: 2px;
-    top: 12px;
-    bottom: 2px;
-    font-size: 9px;
-    white-space: normal;
-    -unity-text-align: middle-center;
-    color: rgb(255, 255, 255);
-    text-shadow: 1px 1px 0 rgb(0, 0, 0);
+    top: -2px;
+    font-size: 11px;
+    color: rgb(255, 210, 120);
 }
 
 .ability__cooldown {
     position: absolute;
     left: 0;
     right: 0;
-    top: 0;
-    background-color: rgba(0, 0, 0, 0.6);
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.62);
 }
 
 .ability__timer {
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 2px;
+    top: 0;
+    bottom: 0;
     -unity-text-align: middle-center;
-    -unity-font-style: bold;
+    font-size: 15px;
     color: rgb(255, 255, 255);
+}
+
+.chip {
+    padding: 0 5px;
+    margin: 0 2px;
+    font-size: 11px;
+    background-color: rgb(42, 35, 27);
+    border-radius: 2px;
 }
 
 /* ---------------------------------------------------------------- chat */
 
+.chatbox {
+    background-color: rgba(212, 196, 156, 0.86);
+    border-width: 1px;
+    border-top-color: rgb(120, 101, 74);
+    border-left-color: rgb(120, 101, 74);
+    border-bottom-color: rgb(240, 228, 196);
+    border-right-color: rgb(240, 228, 196);
+    padding: 3px 5px;
+    text-shadow: 0 0 0 rgba(0, 0, 0, 0);
+}
+
 .chat-line {
     white-space: normal;
-    font-size: 12px;
-    color: rgb(255, 255, 255);
+    font-size: 13px;
+    color: rgb(0, 0, 0);
+    text-shadow: 0 0 0 rgba(0, 0, 0, 0);
 }
 
 .chat-line--warning {
-    color: rgb(255, 160, 80);
+    color: rgb(150, 20, 10);
 }
 
 .chat-line--assayer {
-    color: rgb(205, 180, 255);
+    color: rgb(90, 30, 130);
 }
 
-.chat-line--public {
-    color: rgb(140, 200, 255);
+.chat-filters {
+    flex-direction: row;
+    margin-top: 3px;
+}
+
+.chat-filter {
+    flex-grow: 1;
+    padding: 2px 0;
+    margin-right: 2px;
+    font-size: 12px;
+    -unity-text-align: middle-center;
+    background-color: rgb(52, 44, 34);
+    border-width: 1px;
+    border-top-color: rgb(96, 81, 59);
+    border-left-color: rgb(96, 81, 59);
+    border-bottom-color: rgb(23, 18, 13);
+    border-right-color: rgb(23, 18, 13);
+    color: rgb(232, 220, 192);
+}
+
+.chat-filter--on {
+    background-color: rgb(110, 42, 26);
+    color: rgb(255, 255, 0);
+}
+
+.chat-input-row {
+    flex-direction: row;
+    align-items: center;
+    border-top-width: 1px;
+    border-top-color: rgb(120, 101, 74);
+    margin-top: 2px;
+}
+
+.chat-input-row > .chat-name {
+    color: rgb(0, 0, 0);
+    text-shadow: 0 0 0 rgba(0, 0, 0, 0);
 }
 
 .chat-input {
-    margin: 2px 0 0 0;
+    flex-grow: 1;
+    margin: 0;
 }
 
 .chat-input > .unity-text-field__input {
-    background-color: rgb(30, 26, 20);
-    border-color: rgb(20, 17, 12);
-    color: rgb(255, 255, 255);
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    color: rgb(0, 0, 160);
+    font-size: 13px;
+    padding: 1px 2px;
+    text-shadow: 0 0 0 rgba(0, 0, 0, 0);
 }
 
 /* ---------------------------------------------------------------- minimap */
 
+.minimap-frame {
+    position: absolute;
+    width: 172px;
+    height: 172px;
+    border-radius: 86px;
+    border-width: 4px;
+    border-top-color: rgb(107, 90, 65);
+    border-left-color: rgb(107, 90, 65);
+    border-bottom-color: rgb(23, 18, 13);
+    border-right-color: rgb(23, 18, 13);
+    background-color: rgb(59, 50, 39);
+}
+
 .minimap {
-    width: 180px;
-    height: 180px;
-    border-radius: 90px;
-    border-width: 3px;
-    border-color: rgb(40, 34, 26);
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 82px;
     overflow: hidden;
     background-color: rgb(10, 10, 10);
 }
@@ -379,27 +667,156 @@
     width: 5px;
     height: 5px;
     border-radius: 2px;
+    border-width: 1px;
+    border-color: rgb(0, 0, 0);
 }
 
 .orb {
     position: absolute;
-    width: 40px;
-    height: 40px;
-    border-radius: 20px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.orb__number {
+    width: 30px;
+    height: 18px;
+    margin-right: -4px;
+    padding-right: 6px;
+    -unity-text-align: middle-right;
+    font-size: 12px;
+    color: rgb(60, 216, 60);
+    background-color: rgb(23, 18, 13);
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+}
+
+.orb__circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 16px;
     border-width: 2px;
-    border-color: rgb(20, 17, 12);
-    background-color: rgb(40, 34, 26);
-    -unity-text-align: middle-center;
-    -unity-font-style: bold;
-    font-size: 10px;
+    border-top-color: rgb(107, 90, 65);
+    border-left-color: rgb(107, 90, 65);
+    border-bottom-color: rgb(23, 18, 13);
+    border-right-color: rgb(23, 18, 13);
+    background-color: rgb(20, 16, 12);
+    overflow: hidden;
+    align-items: center;
+    justify-content: center;
+}
+
+.orb__circle:hover {
+    border-top-color: rgb(255, 152, 31);
+    border-left-color: rgb(255, 152, 31);
+}
+
+.orb__fill {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.orb__icon {
+    width: 20px;
+    height: 20px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.round-button {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 15px;
+    border-width: 2px;
+    border-top-color: rgb(107, 90, 65);
+    border-left-color: rgb(107, 90, 65);
+    border-bottom-color: rgb(23, 18, 13);
+    border-right-color: rgb(23, 18, 13);
+    background-color: rgb(59, 50, 39);
+    align-items: center;
+    justify-content: center;
+}
+
+.round-button:hover {
+    background-color: rgb(110, 42, 26);
+}
+
+.clock {
+    position: absolute;
+    padding: 0 5px;
+    font-size: 12px;
+    color: rgb(255, 255, 0);
+    background-color: rgb(23, 18, 13);
+    border-radius: 3px;
+}
+
+/* ---------------------------------------------------------------- scrollbars */
+
+.rth-root .unity-scroller--vertical {
+    width: 10px;
+    border-width: 0;
+    background-color: rgb(30, 25, 19);
+}
+
+.rth-root .unity-scroller--vertical .unity-base-slider__tracker {
+    background-color: rgb(30, 25, 19);
+    border-width: 0;
+}
+
+.rth-root .unity-scroller--vertical .unity-base-slider__dragger {
+    background-color: rgb(110, 92, 66);
+    border-width: 1px;
+    border-top-color: rgb(150, 128, 94);
+    border-left-color: rgb(150, 128, 94);
+    border-bottom-color: rgb(23, 18, 13);
+    border-right-color: rgb(23, 18, 13);
+    left: 1px;
+    right: 1px;
+}
+
+.rth-root .unity-scroller__low-button,
+.rth-root .unity-scroller__high-button {
+    display: none;
+}
+
+.rth-root .unity-scroller--horizontal {
+    display: none;
+}
+
+/* ---------------------------------------------------------------- right-click menu */
+
+.menu {
+    min-width: 150px;
+    background-color: rgb(93, 84, 71);
+    border-width: 1px;
+    border-color: rgb(0, 0, 0);
+    padding-bottom: 2px;
+}
+
+.menu__title {
+    background-color: rgb(0, 0, 0);
+    color: rgb(93, 84, 71);
+    padding: 2px 6px;
+    margin-bottom: 2px;
+    text-shadow: 0 0 0 rgba(0, 0, 0, 0);
+}
+
+.menu__option {
+    padding: 1px 6px;
     color: rgb(255, 255, 255);
-    white-space: normal;
 }
 
-.orb:hover {
-    border-color: rgb(255, 152, 31);
+.menu__option:hover {
+    color: rgb(255, 255, 0);
+    background-color: rgba(0, 0, 0, 0.18);
 }
 
-.orb--on {
-    background-color: rgb(150, 120, 40);
+.hover-text {
+    position: absolute;
+    left: 8px;
+    top: 4px;
+    font-size: 14px;
+    color: rgb(255, 255, 255);
+    text-shadow: 1px 1px 0 rgb(0, 0, 0);
 }

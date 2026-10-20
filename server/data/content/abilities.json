@@ -2,6 +2,7 @@
   {
     "id": "bile_lash",
     "name": "Bile Lash",
+    "icon": "lash",
     "description": "The occultist's idle strike: a flick of humour at whatever you're facing.",
     "type": "Auto",
     "cooldownTicks": 4,
@@ -12,6 +13,7 @@
   {
     "id": "gall_spark",
     "name": "Gall Spark",
+    "icon": "spark",
     "description": "A spit of yellow bile, set alight. Pushes your bile towards the hot pole.",
     "type": "Basic",
     "cooldownTicks": 5,
@@ -24,6 +26,7 @@
   {
     "id": "black_draught",
     "name": "Black Draught",
+    "icon": "draught",
     "description": "Draw black bile out of the wound and into yourself, healing a little of what you deal.",
     "type": "Basic",
     "cooldownTicks": 8,
@@ -37,6 +40,7 @@
   {
     "id": "still_the_humours",
     "name": "Still the Humours",
+    "icon": "balance",
     "description": "A steadying cut that pulls your bile back towards balance, whichever way it has run.",
     "type": "Basic",
     "cooldownTicks": 15,
@@ -49,6 +53,7 @@
   {
     "id": "bitter_salt",
     "name": "Bitter Salt",
+    "icon": "salts",
     "description": "Choleric salts thrown hot. They only catch if your bile already runs yellow.",
     "type": "Basic",
     "cooldownTicks": 12,
@@ -64,6 +69,7 @@
   {
     "id": "choleric_flare",
     "name": "Choleric Flare",
+    "icon": "flare",
     "description": "Let the heat out all at once. Needs a choleric temper.",
     "type": "Threshold",
     "cooldownTicks": 20,
@@ -80,6 +86,7 @@
   {
     "id": "melancholy_shroud",
     "name": "Melancholy Shroud",
+    "icon": "shroud",
     "description": "Wrap yourself in black bile: a cold strike, then 30% less damage taken for six seconds.",
     "type": "Threshold",
     "cooldownTicks": 25,
@@ -99,6 +106,7 @@
   {
     "id": "vitriol_rain",
     "name": "Vitriol Rain",
+    "icon": "rain",
     "description": "The old war-craft of the fen houses, in miniature. Needs your bile at +60 or hotter.",
     "type": "Ultimate",
     "cooldownTicks": 60,
@@ -115,6 +123,7 @@
   {
     "id": "black_sun",
     "name": "Black Sun",
+    "icon": "blacksun",
     "description": "Melancholy made total. Strikes, restores a fifth of your blood, and wards you. Needs bile at -60 or colder.",
     "type": "Ultimate",
     "cooldownTicks": 60,

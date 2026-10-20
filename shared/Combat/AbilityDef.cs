@@ -44,6 +44,8 @@ namespace Rth.Shared.Combat
         public string Id = "";
         public string Name = "";
         public string Description = "";
+        /// <summary>Icon id (the client's icon library); empty means one picked by the bile pole.</summary>
+        public string Icon = "";
         public AbilityType Type;
         public CombatStyle Style = CombatStyle.Occult;
 
