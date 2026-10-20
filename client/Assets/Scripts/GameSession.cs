@@ -70,6 +70,15 @@ namespace Rth.Client
         public Dictionary<string, int> Stats { get; } = new Dictionary<string, int>();
         public Dictionary<string, long> SkillXp { get; } = new Dictionary<string, long>();
 
+        /// <summary>The line of conversation on screen, or null when nobody's talking.</summary>
+        public DialogueMessage Dialogue { get; private set; }
+        /// <summary>The window the server has open (bank, shop), and its title.</summary>
+        public InterfaceKind OpenInterface { get; private set; }
+        public string InterfaceTitle { get; private set; } = "";
+        public List<ItemSlot> Bank { get; } = new List<ItemSlot>();
+        public ShopMessage Shop { get; private set; }
+        public TaskMessage CurrentTask { get; private set; }
+
         public int Level(string skill) =>
             Content == null ? 1 : Content.XpCurve.LevelForXp(SkillXp.TryGetValue(skill, out long xp) ? xp : 0);
 
@@ -81,9 +90,25 @@ namespace Rth.Client
             return skill;
         }
 
-        /// <summary>Why an ability can't be used right now (level, phlegm, bile), or null.</summary>
+        /// <summary>Why an ability can't be used right now (level, reagents, phlegm, bile), or null.</summary>
         public string AbilityProblem(AbilityDef ability) =>
-            PlayerState == null ? null : ability.CheckRequirements(PlayerState.Phlegm, PlayerState.Bile, Level, SkillName);
+            PlayerState == null ? null : ability.CheckRequirements(PlayerState.Phlegm, PlayerState.Bile, Level, SkillName, CountInPack, id => Item(id)?.Name ?? id);
+
+        public int CountInPack(string itemId)
+        {
+            int total = 0;
+            foreach (ItemSlot s in Inventory)
+                if (s.ItemId == itemId) total += s.Count;
+            return total;
+        }
+
+        public NpcInfo Npc(string typeId)
+        {
+            if (Content == null || string.IsNullOrEmpty(typeId)) return null;
+            foreach (NpcInfo n in Content.Npcs)
+                if (n.Id == typeId) return n;
+            return null;
+        }
         /// <summary>What a left-click would do on whatever is under the pointer ("Attack Fen rat").</summary>
         public string HoverText { get; private set; } = "";
         public List<LogLine> Log { get; } = new List<LogLine>();
@@ -100,9 +125,12 @@ namespace Rth.Client
 
         public ItemDef Item(string id) => !string.IsNullOrEmpty(id) && _items.TryGetValue(id, out ItemDef d) ? d : null;
 
+        private void LateUpdate() => CombatHud.ClearClaims();
+
         private void Start()
         {
             if (GetComponent<PopupMenu>() == null) gameObject.AddComponent<PopupMenu>();
+            if (GetComponent<TownWindows>() == null) gameObject.AddComponent<TownWindows>().session = this;
             world.ItemLookup = Item;
             _name = PlayerPrefs.GetString(NamePref, "");
             _host = PlayerPrefs.GetString(HostPref, "127.0.0.1");
@@ -111,6 +139,17 @@ namespace Rth.Client
 
         private void Update()
         {
+            // A script reload during Play keeps our state but not the connection: reconnect.
+            if ((_state == State.InGame || _state == State.Connecting) && _client == null)
+            {
+                world.Clear();
+                PlayerState = null;
+                _state = State.Reconnecting;
+                _reconnectAttempts = 0;
+                _status = "Reconnecting...";
+                _nextReconnectTime = Time.unscaledTime;
+            }
+
             switch (_state)
             {
                 case State.Connecting:
@@ -236,9 +275,25 @@ namespace Rth.Client
                         foreach (ItemDef i in Content.Items) _items[i.Id] = i;
                         break;
                     case ContainerMessage container:
-                        List<ItemSlot> target = container.Kind == ContainerKind.Equipment ? Equipment : Inventory;
+                        List<ItemSlot> target = container.Kind == ContainerKind.Equipment ? Equipment
+                            : container.Kind == ContainerKind.Bank ? Bank
+                            : Inventory;
                         target.Clear();
                         target.AddRange(container.Slots);
+                        break;
+                    case DialogueMessage line:
+                        Dialogue = line.Open ? line : null;
+                        break;
+                    case InterfaceMessage window:
+                        OpenInterface = window.Kind;
+                        InterfaceTitle = window.Title;
+                        if (window.Kind != InterfaceKind.None) PopupMenu.Close();
+                        break;
+                    case ShopMessage shop:
+                        Shop = shop;
+                        break;
+                    case TaskMessage task:
+                        CurrentTask = task;
                         break;
                     case StatsMessage stats:
                         Stats.Clear();
@@ -287,12 +342,20 @@ namespace Rth.Client
                 if (keyboard.zKey.wasPressedThisFrame) ToggleDeflect(CombatStyle.Melee);
                 if (keyboard.xKey.wasPressedThisFrame) ToggleDeflect(CombatStyle.Ranged);
                 if (keyboard.cKey.wasPressedThisFrame) ToggleDeflect(CombatStyle.Occult);
-                if (Content != null)
+                Key[] digits = { Key.Digit1, Key.Digit2, Key.Digit3, Key.Digit4, Key.Digit5, Key.Digit6, Key.Digit7, Key.Digit8, Key.Digit9 };
+                if (Dialogue != null)
                 {
-                    Key[] slots = { Key.Digit1, Key.Digit2, Key.Digit3, Key.Digit4, Key.Digit5, Key.Digit6, Key.Digit7, Key.Digit8, Key.Digit9 };
-                    for (int i = 0; i < slots.Length && i < Content.ActionBar.Count; i++)
-                        if (keyboard[slots[i]].wasPressedThisFrame) UseAbility(Content.ActionBar[i]);
+                    // In conversation the number keys pick options and space continues.
+                    if (Dialogue.Options.Count == 0 && keyboard.spaceKey.wasPressedThisFrame) ChooseDialogue(-1);
+                    for (int i = 0; i < digits.Length && i < Dialogue.Options.Count; i++)
+                        if (keyboard[digits[i]].wasPressedThisFrame) ChooseDialogue(i);
                 }
+                else if (Content != null)
+                {
+                    for (int i = 0; i < digits.Length && i < Content.ActionBar.Count; i++)
+                        if (keyboard[digits[i]].wasPressedThisFrame) UseAbility(Content.ActionBar[i]);
+                }
+                if (keyboard.escapeKey.wasPressedThisFrame && (Dialogue != null || OpenInterface != InterfaceKind.None)) CloseInterface();
             }
 
             if (mouse == null) return;
@@ -348,7 +411,17 @@ namespace Rth.Client
             if (npc != null)
             {
                 int id = npc.Id;
-                options.Add(("Attack " + npc.DisplayName, () => Attack(id)));
+                NpcInfo info = Npc(npc.TypeId);
+                if (info == null || info.Attackable) options.Add(("Attack " + npc.DisplayName, () => Attack(id)));
+                if (info != null)
+                {
+                    foreach (ActionDef action in info.Actions)
+                    {
+                        string actionId = action.Id;
+                        options.Add((action.Label + " " + npc.DisplayName, () => NpcAction(id, actionId)));
+                    }
+                    options.Add(("Examine " + npc.DisplayName, () => NpcAction(id, "examine")));
+                }
             }
             ObjectDef objectDef = mapObject != null ? ObjectDefFor(mapObject.objectType) : null;
             if (objectDef != null)
@@ -380,6 +453,39 @@ namespace Rth.Client
                 options.Add(("Walk here", () => WalkTo(tile)));
             }
             return options;
+        }
+
+        public void NpcAction(int npcId, string actionId)
+        {
+            if (_state != State.InGame) return;
+            _client.Send(new NpcActionMessage { NpcId = npcId, ActionId = actionId });
+            EntityView view = world.Find(npcId);
+            if (view != null && actionId != "examine") ShowClickMarker(view.Tile, new Color(0.9f, 0.85f, 0.2f));
+        }
+
+        /// <summary>Picks a dialogue option, or continues with -1.</summary>
+        public void ChooseDialogue(int option)
+        {
+            if (_state != State.InGame || Dialogue == null) return;
+            _client.Send(new DialogueChoiceMessage { Option = option });
+        }
+
+        public void CloseInterface()
+        {
+            if (_state != State.InGame) return;
+            _client.Send(new CloseInterfaceMessage());
+            Dialogue = null;
+        }
+
+        /// <summary>Slot -1 deposits the whole pack; count 0 means all of that item.</summary>
+        public void BankDeposit(int slot, int count) => Send(new BankDepositMessage { Slot = slot, Count = count });
+        public void BankWithdraw(int slot, int count) => Send(new BankWithdrawMessage { Slot = slot, Count = count });
+        public void ShopBuy(int index, int count) => Send(new ShopBuyMessage { Index = index, Count = count });
+        public void ShopSell(int slot, int count) => Send(new ShopSellMessage { Slot = slot, Count = count });
+
+        private void Send(Message message)
+        {
+            if (_state == State.InGame) _client.Send(message);
         }
 
         private ObjectDef ObjectDefFor(string type)
@@ -461,6 +567,11 @@ namespace Rth.Client
             Equipment.Clear();
             Stats.Clear();
             SkillXp.Clear();
+            Bank.Clear();
+            Dialogue = null;
+            OpenInterface = InterfaceKind.None;
+            Shop = null;
+            CurrentTask = null;
             _state = State.Login;
             _status = "Logged out.";
         }

@@ -28,6 +28,8 @@ namespace Rth.Client
 
         public int Id { get; private set; }
         public EntityKind Kind { get; private set; }
+        /// <summary>NPC type id, for looking up its menu; empty for players.</summary>
+        public string TypeId { get; private set; } = "";
         public string DisplayName { get; private set; }
         public TileCoord Tile { get; private set; }
         /// <summary>Top of the model, for labels and health bars.</summary>
@@ -43,6 +45,7 @@ namespace Rth.Client
             var view = go.AddComponent<EntityView>();
             view.Id = added.Id;
             view.Kind = added.Kind;
+            view.TypeId = added.TypeId ?? "";
             view.DisplayName = added.Name;
             view.HealthPercent = added.HealthPercent;
             view._tickSeconds = tickSeconds;

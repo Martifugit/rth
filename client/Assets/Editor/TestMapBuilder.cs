@@ -79,6 +79,7 @@ namespace Rth.Client.Editor
 
             AddNpcSpawns(root.transform);
             AddStations(root.transform);
+            AddTown(root.transform);
 
             var spawn = new GameObject("Spawn");
             spawn.transform.SetParent(root.transform);
@@ -130,6 +131,41 @@ namespace Rth.Client.Editor
             surface.transform.localPosition = new Vector3(0f, 0.68f, 0f);
             surface.transform.localScale = new Vector3(0.75f, 0.02f, 0.75f);
             surface.GetComponent<Renderer>().sharedMaterial = lye;
+        }
+
+        /// <summary>
+        /// Milestone 5: the town. A Synod strongbox and its clerk by the path, Corvin Sallow in the
+        /// hut (now his apothecary) with his still behind the counter, and Wenna at the skinning rack.
+        /// </summary>
+        public static void AddTown(Transform mapRoot)
+        {
+            Material synodRed = MakeMaterial("SynodRed", new Color(0.55f, 0.1f, 0.12f));
+            Material iron = MakeMaterial("Iron", new Color(0.25f, 0.25f, 0.27f));
+            Material copper = MakeMaterial("Copper", new Color(0.72f, 0.42f, 0.22f));
+
+            var box = Station(mapRoot, "Synod strongbox", "synod_strongbox", 9, 12);
+            Box("Chest", box, box.position + new Vector3(0f, 0.35f, 0f), new Vector3(0.8f, 0.7f, 0.6f), synodRed);
+            Box("Band", box, box.position + new Vector3(0f, 0.55f, 0f), new Vector3(0.84f, 0.08f, 0.64f), iron);
+
+            var still = Station(mapRoot, "Apothecary's still", "apothecary_still", 13, 18);
+            GameObject pot = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            pot.name = "Pot";
+            pot.transform.SetParent(still, false);
+            pot.transform.localPosition = new Vector3(0f, 0.3f, 0f);
+            pot.transform.localScale = new Vector3(0.6f, 0.3f, 0.6f);
+            pot.GetComponent<Renderer>().sharedMaterial = copper;
+            Box("Coil", still, still.position + new Vector3(0.2f, 0.75f, 0f), new Vector3(0.12f, 0.5f, 0.12f), copper);
+
+            var town = new GameObject("Townsfolk").transform;
+            town.SetParent(mapRoot);
+            (string id, int x, int y)[] folk = { ("clerk_ambrose", 9, 11), ("corvin_sallow", 15, 16), ("wenna_thole", 11, 9) };
+            foreach ((string id, int x, int y) in folk)
+            {
+                var go = new GameObject(id);
+                go.transform.SetParent(town);
+                go.transform.position = new Vector3(x + 0.5f, 0f, y + 0.5f);
+                go.AddComponent<MapNpcSpawn>().npcId = id;
+            }
         }
 
         private static Transform Station(Transform mapRoot, string name, string type, int x, int y)

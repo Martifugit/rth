@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Rth.Shared.Combat;
 using Rth.Shared.Items;
 using Rth.Shared.Net;
@@ -39,16 +39,19 @@ namespace Rth.Client
             return false;
         }
 
-        private Rect Claim(Rect rect)
+        /// <summary>Marks part of the screen as interface, so clicks there don't reach the world.</summary>
+        public static Rect Claim(Rect rect)
         {
-            HudRects.Add(rect);
+            if (Event.current == null || Event.current.type == EventType.Repaint) HudRects.Add(rect);
             return rect;
         }
+
+        /// <summary>Called once a frame (after input, before drawing) so this frame's GUI can claim afresh.</summary>
+        public static void ClearClaims() => HudRects.Clear();
 
         private void OnGUI()
         {
             GUI.depth = 0;
-            if (Event.current.type == EventType.Layout) HudRects.Clear();
             if (session == null || !session.IsInGame) return;
             EnsureStyles();
 
@@ -409,6 +412,22 @@ namespace Rth.Client
                 GUI.Label(new Rect(body.x + 4f, y, body.width - 8f, 18f), StatLabel(stat) + ": " + value + StatUnit(stat), _small);
                 y += 20f;
             }
+
+            // The current task and point balances.
+            y += 8f;
+            TaskMessage task = session.CurrentTask;
+            string taskText = task == null || string.IsNullOrEmpty(task.Description) ? "Task: none" : "Task (" + task.GiverName + "): " + task.Description;
+            float h = _small.CalcHeight(new GUIContent(taskText), body.width - 8f);
+            GUI.Label(new Rect(body.x + 4f, y, body.width - 8f, h), taskText, _small);
+            y += h + 4f;
+            if (task != null)
+            {
+                foreach (KeyValuePair<string, int> p in task.Points)
+                {
+                    GUI.Label(new Rect(body.x + 4f, y, body.width - 8f, 18f), p.Key + ": " + p.Value, _small);
+                    y += 18f;
+                }
+            }
         }
 
         /// <summary>Each skill's level, with a bar of progress through the current level.</summary>
@@ -465,9 +484,20 @@ namespace Rth.Client
 
         private static string FormatCount(int n) => n >= 10_000_000 ? n / 1_000_000 + "M" : n >= 100_000 ? n / 1000 + "K" : n.ToString();
 
+        /// <summary>What clicking a pack item does: deposit with the bank open, sell in a shop, otherwise its first action.</summary>
         private void DefaultAction(ContainerKind where, int slot, ItemDef def)
         {
             if (def == null) return;
+            if (where == ContainerKind.Inventory && session.OpenInterface == InterfaceKind.Bank)
+            {
+                session.BankDeposit(slot, 1);
+                return;
+            }
+            if (where == ContainerKind.Inventory && session.OpenInterface == InterfaceKind.Shop)
+            {
+                session.ShopSell(slot, 1);
+                return;
+            }
             List<ItemAction> actions = ItemActions.For(def, where);
             if (actions.Count > 0) session.UseItem(where, slot, actions[0].Id);
         }
@@ -475,6 +505,19 @@ namespace Rth.Client
         private void OpenItemMenu(ContainerKind where, int slot, ItemDef def, Vector2 guiPosition)
         {
             var options = new List<(string Label, System.Action Action)>();
+            if (where == ContainerKind.Inventory && session.OpenInterface == InterfaceKind.Bank)
+            {
+                options.Add(("Deposit 1", () => session.BankDeposit(slot, 1)));
+                options.Add(("Deposit 5", () => session.BankDeposit(slot, 5)));
+                options.Add(("Deposit all", () => session.BankDeposit(slot, 0)));
+            }
+            else if (where == ContainerKind.Inventory && session.OpenInterface == InterfaceKind.Shop && session.Shop != null && session.Shop.SellPercent > 0)
+            {
+                int each = def.Value * session.Shop.SellPercent / 100;
+                options.Add(("Sell 1 (" + each + " each)", () => session.ShopSell(slot, 1)));
+                options.Add(("Sell 5", () => session.ShopSell(slot, 5)));
+                options.Add(("Sell all", () => session.ShopSell(slot, 1000)));
+            }
             foreach (ItemAction a in ItemActions.For(def, where))
             {
                 string id = a.Id;

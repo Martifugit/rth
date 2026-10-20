@@ -6,8 +6,8 @@ forced faction) and looks like **Old School RuneScape** (low-poly models, chunky
 classic layout). It is set in its own world, **R'th**, built around the four humours.
 
 **Status:** Milestones 1 (architecture), 2 (combat core: Occultism, bile, phlegm, breath),
-3 (items, equipment, consumables, loot) and 4 (skills, workstations, carcass butchering) are
-done. Milestone 5 isn't chosen yet.
+3 (items, equipment, consumables, loot), 4 (skills, workstations, carcass butchering) and
+5 (townsfolk: dialogue, bank, shops, tasks; Distillation and reagents) are done.
 
 **Build everything as extensible systems.** New features plug into the mechanisms under
 "Extending the server" below (systems, events, interactions, stats, item components, effect ops,
@@ -198,9 +198,25 @@ Items are kept on death for now. Items have placeholder icons (tinted squares) u
 Not yet: butchering task-givers and their points, the other four creature tiers, banks to
 stockpile carcasses, and old-blood.
 
-**Milestone 5: not chosen yet.** Natural candidates: banks (carcasses are meant to be stockpiled),
-Distillation (recipes + mite glands and vitriol beads already drop), a task-giver NPC with
-dialogue, or a second combat style.
+## Milestone 5: the town (done)
+
+- [x] NPC menus (talk, bank, trade) from data; townsfolk can't be attacked; actions can be
+      flag-gated with a locked message (objects too).
+- [x] Data-driven dialogue (dialogues.json): branches, conditional options, actions, {tokens}.
+- [x] Bank (400 slots, everything stacks), from a strongbox, a banker or dialogue.
+- [x] Shops with shared, restocking stock, priced in items or points, optional buy-back.
+- [x] Points pools and task-givers: tasks tracked by events, streak bonuses, cancel costs.
+- [x] Distillation at Corvin's (secret) still; thresholds and ultimates burn reagents.
+- [x] Townsfolk: Clerk Ambrose (Synod bank), Corvin Sallow (apothecary, back room, Scald tasks),
+      Wenna Thole (skinning yard tasks and token shop).
+- [x] Client: dialogue box (number keys / space), bank and shop windows, pack clicks deposit or
+      sell while those are open, task and points in the Stats tab.
+
+Not yet: quests proper (flags are ready for them), item-on-object/item-on-NPC "use", noted items,
+the other butchering tiers, a larger map.
+
+**Next: not chosen yet.** Candidates: a bigger starting map (the riverside town from the lore),
+the first quest using flags and dialogue, a second combat style, or Medicine (more recipes).
 
 ---
 
@@ -208,8 +224,10 @@ dialogue, or a second combat style.
 
 `World` (server/Rth.Server.Core/Game/World.cs) owns entities, connections, movement, visibility
 and saving. Everything else is a `GameSystem` listed in `World.StandardSystems` (order matters:
-systems run in that order within each phase). Today: `SkillSystem`, `ItemSystem`, `CombatSystem`,
-`DeathSystem`, `NpcSystem`, `GroundItemSystem`, `LootSystem`, `ObjectSystem`, `RecipeSystem`.
+systems run in that order within each phase, and a system may use those before it while
+attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `DeathSystem`,
+`NpcSystem`, `GroundItemSystem`, `LootSystem`, `ObjectSystem`, `RecipeSystem`, `InterfaceSystem`,
+`DialogueSystem`, `BankSystem`, `ShopSystem`, `PointsSystem`, `TaskSystem`.
 
 | To add... | Use |
 |---|---|
@@ -225,6 +243,13 @@ systems run in that order within each phase). Today: `SkillSystem`, `ItemSystem`
 | A level requirement | A `requirements` list (`SkillRequirement`) on the def, checked with `SkillSystem.Check`. |
 | A processing skill (distilling, brewing, cooking) | Recipes in recipes.json and a station in objects.json with a `process` action; place the station in the scene with `MapObject` + `MapBlocker`. No code. |
 | A new object behaviour (mine, open, pray) | An action on the object def, a handler via `ObjectSystem.RegisterAction`, usually starting an `ObjectInteraction`. |
+| An NPC menu option (pickpocket, follow) | An action on the NPC def; a handler via `NpcSystem.RegisterAction` (runs once the player is beside the NPC). |
+| Something said or done in dialogue | `DialogueSystem.RegisterCondition` / `RegisterAction` / `RegisterToken`. Conversations themselves are data. |
+| Remembering story progress | `FlagSystem` (persistent per-player key/values); gate actions with `requiresFlag`. |
+| A window the server opens | A value in `InterfaceKind`; `InterfaceSystem.Open/IsOpen/Close`; draw it in the client's `TownWindows`. |
+| A currency | `ShopSystem.RegisterCurrency(prefix, ICurrency)`; shops then price in "prefix:id". |
+| A kind of task | Subscribe to the event that proves it and advance `TaskSystem` progress for a new `kind`. |
+| An ability cost | `reagents` on the ability (items), checked by the shared requirement rule and consumed on use. |
 | A new kind of map placement | A marker component in tools/unity-map-tools, an export file in `MapExporter`, a field on `MapPlacements`. |
 | A new kind of content file | A field on `ContentParts`, load it in `GameContent.Load`, validate in `Create`. Client-visible content goes in `ClientContent` (sent as JSON, so no codec changes). |
 | A client message | A message class in `shared/Net/Messages.cs`, a case in `MessageCodec.Decode`, bump `Protocol.Version`. |

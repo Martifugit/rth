@@ -29,7 +29,7 @@
         "next": "greet"
       },
       "greet": {
-        "text": "Back again. Hands clean? Doesn't matter. What do you want?",
+        "text": "Hands clean? Doesn't matter, they won't be for long. What do you want?",
         "options": [
           { "text": "Got any work for me?", "next": "work" },
           { "text": "What do your tokens buy?", "actions": [ { "type": "openShop", "id": "skinning_yard" } ] },

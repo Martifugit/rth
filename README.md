@@ -40,6 +40,17 @@ Press Play. The Editor exports the scene's map and starts a local server in the 
   glass flensing hook, which rats sometimes yield). You keep going until you run out.
 - Ground items are only visible to you at first; after a minute anyone can see them, and after
   three minutes they're gone.
+- **Townsfolk**: left-click to talk (right-click for Bank or Trade). In conversation, press the
+  number keys or click to answer; space continues; Escape closes.
+  - **Clerk Ambrose** by the red strongbox runs your **bank** (the strongbox works too). Click
+    items in your pack to deposit them while it's open.
+  - **Corvin Sallow** in the hut sells food, draughts and reagents, and buys things back. Ask
+    him about the humours once you're a decent butcher.
+  - **Wenna Thole** at the skinning rack hands out butchering tasks for **yard tokens**,
+    spent in her shop. Your current task and points are in the **Stats** tab.
+- Occult thresholds and ultimates burn **reagents** (choleric salts, melancholic tincture,
+  vitriol salts). You start with some; Corvin sells them; **Distillation** makes them from the
+  galls and glands butchering yields.
 - The **Skills** tab shows your levels. Occultism (from fighting) unlocks thresholds at 5 and
   ultimates at 10, and adds ability damage per level.
 - Arrow keys or middle-drag rotate the camera; the scroll wheel zooms.
