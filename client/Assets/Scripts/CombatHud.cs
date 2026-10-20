@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Rth.Shared.Combat;
+using Rth.Shared.Items;
 using Rth.Shared.Net;
 using UnityEngine;
 
@@ -24,11 +25,15 @@ namespace Rth.Client
         private GUIStyle _slotName;
         private GUIStyle _log;
         private GUIStyle _assayer;
+        private GUIStyle _count;
+        private GUIStyle _itemName;
+        private GUIStyle _hover;
 
         /// <summary>Whether a screen position (bottom-left origin, as the Input System reports) is over the HUD.</summary>
         public static bool IsPointerOverHud(Vector2 screenPosition)
         {
             var gui = new Vector2(screenPosition.x, Screen.height - screenPosition.y);
+            if (PopupMenu.OpenRect.Contains(gui)) return true;
             foreach (Rect r in HudRects)
                 if (r.Contains(gui)) return true;
             return false;
@@ -49,13 +54,15 @@ namespace Rth.Client
 
             DrawStatusPanel();
             PlayerStateMessage state = session.PlayerState;
-            ContentInfoMessage content = session.Content;
+            ClientContent content = session.Content;
             if (state == null || content == null) return;
 
             DrawTarget(state);
             float barTop = DrawActionBar(state, content);
             DrawResources(state, content, barTop);
             DrawLog();
+            DrawItemPanel(content);
+            DrawHoverText();
             DrawAssayer(state);
         }
 
@@ -82,7 +89,7 @@ namespace Rth.Client
         }
 
         /// <summary>Draws the ability slots along the bottom; returns the y of their top edge.</summary>
-        private float DrawActionBar(PlayerStateMessage state, ContentInfoMessage content)
+        private float DrawActionBar(PlayerStateMessage state, ClientContent content)
         {
             int slots = content.ActionBar.Count;
             float width = slots * (SlotSize + 4f) + 4f;
@@ -154,7 +161,7 @@ namespace Rth.Client
             return string.Join("\n", lines);
         }
 
-        private void DrawResources(PlayerStateMessage state, ContentInfoMessage content, float barTop)
+        private void DrawResources(PlayerStateMessage state, ClientContent content, float barTop)
         {
             const float width = 470f;
             const float rowH = 18f;
@@ -191,7 +198,7 @@ namespace Rth.Client
         }
 
         /// <summary>A centred axis: black bile to the left, yellow bile to the right, marks at the passive and extreme thresholds.</summary>
-        private void DrawBileAxis(Rect r, int bile, ContentInfoMessage content)
+        private void DrawBileAxis(Rect r, int bile, ClientContent content)
         {
             float half = r.width / 2f;
             float mid = r.x + half;
@@ -212,7 +219,7 @@ namespace Rth.Client
             GUI.Label(r, "Bile " + (bile > 0 ? "+" : "") + bile, _center);
         }
 
-        private static string BileSummary(PlayerStateMessage state, ContentInfoMessage content, float tickSeconds)
+        private static string BileSummary(PlayerStateMessage state, ClientContent content, float tickSeconds)
         {
             var rules = new CombatRules
             {
@@ -265,6 +272,212 @@ namespace Rth.Client
             if (GUI.Button(new Rect(r.x + r.width / 2f - 60f, r.yMax - 34f, 120f, 24f), "Return")) session.AssayerText = null;
         }
 
+        // ------------------------------------------------------------------ items
+
+        private enum ItemTab
+        {
+            Inventory,
+            Worn,
+            Stats,
+        }
+
+        private ItemTab _tab;
+        private int _dragFrom = -1;
+
+        private void DrawItemPanel(ClientContent content)
+        {
+            const float slotW = 48f;
+            const float slotH = 40f;
+            const int cols = 4;
+            int rows = Mathf.Max(1, Mathf.CeilToInt(Mathf.Max(session.Inventory.Count, 28) / (float)cols));
+            float width = cols * (slotW + 2f) + 10f;
+            float height = 26f + rows * (slotH + 2f) + 10f;
+            Rect panel = Claim(new Rect(Screen.width - width - 10f, Screen.height - height - 10f, width, height));
+            GUI.Box(panel, GUIContent.none);
+
+            string[] tabs = { "Pack", "Worn", "Stats" };
+            for (int i = 0; i < tabs.Length; i++)
+            {
+                var tabRect = new Rect(panel.x + 5f + i * (width - 10f) / 3f, panel.y + 4f, (width - 10f) / 3f - 2f, 18f);
+                Fill(tabRect, (int)_tab == i ? new Color(0.45f, 0.35f, 0.2f) : new Color(0.18f, 0.16f, 0.14f));
+                if (GUI.Button(tabRect, GUIContent.none, GUIStyle.none)) _tab = (ItemTab)i;
+                GUI.Label(tabRect, tabs[i], _center);
+            }
+
+            var body = new Rect(panel.x + 5f, panel.y + 26f, width - 10f, height - 30f);
+            string tooltip = null;
+            switch (_tab)
+            {
+                case ItemTab.Inventory:
+                    tooltip = DrawInventory(body, cols, slotW, slotH);
+                    break;
+                case ItemTab.Worn:
+                    tooltip = DrawWorn(body);
+                    break;
+                case ItemTab.Stats:
+                    DrawStats(body);
+                    break;
+            }
+
+            if (tooltip != null)
+            {
+                float h = _small.CalcHeight(new GUIContent(tooltip), 220f) + 8f;
+                var tip = new Rect(panel.x - 230f, Mathf.Clamp(Event.current.mousePosition.y - h / 2f, 4f, Screen.height - h - 4f), 224f, h);
+                Fill(tip, new Color(0.08f, 0.08f, 0.1f, 0.95f));
+                GUI.Label(new Rect(tip.x + 4f, tip.y + 4f, tip.width - 8f, tip.height - 8f), tooltip, _small);
+            }
+        }
+
+        /// <summary>The 4-column pack. Click uses an item's first action, right-click lists them, drag moves it.</summary>
+        private string DrawInventory(Rect body, int cols, float slotW, float slotH)
+        {
+            Event e = Event.current;
+            string tooltip = null;
+            for (int i = 0; i < session.Inventory.Count; i++)
+            {
+                var r = new Rect(body.x + (i % cols) * (slotW + 2f), body.y + (i / cols) * (slotH + 2f), slotW, slotH);
+                ItemSlot slot = session.Inventory[i];
+                ItemDef def = slot.IsEmpty ? null : session.Item(slot.ItemId);
+                DrawSlot(r, slot, def, _dragFrom == i);
+                if (!r.Contains(e.mousePosition)) continue;
+                if (def != null) tooltip = Describe(def, slot.Count);
+
+                if (e.type == EventType.MouseDown && e.button == 0 && def != null)
+                {
+                    _dragFrom = i;
+                    e.Use();
+                }
+                else if (e.type == EventType.MouseUp && e.button == 0 && _dragFrom >= 0)
+                {
+                    if (_dragFrom == i) DefaultAction(ContainerKind.Inventory, i, def);
+                    else session.MoveItem(_dragFrom, i);
+                    _dragFrom = -1;
+                    e.Use();
+                }
+                else if (e.type == EventType.MouseDown && e.button == 1 && def != null)
+                {
+                    OpenItemMenu(ContainerKind.Inventory, i, def, e.mousePosition);
+                    e.Use();
+                }
+            }
+            if (e.type == EventType.MouseUp && e.button == 0) _dragFrom = -1;
+            return tooltip;
+        }
+
+        private string DrawWorn(Rect body)
+        {
+            Event e = Event.current;
+            string tooltip = null;
+            string[] slotNames = System.Enum.GetNames(typeof(EquipSlot));
+            float rowH = Mathf.Min(26f, body.height / slotNames.Length);
+            for (int i = 0; i < slotNames.Length; i++)
+            {
+                var r = new Rect(body.x, body.y + i * rowH, body.width, rowH - 2f);
+                ItemSlot slot = i < session.Equipment.Count ? session.Equipment[i] : default;
+                ItemDef def = slot.IsEmpty ? null : session.Item(slot.ItemId);
+                Fill(r, new Color(0.14f, 0.13f, 0.12f));
+                if (def != null) Fill(new Rect(r.x + 2f, r.y + 2f, rowH - 6f, r.height - 4f), WorldView.ParseColor(def.Color));
+                GUI.Label(new Rect(r.x + rowH, r.y, r.width - rowH, r.height), slotNames[i] + ": " + (def?.Name ?? (slot.IsEmpty ? "-" : slot.ItemId)), _small);
+                if (def == null || !r.Contains(e.mousePosition)) continue;
+                tooltip = Describe(def, 1);
+                if (e.type == EventType.MouseDown && e.button == 0)
+                {
+                    DefaultAction(ContainerKind.Equipment, i, def);
+                    e.Use();
+                }
+                else if (e.type == EventType.MouseDown && e.button == 1)
+                {
+                    OpenItemMenu(ContainerKind.Equipment, i, def, e.mousePosition);
+                    e.Use();
+                }
+            }
+            return tooltip;
+        }
+
+        private void DrawStats(Rect body)
+        {
+            float y = body.y;
+            foreach (string stat in StatIds.All)
+            {
+                session.Stats.TryGetValue(stat, out int value);
+                GUI.Label(new Rect(body.x + 4f, y, body.width - 8f, 18f), StatLabel(stat) + ": " + value + StatUnit(stat), _small);
+                y += 20f;
+            }
+        }
+
+        private static string StatLabel(string stat) => stat switch
+        {
+            StatIds.AbilityDamage => "Ability damage",
+            StatIds.Accuracy => "Accuracy",
+            StatIds.DamageBonus => "Damage bonus",
+            StatIds.Ward => "Ward",
+            StatIds.MaxBlood => "Max blood",
+            StatIds.MaxBreath => "Max breath",
+            _ => stat,
+        };
+
+        private static string StatUnit(string stat) =>
+            stat == StatIds.Accuracy || stat == StatIds.DamageBonus || stat == StatIds.Ward ? "%" : "";
+
+        private void DrawSlot(Rect r, ItemSlot slot, ItemDef def, bool dragging)
+        {
+            Fill(r, dragging ? new Color(0.3f, 0.25f, 0.15f) : new Color(0.14f, 0.13f, 0.12f));
+            if (slot.IsEmpty) return;
+            Color color = def != null ? WorldView.ParseColor(def.Color) : Color.magenta;
+            Fill(new Rect(r.x + 4f, r.y + 4f, r.width - 8f, r.height - 8f), color * 0.85f);
+            string name = def?.Name ?? slot.ItemId;
+            GUI.Label(new Rect(r.x + 1f, r.y + 8f, r.width - 2f, r.height - 8f), name, _itemName);
+            if (slot.Count > 1 || (def != null && def.Stackable))
+                GUI.Label(new Rect(r.x + 2f, r.y, r.width, 14f), FormatCount(slot.Count), _count);
+        }
+
+        private static string FormatCount(int n) => n >= 10_000_000 ? n / 1_000_000 + "M" : n >= 100_000 ? n / 1000 + "K" : n.ToString();
+
+        private void DefaultAction(ContainerKind where, int slot, ItemDef def)
+        {
+            if (def == null) return;
+            List<ItemAction> actions = ItemActions.For(def, where);
+            if (actions.Count > 0) session.UseItem(where, slot, actions[0].Id);
+        }
+
+        private void OpenItemMenu(ContainerKind where, int slot, ItemDef def, Vector2 guiPosition)
+        {
+            var options = new List<(string Label, System.Action Action)>();
+            foreach (ItemAction a in ItemActions.For(def, where))
+            {
+                string id = a.Id;
+                options.Add((a.Label + " " + def.Name, () => session.UseItem(where, slot, id)));
+            }
+            PopupMenu.Open(guiPosition, def.Name, options);
+        }
+
+        private static string Describe(ItemDef def, int count)
+        {
+            var lines = new List<string> { def.Name + (count > 1 ? " x" + count : "") };
+            if (!string.IsNullOrEmpty(def.Examine)) lines.Add(def.Examine);
+            if (def.Equipment != null)
+            {
+                var stats = new List<string>();
+                foreach (KeyValuePair<string, int> s in def.Equipment.Stats)
+                    stats.Add((s.Value > 0 ? "+" : "") + s.Value + StatUnit(s.Key) + " " + StatLabel(s.Key).ToLowerInvariant());
+                lines.Add(def.Equipment.Slot + ": " + string.Join(", ", stats));
+            }
+            if (def.Consumable != null)
+            {
+                var effects = new List<string>();
+                foreach (EffectOp op in def.Consumable.Effects) effects.Add(op.Op + " " + op.Amount);
+                lines.Add(def.Consumable.Verb + ": " + string.Join(", ", effects));
+            }
+            return string.Join("\n", lines);
+        }
+
+        /// <summary>What a left-click would do, top-left like the classic games.</summary>
+        private void DrawHoverText()
+        {
+            if (string.IsNullOrEmpty(session.HoverText) || PopupMenu.IsOpen) return;
+            GUI.Label(new Rect(260f, 12f, 400f, 20f), session.HoverText, _hover);
+        }
+
         // ------------------------------------------------------------------ drawing helpers
 
         private void Bar(Rect r, float fraction, Color color, string label)
@@ -301,6 +514,12 @@ namespace Rth.Client
             _slotName = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 10, wordWrap = true };
             _slotName.normal.textColor = Color.white;
             _log = new GUIStyle(GUI.skin.label) { fontSize = 12, clipping = TextClipping.Clip };
+            _itemName = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 8, wordWrap = true, clipping = TextClipping.Clip, padding = new RectOffset(0, 0, 0, 0) };
+            _itemName.normal.textColor = Color.white;
+            _count = new GUIStyle(GUI.skin.label) { fontSize = 10, fontStyle = FontStyle.Bold };
+            _count.normal.textColor = new Color(1f, 1f, 0.3f);
+            _hover = new GUIStyle(GUI.skin.label) { fontSize = 13, fontStyle = FontStyle.Bold };
+            _hover.normal.textColor = new Color(1f, 0.95f, 0.75f);
             _assayer = new GUIStyle(GUI.skin.label) { fontSize = 13, wordWrap = true, fontStyle = FontStyle.Italic, alignment = TextAnchor.UpperCenter };
             _assayer.normal.textColor = new Color(0.88f, 0.84f, 0.95f);
         }

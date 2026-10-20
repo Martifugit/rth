@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Rth.Shared.Items;
 using Rth.Shared.Net;
 using UnityEngine;
 
@@ -23,6 +24,18 @@ namespace Rth.Client
         }
 
         private readonly Dictionary<int, EntityView> _entities = new Dictionary<int, EntityView>();
+        private readonly Dictionary<int, GroundItemView> _groundItems = new Dictionary<int, GroundItemView>();
+
+        /// <summary>Looks up item definitions (set by the session from the server's content).</summary>
+        public System.Func<string, ItemDef> ItemLookup { get; set; } = _ => null;
+
+        public GroundItemView FindGroundItem(int id) => _groundItems.TryGetValue(id, out GroundItemView v) ? v : null;
+
+        public IEnumerable<GroundItemView> GroundItemsOn(Rth.Shared.World.TileCoord tile)
+        {
+            foreach (GroundItemView g in _groundItems.Values)
+                if (g != null && g.Tile == tile) yield return g;
+        }
         private readonly List<Hitsplat> _hitsplats = new List<Hitsplat>();
         private float _tickSeconds = 0.6f;
         private GUIStyle _labelStyle;
@@ -70,7 +83,28 @@ namespace Rth.Client
 
             foreach (int id in update.Deaths)
                 if (_entities.TryGetValue(id, out EntityView view)) view.PlayDeath();
+
+            foreach (int id in update.GroundRemoved) RemoveGroundItem(id);
+            foreach (GroundItemAdded added in update.GroundAdded)
+            {
+                RemoveGroundItem(added.Id);
+                ItemDef def = ItemLookup(added.ItemId);
+                GroundItemView view = GroundItemView.Create(added, ParseColor(def?.Color));
+                view.transform.SetParent(transform, true);
+                _groundItems[added.Id] = view;
+            }
         }
+
+        private void RemoveGroundItem(int id)
+        {
+            if (!_groundItems.TryGetValue(id, out GroundItemView view)) return;
+            if (view != null) Destroy(view.gameObject);
+            _groundItems.Remove(id);
+        }
+
+        /// <summary>"#RRGGBB" to a colour; grey if missing or malformed.</summary>
+        public static Color ParseColor(string hex) =>
+            hex != null && ColorUtility.TryParseHtmlString(hex, out Color c) ? c : new Color(0.6f, 0.6f, 0.6f);
 
         private void ShowAction(ActionEvent action)
         {
@@ -132,6 +166,9 @@ namespace Rth.Client
             foreach (EntityView view in _entities.Values)
                 if (view != null) Destroy(view.gameObject);
             _entities.Clear();
+            foreach (GroundItemView view in _groundItems.Values)
+                if (view != null) Destroy(view.gameObject);
+            _groundItems.Clear();
             _hitsplats.Clear();
             LocalId = -1;
             TargetId = 0;

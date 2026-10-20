@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Rth.Shared.Combat;
+using Rth.Shared.Items;
 using Rth.Shared.Net;
 using Rth.Shared.World;
 using UnityEngine;
@@ -42,6 +43,7 @@ namespace Rth.Client
         }
 
         private readonly Dictionary<string, AbilityDef> _abilities = new Dictionary<string, AbilityDef>();
+        private readonly Dictionary<string, ItemDef> _items = new Dictionary<string, ItemDef>();
         private State _state = State.Login;
         private GameClient _client;
         private Task _connectTask;
@@ -61,7 +63,12 @@ namespace Rth.Client
 
         /// <summary>The player's resources as of the last tick, or null before the first one.</summary>
         public PlayerStateMessage PlayerState { get; private set; }
-        public ContentInfoMessage Content { get; private set; }
+        public ClientContent Content { get; private set; }
+        public List<ItemSlot> Inventory { get; } = new List<ItemSlot>();
+        public List<ItemSlot> Equipment { get; } = new List<ItemSlot>();
+        public Dictionary<string, int> Stats { get; } = new Dictionary<string, int>();
+        /// <summary>What a left-click would do on whatever is under the pointer ("Attack Fen rat").</summary>
+        public string HoverText { get; private set; } = "";
         public List<LogLine> Log { get; } = new List<LogLine>();
         /// <summary>The Assayer's last words, shown until dismissed.</summary>
         public string AssayerText { get; set; }
@@ -74,8 +81,12 @@ namespace Rth.Client
 
         public AbilityDef Ability(string id) => id != null && _abilities.TryGetValue(id, out AbilityDef a) ? a : null;
 
+        public ItemDef Item(string id) => !string.IsNullOrEmpty(id) && _items.TryGetValue(id, out ItemDef d) ? d : null;
+
         private void Start()
         {
+            if (GetComponent<PopupMenu>() == null) gameObject.AddComponent<PopupMenu>();
+            world.ItemLookup = Item;
             _name = PlayerPrefs.GetString(NamePref, "");
             _host = PlayerPrefs.GetString(HostPref, "127.0.0.1");
             _clickMarker = CreateClickMarker();
@@ -200,10 +211,21 @@ namespace Rth.Client
                         _stateReceivedTime = Time.time;
                         world.TargetId = state.TargetId;
                         break;
-                    case ContentInfoMessage content:
-                        Content = content;
+                    case ContentInfoMessage info:
+                        Content = info.Parse();
                         _abilities.Clear();
-                        foreach (AbilityDef a in content.Abilities) _abilities[a.Id] = a;
+                        foreach (AbilityDef a in Content.Abilities) _abilities[a.Id] = a;
+                        _items.Clear();
+                        foreach (ItemDef i in Content.Items) _items[i.Id] = i;
+                        break;
+                    case ContainerMessage container:
+                        List<ItemSlot> target = container.Kind == ContainerKind.Equipment ? Equipment : Inventory;
+                        target.Clear();
+                        target.AddRange(container.Slots);
+                        break;
+                    case StatsMessage stats:
+                        Stats.Clear();
+                        foreach (KeyValuePair<string, int> s in stats.Stats) Stats[s.Key] = s.Value;
                         break;
                     case GameTextMessage text:
                         AddLog(text.Kind, text.Text);
@@ -252,20 +274,93 @@ namespace Rth.Client
                 }
             }
 
-            if (mouse == null || !mouse.leftButton.wasPressedThisFrame) return;
+            if (mouse == null) return;
             Vector2 pointer = mouse.position.ReadValue();
-            if (CombatHud.IsPointerOverHud(pointer)) return;
+            bool overHud = CombatHud.IsPointerOverHud(pointer) || PopupMenu.IsOpen;
+            string title = "";
+            List<(string Label, Action Action)> options = overHud ? null : WorldOptionsAt(pointer, out title);
+            HoverText = options != null && options.Count > 0 ? options[0].Label : "";
+            if (options == null || options.Count == 0) return;
 
+            // Left-click does the first option; right-click lists them all.
+            if (mouse.leftButton.wasPressedThisFrame) options[0].Action();
+            else if (mouse.rightButton.wasPressedThisFrame) PopupMenu.Open(new Vector2(pointer.x, Screen.height - pointer.y), title, options);
+        }
+
+        /// <summary>Everything you could do with what's under the pointer, best first: attack, take, walk.</summary>
+        private List<(string Label, Action Action)> WorldOptionsAt(Vector2 pointer, out string title)
+        {
+            title = "Choose option";
+            var options = new List<(string Label, Action Action)>();
             Camera cam = Camera.main;
-            if (cam == null || !Physics.Raycast(cam.ScreenPointToRay(pointer), out RaycastHit hit, 500f)) return;
+            if (cam == null) return options;
 
-            EntityView entity = hit.collider.GetComponentInParent<EntityView>();
-            if (entity != null && entity.Id != world.LocalId && entity.Kind == EntityKind.Npc && !entity.IsDying)
+            RaycastHit[] hits = Physics.RaycastAll(cam.ScreenPointToRay(pointer), 500f);
+            Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+            EntityView npc = null;
+            GroundItemView item = null;
+            Vector3? ground = null;
+            foreach (RaycastHit h in hits)
             {
-                Attack(entity.Id);
-                return;
+                EntityView e = h.collider.GetComponentInParent<EntityView>();
+                if (e != null)
+                {
+                    if (npc == null && e.Kind == EntityKind.Npc && !e.IsDying) npc = e;
+                    continue;
+                }
+                GroundItemView g = h.collider.GetComponent<GroundItemView>();
+                if (g != null)
+                {
+                    if (item == null) item = g;
+                    continue;
+                }
+                if (ground == null) ground = h.point + cam.transform.forward * 0.01f;
             }
-            WalkTo(TileMath.FromWorld(hit.point + cam.transform.forward * 0.01f));
+
+            if (npc != null)
+            {
+                int id = npc.Id;
+                options.Add(("Attack " + npc.DisplayName, () => Attack(id)));
+            }
+            TileCoord? itemTile = item != null ? item.Tile : ground.HasValue ? TileMath.FromWorld(ground.Value) : (TileCoord?)null;
+            if (itemTile.HasValue)
+            {
+                var piles = new List<GroundItemView>(world.GroundItemsOn(itemTile.Value));
+                piles.Sort((a, b) => (b == item).CompareTo(a == item)); // the one under the pointer first
+                foreach (GroundItemView pile in piles)
+                {
+                    int id = pile.Id;
+                    string name = Item(pile.ItemId)?.Name ?? pile.ItemId;
+                    options.Add(("Take " + name + (pile.Count > 1 ? " (" + pile.Count + ")" : ""), () => Pickup(id)));
+                }
+            }
+            if (ground.HasValue)
+            {
+                TileCoord tile = TileMath.FromWorld(ground.Value);
+                options.Add(("Walk here", () => WalkTo(tile)));
+            }
+            return options;
+        }
+
+        public void Pickup(int groundItemId)
+        {
+            if (_state != State.InGame) return;
+            _client.Send(new PickupMessage { GroundItemId = groundItemId });
+            GroundItemView view = world.FindGroundItem(groundItemId);
+            if (view != null) ShowClickMarker(view.Tile, new Color(0.9f, 0.15f, 0.1f));
+        }
+
+        /// <summary>Uses one of an item's actions (see <see cref="ItemActions"/>).</summary>
+        public void UseItem(ContainerKind container, int slot, string actionId)
+        {
+            if (_state != State.InGame) return;
+            _client.Send(new ItemActionMessage { Container = container, Slot = slot, ActionId = actionId });
+        }
+
+        public void MoveItem(int from, int to)
+        {
+            if (_state != State.InGame) return;
+            _client.Send(new MoveItemMessage { From = from, To = to });
         }
 
         /// <summary>Asks the server to walk (or run, if toggled) the local player to a tile.</summary>
@@ -306,6 +401,9 @@ namespace Rth.Client
             world.Clear();
             PlayerState = null;
             AssayerText = null;
+            Inventory.Clear();
+            Equipment.Clear();
+            Stats.Clear();
             _state = State.Login;
             _status = "Logged out.";
         }

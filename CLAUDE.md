@@ -5,8 +5,13 @@ It plays like **RuneScape 3** (Evolution of Combat abilities, the skilling loops
 forced faction) and looks like **Old School RuneScape** (low-poly models, chunky flat textures,
 classic layout). It is set in its own world, **R'th**, built around the four humours.
 
-**Status:** Milestones 1 (architecture) and 2 (combat core: Occultism, bile, phlegm, breath)
-are done. Milestone 3 isn't chosen yet; see the end of the Milestone 2 section.
+**Status:** Milestones 1 (architecture), 2 (combat core: Occultism, bile, phlegm, breath) and
+3 (items, equipment, consumables, loot) are done. Milestone 4 isn't chosen yet.
+
+**Build everything as extensible systems.** New features plug into the mechanisms under
+"Extending the server" below (systems, events, interactions, stats, item components, effect ops,
+save sections, data files) rather than adding special cases. Prefer a general mechanism plus
+data over code for one case.
 See `README.md` for how to build, run and test.
 
 Design docs:
@@ -158,17 +163,51 @@ phlegm and breath came with it. The prototype numbers are in `docs/systems.md`.
 - [x] Client: click to attack, 1-8 action bar, resource bars and bile axis, hitsplats, projectiles.
 - [x] Simulation tests (`CombatTests`), including 1000 ticks of fighting.
 
-How combat is put together:
-- `World` is split into `World.cs` (phases, input, logins, updates), `World.Combat.cs` (engaging,
-  abilities, damage, death, per-tick resources) and `World.Npcs.cs` (AI, spawning). Players and
-  NPCs share `Entity`. Formulas that the client also needs (bile passives, requirements) live in
-  `shared/Combat`.
-- Players only fight NPCs for now (no PvP). Damage lands on the tick it's used (no projectile
-  delay yet). There are no levels, gear, items or reagents yet: `PlayerAbilityDamage` stands in.
-- The client HUD is IMGUI (`CombatHud`), a placeholder until the classic-layout interface work.
+Notes: players only fight NPCs (no PvP). Damage lands on the tick it's used (no projectile delay
+yet). There are no levels yet; base `PlayerAbilityDamage` plus gear stands in. The client HUD is
+IMGUI (`CombatHud`), a placeholder until the classic-layout interface work.
 
-**Milestone 3: not chosen yet.** Natural candidates: items and inventory (unlocks food, drops,
-reagents and gear), the first skilling loop, or a second combat style.
+## Milestone 3: items (done)
+
+- [x] Item definitions with components (equipment, consumable), validated content.
+- [x] 28-slot inventory and 10 equipment slots, saved per player; starter kit for new characters.
+- [x] Consumables (food, potions) via generic effect ops; shared cooldown groups; eating delays attacks.
+- [x] Equipment adds to named stats, which combat reads.
+- [x] Nested, shareable drop tables; loot on the ground for the killer, then public, then gone.
+- [x] Pick up (walk over), drop, examine, wield/remove; inventory drag to rearrange.
+- [x] Client: pack/worn/stats panel, right-click menus in the world and on items, hover text.
+
+Items are kept on death for now. Items have placeholder icons (tinted squares) until there's art.
+
+**Milestone 4: not chosen yet.** Natural candidates: the first skilling loop (e.g. carcass
+butchering, which uses drops, items, interactions and drop tables), banks and shops, or a
+second combat style.
+
+---
+
+## Extending the server
+
+`World` (server/Rth.Server.Core/Game/World.cs) owns entities, connections, movement, visibility
+and saving. Everything else is a `GameSystem` listed in `World.StandardSystems` (order matters:
+systems run in that order within each phase). Today: `ItemSystem`, `CombatSystem`, `DeathSystem`,
+`NpcSystem`, `GroundItemSystem`, `LootSystem`.
+
+| To add... | Use |
+|---|---|
+| A feature (skill, quest, shop) | A new `GameSystem`: override the phase hooks you need; register client messages with `World.OnMessage<T>`. |
+| Reacting to something another system did | `World.Events.Subscribe<T>` / `Publish`. Existing: `EntityDied`, `DamageDealt`. Add event classes in `GameEvents.cs`. |
+| "Walk over there and do X" (pick up, mine, talk) | An `Interaction` subclass; start it with `World.StartInteraction`. Walking cancels it. |
+| Per-player state for a system | `player.Component<T>()` (created on first use). |
+| Saving that state | Override `OnLogin`/`OnSave`; use `save.Section<T>(key)` / `save.SetSection(key, …)`. Unknown sections are preserved. |
+| A stat gear or buffs can change | Add the id to `shared/Combat/StatIds.cs`, read it where it matters; contributors implement `IStatContributor`; call `World.RecalculateStats` when inputs change. |
+| A new item capability | A component class on `ItemDef`, an action provider in `shared/Items/ItemActions.cs`, and a handler via `ItemSystem.RegisterAction`. |
+| A new consumable/ritual effect | A constant in `EffectOp`, validation in `GameContent.KnownEffectOps`, a handler via `ItemSystem.RegisterEffectOp`. |
+| A new kind of content file | A field on `ContentParts`, load it in `GameContent.Load`, validate in `Create`. Client-visible content goes in `ClientContent` (sent as JSON, so no codec changes). |
+| A client message | A message class in `shared/Net/Messages.cs`, a case in `MessageCodec.Decode`, bump `Protocol.Version`. |
+
+Tests: build worlds with `WorldFixture` and `TestContent` (server/Rth.Tests/TestSupport.cs), which
+uses fixed content so tuning the real data files never breaks tests. `World` can also be built
+with an explicit list of systems.
 
 ---
 
