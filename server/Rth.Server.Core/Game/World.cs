@@ -87,6 +87,8 @@ namespace Rth.Server.Game
 
         public ServerConfig Config => _config;
         public MapData Map { get; }
+        /// <summary>The map's name (its file name without extension), stored in saves.</summary>
+        public string MapName => System.IO.Path.GetFileNameWithoutExtension(_config.MapPath);
         public GameContent Content { get; private set; }
         public CombatRules Rules => Content.Rules;
         public GameEvents Events { get; } = new GameEvents();
@@ -409,7 +411,7 @@ namespace Rth.Server.Game
 
             PlayerSave? save = _store.Load(key);
             var player = new Player(NextEntityId(), key, save?.Name ?? name, connection);
-            if (save != null && Map.Contains(save.Plane, save.X, save.Y) && !Map.IsBlocked(save.Plane, save.X, save.Y))
+            if (save != null && save.Map == MapName && Map.Contains(save.Plane, save.X, save.Y) && !Map.IsBlocked(save.Plane, save.X, save.Y))
             {
                 player.Plane = save.Plane;
                 player.Position = new TileCoord(save.X, save.Y);
@@ -519,6 +521,7 @@ namespace Rth.Server.Game
                 var save = new PlayerSave
                 {
                     Name = player.Name,
+                    Map = MapName,
                     // Logging out while dead counts as having respawned.
                     Plane = player.IsDead ? Map.SpawnPlane : player.Plane,
                     X = player.IsDead ? Map.Spawn.X : player.Position.X,

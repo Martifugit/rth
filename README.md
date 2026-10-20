@@ -1,4 +1,4 @@
-﻿# R'th
+# R'th
 
 A private multiplayer RPG for a group of friends: RuneScape 3-style play, Old School RuneScape-style
 looks, in an original world. See `CLAUDE.md` for the architecture and `docs/` for the design.
@@ -19,7 +19,7 @@ Run `dotnet build` **before** opening the Unity project the first time, and agai
 change anything under `/shared` or `/server`. Unity uses the built DLLs, and without them it opens
 in Safe Mode with missing-type errors.
 
-Then open `client/` in Unity and load `Assets/Scenes/TestMap.unity`.
+Then open `client/` in Unity and load `Assets/Scenes/Tolling.unity`.
 
 ## Playing in the Editor
 
@@ -57,8 +57,11 @@ Press Play. The Editor exports the scene's map and starts a local server in the 
   ultimates at 10, and adds ability damage per level.
 - Arrow keys or middle-drag rotate the camera; the scroll wheel zooms.
 
-The test map has fen rats (south-west, passive), vitriol mites (north-east, aggressive, they spit
-from range) and a straw penitent beside the spawn, a training effigy that never fights back.
+**Tolling**, the riverside town where you wake: the square and bell tower, the Synod treasury,
+Corvin's apothecary, Wenna's skinning yard south of town (and the sleepers' graves past it), the
+training yard with its straw penitent, the Backwards Mill and millpond to the north, fen rats in
+the reed beds along the river, and over the bridge, the east woods and Sour Hollow, where vitriol
+mites nest around a leaking cask (aggressive; they spit from range). The bay is to the south-east.
 
 ## Tuning content
 

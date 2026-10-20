@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -8,7 +8,7 @@ using Rth.Server.Game;
 // Standalone R'th server. Usage:
 //   dotnet run --project server/Rth.Server -- [--port N] [--map path] [--saves dir] [--content dir]
 //                                             [--tick-ms N] [--no-hot-reload]
-// Paths default to server/data/maps/test.rthmap and server/saves (found from the working directory).
+// Paths default to server/data/maps/tolling.rthmap and server/saves (found from the working directory).
 
 var config = new ServerConfig
 {
@@ -16,7 +16,7 @@ var config = new ServerConfig
 };
 
 string serverDir = FindServerDirectory();
-config.MapPath = Path.Combine(serverDir, "data", "maps", "test.rthmap");
+config.MapPath = Path.Combine(serverDir, "data", "maps", "tolling.rthmap");
 config.SaveDirectory = Path.Combine(serverDir, "saves");
 config.ContentDirectory = Path.Combine(serverDir, "data", "content");
 

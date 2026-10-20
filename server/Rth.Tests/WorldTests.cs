@@ -110,6 +110,22 @@ public class WorldTests
     }
 
     [Fact]
+    public void ASaveFromAnotherMapStartsAtThisMapsSpawn()
+    {
+        var fx = OpenWorld();
+        FakeConnection first = fx.Login("Alice");
+        first.FromClient(new WalkToMessage { X = 12, Y = 8 });
+        fx.Ticks(10);
+        first.FromClient(new LogoutMessage());
+        fx.Ticks(1);
+        Assert.Equal(fx.World.MapName, fx.Store.Saves["alice"].Map);
+
+        fx.Store.Saves["alice"].Map = "somewhere_else";
+        fx.Login("Alice");
+        Assert.Equal(Spawn, fx.Player("Alice").Position);
+    }
+
+    [Fact]
     public void DroppedConnectionIsLoggedOutAndSaved()
     {
         var fx = OpenWorld();

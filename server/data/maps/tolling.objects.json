@@ -1,0 +1,6 @@
+[
+  { "type": "synod_strongbox", "plane": 0, "x": 23, "y": 55 },
+  { "type": "apothecary_still", "plane": 0, "x": 36, "y": 40 },
+  { "type": "skinning_rack", "plane": 0, "x": 26, "y": 33 },
+  { "type": "lye_vat", "plane": 0, "x": 75, "y": 62 }
+]

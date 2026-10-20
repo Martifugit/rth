@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/Tolling.unity
+    guid: 20eab0e08553cd84c821c1e0734dee7d
+  - enabled: 1
     path: Assets/Scenes/TestMap.unity
     guid: c39ff4f09d71874488edb2a76aa31c2e
   m_configObjects:

@@ -51,10 +51,10 @@ To replace (read too much like clockwork, which the world isn't):
 
 The engine handles one map area at a time well, so the world is built a region at a time.
 
-1. **Tolling and the river** (now). One riverside town west of the bay: the river and its
+1. **Tolling and the river** (built: `client/Assets/Scenes/Tolling.unity`). One riverside town west of the bay: the river and its
    bridge, the Backwards Mill and millpond, fields, reed beds with fen rats, a wooded east bank
    with Sour Hollow (vitriol mites around a cask that leaked after the Scalding), and the bay
-   shore at the edge. The current townsfolk move in. About 96 x 96 tiles.
+   shore at the edge, and the sleepers' graves south of town. The townsfolk live here. 96 x 96 tiles.
 2. **Cruor and the bay shore.** The first capital. Needs a second map area (regions and
    walking between them), so it's also the engine milestone for a multi-region world.
 3. The fens and the occult north-east.

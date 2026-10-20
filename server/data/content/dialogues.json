@@ -73,7 +73,7 @@
         "next": "greet"
       },
       "scald": {
-        "text": "Not on my racks. Mites from the Scald eat through iron, never mind hide. There's a lye vat out past the fence. You'll want a glass hook, and you'll want to know what you're doing first.",
+        "text": "Not on my racks. Mites from the Scald eat through iron, never mind hide. There's a lye vat over the river in Sour Hollow, where the mites nest. Somebody dumped a cask of the old war-stuff there after the Scalding and it never stopped leaking. You'll want a glass hook, and you'll want to know what you're doing first.",
         "next": "greet"
       }
     }

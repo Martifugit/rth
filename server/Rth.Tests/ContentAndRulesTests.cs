@@ -20,13 +20,25 @@ public class ContentAndRulesTests
     }
 
     [Fact]
-    public void TheShippedSpawnsAllNameRealNpcs()
+    public void EveryShippedMapPlacesOnlyRealNpcsAndObjectsOnOpenGround()
     {
         GameContent content = GameContent.Load(Repo.ContentDirectory);
-        string spawns = GameContent.SpawnsPathFor(Path.Combine(Repo.ServerDirectory, "data", "maps", "test.rthmap"));
-        Assert.True(File.Exists(spawns), "Export the test map from Unity to create " + spawns);
-        foreach (NpcSpawn spawn in GameContent.LoadSpawns(spawns))
-            Assert.Contains(spawn.Npc, content.Npcs.Keys);
+        string[] maps = Directory.GetFiles(Path.Combine(Repo.ServerDirectory, "data", "maps"), "*.rthmap");
+        Assert.Contains(maps, m => Path.GetFileName(m) == "tolling.rthmap");
+        foreach (string path in maps)
+        {
+            MapData map = MapData.Load(path);
+            MapPlacements placements = MapPlacements.Load(path);
+            string name = Path.GetFileName(path);
+            Assert.False(map.IsBlocked(map.SpawnPlane, map.Spawn.X, map.Spawn.Y), name + ": the spawn is blocked");
+            foreach (NpcSpawn spawn in placements.Npcs)
+            {
+                Assert.True(content.Npcs.ContainsKey(spawn.Npc), name + ": unknown NPC " + spawn.Npc);
+                Assert.False(map.IsBlocked(spawn.Plane, spawn.X, spawn.Y), name + ": " + spawn.Npc + " spawns on a blocked tile (" + spawn.X + ", " + spawn.Y + ")");
+            }
+            foreach (PlacedObject o in placements.Objects)
+                Assert.True(content.Objects.ContainsKey(o.Type), name + ": unknown object " + o.Type);
+        }
     }
 
     [Fact]
@@ -119,7 +131,8 @@ public class ContentAndRulesTests
             fx.Store.Save("old", save);
             fx.Login("Old");
             var old = fx.Player("Old");
-            Assert.Equal((new TileCoord(7, 6), old.MaxBlood, old.MaxBreath, 0), (old.Position, old.Blood, old.Breath, old.Bile));
+            // Saves from before maps were recorded start at the spawn; everything else carries over.
+            Assert.Equal((new TileCoord(1, 1), old.MaxBlood, old.MaxBreath, 0), (old.Position, old.Blood, old.Breath, old.Bile));
         }
         finally
         {
