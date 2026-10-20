@@ -5,7 +5,8 @@ It plays like **RuneScape 3** (Evolution of Combat abilities, the skilling loops
 forced faction) and looks like **Old School RuneScape** (low-poly models, chunky flat textures,
 classic layout). It is set in its own world, **R'th**, built around the four humours.
 
-**Status:** Milestone 1 (architecture prototype) is done. Next is Milestone 2 below.
+**Status:** Milestones 1 (architecture) and 2 (combat core: Occultism, bile, phlegm, breath)
+are done. Milestone 3 isn't chosen yet; see the end of the Milestone 2 section.
 See `README.md` for how to build, run and test.
 
 Design docs:
@@ -140,9 +141,34 @@ How it works, briefly:
   **R'th > Dev > Rebuild Test Map Scene**. The scene is now the source of truth; rebuilding
   overwrites edits.
 
-**Milestone 2 (next):** the combat core with one style, **Occultism**, because its bile axis is
-the riskiest and most unusual system. Blood, phlegm and Breath come with it. See
-`docs/systems.md`.
+## Milestone 2: the combat core (done)
+
+One style, **Occultism**, because its bile axis is the riskiest and most unusual system. Blood,
+phlegm and breath came with it. The prototype numbers are in `docs/systems.md`.
+
+- [x] Blood, phlegm (0-100), bile (-100..+100) and breath on every player, saved with them.
+- [x] Occult auto-attack plus 8 abilities (basics, thresholds, ultimates) across both poles,
+      with phlegm and bile requirements, a 3-tick global cooldown and an ability queue.
+- [x] Bile passives at ±30, fever/torpor at ±80, settling out of combat.
+- [x] Breath deflection against one style.
+- [x] NPCs placed in the scene (`MapNpcSpawn`), with chase, melee/ranged rules, line of sight,
+      aggression, retaliation, leashing, death and respawn.
+- [x] Death and the Assayer; respawn with balanced humours.
+- [x] Content (abilities, NPCs, rules, Assayer lines) as JSON in `server/data/content/`, hot-reloaded.
+- [x] Client: click to attack, 1-8 action bar, resource bars and bile axis, hitsplats, projectiles.
+- [x] Simulation tests (`CombatTests`), including 1000 ticks of fighting.
+
+How combat is put together:
+- `World` is split into `World.cs` (phases, input, logins, updates), `World.Combat.cs` (engaging,
+  abilities, damage, death, per-tick resources) and `World.Npcs.cs` (AI, spawning). Players and
+  NPCs share `Entity`. Formulas that the client also needs (bile passives, requirements) live in
+  `shared/Combat`.
+- Players only fight NPCs for now (no PvP). Damage lands on the tick it's used (no projectile
+  delay yet). There are no levels, gear, items or reagents yet: `PlayerAbilityDamage` stands in.
+- The client HUD is IMGUI (`CombatHud`), a placeholder until the classic-layout interface work.
+
+**Milestone 3: not chosen yet.** Natural candidates: items and inventory (unlocks food, drops,
+reagents and gear), the first skilling loop, or a second combat style.
 
 ---
 
@@ -165,7 +191,9 @@ the riskiest and most unusual system. Blood, phlegm and Breath come with it. See
   PowerShell, put C# for `eval` in a file and use `eval_file` (quotes get mangled otherwise); the
   file is a method body, so use fully qualified names, not `using` lines. `simulate_pointer` does
   not reach `Mouse.current` here, so drive gameplay checks through public methods
-  (`GameSession.LogIn`, `GameSession.WalkTo`) instead.
+  (`GameSession.LogIn`, `WalkTo`, `Attack`, `UseAbility`) instead. `screenshot --view game`
+  renders the camera only (no IMGUI); `game_view --source screen --save_path Temp/x.png` includes
+  the HUD but writes into `Assets/Temp/`, so move the file out and delete that folder afterwards.
 - `UnityEngine.CollisionFlags` clashes with `Rth.Shared.World.CollisionFlags`; alias it in Unity
   code. Unity 6.6 deprecates `FindFirstObjectByType` and the `FindObjectsSortMode` overloads; use
   `FindAnyObjectByType` and `FindObjectsByType<T>(FindObjectsInactive)`.

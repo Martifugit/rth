@@ -155,6 +155,7 @@ namespace Rth.Client
 
         private void OnGUI()
         {
+            GUI.depth = 10; // world labels sit underneath the HUD (lower depth draws on top)
             Camera cam = Camera.main;
             if (cam == null) return;
             EnsureStyles();

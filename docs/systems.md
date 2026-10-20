@@ -27,6 +27,24 @@ marked **Proposal** are suggestions that the designer has not yet confirmed.
 - **+ pole: yellow bile (choleric).** Hot, angry, offensive.
 - **− pole: black bile (melancholic).** Cold, inward, defensive and utility.
 
+**Prototype (Milestone 2).** The poles above are playable, with placeholder numbers. All of them
+live in `server/data/content/` and hot-reload, so they're meant to be tuned by playing:
+- **Passives** from ±30: choleric deals 5% more damage at +30, rising to 20% at +100;
+  melancholic takes 5% less damage at −30, rising to 15% at −100.
+- **Extremes** from ±80: choleric **fever** burns 0.5% of max blood per tick (it never kills);
+  melancholic **torpor** halves phlegm gained from basics.
+- **Settling:** after 10 ticks out of combat, bile drifts back 1 per tick, phlegm fades 2 per
+  tick, and blood and breath regenerate.
+- **Phlegm:** basics build 6–8; thresholds need 50 and spend 15; ultimates need and spend 100.
+  3-tick global cooldown; one ability can be queued.
+- **Breath:** 300 max; deflecting one style drains 1 per tick and halves that style's damage.
+- **Death:** the Assayer resets bile to 0 on respawn. That is the cost of dying in the
+  prototype; there is nothing to lose until items exist.
+- **Abilities:** Gall Spark (+10), Black Draught (−10, heals 25% of damage), Still the Humours
+  (25 towards zero), Bitter Salt (needs +20), Choleric Flare (threshold, needs +30), Melancholy
+  Shroud (threshold, needs −30, 30% ward), Vitriol Rain (ultimate, needs +60), Black Sun
+  (ultimate, needs −60, heals 20% and wards). Reagent costs wait for items and Distillation.
+
 ## Combat styles
 
 - **Melee: Blood / the Sanguine Synod.** Plate, close quarters. Spends verses from Religion.

@@ -42,6 +42,7 @@ namespace Rth.Client
 
         private void OnGUI()
         {
+            GUI.depth = 0;
             if (Event.current.type == EventType.Layout) HudRects.Clear();
             if (session == null || !session.IsInGame) return;
             EnsureStyles();
