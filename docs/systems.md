@@ -58,7 +58,7 @@ live in `server/data/content/` and hot-reload, so they're meant to be tuned by p
 
 ### Religion (prep skill)
 Like RS3 Necromancy's ritual layer, but with no combat of its own. You perform rituals to create
-verses, which melee spends. **Brazenhithe** and **Noonhaven** each have their own verse lists,
+verses, which melee spends. **Cruor** and **Tithe** each have their own verse lists,
 and styles can cross-pollinate.
 
 ### Carcass butchering (Slayer analogue)

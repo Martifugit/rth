@@ -346,7 +346,7 @@
         ]
       },
       "synod": {
-        "text": "Keeps it. That's the covenant, the way Brazenhithe reads it: we are keepers. Noonhaven would tell you everything is a debt that comes due one day. I prefer Brazenhithe's arithmetic.",
+        "text": "Keeps it. That's the covenant, the way Cruor reads it: we are keepers. Tithe would tell you everything is a debt that comes due one day. I prefer Cruor's arithmetic. Tithe's always ends with somebody paying.",
         "next": "greet"
       },
       "chain": {

@@ -7,22 +7,53 @@ proposal. The thing in the bay is deliberately left undefined.*
 
 ## I. The shape of the known world
 
-The known kingdoms live in a basin. A ring of mountains encloses the lowlands on the north and the
-west, and they open to the sea in the south and east. In the middle lies a round bay. Its water
-rises and falls more steadily than any tide should, and out of it rises a shape that can be seen
-from anywhere in the lowlands. Nobody agrees what it is. Nobody who has tried to find out has come
-back with an answer worth keeping.
+The known kingdoms live in a basin. A great mountain range curves around the continent like a
+wall, sloping down to the sea at both ends, and encloses the lowlands on the north and the west.
+Beyond it lies frozen country nobody farms. In the middle of the lowlands lies a round bay. Its
+water rises and falls more steadily than any tide should, and out of it rises a shape that can be
+seen from anywhere in the lowlands. Nobody agrees what it is. Nobody who has tried to find out has
+come back with an answer worth keeping.
 
 Around the bay lies the **heartland**: green river country, and the oldest seat of the faith of
-Blood at **Brazenhithe**. Across the bay's narrow channel to the south-east lies **Noonhaven**, the
-second seat of the same faith, harder, hotter and prouder. West of the heartland, in the rain
-shadow of the mountains, the dry kingdom of **Lammas** grows rich on salt and caravans and poor in
-water. The north-east is broken country, fen and scar, divided between the **occult houses**.
-The mountains themselves belong, on their surface, to the **Rationalists**, whose capital stands
-where the range comes down to the sea. Beneath them they belong to the **dwarves**, and beneath the
-dwarves to peoples older still.
+Blood at **Cruor**. Across the bay's narrow mouth to the south-east lies **Tithe**, the second seat
+of the same faith, harder, hotter and prouder. West of the heartland, in the rain shadow of the
+mountains, the dry kingdom of **Lammas** grows rich on salt and caravans and poor in water. In the
+far north-east the range itself gives out: eroded, broken open, and finally eaten away by the
+Scalding. That broken country of fen and scar belongs to the **occult houses**.
+
+**The range is held in three layers.** Its liveable surface (the passes, the high valleys, the
+observatories) belongs to the **Rationalists**, whose capital, **Meridian**, stands where the
+range comes down to the sea. Its caves and cart-lines belong to the **dwarves**. And beneath the
+dwarves are the depths, which belong to peoples older still, whom nobody visits on purpose.
 
 Over all of it hang **two moons**. One of them is cracked.
+
+### Why the borders hold
+
+Every power in the basin holds its land for a reason the land itself gives it.
+
+- **Cruor** holds the heartland because everything flows to it. Every river in the basin runs
+  down to the bay, and so does every road, barge and pilgrim. It is the richest city in the
+  basin, it keeps the largest army, and its faith honours martyrdom: its soldiers would rather
+  die than yield, and its enemies know it. Nobody has taken ground from Cruor in living memory.
+  It needs no wall but its people.
+- **Tithe** holds the south-east because it holds the bay's only mouth to the open sea. Every
+  ship that leaves the bay passes under its towers and pays, which is where its name comes from.
+  Behind it lie the brine pans and the Shadowless Stones, salt flats and bare rock where no army
+  can live off the land. Cruor could crush it, and has tried three times. The channel and the
+  glare beat it every time.
+- **Lammas** holds the west because nobody else can live there. The mountains take the rain,
+  and only Lammas knows the wells and cisterns. Armies that march in die of thirst. It also holds
+  the lowland ends of the western passes, so the caravan trade through the range runs through
+  its markets and its salt reaches every table in the basin.
+- **The Rationalists** hold the range's surface because they hold the passes, and the high
+  ground looks down on everyone. Their neutrality is a toll gate: every crossing pays, every war
+  needs their roads, and every side needs their moonfall forecasts.
+- **The dwarves** hold the caves because nobody else can find their way in them, and they hold
+  the depths' bindings because nobody else knows they exist.
+- **The occult houses** survive in the north-east because nobody else wants it. The fens swallow
+  plate armour and cavalry, the Scald still burns, and where the range has fallen apart the coast
+  is all inlets and sea caves. The Synod can burn a house, but it cannot hold the ground after.
 
 ## II. The four humours
 
@@ -54,23 +85,24 @@ They have done so ever since, in silence.
 ### The Covenant
 The first settlers of the heartland came to the bay. What happened there is told in a hundred
 versions. The Synod's version is that a covenant was made at the water's edge, in blood, with
-something that answered. The faith of Blood begins there, and so does Brazenhithe, built on the
+something that answered. The faith of Blood begins there, and so does Cruor, built on the
 bay's rim facing what lies in it.
 
 ### The Cracking
 On a night still kept as a feast in some places and a fast in others, the second moon cracked. The
-first fragment fell in the western hills and burned for a month. From the scholars and
+first fragment struck the range in the north-west, tore the Moon Breach through it, and burned for
+a month. From the scholars and
 sky-watchers who studied the falls came the **Rationalists**: they predicted the second fall and
 were right, and in the basin that is a kind of power. They took to the mountains for clearer skies.
-There they met the dwarves and struck the **Under-Treaty**: the surface to the scholars, the deep
+There they met the dwarves and struck the **Under-Treaty**: the surface to the scholars, the caves
 to the dwarves, and no questions asked in either direction. Both sides have broken the last clause
 many times.
 
 ### The Great Schism
 The faith split over a single question: **what the covenant asks of the faithful**.
-- **Brazenhithe** teaches that the covenant is a *keeping*. The faithful guard what is in the bay,
+- **Cruor** teaches that the covenant is a *keeping*. The faithful guard what is in the bay,
   and they guard the world from it.
-- **Noonhaven** teaches that the covenant is a *debt*. One day it will be called in, and the
+- **Tithe** teaches that the covenant is a *debt*. One day it will be called in, and the
   faithful must be found worthy when it is.
 
 The two sees have fought three wars over the difference and made peace four times. Today they are
@@ -219,8 +251,8 @@ race each other to every crater. The scholars' own figures say the cracks are wi
 one day something much larger will come down. They have not told anyone.
 
 ### The faith divided
-The covenant debate between the sees is not academic. If Brazenhithe is right, the faithful are
-guards. If Noonhaven is right, they are debtors, and the debt is coming due. Both sees watch the
+The covenant debate between the sees is not academic. If Cruor is right, the faithful are
+guards. If Tithe is right, they are debtors, and the debt is coming due. Both sees watch the
 bay. Both are preparing for different things. When it matters most, the player will have to decide
 which of them understood the covenant, or whether either did.
 
@@ -228,10 +260,10 @@ which of them understood the covenant, or whether either did.
 
 | Character | Who they are at the start | How they change |
 | --- | --- | --- |
-| **Sister Odile Vane** | A young blood-knight of Brazenhithe, devout, brave and a little insufferable. Assigned to watch the woken sleeper. | Comes to doubt her see through what she sees at the player's side. She can end as the reformer who reconciles the sees, or as a martyr for a covenant she no longer understands. The player's choices tip it. |
-| **Brother Cassius Ember** | A Noonhaven inquisitor who suspects the player is tainted and says so. | The most honest person in either see, and he never warms to the player. He is the first to see the Physician's hand in the Schism, and nobody believes him. |
+| **Sister Odile Vane** | A young blood-knight of Cruor, devout, brave and a little insufferable. Assigned to watch the woken sleeper. | Comes to doubt her see through what she sees at the player's side. She can end as the reformer who reconciles the sees, or as a martyr for a covenant she no longer understands. The player's choices tip it. |
+| **Brother Cassius Ember** | A Tithe inquisitor who suspects the player is tainted and says so. | The most honest person in either see, and he never warms to the player. He is the first to see the Physician's hand in the Schism, and nobody believes him. |
 | **Corvin Sallow** | The friendly apothecary in the player's home town who sells them their first potions. | Revealed as an occultist, then as far more: a would-be house master, and one of the Physician's oldest patients. Whether he masters his own transformation or is consumed by it is one of the long tragedies. |
-| **Magister Ilse Varrow** | Chief astronomer of the Rationalist capital, forecaster of moonfalls, brilliant and cold. | Carries the secret of the coming great fall, and later the guilt of the deep bores. She turns from the player's most useful patron into the person they must decide whether to expose. |
+| **Magister Ilse Varrow** | Chief astronomer of Meridian, forecaster of moonfalls, brilliant and cold. | Carries the secret of the coming great fall, and later the guilt of the deep bores. She turns from the player's most useful patron into the person they must decide whether to expose. |
 | **Brannoch** | Master of the cart lines: a dwarf who talks to the player like weather talks to a field. | Slowly opens up about the seals. Late in the deep story he reveals that his family has kept one of them for thirty generations, and that it is failing. |
 | **Queen Saffiya of Lammas** | A pragmatic young monarch with a thirsty kingdom. | Plays every power against every other with real skill. She becomes either the player's best ally or the most dangerous opponent in the lowlands, depending on what the player gives her. |
 | **The Breathless Pilgrim** | A Pneuma ascetic walking the basin, gentle and serene, who seems to know things. | Never changes, which turns out to be the point. Their calm is a fixed mark the player can steer by when everything else shifts. |
