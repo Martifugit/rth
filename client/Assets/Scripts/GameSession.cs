@@ -185,7 +185,13 @@ namespace Rth.Client
             Camera cam = Camera.main;
             if (cam == null || !Physics.Raycast(cam.ScreenPointToRay(pointer), out RaycastHit hit, 500f)) return;
 
-            TileCoord tile = TileMath.FromWorld(hit.point + cam.transform.forward * 0.01f);
+            WalkTo(TileMath.FromWorld(hit.point + cam.transform.forward * 0.01f));
+        }
+
+        /// <summary>Asks the server to walk (or run, if toggled) the local player to a tile.</summary>
+        public void WalkTo(TileCoord tile)
+        {
+            if (_state != State.InGame) return;
             _client.Send(new WalkToMessage { X = tile.X, Y = tile.Y, Run = _run });
             ShowClickMarker(tile);
         }

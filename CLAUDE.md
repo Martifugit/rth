@@ -5,7 +5,8 @@ It plays like **RuneScape 3** (Evolution of Combat abilities, the skilling loops
 forced faction) and looks like **Old School RuneScape** (low-poly models, chunky flat textures,
 classic layout). It is set in its own world, **R'th**, built around the four humours.
 
-**Status:** pre-prototype. Nothing is built yet. Start with Milestone 1 below.
+**Status:** Milestone 1 (architecture prototype) is done. Next is Milestone 2 below.
+See `README.md` for how to build, run and test.
 
 Design docs:
 - `docs/lore.md`: the world, history, factions and characters. All names are provisional.
@@ -19,12 +20,20 @@ Design docs:
 
 ```
 /server     Plain C# console app (.NET, current LTS). Runs the tick loop, persistence, networking.
+  Rth.Server.Core   The server itself (netstandard2.1, so the Unity Editor can host it in-process).
+  Rth.Server        Thin console host (net10.0).
+  Rth.Tests         xUnit tests for /shared and the server; run without Unity.
+  data/maps         Exported collision maps (*.rthmap). Written only by the exporter.
 /shared     C# class library with NO UnityEngine references. Game rules, definitions,
             message types, map/tile data structures. Used by both server and client.
-/client     Unity project (Unity 6+). Rendering, input, UI, animation. Sends intents, draws state.
-/tools      Small utilities, e.g. the map exporter.
+/client     Unity project (Unity 6.6, URP). Rendering, input, UI, animation. Sends intents, draws state.
+/tools      Small utilities. unity-map-tools: a local UPM package (map markers + exporter).
 /docs       Design documents.
 ```
+
+Build output goes to `/artifacts`. Building `Rth.Shared` and `Rth.Server.Core` copies their DLLs into
+`client/Assets/Plugins/Rth/` (git-ignored), so **run `dotnet build` before opening Unity** and after
+changing `/shared` or `/server`. Unity loads the DLLs; it never compiles that source itself.
 
 Why: the game rules are tick-and-tile maths with no physics, so the server has no reason to carry
 Unity. A plain C# server is light enough to run 24/7 on a home PC or a free/cheap ARM machine, and
@@ -80,9 +89,15 @@ add complexity before Milestone 1 proves the need.
 
 ### Persistence
 
-Players are saved on logout and on a periodic autosave (every few minutes). SQLite is a sensible
-default. Save on server shutdown. The world state that must persist (e.g. player-built or
+Players are saved on logout (including dropped connections), on autosave every 300 ticks
+(3 minutes) and on server shutdown. The world state that must persist (e.g. player-built or
 long-lived changes) gets designed when such features exist.
+
+**Decided (Milestone 1):** saves are one JSON file per player in `server/saves/` (`JsonPlayerStore`,
+written atomically through a temp file), not SQLite. SQLite needs a native library, which is
+awkward inside the in-Editor server, and ~200 small files don't need a database. Everything goes
+through `IPlayerStore`, so a SQLite store can replace it later without touching the world. The
+Editor-hosted and standalone servers share the same save folder.
 
 ### Content as data
 
@@ -96,16 +111,34 @@ mechanics; data handles the content.
 
 Build only this, and make it feel good:
 
-- [ ] Repo layout as above; `/shared` builds for both the server and Unity.
-- [ ] Server runs a drift-corrected 600 ms tick loop with the phases above.
-- [ ] One small test map designed in Unity, exported by the tool, loaded by the server.
-- [ ] Two players can log in (name only, no passwords; it's friends-only, add auth later if wanted).
-- [ ] Click a tile: the server pathfinds and the player walks there; walls block movement.
-- [ ] Both players see each other move, with smooth interpolation between ticks.
-- [ ] Log out and back in: the player is where they left off (persistence).
-- [ ] Pressing Play in the Editor starts an in-process server automatically; the standalone
+- [x] Repo layout as above; `/shared` builds for both the server and Unity.
+- [x] Server runs a drift-corrected 600 ms tick loop with the phases above.
+- [x] One small test map designed in Unity, exported by the tool, loaded by the server.
+- [x] Two players can log in (name only, no passwords; it's friends-only, add auth later if wanted).
+- [x] Click a tile: the server pathfinds and the player walks there; walls block movement.
+- [x] Both players see each other move, with smooth interpolation between ticks.
+- [x] Log out and back in: the player is where they left off (persistence).
+- [x] Pressing Play in the Editor starts an in-process server automatically; the standalone
       server also works.
-- [ ] Unit tests for pathfinding, tick timing and save/load run without Unity.
+- [x] Unit tests for pathfinding, tick timing and save/load run without Unity.
+
+How it works, briefly:
+- **Map pipeline.** Scenes mark collision with components from `tools/unity-map-tools`: `MapArea`
+  (the exported rectangle; 1 Unity unit = 1 tile, tile (x,y) covers world X [x,x+1], Z [y,y+1]),
+  `MapBlocker` (tiles under its colliders are blocked), `MapWall` (thin colliders snapped to grid
+  lines block tile edges) and `MapSpawn`. A tile with no ground collider is blocked. Use
+  **R'th > Export Map**; pressing Play also re-exports the open scene's map automatically.
+  The exporter is the only thing that writes `server/data/maps/*.rthmap`.
+- **Protocol.** `shared/Net/Messages.cs`. Bump `Protocol.Version` whenever a message layout
+  changes. The server sends every client a `WorldUpdateMessage` every tick, with entities added,
+  moved (with each step, for interpolation) and removed within `ViewRadius` (15 tiles).
+- **Editor server.** `client/Assets/Editor/LocalServerLauncher.cs` starts `ServerHost` on Play
+  (toggle under the R'th menu). If the port is taken, the client uses whatever server is there.
+  The project has domain reload on Play turned off, so client code must not rely on statics
+  being reset between Play sessions.
+- **Test scene.** `client/Assets/Scenes/TestMap.unity`, first generated by
+  **R'th > Dev > Rebuild Test Map Scene**. The scene is now the source of truth; rebuilding
+  overwrites edits.
 
 **Milestone 2 (next):** the combat core with one style, **Occultism**, because its bile axis is
 the riskiest and most unusual system. Blood, phlegm and Breath come with it. See
@@ -127,6 +160,15 @@ the riskiest and most unusual system. Blood, phlegm and Breath come with it. See
   Unity-MCP plugins.
 - If the Editor stops responding to the CLI, check for **Safe Mode** (C# compile errors) first:
   fix the errors in files, then restart the Editor.
+- Unity CLI notes (CLI 1.0 beta, `%LOCALAPPDATA%\Unity\bin\unity.exe`): commands are namespaced,
+  e.g. `unity command editor.playmode start`, `unity command console get --tail 20`. From
+  PowerShell, put C# for `eval` in a file and use `eval_file` (quotes get mangled otherwise); the
+  file is a method body, so use fully qualified names, not `using` lines. `simulate_pointer` does
+  not reach `Mouse.current` here, so drive gameplay checks through public methods
+  (`GameSession.LogIn`, `GameSession.WalkTo`) instead.
+- `UnityEngine.CollisionFlags` clashes with `Rth.Shared.World.CollisionFlags`; alias it in Unity
+  code. Unity 6.6 deprecates `FindFirstObjectByType` and the `FindObjectsSortMode` overloads; use
+  `FindAnyObjectByType` and `FindObjectsByType<T>(FindObjectsInactive)`.
 
 ## Working conventions
 
