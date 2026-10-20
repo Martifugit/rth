@@ -6,15 +6,16 @@ using CollisionFlags = Rth.Shared.World.CollisionFlags; // UnityEngine has its o
 namespace Rth.MapTools.Editor
 {
     /// <summary>
-    /// Draws the last exported collision map in the Scene view: red tiles are blocked, yellow
-    /// lines are walls. Use it to check the export matches what the scene looks like.
+    /// Draws the last exported collision map of each region in the Scene view: red tiles are
+    /// blocked, yellow lines are walls. Use it to check the export matches what the scene looks like.
     /// </summary>
     [InitializeOnLoad]
     public static class CollisionPreview
     {
         private const string PrefKey = "Rth.CollisionPreview";
-        private static MapData _map;
-        private static int _plane;
+        // One per region (keyed by origin), so a whole world opened side by side previews in full.
+        private static readonly System.Collections.Generic.Dictionary<(int, int), (MapData Map, int Plane)> _maps =
+            new System.Collections.Generic.Dictionary<(int, int), (MapData, int)>();
 
         static CollisionPreview()
         {
@@ -43,23 +44,25 @@ namespace Rth.MapTools.Editor
 
         public static void Show(MapData map, int plane)
         {
-            _map = map;
-            _plane = plane;
+            _maps[(map.OriginX, map.OriginY)] = (map, plane);
             SceneView.RepaintAll();
         }
 
         private static void Draw(SceneView view)
         {
-            MapData map = _map;
-            if (!Enabled || map == null || Event.current.type != EventType.Repaint) return;
+            if (!Enabled || Event.current.type != EventType.Repaint) return;
+            foreach ((MapData map, int plane) in _maps.Values) Draw(map, plane);
+        }
 
+        private static void Draw(MapData map, int plane)
+        {
             const float h = 0.03f;
             var blocked = new Color(1f, 0.1f, 0.1f, 0.35f);
             for (int y = map.OriginY; y < map.OriginY + map.Height; y++)
             {
                 for (int x = map.OriginX; x < map.OriginX + map.Width; x++)
                 {
-                    CollisionFlags f = map.GetFlags(_plane, x, y);
+                    CollisionFlags f = map.GetFlags(plane, x, y);
                     if ((f & CollisionFlags.Blocked) != 0)
                     {
                         Handles.DrawSolidRectangleWithOutline(new[]

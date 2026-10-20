@@ -160,7 +160,10 @@ How it works, briefly:
   `TollingBuilder` / `PilgrimRoadBuilder` using the reusable `WorldKit` (`BeginRegion` /
   `SaveRegion`, houses with hideable roofs, water from tile sets, roads, fences, trees, stations,
   spawns). Pressing Play in a region scene loads the Game scene beside it (`GameBootstrap`).
-  Once a scene exists it is the source of truth: rebuilding overwrites hand edits. Exporting a
+  Once a scene exists it is the source of truth: rebuilding overwrites hand edits.
+  **R'th > World > Open Whole World** opens every exported region (plus the Game scene's sun and
+  fog) side by side for editing across borders; each scene still saves to its own file, and
+  Play and Export Map handle every open region. Exporting a
   region writes `<name>.rthmap`, `.region.json` (scene, title, spawn), `.spawns.json` and
   `.objects.json`, and adds the scene to the build so the client can stream it. Saves hold
   absolute positions; a save whose tile is no longer open ground starts at the spawn.
