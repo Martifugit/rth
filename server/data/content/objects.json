@@ -1,0 +1,14 @@
+[
+  {
+    "id": "skinning_rack",
+    "name": "Skinning rack",
+    "examine": "Pegs, hooks and a lot of old stains. For basin wildlife.",
+    "actions": [ { "id": "process", "label": "Butcher" } ]
+  },
+  {
+    "id": "lye_vat",
+    "name": "Lye vat",
+    "examine": "A glazed vat of lye. Scald creatures come apart in it without taking your hands with them.",
+    "actions": [ { "id": "process", "label": "Butcher" } ]
+  }
+]

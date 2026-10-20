@@ -41,8 +41,8 @@ namespace Rth.Server.Game
         private readonly List<int> _deaths = new List<int>();
 
         /// <summary>Creates a world with the standard systems.</summary>
-        public World(ServerConfig config, MapData map, IPlayerStore store, GameContent content, IEnumerable<NpcSpawn>? spawns = null)
-            : this(config, map, store, content, StandardSystems(spawns))
+        public World(ServerConfig config, MapData map, IPlayerStore store, GameContent content, MapPlacements? placements = null)
+            : this(config, map, store, content, StandardSystems(placements ?? new MapPlacements()))
         {
         }
 
@@ -64,14 +64,17 @@ namespace Rth.Server.Game
         /// The systems a normal server runs. Order matters: systems run in this order within each
         /// phase, and a system may use any system listed before it while attaching.
         /// </summary>
-        public static IEnumerable<GameSystem> StandardSystems(IEnumerable<NpcSpawn>? spawns) => new GameSystem[]
+        public static IEnumerable<GameSystem> StandardSystems(MapPlacements placements) => new GameSystem[]
         {
+            new SkillSystem(),
             new ItemSystem(),
             new CombatSystem(),
             new DeathSystem(),
-            new NpcSystem(spawns ?? Enumerable.Empty<NpcSpawn>()),
+            new NpcSystem(placements.Npcs),
             new GroundItemSystem(),
             new LootSystem(),
+            new ObjectSystem(placements.Objects),
+            new RecipeSystem(),
         };
 
         public ServerConfig Config => _config;
@@ -153,6 +156,40 @@ namespace Rth.Server.Game
             List<TileCoord> path = Pathfinder.FindPath(Map, entity.Plane, entity.Position, target, _config.PathSearchRadius);
             entity.Waypoints.Clear();
             foreach (TileCoord tile in path) entity.Waypoints.Enqueue(tile);
+        }
+
+        /// <summary>
+        /// Whether an entity stands straight beside a tile (not diagonal) with no wall between: how
+        /// melee fighters stand next to their target and players stand at workstations.
+        /// </summary>
+        public bool IsBeside(Entity entity, int plane, TileCoord tile)
+        {
+            if (entity.Plane != plane) return false;
+            int dx = tile.X - entity.Position.X;
+            int dy = tile.Y - entity.Position.Y;
+            return Math.Abs(dx) + Math.Abs(dy) == 1 && Map.EdgeOpen(plane, entity.Position.X, entity.Position.Y, dx, dy);
+        }
+
+        /// <summary>
+        /// Paths to the nearest reachable tile straight beside <paramref name="tile"/>. Returns false
+        /// if none can be reached (or the entity is already beside it, in which case it stays put).
+        /// </summary>
+        public bool PathBeside(Entity entity, int plane, TileCoord tile)
+        {
+            entity.Waypoints.Clear();
+            if (IsBeside(entity, plane, tile)) return false;
+            List<TileCoord>? best = null;
+            foreach ((int dx, int dy) in new[] { (-1, 0), (1, 0), (0, -1), (0, 1) })
+            {
+                TileCoord beside = tile.Offset(dx, dy);
+                if (Map.IsBlocked(plane, beside.X, beside.Y) || !Map.EdgeOpen(plane, beside.X, beside.Y, -dx, -dy)) continue;
+                List<TileCoord> path = Pathfinder.FindPath(Map, plane, entity.Position, beside, _config.PathSearchRadius);
+                if (path.Count == 0 || path[path.Count - 1] != beside) continue;
+                if (best == null || path.Count < best.Count) best = path;
+            }
+            if (best == null) return false;
+            foreach (TileCoord step in best) entity.Waypoints.Enqueue(step);
+            return true;
         }
 
         /// <summary>Walks up to one tick's worth of steps; <paramref name="stopWhen"/> is checked before each step.</summary>

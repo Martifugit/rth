@@ -36,9 +36,9 @@ namespace Rth.Server
             if (IsRunning) throw new InvalidOperationException("Server already running.");
             MapData map = MapData.Load(_config.MapPath);
             GameContent content = GameContent.Load(_config.ContentDirectory);
-            var spawns = GameContent.LoadSpawns(GameContent.SpawnsPathFor(_config.MapPath));
+            MapPlacements placements = MapPlacements.Load(_config.MapPath);
             var store = new JsonPlayerStore(_config.SaveDirectory);
-            var world = new World(_config, map, store, content, spawns);
+            var world = new World(_config, map, store, content, placements);
 
             var network = new NetworkServer(_config.Port, world.AcceptConnection, _config.Log);
             network.Start();

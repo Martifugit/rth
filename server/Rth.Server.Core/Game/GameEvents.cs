@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Rth.Shared.Combat;
 
 namespace Rth.Server.Game
 {
@@ -42,15 +43,17 @@ namespace Rth.Server.Game
     /// <summary>Damage was dealt (after reductions). Useful for XP, contribution tracking, achievements.</summary>
     public sealed class DamageDealt
     {
-        public DamageDealt(Entity target, Entity? source, int amount)
+        public DamageDealt(Entity target, Entity? source, int amount, CombatStyle style)
         {
             Target = target;
             Source = source;
             Amount = amount;
+            Style = style;
         }
 
         public Entity Target { get; }
         public Entity? Source { get; }
         public int Amount { get; }
+        public CombatStyle Style { get; }
     }
 }

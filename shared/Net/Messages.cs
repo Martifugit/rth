@@ -3,6 +3,7 @@ using System.IO;
 using Newtonsoft.Json;
 using Rth.Shared.Combat;
 using Rth.Shared.Items;
+using Rth.Shared.Skills;
 using Rth.Shared.World;
 
 namespace Rth.Shared.Net
@@ -10,7 +11,7 @@ namespace Rth.Shared.Net
     public static class Protocol
     {
         /// <summary>Bump whenever a message layout changes, so mismatched builds are refused at login.</summary>
-        public const int Version = 3;
+        public const int Version = 4;
         public const int DefaultPort = 43600;
         /// <summary>Sanity limits on a single frame's length, in bytes.</summary>
         public const int MaxClientFrame = 4 * 1024;
@@ -29,6 +30,7 @@ namespace Rth.Shared.Net
         ItemAction = 7,
         MoveItem = 8,
         Pickup = 9,
+        ObjectAction = 10,
 
         // Server to client: state.
         LoginOk = 100,
@@ -39,6 +41,7 @@ namespace Rth.Shared.Net
         GameText = 105,
         Container = 106,
         Stats = 107,
+        Skills = 108,
     }
 
     public abstract class Message
@@ -462,6 +465,9 @@ namespace Rth.Shared.Net
         /// <summary>Ids of the abilities on the player's action bar, in slot order.</summary>
         public List<string> ActionBar = new List<string>();
         public List<ItemDef> Items = new List<ItemDef>();
+        public List<SkillDef> Skills = new List<SkillDef>();
+        public XpCurve XpCurve = new XpCurve();
+        public List<ObjectDef> Objects = new List<ObjectDef>();
         public int BileLimit;
         public int BilePassiveThreshold;
         public int BileExtreme;
@@ -600,6 +606,56 @@ namespace Rth.Shared.Net
         }
 
         internal static MoveItemMessage Read(BinaryReader r) => new MoveItemMessage { From = r.ReadByte(), To = r.ReadByte() };
+    }
+
+    /// <summary>Use an action on a world object: walk beside it, then do it (e.g. butcher at a rack).</summary>
+    public sealed class ObjectActionMessage : Message
+    {
+        public string ObjectType = "";
+        public int Plane;
+        public int X;
+        public int Y;
+        public string ActionId = "";
+
+        public override MessageType Type => MessageType.ObjectAction;
+
+        internal override void WriteBody(BinaryWriter w)
+        {
+            w.Write(ObjectType);
+            w.Write((byte)Plane);
+            w.Write(X);
+            w.Write(Y);
+            w.Write(ActionId);
+        }
+
+        internal static ObjectActionMessage Read(BinaryReader r) =>
+            new ObjectActionMessage { ObjectType = r.ReadString(), Plane = r.ReadByte(), X = r.ReadInt32(), Y = r.ReadInt32(), ActionId = r.ReadString() };
+    }
+
+    /// <summary>The player's XP in every skill. Sent at login and whenever it changes.</summary>
+    public sealed class SkillsMessage : Message
+    {
+        public Dictionary<string, long> Xp = new Dictionary<string, long>();
+
+        public override MessageType Type => MessageType.Skills;
+
+        internal override void WriteBody(BinaryWriter w)
+        {
+            w.Write((byte)Xp.Count);
+            foreach (KeyValuePair<string, long> s in Xp)
+            {
+                w.Write(s.Key);
+                w.Write(s.Value);
+            }
+        }
+
+        internal static SkillsMessage Read(BinaryReader r)
+        {
+            var m = new SkillsMessage();
+            int count = r.ReadByte();
+            for (int i = 0; i < count; i++) m.Xp[r.ReadString()] = r.ReadInt64();
+            return m;
+        }
     }
 
     /// <summary>Walk to a ground item and pick it up.</summary>

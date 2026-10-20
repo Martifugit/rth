@@ -119,7 +119,7 @@
     "value": 120,
     "color": "#c7d4e8",
     "tags": [ "moon-touched" ],
-    "equipment": { "slot": "Ring", "stats": { "maxBreath": 60 } }
+    "equipment": { "slot": "Ring", "stats": { "maxBreath": 60 }, "requirements": [ { "skill": "occultism", "level": 8 } ] }
   },
   {
     "id": "gallstone_amulet",
@@ -128,9 +128,41 @@
     "value": 150,
     "color": "#b07f2a",
     "tags": [ "occult" ],
-    "equipment": { "slot": "Neck", "stats": { "damageBonus": 5, "maxBlood": -50 } }
+    "equipment": { "slot": "Neck", "stats": { "damageBonus": 5, "maxBlood": -50 }, "requirements": [ { "skill": "occultism", "level": 12 } ] }
   },
 
+  {
+    "id": "fen_rat_carcass",
+    "name": "Fen rat carcass",
+    "examine": "Worth more skinned than whole. Take it to a skinning rack.",
+    "value": 3,
+    "color": "#7d6a52",
+    "tags": [ "carcass", "basin-wildlife" ]
+  },
+  {
+    "id": "vitriol_mite_carcass",
+    "name": "Vitriol mite carcass",
+    "examine": "Still fizzing. It wants a lye vat and a glass hook, not your bare hands.",
+    "value": 10,
+    "color": "#b5a63a",
+    "tags": [ "carcass", "scald" ]
+  },
+  {
+    "id": "skinning_knife",
+    "name": "Skinning knife",
+    "examine": "Short, curved and sharper than it looks. For basin wildlife.",
+    "value": 15,
+    "color": "#b0a99a",
+    "tags": [ "tool", "butchering" ]
+  },
+  {
+    "id": "glass_flensing_hook",
+    "name": "Glass flensing hook",
+    "examine": "Acid won't touch glass. Your fingers are another matter. For Scald creatures.",
+    "value": 40,
+    "color": "#a8d8d0",
+    "tags": [ "tool", "butchering" ]
+  },
   {
     "id": "rat_pelt",
     "name": "Rat pelt",

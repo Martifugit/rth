@@ -7,6 +7,8 @@ using Newtonsoft.Json;
 using Rth.Shared.Combat;
 using Rth.Shared.Items;
 using Rth.Shared.Net;
+using Rth.Shared.Skills;
+using Rth.Shared.World;
 
 namespace Rth.Server.Content
 {
@@ -84,6 +86,48 @@ namespace Rth.Server.Content
         public List<string> StarterEquipment = new List<string>();
     }
 
+    /// <summary>
+    /// Making something at a station: a skill action that repeats (semi-AFK) while you have the
+    /// inputs. Butchering carcasses now; distilling, brewing and cooking later. From recipes.json.
+    /// </summary>
+    public sealed class RecipeDef
+    {
+        public string Id = "";
+        /// <summary>What's being worked on, for messages ("fen rat carcass").</summary>
+        public string Name = "";
+        /// <summary>The verb for messages ("butcher").</summary>
+        public string Verb = "process";
+        public string Skill = "";
+        public int Level = 1;
+        /// <summary>Object type it's done at.</summary>
+        public string Station = "";
+        public List<ItemAmount> Inputs = new List<ItemAmount>();
+        /// <summary>Items needed in the pack or worn, not used up.</summary>
+        public List<string> Tools = new List<string>();
+        public List<ItemAmount> Outputs = new List<ItemAmount>();
+        /// <summary>A drop table rolled for each completion, or null.</summary>
+        public string? OutputTable;
+        /// <summary>One extra roll of the output table per this many levels above <see cref="Level"/> (0 = never).</summary>
+        public int ExtraRollEveryLevels;
+        public int Ticks = 4;
+        public double Xp;
+    }
+
+    /// <summary>Damage dealt with a combat style trains a skill.</summary>
+    public sealed class DamageXpRule
+    {
+        public CombatStyle Style;
+        public string Skill = "";
+        public double XpPerDamage;
+    }
+
+    public sealed class SkillsFile
+    {
+        public XpCurve XpCurve = new XpCurve();
+        public List<SkillDef> Skills = new List<SkillDef>();
+        public List<DamageXpRule> DamageXp = new List<DamageXpRule>();
+    }
+
     public sealed class ContentException : Exception
     {
         public ContentException(string message) : base(message) { }
@@ -101,6 +145,9 @@ namespace Rth.Server.Content
         public List<ItemDef> Items = new List<ItemDef>();
         public List<DropTableDef> DropTables = new List<DropTableDef>();
         public WorldSettings World = new WorldSettings();
+        public SkillsFile Skills = new SkillsFile();
+        public List<ObjectDef> Objects = new List<ObjectDef>();
+        public List<RecipeDef> Recipes = new List<RecipeDef>();
     }
 
     /// <summary>
@@ -125,8 +172,15 @@ namespace Rth.Server.Content
         public IReadOnlyDictionary<string, ItemDef> Items { get; private set; } = new Dictionary<string, ItemDef>();
         public IReadOnlyDictionary<string, DropTableDef> DropTables { get; private set; } = new Dictionary<string, DropTableDef>();
         public WorldSettings World { get; private set; } = new WorldSettings();
+        public XpCurve XpCurve { get; private set; } = new XpCurve();
+        public IReadOnlyDictionary<string, SkillDef> Skills { get; private set; } = new Dictionary<string, SkillDef>();
+        public IReadOnlyList<DamageXpRule> DamageXp { get; private set; } = new List<DamageXpRule>();
+        public IReadOnlyDictionary<string, ObjectDef> Objects { get; private set; } = new Dictionary<string, ObjectDef>();
+        public IReadOnlyDictionary<string, RecipeDef> Recipes { get; private set; } = new Dictionary<string, RecipeDef>();
 
         public ItemDef? Item(string? id) => id != null && Items.TryGetValue(id, out ItemDef? def) ? def : null;
+
+        public string SkillName(string id) => Skills.TryGetValue(id, out SkillDef? s) ? s.Name : id;
 
         public static GameContent Load(string directory)
         {
@@ -142,6 +196,9 @@ namespace Rth.Server.Content
                 Items = ReadJson<List<ItemDef>>(directory, "items.json"),
                 DropTables = ReadJson<List<DropTableDef>>(directory, "drops.json"),
                 World = ReadJson<WorldSettings>(directory, "world.json"),
+                Skills = ReadJson<SkillsFile>(directory, "skills.json"),
+                Objects = ReadJson<List<ObjectDef>>(directory, "objects.json"),
+                Recipes = ReadJson<List<RecipeDef>>(directory, "recipes.json"),
             });
         }
 
@@ -190,6 +247,40 @@ namespace Rth.Server.Content
                 if (!items.TryGetValue(id, out ItemDef? e) || e.Equipment == null) problems.Add("Starter equipment '" + id + "' isn't an equippable item.");
             if (parts.World.InventorySize < 1 || parts.World.InventorySize > 255) problems.Add("World: inventorySize must be 1-255.");
 
+            Dictionary<string, SkillDef> skills = Index(parts.Skills.Skills, s => s.Id, "skill", problems);
+            foreach (SkillDef s in parts.Skills.Skills)
+                foreach (string stat in s.StatsPerLevel.Keys)
+                    if (!StatIds.IsKnown(stat)) problems.Add("Skill '" + s.Id + "': unknown stat '" + stat + "'.");
+            XpCurve curve = parts.Skills.XpCurve;
+            if (curve.MaxLevel < 2 || curve.FirstLevelXp <= 0 || curve.Growth < 1) problems.Add("XP curve: need maxLevel >= 2, firstLevelXp > 0, growth >= 1.");
+            foreach (DamageXpRule rule in parts.Skills.DamageXp)
+                if (!skills.ContainsKey(rule.Skill)) problems.Add("Damage XP rule for " + rule.Style + ": skill '" + rule.Skill + "' doesn't exist.");
+
+            void CheckRequirements(IEnumerable<SkillRequirement> reqs, string where)
+            {
+                foreach (SkillRequirement r in reqs)
+                    if (!skills.ContainsKey(r.Skill)) problems.Add(where + ": requires unknown skill '" + r.Skill + "'.");
+            }
+            foreach (AbilityDef a in parts.Abilities) CheckRequirements(a.Requirements, "Ability '" + a.Id + "'");
+            foreach (ItemDef i in parts.Items)
+                if (i.Equipment != null) CheckRequirements(i.Equipment.Requirements, "Item '" + i.Id + "'");
+
+            Dictionary<string, ObjectDef> objects = Index(parts.Objects, o => o.Id, "object", problems);
+            Dictionary<string, RecipeDef> recipes = Index(parts.Recipes, r => r.Id, "recipe", problems);
+            foreach (RecipeDef r in parts.Recipes)
+            {
+                string where = "Recipe '" + r.Id + "': ";
+                if (!skills.ContainsKey(r.Skill)) problems.Add(where + "skill '" + r.Skill + "' doesn't exist.");
+                if (!objects.ContainsKey(r.Station)) problems.Add(where + "station '" + r.Station + "' isn't an object.");
+                if (r.Inputs.Count == 0) problems.Add(where + "needs at least one input.");
+                foreach (ItemAmount a in r.Inputs.Concat(r.Outputs))
+                    if (!items.ContainsKey(a.Item) || a.Count < 1) problems.Add(where + "bad item '" + a.Item + "' x" + a.Count + ".");
+                foreach (string tool in r.Tools)
+                    if (!items.ContainsKey(tool)) problems.Add(where + "tool '" + tool + "' doesn't exist.");
+                if (r.OutputTable != null && !tables.ContainsKey(r.OutputTable)) problems.Add(where + "output table '" + r.OutputTable + "' doesn't exist.");
+                if (r.Ticks < 1) problems.Add(where + "ticks must be at least 1.");
+            }
+
             CombatRules rules = parts.Rules;
             if (rules.BilePassiveThreshold <= 0 || rules.BileExtreme <= rules.BilePassiveThreshold || rules.BileLimit < rules.BileExtreme)
                 problems.Add("Rules: need 0 < bilePassiveThreshold < bileExtreme <= bileLimit.");
@@ -207,6 +298,11 @@ namespace Rth.Server.Content
                 Items = items,
                 DropTables = tables,
                 World = parts.World,
+                XpCurve = curve,
+                Skills = skills,
+                DamageXp = parts.Skills.DamageXp,
+                Objects = objects,
+                Recipes = recipes,
             };
         }
 
@@ -304,6 +400,9 @@ namespace Rth.Server.Content
             Abilities = Abilities.Values.ToList(),
             ActionBar = ActionBar.ToList(),
             Items = Items.Values.ToList(),
+            Skills = Skills.Values.ToList(),
+            XpCurve = XpCurve,
+            Objects = Objects.Values.ToList(),
             BileLimit = Rules.BileLimit,
             BilePassiveThreshold = Rules.BilePassiveThreshold,
             BileExtreme = Rules.BileExtreme,

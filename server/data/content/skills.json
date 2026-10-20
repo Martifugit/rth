@@ -1,0 +1,19 @@
+{
+  "xpCurve": { "maxLevel": 99, "firstLevelXp": 60, "growth": 1.105 },
+  "skills": [
+    {
+      "id": "occultism",
+      "name": "Occultism",
+      "description": "Working the humours as weapons. Trained by dealing occult damage.",
+      "statsPerLevel": { "abilityDamage": 2 }
+    },
+    {
+      "id": "butchering",
+      "name": "Butchering",
+      "description": "Taking carcasses apart at the right station with the right tool. Higher levels get more out of each one."
+    }
+  ],
+  "damageXp": [
+    { "style": "Occult", "skill": "occultism", "xpPerDamage": 0.25 }
+  ]
+}

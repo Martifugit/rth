@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -47,6 +47,7 @@ namespace Rth.Shared.Net
                     MessageType.ItemAction => ItemActionMessage.Read(r),
                     MessageType.MoveItem => MoveItemMessage.Read(r),
                     MessageType.Pickup => PickupMessage.Read(r),
+                    MessageType.ObjectAction => ObjectActionMessage.Read(r),
                     MessageType.LoginOk => LoginOkMessage.Read(r),
                     MessageType.LoginRejected => LoginRejectedMessage.Read(r),
                     MessageType.WorldUpdate => WorldUpdateMessage.Read(r),
@@ -55,6 +56,7 @@ namespace Rth.Shared.Net
                     MessageType.GameText => GameTextMessage.Read(r),
                     MessageType.Container => ContainerMessage.Read(r),
                     MessageType.Stats => StatsMessage.Read(r),
+                    MessageType.Skills => SkillsMessage.Read(r),
                     _ => throw new InvalidDataException("Unknown message type " + (int)type + "."),
                 };
                 if (ms.Position != count) throw new InvalidDataException("Trailing bytes after " + type + " message.");

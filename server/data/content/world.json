@@ -5,7 +5,8 @@
   "starterInventory": [
     { "item": "riverbread", "count": 6 },
     { "item": "saltfig", "count": 2 },
-    { "item": "phlegm_tonic", "count": 1 }
+    { "item": "phlegm_tonic", "count": 1 },
+    { "item": "skinning_knife", "count": 1 }
   ],
   "starterEquipment": [ "apprentice_athame", "occultist_robe" ]
 }

@@ -176,6 +176,12 @@ namespace Rth.Server.Game
 
         private void Equip(Player player, ItemUse use)
         {
+            string? problem = World.Find<SkillSystem>()?.Check(player, use.Def.Equipment!.Requirements, "wear the " + use.Def.Name.ToLowerInvariant());
+            if (problem != null)
+            {
+                World.Tell(player, TextKind.Warning, problem);
+                return;
+            }
             int slot = (int)use.Def.Equipment!.Slot;
             ItemContainer equipment = Of(player).Equipment;
             ItemSlot worn = equipment[slot];

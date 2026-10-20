@@ -57,7 +57,8 @@
     "damageMax": 150,
     "phlegmGain": 8,
     "bileShift": 5,
-    "bileMin": 20
+    "bileMin": 20,
+    "requirements": [ { "skill": "occultism", "level": 3 } ]
   },
   {
     "id": "choleric_flare",
@@ -71,7 +72,8 @@
     "phlegmRequired": 50,
     "phlegmCost": 15,
     "bileShift": 15,
-    "bileMin": 30
+    "bileMin": 30,
+    "requirements": [ { "skill": "occultism", "level": 5 } ]
   },
   {
     "id": "melancholy_shroud",
@@ -88,7 +90,8 @@
     "bileMax": -30,
     "effect": "Ward",
     "effectMagnitude": 30,
-    "effectTicks": 10
+    "effectTicks": 10,
+    "requirements": [ { "skill": "occultism", "level": 5 } ]
   },
   {
     "id": "vitriol_rain",
@@ -102,7 +105,8 @@
     "phlegmRequired": 100,
     "phlegmCost": 100,
     "bileShift": 20,
-    "bileMin": 60
+    "bileMin": 60,
+    "requirements": [ { "skill": "occultism", "level": 10 } ]
   },
   {
     "id": "black_sun",
@@ -120,6 +124,7 @@
     "healPercentOfMaxBlood": 20,
     "effect": "Ward",
     "effectMagnitude": 20,
-    "effectTicks": 10
+    "effectTicks": 10,
+    "requirements": [ { "skill": "occultism", "level": 10 } ]
   }
 ]

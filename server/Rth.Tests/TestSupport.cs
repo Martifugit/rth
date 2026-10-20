@@ -4,6 +4,7 @@ using Rth.Server.Content;
 using Rth.Server.Game;
 using Rth.Shared.Combat;
 using Rth.Shared.Items;
+using Rth.Shared.Skills;
 using Rth.Server.Net;
 using Rth.Server.Persistence;
 using Rth.Server.Timing;
@@ -112,6 +113,7 @@ internal static class TestContent
         new AbilityDef { Id = "shroud", Name = "Shroud", Type = AbilityType.Threshold, CooldownTicks = 10, Range = 8, DamageMin = 100, DamageMax = 100, PhlegmRequired = 50, PhlegmCost = 15, BileShift = -15, BileMax = -30, Effect = EffectType.Ward, EffectMagnitude = 30, EffectTicks = 10 },
         new AbilityDef { Id = "ult", Name = "Ult", Type = AbilityType.Ultimate, CooldownTicks = 30, Range = 8, DamageMin = 400, DamageMax = 400, PhlegmRequired = 100, PhlegmCost = 100 },
         new AbilityDef { Id = "poke", Name = "Poke", Type = AbilityType.Basic, CooldownTicks = 3, Range = 1, DamageMin = 10, DamageMax = 10, PhlegmGain = 1 },
+        new AbilityDef { Id = "secret", Name = "Secret", Type = AbilityType.Basic, CooldownTicks = 3, Range = 8, DamageMin = 10, DamageMax = 10, Style = CombatStyle.Occult, Requirements = { new SkillRequirement { Skill = "occultism", Level = 3 } } },
     };
 
     public static List<NpcDef> Npcs() => new()
@@ -141,6 +143,10 @@ internal static class TestContent
         new ItemDef { Id = "club", Name = "Club", Equipment = new EquipmentDef { Slot = EquipSlot.Weapon, Stats = { [StatIds.AbilityDamage] = 20 } } },
         new ItemDef { Id = "hat", Name = "Hat", Equipment = new EquipmentDef { Slot = EquipSlot.Head, Stats = { [StatIds.Ward] = 10, [StatIds.MaxBlood] = 100 } } },
         new ItemDef { Id = "gem", Name = "Gem" },
+        new ItemDef { Id = "carcass", Name = "Carcass" },
+        new ItemDef { Id = "big_carcass", Name = "Big carcass" },
+        new ItemDef { Id = "knife", Name = "Knife" },
+        new ItemDef { Id = "crown", Name = "Crown", Equipment = new EquipmentDef { Slot = EquipSlot.Head, Requirements = { new SkillRequirement { Skill = "occultism", Level = 3 } } } },
     };
 
     public static List<DropTableDef> DropTables() => new()
@@ -150,12 +156,48 @@ internal static class TestContent
         new DropTableDef { Id = "nested", Always = { new DropEntry { Table = "gems" } }, Rolls = 3, Entries = { new DropEntry { Item = "coins", Min = 1, Max = 3 } }, NothingWeight = 1 },
     };
 
+    public static SkillsFile Skills() => new()
+    {
+        XpCurve = new XpCurve { MaxLevel = 99, FirstLevelXp = 100, Growth = 1.1 },
+        Skills =
+        {
+            new SkillDef { Id = "occultism", Name = "Occultism" },
+            new SkillDef { Id = "butchering", Name = "Butchering" },
+            new SkillDef { Id = "might", Name = "Might", StatsPerLevel = { [StatIds.AbilityDamage] = 3 } },
+        },
+        DamageXp = { new DamageXpRule { Style = CombatStyle.Occult, Skill = "occultism", XpPerDamage = 0.5 } },
+    };
+
+    public static List<ObjectDef> Objects() => new()
+    {
+        new ObjectDef { Id = "rack", Name = "Rack", Examine = "A rack.", Actions = { new ObjectActionDef { Id = "process", Label = "Butcher" } } },
+        new ObjectDef { Id = "vat", Name = "Vat", Actions = { new ObjectActionDef { Id = "process", Label = "Butcher" } } },
+    };
+
+    public static List<RecipeDef> Recipes() => new()
+    {
+        new RecipeDef
+        {
+            Id = "rat", Name = "rat carcass", Verb = "butcher", Skill = "butchering", Level = 1, Station = "rack",
+            Inputs = { new ItemAmount { Item = "carcass" } }, Tools = { "knife" }, Outputs = { new ItemAmount { Item = "coins", Count = 2 } },
+            OutputTable = "gems", ExtraRollEveryLevels = 5, Ticks = 3, Xp = 50,
+        },
+        new RecipeDef
+        {
+            Id = "big", Name = "big carcass", Verb = "butcher", Skill = "butchering", Level = 5, Station = "vat",
+            Inputs = { new ItemAmount { Item = "big_carcass" } }, Outputs = { new ItemAmount { Item = "gem", Count = 2 } }, Ticks = 2, Xp = 10,
+        },
+    };
+
     public static ContentParts Parts(CombatRules? rules = null, List<AbilityDef>? abilities = null) => new()
     {
+        Skills = Skills(),
+        Objects = Objects(),
+        Recipes = Recipes(),
         Rules = rules ?? Rules(),
         Abilities = abilities ?? Abilities(),
         AutoAttack = "zap",
-        ActionBar = new List<string> { "spark", "draught", "still", "flare", "shroud", "ult", "poke" },
+        ActionBar = new List<string> { "spark", "draught", "still", "flare", "shroud", "ult", "poke", "secret" },
         Npcs = Npcs(),
         Assayer = Assayer(),
         Items = Items(),
@@ -170,12 +212,13 @@ internal static class TestContent
 /// <summary>A world with a fake store and helpers for logging in fake clients.</summary>
 internal sealed class WorldFixture
 {
-    public WorldFixture(MapData map, ServerConfig? config = null, GameContent? content = null, IEnumerable<NpcSpawn>? spawns = null)
+    public WorldFixture(MapData map, ServerConfig? config = null, GameContent? content = null, IEnumerable<NpcSpawn>? spawns = null, IEnumerable<PlacedObject>? objects = null)
     {
         Config = config ?? new ServerConfig();
         Config.RandomSeed ??= 12345;
         Store = new MemoryPlayerStore();
-        World = new World(Config, map, Store, content ?? TestContent.Create(), spawns);
+        World = new World(Config, map, Store, content ?? TestContent.Create(),
+            new MapPlacements { Npcs = (spawns ?? Enumerable.Empty<NpcSpawn>()).ToList(), Objects = (objects ?? Enumerable.Empty<PlacedObject>()).ToList() });
     }
 
     public Npc Npc(string defId) => World.Npcs.First(n => n.Def.Id == defId);

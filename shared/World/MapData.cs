@@ -102,6 +102,18 @@ namespace Rth.Shared.World
                 && CanStepStraight(plane, x, y + dy, dx, 0);
         }
 
+        /// <summary>Whether there's no wall on the edge between a tile and its straight neighbour (ignores blocked tiles).</summary>
+        public bool EdgeOpen(int plane, int x, int y, int dx, int dy)
+        {
+            if (Math.Abs(dx) + Math.Abs(dy) != 1 || !Contains(plane, x + dx, y + dy)) return false;
+            CollisionFlags from = GetFlags(plane, x, y);
+            CollisionFlags to = GetFlags(plane, x + dx, y + dy);
+            if (dy == 1) return (from & CollisionFlags.WallNorth) == 0 && (to & CollisionFlags.WallSouth) == 0;
+            if (dy == -1) return (from & CollisionFlags.WallSouth) == 0 && (to & CollisionFlags.WallNorth) == 0;
+            if (dx == 1) return (from & CollisionFlags.WallEast) == 0 && (to & CollisionFlags.WallWest) == 0;
+            return (from & CollisionFlags.WallWest) == 0 && (to & CollisionFlags.WallEast) == 0;
+        }
+
         private bool CanStepStraight(int plane, int x, int y, int dx, int dy)
         {
             CollisionFlags from = GetFlags(plane, x, y);

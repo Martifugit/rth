@@ -1,0 +1,30 @@
+[
+  {
+    "id": "butcher_fen_rat",
+    "name": "fen rat carcass",
+    "verb": "butcher",
+    "skill": "butchering",
+    "level": 1,
+    "station": "skinning_rack",
+    "inputs": [ { "item": "fen_rat_carcass", "count": 1 } ],
+    "tools": [ "skinning_knife" ],
+    "outputTable": "fen_rat_yield",
+    "extraRollEveryLevels": 15,
+    "ticks": 4,
+    "xp": 18
+  },
+  {
+    "id": "butcher_vitriol_mite",
+    "name": "vitriol mite carcass",
+    "verb": "butcher",
+    "skill": "butchering",
+    "level": 10,
+    "station": "lye_vat",
+    "inputs": [ { "item": "vitriol_mite_carcass", "count": 1 } ],
+    "tools": [ "glass_flensing_hook" ],
+    "outputTable": "vitriol_mite_yield",
+    "extraRollEveryLevels": 15,
+    "ticks": 5,
+    "xp": 45
+  }
+]

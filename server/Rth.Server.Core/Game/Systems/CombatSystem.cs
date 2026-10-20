@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Rth.Server.Persistence;
@@ -102,13 +102,22 @@ namespace Rth.Server.Game
                 World.Tell(player, TextKind.Warning, "You need a target first.");
                 return;
             }
-            string? problem = ability.CheckRequirements(player.Phlegm, player.Bile);
+            string? problem = Requirements(player, ability);
             if (problem != null)
             {
                 World.Tell(player, TextKind.Warning, problem);
                 return;
             }
             player.QueuedAbility = abilityId;
+        }
+
+        /// <summary>Why the player can't use an ability right now (levels, phlegm, bile), or null.</summary>
+        private string? Requirements(Player player, AbilityDef ability)
+        {
+            SkillSystem? skills = World.Find<SkillSystem>();
+            return skills == null
+                ? ability.CheckRequirements(player.Phlegm, player.Bile)
+                : ability.CheckRequirements(player.Phlegm, player.Bile, s => skills.Level(player, s), skills.Name);
         }
 
         private void HandleDeflect(Player player, CombatStyle style)
@@ -168,19 +177,7 @@ namespace Rth.Server.Game
             }
 
             // Melee: head for the closest tile beside the target that can actually reach it.
-            List<TileCoord>? best = null;
-            foreach ((int dx, int dy) in new[] { (-1, 0), (1, 0), (0, -1), (0, 1) })
-            {
-                TileCoord beside = target.Position.Offset(dx, dy);
-                if (World.Map.IsBlocked(attacker.Plane, beside.X, beside.Y) || !World.Map.CanStep(attacker.Plane, beside.X, beside.Y, -dx, -dy)) continue;
-                if (beside == attacker.Position) return;
-                List<TileCoord> path = Pathfinder.FindPath(World.Map, attacker.Plane, attacker.Position, beside, World.Config.PathSearchRadius);
-                if (path.Count == 0 || path[path.Count - 1] != beside) continue;
-                if (best == null || path.Count < best.Count) best = path;
-            }
-            attacker.Waypoints.Clear();
-            if (best != null)
-                foreach (TileCoord tile in best) attacker.Waypoints.Enqueue(tile);
+            World.PathBeside(attacker, target.Plane, target.Position);
         }
 
         // ------------------------------------------------------------------ player attacks
@@ -201,7 +198,7 @@ namespace Rth.Server.Game
             {
                 if (player.Cooldowns.TryGetValue(queued.Id, out uint ready) && now < ready) return true; // waits in the queue
                 player.QueuedAbility = null;
-                string? problem = queued.CheckRequirements(player.Phlegm, player.Bile);
+                string? problem = Requirements(player, queued);
                 if (problem != null)
                 {
                     World.Tell(player, TextKind.Warning, problem);
@@ -239,11 +236,11 @@ namespace Rth.Server.Game
                     int percent = World.Random.Next(ability.DamageMin, ability.DamageMax + 1);
                     double damage = player.Stats.Get(StatIds.AbilityDamage) * percent / 100.0;
                     damage *= 1 + (Rules.CholericBonusPercent(player.Bile) + player.Stats.Get(StatIds.DamageBonus)) / 100.0;
-                    dealt = Damage(target, (int)Math.Round(damage), player, HitKind.Normal);
+                    dealt = Damage(target, (int)Math.Round(damage), player, HitKind.Normal, ability.Style);
                 }
                 else
                 {
-                    Damage(target, 0, player, HitKind.Miss);
+                    Damage(target, 0, player, HitKind.Miss, ability.Style);
                 }
             }
 
@@ -316,7 +313,7 @@ namespace Rth.Server.Game
             target.Blood -= amount;
             target.HealthChanged |= amount > 0;
             World.AddHit(new HitEvent { TargetId = target.Id, SourceId = source?.Id ?? 0, Amount = amount, Kind = kind });
-            if (amount > 0) World.Events.Publish(new DamageDealt(target, source, amount));
+            if (amount > 0) World.Events.Publish(new DamageDealt(target, source, amount, style));
 
             if (source != null && kind != HitKind.Fever)
             {

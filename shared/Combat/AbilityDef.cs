@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using Rth.Shared.Skills;
+
 namespace Rth.Shared.Combat
 {
     public enum CombatStyle : byte
@@ -67,9 +71,20 @@ namespace Rth.Shared.Combat
         public int EffectMagnitude;
         public int EffectTicks;
 
-        /// <summary>Why the ability can't be used with these resources, or null if it can.</summary>
-        public string? CheckRequirements(int phlegm, int bile)
+        /// <summary>Skill levels needed to use it at all (e.g. occultism 5 for a threshold).</summary>
+        public List<SkillRequirement> Requirements = new List<SkillRequirement>();
+
+        /// <summary>
+        /// Why the ability can't be used with these resources and levels, or null if it can.
+        /// Without <paramref name="levelOf"/>, level requirements are ignored.
+        /// </summary>
+        public string? CheckRequirements(int phlegm, int bile, Func<string, int>? levelOf = null, Func<string, string>? skillName = null)
         {
+            if (levelOf != null)
+            {
+                string? level = SkillRequirement.Check(Requirements, levelOf, skillName ?? (s => s), "use " + Name);
+                if (level != null) return level;
+            }
             if (phlegm < PhlegmRequired) return Name + " needs " + PhlegmRequired + "% phlegm.";
             if (bile < BileMin) return Name + " needs your bile at " + Signed(BileMin) + " or higher.";
             if (bile > BileMax) return Name + " needs your bile at " + Signed(BileMax) + " or lower.";

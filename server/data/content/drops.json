@@ -1,17 +1,26 @@
 [
   {
     "id": "fen_rat",
+    "always": [ { "item": "fen_rat_carcass" } ]
+  },
+  {
+    "id": "fen_rat_yield",
     "always": [ { "item": "rat_pelt" } ],
     "rolls": 1,
     "entries": [
       { "item": "marks", "min": 2, "max": 12, "weight": 40 },
       { "item": "riverbread", "weight": 10 },
-      { "item": "sewn_hide_boots", "weight": 2 }
+      { "item": "sewn_hide_boots", "weight": 3 },
+      { "item": "glass_flensing_hook", "weight": 3 }
     ],
-    "nothingWeight": 48
+    "nothingWeight": 44
   },
   {
     "id": "vitriol_mite",
+    "always": [ { "item": "vitriol_mite_carcass" } ]
+  },
+  {
+    "id": "vitriol_mite_yield",
     "always": [ { "item": "mite_gland", "min": 1, "max": 2 } ],
     "rolls": 2,
     "entries": [
