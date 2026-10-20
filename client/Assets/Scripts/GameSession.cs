@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Rth.Shared.Combat;
 using Rth.Shared.Items;
 using Rth.Shared.Net;
+using Rth.Shared.Skills;
 using Rth.Shared.World;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -67,6 +68,22 @@ namespace Rth.Client
         public List<ItemSlot> Inventory { get; } = new List<ItemSlot>();
         public List<ItemSlot> Equipment { get; } = new List<ItemSlot>();
         public Dictionary<string, int> Stats { get; } = new Dictionary<string, int>();
+        public Dictionary<string, long> SkillXp { get; } = new Dictionary<string, long>();
+
+        public int Level(string skill) =>
+            Content == null ? 1 : Content.XpCurve.LevelForXp(SkillXp.TryGetValue(skill, out long xp) ? xp : 0);
+
+        public string SkillName(string skill)
+        {
+            if (Content != null)
+                foreach (SkillDef s in Content.Skills)
+                    if (s.Id == skill) return s.Name;
+            return skill;
+        }
+
+        /// <summary>Why an ability can't be used right now (level, phlegm, bile), or null.</summary>
+        public string AbilityProblem(AbilityDef ability) =>
+            PlayerState == null ? null : ability.CheckRequirements(PlayerState.Phlegm, PlayerState.Bile, Level, SkillName);
         /// <summary>What a left-click would do on whatever is under the pointer ("Attack Fen rat").</summary>
         public string HoverText { get; private set; } = "";
         public List<LogLine> Log { get; } = new List<LogLine>();
@@ -227,6 +244,10 @@ namespace Rth.Client
                         Stats.Clear();
                         foreach (KeyValuePair<string, int> s in stats.Stats) Stats[s.Key] = s.Value;
                         break;
+                    case SkillsMessage skills:
+                        SkillXp.Clear();
+                        foreach (KeyValuePair<string, long> s in skills.Xp) SkillXp[s.Key] = s.Value;
+                        break;
                     case GameTextMessage text:
                         AddLog(text.Kind, text.Text);
                         if (text.Kind == TextKind.Assayer) AssayerText = text.Text;
@@ -299,6 +320,7 @@ namespace Rth.Client
             Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
             EntityView npc = null;
             GroundItemView item = null;
+            Rth.MapTools.MapObject mapObject = null;
             Vector3? ground = null;
             foreach (RaycastHit h in hits)
             {
@@ -314,6 +336,12 @@ namespace Rth.Client
                     if (item == null) item = g;
                     continue;
                 }
+                Rth.MapTools.MapObject o = h.collider.GetComponentInParent<Rth.MapTools.MapObject>();
+                if (o != null)
+                {
+                    if (mapObject == null) mapObject = o;
+                    continue;
+                }
                 if (ground == null) ground = h.point + cam.transform.forward * 0.01f;
             }
 
@@ -321,6 +349,18 @@ namespace Rth.Client
             {
                 int id = npc.Id;
                 options.Add(("Attack " + npc.DisplayName, () => Attack(id)));
+            }
+            ObjectDef objectDef = mapObject != null ? ObjectDefFor(mapObject.objectType) : null;
+            if (objectDef != null)
+            {
+                string type = objectDef.Id;
+                TileCoord tile = new TileCoord(mapObject.Tile.x, mapObject.Tile.y);
+                foreach (ObjectActionDef action in objectDef.Actions)
+                {
+                    string actionId = action.Id;
+                    options.Add((action.Label + " " + objectDef.Name, () => ObjectAction(type, tile, actionId)));
+                }
+                options.Add(("Examine " + objectDef.Name, () => ObjectAction(type, tile, "examine")));
             }
             TileCoord? itemTile = item != null ? item.Tile : ground.HasValue ? TileMath.FromWorld(ground.Value) : (TileCoord?)null;
             if (itemTile.HasValue)
@@ -340,6 +380,22 @@ namespace Rth.Client
                 options.Add(("Walk here", () => WalkTo(tile)));
             }
             return options;
+        }
+
+        private ObjectDef ObjectDefFor(string type)
+        {
+            if (Content == null) return null;
+            foreach (ObjectDef d in Content.Objects)
+                if (d.Id == type) return d;
+            return null;
+        }
+
+        /// <summary>Uses an action on a world object (walk beside it, then e.g. butcher).</summary>
+        public void ObjectAction(string objectType, TileCoord tile, string actionId)
+        {
+            if (_state != State.InGame) return;
+            _client.Send(new ObjectActionMessage { ObjectType = objectType, Plane = 0, X = tile.X, Y = tile.Y, ActionId = actionId });
+            if (actionId != "examine") ShowClickMarker(tile, new Color(0.9f, 0.15f, 0.1f));
         }
 
         public void Pickup(int groundItemId)
@@ -404,6 +460,7 @@ namespace Rth.Client
             Inventory.Clear();
             Equipment.Clear();
             Stats.Clear();
+            SkillXp.Clear();
             _state = State.Login;
             _status = "Logged out.";
         }

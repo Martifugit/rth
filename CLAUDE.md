@@ -5,8 +5,9 @@ It plays like **RuneScape 3** (Evolution of Combat abilities, the skilling loops
 forced faction) and looks like **Old School RuneScape** (low-poly models, chunky flat textures,
 classic layout). It is set in its own world, **R'th**, built around the four humours.
 
-**Status:** Milestones 1 (architecture), 2 (combat core: Occultism, bile, phlegm, breath) and
-3 (items, equipment, consumables, loot) are done. Milestone 4 isn't chosen yet.
+**Status:** Milestones 1 (architecture), 2 (combat core: Occultism, bile, phlegm, breath),
+3 (items, equipment, consumables, loot) and 4 (skills, workstations, carcass butchering) are
+done. Milestone 5 isn't chosen yet.
 
 **Build everything as extensible systems.** New features plug into the mechanisms under
 "Extending the server" below (systems, events, interactions, stats, item components, effect ops,
@@ -179,9 +180,27 @@ IMGUI (`CombatHud`), a placeholder until the classic-layout interface work.
 
 Items are kept on death for now. Items have placeholder icons (tinted squares) until there's art.
 
-**Milestone 4: not chosen yet.** Natural candidates: the first skilling loop (e.g. carcass
-butchering, which uses drops, items, interactions and drop tables), banks and shops, or a
-second combat style.
+## Milestone 4: skills and carcass butchering (done)
+
+- [x] Skills with XP and levels (skills.json): one data-defined XP curve, level-up event and
+      message, stats per level, XP from damage by combat style.
+- [x] "Needs level N" requirements on abilities (thresholds occultism 5, ultimates 10),
+      equipment and recipes.
+- [x] Interactive world objects placed in the scene (`MapObject`), exported to
+      `<map>.objects.json`; right-click/left-click them in the client.
+- [x] Recipes at stations (recipes.json): semi-AFK processing with inputs, tools, outputs, an
+      output table with extra rolls per levels, XP.
+- [x] Carcass butchering: creatures drop carcasses; their loot comes from butchering them.
+      Fen rats: skinning rack + skinning knife (starter kit). Vitriol mites: lye vat + glass
+      flensing hook (an uncommon rat yield), butchering 10.
+- [x] Client: Skills tab with levels and progress; locked abilities grey out.
+
+Not yet: butchering task-givers and their points, the other four creature tiers, banks to
+stockpile carcasses, and old-blood.
+
+**Milestone 5: not chosen yet.** Natural candidates: banks (carcasses are meant to be stockpiled),
+Distillation (recipes + mite glands and vitriol beads already drop), a task-giver NPC with
+dialogue, or a second combat style.
 
 ---
 
@@ -189,8 +208,8 @@ second combat style.
 
 `World` (server/Rth.Server.Core/Game/World.cs) owns entities, connections, movement, visibility
 and saving. Everything else is a `GameSystem` listed in `World.StandardSystems` (order matters:
-systems run in that order within each phase). Today: `ItemSystem`, `CombatSystem`, `DeathSystem`,
-`NpcSystem`, `GroundItemSystem`, `LootSystem`.
+systems run in that order within each phase). Today: `SkillSystem`, `ItemSystem`, `CombatSystem`,
+`DeathSystem`, `NpcSystem`, `GroundItemSystem`, `LootSystem`, `ObjectSystem`, `RecipeSystem`.
 
 | To add... | Use |
 |---|---|
@@ -202,6 +221,11 @@ systems run in that order within each phase). Today: `ItemSystem`, `CombatSystem
 | A stat gear or buffs can change | Add the id to `shared/Combat/StatIds.cs`, read it where it matters; contributors implement `IStatContributor`; call `World.RecalculateStats` when inputs change. |
 | A new item capability | A component class on `ItemDef`, an action provider in `shared/Items/ItemActions.cs`, and a handler via `ItemSystem.RegisterAction`. |
 | A new consumable/ritual effect | A constant in `EffectOp`, validation in `GameContent.KnownEffectOps`, a handler via `ItemSystem.RegisterEffectOp`. |
+| A skill | An entry in skills.json; award XP with `SkillSystem.AddXp`, check with `Level`/`Check`; react to `LevelUp`. |
+| A level requirement | A `requirements` list (`SkillRequirement`) on the def, checked with `SkillSystem.Check`. |
+| A processing skill (distilling, brewing, cooking) | Recipes in recipes.json and a station in objects.json with a `process` action; place the station in the scene with `MapObject` + `MapBlocker`. No code. |
+| A new object behaviour (mine, open, pray) | An action on the object def, a handler via `ObjectSystem.RegisterAction`, usually starting an `ObjectInteraction`. |
+| A new kind of map placement | A marker component in tools/unity-map-tools, an export file in `MapExporter`, a field on `MapPlacements`. |
 | A new kind of content file | A field on `ContentParts`, load it in `GameContent.Load`, validate in `Create`. Client-visible content goes in `ClientContent` (sent as JSON, so no codec changes). |
 | A client message | A message class in `shared/Net/Messages.cs`, a case in `MessageCodec.Decode`, bump `Protocol.Version`. |
 

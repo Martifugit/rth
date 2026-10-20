@@ -104,7 +104,7 @@ namespace Rth.Client
                 if (ability == null) continue;
                 var slot = new Rect(bar.x + 4f + i * (SlotSize + 4f), bar.y + 4f, SlotSize, SlotSize);
 
-                bool usable = ability.CheckRequirements(state.Phlegm, state.Bile) == null;
+                bool usable = session.AbilityProblem(ability) == null;
                 Color tint = ability.BileShift > 0 ? new Color(0.62f, 0.5f, 0.12f)
                     : ability.BileShift < 0 ? new Color(0.26f, 0.17f, 0.34f)
                     : new Color(0.3f, 0.36f, 0.3f);
@@ -157,6 +157,7 @@ namespace Rth.Client
             if (a.BileMax < 100) costs.Add("bile at most " + a.BileMax);
             costs.Add(a.DamageMin + "-" + a.DamageMax + "% damage");
             costs.Add("range " + a.Range + ", cooldown " + (a.CooldownTicks * tickSeconds).ToString("0.#") + "s");
+            foreach (Rth.Shared.Skills.SkillRequirement r in a.Requirements) costs.Add("needs " + r.Skill + " " + r.Level);
             lines.Add(string.Join(" | ", costs));
             return string.Join("\n", lines);
         }
@@ -279,6 +280,7 @@ namespace Rth.Client
             Inventory,
             Worn,
             Stats,
+            Skills,
         }
 
         private ItemTab _tab;
@@ -295,10 +297,11 @@ namespace Rth.Client
             Rect panel = Claim(new Rect(Screen.width - width - 10f, Screen.height - height - 10f, width, height));
             GUI.Box(panel, GUIContent.none);
 
-            string[] tabs = { "Pack", "Worn", "Stats" };
+            string[] tabs = { "Pack", "Worn", "Stats", "Skills" };
+            float tabW = (width - 10f) / tabs.Length;
             for (int i = 0; i < tabs.Length; i++)
             {
-                var tabRect = new Rect(panel.x + 5f + i * (width - 10f) / 3f, panel.y + 4f, (width - 10f) / 3f - 2f, 18f);
+                var tabRect = new Rect(panel.x + 5f + i * tabW, panel.y + 4f, tabW - 2f, 18f);
                 Fill(tabRect, (int)_tab == i ? new Color(0.45f, 0.35f, 0.2f) : new Color(0.18f, 0.16f, 0.14f));
                 if (GUI.Button(tabRect, GUIContent.none, GUIStyle.none)) _tab = (ItemTab)i;
                 GUI.Label(tabRect, tabs[i], _center);
@@ -313,6 +316,9 @@ namespace Rth.Client
                     break;
                 case ItemTab.Worn:
                     tooltip = DrawWorn(body);
+                    break;
+                case ItemTab.Skills:
+                    tooltip = DrawSkills(body, content);
                     break;
                 case ItemTab.Stats:
                     DrawStats(body);
@@ -403,6 +409,32 @@ namespace Rth.Client
                 GUI.Label(new Rect(body.x + 4f, y, body.width - 8f, 18f), StatLabel(stat) + ": " + value + StatUnit(stat), _small);
                 y += 20f;
             }
+        }
+
+        /// <summary>Each skill's level, with a bar of progress through the current level.</summary>
+        private string DrawSkills(Rect body, ClientContent content)
+        {
+            string tooltip = null;
+            float y = body.y;
+            foreach (Rth.Shared.Skills.SkillDef skill in content.Skills)
+            {
+                session.SkillXp.TryGetValue(skill.Id, out long xp);
+                int level = content.XpCurve.LevelForXp(xp);
+                long from = content.XpCurve.XpForLevel(level);
+                long to = content.XpCurve.XpForLevel(level + 1);
+                float progress = to > from ? (xp - from) / (float)(to - from) : 1f;
+
+                var row = new Rect(body.x, y, body.width, 34f);
+                Fill(row, new Color(0.14f, 0.13f, 0.12f));
+                GUI.Label(new Rect(row.x + 4f, row.y + 1f, row.width - 40f, 16f), skill.Name, _small);
+                GUI.Label(new Rect(row.xMax - 36f, row.y + 1f, 34f, 16f), level.ToString(), _center);
+                Bar(new Rect(row.x + 4f, row.y + 19f, row.width - 8f, 11f), progress, new Color(0.35f, 0.6f, 0.3f), "");
+                if (row.Contains(Event.current.mousePosition))
+                    tooltip = skill.Name + " " + level + "\n" + xp + " xp" + (level < content.XpCurve.MaxLevel ? ", " + (to - xp) + " to level " + (level + 1) : "") +
+                              (string.IsNullOrEmpty(skill.Description) ? "" : "\n" + skill.Description);
+                y += 38f;
+            }
+            return tooltip;
         }
 
         private static string StatLabel(string stat) => stat switch

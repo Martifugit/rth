@@ -78,6 +78,7 @@ namespace Rth.Client.Editor
             Fence("Fence E", fence, 25f, 30f, 8f, wood);
 
             AddNpcSpawns(root.transform);
+            AddStations(root.transform);
 
             var spawn = new GameObject("Spawn");
             spawn.transform.SetParent(root.transform);
@@ -99,6 +100,46 @@ namespace Rth.Client.Editor
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
             MapExporter.Export(area);
             Debug.Log("[R'th] Built " + ScenePath);
+        }
+
+        /// <summary>The Milestone 4 workstations: a skinning rack by the spawn, a lye vat near the mites.</summary>
+        public static void AddStations(Transform mapRoot)
+        {
+            Material wood = MakeMaterial("Fence", new Color(0.45f, 0.33f, 0.20f));
+            Material hide = MakeMaterial("Hide", new Color(0.62f, 0.52f, 0.38f));
+            Material glaze = MakeMaterial("Glaze", new Color(0.42f, 0.5f, 0.46f));
+            Material lye = MakeMaterial("Lye", new Color(0.78f, 0.85f, 0.62f));
+
+            var rack = Station(mapRoot, "Skinning rack", "skinning_rack", 12, 8);
+            Box("Post L", rack, rack.position + new Vector3(-0.35f, 0.6f, 0f), new Vector3(0.12f, 1.2f, 0.12f), wood);
+            Box("Post R", rack, rack.position + new Vector3(0.35f, 0.6f, 0f), new Vector3(0.12f, 1.2f, 0.12f), wood);
+            Box("Bar", rack, rack.position + new Vector3(0f, 1.15f, 0f), new Vector3(0.9f, 0.1f, 0.1f), wood);
+            Box("Hide", rack, rack.position + new Vector3(0f, 0.75f, 0.02f), new Vector3(0.6f, 0.65f, 0.03f), hide);
+
+            var vat = Station(mapRoot, "Lye vat", "lye_vat", 24, 18);
+            GameObject body = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            body.name = "Vat";
+            body.transform.SetParent(vat, false);
+            body.transform.localPosition = new Vector3(0f, 0.35f, 0f);
+            body.transform.localScale = new Vector3(0.85f, 0.35f, 0.85f);
+            body.GetComponent<Renderer>().sharedMaterial = glaze;
+            GameObject surface = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            surface.name = "Lye";
+            Object.DestroyImmediate(surface.GetComponent<Collider>());
+            surface.transform.SetParent(vat, false);
+            surface.transform.localPosition = new Vector3(0f, 0.68f, 0f);
+            surface.transform.localScale = new Vector3(0.75f, 0.02f, 0.75f);
+            surface.GetComponent<Renderer>().sharedMaterial = lye;
+        }
+
+        private static Transform Station(Transform mapRoot, string name, string type, int x, int y)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(mapRoot);
+            go.transform.position = new Vector3(x + 0.5f, 0f, y + 0.5f);
+            go.AddComponent<MapObject>().objectType = type;
+            go.AddComponent<MapBlocker>();
+            return go.transform;
         }
 
         /// <summary>The Milestone 2 creatures: rats in the south-west, mites in the north-east, a training effigy by the spawn.</summary>

@@ -62,6 +62,13 @@ verses, which melee spends. **Brazenhithe** and **Noonhaven** each have their ow
 and styles can cross-pollinate.
 
 ### Carcass butchering (Slayer analogue)
+
+**Prototype (Milestone 4):** the core loop below is playable for two tiers. Fen rats (basin
+wildlife: skinning rack + skinning knife) and vitriol mites (Scald: lye vat + glass flensing
+hook, level 10) drop carcasses; their old loot tables are now the butchering yield. Each
+completion rolls the yield table once, plus once more per 15 levels above the requirement.
+Task-givers, points, the other tiers and old-blood are still to come.
+
 - You kill a creature and it drops a carcass. Its loot table is gated behind processing the
   carcass at a workstation.
 - Processing is semi-AFK, like RS Masterwork. Carcasses can be stockpiled.

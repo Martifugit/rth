@@ -56,9 +56,35 @@ namespace Rth.MapTools.Editor
             string path = OutputPathFor(area);
             map.Save(path);
             int npcs = ExportNpcSpawns(area, map, Path.ChangeExtension(path, null) + ".spawns.json");
+            int objects = ExportObjects(area, Path.ChangeExtension(path, null) + ".objects.json");
             CollisionPreview.Show(map, area.plane);
-            Debug.Log($"[R'th] Exported '{area.exportName}' ({map.Width}x{map.Height}, spawn {map.Spawn}, {npcs} NPCs) to {path}");
+            Debug.Log($"[R'th] Exported '{area.exportName}' ({map.Width}x{map.Height}, spawn {map.Spawn}, {npcs} NPCs, {objects} objects) to {path}");
             return path;
+        }
+
+        /// <summary>Writes the interactive objects as JSON next to the map. Returns how many.</summary>
+        private static int ExportObjects(MapArea area, string path)
+        {
+            var sb = new System.Text.StringBuilder("[\n");
+            int count = 0;
+            foreach (MapObject obj in area.GetComponentsInChildren<MapObject>())
+            {
+                if (string.IsNullOrWhiteSpace(obj.objectType))
+                {
+                    Debug.LogWarning($"[R'th] MapObject '{obj.name}' has no objectType; skipped.", obj);
+                    continue;
+                }
+                Vector2Int t = obj.Tile;
+                if (count++ > 0) sb.Append(",\n");
+                sb.Append("  { \"type\": \"").Append(obj.objectType.Trim().Replace("\"", ""))
+                  .Append("\", \"plane\": ").Append(area.plane)
+                  .Append(", \"x\": ").Append(t.x)
+                  .Append(", \"y\": ").Append(t.y)
+                  .Append(" }");
+            }
+            sb.Append("\n]\n");
+            File.WriteAllText(path, sb.ToString());
+            return count;
         }
 
         /// <summary>Writes the creature spawns as JSON next to the map. Returns how many.</summary>

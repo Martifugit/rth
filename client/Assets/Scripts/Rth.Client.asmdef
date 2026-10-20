@@ -2,7 +2,8 @@
     "name": "Rth.Client",
     "rootNamespace": "Rth.Client",
     "references": [
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "Rth.MapTools"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

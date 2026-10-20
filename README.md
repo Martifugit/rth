@@ -34,8 +34,14 @@ Press Play. The Editor exports the scene's map and starts a local server in the 
   walk here). The top-left text shows what a left-click will do.
 - The panel at bottom right has your **Pack** (click an item to use it: eat, drink, wield;
   right-click for drop and examine; drag to rearrange), what you're **Worn**, and your **Stats**.
-- Creatures drop loot on the ground. Only you see it at first; after a minute anyone can, and
-  after three minutes it's gone.
+- Creatures drop their **carcass**. Take it to the right workstation and click it to
+  **butcher** it for the loot: fen rats at the skinning rack by the spawn (you start with a
+  skinning knife), vitriol mites at the lye vat in the north-east (needs butchering 10 and a
+  glass flensing hook, which rats sometimes yield). You keep going until you run out.
+- Ground items are only visible to you at first; after a minute anyone can see them, and after
+  three minutes they're gone.
+- The **Skills** tab shows your levels. Occultism (from fighting) unlocks thresholds at 5 and
+  ultimates at 10, and adds ability damage per level.
 - Arrow keys or middle-drag rotate the camera; the scroll wheel zooms.
 
 The test map has fen rats (south-west, passive), vitriol mites (north-east, aggressive, they spit
@@ -76,6 +82,7 @@ The map is designed in the Unity scene. Mark things with the components from the
 | `MapWall`   | A thin wall or fence on a grid line; blocks crossing that tile edge. |
 | `MapSpawn`  | Where new players appear. |
 | `MapNpcSpawn` | A creature lives here (`npcId` from `npcs.json`, optional wander radius). |
+| `MapObject` | An interactive object, e.g. a workstation (`objectType` from `objects.json`). Pair with `MapBlocker`. |
 
 Tiles with no ground collider are blocked. **R'th > Export Map** writes
 `server/data/maps/<name>.rthmap`, and the Scene view then shows blocked tiles in red and walls
