@@ -1,4 +1,4 @@
-using Rth.Server;
+﻿using Rth.Server;
 using Rth.Server.Content;
 using Rth.Server.Game;
 using Rth.Shared.Combat;
@@ -200,9 +200,11 @@ public class CombatTests
 
         Assert.Equal(100, Take(100));
 
-        alice.Effects.Add(new ActiveEffect { Type = EffectType.Ward, Magnitude = 30, EndTick = 1000 });
+        CombatSystem combat = fx.World.Get<CombatSystem>();
+        combat.ApplyEffect(alice, EffectType.Ward, 30, 1000);
         Assert.Equal(70, Take(100));
         alice.Effects.Clear();
+        fx.World.RecalculateStats(alice);
 
         alice.Deflect = CombatStyle.Melee;
         Assert.Equal(50, Take(100));
@@ -216,7 +218,7 @@ public class CombatTests
         int Take(int amount)
         {
             alice.Blood = alice.MaxBlood;
-            return fx.World.Damage(alice, amount, rat, HitKind.Normal, CombatStyle.Melee);
+            return fx.World.Get<CombatSystem>().Damage(alice, amount, rat, HitKind.Normal, CombatStyle.Melee);
         }
     }
 
@@ -334,9 +336,9 @@ public class CombatTests
         Npc rat = fx.Npc("rat");
         rat.TargetId = alice.Id;
 
-        Assert.False(fx.World.InRange(rat, alice, 1));
+        Assert.False(fx.World.Get<CombatSystem>().InRange(rat, alice, 1));
         fx.Ticks(1);
-        Assert.True(fx.World.InRange(rat, alice, 1));
+        Assert.True(fx.World.Get<CombatSystem>().InRange(rat, alice, 1));
         Assert.True(Math.Abs(rat.Position.X - 5) + Math.Abs(rat.Position.Y - 5) == 1);
     }
 
@@ -347,7 +349,7 @@ public class CombatTests
         map.AddWall(0, 5, 5, WallSide.East);
         var fx = new WorldFixture(map, spawns: new[] { At("rat", 6, 5) });
         fx.Login("Alice");
-        Assert.False(fx.World.InRange(fx.Npc("rat"), fx.Player("Alice"), 1));
+        Assert.False(fx.World.Get<CombatSystem>().InRange(fx.Npc("rat"), fx.Player("Alice"), 1));
     }
 
     [Fact]
@@ -420,7 +422,7 @@ public class CombatTests
         Player alice = fx.Player("Alice");
         alice.Deaths = 1;
         alice.Bile = -60;
-        fx.World.Damage(alice, 5000, fx.Npc("brute"), HitKind.Normal);
+        fx.World.Get<CombatSystem>().Damage(alice, 5000, fx.Npc("brute"), HitKind.Normal);
         Assert.Contains(client.Sent.OfType<GameTextMessage>(), t => t.Kind == TextKind.Assayer && t.Text == "cold");
     }
 

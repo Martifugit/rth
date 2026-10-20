@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
+
 namespace Rth.Server.Persistence
 {
     /// <summary>Everything about a player that survives logout. Grows with each milestone.</summary>
@@ -17,6 +20,18 @@ namespace Rth.Server.Persistence
         public int Bile;
         /// <summary>The Assayer keeps count.</summary>
         public int Deaths;
+
+        /// <summary>
+        /// Per-system data, keyed by system ("items", later "skills", "quests"...). Each system reads
+        /// and writes its own section, so adding one never changes this class. Sections a running
+        /// server doesn't recognise are kept as they are.
+        /// </summary>
+        public Dictionary<string, JToken> Sections = new Dictionary<string, JToken>();
+
+        public T? Section<T>(string key) where T : class =>
+            Sections.TryGetValue(key, out JToken? token) ? token.ToObject<T>() : null;
+
+        public void SetSection(string key, object value) => Sections[key] = JToken.FromObject(value);
     }
 
     public interface IPlayerStore

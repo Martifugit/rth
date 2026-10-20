@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 using Rth.Server.Net;
 using Rth.Shared.Combat;
 using Rth.Shared.Net;
@@ -19,6 +20,13 @@ namespace Rth.Server.Game
         public string Key { get; }
         public IConnection Connection { get; }
 
+        /// <summary>What the player is busy doing (attacking, picking up...), or null.</summary>
+        public Interaction? Interaction { get; set; }
+
+        public StatBlock Stats { get; } = new StatBlock();
+        /// <summary>Set when stats were recalculated, so the client can be told.</summary>
+        public bool StatsChanged { get; set; }
+
         public int Phlegm { get; set; }
         public int Bile { get; set; }
         public int Breath { get; set; }
@@ -28,7 +36,9 @@ namespace Rth.Server.Game
         /// <summary>Ability id to fire as soon as the global cooldown allows, or null.</summary>
         public string? QueuedAbility { get; set; }
         public uint GlobalCooldownReadyTick { get; set; }
-        /// <summary>Ability id to the tick it can next be used.</summary>
+        /// <summary>Busy with something else (eating, say) until this tick: no attacks before it.</summary>
+        public uint ActionDelayUntilTick { get; set; }
+        /// <summary>Ability ids (and other cooldown keys, such as "item:food") to the tick they can next be used.</summary>
         public Dictionary<string, uint> Cooldowns { get; } = new Dictionary<string, uint>();
 
         public uint RespawnAtTick { get; set; }
@@ -36,6 +46,9 @@ namespace Rth.Server.Game
 
         /// <summary>Ids of the entities this player's client currently knows about.</summary>
         public HashSet<int> KnownEntities { get; } = new HashSet<int>();
+
+        /// <summary>Every save section loaded at login, so ones no system claims survive the next save.</summary>
+        public Dictionary<string, JToken> SavedSections { get; } = new Dictionary<string, JToken>();
 
         public bool LogoutRequested { get; set; }
 

@@ -1,8 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Newtonsoft.Json.Linq;
 using Rth.Server.Content;
 using Rth.Server.Net;
 using Rth.Server.Persistence;
@@ -13,22 +14,24 @@ using Rth.Shared.World;
 namespace Rth.Server.Game
 {
     /// <summary>
-    /// The whole game state. Everything except <see cref="AcceptConnection"/> and
-    /// <see cref="QueueContent"/> runs on the tick thread; <see cref="Tick"/> advances the world by
-    /// exactly one tick. Combat is in World.Combat.cs, NPC behaviour in World.Npcs.cs.
+    /// The whole game state and the tick. The world owns entities, connections, movement,
+    /// visibility and saving; everything else is a <see cref="GameSystem"/> plugged in at
+    /// construction (combat, NPCs, items...). Everything except <see cref="AcceptConnection"/> and
+    /// <see cref="QueueContent"/> runs on the tick thread.
     /// </summary>
-    public sealed partial class World
+    public sealed class World
     {
         private readonly ServerConfig _config;
         private readonly IPlayerStore _store;
         private readonly Action<string> _log;
-        private readonly Random _random;
 
         private readonly ConcurrentQueue<IConnection> _newConnections = new ConcurrentQueue<IConnection>();
         private readonly List<IConnection> _pendingConnections = new List<IConnection>();
         private readonly List<(IConnection Connection, LoginMessage Login)> _loginQueue = new List<(IConnection, LoginMessage)>();
         private readonly Dictionary<int, Player> _players = new Dictionary<int, Player>();
         private readonly Dictionary<int, Npc> _npcs = new Dictionary<int, Npc>();
+        private readonly List<GameSystem> _systems = new List<GameSystem>();
+        private readonly Dictionary<Type, Action<Player, Message>> _messageHandlers = new Dictionary<Type, Action<Player, Message>>();
         private GameContent? _pendingContent;
         private int _nextEntityId = 1;
 
@@ -37,24 +40,65 @@ namespace Rth.Server.Game
         private readonly List<ActionEvent> _actions = new List<ActionEvent>();
         private readonly List<int> _deaths = new List<int>();
 
+        /// <summary>Creates a world with the standard systems.</summary>
         public World(ServerConfig config, MapData map, IPlayerStore store, GameContent content, IEnumerable<NpcSpawn>? spawns = null)
+            : this(config, map, store, content, StandardSystems(spawns))
+        {
+        }
+
+        /// <summary>Creates a world with exactly the given systems, in order (useful for tests and tools).</summary>
+        public World(ServerConfig config, MapData map, IPlayerStore store, GameContent content, IEnumerable<GameSystem> systems)
         {
             _config = config;
             _store = store;
             _log = config.Log;
-            _random = config.RandomSeed.HasValue ? new Random(config.RandomSeed.Value) : new Random();
+            Random = config.RandomSeed.HasValue ? new Random(config.RandomSeed.Value) : new Random();
             Map = map;
             Content = content;
-            foreach (NpcSpawn spawn in spawns ?? Enumerable.Empty<NpcSpawn>()) AddNpc(spawn);
+            OnMessage<WalkToMessage>(HandleWalk);
+            OnMessage<LogoutMessage>((player, _) => player.LogoutRequested = true);
+            foreach (GameSystem system in systems) AddSystem(system);
         }
 
+        public static IEnumerable<GameSystem> StandardSystems(IEnumerable<NpcSpawn>? spawns) => new GameSystem[]
+        {
+            new CombatSystem(),
+            new DeathSystem(),
+            new NpcSystem(spawns ?? Enumerable.Empty<NpcSpawn>()),
+        };
+
+        public ServerConfig Config => _config;
         public MapData Map { get; }
         public GameContent Content { get; private set; }
         public CombatRules Rules => Content.Rules;
+        public GameEvents Events { get; } = new GameEvents();
+        public Random Random { get; }
         public uint CurrentTick { get; private set; }
         public IEnumerable<Player> Players => _players.Values;
         public IEnumerable<Npc> Npcs => _npcs.Values;
         public int PlayerCount => _players.Count;
+
+        // ------------------------------------------------------------------ systems
+
+        private void AddSystem(GameSystem system)
+        {
+            _systems.Add(system);
+            system.Attach(this);
+        }
+
+        /// <summary>The system of a given type. Throws if it isn't installed.</summary>
+        public T Get<T>() where T : GameSystem =>
+            _systems.OfType<T>().FirstOrDefault() ?? throw new InvalidOperationException(typeof(T).Name + " is not installed.");
+
+        public T? Find<T>() where T : GameSystem => _systems.OfType<T>().FirstOrDefault();
+
+        /// <summary>Handles a client message type. One handler per type; later registrations replace earlier ones.</summary>
+        public void OnMessage<T>(Action<Player, T> handler) where T : Message =>
+            _messageHandlers[typeof(T)] = (player, message) => handler(player, (T)message);
+
+        // ------------------------------------------------------------------ entities
+
+        public int NextEntityId() => _nextEntityId++;
 
         public Player? FindPlayer(string name)
         {
@@ -69,6 +113,98 @@ namespace Rth.Server.Game
             if (_npcs.TryGetValue(id, out Npc? npc) && !npc.Despawned) return npc;
             return null;
         }
+
+        public void AddNpc(Npc npc) => _npcs.Add(npc.Id, npc);
+
+        public IEnumerable<Entity> AllEntities() => _players.Values.Cast<Entity>().Concat(_npcs.Values);
+
+        private IEnumerable<Entity> VisibleEntities()
+        {
+            foreach (Player p in _players.Values) yield return p;
+            foreach (Npc n in _npcs.Values)
+                if (!n.Despawned) yield return n;
+        }
+
+        public bool CanSee(Player viewer, Entity other) => CanSee(viewer, other.Plane, other.Position);
+
+        public bool CanSee(Player viewer, int plane, TileCoord tile) =>
+            viewer.Plane == plane && viewer.Position.ChebyshevDistance(tile) <= _config.ViewRadius;
+
+        // ------------------------------------------------------------------ helpers for systems
+
+        public void Tell(Player player, TextKind kind, string text) =>
+            player.Connection.Send(new GameTextMessage { Kind = kind, Text = text });
+
+        public void Log(string line) => _log(line);
+
+        public void AddHit(HitEvent hit) => _hits.Add(hit);
+        public void AddAction(ActionEvent action) => _actions.Add(action);
+        public void AddDeath(int entityId) => _deaths.Add(entityId);
+
+        public void SetPath(Entity entity, TileCoord target)
+        {
+            List<TileCoord> path = Pathfinder.FindPath(Map, entity.Plane, entity.Position, target, _config.PathSearchRadius);
+            entity.Waypoints.Clear();
+            foreach (TileCoord tile in path) entity.Waypoints.Enqueue(tile);
+        }
+
+        /// <summary>Walks up to one tick's worth of steps; <paramref name="stopWhen"/> is checked before each step.</summary>
+        public void ProcessMovement(Entity entity, Func<bool>? stopWhen = null)
+        {
+            int steps = entity.Running ? 2 : 1;
+            for (int i = 0; i < steps && entity.Waypoints.Count > 0; i++)
+            {
+                if (stopWhen != null && stopWhen())
+                {
+                    entity.Waypoints.Clear();
+                    break;
+                }
+                TileCoord next = entity.Waypoints.Peek();
+                TileCoord from = entity.Position;
+                if (!Map.CanStep(entity.Plane, from.X, from.Y, next.X - from.X, next.Y - from.Y))
+                {
+                    // The path is no longer valid (e.g. something now blocks it): stop here.
+                    entity.Waypoints.Clear();
+                    break;
+                }
+                entity.Waypoints.Dequeue();
+                entity.Position = next;
+                entity.StepsThisTick.Add(next);
+            }
+        }
+
+        /// <summary>
+        /// Rebuilds a player's stats from every <see cref="IStatContributor"/>, then applies the
+        /// ones the world itself uses (max blood and breath).
+        /// </summary>
+        public void RecalculateStats(Player player)
+        {
+            player.Stats.Clear();
+            foreach (GameSystem system in _systems)
+                if (system is IStatContributor contributor) contributor.Contribute(player, player.Stats);
+            player.MaxBlood = Math.Max(1, player.Stats.Get(StatIds.MaxBlood));
+            player.MaxBreath = Math.Max(0, player.Stats.Get(StatIds.MaxBreath));
+            if (player.Blood > player.MaxBlood) player.Blood = player.MaxBlood;
+            if (player.Breath > player.MaxBreath) player.Breath = player.MaxBreath;
+            player.StatsChanged = true;
+        }
+
+        /// <summary>Starts an interaction, ending whatever the player was doing before.</summary>
+        public void StartInteraction(Player player, Interaction interaction)
+        {
+            StopInteraction(player);
+            player.Interaction = interaction;
+        }
+
+        public void StopInteraction(Player player)
+        {
+            Interaction? current = player.Interaction;
+            if (current == null) return;
+            player.Interaction = null;
+            current.End(this, player);
+        }
+
+        // ------------------------------------------------------------------ the tick
 
         /// <summary>Thread-safe: called by the network layer when a client connects.</summary>
         public void AcceptConnection(IConnection connection) => _newConnections.Enqueue(connection);
@@ -90,32 +226,22 @@ namespace Rth.Server.Game
             Cleanup();            // 8. per-tick cleanup
         }
 
-        // ------------------------------------------------------------------ 1. timers
-
         private void ProcessTimers()
         {
             GameContent? reloaded = Interlocked.Exchange(ref _pendingContent, null);
-            if (reloaded != null) ApplyContent(reloaded);
+            if (reloaded != null)
+            {
+                Content = reloaded;
+                foreach (GameSystem system in _systems) system.OnContentChanged();
+                ContentInfoMessage info = Content.ToMessage();
+                foreach (Player player in _players.Values) player.Connection.Send(info);
+            }
+
+            foreach (GameSystem system in _systems) system.OnTimers();
 
             if (_config.AutosaveIntervalTicks > 0 && CurrentTick % (uint)_config.AutosaveIntervalTicks == 0)
                 SaveAll();
         }
-
-        private void ApplyContent(GameContent content)
-        {
-            Content = content;
-            foreach (Npc npc in _npcs.Values)
-            {
-                if (!content.Npcs.TryGetValue(npc.Def.Id, out NpcDef? def)) continue; // removed type: keep the old one
-                npc.Def = def;
-                npc.MaxBlood = def.Blood;
-                npc.Blood = Math.Min(npc.Blood, def.Blood);
-            }
-            ContentInfoMessage info = content.ToMessage();
-            foreach (Player player in _players.Values) player.Connection.Send(info);
-        }
-
-        // ------------------------------------------------------------------ 2. input
 
         private void ProcessInput()
         {
@@ -147,24 +273,8 @@ namespace Rth.Server.Game
                 }
                 for (int n = 0; n < _config.MaxMessagesPerTick && player.Connection.TryReceive(out Message message); n++)
                 {
-                    switch (message)
-                    {
-                        case WalkToMessage walk:
-                            HandleWalk(player, walk);
-                            break;
-                        case AttackMessage attack:
-                            HandleAttack(player, attack.TargetId);
-                            break;
-                        case UseAbilityMessage use:
-                            HandleUseAbility(player, use.AbilityId);
-                            break;
-                        case SetDeflectMessage deflect:
-                            HandleDeflect(player, deflect.Style);
-                            break;
-                        case LogoutMessage _:
-                            player.LogoutRequested = true;
-                            break;
-                    }
+                    if (_messageHandlers.TryGetValue(message.GetType(), out Action<Player, Message>? handler))
+                        handler(player, message);
                 }
             }
         }
@@ -172,62 +282,37 @@ namespace Rth.Server.Game
         private void HandleWalk(Player player, WalkToMessage walk)
         {
             if (player.IsDead) return;
-            // Walking away is how you stop fighting.
-            player.ClearCombat();
-            player.QueuedAbility = null;
+            // Walking away is how you stop doing anything else.
+            StopInteraction(player);
             SetPath(player, new TileCoord(walk.X, walk.Y));
             player.Running = walk.Run;
         }
 
-        private void SetPath(Entity entity, TileCoord target)
+        private void ProcessNpcs()
         {
-            List<TileCoord> path = Pathfinder.FindPath(Map, entity.Plane, entity.Position, target, _config.PathSearchRadius);
-            entity.Waypoints.Clear();
-            foreach (TileCoord tile in path) entity.Waypoints.Enqueue(tile);
+            foreach (GameSystem system in _systems) system.OnNpcs();
         }
-
-        internal void Tell(Player player, TextKind kind, string text) =>
-            player.Connection.Send(new GameTextMessage { Kind = kind, Text = text });
-
-        // ------------------------------------------------------------------ 4. players
 
         private void ProcessPlayers()
         {
             foreach (Player player in _players.Values)
             {
-                if (player.IsDead)
-                {
-                    if (CurrentTick >= player.RespawnAtTick) RespawnPlayer(player);
-                    continue;
-                }
-                ProcessPlayerCombat(player);
-                TickResources(player);
-                ExpireEffects(player);
-            }
-        }
+                foreach (GameSystem system in _systems) system.BeforePlayer(player);
 
-        /// <summary>Walks up to one tick's worth of steps; <paramref name="stopWhen"/> is checked after each step.</summary>
-        private void ProcessMovement(Entity entity, Func<bool>? stopWhen = null)
-        {
-            int steps = entity.Running ? 2 : 1;
-            for (int i = 0; i < steps && entity.Waypoints.Count > 0; i++)
-            {
-                if (stopWhen != null && stopWhen())
+                if (!player.IsDead)
                 {
-                    entity.Waypoints.Clear();
-                    break;
+                    Interaction? interaction = player.Interaction;
+                    if (interaction != null)
+                    {
+                        if (!interaction.Tick(this, player) && player.Interaction == interaction) StopInteraction(player);
+                    }
+                    else
+                    {
+                        ProcessMovement(player);
+                    }
                 }
-                TileCoord next = entity.Waypoints.Peek();
-                TileCoord from = entity.Position;
-                if (!Map.CanStep(entity.Plane, from.X, from.Y, next.X - from.X, next.Y - from.Y))
-                {
-                    // The path is no longer valid (e.g. something now blocks it): stop here.
-                    entity.Waypoints.Clear();
-                    break;
-                }
-                entity.Waypoints.Dequeue();
-                entity.Position = next;
-                entity.StepsThisTick.Add(next);
+
+                foreach (GameSystem system in _systems) system.AfterPlayer(player);
             }
         }
 
@@ -271,11 +356,7 @@ namespace Rth.Server.Game
             else if (_players.Count >= _config.MaxPlayers) return "The world is full.";
 
             PlayerSave? save = _store.Load(key);
-            var player = new Player(_nextEntityId++, key, save?.Name ?? name, connection)
-            {
-                MaxBlood = Rules.PlayerMaxBlood,
-                MaxBreath = Rules.PlayerMaxBreath,
-            };
+            var player = new Player(NextEntityId(), key, save?.Name ?? name, connection);
             if (save != null && Map.Contains(save.Plane, save.X, save.Y) && !Map.IsBlocked(save.Plane, save.X, save.Y))
             {
                 player.Plane = save.Plane;
@@ -286,33 +367,31 @@ namespace Rth.Server.Game
                 player.Plane = Map.SpawnPlane;
                 player.Position = Map.Spawn;
             }
-            player.Blood = Clamp(save?.Blood ?? player.MaxBlood, 1, player.MaxBlood);
-            player.Breath = Clamp(save?.Breath ?? player.MaxBreath, 0, player.MaxBreath);
-            player.Bile = Rules.ClampBile(save?.Bile ?? 0);
-            player.Deaths = save?.Deaths ?? 0;
+            // Keep every section, including ones no installed system understands, so nothing is lost.
+            if (save != null)
+                foreach (KeyValuePair<string, JToken> section in save.Sections) player.SavedSections[section.Key] = section.Value;
 
             _players.Add(player.Id, player);
             connection.Send(new LoginOkMessage { PlayerId = player.Id, TickMillis = _config.TickMillis });
             connection.Send(Content.ToMessage());
+            foreach (GameSystem system in _systems) system.OnLogin(player, save);
             _log(player.Name + " logged in at " + player.Position + (save == null ? " (new player)." : "."));
             return null;
         }
 
         private void RemovePlayer(Player player)
         {
+            StopInteraction(player);
             Save(player);
             _players.Remove(player.Id);
-            foreach (Entity other in AllEntities())
-                if (other.TargetId == player.Id) other.ClearCombat();
+            foreach (GameSystem system in _systems) system.OnLogout(player);
             player.Connection.Close();
             _log(player.Name + " logged out at " + player.Position + ".");
         }
 
-        private IEnumerable<Entity> AllEntities() => _players.Values.Cast<Entity>().Concat(_npcs.Values);
-
         private void ProcessZones()
         {
-            // No zone or ground-item state yet.
+            foreach (GameSystem system in _systems) system.OnZones();
         }
 
         // ------------------------------------------------------------------ 7. updates
@@ -353,46 +432,12 @@ namespace Rth.Server.Game
                 foreach (int id in _deaths)
                     if (seen.Contains(id)) update.Deaths.Add(id);
 
+                foreach (GameSystem system in _systems) system.WriteUpdate(viewer, update, seen);
+
                 viewer.Connection.Send(update);
-                viewer.Connection.Send(DescribeState(viewer));
+                foreach (GameSystem system in _systems) system.SendState(viewer);
             }
         }
-
-        private IEnumerable<Entity> VisibleEntities()
-        {
-            foreach (Player p in _players.Values) yield return p;
-            foreach (Npc n in _npcs.Values)
-                if (!n.Despawned) yield return n;
-        }
-
-        private bool CanSee(Player viewer, Entity other) =>
-            viewer.Plane == other.Plane && viewer.Position.ChebyshevDistance(other.Position) <= _config.ViewRadius;
-
-        private PlayerStateMessage DescribeState(Player p)
-        {
-            var state = new PlayerStateMessage
-            {
-                Tick = CurrentTick,
-                Blood = p.Blood,
-                MaxBlood = p.MaxBlood,
-                Phlegm = p.Phlegm,
-                Bile = p.Bile,
-                Breath = p.Breath,
-                MaxBreath = p.MaxBreath,
-                Deflect = p.Deflect,
-                InCombat = p.InCombat(CurrentTick, Rules.CombatTimeoutTicks),
-                TargetId = p.TargetId,
-                GlobalCooldownReadyTick = p.GlobalCooldownReadyTick,
-                QueuedAbility = p.QueuedAbility ?? "",
-            };
-            foreach (KeyValuePair<string, uint> cd in p.Cooldowns)
-                if (cd.Value > CurrentTick) state.Cooldowns.Add(new CooldownState { AbilityId = cd.Key, ReadyTick = cd.Value });
-            foreach (ActiveEffect e in p.Effects)
-                state.Effects.Add(new EffectState { Effect = e.Type, Magnitude = e.Magnitude, EndTick = e.EndTick });
-            return state;
-        }
-
-        // ------------------------------------------------------------------ 8. cleanup
 
         private void Cleanup()
         {
@@ -405,6 +450,7 @@ namespace Rth.Server.Game
             _hits.Clear();
             _actions.Clear();
             _deaths.Clear();
+            foreach (GameSystem system in _systems) system.OnCleanup();
         }
 
         // ------------------------------------------------------------------ persistence
@@ -413,18 +459,17 @@ namespace Rth.Server.Game
         {
             try
             {
-                _store.Save(player.Key, new PlayerSave
+                var save = new PlayerSave
                 {
                     Name = player.Name,
                     // Logging out while dead counts as having respawned.
                     Plane = player.IsDead ? Map.SpawnPlane : player.Plane,
                     X = player.IsDead ? Map.Spawn.X : player.Position.X,
                     Y = player.IsDead ? Map.Spawn.Y : player.Position.Y,
-                    Blood = player.IsDead ? player.MaxBlood : player.Blood,
-                    Breath = player.Breath,
-                    Bile = player.IsDead ? 0 : player.Bile,
-                    Deaths = player.Deaths,
-                });
+                };
+                foreach (KeyValuePair<string, JToken> section in player.SavedSections) save.Sections[section.Key] = section.Value;
+                foreach (GameSystem system in _systems) system.OnSave(player, save);
+                _store.Save(player.Key, save);
             }
             catch (Exception e)
             {
@@ -445,7 +490,5 @@ namespace Rth.Server.Game
             _pendingConnections.Clear();
             while (_newConnections.TryDequeue(out IConnection connection)) connection.Close();
         }
-
-        private static int Clamp(int value, int min, int max) => Math.Max(min, Math.Min(max, value));
     }
 }
