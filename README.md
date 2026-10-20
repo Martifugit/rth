@@ -61,7 +61,8 @@ Press Play. The Editor exports the scene's map and starts a local server in the 
 Corvin's apothecary, Wenna's skinning yard south of town (and the sleepers' graves past it), the
 training yard with its straw penitent, the Backwards Mill and millpond to the north, fen rats in
 the reed beds along the river, and over the bridge, the east woods and Sour Hollow, where vitriol
-mites nest around a leaking cask (aggressive; they spit from range). The bay is to the south-east.
+mites nest around a leaking cask (aggressive; they spit from range). The Wash, a broad mere, is to the south-east.
+Tolling sits at the far western edge of Cruor's lands.
 
 ## Tuning content
 

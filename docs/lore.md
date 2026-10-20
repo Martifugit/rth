@@ -28,6 +28,13 @@ dwarves are the depths, which belong to peoples older still, whom nobody visits 
 
 Over all of it hang **two moons**. One of them is cracked.
 
+The story begins far from all of this, in **Tolling**, a river town at the western edge of
+Cruor's lands, where the heartland starts to dry out towards Lammas. The Synod keeps a clerk and
+a strongbox there and not much else. It is the kind of place the great powers forget about,
+which is why strange things can happen in it for a long time before anyone important notices.
+(Names other than Cruor, Tithe and Meridian are placeholders; see `docs/world-map.md` for the
+naming proposal.)
+
 ### Why the borders hold
 
 Every power in the basin holds its land for a reason the land itself gives it.

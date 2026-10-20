@@ -22,7 +22,7 @@
   {
     "id": "smoked_eel",
     "name": "Smoked eel",
-    "examine": "Caught where the river meets the bay. Nobody asks what it was eating.",
+    "examine": "Caught where the river spreads into the Wash. Nobody asks what it was eating.",
     "value": 12,
     "color": "#6e5236",
     "tags": [ "food" ],
