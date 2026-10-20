@@ -1,7 +1,7 @@
 # World map
 
 The reference sketch is `images/map.png`. Its shapes are the plan, and its names are all
-placeholders. This file records the naming proposal and how the world gets built in phases.
+placeholders. This file records the adopted names and how the world gets built in phases.
 Concept art in `images/` (Cruor, Meridian, Frostpeak Forge) sets the mood. The game itself
 should still look like Old School RuneScape.
 
@@ -22,9 +22,9 @@ Why each power holds its ground is written up in `docs/lore.md`, section I.
 
 ## Names
 
-Every name on the sketch is a placeholder. Only three names are settled: **Cruor**, **Tithe**
-and **Meridian**. Everything else below is a **proposal** and waits for approval before it goes
-into lore or content. A good name here is short, easy to say aloud, and hints at what the place
+Every name on the sketch was a placeholder. The names below are **adopted for now** (approved
+2026-10-20) and used in lore and content; any of them can still change. Cruor, Tithe and
+Meridian are settled. A good name here is short, easy to say aloud, and hints at what the place
 is for. A player should be able to shout it across a chat channel.
 
 ### Settled
@@ -35,7 +35,7 @@ is for. A player should be able to shout it across a chat channel.
 | **Tithe** | Second see. It guards the bay's mouth and taxes every ship. |
 | **Meridian** | Capital of the Rationalists, where the range comes down to the sea. |
 
-### Proposed: realms and capitals
+### realms and capitals
 
 | Realm | Capital | Why |
 |---|---|---|
@@ -46,7 +46,7 @@ is for. A player should be able to shout it across a chat channel.
 | **Holdfast** (the dwarven realm in the caves) | **Frostpeak Forge** (the trade hall, from the concept art) | A holdfast is a grip on rock, and the name says why nobody dislodges them. |
 | **The Wrack** (the occult north-east, replaces the unnamed "broken country") | none: the houses hold it between them | *Wrack* means wreckage and seaweed: broken land eaten by the sea. |
 
-### Proposed: the occult houses of the Wrack
+### the occult houses of the Wrack
 
 Each house leans towards one bile and practises one art. Names are old words for bitter or
 staining things.
@@ -58,7 +58,7 @@ staining things.
 | **Mordant** | Both biles, corrosion | Acids, vitriols, the arts that eat. Their workshops gave Sour Hollow its cask. |
 | **Sallow** | Distillation | A minor house fallen on hard times. Corvin Sallow is its last son in the Keeping. |
 
-### Proposed: the range
+### the range
 
 | Name | What it is |
 |---|---|
@@ -74,7 +74,7 @@ staining things.
 | **The Gnaw** | A great sinkhole in the broken Pale (replaces "the Mainspring Pit"). |
 | **The Teeth** | Sea stacks where the Pale crumbles into the north-east sea (replaces "the Escapement"). |
 
-### Proposed: the bay and the sea
+### the bay and the sea
 
 | Name | What it is |
 |---|---|

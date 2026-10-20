@@ -16,7 +16,7 @@ data over code for one case.
 See `README.md` for how to build, run and test.
 
 Design docs:
-- `docs/lore.md`: the world, history, factions and characters. All names are provisional.
+- `docs/lore.md`: the world, history, factions and characters. Place names are listed in `docs/world-map.md`.
 - `docs/systems.md`: combat resources, skills, and open design questions.
 
 ---

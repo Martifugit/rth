@@ -142,7 +142,7 @@
         "next": "edda2"
       },
       "edda2": {
-        "text": "I can brew something that makes her sleep like a stone. Bring me three rat galls and a Lammas saltfig. And tell me: did she say anything? About where she goes?",
+        "text": "I can brew something that makes her sleep like a stone. Bring me three rat galls and a Sere saltfig. And tell me: did she say anything? About where she goes?",
         "actions": [ { "type": "setQuestStage", "id": "dreamless", "count": 2 } ],
         "options": [
           { "text": "Something about a grey place, and threads.", "next": "edda_curious" },
@@ -164,7 +164,7 @@
             "next": "brew_done"
           }
         ],
-        "text": "Three rat galls and a Lammas saltfig, I said. Not a crumb less. I'm generous, not careless.",
+        "text": "Three rat galls and a Sere saltfig, I said. Not a crumb less. I'm generous, not careless.",
         "next": null
       },
       "brew_done": {

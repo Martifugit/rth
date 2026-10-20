@@ -31,8 +31,8 @@
   },
   {
     "id": "saltfig",
-    "name": "Lammas saltfig",
-    "examine": "Dried in the salt pans of Lammas. Makes you thirsty, and somehow calmer.",
+    "name": "Sere saltfig",
+    "examine": "Dried in the salt pans of Sere. Makes you thirsty, and somehow calmer.",
     "value": 9,
     "color": "#8a5a7a",
     "tags": [ "food" ],

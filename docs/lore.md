@@ -1,39 +1,43 @@
 # A Chronicle of the Basin
 
-*A first sketch of R'th's history, its people and the powers that move it. Every name is a
-proposal. The thing in the bay is deliberately left undefined.*
+*A first sketch of R'th's history, its people and the powers that move it. Names are adopted
+for now (see `docs/world-map.md`) and can still change. The thing in the bay is deliberately
+left undefined.*
 
 ---
 
 ## I. The shape of the known world
 
-The known kingdoms live in a basin. A great mountain range curves around the continent like a
-wall, sloping down to the sea at both ends, and encloses the lowlands on the north and the west.
-Beyond it lies frozen country nobody farms. In the middle of the lowlands lies a round bay. Its
+The known kingdoms live in a basin. A great mountain range, **the Pale**, curves around the
+continent like a wall, sloping down to the sea at both ends, and encloses the lowlands on the north and the west.
+Beyond it lies frozen country nobody farms: **the Rime**. In the middle of the lowlands lies a
+round bay, **the Cradle**. Its
 water rises and falls more steadily than any tide should, and out of it rises a shape that can be
 seen from anywhere in the lowlands. Nobody agrees what it is. Nobody who has tried to find out has
-come back with an answer worth keeping.
+come back with an answer worth keeping. Most people call it **the Question**. The Synod calls it
+**the Answer**.
 
-Around the bay lies the **heartland**: green river country, and the oldest seat of the faith of
-Blood at **Cruor**. Across the bay's narrow mouth to the south-east lies **Tithe**, the second seat
-of the same faith, harder, hotter and prouder. West of the heartland, in the rain shadow of the
-mountains, the dry kingdom of **Lammas** grows rich on salt and caravans and poor in water. In the
+Around the bay lies the **heartland**: green river country, **the Keeping**, ruled from the
+oldest seat of the faith of Blood at **Cruor**. Across the bay's narrow mouth to the south-east lies **Tithe**, the second seat
+of the same faith, harder, hotter and prouder, and its salt coast, **the Saltmarch**. West of the heartland, in the rain shadow of the
+mountains, the dry kingdom of **Sere** grows rich on salt and caravans and poor in water. Its capital is
+**Cistern**, built around the deepest wells in the west. In the
 far north-east the range itself gives out: eroded, broken open, and finally eaten away by the
-Scalding. That broken country of fen and scar belongs to the **occult houses**.
+Scalding. That broken country of fen and scar, **the Wrack**, belongs to the **occult houses**: Gall,
+Umber, Mordant and the fallen house of Sallow.
 
 **The range is held in three layers.** Its liveable surface (the passes, the high valleys, the
-observatories) belongs to the **Rationalists**, whose capital, **Meridian**, stands where the
-range comes down to the sea. Its caves and cart-lines belong to the **dwarves**. And beneath the
-dwarves are the depths, which belong to peoples older still, whom nobody visits on purpose.
+observatories) belongs to the **Rationalists** of **the Concord**, whose capital, **Meridian**, stands where the
+range comes down to the sea. Its caves and cart-lines belong to the **dwarves** of **Holdfast**, who trade from the hall
+of **Frostpeak Forge**. And beneath the dwarves are the depths, **the Undermost**, which belong to peoples older still, whom nobody visits on purpose.
 
 Over all of it hang **two moons**. One of them is cracked.
 
 The story begins far from all of this, in **Tolling**, a river town at the western edge of
-Cruor's lands, where the heartland starts to dry out towards Lammas. The Synod keeps a clerk and
+Cruor's lands, where the heartland starts to dry out towards Sere. The Synod keeps a clerk and
 a strongbox there and not much else. It is the kind of place the great powers forget about,
 which is why strange things can happen in it for a long time before anyone important notices.
-(Names other than Cruor, Tithe and Meridian are placeholders; see `docs/world-map.md` for the
-naming proposal.)
+(See `docs/world-map.md` for every place name.)
 
 ### Why the borders hold
 
@@ -49,8 +53,8 @@ Every power in the basin holds its land for a reason the land itself gives it.
   Behind it lie the brine pans and the Shadowless Stones, salt flats and bare rock where no army
   can live off the land. Cruor could crush it, and has tried three times. The channel and the
   glare beat it every time.
-- **Lammas** holds the west because nobody else can live there. The mountains take the rain,
-  and only Lammas knows the wells and cisterns. Armies that march in die of thirst. It also holds
+- **Sere** holds the west because nobody else can live there. The mountains take the rain,
+  and only Sere knows the wells and cisterns. Armies that march in die of thirst. It also holds
   the lowland ends of the western passes, so the caravan trade through the range runs through
   its markets and its salt reaches every table in the basin.
 - **The Rationalists** hold the range's surface because they hold the passes, and the high
@@ -125,7 +129,7 @@ did not die out. They went into the cities, under the counters of apothecaries a
 of quiet neighbours, and into the fens and sea caves the Synod cannot hold.
 
 ### The present
-An uneasy calm. The sees are allied and suspicious of each other. Lammas plays them off against the
+An uneasy calm. The sees are allied and suspicious of each other. Sere plays them off against the
 Rationalists for water and metal. The occult houses are rebuilding, each alone. Fragments still fall.
 
 And people have begun to fall asleep and not wake.
@@ -181,7 +185,7 @@ its story around, and the one thing none of them understands.
 ## VI. The twist engine: the Physician
 
 The basin has suffered a remarkable number of catastrophes for a land so small: the Schism, the
-Scalding, the plague years, the war of the three Lammas kings. In memory orbs from centuries
+Scalding, the plague years, the war of the three kings of Sere. In memory orbs from centuries
 apart, the player keeps seeing the same figure at the edge of the scene. It is someone in a plain
 coat, carrying a case of instruments, and always in the right place.
 
@@ -272,7 +276,7 @@ which of them understood the covenant, or whether either did.
 | **Corvin Sallow** | The friendly apothecary in the player's home town who sells them their first potions. | Revealed as an occultist, then as far more: a would-be house master, and one of the Physician's oldest patients. Whether he masters his own transformation or is consumed by it is one of the long tragedies. |
 | **Magister Ilse Varrow** | Chief astronomer of Meridian, forecaster of moonfalls, brilliant and cold. | Carries the secret of the coming great fall, and later the guilt of the deep bores. She turns from the player's most useful patron into the person they must decide whether to expose. |
 | **Brannoch** | Master of the cart lines: a dwarf who talks to the player like weather talks to a field. | Slowly opens up about the seals. Late in the deep story he reveals that his family has kept one of them for thirty generations, and that it is failing. |
-| **Queen Saffiya of Lammas** | A pragmatic young monarch with a thirsty kingdom. | Plays every power against every other with real skill. She becomes either the player's best ally or the most dangerous opponent in the lowlands, depending on what the player gives her. |
+| **Queen Saffiya of Sere** | A pragmatic young monarch with a thirsty kingdom. | Plays every power against every other with real skill. She becomes either the player's best ally or the most dangerous opponent in the lowlands, depending on what the player gives her. |
 | **The Breathless Pilgrim** | A Pneuma ascetic walking the basin, gentle and serene, who seems to know things. | Never changes, which turns out to be the point. Their calm is a fixed mark the player can steer by when everything else shifts. |
 | **The Physician** | A pleasant, helpful stranger met briefly, early, and soon forgotten. | Section VI. |
 

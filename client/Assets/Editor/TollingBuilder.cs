@@ -13,7 +13,7 @@ namespace Rth.Client.Editor
     /// player wakes. West bank: the town square and bell tower, the Synod treasury, Corvin's
     /// apothecary, the skinning yard, cottages and fields. North: the Backwards Mill and its
     /// millpond. South: reed beds full of fen rats. East bank: woods and Sour Hollow. South-east:
-    /// the bay shore. Once built, the scene is the source of truth; rebuilding replaces edits.
+    /// the Wash. Once built, the scene is the source of truth; rebuilding replaces edits.
     /// </summary>
     public static class TollingBuilder
     {
@@ -73,7 +73,7 @@ namespace Rth.Client.Editor
 
             WorldKit.Box("Ground", map, new Vector3(Size / 2f, -0.1f, Size / 2f), new Vector3(Size, 0.2f, Size), grass);
 
-            // ---------------------------------------------------------- water: the river, the bay, the millpond
+            // ---------------------------------------------------------- water: the river, the Wash, the millpond
             var riverLine = new List<Vector2>
             {
                 new Vector2(41.5f, 97f), new Vector2(42.5f, 84f), new Vector2(45.5f, 72f), new Vector2(44.5f, 60f),
@@ -131,7 +131,7 @@ namespace Rth.Client.Editor
             void AddRoad(params Vector2[] points) => roads.UnionWith(WorldKit.Along(points, 0.9f, Size));
             AddRoad(new Vector2(40f, 50f), new Vector2(bx0, 50f));                                     // square to bridge
             AddRoad(new Vector2(bx1, 50f), new Vector2(58f, 51f), new Vector2(66f, 58f), new Vector2(71f, 64f)); // east to Sour Hollow
-            AddRoad(new Vector2(58f, 51f), new Vector2(62f, 40f), new Vector2(72f, 28f), new Vector2(81f, 18f));              // down to the bay shore
+            AddRoad(new Vector2(58f, 51f), new Vector2(62f, 40f), new Vector2(72f, 28f), new Vector2(81f, 18f));              // down to the Wash
             AddRoad(new Vector2(35f, 56f), new Vector2(35f, 68f), new Vector2(38.5f, 72.5f));           // north to the mill
             AddRoad(new Vector2(31f, 45f), new Vector2(31f, 38f));                                       // south to the skinning yard
             AddRoad(new Vector2(29f, 50f), new Vector2(18f, 50f), new Vector2(8f, 52f));                // west to the fields
