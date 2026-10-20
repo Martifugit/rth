@@ -1,11 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Loaded by Unity: netstandard2.1, C# 9, no UnityEngine and no NuGet dependencies. -->
+  <!-- Loaded by Unity: netstandard2.1, C# 9, no UnityEngine. -->
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>9.0</LangVersion>
     <RootNamespace>Rth.Shared</RootNamespace>
     <RthCopyToUnity>true</RthCopyToUnity>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The only dependency: Unity provides the same assembly through com.unity.nuget.newtonsoft-json. -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
 
 </Project>

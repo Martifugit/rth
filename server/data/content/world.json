@@ -1,0 +1,11 @@
+{
+  "inventorySize": 28,
+  "groundItemPrivateTicks": 100,
+  "groundItemDespawnTicks": 300,
+  "starterInventory": [
+    { "item": "riverbread", "count": 6 },
+    { "item": "saltfig", "count": 2 },
+    { "item": "phlegm_tonic", "count": 1 }
+  ],
+  "starterEquipment": [ "apprentice_athame", "occultist_robe" ]
+}

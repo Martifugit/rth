@@ -1,0 +1,160 @@
+[
+  {
+    "id": "marks",
+    "name": "Marks",
+    "examine": "Synod-minted coin. Accepted almost everywhere, trusted almost nowhere.",
+    "stackable": true,
+    "value": 1,
+    "color": "#d4b85a",
+    "tags": [ "currency" ]
+  },
+
+  {
+    "id": "riverbread",
+    "name": "Riverbread",
+    "examine": "A dense loaf baked with river water. Better than it sounds.",
+    "value": 4,
+    "color": "#c9a45c",
+    "tags": [ "food" ],
+    "consumable": { "verb": "Eat", "cooldownGroup": "food", "cooldownTicks": 2, "attackDelayTicks": 2,
+      "effects": [ { "op": "healBlood", "amount": 120 } ] }
+  },
+  {
+    "id": "smoked_eel",
+    "name": "Smoked eel",
+    "examine": "Caught where the river meets the bay. Nobody asks what it was eating.",
+    "value": 12,
+    "color": "#6e5236",
+    "tags": [ "food" ],
+    "consumable": { "verb": "Eat", "cooldownGroup": "food", "cooldownTicks": 2, "attackDelayTicks": 2,
+      "effects": [ { "op": "healBlood", "amount": 220 } ] }
+  },
+  {
+    "id": "saltfig",
+    "name": "Lammas saltfig",
+    "examine": "Dried in the salt pans of Lammas. Makes you thirsty, and somehow calmer.",
+    "value": 9,
+    "color": "#8a5a7a",
+    "tags": [ "food" ],
+    "consumable": { "verb": "Eat", "cooldownGroup": "food", "cooldownTicks": 2, "attackDelayTicks": 2,
+      "effects": [ { "op": "healBlood", "amount": 60 }, { "op": "restoreBreath", "amount": 40 } ] }
+  },
+
+  {
+    "id": "phlegm_tonic",
+    "name": "Phlegm tonic",
+    "examine": "Thick, pale and faintly salty. Settles the mind for the next thing you do.",
+    "value": 20,
+    "color": "#b9d3b0",
+    "tags": [ "potion" ],
+    "consumable": { "verb": "Drink", "cooldownGroup": "potion", "cooldownTicks": 10, "attackDelayTicks": 1,
+      "effects": [ { "op": "addPhlegm", "amount": 25 } ], "leaves": "empty_vial" }
+  },
+  {
+    "id": "cooling_draught",
+    "name": "Cooling draught",
+    "examine": "Bitter as regret. Draws whichever bile you're running back towards level.",
+    "value": 20,
+    "color": "#7fa6c4",
+    "tags": [ "potion" ],
+    "consumable": { "verb": "Drink", "cooldownGroup": "potion", "cooldownTicks": 10, "attackDelayTicks": 1,
+      "effects": [ { "op": "settleBile", "amount": 40 } ], "leaves": "empty_vial" }
+  },
+  {
+    "id": "empty_vial",
+    "name": "Empty vial",
+    "examine": "Someone will want this back.",
+    "value": 1,
+    "color": "#cfd8dc",
+    "tags": [ "container" ]
+  },
+
+  {
+    "id": "apprentice_athame",
+    "name": "Apprentice's athame",
+    "examine": "A ritual knife, blunt on purpose. The point is where you put it.",
+    "value": 40,
+    "color": "#9e9e9e",
+    "tags": [ "occult" ],
+    "equipment": { "slot": "Weapon", "stats": { "abilityDamage": 10, "accuracy": 2 } }
+  },
+  {
+    "id": "occultist_robe",
+    "name": "Occultist's robe",
+    "examine": "Plain on the outside, stitched with notes on the inside.",
+    "value": 60,
+    "color": "#4a3b5c",
+    "tags": [ "occult" ],
+    "equipment": { "slot": "Body", "stats": { "ward": 3, "abilityDamage": 5 } }
+  },
+  {
+    "id": "fen_leather_hood",
+    "name": "Fen-leather hood",
+    "examine": "Smells of the fens. So will you.",
+    "value": 45,
+    "color": "#5d6b3f",
+    "equipment": { "slot": "Head", "stats": { "ward": 2 } }
+  },
+  {
+    "id": "bile_stained_gloves",
+    "name": "Bile-stained gloves",
+    "examine": "Whatever stained them, they held up.",
+    "value": 55,
+    "color": "#a39337",
+    "tags": [ "occult" ],
+    "equipment": { "slot": "Hands", "stats": { "accuracy": 3, "damageBonus": 2 } }
+  },
+  {
+    "id": "sewn_hide_boots",
+    "name": "Sewn-hide boots",
+    "examine": "Rat hide, mostly. Warm, mostly.",
+    "value": 30,
+    "color": "#7a6248",
+    "equipment": { "slot": "Feet", "stats": { "ward": 1, "maxBlood": 30 } }
+  },
+  {
+    "id": "cracked_moonstone_ring",
+    "name": "Cracked moonstone ring",
+    "examine": "A sliver of the second moon, set badly. You breathe easier wearing it.",
+    "value": 120,
+    "color": "#c7d4e8",
+    "tags": [ "moon-touched" ],
+    "equipment": { "slot": "Ring", "stats": { "maxBreath": 60 } }
+  },
+  {
+    "id": "gallstone_amulet",
+    "name": "Gallstone amulet",
+    "examine": "A polished gallstone on a cord. It makes your temper sharper and your blood thinner.",
+    "value": 150,
+    "color": "#b07f2a",
+    "tags": [ "occult" ],
+    "equipment": { "slot": "Neck", "stats": { "damageBonus": 5, "maxBlood": -50 } }
+  },
+
+  {
+    "id": "rat_pelt",
+    "name": "Rat pelt",
+    "examine": "Fen rat. Not much of it.",
+    "value": 2,
+    "color": "#6b5a43",
+    "tags": [ "hide" ]
+  },
+  {
+    "id": "mite_gland",
+    "name": "Mite gland",
+    "examine": "Still sour. The distillers will want this.",
+    "stackable": true,
+    "value": 8,
+    "color": "#c9b62f",
+    "tags": [ "reagent-base" ]
+  },
+  {
+    "id": "vitriol_bead",
+    "name": "Vitriol bead",
+    "examine": "A hard bead of the stuff. Handle with gloves.",
+    "stackable": true,
+    "value": 25,
+    "color": "#9bd14a",
+    "tags": [ "reagent-base", "vitriol" ]
+  }
+]

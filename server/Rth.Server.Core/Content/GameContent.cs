@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using Rth.Shared.Combat;
+using Rth.Shared.Items;
 using Rth.Shared.Net;
 
 namespace Rth.Server.Content
@@ -34,6 +35,8 @@ namespace Rth.Server.Content
         public int RespawnTicks = 30;
         /// <summary>Heals to full as soon as it's out of combat.</summary>
         public bool Regenerates;
+        /// <summary>Drop table rolled when it dies (drops.json), or null for none.</summary>
+        public string? DropTable;
 
         public EntityShape Shape = EntityShape.Capsule;
         public string Color = "#888888";
@@ -63,9 +66,41 @@ namespace Rth.Server.Content
         public int Wander = -1;
     }
 
+    public sealed class ItemAmount
+    {
+        public string Item = "";
+        public int Count = 1;
+    }
+
+    /// <summary>World-wide settings that aren't combat, from world.json.</summary>
+    public sealed class WorldSettings
+    {
+        public int InventorySize = 28;
+        /// <summary>Loot and dropped items are only visible to their owner for this long.</summary>
+        public int GroundItemPrivateTicks = 100;
+        /// <summary>Ground items vanish this long after appearing.</summary>
+        public int GroundItemDespawnTicks = 300;
+        public List<ItemAmount> StarterInventory = new List<ItemAmount>();
+        public List<string> StarterEquipment = new List<string>();
+    }
+
     public sealed class ContentException : Exception
     {
         public ContentException(string message) : base(message) { }
+    }
+
+    /// <summary>The raw pieces content is built from: one field per kind of content. Add a field for a new kind.</summary>
+    public sealed class ContentParts
+    {
+        public CombatRules Rules = new CombatRules();
+        public List<AbilityDef> Abilities = new List<AbilityDef>();
+        public string AutoAttack = "";
+        public List<string> ActionBar = new List<string>();
+        public List<NpcDef> Npcs = new List<NpcDef>();
+        public AssayerLines Assayer = new AssayerLines();
+        public List<ItemDef> Items = new List<ItemDef>();
+        public List<DropTableDef> DropTables = new List<DropTableDef>();
+        public WorldSettings World = new WorldSettings();
     }
 
     /// <summary>
@@ -87,27 +122,37 @@ namespace Rth.Server.Content
         public IReadOnlyList<string> ActionBar { get; private set; } = new List<string>();
         public IReadOnlyDictionary<string, NpcDef> Npcs { get; private set; } = new Dictionary<string, NpcDef>();
         public AssayerLines Assayer { get; private set; } = new AssayerLines();
+        public IReadOnlyDictionary<string, ItemDef> Items { get; private set; } = new Dictionary<string, ItemDef>();
+        public IReadOnlyDictionary<string, DropTableDef> DropTables { get; private set; } = new Dictionary<string, DropTableDef>();
+        public WorldSettings World { get; private set; } = new WorldSettings();
+
+        public ItemDef? Item(string? id) => id != null && Items.TryGetValue(id, out ItemDef? def) ? def : null;
 
         public static GameContent Load(string directory)
         {
             var combat = ReadJson<CombatFile>(directory, "combat.json");
-            var abilities = ReadJson<List<AbilityDef>>(directory, "abilities.json");
-            var npcs = ReadJson<List<NpcDef>>(directory, "npcs.json");
-            var assayer = ReadJson<AssayerLines>(directory, "assayer.json");
-            return Create(combat.Rules, abilities, combat.AutoAttack, combat.ActionBar, npcs, assayer);
+            return Create(new ContentParts
+            {
+                Rules = combat.Rules,
+                AutoAttack = combat.AutoAttack,
+                ActionBar = combat.ActionBar,
+                Abilities = ReadJson<List<AbilityDef>>(directory, "abilities.json"),
+                Npcs = ReadJson<List<NpcDef>>(directory, "npcs.json"),
+                Assayer = ReadJson<AssayerLines>(directory, "assayer.json"),
+                Items = ReadJson<List<ItemDef>>(directory, "items.json"),
+                DropTables = ReadJson<List<DropTableDef>>(directory, "drops.json"),
+                World = ReadJson<WorldSettings>(directory, "world.json"),
+            });
         }
 
-        /// <summary>Builds and validates content from parts; throws <see cref="ContentException"/> listing every problem.</summary>
-        public static GameContent Create(CombatRules rules, IEnumerable<AbilityDef> abilities, string autoAttack,
-            IEnumerable<string> actionBar, IEnumerable<NpcDef> npcs, AssayerLines? assayer = null)
+        /// <summary>Builds and validates content; throws <see cref="ContentException"/> listing every problem.</summary>
+        public static GameContent Create(ContentParts parts)
         {
             var problems = new List<string>();
-            var abilityMap = new Dictionary<string, AbilityDef>();
-            foreach (AbilityDef a in abilities)
+
+            Dictionary<string, AbilityDef> abilities = Index(parts.Abilities, a => a.Id, "ability", problems);
+            foreach (AbilityDef a in parts.Abilities)
             {
-                if (string.IsNullOrWhiteSpace(a.Id)) problems.Add("An ability has no id.");
-                else if (abilityMap.ContainsKey(a.Id)) problems.Add("Duplicate ability id '" + a.Id + "'.");
-                else abilityMap.Add(a.Id, a);
                 if (a.DamageMin < 0 || a.DamageMax < a.DamageMin) problems.Add("Ability '" + a.Id + "': damage range is invalid.");
                 if (a.Range < 1) problems.Add("Ability '" + a.Id + "': range must be at least 1.");
                 if (a.CooldownTicks < 0) problems.Add("Ability '" + a.Id + "': negative cooldown.");
@@ -115,34 +160,37 @@ namespace Rth.Server.Content
                 if (a.PhlegmCost > a.PhlegmRequired && a.Type != AbilityType.Basic) problems.Add("Ability '" + a.Id + "': costs more phlegm than it requires.");
             }
 
-            if (!abilityMap.TryGetValue(autoAttack ?? "", out AbilityDef? auto)) problems.Add("autoAttack '" + autoAttack + "' is not an ability.");
-            else if (auto.Type != AbilityType.Auto) problems.Add("autoAttack '" + autoAttack + "' must have type Auto.");
+            if (!abilities.TryGetValue(parts.AutoAttack ?? "", out AbilityDef? auto)) problems.Add("autoAttack '" + parts.AutoAttack + "' is not an ability.");
+            else if (auto.Type != AbilityType.Auto) problems.Add("autoAttack '" + parts.AutoAttack + "' must have type Auto.");
 
-            var bar = actionBar.ToList();
-            foreach (string id in bar)
+            foreach (string id in parts.ActionBar)
             {
-                if (!abilityMap.TryGetValue(id, out AbilityDef? a)) problems.Add("Action bar ability '" + id + "' doesn't exist.");
+                if (!abilities.TryGetValue(id, out AbilityDef? a)) problems.Add("Action bar ability '" + id + "' doesn't exist.");
                 else if (a.Type == AbilityType.Auto) problems.Add("Action bar ability '" + id + "' is an auto-attack.");
             }
 
-            var npcMap = new Dictionary<string, NpcDef>();
-            foreach (NpcDef n in npcs)
+            Dictionary<string, ItemDef> items = Index(parts.Items, i => i.Id, "item", problems);
+            foreach (ItemDef item in parts.Items) ValidateItem(item, items, problems);
+
+            Dictionary<string, DropTableDef> tables = Index(parts.DropTables, t => t.Id, "drop table", problems);
+            foreach (DropTableDef table in parts.DropTables) ValidateTable(table, items, tables, problems);
+
+            Dictionary<string, NpcDef> npcs = Index(parts.Npcs, n => n.Id, "NPC", problems);
+            foreach (NpcDef n in parts.Npcs)
             {
-                if (string.IsNullOrWhiteSpace(n.Id)) problems.Add("An NPC has no id.");
-                else if (npcMap.ContainsKey(n.Id)) problems.Add("Duplicate NPC id '" + n.Id + "'.");
-                else npcMap.Add(n.Id, n);
                 if (n.Blood <= 0) problems.Add("NPC '" + n.Id + "': blood must be positive.");
                 if (n.AttackRange < 1 || n.AttackTicks < 1) problems.Add("NPC '" + n.Id + "': attackRange and attackTicks must be at least 1.");
-                try
-                {
-                    _ = n.ColorRgb;
-                }
-                catch (FormatException)
-                {
-                    problems.Add("NPC '" + n.Id + "': color '" + n.Color + "' isn't #RRGGBB.");
-                }
+                if (n.DropTable != null && !tables.ContainsKey(n.DropTable)) problems.Add("NPC '" + n.Id + "': drop table '" + n.DropTable + "' doesn't exist.");
+                if (!IsColor(n.Color)) problems.Add("NPC '" + n.Id + "': color '" + n.Color + "' isn't #RRGGBB.");
             }
 
+            foreach (ItemAmount start in parts.World.StarterInventory)
+                if (!items.ContainsKey(start.Item)) problems.Add("Starter item '" + start.Item + "' doesn't exist.");
+            foreach (string id in parts.World.StarterEquipment)
+                if (!items.TryGetValue(id, out ItemDef? e) || e.Equipment == null) problems.Add("Starter equipment '" + id + "' isn't an equippable item.");
+            if (parts.World.InventorySize < 1 || parts.World.InventorySize > 255) problems.Add("World: inventorySize must be 1-255.");
+
+            CombatRules rules = parts.Rules;
             if (rules.BilePassiveThreshold <= 0 || rules.BileExtreme <= rules.BilePassiveThreshold || rules.BileLimit < rules.BileExtreme)
                 problems.Add("Rules: need 0 < bilePassiveThreshold < bileExtreme <= bileLimit.");
 
@@ -151,13 +199,85 @@ namespace Rth.Server.Content
             return new GameContent
             {
                 Rules = rules,
-                Abilities = abilityMap,
+                Abilities = abilities,
                 AutoAttack = auto!,
-                ActionBar = bar,
-                Npcs = npcMap,
-                Assayer = assayer ?? new AssayerLines(),
+                ActionBar = parts.ActionBar.ToList(),
+                Npcs = npcs,
+                Assayer = parts.Assayer ?? new AssayerLines(),
+                Items = items,
+                DropTables = tables,
+                World = parts.World,
             };
         }
+
+        private static readonly HashSet<string> KnownEffectOps = new HashSet<string>
+        {
+            EffectOp.HealBlood, EffectOp.HealBloodPercent, EffectOp.RestoreBreath, EffectOp.AddPhlegm,
+            EffectOp.ShiftBile, EffectOp.SettleBile, EffectOp.ApplyEffect,
+        };
+
+        private static void ValidateItem(ItemDef item, Dictionary<string, ItemDef> items, List<string> problems)
+        {
+            string where = "Item '" + item.Id + "': ";
+            if (string.IsNullOrWhiteSpace(item.Name)) problems.Add(where + "has no name.");
+            if (!IsColor(item.Color)) problems.Add(where + "color '" + item.Color + "' isn't #RRGGBB.");
+            if (item.Equipment != null)
+            {
+                foreach (string stat in item.Equipment.Stats.Keys)
+                    if (!StatIds.IsKnown(stat)) problems.Add(where + "unknown stat '" + stat + "' (known: " + string.Join(", ", StatIds.All) + ").");
+                if (item.Stackable) problems.Add(where + "equipment can't be stackable (yet).");
+            }
+            if (item.Consumable != null)
+            {
+                foreach (EffectOp op in item.Consumable.Effects)
+                    if (!KnownEffectOps.Contains(op.Op)) problems.Add(where + "unknown effect op '" + op.Op + "'.");
+                if (item.Consumable.Leaves != null && !items.ContainsKey(item.Consumable.Leaves))
+                    problems.Add(where + "leaves '" + item.Consumable.Leaves + "', which doesn't exist.");
+            }
+        }
+
+        private static void ValidateTable(DropTableDef table, Dictionary<string, ItemDef> items, Dictionary<string, DropTableDef> tables, List<string> problems)
+        {
+            string where = "Drop table '" + table.Id + "': ";
+            foreach (DropEntry e in table.Always.Concat(table.Entries))
+            {
+                if ((e.Item == null) == (e.Table == null)) problems.Add(where + "each entry needs exactly one of item or table.");
+                if (e.Item != null && !items.ContainsKey(e.Item)) problems.Add(where + "item '" + e.Item + "' doesn't exist.");
+                if (e.Table != null && !tables.ContainsKey(e.Table)) problems.Add(where + "table '" + e.Table + "' doesn't exist.");
+                if (e.Min < 0 || e.Max < e.Min) problems.Add(where + "bad count range " + e.Min + "-" + e.Max + ".");
+                if (e.Weight < 0) problems.Add(where + "negative weight.");
+            }
+            if (table.Rolls < 0 || table.NothingWeight < 0) problems.Add(where + "rolls and nothingWeight can't be negative.");
+            if (ReachesItself(table.Id, table.Id, tables, new HashSet<string>())) problems.Add(where + "refers back to itself.");
+        }
+
+        private static bool ReachesItself(string start, string current, Dictionary<string, DropTableDef> tables, HashSet<string> visited)
+        {
+            if (!visited.Add(current) || !tables.TryGetValue(current, out DropTableDef? table)) return false;
+            foreach (DropEntry e in table.Always.Concat(table.Entries))
+            {
+                if (e.Table == null) continue;
+                if (e.Table == start || ReachesItself(start, e.Table, tables, visited)) return true;
+            }
+            return false;
+        }
+
+        private static Dictionary<string, T> Index<T>(IEnumerable<T> things, Func<T, string> id, string kind, List<string> problems)
+        {
+            var map = new Dictionary<string, T>();
+            foreach (T thing in things)
+            {
+                string key = id(thing);
+                if (string.IsNullOrWhiteSpace(key)) problems.Add("A" + (kind[0] == 'i' || kind[0] == 'a' ? "n " : " ") + kind + " has no id.");
+                else if (map.ContainsKey(key)) problems.Add("Duplicate " + kind + " id '" + key + "'.");
+                else map.Add(key, thing);
+            }
+            return map;
+        }
+
+        private static bool IsColor(string color) =>
+            color != null && color.Length == 7 && color[0] == '#' &&
+            int.TryParse(color.Substring(1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out _);
 
         public static List<NpcSpawn> LoadSpawns(string path) =>
             File.Exists(path) ? JsonConvert.DeserializeObject<List<NpcSpawn>>(File.ReadAllText(path)) ?? new List<NpcSpawn>() : new List<NpcSpawn>();
@@ -179,14 +299,15 @@ namespace Rth.Server.Content
             }
         }
 
-        public ContentInfoMessage ToMessage() => new ContentInfoMessage
+        public ContentInfoMessage ToMessage() => ContentInfoMessage.From(new ClientContent
         {
             Abilities = Abilities.Values.ToList(),
             ActionBar = ActionBar.ToList(),
+            Items = Items.Values.ToList(),
             BileLimit = Rules.BileLimit,
             BilePassiveThreshold = Rules.BilePassiveThreshold,
             BileExtreme = Rules.BileExtreme,
             MaxPhlegm = Rules.MaxPhlegm,
-        };
+        });
     }
 }

@@ -60,11 +60,18 @@ namespace Rth.Server.Game
             foreach (GameSystem system in systems) AddSystem(system);
         }
 
+        /// <summary>
+        /// The systems a normal server runs. Order matters: systems run in this order within each
+        /// phase, and a system may use any system listed before it while attaching.
+        /// </summary>
         public static IEnumerable<GameSystem> StandardSystems(IEnumerable<NpcSpawn>? spawns) => new GameSystem[]
         {
+            new ItemSystem(),
             new CombatSystem(),
             new DeathSystem(),
             new NpcSystem(spawns ?? Enumerable.Empty<NpcSpawn>()),
+            new GroundItemSystem(),
+            new LootSystem(),
         };
 
         public ServerConfig Config => _config;
@@ -436,6 +443,11 @@ namespace Rth.Server.Game
 
                 viewer.Connection.Send(update);
                 foreach (GameSystem system in _systems) system.SendState(viewer);
+                if (viewer.StatsChanged)
+                {
+                    viewer.StatsChanged = false;
+                    viewer.Connection.Send(new StatsMessage { Stats = new Dictionary<string, int>(viewer.Stats.Values) });
+                }
             }
         }
 

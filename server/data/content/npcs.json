@@ -13,6 +13,7 @@
     "wanderRadius": 4,
     "leashRadius": 10,
     "respawnTicks": 20,
+    "dropTable": "fen_rat",
     "shape": "Box",
     "color": "#6b5a43",
     "scale": 0.6
@@ -32,6 +33,7 @@
     "wanderRadius": 2,
     "leashRadius": 10,
     "respawnTicks": 30,
+    "dropTable": "vitriol_mite",
     "shape": "Sphere",
     "color": "#c9b62f",
     "scale": 0.7

@@ -75,5 +75,18 @@ namespace Rth.Server.Game
 
         /// <summary>How this entity looks to a client seeing it for the first time.</summary>
         public abstract EntityAdded Describe();
+
+        private readonly Dictionary<Type, object> _components = new Dictionary<Type, object>();
+
+        /// <summary>
+        /// Per-entity state owned by a system (a player's items, later their skills or quest flags),
+        /// created on first use. Lets systems attach data without adding fields to Entity.
+        /// </summary>
+        public T Component<T>() where T : class, new()
+        {
+            if (!_components.TryGetValue(typeof(T), out object? component))
+                _components[typeof(T)] = component = new T();
+            return (T)component;
+        }
     }
 }

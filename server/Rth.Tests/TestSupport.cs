@@ -3,6 +3,7 @@ using Rth.Server;
 using Rth.Server.Content;
 using Rth.Server.Game;
 using Rth.Shared.Combat;
+using Rth.Shared.Items;
 using Rth.Server.Net;
 using Rth.Server.Persistence;
 using Rth.Server.Timing;
@@ -116,7 +117,7 @@ internal static class TestContent
     public static List<NpcDef> Npcs() => new()
     {
         new NpcDef { Id = "dummy", Name = "Dummy", Blood = 100000, Attacks = false, Regenerates = true, WanderRadius = 0, Evasion = 0, Shape = EntityShape.Cylinder },
-        new NpcDef { Id = "rat", Name = "Rat", Blood = 300, Style = CombatStyle.Melee, AttackRange = 1, AttackTicks = 4, MaxHit = 10, Accuracy = 1.0, Evasion = 0, WanderRadius = 0, LeashRadius = 10, RespawnTicks = 5 },
+        new NpcDef { Id = "rat", Name = "Rat", Blood = 300, Style = CombatStyle.Melee, AttackRange = 1, AttackTicks = 4, MaxHit = 10, Accuracy = 1.0, Evasion = 0, WanderRadius = 0, LeashRadius = 10, RespawnTicks = 5, DropTable = "rat" },
         new NpcDef { Id = "brute", Name = "Brute", Blood = 5000, Style = CombatStyle.Melee, AttackRange = 1, AttackTicks = 2, MaxHit = 2000, Accuracy = 1.0, Evasion = 0, WanderRadius = 0 },
         new NpcDef { Id = "mite", Name = "Mite", Blood = 300, Style = CombatStyle.Occult, AttackRange = 5, AttackTicks = 5, MaxHit = 50, Accuracy = 1.0, Evasion = 0, Aggressive = true, AggroRadius = 4, WanderRadius = 0 },
     };
@@ -130,9 +131,40 @@ internal static class TestContent
         Frequent = { "again {deaths}" },
     };
 
+    public static List<ItemDef> Items() => new()
+    {
+        new ItemDef { Id = "coins", Name = "Coins", Stackable = true },
+        new ItemDef { Id = "bread", Name = "Bread", Examine = "Bready.", Consumable = new ConsumableDef { Verb = "Eat", CooldownTicks = 2, AttackDelayTicks = 2, Effects = { new EffectOp { Op = EffectOp.HealBlood, Amount = 100 } } } },
+        new ItemDef { Id = "tonic", Name = "Tonic", Consumable = new ConsumableDef { Verb = "Drink", CooldownGroup = "potion", CooldownTicks = 10, AttackDelayTicks = 1, Leaves = "vial", Effects = { new EffectOp { Op = EffectOp.AddPhlegm, Amount = 30 }, new EffectOp { Op = EffectOp.ShiftBile, Amount = -20 } } } },
+        new ItemDef { Id = "vial", Name = "Vial" },
+        new ItemDef { Id = "sword", Name = "Sword", Equipment = new EquipmentDef { Slot = EquipSlot.Weapon, Stats = { [StatIds.AbilityDamage] = 50 } } },
+        new ItemDef { Id = "club", Name = "Club", Equipment = new EquipmentDef { Slot = EquipSlot.Weapon, Stats = { [StatIds.AbilityDamage] = 20 } } },
+        new ItemDef { Id = "hat", Name = "Hat", Equipment = new EquipmentDef { Slot = EquipSlot.Head, Stats = { [StatIds.Ward] = 10, [StatIds.MaxBlood] = 100 } } },
+        new ItemDef { Id = "gem", Name = "Gem" },
+    };
+
+    public static List<DropTableDef> DropTables() => new()
+    {
+        new DropTableDef { Id = "rat", Always = { new DropEntry { Item = "coins", Min = 5, Max = 5 } } },
+        new DropTableDef { Id = "gems", Rolls = 1, Entries = { new DropEntry { Item = "gem" } } },
+        new DropTableDef { Id = "nested", Always = { new DropEntry { Table = "gems" } }, Rolls = 3, Entries = { new DropEntry { Item = "coins", Min = 1, Max = 3 } }, NothingWeight = 1 },
+    };
+
+    public static ContentParts Parts(CombatRules? rules = null, List<AbilityDef>? abilities = null) => new()
+    {
+        Rules = rules ?? Rules(),
+        Abilities = abilities ?? Abilities(),
+        AutoAttack = "zap",
+        ActionBar = new List<string> { "spark", "draught", "still", "flare", "shroud", "ult", "poke" },
+        Npcs = Npcs(),
+        Assayer = Assayer(),
+        Items = Items(),
+        DropTables = DropTables(),
+        World = new WorldSettings { InventorySize = 28, GroundItemPrivateTicks = 10, GroundItemDespawnTicks = 30 },
+    };
+
     public static GameContent Create(CombatRules? rules = null, List<AbilityDef>? abilities = null) =>
-        GameContent.Create(rules ?? Rules(), abilities ?? Abilities(), "zap",
-            new[] { "spark", "draught", "still", "flare", "shroud", "ult", "poke" }, Npcs(), Assayer());
+        GameContent.Create(Parts(rules, abilities));
 }
 
 /// <summary>A world with a fake store and helpers for logging in fake clients.</summary>

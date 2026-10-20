@@ -1,6 +1,7 @@
 using Rth.Server.Content;
 using Rth.Server.Persistence;
 using Rth.Shared.Combat;
+using Rth.Shared.Items;
 using Rth.Shared.Net;
 using Rth.Shared.World;
 
@@ -31,14 +32,27 @@ public class ContentAndRulesTests
     [Fact]
     public void ValidationReportsEveryProblem()
     {
-        List<AbilityDef> abilities = TestContent.Abilities();
-        abilities.Add(new AbilityDef { Id = "spark", Name = "Dupe", DamageMin = 5, DamageMax = 1 });
-        var e = Assert.Throws<ContentException>(() =>
-            GameContent.Create(TestContent.Rules(), abilities, "spark", new[] { "missing" }, TestContent.Npcs()));
+        ContentParts parts = TestContent.Parts();
+        parts.Abilities.Add(new AbilityDef { Id = "spark", Name = "Dupe", DamageMin = 5, DamageMax = 1 });
+        parts.AutoAttack = "spark";
+        parts.ActionBar = new List<string> { "missing" };
+        parts.Items.Add(new ItemDef { Id = "bad", Name = "Bad", Equipment = new EquipmentDef { Stats = { ["strength"] = 5 } } });
+        parts.Items.Add(new ItemDef { Id = "pot", Name = "Pot", Consumable = new ConsumableDef { Leaves = "nothing", Effects = { new EffectOp { Op = "teleport" } } } });
+        parts.DropTables.Add(new DropTableDef { Id = "loop", Entries = { new DropEntry { Table = "loop" } } });
+        parts.DropTables.Add(new DropTableDef { Id = "ghost", Entries = { new DropEntry { Item = "unobtainium" } } });
+        parts.World.StarterEquipment.Add("gem");
+
+        var e = Assert.Throws<ContentException>(() => GameContent.Create(parts));
         Assert.Contains("Duplicate ability id 'spark'", e.Message);
         Assert.Contains("damage range is invalid", e.Message);
         Assert.Contains("must have type Auto", e.Message);
         Assert.Contains("'missing' doesn't exist", e.Message);
+        Assert.Contains("unknown stat 'strength'", e.Message);
+        Assert.Contains("unknown effect op 'teleport'", e.Message);
+        Assert.Contains("leaves 'nothing'", e.Message);
+        Assert.Contains("'loop': refers back to itself", e.Message);
+        Assert.Contains("item 'unobtainium' doesn't exist", e.Message);
+        Assert.Contains("Starter equipment 'gem'", e.Message);
     }
 
     [Theory]
@@ -146,6 +160,12 @@ public class ContentAndRulesTests
             },
             TestContent.Create().ToMessage(),
             new GameTextMessage { Kind = TextKind.Assayer, Text = "hello" },
+            new ItemActionMessage { Container = ContainerKind.Equipment, Slot = 3, ActionId = "unequip" },
+            new MoveItemMessage { From = 2, To = 27 },
+            new PickupMessage { GroundItemId = 99 },
+            new ContainerMessage { Kind = ContainerKind.Inventory, Slots = { new ItemSlot { ItemId = "bread", Count = 1 }, new ItemSlot { ItemId = "", Count = 0 } } },
+            new StatsMessage { Stats = { ["ward"] = 5, ["abilityDamage"] = 110 } },
+            new WorldUpdateMessage { Tick = 1, GroundAdded = { new GroundItemAdded { Id = 4, ItemId = "coins", Count = 7, Position = new TileCoord(3, 4) } }, GroundRemoved = { 2 } },
         };
 
         foreach (Message original in messages)

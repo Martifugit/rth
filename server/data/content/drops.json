@@ -1,0 +1,38 @@
+[
+  {
+    "id": "fen_rat",
+    "always": [ { "item": "rat_pelt" } ],
+    "rolls": 1,
+    "entries": [
+      { "item": "marks", "min": 2, "max": 12, "weight": 40 },
+      { "item": "riverbread", "weight": 10 },
+      { "item": "sewn_hide_boots", "weight": 2 }
+    ],
+    "nothingWeight": 48
+  },
+  {
+    "id": "vitriol_mite",
+    "always": [ { "item": "mite_gland", "min": 1, "max": 2 } ],
+    "rolls": 2,
+    "entries": [
+      { "item": "marks", "min": 5, "max": 25, "weight": 40 },
+      { "item": "vitriol_bead", "weight": 15 },
+      { "item": "phlegm_tonic", "weight": 8 },
+      { "item": "cooling_draught", "weight": 8 },
+      { "item": "smoked_eel", "weight": 6 },
+      { "table": "occult_trinkets", "weight": 4 }
+    ],
+    "nothingWeight": 19
+  },
+  {
+    "id": "occult_trinkets",
+    "rolls": 1,
+    "entries": [
+      { "item": "fen_leather_hood", "weight": 3 },
+      { "item": "bile_stained_gloves", "weight": 3 },
+      { "item": "occultist_robe", "weight": 2 },
+      { "item": "cracked_moonstone_ring", "weight": 1 },
+      { "item": "gallstone_amulet", "weight": 1 }
+    ]
+  }
+]

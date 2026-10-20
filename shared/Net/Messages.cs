@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.IO;
+using Newtonsoft.Json;
 using Rth.Shared.Combat;
+using Rth.Shared.Items;
 using Rth.Shared.World;
 
 namespace Rth.Shared.Net
@@ -8,7 +10,7 @@ namespace Rth.Shared.Net
     public static class Protocol
     {
         /// <summary>Bump whenever a message layout changes, so mismatched builds are refused at login.</summary>
-        public const int Version = 2;
+        public const int Version = 3;
         public const int DefaultPort = 43600;
         /// <summary>Sanity limits on a single frame's length, in bytes.</summary>
         public const int MaxClientFrame = 4 * 1024;
@@ -24,6 +26,9 @@ namespace Rth.Shared.Net
         Attack = 4,
         UseAbility = 5,
         SetDeflect = 6,
+        ItemAction = 7,
+        MoveItem = 8,
+        Pickup = 9,
 
         // Server to client: state.
         LoginOk = 100,
@@ -32,6 +37,8 @@ namespace Rth.Shared.Net
         PlayerState = 103,
         ContentInfo = 104,
         GameText = 105,
+        Container = 106,
+        Stats = 107,
     }
 
     public abstract class Message
@@ -229,12 +236,14 @@ namespace Rth.Shared.Net
         public List<HitEvent> Hits = new List<HitEvent>();
         public List<ActionEvent> Actions = new List<ActionEvent>();
         public List<int> Deaths = new List<int>();
+        public List<GroundItemAdded> GroundAdded = new List<GroundItemAdded>();
+        public List<int> GroundRemoved = new List<int>();
 
         public override MessageType Type => MessageType.WorldUpdate;
 
         public bool IsEmpty =>
             Added.Count == 0 && Moved.Count == 0 && Removed.Count == 0 && Health.Count == 0 &&
-            Hits.Count == 0 && Actions.Count == 0 && Deaths.Count == 0;
+            Hits.Count == 0 && Actions.Count == 0 && Deaths.Count == 0 && GroundAdded.Count == 0 && GroundRemoved.Count == 0;
 
         internal override void WriteBody(BinaryWriter w)
         {
@@ -286,6 +295,17 @@ namespace Rth.Shared.Net
             }
             w.Write((ushort)Deaths.Count);
             foreach (int id in Deaths) w.Write(id);
+            w.Write((ushort)GroundAdded.Count);
+            foreach (GroundItemAdded g in GroundAdded)
+            {
+                w.Write(g.Id);
+                w.Write(g.ItemId);
+                w.Write(g.Count);
+                w.Write((byte)g.Plane);
+                WriteTile(w, g.Position);
+            }
+            w.Write((ushort)GroundRemoved.Count);
+            foreach (int id in GroundRemoved) w.Write(id);
         }
 
         internal static WorldUpdateMessage Read(BinaryReader r)
@@ -327,6 +347,11 @@ namespace Rth.Shared.Net
                 msg.Actions.Add(new ActionEvent { SourceId = r.ReadInt32(), TargetId = r.ReadInt32(), AbilityId = r.ReadString(), Pole = r.ReadSByte() });
             count = r.ReadUInt16();
             for (int i = 0; i < count; i++) msg.Deaths.Add(r.ReadInt32());
+            count = r.ReadUInt16();
+            for (int i = 0; i < count; i++)
+                msg.GroundAdded.Add(new GroundItemAdded { Id = r.ReadInt32(), ItemId = r.ReadString(), Count = r.ReadInt32(), Plane = r.ReadByte(), Position = ReadTile(r) });
+            count = r.ReadUInt16();
+            for (int i = 0; i < count; i++) msg.GroundRemoved.Add(r.ReadInt32());
             return msg;
         }
 
@@ -427,95 +452,164 @@ namespace Rth.Shared.Net
         }
     }
 
-    /// <summary>The content the client needs to draw its UI: abilities and the bile thresholds. Sent at login and on hot-reload.</summary>
-    public sealed class ContentInfoMessage : Message
+    /// <summary>
+    /// Everything the client needs to know about content to draw its UI: abilities, items, the
+    /// action bar and the bile thresholds. Sent at login and after every hot-reload.
+    /// </summary>
+    public sealed class ClientContent
     {
         public List<AbilityDef> Abilities = new List<AbilityDef>();
         /// <summary>Ids of the abilities on the player's action bar, in slot order.</summary>
         public List<string> ActionBar = new List<string>();
+        public List<ItemDef> Items = new List<ItemDef>();
         public int BileLimit;
         public int BilePassiveThreshold;
         public int BileExtreme;
         public int MaxPhlegm;
+    }
+
+    /// <summary>
+    /// Carries <see cref="ClientContent"/> as JSON: it's sent rarely, and this way new content
+    /// fields and item components reach the client without any codec changes.
+    /// </summary>
+    public sealed class ContentInfoMessage : Message
+    {
+        private static readonly JsonSerializerSettings Settings = new JsonSerializerSettings
+        {
+            NullValueHandling = NullValueHandling.Ignore,
+        };
+
+        public string Json = "{}";
 
         public override MessageType Type => MessageType.ContentInfo;
 
+        public static ContentInfoMessage From(ClientContent content) =>
+            new ContentInfoMessage { Json = JsonConvert.SerializeObject(content, Settings) };
+
+        public ClientContent Parse() => JsonConvert.DeserializeObject<ClientContent>(Json, Settings) ?? new ClientContent();
+
+        internal override void WriteBody(BinaryWriter w) => w.Write(Json);
+
+        internal static ContentInfoMessage Read(BinaryReader r) => new ContentInfoMessage { Json = r.ReadString() };
+    }
+
+    public struct GroundItemAdded
+    {
+        public int Id;
+        public string ItemId;
+        public int Count;
+        public int Plane;
+        public TileCoord Position;
+    }
+
+    public struct ItemSlot
+    {
+        /// <summary>Empty string for an empty slot.</summary>
+        public string ItemId;
+        public int Count;
+
+        public bool IsEmpty => string.IsNullOrEmpty(ItemId) || Count <= 0;
+    }
+
+    /// <summary>The full contents of one of the player's item containers. Sent whenever it changes.</summary>
+    public sealed class ContainerMessage : Message
+    {
+        public ContainerKind Kind;
+        public List<ItemSlot> Slots = new List<ItemSlot>();
+
+        public override MessageType Type => MessageType.Container;
+
         internal override void WriteBody(BinaryWriter w)
         {
-            w.Write(BileLimit);
-            w.Write(BilePassiveThreshold);
-            w.Write(BileExtreme);
-            w.Write(MaxPhlegm);
-            w.Write((byte)ActionBar.Count);
-            foreach (string id in ActionBar) w.Write(id);
-            w.Write((ushort)Abilities.Count);
-            foreach (AbilityDef a in Abilities)
+            w.Write((byte)Kind);
+            w.Write((ushort)Slots.Count);
+            foreach (ItemSlot s in Slots)
             {
-                w.Write(a.Id);
-                w.Write(a.Name);
-                w.Write(a.Description);
-                w.Write((byte)a.Type);
-                w.Write((byte)a.Style);
-                w.Write(a.CooldownTicks);
-                w.Write(a.Range);
-                w.Write(a.DamageMin);
-                w.Write(a.DamageMax);
-                w.Write(a.PhlegmGain);
-                w.Write(a.PhlegmRequired);
-                w.Write(a.PhlegmCost);
-                w.Write(a.BileShift);
-                w.Write(a.BileTowardZero);
-                w.Write(a.BileMin);
-                w.Write(a.BileMax);
-                w.Write(a.HealPercentOfDamage);
-                w.Write(a.HealPercentOfMaxBlood);
-                w.Write((byte)a.Effect);
-                w.Write(a.EffectMagnitude);
-                w.Write(a.EffectTicks);
+                w.Write(s.ItemId ?? "");
+                w.Write(s.Count);
             }
         }
 
-        internal static ContentInfoMessage Read(BinaryReader r)
+        internal static ContainerMessage Read(BinaryReader r)
         {
-            var m = new ContentInfoMessage
-            {
-                BileLimit = r.ReadInt32(),
-                BilePassiveThreshold = r.ReadInt32(),
-                BileExtreme = r.ReadInt32(),
-                MaxPhlegm = r.ReadInt32(),
-            };
-            int count = r.ReadByte();
-            for (int i = 0; i < count; i++) m.ActionBar.Add(r.ReadString());
-            count = r.ReadUInt16();
-            for (int i = 0; i < count; i++)
-            {
-                m.Abilities.Add(new AbilityDef
-                {
-                    Id = r.ReadString(),
-                    Name = r.ReadString(),
-                    Description = r.ReadString(),
-                    Type = (AbilityType)r.ReadByte(),
-                    Style = (CombatStyle)r.ReadByte(),
-                    CooldownTicks = r.ReadInt32(),
-                    Range = r.ReadInt32(),
-                    DamageMin = r.ReadInt32(),
-                    DamageMax = r.ReadInt32(),
-                    PhlegmGain = r.ReadInt32(),
-                    PhlegmRequired = r.ReadInt32(),
-                    PhlegmCost = r.ReadInt32(),
-                    BileShift = r.ReadInt32(),
-                    BileTowardZero = r.ReadInt32(),
-                    BileMin = r.ReadInt32(),
-                    BileMax = r.ReadInt32(),
-                    HealPercentOfDamage = r.ReadInt32(),
-                    HealPercentOfMaxBlood = r.ReadInt32(),
-                    Effect = (EffectType)r.ReadByte(),
-                    EffectMagnitude = r.ReadInt32(),
-                    EffectTicks = r.ReadInt32(),
-                });
-            }
+            var m = new ContainerMessage { Kind = (ContainerKind)r.ReadByte() };
+            int count = r.ReadUInt16();
+            for (int i = 0; i < count; i++) m.Slots.Add(new ItemSlot { ItemId = r.ReadString(), Count = r.ReadInt32() });
             return m;
         }
+    }
+
+    /// <summary>The player's stat totals (see <see cref="StatIds"/>). Sent whenever they change.</summary>
+    public sealed class StatsMessage : Message
+    {
+        public Dictionary<string, int> Stats = new Dictionary<string, int>();
+
+        public override MessageType Type => MessageType.Stats;
+
+        internal override void WriteBody(BinaryWriter w)
+        {
+            w.Write((byte)Stats.Count);
+            foreach (KeyValuePair<string, int> s in Stats)
+            {
+                w.Write(s.Key);
+                w.Write(s.Value);
+            }
+        }
+
+        internal static StatsMessage Read(BinaryReader r)
+        {
+            var m = new StatsMessage();
+            int count = r.ReadByte();
+            for (int i = 0; i < count; i++) m.Stats[r.ReadString()] = r.ReadInt32();
+            return m;
+        }
+    }
+
+    /// <summary>Use one of an item's actions (see <see cref="ItemActions"/>).</summary>
+    public sealed class ItemActionMessage : Message
+    {
+        public ContainerKind Container;
+        public int Slot;
+        public string ActionId = "";
+
+        public override MessageType Type => MessageType.ItemAction;
+
+        internal override void WriteBody(BinaryWriter w)
+        {
+            w.Write((byte)Container);
+            w.Write((byte)Slot);
+            w.Write(ActionId);
+        }
+
+        internal static ItemActionMessage Read(BinaryReader r) =>
+            new ItemActionMessage { Container = (ContainerKind)r.ReadByte(), Slot = r.ReadByte(), ActionId = r.ReadString() };
+    }
+
+    /// <summary>Rearrange the inventory: swap two slots.</summary>
+    public sealed class MoveItemMessage : Message
+    {
+        public int From;
+        public int To;
+
+        public override MessageType Type => MessageType.MoveItem;
+
+        internal override void WriteBody(BinaryWriter w)
+        {
+            w.Write((byte)From);
+            w.Write((byte)To);
+        }
+
+        internal static MoveItemMessage Read(BinaryReader r) => new MoveItemMessage { From = r.ReadByte(), To = r.ReadByte() };
+    }
+
+    /// <summary>Walk to a ground item and pick it up.</summary>
+    public sealed class PickupMessage : Message
+    {
+        public int GroundItemId;
+
+        public override MessageType Type => MessageType.Pickup;
+        internal override void WriteBody(BinaryWriter w) => w.Write(GroundItemId);
+        internal static PickupMessage Read(BinaryReader r) => new PickupMessage { GroundItemId = r.ReadInt32() };
     }
 
     public enum TextKind : byte
