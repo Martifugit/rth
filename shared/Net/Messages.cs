@@ -11,7 +11,7 @@ namespace Rth.Shared.Net
     public static class Protocol
     {
         /// <summary>Bump whenever a message layout changes, so mismatched builds are refused at login.</summary>
-        public const int Version = 7;
+        public const int Version = 8;
         public const int DefaultPort = 43600;
         /// <summary>Sanity limits on a single frame's length, in bytes.</summary>
         public const int MaxClientFrame = 4 * 1024;
@@ -38,6 +38,7 @@ namespace Rth.Shared.Net
         BankWithdraw = 15,
         ShopBuy = 16,
         ShopSell = 17,
+        Chat = 18,
 
         // Server to client: state.
         LoginOk = 100,
@@ -55,6 +56,7 @@ namespace Rth.Shared.Net
         Task = 112,
         Quests = 113,
         Regions = 114,
+        ChatLine = 115,
     }
 
     public abstract class Message
@@ -709,6 +711,53 @@ namespace Rth.Shared.Net
         Warning = 1,
         /// <summary>The Assayer speaks (on death).</summary>
         Assayer = 2,
+    }
+
+    /// <summary>Who a chat line is for. Public is everyone nearby; more channels come with friends and groups.</summary>
+    public enum ChatChannel : byte
+    {
+        Public = 0,
+    }
+
+    /// <summary>The player says something.</summary>
+    public sealed class ChatMessage : Message
+    {
+        public const int MaxLength = 120;
+
+        public ChatChannel Channel;
+        public string Text = "";
+
+        public override MessageType Type => MessageType.Chat;
+
+        internal override void WriteBody(BinaryWriter w)
+        {
+            w.Write((byte)Channel);
+            w.Write(Text);
+        }
+
+        internal static ChatMessage Read(BinaryReader r) => new ChatMessage { Channel = (ChatChannel)r.ReadByte(), Text = r.ReadString() };
+    }
+
+    /// <summary>Someone said something. Public lines also appear over the speaker's head.</summary>
+    public sealed class ChatLineMessage : Message
+    {
+        public ChatChannel Channel;
+        public int EntityId;
+        public string From = "";
+        public string Text = "";
+
+        public override MessageType Type => MessageType.ChatLine;
+
+        internal override void WriteBody(BinaryWriter w)
+        {
+            w.Write((byte)Channel);
+            w.Write(EntityId);
+            w.Write(From);
+            w.Write(Text);
+        }
+
+        internal static ChatLineMessage Read(BinaryReader r) =>
+            new ChatLineMessage { Channel = (ChatChannel)r.ReadByte(), EntityId = r.ReadInt32(), From = r.ReadString(), Text = r.ReadString() };
     }
 
     /// <summary>A line for the player's message log.</summary>

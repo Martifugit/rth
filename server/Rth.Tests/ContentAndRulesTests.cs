@@ -189,6 +189,8 @@ public class ContentAndRulesTests
             },
             TestContent.Create().ToMessage(),
             new GameTextMessage { Kind = TextKind.Assayer, Text = "hello" },
+            new ChatMessage { Channel = ChatChannel.Public, Text = "hi" },
+            new ChatLineMessage { Channel = ChatChannel.Public, EntityId = 7, From = "Alice", Text = "hi" },
             new ItemActionMessage { Container = ContainerKind.Equipment, Slot = 3, ActionId = "unequip" },
             new MoveItemMessage { From = 2, To = 27 },
             new PickupMessage { GroundItemId = 99 },

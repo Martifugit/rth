@@ -7,8 +7,8 @@ classic layout). It is set in its own world, **R'th**, built around the four hum
 
 **Status:** Milestones 1 (architecture), 2 (combat core: Occultism, bile, phlegm, breath),
 3 (items, equipment, consumables, loot), 4 (skills, workstations, carcass butchering) and
-5 (townsfolk: dialogue, bank, shops, tasks; Distillation and reagents), 6 (quests) and 7 (a
-multi-region world streamed by the client) are done.
+5 (townsfolk: dialogue, bank, shops, tasks; Distillation and reagents), 6 (quests), 7 (a
+multi-region world streamed by the client) and 8 (the window-based interface, chat) are done.
 
 **Build everything as extensible systems.** New features plug into the mechanisms under
 "Extending the server" below (systems, events, interactions, stats, item components, effect ops,
@@ -259,8 +259,30 @@ Not yet: item-on-object/item-on-NPC "use", noted items, the other butchering tie
 Not yet: teleports and the client's handling of long jumps, multiple planes in practice, a
 region-level "music/area name" finer than a whole region, world-map/minimap.
 
-**Next: not chosen yet.** Candidates: the classic interface (side panel, chatbox, minimap), an
-art pass on Tolling, more quests, a second combat style, or Medicine.
+## Milestone 8: the interface (done)
+
+RS3-style movable windows with an OSRS look; see `docs/interface.md`.
+
+- [x] UI Toolkit runtime interface (`client/Assets/Scripts/Ui/`): `UiRoot` (document, layout,
+      hotkeys, pointer-over-UI and typing checks), `UiWindow` (drag with snapping, resize,
+      tabs that pull out into their own window or drop onto another, close), `UiPanel` (one
+      class per interface, found by reflection), `UiDefaultLayout` (the classic arrangement).
+      Layout saved in PlayerPrefs; lock, scale and reset in Settings. Theme in
+      `Resources/UI/Rth.uss`.
+- [x] Panels: action bar with blood/phlegm/breath/bile, target, minimap (turns with the camera,
+      dots, click to walk, compass, run, world map, settings, every-panel menu, clock), pack,
+      worn + bonuses, ability book, focuses (deflection), skills (total level, targets),
+      quests, task, XP metrics, chat, world map (regions to scale), settings.
+- [x] Public chat: `ChatSystem` (protocol 8), overhead text, Enter to type.
+- [x] The old IMGUI HUD is reduced to hover text and the Assayer; bank, shop, dialogue and
+      right-click menus are still IMGUI, and a guard stops their clicks reaching windows below.
+
+Not yet: player-arranged action bars (needs a server-saved bar layout), secondary bars, run
+energy, friends/group/private chat, the larger windows (bestiary, diary, skill unlocks, quest
+journal, ability reference, player examine), waystones on the world map, item art.
+
+**Next: not chosen yet.** Candidates: player-arranged action bars and the breath skill (run
+energy, focuses, courses), an art pass on Tolling, more quests, a second combat style.
 
 ---
 
@@ -300,6 +322,8 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | Something per region (music, rules, title) | A field on `WorldRegion`, written to `<name>.region.json` by `MapExporter`; it reaches clients in `RegionsMessage` as JSON. |
 | "Who is near this tile" | `World.EntitiesNear(plane, tile, radius)` (zone index), not a scan of every entity. |
 | A sign, notice or flavour action | An object action with a `message` in objects.json (no handler needed). |
+| An interface panel | A `UiPanel` subclass in `client/Assets/Scripts/Ui/Panels/` (id, title, default window, `Build`, `Refresh`); it registers itself. A new default spot goes in `UiDefaultLayout`. |
+| A chat channel (private, group) | A `ChatChannel` value and its routing in `ChatSystem`; the chat panel shows `ChatLineMessage`s. |
 | A new kind of content file | A field on `ContentParts`, load it in `GameContent.Load`, validate in `Create`. Client-visible content goes in `ClientContent` (sent as JSON, so no codec changes). |
 | A client message | A message class in `shared/Net/Messages.cs`, a case in `MessageCodec.Decode`, bump `Protocol.Version`. |
 

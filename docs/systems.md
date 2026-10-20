@@ -94,6 +94,17 @@ Navigate memory orbs in the Veilwood and extract fragments.
 - Gives utility against the nightmare boss.
 - Unlocks lore vignettes as rewards.
 
+### The breath skill (agility analogue; name to be decided)
+The utility skill behind **breath**. It is to breath what Agility is to run energy, and more:
+- **Shortcuts** around the world, gated by level, like agility shortcuts.
+- **Focuses** (the prayer analogue): deflection and similar stances that spend breath. Higher
+  levels unlock more focuses. Not called prayers.
+- **Run energy:** higher levels raise run energy and how fast it recovers.
+- **Obstacle courses that are designed on purpose:** fewer, more deliberate courses with
+  completion times, personal bests and leaderboards, so friends can compete on the fastest runs.
+  This is the part that should play better than traditional Agility.
+- Ties to the Pneuma ascetics in the lore.
+
 ### Ammo crafting (fletching or engineering analogue)
 Makes Rationalist ammunition; moon-touched materials at higher tiers.
 

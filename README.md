@@ -29,14 +29,21 @@ process, which loads every region in `server/data/maps/` (turn this off under **
 Local Server On Play**). Type a name and log in. Region scenes stream in and out as you walk;
 pressing Play in a region scene loads the Game scene beside it.
 
-- Left-click a tile to walk there. **R** toggles running (2 tiles per tick).
+- Left-click a tile (or a spot on the minimap) to walk there. **R** toggles running (2 tiles per tick).
+- **The interface is made of windows**: drag a title bar to move one (edges snap), drag the
+  corner to resize, drag a tab out to make its own window or onto another window to combine
+  them. The minimap's buttons open the world map, settings (lock, scale, reset layout, log
+  out) and a menu of every panel. Keys: **B** pack, **E** worn, **A** abilities, **F** focuses,
+  **K** skills, **Q** quests, **M** world map; **Enter** to chat.
 - Left-click a creature to attack it. **1-8** (or clicking the action bar) queue Occult
   abilities; hover a slot to see what it does and what bile or phlegm it needs.
 - **Z / X / C** toggle deflecting melee, ranged or occult attacks, which spends breath.
 - **Right-click** anything in the world for all its options (attack, take each item on the tile,
   walk here). The top-left text shows what a left-click will do.
-- The panel at bottom right has your **Pack** (click an item to use it: eat, drink, wield;
-  right-click for drop and examine; drag to rearrange), what you're **Worn**, and your **Stats**.
+- The side window at bottom right has your **Pack** (click an item to use it: eat, drink, wield;
+  right-click for drop and examine; drag to rearrange), what you've **Worn** (with your
+  bonuses), the ability **Book**, **Focus** (deflection), **Skills**, **Quests**, your **Task**
+  and **XP** gained this session.
 - Creatures drop their **carcass**. Take it to the right workstation and click it to
   **butcher** it for the loot: fen rats at the skinning rack by the spawn (you start with a
   skinning knife), vitriol mites at the lye vat in the north-east (needs butchering 10 and a
@@ -50,7 +57,7 @@ pressing Play in a region scene loads the Game scene beside it.
   - **Corvin Sallow** in the hut sells food, draughts and reagents, and buys things back. Ask
     him about the humours once you're a decent butcher.
   - **Wenna Thole** at the skinning rack hands out butchering tasks for **yard tokens**,
-    spent in her shop. Your current task and points are in the **Stats** tab.
+    spent in her shop. Your current task and points are in the **Task** tab.
 - Occult thresholds and ultimates burn **reagents** (choleric salts, melancholic tincture,
   vitriol salts). You start with some; Corvin sells them; **Distillation** makes them from the
   galls and glands butchering yields.

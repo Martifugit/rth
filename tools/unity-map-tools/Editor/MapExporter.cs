@@ -195,13 +195,10 @@ namespace Rth.MapTools.Editor
                 Vector3 p = spawn.transform.position;
                 map.SpawnPlane = plane;
                 map.Spawn = new TileCoord(Mathf.FloorToInt(p.x), Mathf.FloorToInt(p.z));
+                if (map.IsBlocked(map.SpawnPlane, map.Spawn.X, map.Spawn.Y))
+                    Debug.LogError($"[R'th] The spawn tile {map.Spawn} is blocked.", area);
             }
-            else
-            {
-                Debug.LogWarning("[R'th] No MapSpawn under the MapArea; players will spawn in the middle.", area);
-            }
-            if (map.IsBlocked(map.SpawnPlane, map.Spawn.X, map.Spawn.Y))
-                Debug.LogError($"[R'th] The spawn tile {map.Spawn} is blocked.", area);
+            // No MapSpawn is normal: most regions aren't where new players start.
 
             return map;
         }

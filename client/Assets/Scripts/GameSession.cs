@@ -34,6 +34,8 @@ namespace Rth.Client
         {
             public TextKind Kind;
             public string Text;
+            /// <summary>Who said it, for chat; null for game messages.</summary>
+            public string From;
         }
 
         private enum State
@@ -114,6 +116,8 @@ namespace Rth.Client
         /// <summary>What a left-click would do on whatever is under the pointer ("Attack Fen rat").</summary>
         public string HoverText { get; private set; } = "";
         public List<LogLine> Log { get; } = new List<LogLine>();
+        /// <summary>How many lines have ever been logged, so views can tell what's new after old lines drop off.</summary>
+        public int LogTotal { get; private set; }
         /// <summary>The Assayer's last words, shown until dismissed.</summary>
         public string AssayerText { get; set; }
 
@@ -137,6 +141,12 @@ namespace Rth.Client
             if (regions == null) regions = GetComponent<RegionStreamer>();
             if (regions == null) regions = gameObject.AddComponent<RegionStreamer>();
             regions.world = world;
+            Ui.UiRoot ui = GetComponent<Ui.UiRoot>();
+            if (ui == null) ui = gameObject.AddComponent<Ui.UiRoot>();
+            ui.session = this;
+            ui.world = world;
+            ui.cameraRig = cameraRig;
+            ui.regions = regions;
             world.ItemLookup = Item;
             _name = PlayerPrefs.GetString(NamePref, "");
             _host = PlayerPrefs.GetString(HostPref, "127.0.0.1");
@@ -301,6 +311,12 @@ namespace Rth.Client
                     case TaskMessage task:
                         CurrentTask = task;
                         break;
+                    case ChatLineMessage chat:
+                        Log.Add(new LogLine { Kind = TextKind.Info, Text = chat.Text, From = chat.From });
+                        LogTotal++;
+                        if (Log.Count > MaxLogLines) Log.RemoveAt(0);
+                        world.ShowOverheadText(chat.EntityId, chat.Text);
+                        break;
                     case RegionsMessage regionList:
                         regions.SetRegions(regionList.Regions);
                         break;
@@ -339,6 +355,7 @@ namespace Rth.Client
         private void AddLog(TextKind kind, string text)
         {
             Log.Add(new LogLine { Kind = kind, Text = text });
+            LogTotal++;
             if (Log.Count > MaxLogLines) Log.RemoveAt(0);
         }
 
@@ -349,8 +366,10 @@ namespace Rth.Client
             Keyboard keyboard = Keyboard.current;
             Mouse mouse = Mouse.current;
 
-            if (keyboard != null)
+            if (keyboard != null && !Ui.UiRoot.IsTyping)
             {
+                if (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame)
+                    Ui.UiRoot.Instance?.Panel<Ui.Panels.ChatPanel>()?.Focus();
                 if (keyboard.rKey.wasPressedThisFrame) ToggleRun();
                 if (keyboard.zKey.wasPressedThisFrame) ToggleDeflect(CombatStyle.Melee);
                 if (keyboard.xKey.wasPressedThisFrame) ToggleDeflect(CombatStyle.Ranged);
@@ -373,7 +392,7 @@ namespace Rth.Client
 
             if (mouse == null) return;
             Vector2 pointer = mouse.position.ReadValue();
-            bool overHud = CombatHud.IsPointerOverHud(pointer) || PopupMenu.IsOpen;
+            bool overHud = CombatHud.IsPointerOverHud(pointer) || PopupMenu.IsOpen || Ui.UiRoot.IsPointerOverUi(pointer);
             string title = "";
             List<(string Label, Action Action)> options = overHud ? null : WorldOptionsAt(pointer, out title);
             HoverText = options != null && options.Count > 0 ? options[0].Label : "";
@@ -568,6 +587,9 @@ namespace Rth.Client
         }
 
         public void ToggleRun() => Running = !Running;
+
+        /// <summary>Says something in public chat.</summary>
+        public void Say(string text) => Send(new ChatMessage { Channel = ChatChannel.Public, Text = text });
 
         public void Logout()
         {

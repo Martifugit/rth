@@ -50,6 +50,14 @@ namespace Rth.Client
 
         public EntityView Find(int id) => _entities.TryGetValue(id, out EntityView view) ? view : null;
 
+        public IEnumerable<EntityView> Entities => _entities.Values;
+
+        private const float OverheadSeconds = 4f;
+        private readonly Dictionary<int, (string Text, float Time)> _overhead = new Dictionary<int, (string, float)>();
+
+        /// <summary>Shows what someone said above their head for a few seconds.</summary>
+        public void ShowOverheadText(int entityId, string text) => _overhead[entityId] = (text, Time.time);
+
         public void Begin(int localId, float tickSeconds)
         {
             Clear();
@@ -170,6 +178,7 @@ namespace Rth.Client
                 if (view != null) Destroy(view.gameObject);
             _groundItems.Clear();
             _hitsplats.Clear();
+            _overhead.Clear();
             LocalId = -1;
             TargetId = 0;
         }
@@ -202,7 +211,7 @@ namespace Rth.Client
             {
                 if (view == null) continue;
                 Vector3 screen = cam.WorldToScreenPoint(view.transform.position + Vector3.up * (view.Height + 0.35f));
-                if (screen.z <= 0f) continue;
+                if (screen.z <= 0f || Ui.UiRoot.IsPointerOverUi(screen)) continue; // IMGUI draws over windows: keep labels out from under them
                 float x = screen.x;
                 float y = Screen.height - screen.y;
 
@@ -219,6 +228,14 @@ namespace Rth.Client
                 Color nameColor = view.Id == TargetId ? new Color(1f, 0.55f, 0.3f) : view.Kind == EntityKind.Npc ? new Color(1f, 1f, 0.4f) : Color.white;
                 _labelStyle.normal.textColor = nameColor;
                 GUI.Label(new Rect(x - 70f, y - 18f, 140f, 18f), view.DisplayName, _labelStyle);
+
+                if (_overhead.TryGetValue(view.Id, out (string Text, float Time) said) && Time.time - said.Time < OverheadSeconds)
+                {
+                    _labelStyle.normal.textColor = new Color(0f, 0f, 0f, 0.8f);
+                    GUI.Label(new Rect(x - 159f, y - 37f, 320f, 18f), said.Text, _labelStyle);
+                    _labelStyle.normal.textColor = new Color(1f, 1f, 0f);
+                    GUI.Label(new Rect(x - 160f, y - 38f, 320f, 18f), said.Text, _labelStyle);
+                }
             }
 
             foreach (Hitsplat h in _hitsplats)
@@ -227,7 +244,7 @@ namespace Rth.Client
                 if (view == null) continue;
                 float age = (Time.time - h.Time) / HitsplatSeconds;
                 Vector3 screen = cam.WorldToScreenPoint(view.transform.position + Vector3.up * (view.Height * 0.6f));
-                if (screen.z <= 0f) continue;
+                if (screen.z <= 0f || Ui.UiRoot.IsPointerOverUi(screen)) continue;
                 var rect = new Rect(screen.x - 30f + h.Offset, Screen.height - screen.y - 12f - age * 30f, 60f, 24f);
                 Color c = h.Color;
                 c.a = 1f - age * age;

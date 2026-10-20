@@ -1,0 +1,405 @@
+/* R'th interface theme: OSRS-style stone and leather. Original styling only. */
+
+.rth-root {
+    font-size: 12px;
+    color: rgb(232, 216, 176);
+}
+
+/* ---------------------------------------------------------------- windows */
+
+.window {
+    position: absolute;
+    background-color: rgb(62, 53, 41);
+    border-width: 2px;
+    border-color: rgb(20, 17, 12);
+    border-radius: 3px;
+}
+
+.window--bare {
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+}
+
+.window__titlebar {
+    flex-direction: row;
+    align-items: flex-end;
+    min-height: 22px;
+    background-color: rgb(40, 34, 26);
+    border-bottom-width: 1px;
+    border-bottom-color: rgb(20, 17, 12);
+    padding-left: 2px;
+}
+
+.window__tabs {
+    flex-direction: row;
+    flex-wrap: wrap;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.tab {
+    padding: 3px 6px 3px 6px;
+    margin: 2px 1px 0 1px;
+    background-color: rgb(54, 46, 36);
+    color: rgb(185, 165, 125);
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    -unity-font-style: bold;
+    font-size: 11px;
+}
+
+.tab:hover {
+    color: rgb(255, 210, 120);
+}
+
+.tab--active {
+    background-color: rgb(92, 78, 58);
+    color: rgb(255, 152, 31);
+}
+
+.window__button {
+    width: 18px;
+    height: 18px;
+    margin: 2px;
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+    color: rgb(200, 180, 140);
+    background-color: rgb(54, 46, 36);
+    border-radius: 2px;
+}
+
+.window__button:hover {
+    color: rgb(255, 152, 31);
+}
+
+.window__body {
+    flex-grow: 1;
+    padding: 4px;
+    overflow: hidden;
+}
+
+.window--bare > .window__body {
+    padding: 0;
+}
+
+.window__grip {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 12px;
+    height: 12px;
+    border-right-width: 3px;
+    border-bottom-width: 3px;
+    border-color: rgb(120, 100, 70);
+}
+
+.window__handle {
+    position: absolute;
+    left: -2px;
+    top: -2px;
+    width: 14px;
+    height: 14px;
+    background-color: rgb(92, 78, 58);
+    border-width: 1px;
+    border-color: rgb(20, 17, 12);
+    border-radius: 7px;
+    opacity: 0;
+}
+
+.window--bare:hover > .window__handle {
+    opacity: 1;
+}
+
+.rth-root--locked .window__grip,
+.rth-root--locked .window__handle,
+.rth-root--locked .window__close {
+    display: none;
+}
+
+.drop-target {
+    border-color: rgb(255, 152, 31);
+}
+
+/* ---------------------------------------------------------------- common pieces */
+
+.tooltip {
+    position: absolute;
+    max-width: 280px;
+    padding: 5px 7px;
+    background-color: rgba(18, 15, 12, 0.96);
+    border-width: 1px;
+    border-color: rgb(120, 100, 70);
+    color: rgb(240, 230, 200);
+    white-space: normal;
+    font-size: 11px;
+}
+
+.drag-ghost {
+    position: absolute;
+    padding: 3px 8px;
+    background-color: rgba(92, 78, 58, 0.9);
+    color: rgb(255, 152, 31);
+    -unity-font-style: bold;
+    border-width: 1px;
+    border-color: rgb(20, 17, 12);
+}
+
+.bar {
+    height: 16px;
+    background-color: rgb(22, 19, 15);
+    border-width: 1px;
+    border-color: rgb(14, 12, 9);
+    margin-bottom: 3px;
+}
+
+.bar__fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.bar__label {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+    font-size: 11px;
+    color: rgb(255, 255, 255);
+    text-shadow: 1px 1px 0 rgb(0, 0, 0);
+}
+
+.button {
+    padding: 4px 8px;
+    margin: 2px;
+    background-color: rgb(80, 67, 50);
+    border-width: 1px;
+    border-color: rgb(20, 17, 12);
+    border-radius: 2px;
+    color: rgb(255, 152, 31);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.button:hover {
+    background-color: rgb(100, 85, 62);
+}
+
+.button--on {
+    background-color: rgb(60, 90, 140);
+    color: rgb(230, 240, 255);
+}
+
+.heading {
+    color: rgb(255, 152, 31);
+    -unity-font-style: bold;
+    margin-bottom: 4px;
+}
+
+.muted {
+    color: rgb(160, 145, 115);
+}
+
+.row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.scroll {
+    flex-grow: 1;
+}
+
+/* ---------------------------------------------------------------- slots (pack, worn, abilities) */
+
+.slot-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.slot {
+    width: 44px;
+    height: 38px;
+    margin: 1px;
+    background-color: rgb(44, 38, 30);
+    border-width: 1px;
+    border-color: rgb(30, 26, 20);
+}
+
+.slot:hover {
+    border-color: rgb(160, 135, 90);
+}
+
+.slot__icon {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    top: 4px;
+    bottom: 4px;
+    border-radius: 3px;
+}
+
+.slot__name {
+    position: absolute;
+    left: 1px;
+    right: 1px;
+    top: 8px;
+    bottom: 1px;
+    font-size: 8px;
+    white-space: normal;
+    -unity-text-align: middle-center;
+    color: rgb(255, 255, 255);
+    text-shadow: 1px 1px 0 rgb(0, 0, 0);
+}
+
+.slot__count {
+    position: absolute;
+    left: 2px;
+    top: 0;
+    font-size: 10px;
+    -unity-font-style: bold;
+    color: rgb(255, 255, 0);
+    text-shadow: 1px 1px 0 rgb(0, 0, 0);
+}
+
+.slot--dragging {
+    opacity: 0.4;
+}
+
+/* ---------------------------------------------------------------- action bar */
+
+.ability {
+    width: 52px;
+    height: 52px;
+    margin: 2px;
+    border-width: 2px;
+    border-color: rgb(20, 17, 12);
+    border-radius: 3px;
+}
+
+.ability--queued {
+    border-color: rgb(255, 150, 30);
+}
+
+.ability__key {
+    position: absolute;
+    left: 3px;
+    top: 1px;
+    font-size: 10px;
+    -unity-font-style: bold;
+    color: rgb(255, 255, 255);
+}
+
+.ability__kind {
+    position: absolute;
+    right: 3px;
+    top: 1px;
+    font-size: 10px;
+    -unity-font-style: bold;
+    color: rgb(255, 220, 120);
+}
+
+.ability__name {
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    top: 12px;
+    bottom: 2px;
+    font-size: 9px;
+    white-space: normal;
+    -unity-text-align: middle-center;
+    color: rgb(255, 255, 255);
+    text-shadow: 1px 1px 0 rgb(0, 0, 0);
+}
+
+.ability__cooldown {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+.ability__timer {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 2px;
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+    color: rgb(255, 255, 255);
+}
+
+/* ---------------------------------------------------------------- chat */
+
+.chat-line {
+    white-space: normal;
+    font-size: 12px;
+    color: rgb(255, 255, 255);
+}
+
+.chat-line--warning {
+    color: rgb(255, 160, 80);
+}
+
+.chat-line--assayer {
+    color: rgb(205, 180, 255);
+}
+
+.chat-line--public {
+    color: rgb(140, 200, 255);
+}
+
+.chat-input {
+    margin: 2px 0 0 0;
+}
+
+.chat-input > .unity-text-field__input {
+    background-color: rgb(30, 26, 20);
+    border-color: rgb(20, 17, 12);
+    color: rgb(255, 255, 255);
+}
+
+/* ---------------------------------------------------------------- minimap */
+
+.minimap {
+    width: 180px;
+    height: 180px;
+    border-radius: 90px;
+    border-width: 3px;
+    border-color: rgb(40, 34, 26);
+    overflow: hidden;
+    background-color: rgb(10, 10, 10);
+}
+
+.minimap__dot {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    border-radius: 2px;
+}
+
+.orb {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    border-width: 2px;
+    border-color: rgb(20, 17, 12);
+    background-color: rgb(40, 34, 26);
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+    font-size: 10px;
+    color: rgb(255, 255, 255);
+    white-space: normal;
+}
+
+.orb:hover {
+    border-color: rgb(255, 152, 31);
+}
+
+.orb--on {
+    background-color: rgb(150, 120, 40);
+}
