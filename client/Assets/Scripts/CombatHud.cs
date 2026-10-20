@@ -76,9 +76,10 @@ namespace Rth.Client
         private void DrawStatusPanel()
         {
             EntityView local = world.Local;
-            GUILayout.BeginArea(Claim(new Rect(10f, 10f, 240f, 92f)), GUI.skin.box);
+            GUILayout.BeginArea(Claim(new Rect(10f, 10f, 240f, 116f)), GUI.skin.box);
             GUILayout.Label(local != null ? session.PlayerName + " at " + local.Tile : "Loading...");
             if (GUILayout.Button(session.Running ? "Run: ON  (R)" : "Run: off  (R)")) session.ToggleRun();
+            if (GUILayout.Button(RoofHider.ShowRoofs ? "Roofs: shown" : "Roofs: hidden")) RoofHider.ShowRoofs = !RoofHider.ShowRoofs;
             if (GUILayout.Button("Log out")) session.Logout();
             GUILayout.EndArea();
         }

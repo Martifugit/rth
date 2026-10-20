@@ -132,6 +132,7 @@ namespace Rth.Client
         {
             if (GetComponent<PopupMenu>() == null) gameObject.AddComponent<PopupMenu>();
             if (GetComponent<TownWindows>() == null) gameObject.AddComponent<TownWindows>().session = this;
+            if (cameraRig != null && cameraRig.GetComponent<CameraOcclusion>() == null) cameraRig.gameObject.AddComponent<CameraOcclusion>().world = world;
             world.ItemLookup = Item;
             _name = PlayerPrefs.GetString(NamePref, "");
             _host = PlayerPrefs.GetString(HostPref, "127.0.0.1");

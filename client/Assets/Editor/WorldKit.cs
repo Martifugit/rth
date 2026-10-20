@@ -200,10 +200,12 @@ namespace Rth.Client.Editor
         {
             Transform house = Group(parent, name);
             Patch("Floor", house, x0, z0, x1, z1, floor, 0.02f);
-            Wall(house, "Wall S", x0, z0, x1, z0, walls, gaps: doorSide == Side.South ? new[] { doorAt } : new int[0]);
-            Wall(house, "Wall N", x0, z1, x1, z1, walls, gaps: doorSide == Side.North ? new[] { doorAt } : new int[0]);
-            Wall(house, "Wall W", x0, z0, x0, z1, walls, gaps: doorSide == Side.West ? new[] { doorAt } : new int[0]);
-            Wall(house, "Wall E", x1, z0, x1, z1, walls, gaps: doorSide == Side.East ? new[] { doorAt } : new int[0]);
+            Transform wallGroup = Group(house, "Walls");
+            Wall(wallGroup, "Wall S", x0, z0, x1, z0, walls, gaps: doorSide == Side.South ? new[] { doorAt } : new int[0]);
+            Wall(wallGroup, "Wall N", x0, z1, x1, z1, walls, gaps: doorSide == Side.North ? new[] { doorAt } : new int[0]);
+            Wall(wallGroup, "Wall W", x0, z0, x0, z1, walls, gaps: doorSide == Side.West ? new[] { doorAt } : new int[0]);
+            Wall(wallGroup, "Wall E", x1, z0, x1, z1, walls, gaps: doorSide == Side.East ? new[] { doorAt } : new int[0]);
+            Fades(wallGroup, 0.35f);
 
             // A simple pitched roof: two slabs meeting at a ridge along the longer side.
             Transform roofGroup = Group(house, "Roof");
@@ -221,9 +223,19 @@ namespace Rth.Client.Editor
                 // Each slab tilts so its outer edge is low and its ridge edge high.
                 half.transform.rotation = ridgeAlongX ? Quaternion.Euler(s * pitch, 0f, 0f) : Quaternion.Euler(0f, 0f, -s * pitch);
             }
+            Fades(roofGroup, 0.2f);
             var hider = roofGroup.gameObject.AddComponent<RoofHider>();
             hider.interior = new RectInt(x0, z0, x1 - x0, z1 - z0);
             return house;
+        }
+
+        /// <summary>Lets something fade when it blocks the camera's view of the player.</summary>
+        public static Occluder Fades(Transform target, float minAlpha = 0.25f)
+        {
+            Occluder o = target.GetComponent<Occluder>();
+            if (o == null) o = target.gameObject.AddComponent<Occluder>();
+            o.minAlpha = minAlpha;
+            return o;
         }
 
         /// <summary>A rail fence along a grid line with gaps; blocks edges like a wall but low and see-through.</summary>
@@ -248,10 +260,15 @@ namespace Rth.Client.Editor
 
         // ------------------------------------------------------------------ nature and props
 
-        /// <summary>A tree on a tile: blocks that tile (trunk collider), with a stacked low-poly crown.</summary>
-        public void Tree(Transform parent, int x, int z, Material bark, Material leaves, float scale = 1f)
+        /// <summary>
+        /// A tree on a tile: blocks that tile (trunk collider), with a stacked low-poly crown, and
+        /// fades when it hides the player. Trees are placed deliberately (they'll be a resource),
+        /// RuneScape-sparse: a "large forest" is a few dozen.
+        /// </summary>
+        public void Tree(Transform parent, int x, int z, Material bark, Material leaves, float scale = 1f, string kind = "Tree")
         {
-            var tree = new GameObject("Tree");
+            var tree = new GameObject(kind);
+            Fades(tree.transform, 0.25f);
             tree.transform.SetParent(parent, false);
             tree.transform.position = new Vector3(x + 0.5f, 0f, z + 0.5f);
             tree.AddComponent<MapBlocker>();

@@ -225,26 +225,31 @@ namespace Rth.Client.Editor
             WorldKit.Cylinder("Lye", vat, vat.position + new Vector3(0f, 0.68f, 0f), new Vector3(0.75f, 0.02f, 0.75f), lye, collider: false);
 
             // ---------------------------------------------------------- trees
+            // RuneScape scale: a handful of deliberate groves, not a forest. Every tree here is a
+            // future woodcutting resource, so each one is placed on purpose.
             Transform trees = WorldKit.Group(map, "Trees");
-            var occupied = new HashSet<Vector2Int>(river);
-            occupied.UnionWith(bridge);
-            occupied.UnionWith(bayTiles);
-            occupied.UnionWith(shore);
-            occupied.UnionWith(pond);
-            occupied.UnionWith(roads);
-            bool Clear(int x, int z) =>
-                !occupied.Contains(new Vector2Int(x, z)) && !InRect(x, z, 4, 27, 46, 92) && !InRect(x, z, 64, 58, 80, 73)
-                && !InRect(x, z, 21, 11, 37, 40); // graves and their path
-            for (int z = 2; z < Size - 2; z++)
-            for (int x = 2; x < Size - 2; x++)
+            Material willowLeaves = kit.Mat("WillowLeaves", new Color(0.38f, 0.52f, 0.25f));
+            (string kind, int x, int z, Material crown, float scale)[] grove =
             {
-                bool eastWoods = x > 50 && z > 36;
-                bool edge = x < 4 || z > Size - 5 || (x < 20 && z < 30);
-                double p = eastWoods ? 0.09 : edge ? 0.3 : 0.012;
-                if (!Clear(x, z) || !kit.Chance(p)) continue;
-                kit.Tree(trees, x, z, bark, eastWoods && kit.Chance(0.5) ? darkLeaves : leaves);
-                occupied.Add(new Vector2Int(x, z));
-            }
+                // The old oaks at the meadow's north-west corner.
+                ("Oak", 8, 86, leaves, 1.25f), ("Oak", 11, 88, leaves, 1.1f), ("Oak", 12, 84, leaves, 1.15f),
+                // Willows at the millpond and the mill.
+                ("Willow", 38, 79, willowLeaves, 1f), ("Willow", 35, 81, willowLeaves, 1.05f),
+                // A yew over the sleepers' graves; a lone oak behind the treasury.
+                ("Yew", 35, 16, darkLeaves, 1.1f), ("Oak", 20, 54, leaves, 1f),
+                // The east woods: a few groves either side of the road to Sour Hollow.
+                ("Tree", 52, 56, leaves, 1f), ("Tree", 54, 59, darkLeaves, 1f), ("Tree", 51, 61, leaves, 0.95f), ("Tree", 56, 62, leaves, 1.05f),
+                ("Tree", 60, 80, darkLeaves, 1f), ("Tree", 63, 83, leaves, 1.1f), ("Tree", 65, 79, darkLeaves, 0.95f),
+                ("Tree", 61, 86, leaves, 1f), ("Tree", 67, 85, darkLeaves, 1.05f),
+                ("Tree", 63, 66, darkLeaves, 1f), ("Tree", 81, 70, leaves, 1f), ("Tree", 80, 63, darkLeaves, 0.95f),
+                ("Tree", 66, 44, leaves, 1f), ("Tree", 69, 46, leaves, 1.05f), ("Tree", 64, 48, darkLeaves, 1f),
+                // A few loners in the south meadow and along the field edges.
+                ("Oak", 45, 20, leaves, 1.15f), ("Tree", 40, 13, leaves, 1f), ("Tree", 52, 9, darkLeaves, 1f),
+                ("Tree", 4, 58, leaves, 1f), ("Tree", 4, 40, leaves, 0.95f), ("Tree", 19, 33, leaves, 1f),
+            };
+            foreach ((string kind, int x, int z, Material crown, float scale) in grove)
+                kit.Tree(trees, x, z, bark, crown, scale, kind);
+            WorldKit.Fades(tower, 0.3f);
             Transform rocks = WorldKit.Group(map, "Rocks");
             foreach (Vector2Int r in new[] { new Vector2Int(55, 62), new Vector2Int(61, 76), new Vector2Int(84, 52), new Vector2Int(14, 30), new Vector2Int(50, 86) })
                 WorldKit.Rock(rocks, r.x, r.y, stone);
@@ -297,6 +302,7 @@ namespace Rth.Client.Editor
             cam.fieldOfView = 45f;
             cam.farClipPlane = 200f;
             var rig = cam.gameObject.AddComponent<CameraRig>();
+            cam.gameObject.AddComponent<CameraOcclusion>();
             rig.idleFocus = new Vector3(33.5f, 0f, 53.5f);
             Light sun = Object.FindAnyObjectByType<Light>();
             if (sun != null)
