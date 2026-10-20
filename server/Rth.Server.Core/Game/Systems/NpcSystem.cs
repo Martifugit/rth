@@ -57,6 +57,7 @@ namespace Rth.Server.Game
             {
                 n.BusyUntilTick = World.CurrentTick + 20;
                 n.Waypoints.Clear();
+                World.Events.Publish(new NpcActionUsed(p, n, m.ActionId));
                 handler(p, n);
             }));
         }

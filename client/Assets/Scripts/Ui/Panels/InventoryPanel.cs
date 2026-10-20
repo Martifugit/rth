@@ -9,8 +9,8 @@ namespace Rth.Client.Ui.Panels
 {
     /// <summary>
     /// The 28-slot backpack, four across. Click uses an item's first action (or deposits/sells
-    /// while a bank or shop is open), right-click lists every option, drag moves it to another
-    /// slot (its icon follows the pointer).
+    /// while a bank or shop is open), right-click lists every option. Drag an item to another
+    /// slot to move it, onto an action bar to put it there, or onto the bank to deposit it.
     /// </summary>
     public sealed class InventoryPanel : UiPanel
     {
@@ -20,126 +20,97 @@ namespace Rth.Client.Ui.Panels
         public override string DefaultWindow => UiDefaultLayout.Side;
         public override int Order => 0;
         public override Key Hotkey => Key.B;
-        public override Vector2 MinSize => new Vector2(186f, 200f);
+        public override Vector2 MinSize => new Vector2(200f, 260f);
 
         private VisualElement _grid;
         private Label _free;
-        private readonly List<SlotView> _slots = new List<SlotView>();
-        private int _dragFrom = -1;
-        private bool _dragMoved;
-        private Vector2 _dragStart;
+        private readonly List<ItemSlotView> _slots = new List<ItemSlotView>();
 
         protected override void Build(VisualElement root)
         {
-            VisualElement well = UiKit.El(root, "well");
-            well.style.alignSelf = Align.Center;
-            _grid = UiKit.El(well, "slot-grid");
-            _grid.style.width = 4 * 42f;
+            _grid = UiKit.El(root, "slot-grid");
+            _grid.style.width = 4 * 44f;
+            _grid.style.alignSelf = Align.Center;
             _free = UiKit.Text(root, "", "muted", "small");
             _free.style.unityTextAlign = TextAnchor.MiddleCenter;
-            _free.style.marginTop = 3f;
-
-            root.RegisterCallback<PointerMoveEvent>(e =>
-            {
-                if (_dragFrom < 0) return;
-                if (!_dragMoved && ((Vector2)e.position - _dragStart).magnitude > 5f) _dragMoved = true;
-                if (_dragMoved) Ui.ShowDragGhost(null, IconLibrary.ForItem(Def(_dragFrom)), (Vector2)e.position - new Vector2(24f, 24f));
-            });
-            root.RegisterCallback<PointerUpEvent>(_ => EndDrag());
-            root.RegisterCallback<PointerLeaveEvent>(_ => EndDrag());
+            _free.style.marginTop = 6f;
         }
 
         public override void Refresh()
         {
             List<ItemSlot> items = Session.Inventory;
-            while (_slots.Count < items.Count) AddSlot(_slots.Count);
+            while (_slots.Count < items.Count) _slots.Add(CreateSlot(Ui, Session, _grid, _slots.Count));
             int free = 0;
             for (int i = 0; i < _slots.Count; i++)
             {
                 ItemSlot slot = i < items.Count ? items[i] : default;
                 if (slot.IsEmpty) free++;
                 _slots[i].Show(slot, slot.IsEmpty ? null : Session.Item(slot.ItemId));
-                _slots[i].Root.EnableInClassList("slot--dragging", i == _dragFrom && _dragMoved);
                 _slots[i].Root.style.display = i < items.Count ? DisplayStyle.Flex : DisplayStyle.None;
             }
-            _free.text = free + " free";
+            _free.text = free + " of " + items.Count + " slots free";
         }
 
-        private void AddSlot(int index)
+        /// <summary>
+        /// A pack slot with all its behaviour: click, right-click, drag out, and taking drops from
+        /// other pack slots. Shared by every view of the pack (this panel, the bank's side).
+        /// </summary>
+        public static ItemSlotView CreateSlot(UiRoot ui, GameSession session, VisualElement parent, int index)
         {
-            var view = new SlotView(_grid);
-            _slots.Add(view);
+            var view = new ItemSlotView(parent);
+            bool pressed = false;
+            Vector2 pressedAt = default;
+
+            ItemDef Def()
+            {
+                if (index >= session.Inventory.Count) return null;
+                ItemSlot slot = session.Inventory[index];
+                return slot.IsEmpty ? null : session.Item(slot.ItemId);
+            }
+
             view.Root.RegisterCallback<PointerDownEvent>(e =>
             {
-                ItemDef def = Def(index);
+                ItemDef def = Def();
                 if (def == null) return;
                 if (e.button == 0)
                 {
-                    _dragFrom = index;
-                    _dragMoved = false;
-                    _dragStart = e.position;
+                    pressed = true;
+                    pressedAt = e.position;
                 }
                 else if (e.button == 1)
                 {
-                    Ui.Menu(e.position, def.Name, GameText.ItemOptions(Session, ContainerKind.Inventory, index, def));
+                    ui.Menu(e.position, def.Name, GameText.ItemOptions(session, ContainerKind.Inventory, index, def));
                 }
+            });
+            view.Root.RegisterCallback<PointerMoveEvent>(e =>
+            {
+                if (!pressed || ui.IsDragging || ((Vector2)e.position - pressedAt).magnitude < 6f) return;
+                pressed = false;
+                ItemDef def = Def();
+                if (def == null) return;
+                ui.BeginDrag(new UiRoot.Drag
+                {
+                    Data = new ItemDrag { From = ContainerKind.Inventory, Slot = index, ItemId = def.Id },
+                    Icon = IconLibrary.ForItem(def),
+                    Tint = IconLibrary.ItemTint(def),
+                });
             });
             view.Root.RegisterCallback<PointerUpEvent>(e =>
             {
-                if (e.button != 0 || _dragFrom < 0) return;
-                if (_dragFrom == index && !_dragMoved) GameText.DefaultAction(Session, ContainerKind.Inventory, index, Def(index));
-                else if (_dragFrom != index) Session.MoveItem(_dragFrom, index);
-                EndDrag();
-                e.StopPropagation();
+                if (e.button != 0 || !pressed) return;
+                pressed = false;
+                GameText.DefaultAction(session, ContainerKind.Inventory, index, Def());
             });
+            view.Root.RegisterCallback<PointerLeaveEvent>(_ => pressed = false);
+            ui.AddDropTarget(view.Root,
+                data => data is ItemDrag d && d.From == ContainerKind.Inventory && d.Slot != index,
+                data => session.MoveItem(((ItemDrag)data).Slot, index));
             UiKit.Tooltip(view.Root, () =>
             {
-                ItemDef def = Def(index);
-                return def == null || _dragMoved ? null : GameText.Describe(def, Session.Inventory[index].Count);
+                ItemDef def = Def();
+                return def == null ? null : GameText.Describe(def, session.Inventory[index].Count);
             });
-        }
-
-        private ItemDef Def(int index)
-        {
-            if (index < 0 || index >= Session.Inventory.Count) return null;
-            ItemSlot slot = Session.Inventory[index];
-            return slot.IsEmpty ? null : Session.Item(slot.ItemId);
-        }
-
-        private void EndDrag()
-        {
-            _dragFrom = -1;
-            _dragMoved = false;
-            Ui.HideDragGhost();
-        }
-
-        /// <summary>One item slot: the item's icon and, for stacks, the count in the classic colours.</summary>
-        public sealed class SlotView
-        {
-            public readonly VisualElement Root;
-            private readonly VisualElement _icon;
-            private readonly Label _count;
-            private ItemDef _shownDef;
-
-            public SlotView(VisualElement parent)
-            {
-                Root = UiKit.El(parent, "slot");
-                _icon = UiKit.El(Root, "slot__icon");
-                _count = UiKit.Text(Root, "", "slot__count");
-                _icon.pickingMode = _count.pickingMode = PickingMode.Ignore;
-            }
-
-            public void Show(ItemSlot slot, ItemDef def)
-            {
-                if (def != _shownDef)
-                {
-                    _shownDef = def;
-                    UiKit.SetIcon(_icon, def != null ? IconLibrary.ForItem(def) : null);
-                }
-                bool stack = !slot.IsEmpty && (slot.Count > 1 || (def != null && def.Stackable));
-                _count.text = stack ? UiKit.FormatCount(slot.Count) : "";
-                if (stack) _count.style.color = UiKit.CountColour(slot.Count);
-            }
+            return view;
         }
     }
 }

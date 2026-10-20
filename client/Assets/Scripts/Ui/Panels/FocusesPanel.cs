@@ -7,9 +7,9 @@ using UnityEngine.UIElements;
 namespace Rth.Client.Ui.Panels
 {
     /// <summary>
-    /// Focuses: stances held with breath, the prayer analogue. A book of icons with breath at the
-    /// top; an active focus glows. Deflection comes first, one per combat style (keys Z / X / C);
-    /// the breath skill will add more.
+    /// Focuses: stances held with breath, the prayer analogue. Breath at the top, then the focuses
+    /// as a book of icons; a held one glows. Deflection comes first, one per combat style (keys
+    /// Z / X / C); the breath skill will add more.
     /// </summary>
     public sealed class FocusesPanel : UiPanel
     {
@@ -17,47 +17,52 @@ namespace Rth.Client.Ui.Panels
         public override string Title => "Focuses";
         public override string Icon => "focus";
         public override string DefaultWindow => UiDefaultLayout.Side;
-        public override int Order => 3;
+        public override int Order => 4;
         public override Key Hotkey => Key.F;
 
-        private UiKit.Bar _breath;
-        private Label _drain;
-        private readonly List<(CombatStyle Style, VisualElement Socket)> _deflects = new List<(CombatStyle, VisualElement)>();
+        private UiKit.Gauge _breath;
+        private Label _held;
+        private readonly List<(CombatStyle Style, VisualElement Slot)> _deflects = new List<(CombatStyle, VisualElement)>();
 
         protected override void Build(VisualElement root)
         {
-            _breath = new UiKit.Bar(root, new Color(0.42f, 0.66f, 0.92f), IconLibrary.Get("focus"), 16f);
-            _drain = UiKit.Text(root, "", "muted", "small");
-            _drain.style.unityTextAlign = TextAnchor.MiddleCenter;
+            VisualElement card = UiKit.El(root, "card");
+            _breath = new UiKit.Gauge(card, "breath", UiKit.BreathColour);
+            _breath.Root.style.marginRight = 0f;
+            _held = UiKit.Text(card, "", "muted", "small");
+            _held.style.marginTop = 4f;
 
-            UiKit.Text(root, "Deflection", "heading", "small");
+            UiKit.Heading(root, "Deflection").style.marginTop = 10f;
             VisualElement grid = UiKit.El(root, "slot-grid");
             foreach ((CombatStyle style, string icon, string key) in new[] { (CombatStyle.Melee, "deflect_melee", "Z"), (CombatStyle.Ranged, "deflect_ranged", "X"), (CombatStyle.Occult, "deflect_occult", "C") })
             {
                 CombatStyle s = style;
                 VisualElement column = UiKit.El(grid);
                 column.style.alignItems = Align.Center;
-                VisualElement socket = UiKit.El(column, "socket");
-                UiKit.Icon(socket, IconLibrary.Get(icon), 32f, "slot__icon").pickingMode = PickingMode.Ignore;
-                UiKit.Text(socket, key, "ability__key").pickingMode = PickingMode.Ignore;
-                UiKit.Text(column, style.ToString(), "socket-caption");
-                socket.RegisterCallback<ClickEvent>(_ => Session.ToggleDeflect(s));
-                UiKit.Tooltip(socket, () => UiKit.Title("Deflect " + s.ToString().ToLowerInvariant()) +
+                column.style.marginRight = 6f;
+                VisualElement slot = UiKit.El(column, "slot");
+                slot.style.width = slot.style.height = 48f;
+                VisualElement i = UiKit.El(slot, "slot__icon");
+                i.style.width = i.style.height = 38f;
+                i.pickingMode = PickingMode.Ignore;
+                UiKit.SetIcon(i, IconLibrary.Get(icon), new Color(0.65f, 0.8f, 1f));
+                UiKit.Text(slot, key, "ability__key").pickingMode = PickingMode.Ignore;
+                UiKit.Text(column, style.ToString(), "slot-caption");
+                slot.RegisterCallback<ClickEvent>(_ => Session.ToggleDeflect(s));
+                UiKit.Tooltip(slot, () => UiKit.Title("Deflect " + s.ToString().ToLowerInvariant()) +
                     "\nHalves the damage you take from " + s.ToString().ToLowerInvariant() + " attacks while held." +
-                    "\n" + UiKit.Colour("Drains 1 breath a tick.", UiKit.Muted) + "\nKey: " + UiKit.Colour(KeyFor(s), UiKit.Value));
-                _deflects.Add((style, socket));
+                    "\n" + UiKit.Colour("Drains 1 breath a tick. Key: " + key, UiKit.Muted));
+                _deflects.Add((style, slot));
             }
         }
-
-        private static string KeyFor(CombatStyle s) => s == CombatStyle.Melee ? "Z" : s == CombatStyle.Ranged ? "X" : "C";
 
         public override void Refresh()
         {
             var state = Session.PlayerState;
             if (state == null) return;
             _breath.Set(state.Breath / (float)Mathf.Max(1, state.MaxBreath), state.Breath + " / " + state.MaxBreath);
-            _drain.text = state.Deflect == CombatStyle.None ? "No focus held" : "Holding: deflect " + state.Deflect.ToString().ToLowerInvariant();
-            foreach ((CombatStyle style, VisualElement socket) in _deflects) socket.EnableInClassList("socket--on", state.Deflect == style);
+            _held.text = state.Deflect == CombatStyle.None ? "No focus held." : "Holding: deflect " + state.Deflect.ToString().ToLowerInvariant() + ".";
+            foreach ((CombatStyle style, VisualElement slot) in _deflects) slot.EnableInClassList("slot--on", state.Deflect == style);
         }
     }
 }

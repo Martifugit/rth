@@ -22,6 +22,10 @@ namespace Rth.Shared.Items
         public string Color = "#a0a0a0";
         /// <summary>Icon id (the client's icon library); empty means a guess from what the item is.</summary>
         public string Icon = "";
+        /// <summary>For a bank note: the item it stands for. Notes are made for every unstackable item.</summary>
+        public string? NoteOf;
+        /// <summary>The bank note for this item, if it has one.</summary>
+        public string? Note;
         /// <summary>Free-form labels other systems can match on ("food", "reagent", "occult"...).</summary>
         public List<string> Tags = new List<string>();
 

@@ -15,7 +15,7 @@ namespace Rth.Client.Ui.Panels
         public override string Title => "XP tracker";
         public override string Icon => "xp";
         public override string DefaultWindow => UiDefaultLayout.Side;
-        public override int Order => 7;
+        public override int Order => 8;
 
         private readonly Dictionary<string, long> _baseline = new Dictionary<string, long>();
         private readonly Dictionary<string, float> _firstGainTime = new Dictionary<string, float>();
@@ -37,21 +37,19 @@ namespace Rth.Client.Ui.Panels
 
         protected override void Build(VisualElement root)
         {
-            VisualElement summary = UiKit.El(root, "raised", "row");
-            summary.style.paddingLeft = summary.style.paddingRight = summary.style.paddingTop = summary.style.paddingBottom = 4f;
-            UiKit.Icon(summary, IconLibrary.Get("xp"), 32f).style.marginRight = 6f;
+            VisualElement summary = UiKit.El(root, "card", "row");
+            UiKit.Icon(summary, IconLibrary.Get("xp"), 30f).style.unityBackgroundImageTintColor = UiKit.IconTint;
             VisualElement text = UiKit.El(summary);
-            _total = UiKit.Text(text, "", "value");
+            text.style.marginLeft = 8f;
+            _total = UiKit.Text(text, "", "value", "bold");
             _time = UiKit.Text(text, "", "muted", "small");
             UiKit.El(summary, "spacer");
             UiKit.Button(summary, "Reset", Reset);
 
             VisualElement well = UiKit.El(root, "well");
             well.style.flexGrow = 1;
-            well.style.marginTop = 4f;
-            var scroll = new ScrollView();
-            scroll.AddToClassList("scroll");
-            well.Add(scroll);
+            well.style.marginTop = 6f;
+            ScrollView scroll = UiKit.Scroll(well);
             _list = scroll.contentContainer;
             _empty = UiKit.Text(scroll, "Gain some XP and it shows here.", "muted", "small");
         }
@@ -110,7 +108,7 @@ namespace Rth.Client.Ui.Panels
                 }
             }
             _empty.style.display = totalGained > 0 ? DisplayStyle.None : DisplayStyle.Flex;
-            _total.text = "+" + UiKit.FormatXp(totalGained) + " xp";
+            _total.text = "+" + UiKit.FormatXp(totalGained) + " XP";
             int minutes = Mathf.FloorToInt((Time.time - _sessionStart) / 60f);
             _time.text = "this session, " + (minutes >= 60 ? minutes / 60 + "h " + minutes % 60 + "m" : minutes + " min");
         }
@@ -119,15 +117,16 @@ namespace Rth.Client.Ui.Panels
         {
             if (_rows.TryGetValue(skill.Id, out Row row)) return row;
             row = new Row { Root = UiKit.El(_list) };
-            row.Root.style.marginBottom = 4f;
+            row.Root.style.marginBottom = 6f;
             VisualElement line = UiKit.El(row.Root, "row");
-            UiKit.Icon(line, IconLibrary.Get(skill.Icon), 16f).style.marginRight = 4f;
-            UiKit.Text(line, skill.Name, "small");
+            UiKit.Icon(line, IconLibrary.Get(skill.Icon), 18f).style.unityBackgroundImageTintColor = UiKit.IconTint;
+            UiKit.Text(line, skill.Name).style.marginLeft = 4f;
             UiKit.El(line, "spacer");
-            row.Gained = UiKit.Text(line, "", "value", "small");
+            row.Gained = UiKit.Text(line, "", "value", "bold");
             row.Rate = UiKit.Text(line, "", "muted", "small");
             row.Rate.style.marginLeft = 6f;
-            row.Target = new UiKit.Bar(row.Root, UiKit.Heading, null, 12f);
+            row.Target = new UiKit.Bar(row.Root, UiKit.Value, 14f);
+            row.Target.Root.style.marginTop = 2f;
             _rows[skill.Id] = row;
             return row;
         }

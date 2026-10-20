@@ -84,6 +84,10 @@ namespace Rth.Server.Game
             new TaskSystem(),
             new QuestSystem(),
             new ChatSystem(),
+            new RegionSystem(),
+            new ClientStateSystem(),
+            new AchievementSystem(),
+            new BestiarySystem(),
         };
 
         public ServerConfig Config => _config;

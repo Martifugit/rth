@@ -319,6 +319,9 @@ namespace Rth.Client
                     case RegionsMessage regionList:
                         regions.SetRegions(regionList.Regions);
                         break;
+                    case JsonStateMessage state:
+                        OnState(state);
+                        break;
                     case QuestsMessage quests:
                         Quests.Clear();
                         Quests.AddRange(quests.Quests);
@@ -373,20 +376,16 @@ namespace Rth.Client
                 if (keyboard.zKey.wasPressedThisFrame) ToggleDeflect(CombatStyle.Melee);
                 if (keyboard.xKey.wasPressedThisFrame) ToggleDeflect(CombatStyle.Ranged);
                 if (keyboard.cKey.wasPressedThisFrame) ToggleDeflect(CombatStyle.Occult);
-                Key[] digits = { Key.Digit1, Key.Digit2, Key.Digit3, Key.Digit4, Key.Digit5, Key.Digit6, Key.Digit7, Key.Digit8, Key.Digit9 };
+                // In conversation the dialogue window owns Space and the number keys.
                 if (Dialogue != null)
                 {
-                    // In conversation the number keys pick options and space continues.
-                    if (Dialogue.Options.Count == 0 && keyboard.spaceKey.wasPressedThisFrame) ChooseDialogue(-1);
-                    for (int i = 0; i < digits.Length && i < Dialogue.Options.Count; i++)
-                        if (keyboard[digits[i]].wasPressedThisFrame) ChooseDialogue(i);
                 }
-                else if (Content != null)
+                else if (Bars != null && !Ui.UiRoot.IsModalOpen)
                 {
-                    for (int i = 0; i < digits.Length && i < Content.ActionBar.Count; i++)
-                        if (keyboard[digits[i]].wasPressedThisFrame) UseAbility(Content.ActionBar[i]);
+                    for (int i = 0; i < Ui.ActionBars.MainKeys.Length; i++)
+                        if (Ui.ActionBars.MainKeys[i] != Key.None && keyboard[Ui.ActionBars.MainKeys[i]].wasPressedThisFrame) Bars.Use(this, 0, i);
                 }
-                if (keyboard.escapeKey.wasPressedThisFrame && (Dialogue != null || OpenInterface != InterfaceKind.None)) CloseInterface();
+                if (keyboard.escapeKey.wasPressedThisFrame && !Ui.UiRoot.IsModalOpen && (Dialogue != null || OpenInterface != InterfaceKind.None)) CloseInterface();
             }
 
             if (mouse == null) return;
@@ -509,8 +508,64 @@ namespace Rth.Client
         }
 
         /// <summary>Slot -1 deposits the whole pack; count 0 means all of that item.</summary>
-        public void BankDeposit(int slot, int count) => Send(new BankDepositMessage { Slot = slot, Count = count });
-        public void BankWithdraw(int slot, int count) => Send(new BankWithdrawMessage { Slot = slot, Count = count });
+        public void BankDeposit(int slot, int count, ContainerKind from = ContainerKind.Inventory) =>
+            Send(new BankDepositMessage { Slot = slot, Count = count, From = from });
+
+        public void BankWithdraw(int slot, int count, bool noted = false) =>
+            Send(new BankWithdrawMessage { Slot = slot, Count = count, Noted = noted });
+
+        // ------------------------------------------------------------------ server state and client state
+
+        private readonly Dictionary<string, string> _states = new Dictionary<string, string>();
+        private readonly Dictionary<string, object> _parsedStates = new Dictionary<string, object>();
+
+        /// <summary>Counts every state update, so views can tell when to rebuild.</summary>
+        public int StateVersion { get; private set; }
+
+        /// <summary>A piece of state the server sent as JSON ("achievements", "bestiary"), parsed once per update.</summary>
+        public T ServerState<T>(string key) where T : class, new()
+        {
+            if (_parsedStates.TryGetValue(key, out object parsed) && parsed is T typed) return typed;
+            T value = _states.TryGetValue(key, out string json) ? Newtonsoft.Json.JsonConvert.DeserializeObject<T>(json) ?? new T() : new T();
+            _parsedStates[key] = value;
+            return value;
+        }
+
+        private void OnState(JsonStateMessage message)
+        {
+            _states[message.Key] = message.Json;
+            _parsedStates.Remove(message.Key);
+            StateVersion++;
+            if (message.Key == "client")
+            {
+                ClientState.Clear();
+                foreach (KeyValuePair<string, string> kv in ServerState<Dictionary<string, string>>("client")) ClientState[kv.Key] = kv.Value;
+                Bars = null; // rebuilt from the saved layout
+            }
+        }
+
+        /// <summary>The client's own state kept on the server (bar layouts, targets): key to JSON.</summary>
+        public Dictionary<string, string> ClientState { get; } = new Dictionary<string, string>();
+
+        /// <summary>Stores a piece of client state on the server, so it follows the player.</summary>
+        public void SetClientState(string key, string json)
+        {
+            ClientState[key] = json;
+            Send(new SetClientStateMessage { Key = key, Json = json });
+        }
+
+        private Ui.ActionBars _bars;
+
+        /// <summary>The action bar layouts, once content and the saved layout have arrived.</summary>
+        public Ui.ActionBars Bars
+        {
+            get
+            {
+                if (_bars == null && Content != null && _states.ContainsKey("client")) _bars = Ui.ActionBars.Load(this);
+                return _bars;
+            }
+            private set => _bars = value;
+        }
         public void ShopBuy(int index, int count) => Send(new ShopBuyMessage { Index = index, Count = count });
         public void ShopSell(int slot, int count) => Send(new ShopSellMessage { Slot = slot, Count = count });
 

@@ -11,7 +11,7 @@ namespace Rth.Shared.Net
     public static class Protocol
     {
         /// <summary>Bump whenever a message layout changes, so mismatched builds are refused at login.</summary>
-        public const int Version = 8;
+        public const int Version = 9;
         public const int DefaultPort = 43600;
         /// <summary>Sanity limits on a single frame's length, in bytes.</summary>
         public const int MaxClientFrame = 4 * 1024;
@@ -39,6 +39,7 @@ namespace Rth.Shared.Net
         ShopBuy = 16,
         ShopSell = 17,
         Chat = 18,
+        SetClientState = 19,
 
         // Server to client: state.
         LoginOk = 100,
@@ -57,6 +58,7 @@ namespace Rth.Shared.Net
         Quests = 113,
         Regions = 114,
         ChatLine = 115,
+        JsonState = 116,
     }
 
     public abstract class Message
@@ -492,12 +494,27 @@ namespace Rth.Shared.Net
         public int BilePassiveThreshold;
         public int BileExtreme;
         public int MaxPhlegm;
+        public List<RecipeInfo> Recipes = new List<RecipeInfo>();
+        public List<Rth.Shared.Progress.AchievementDef> Achievements = new List<Rth.Shared.Progress.AchievementDef>();
     }
 
     /// <summary>
     /// Carries <see cref="ClientContent"/> as JSON: it's sent rarely, and this way new content
     /// fields and item components reach the client without any codec changes.
     /// </summary>
+    /// <summary>What the client needs to know about a recipe: for skill guides and tooltips.</summary>
+    public sealed class RecipeInfo
+    {
+        public string Id = "";
+        public string Name = "";
+        public string Verb = "";
+        public string Skill = "";
+        public int Level;
+        public string Station = "";
+        public List<ItemCost> Inputs = new List<ItemCost>();
+        public double Xp;
+    }
+
     public sealed class ContentInfoMessage : Message
     {
         private static readonly JsonSerializerSettings Settings = new JsonSerializerSettings
@@ -711,6 +728,52 @@ namespace Rth.Shared.Net
         Warning = 1,
         /// <summary>The Assayer speaks (on death).</summary>
         Assayer = 2,
+    }
+
+    /// <summary>
+    /// A named piece of player state as JSON ("achievements", "bestiary", "client"...), so a system
+    /// can show the client what it tracks without a message type and codec of its own.
+    /// </summary>
+    public sealed class JsonStateMessage : Message
+    {
+        public string Key = "";
+        public string Json = "{}";
+
+        public override MessageType Type => MessageType.JsonState;
+
+        internal override void WriteBody(BinaryWriter w)
+        {
+            w.Write(Key);
+            w.Write(Json);
+        }
+
+        internal static JsonStateMessage Read(BinaryReader r) => new JsonStateMessage { Key = r.ReadString(), Json = r.ReadString() };
+
+        public static JsonStateMessage Of(string key, object value) => new JsonStateMessage { Key = key, Json = JsonConvert.SerializeObject(value) };
+
+        public T Parse<T>() where T : class, new() => JsonConvert.DeserializeObject<T>(Json) ?? new T();
+    }
+
+    /// <summary>
+    /// The client keeps small pieces of its own state on the server (action bar layouts, targets),
+    /// so they follow the player between machines. The server stores them as given.
+    /// </summary>
+    public sealed class SetClientStateMessage : Message
+    {
+        public const int MaxLength = 16 * 1024;
+
+        public string Key = "";
+        public string Json = "";
+
+        public override MessageType Type => MessageType.SetClientState;
+
+        internal override void WriteBody(BinaryWriter w)
+        {
+            w.Write(Key);
+            w.Write(Json);
+        }
+
+        internal static SetClientStateMessage Read(BinaryReader r) => new SetClientStateMessage { Key = r.ReadString(), Json = r.ReadString() };
     }
 
     /// <summary>Who a chat line is for. Public is everyone nearby; more channels come with friends and groups.</summary>

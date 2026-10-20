@@ -163,6 +163,7 @@ namespace Rth.Server.Content
         public List<ShopDef> Shops = new List<ShopDef>();
         public TasksFile Tasks = new TasksFile();
         public List<QuestDef> Quests = new List<QuestDef>();
+        public List<Rth.Shared.Progress.AchievementDef> Achievements = new List<Rth.Shared.Progress.AchievementDef>();
     }
 
     /// <summary>
@@ -197,6 +198,7 @@ namespace Rth.Server.Content
         public IReadOnlyDictionary<string, PointPoolDef> PointPools { get; private set; } = new Dictionary<string, PointPoolDef>();
         public IReadOnlyDictionary<string, TaskGiverDef> TaskGivers { get; private set; } = new Dictionary<string, TaskGiverDef>();
         public IReadOnlyDictionary<string, QuestDef> Quests { get; private set; } = new Dictionary<string, QuestDef>();
+        public IReadOnlyDictionary<string, Rth.Shared.Progress.AchievementDef> Achievements { get; private set; } = new Dictionary<string, Rth.Shared.Progress.AchievementDef>();
 
         public ItemDef? Item(string? id) => id != null && Items.TryGetValue(id, out ItemDef? def) ? def : null;
 
@@ -223,6 +225,7 @@ namespace Rth.Server.Content
                 Shops = ReadJson<List<ShopDef>>(directory, "shops.json"),
                 Tasks = ReadJson<TasksFile>(directory, "tasks.json"),
                 Quests = ReadJson<List<QuestDef>>(directory, "quests.json"),
+                Achievements = ReadJson<List<Rth.Shared.Progress.AchievementDef>>(directory, "achievements.json"),
             });
         }
 
@@ -375,6 +378,32 @@ namespace Rth.Server.Content
                     if (!items.ContainsKey(item.Item)) problems.Add(where + "rewards unknown item '" + item.Item + "'.");
             }
 
+            Dictionary<string, Rth.Shared.Progress.AchievementDef> achievements = Index(parts.Achievements, a => a.Id, "achievement", problems);
+            foreach (Rth.Shared.Progress.AchievementDef a in parts.Achievements)
+            {
+                string where = "Achievement '" + a.Id + "': ";
+                if (string.IsNullOrWhiteSpace(a.Name)) problems.Add(where + "has no name.");
+                Rth.Shared.Progress.Objective o = a.Objective;
+                bool ok = o.Kind switch
+                {
+                    "kill" => parts.Npcs.Any(n => n.Id == o.Target),
+                    "talk" => parts.Npcs.Any(n => n.Id == o.Target),
+                    "recipe" => recipes.ContainsKey(o.Target),
+                    "level" => skills.ContainsKey(o.Target),
+                    "quest" => quests.ContainsKey(o.Target),
+                    "obtain" => items.ContainsKey(o.Target),
+                    "object" => o.Target.Contains(":") && objects.ContainsKey(o.Target.Split(':')[0]),
+                    "region" => o.Target.Length > 0,
+                    _ => false,
+                };
+                if (!ok) problems.Add(where + "has a bad objective (" + o.Kind + " " + o.Target + ").");
+                if (o.Count < 1) problems.Add(where + "objective count must be at least 1.");
+                foreach (Rth.Shared.Progress.XpReward xp in a.Reward.Xp)
+                    if (!skills.ContainsKey(xp.Skill)) problems.Add(where + "rewards XP in unknown skill '" + xp.Skill + "'.");
+                foreach (ItemCost item in a.Reward.Items)
+                    if (!items.ContainsKey(item.Item)) problems.Add(where + "rewards unknown item '" + item.Item + "'.");
+            }
+
             foreach (NpcDef n in parts.Npcs)
             {
                 if (n.Dialogue != null && !dialogues.ContainsKey(n.Dialogue)) problems.Add("NPC '" + n.Id + "': dialogue '" + n.Dialogue + "' doesn't exist.");
@@ -388,6 +417,8 @@ namespace Rth.Server.Content
                 problems.Add("Rules: need 0 < bilePassiveThreshold < bileExtreme <= bileLimit.");
 
             if (problems.Count > 0) throw new ContentException(string.Join(Environment.NewLine, problems));
+
+            AddBankNotes(items);
 
             return new GameContent
             {
@@ -410,7 +441,35 @@ namespace Rth.Server.Content
                 PointPools = pools,
                 TaskGivers = givers,
                 Quests = quests,
+                Achievements = achievements,
             };
+        }
+
+        /// <summary>
+        /// Every item that doesn't stack gets a bank note: a stackable paper standing for it, which
+        /// the bank hands out on request and takes back as the real thing.
+        /// </summary>
+        private static void AddBankNotes(Dictionary<string, ItemDef> items)
+        {
+            foreach (ItemDef item in items.Values.ToList())
+            {
+                if (item.Stackable || item.NoteOf != null) continue;
+                string id = item.Id + ".note";
+                if (items.ContainsKey(id)) continue;
+                item.Note = id;
+                items[id] = new ItemDef
+                {
+                    Id = id,
+                    Name = item.Name,
+                    Examine = "A Synod bank note for " + item.Name.ToLowerInvariant() + ". Any strongbox will exchange it.",
+                    Stackable = true,
+                    Value = item.Value,
+                    Color = item.Color,
+                    Icon = item.Icon,
+                    NoteOf = item.Id,
+                    Tags = new List<string> { "note" },
+                };
+            }
         }
 
         private static readonly HashSet<string> KnownEffectOps = new HashSet<string>
@@ -537,7 +596,17 @@ namespace Rth.Server.Content
             Skills = Skills.Values.ToList(),
             XpCurve = XpCurve,
             Objects = Objects.Values.ToList(),
-            Npcs = Npcs.Values.Select(n => new NpcInfo { Id = n.Id, Name = n.Name, Examine = n.Examine, Attackable = n.Attackable, Actions = n.Actions }).ToList(),
+            Npcs = Npcs.Values.Select(n => new NpcInfo
+            {
+                Id = n.Id, Name = n.Name, Examine = n.Examine, Attackable = n.Attackable, Actions = n.Actions,
+                Blood = n.Blood, MaxHit = n.MaxHit, Style = n.Style, Aggressive = n.Aggressive,
+            }).ToList(),
+            Recipes = Recipes.Values.Select(r => new RecipeInfo
+            {
+                Id = r.Id, Name = r.Name, Verb = r.Verb, Skill = r.Skill, Level = r.Level, Station = r.Station, Xp = r.Xp,
+                Inputs = r.Inputs.Select(i => new ItemCost { Item = i.Item, Count = i.Count }).ToList(),
+            }).ToList(),
+            Achievements = Achievements.Values.ToList(),
             BileLimit = Rules.BileLimit,
             BilePassiveThreshold = Rules.BilePassiveThreshold,
             BileExtreme = Rules.BileExtreme,

@@ -93,6 +93,7 @@ namespace Rth.Server.Game
                 if (left > 0 && ground != null) ground.Spawn(drop.ItemId, left, player.Plane, player.Position, player);
             }
             Skills.AddXp(player, recipe.Skill, recipe.Xp);
+            if (produced.Count > 0) World.Events.Publish(new ItemsObtained(player, "recipe:" + recipe.Id, produced));
             World.Events.Publish(new RecipeCompleted(player, recipe));
         }
     }

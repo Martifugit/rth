@@ -54,32 +54,40 @@ namespace Rth.Server.Game
         private void Deposit(Player player, BankDepositMessage m)
         {
             if (!IsOpen(player)) return;
-            ItemContainer inv = ItemSys.Of(player).Inventory;
+            bool worn = m.From == ContainerKind.Equipment;
+            ItemContainer from = worn ? ItemSys.Of(player).Equipment : ItemSys.Of(player).Inventory;
             if (m.Slot < 0)
             {
-                for (int i = 0; i < inv.Size; i++) DepositSlot(player, inv, i, 0);
-                return;
+                for (int i = 0; i < from.Size; i++) DepositSlot(player, from, i, 0);
             }
-            if (inv.InRange(m.Slot)) DepositSlot(player, inv, m.Slot, m.Count);
+            else if (from.InRange(m.Slot))
+            {
+                DepositSlot(player, from, m.Slot, m.Count);
+            }
+            if (worn) World.RecalculateStats(player);
         }
 
-        /// <summary>Moves an item from the pack into the bank: all of that item if count is 0.</summary>
-        private void DepositSlot(Player player, ItemContainer inv, int slot, int count)
+        /// <summary>
+        /// Moves an item into the bank: all of that item if count is 0. A bank note goes in as the
+        /// item it stands for.
+        /// </summary>
+        private void DepositSlot(Player player, ItemContainer from, int slot, int count)
         {
-            if (inv.IsEmpty(slot)) return;
-            string id = inv[slot].ItemId;
+            if (from.IsEmpty(slot)) return;
+            string id = from[slot].ItemId;
             ItemDef def = World.Content.Item(id) ?? new ItemDef { Id = id, Name = id };
-            int want = count <= 0 ? inv.CountOf(id) : Math.Min(count, inv.CountOf(id));
+            ItemDef stored = def.NoteOf != null ? World.Content.Item(def.NoteOf) ?? def : def;
+            int want = count <= 0 ? from.CountOf(id) : Math.Min(count, from.CountOf(id));
             ItemContainer bank = Of(player);
-            if (!bank.CanAdd(def, want))
+            if (!bank.CanAdd(stored, want))
             {
                 World.Tell(player, TextKind.Warning, "Your bank is full.");
                 return;
             }
-            // Take from the clicked slot first, then the rest of the pack.
-            int moved = inv.RemoveAt(slot, want);
-            if (moved < want) moved += inv.Remove(id, want - moved);
-            bank.Add(def, moved);
+            // Take from the clicked slot first, then the rest of the container.
+            int moved = from.RemoveAt(slot, want);
+            if (moved < want) moved += from.Remove(id, want - moved);
+            bank.Add(stored, moved);
         }
 
         private void Withdraw(Player player, BankWithdrawMessage m)
@@ -90,15 +98,17 @@ namespace Rth.Server.Game
             ItemSlot stack = bank[m.Slot];
             ItemDef def = World.Content.Item(stack.ItemId) ?? new ItemDef { Id = stack.ItemId, Name = stack.ItemId };
             ItemContainer inv = ItemSys.Of(player).Inventory;
+            // As notes, if asked and the item has one: notes stack, so a whole pile fits in one slot.
+            ItemDef given = m.Noted && def.Note != null ? World.Content.Item(def.Note) ?? def : def;
 
             int want = m.Count <= 0 ? stack.Count : Math.Min(m.Count, stack.Count);
-            int fits = def.Stackable ? (inv.CanAdd(def, want) ? want : 0) : Math.Min(want, inv.FreeSlots);
+            int fits = given.Stackable ? (inv.CanAdd(given, want) ? want : 0) : Math.Min(want, inv.FreeSlots);
             if (fits <= 0)
             {
                 World.Tell(player, TextKind.Warning, "You don't have enough inventory space.");
                 return;
             }
-            int left = inv.Add(def, fits);
+            int left = inv.Add(given, fits);
             bank.RemoveAt(m.Slot, fits - left);
             bank.Compact();
         }

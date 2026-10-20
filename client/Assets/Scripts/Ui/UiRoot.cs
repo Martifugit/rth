@@ -8,15 +8,16 @@ using UnityEngine.UIElements;
 namespace Rth.Client.Ui
 {
     /// <summary>
-    /// The in-game interface: a UI Toolkit document holding movable windows of panels. Finds
-    /// every <see cref="UiPanel"/> by itself, lays them out by <see cref="UiDefaultLayout"/> or
-    /// the player's saved layout, refreshes the visible ones each frame, and answers whether the
-    /// pointer is over the interface (so clicks there don't reach the world) or the player is
-    /// typing (so keys don't trigger hotkeys).
+    /// The in-game interface: a UI Toolkit document holding movable windows of panels, and modals
+    /// on top. Finds every <see cref="UiPanel"/> and <see cref="UiModal"/> by itself, lays panels
+    /// out by <see cref="UiDefaultLayout"/> or the player's saved layout, refreshes what's visible
+    /// each frame, runs drag and drop between slots, and answers whether the pointer is over the
+    /// interface (so clicks there don't reach the world) or the player is typing (so keys don't
+    /// trigger hotkeys).
     /// </summary>
     public sealed class UiRoot : MonoBehaviour
     {
-        private const string LayoutPref = "rth.ui.layout.v2";
+        private const string LayoutPref = "rth.ui.layout.v3";
         private const string LockedPref = "rth.ui.locked";
         private const string ScalePref = "rth.ui.scale";
 
@@ -31,20 +32,26 @@ namespace Rth.Client.Ui
         private PanelSettings _settings;
         private VisualElement _root;
         private VisualElement _windowLayer;
+        private VisualElement _modalLayer;
         private Label _tooltip;
         private Label _hover;
         private VisualElement _ghost;
         private VisualElement _ghostIcon;
         private Label _ghostText;
         private readonly List<UiPanel> _panels = new List<UiPanel>();
+        private readonly List<UiModal> _modals = new List<UiModal>();
         private readonly List<UiWindow> _windows = new List<UiWindow>();
+        private readonly HashSet<UiPanel> _dismissed = new HashSet<UiPanel>();
         private Vector2 _lastScreen;
         private bool _built;
+        private UiModal _openModal;
 
         public IReadOnlyList<UiWindow> Windows => _windows;
         public IReadOnlyList<UiPanel> Panels => _panels;
+        public IReadOnlyList<UiModal> Modals => _modals;
 
         public T Panel<T>() where T : UiPanel => _panels.OfType<T>().FirstOrDefault();
+        public T Modal<T>() where T : UiModal => _modals.OfType<T>().FirstOrDefault();
 
         public bool Locked
         {
@@ -90,24 +97,18 @@ namespace Rth.Client.Ui
             var sheet = Resources.Load<StyleSheet>("UI/Rth");
             if (sheet != null) _root.styleSheets.Add(sheet);
             _root.AddToClassList("rth-root");
-            var font = Resources.Load<Font>("UI/Fonts/PixelifySans");
-            if (font != null) _root.style.unityFontDefinition = FontDefinition.FromFont(font);
             _root.pickingMode = PickingMode.Ignore;
             _root.EnableInClassList("rth-root--locked", Locked);
-            // IMGUI windows and menus (bank, shop, dialogue, right-click) draw over these windows:
-            // a click meant for them must not also reach the window underneath.
+            // Anything still drawn with IMGUI (the login box) sits over these windows: clicks meant
+            // for it must not reach the window underneath.
             _root.RegisterCallback<PointerDownEvent>(GuardImgui, TrickleDown.TrickleDown);
             _root.RegisterCallback<PointerUpEvent>(GuardImgui, TrickleDown.TrickleDown);
             _root.RegisterCallback<ClickEvent>(GuardImgui, TrickleDown.TrickleDown);
 
-            _windowLayer = new VisualElement { pickingMode = PickingMode.Ignore };
-            _windowLayer.style.position = Position.Absolute;
-            _windowLayer.style.left = _windowLayer.style.top = _windowLayer.style.right = _windowLayer.style.bottom = 0;
-            _root.Add(_windowLayer);
-
-            // What a left-click would do, top left, as in the classic games.
+            _windowLayer = Layer();
             _hover = UiKit.Text(_root, "", "hover-text");
             _hover.pickingMode = PickingMode.Ignore;
+            _modalLayer = Layer();
 
             _tooltip = UiKit.Text(_root, "", "tooltip");
             _tooltip.pickingMode = PickingMode.Ignore;
@@ -115,18 +116,34 @@ namespace Rth.Client.Ui
             _ghost = UiKit.El(_root, "drag-ghost");
             _ghost.pickingMode = PickingMode.Ignore;
             _ghost.style.display = DisplayStyle.None;
-            _ghostIcon = UiKit.Icon(_ghost, null, 22f);
-            _ghostIcon.style.marginRight = 4f;
+            _ghostIcon = UiKit.Icon(_ghost, null, 28f);
             _ghostText = UiKit.Text(_ghost, "");
+            _ghostText.style.marginLeft = 4f;
 
             foreach (Type type in typeof(UiPanel).Assembly.GetTypes())
             {
-                if (type.IsAbstract || !typeof(UiPanel).IsAssignableFrom(type) || type.GetConstructor(Type.EmptyTypes) == null) continue;
-                var panel = (UiPanel)Activator.CreateInstance(type);
-                panel.Create(this);
-                _panels.Add(panel);
+                if (type.IsAbstract || type.GetConstructor(Type.EmptyTypes) == null) continue;
+                if (typeof(UiPanel).IsAssignableFrom(type))
+                {
+                    var panel = (UiPanel)Activator.CreateInstance(type);
+                    panel.Create(this);
+                    _panels.Add(panel);
+                }
+                else if (typeof(UiModal).IsAssignableFrom(type))
+                {
+                    _modals.Add((UiModal)Activator.CreateInstance(type));
+                }
             }
             _panels.Sort((a, b) => a.Order != b.Order ? a.Order.CompareTo(b.Order) : string.CompareOrdinal(a.Id, b.Id));
+        }
+
+        private VisualElement Layer()
+        {
+            var layer = new VisualElement { pickingMode = PickingMode.Ignore };
+            layer.style.position = Position.Absolute;
+            layer.style.left = layer.style.top = layer.style.right = layer.style.bottom = 0;
+            _root.Add(layer);
+            return layer;
         }
 
         private void Update()
@@ -137,6 +154,7 @@ namespace Rth.Client.Ui
             if (!inGame)
             {
                 HideTooltip();
+                CancelDrag();
                 return;
             }
 
@@ -155,21 +173,31 @@ namespace Rth.Client.Ui
                 foreach (UiWindow w in _windows) w.Apply(screen);
             }
 
-            _hover.text = PopupMenu.IsOpen ? "" : session.HoverText;
+            _hover.text = PopupMenu.IsOpen || _drag != null ? "" : session.HoverText;
 
             foreach (UiPanel panel in _panels)
             {
+                // Server windows follow the server, unless the player has just closed one and the
+                // server hasn't caught up yet.
                 bool? serverOpen = panel.ServerOpen;
-                if (serverOpen == true && panel.Window == null) Open(panel);
+                if (serverOpen == false) _dismissed.Remove(panel);
+                if (serverOpen == true && panel.Window == null && !_dismissed.Contains(panel)) Open(panel);
                 else if (serverOpen == false && panel.Window != null) Close(panel, byPlayer: false);
                 panel.Observe();
                 if (panel.IsVisible) panel.Refresh();
             }
+            _openModal?.Refresh();
+
+            UpdateDrag();
+            UpdatePrompt();
 
             Keyboard keyboard = Keyboard.current;
-            if (keyboard != null && !IsTyping)
-                foreach (UiPanel panel in _panels)
-                    if (panel.Hotkey != Key.None && keyboard[panel.Hotkey].wasPressedThisFrame) Toggle(panel);
+            if (keyboard == null || IsTyping) return;
+            if (keyboard.escapeKey.wasPressedThisFrame && _openModal != null) CloseModal();
+            foreach (UiPanel panel in _panels)
+                if (panel.Hotkey != Key.None && keyboard[panel.Hotkey].wasPressedThisFrame) Toggle(panel);
+            foreach (UiModal modal in _modals)
+                if (modal.Hotkey != Key.None && keyboard[modal.Hotkey].wasPressedThisFrame) ToggleModal(modal);
         }
 
         // ------------------------------------------------------------------ input questions
@@ -179,6 +207,7 @@ namespace Rth.Client.Ui
         {
             UiRoot ui = Instance;
             if (ui == null || ui._root?.panel == null || ui._root.resolvedStyle.display == DisplayStyle.None) return false;
+            if (ui._openModal != null) return true; // a modal owns the screen
             Vector2 p = RuntimePanelUtils.ScreenToPanel(ui._root.panel, new Vector2(screenPosition.x, Screen.height - screenPosition.y));
             return ui._root.panel.Pick(p) != null;
         }
@@ -195,6 +224,8 @@ namespace Rth.Client.Ui
             }
         }
 
+        public static bool IsModalOpen => Instance != null && Instance._openModal != null;
+
         private void GuardImgui<T>(T e) where T : EventBase, IPointerEvent
         {
             if (CombatHud.ClaimsContain(PanelToGui(e.position))) e.StopImmediatePropagation();
@@ -206,6 +237,17 @@ namespace Rth.Client.Ui
 
         /// <summary>Converts an IMGUI position (top-left origin, screen pixels) to a panel position.</summary>
         public Vector2 GuiToPanel(Vector2 gui) => gui / (_settings != null ? _settings.scale : 1f);
+
+        /// <summary>Converts a panel position (top-left origin, panel pixels) to an IMGUI position for <see cref="PopupMenu"/>.</summary>
+        public Vector2 PanelToGui(Vector2 panelPosition) => panelPosition * (_settings != null ? _settings.scale : 1f);
+
+        private Vector2 PointerPanelPosition()
+        {
+            Mouse mouse = Mouse.current;
+            if (mouse == null || _root?.panel == null) return Vector2.zero;
+            Vector2 screen = mouse.position.ReadValue();
+            return RuntimePanelUtils.ScreenToPanel(_root.panel, new Vector2(screen.x, Screen.height - screen.y));
+        }
 
         /// <summary>Shows a menu element at a panel position, kept on screen, above everything.</summary>
         public void ShowMenu(VisualElement menu, Vector2 at)
@@ -226,14 +268,11 @@ namespace Rth.Client.Ui
             });
         }
 
-        /// <summary>Converts a panel position (top-left origin, panel pixels) to an IMGUI position for <see cref="PopupMenu"/>.</summary>
-        public Vector2 PanelToGui(Vector2 panelPosition) => panelPosition * (_settings != null ? _settings.scale : 1f);
-
-        // ------------------------------------------------------------------ tooltip and drag ghost
+        // ------------------------------------------------------------------ tooltip
 
         public void ShowTooltip(string text, Vector2 at)
         {
-            if (string.IsNullOrEmpty(text) || _ghost.style.display == DisplayStyle.Flex)
+            if (string.IsNullOrEmpty(text) || _drag != null || _ghost.style.display == DisplayStyle.Flex)
             {
                 HideTooltip();
                 return;
@@ -255,20 +294,210 @@ namespace Rth.Client.Ui
             if (_tooltip != null) _tooltip.style.display = DisplayStyle.None;
         }
 
-        public void ShowDragGhost(string text, Texture2D icon, Vector2 at)
+        public void ShowDragGhost(string text, Texture2D icon, Color tint, Vector2 at)
         {
             HideTooltip();
-            _ghostText.text = text;
+            _ghostText.text = text ?? "";
             _ghostText.style.display = string.IsNullOrEmpty(text) ? DisplayStyle.None : DisplayStyle.Flex;
-            UiKit.SetIcon(_ghostIcon, icon);
+            UiKit.SetIcon(_ghostIcon, icon, tint);
             _ghostIcon.style.display = icon != null ? DisplayStyle.Flex : DisplayStyle.None;
             _ghost.style.display = DisplayStyle.Flex;
             _ghost.BringToFront();
-            _ghost.style.left = at.x + 8f;
-            _ghost.style.top = at.y + 8f;
+            _ghost.style.left = at.x + 10f;
+            _ghost.style.top = at.y + 10f;
         }
 
         public void HideDragGhost() => _ghost.style.display = DisplayStyle.None;
+
+        // ------------------------------------------------------------------ drag and drop
+
+        /// <summary>
+        /// Something being dragged: an item from a slot, an ability from the book, an action bar
+        /// slot. Drop targets decide whether they take it; dropping on nothing runs
+        /// <see cref="OnNowhere"/> (taking an ability off a bar).
+        /// </summary>
+        public sealed class Drag
+        {
+            public object Data;
+            public Texture2D Icon;
+            public Color Tint = Color.white;
+            public Action OnNowhere;
+        }
+
+        private sealed class DropTarget
+        {
+            public Func<object, bool> Accepts;
+            public Action<object> Drop;
+        }
+
+        private readonly Dictionary<VisualElement, DropTarget> _dropTargets = new Dictionary<VisualElement, DropTarget>();
+        private Drag _drag;
+        private VisualElement _dropHighlight;
+
+        public bool IsDragging => _drag != null;
+
+        /// <summary>Makes an element a place things can be dropped.</summary>
+        public void AddDropTarget(VisualElement element, Func<object, bool> accepts, Action<object> drop) =>
+            _dropTargets[element] = new DropTarget { Accepts = accepts, Drop = drop };
+
+        /// <summary>
+        /// Starts dragging (call once the pointer has moved a few pixels with the button held).
+        /// The drag follows the mouse until the button is released.
+        /// </summary>
+        public void BeginDrag(Drag drag)
+        {
+            _drag = drag;
+            HideTooltip();
+        }
+
+        private void UpdateDrag()
+        {
+            if (_drag == null) return;
+            Mouse mouse = Mouse.current;
+            Vector2 at = PointerPanelPosition();
+            ShowDragGhost(null, _drag.Icon, _drag.Tint, at - new Vector2(24f, 24f));
+            VisualElement target = TargetAt(at, out DropTarget drop);
+            Highlight(target != null && drop.Accepts(_drag.Data) ? target : null);
+            if (mouse != null && mouse.leftButton.isPressed) return;
+
+            Drag finished = _drag;
+            CancelDrag();
+            if (target != null && drop.Accepts(finished.Data)) drop.Drop(finished.Data);
+            else if (!IsOverAnyWindow(at)) finished.OnNowhere?.Invoke();
+        }
+
+        private VisualElement TargetAt(Vector2 at, out DropTarget drop)
+        {
+            drop = null;
+            for (VisualElement e = _root.panel.Pick(at); e != null; e = e.parent)
+                if (_dropTargets.TryGetValue(e, out drop)) return e;
+            return null;
+        }
+
+        private bool IsOverAnyWindow(Vector2 at) => _root.panel.Pick(at) != null;
+
+        private void Highlight(VisualElement target)
+        {
+            if (_dropHighlight == target) return;
+            _dropHighlight?.RemoveFromClassList("slot--drop");
+            _dropHighlight = target;
+            _dropHighlight?.AddToClassList("slot--drop");
+        }
+
+        public void CancelDrag()
+        {
+            _drag = null;
+            Highlight(null);
+            HideDragGhost();
+        }
+
+        // ------------------------------------------------------------------ number prompt
+
+        private VisualElement _prompt;
+        private TextField _promptField;
+        private Action<int> _promptDone;
+
+        /// <summary>Asks for a number ("Withdraw how many?"). Enter accepts; Escape cancels.</summary>
+        public void PromptNumber(string question, Action<int> done)
+        {
+            ClosePrompt();
+            _promptDone = done;
+            _prompt = UiKit.El(_root, "modal-backdrop");
+            _prompt.style.backgroundColor = new Color(0f, 0f, 0f, 0.35f);
+            VisualElement box = UiKit.El(_prompt, "card");
+            box.style.width = 280f;
+            box.style.paddingLeft = box.style.paddingRight = box.style.paddingTop = box.style.paddingBottom = 14f;
+            UiKit.Heading(box, question);
+            _promptField = new TextField { maxLength = 10 };
+            _promptField.AddToClassList("input");
+            box.Add(_promptField);
+            Label hint = UiKit.Text(box, "Enter a number. K and M work: 5k, 1.5m.", "muted", "small");
+            hint.style.marginTop = 4f;
+            VisualElement buttons = UiKit.El(box, "row");
+            buttons.style.justifyContent = Justify.FlexEnd;
+            buttons.style.marginTop = 8f;
+            UiKit.Button(buttons, "Cancel", ClosePrompt);
+            UiKit.Button(buttons, "OK", AcceptPrompt);
+            _promptField.RegisterCallback<KeyDownEvent>(e =>
+            {
+                if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter) AcceptPrompt();
+                else if (e.keyCode == KeyCode.Escape) ClosePrompt();
+            }, TrickleDown.TrickleDown);
+            _prompt.schedule.Execute(() => _promptField.Focus());
+        }
+
+        private void AcceptPrompt()
+        {
+            int? n = ParseAmount(_promptField?.value);
+            Action<int> done = _promptDone;
+            ClosePrompt();
+            if (n.HasValue && n.Value > 0) done?.Invoke(n.Value);
+        }
+
+        private void ClosePrompt()
+        {
+            _prompt?.RemoveFromHierarchy();
+            _prompt = null;
+            _promptField = null;
+            _promptDone = null;
+        }
+
+        private void UpdatePrompt()
+        {
+            if (_prompt != null) _prompt.BringToFront();
+        }
+
+        /// <summary>"250", "5k", "1.5m" to a count.</summary>
+        public static int? ParseAmount(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return null;
+            text = text.Trim().ToLowerInvariant();
+            double scale = 1;
+            if (text.EndsWith("k")) { scale = 1_000; text = text.Substring(0, text.Length - 1); }
+            else if (text.EndsWith("m")) { scale = 1_000_000; text = text.Substring(0, text.Length - 1); }
+            if (!double.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double value)) return null;
+            double total = value * scale;
+            return total >= int.MaxValue ? int.MaxValue : (int)total;
+        }
+
+        // ------------------------------------------------------------------ modals
+
+        /// <summary>Opens a modal (closing any other), on a tab and focused on something if given.</summary>
+        public void OpenModal(UiModal modal, string tab = null, string focus = null)
+        {
+            if (modal == null) return;
+            if (_openModal != modal)
+            {
+                CloseModal();
+                if (modal.Root == null) modal.Create(this);
+                VisualElement backdrop = UiKit.El(_modalLayer, "modal-backdrop");
+                backdrop.pickingMode = PickingMode.Position;
+                backdrop.RegisterCallback<PointerDownEvent>(e =>
+                {
+                    if (e.target == backdrop) CloseModal(); // a click outside the modal
+                });
+                backdrop.Add(modal.Root);
+                _openModal = modal;
+            }
+            modal.Show(tab, focus);
+            HideTooltip();
+        }
+
+        public void OpenModal<T>(string tab = null, string focus = null) where T : UiModal => OpenModal(Modal<T>(), tab, focus);
+
+        public void ToggleModal(UiModal modal)
+        {
+            if (_openModal == modal) CloseModal();
+            else OpenModal(modal);
+        }
+
+        public void CloseModal()
+        {
+            if (_openModal == null) return;
+            _modalLayer.Clear();
+            _openModal = null;
+            HideTooltip();
+        }
 
         // ------------------------------------------------------------------ opening and closing panels
 
@@ -285,7 +514,7 @@ namespace Rth.Client.Ui
 
         /// <summary>
         /// Opens a panel: into a window already holding panels from its default group, or a new
-        /// window where its group belongs.
+        /// window where it last stood or where its group belongs.
         /// </summary>
         public void Open(UiPanel panel)
         {
@@ -321,7 +550,7 @@ namespace Rth.Client.Ui
             if (window.Panels.Count == 1) Remember(window);
             window.Remove(panel);
             if (window.Panels.Count == 0) RemoveWindow(window);
-            if (byPlayer) panel.OnClosedByPlayer();
+            if (byPlayer) Dismiss(panel);
             SaveLayout();
         }
 
@@ -331,10 +560,16 @@ namespace Rth.Client.Ui
             foreach (UiPanel p in window.Panels.ToList())
             {
                 window.Remove(p);
-                p.OnClosedByPlayer();
+                Dismiss(p);
             }
             RemoveWindow(window);
             SaveLayout();
+        }
+
+        private void Dismiss(UiPanel panel)
+        {
+            if (panel.ServerOpen == true) _dismissed.Add(panel); // stays shut until the server agrees
+            panel.OnClosedByPlayer();
         }
 
         /// <summary>Where a panel last stood on its own, so it reopens there.</summary>
@@ -360,11 +595,11 @@ namespace Rth.Client.Ui
             window.Root.RemoveFromHierarchy();
         }
 
-        /// <summary>A tab dropped somewhere: onto another window's tab strip joins it; anywhere else gets its own window.</summary>
+        /// <summary>A tab dropped somewhere: onto another window's title bar joins it; anywhere else gets its own window.</summary>
         public void DropPanel(UiPanel panel, Vector2 at)
         {
             UiWindow from = panel.Window;
-            UiWindow target = _windows.FirstOrDefault(w => w != from && w.AcceptsDropAt(at));
+            UiWindow target = _windows.FirstOrDefault(w => w != from && w.AcceptsDropAt(at) && !w.FixedSize.HasValue && !panel.FixedSize.HasValue);
             if (target != null)
             {
                 target.Add(panel);
@@ -436,7 +671,7 @@ namespace Rth.Client.Ui
         public void SaveLayout()
         {
             if (!_built) return;
-            var layout = new SavedLayout { known = _panels.Select(p => p.Id).ToList(), placements = _placements.Values.ToList() };
+            var layout = new SavedLayout { known = _panels.Select(p => p.Id).ToList() };
             foreach (UiWindow w in _windows)
             {
                 // Server windows reopen when the server says, not at login.

@@ -1,21 +1,31 @@
 using System;
+using Rth.Shared.Items;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Rth.Client.Ui
 {
     /// <summary>
-    /// Building blocks for panels, all styled by Rth.uss: elements with classes, icons, wells,
-    /// resource bars, buttons, checkboxes and tooltips. Panels should compose these rather than
-    /// set colours and borders by hand, so the whole interface keeps one look.
+    /// Building blocks for panels and modals, all styled by Rth.uss: elements with classes, tinted
+    /// icons, item icons (bank notes included), bars and resource gauges, buttons, checkboxes,
+    /// scroll areas, list rows and tooltips. Compose these rather than styling by hand, so the
+    /// whole interface keeps one look.
     /// </summary>
     public static class UiKit
     {
-        public static readonly Color Heading = new Color(1f, 0.596f, 0.122f);
-        public static readonly Color Value = new Color(1f, 1f, 0f);
-        public static readonly Color Muted = new Color(0.66f, 0.6f, 0.48f);
-        public static readonly Color Good = new Color(0.235f, 0.847f, 0.235f);
-        public static readonly Color Bad = new Color(1f, 0.29f, 0.227f);
+        public static readonly Color TextColour = new Color(0.867f, 0.827f, 0.749f);
+        public static readonly Color HeadingColour = new Color(0.878f, 0.765f, 0.529f);
+        public static readonly Color Value = new Color(0.941f, 0.835f, 0.549f);
+        public static readonly Color Muted = new Color(0.561f, 0.518f, 0.443f);
+        public static readonly Color Good = new Color(0.486f, 0.812f, 0.384f);
+        public static readonly Color Bad = new Color(0.878f, 0.376f, 0.306f);
+        public static readonly Color IconTint = new Color(0.878f, 0.765f, 0.529f);
+
+        public static readonly Color BloodColour = new Color(0.72f, 0.12f, 0.1f);
+        public static readonly Color PhlegmColour = new Color(0.4f, 0.66f, 0.38f);
+        public static readonly Color BreathColour = new Color(0.36f, 0.6f, 0.9f);
+        public static readonly Color YellowBile = new Color(0.92f, 0.74f, 0.16f);
+        public static readonly Color BlackBile = new Color(0.5f, 0.3f, 0.7f);
 
         public static VisualElement El(VisualElement parent, params string[] classes)
         {
@@ -33,7 +43,13 @@ namespace Rth.Client.Ui
             return l;
         }
 
-        /// <summary>An element showing an icon at a fixed size (pixel art scales by whole steps best: 16, 32, 48).</summary>
+        public static Label Heading(VisualElement parent, string text) => Text(parent, text.ToUpperInvariant(), "heading");
+
+        public static VisualElement Divider(VisualElement parent) => El(parent, "divider");
+
+        // ------------------------------------------------------------------ icons
+
+        /// <summary>An element showing an icon at a size, tinted (icons are white silhouettes).</summary>
         public static VisualElement Icon(VisualElement parent, Texture2D texture, float size, params string[] classes)
         {
             VisualElement e = El(parent, classes);
@@ -44,14 +60,57 @@ namespace Rth.Client.Ui
             return e;
         }
 
-        public static void SetIcon(VisualElement element, Texture2D texture) =>
+        public static void SetIcon(VisualElement element, Texture2D texture, Color? tint = null)
+        {
             element.style.backgroundImage = texture != null ? new StyleBackground(texture) : new StyleBackground(StyleKeyword.None);
+            if (tint.HasValue) element.style.unityBackgroundImageTintColor = tint.Value;
+        }
+
+        /// <summary>
+        /// Shows an item on an icon element: its icon in its colour, or for a bank note, a paper
+        /// with the item drawn small on it.
+        /// </summary>
+        public static void SetItem(VisualElement icon, ItemDef def)
+        {
+            icon.Clear();
+            if (def == null)
+            {
+                SetIcon(icon, null);
+                return;
+            }
+            if (def.NoteOf != null)
+            {
+                SetIcon(icon, IconLibrary.Get("note"), new Color(0.86f, 0.8f, 0.64f));
+                VisualElement inner = El(icon, "icon");
+                inner.pickingMode = PickingMode.Ignore;
+                inner.style.position = Position.Absolute;
+                inner.style.left = Length.Percent(22f);
+                inner.style.top = Length.Percent(22f);
+                inner.style.width = Length.Percent(56f);
+                inner.style.height = Length.Percent(56f);
+                SetIcon(inner, IconLibrary.ForItem(def), IconLibrary.ItemTint(def));
+                return;
+            }
+            SetIcon(icon, IconLibrary.ForItem(def), IconLibrary.ItemTint(def));
+        }
+
+        // ------------------------------------------------------------------ buttons and toggles
 
         public static Label Button(VisualElement parent, string text, Action onClick, params string[] classes)
         {
             Label b = Text(parent, text, "button");
             foreach (string c in classes) b.AddToClassList(c);
             b.RegisterCallback<ClickEvent>(_ => onClick());
+            return b;
+        }
+
+        /// <summary>A square button showing an icon.</summary>
+        public static VisualElement IconButton(VisualElement parent, string icon, string tooltip, Action onClick)
+        {
+            VisualElement b = El(parent, "button", "button--icon");
+            Icon(b, IconLibrary.Get(icon), 20f).style.unityBackgroundImageTintColor = IconTint;
+            if (onClick != null) b.RegisterCallback<ClickEvent>(_ => onClick());
+            Tooltip(b, () => tooltip);
             return b;
         }
 
@@ -76,24 +135,43 @@ namespace Rth.Client.Ui
             }
         }
 
-        /// <summary>A resource bar: optional icon, the bar, and a centred label.</summary>
+        /// <summary>A vertical scroll area that scrolls at a sensible speed.</summary>
+        public static ScrollView Scroll(VisualElement parent)
+        {
+            var scroll = new ScrollView(ScrollViewMode.Vertical) { horizontalScrollerVisibility = ScrollerVisibility.Hidden };
+            scroll.style.flexGrow = 1;
+            scroll.mouseWheelScrollSize = 40f;
+            parent.Add(scroll);
+            return scroll;
+        }
+
+        /// <summary>A selectable row for a master list (quests, creatures, skills).</summary>
+        public static VisualElement MasterRow(VisualElement parent, string text, Action onClick, Color? colour = null)
+        {
+            VisualElement row = El(parent, "master-row");
+            Label label = Text(row, text);
+            if (colour.HasValue) label.style.color = colour.Value;
+            row.RegisterCallback<ClickEvent>(_ => onClick());
+            return row;
+        }
+
+        // ------------------------------------------------------------------ bars
+
+        /// <summary>A plain bar with an optional centred label.</summary>
         public sealed class Bar
         {
             public readonly VisualElement Root;
-            public readonly VisualElement Track;
             private readonly VisualElement _fill;
             private readonly Label _label;
 
-            public Bar(VisualElement parent, Color color, Texture2D icon = null, float height = 16f)
+            public Bar(VisualElement parent, Color color, float height = 18f)
             {
-                Root = El(parent, "bar-row");
-                if (icon != null) Icon(Root, icon, Mathf.Min(18f, height + 2f), "bar-row__icon");
-                Track = El(Root, "bar");
-                Track.style.height = height;
-                _fill = El(Track, "bar__fill");
+                Root = El(parent, "bar");
+                Root.style.height = height;
+                _fill = El(Root, "bar__fill");
                 _fill.style.backgroundColor = color;
-                El(Track, "bar__gloss");
-                _label = Text(Track, "", "bar__label");
+                El(Root, "bar__gloss");
+                _label = Text(Root, "", "bar__label");
             }
 
             public void Set(float fraction, string text)
@@ -108,6 +186,51 @@ namespace Rth.Client.Ui
             }
         }
 
+        /// <summary>
+        /// A resource gauge in the modern style: icon, the numbers written above, a slim bar
+        /// beneath. Several sit side by side with equal widths.
+        /// </summary>
+        public sealed class Gauge
+        {
+            public readonly VisualElement Root;
+            private readonly Label _value;
+            private readonly VisualElement _fill;
+
+            public Gauge(VisualElement parent, string icon, Color colour)
+            {
+                Root = El(parent, "row");
+                Root.style.flexGrow = 1;
+                Root.style.flexBasis = 0;
+                Root.style.marginRight = 8f;
+                VisualElement i = Icon(Root, IconLibrary.Get(icon), 22f);
+                i.style.unityBackgroundImageTintColor = Color.Lerp(colour, Color.white, 0.25f);
+                i.style.marginRight = 6f;
+                VisualElement column = El(Root);
+                column.style.flexGrow = 1;
+                _value = Text(column, "", "bold", "small");
+                _value.style.marginBottom = 1f;
+                VisualElement track = El(column, "bar");
+                track.style.height = 7f;
+                track.style.flexGrow = 0;
+                _fill = El(track, "bar__fill");
+                _fill.style.backgroundColor = colour;
+                El(track, "bar__gloss");
+            }
+
+            public void Set(float fraction, string text)
+            {
+                _fill.style.width = Length.Percent(Mathf.Clamp01(fraction) * 100f);
+                _value.text = text;
+            }
+
+            public Color Fill
+            {
+                set => _fill.style.backgroundColor = value;
+            }
+        }
+
+        // ------------------------------------------------------------------ tooltips and text
+
         /// <summary>Shows a tooltip (rich text allowed) while the pointer is over an element; the text is asked for each time.</summary>
         public static void Tooltip(VisualElement element, Func<string> text)
         {
@@ -119,17 +242,14 @@ namespace Rth.Client.Ui
         /// <summary>Rich-text colour wrapper for tooltips and labels.</summary>
         public static string Colour(string text, Color color) => "<color=#" + ColorUtility.ToHtmlStringRGB(color) + ">" + text + "</color>";
 
-        public static string Title(string text) => "<b>" + Colour(text, Heading) + "</b>";
-
-        public static Color Rgb(int rgb) =>
-            new Color(((rgb >> 16) & 0xFF) / 255f, ((rgb >> 8) & 0xFF) / 255f, (rgb & 0xFF) / 255f);
+        public static string Title(string text) => "<b>" + Colour(text, HeadingColour) + "</b>";
 
         public static string FormatCount(int n) =>
             n >= 10_000_000 ? n / 1_000_000 + "M" : n >= 100_000 ? n / 1000 + "K" : n.ToString();
 
-        /// <summary>The classic stack colours: yellow, white from 100K, green from 10M.</summary>
+        /// <summary>The classic stack colours: gold, white from 100K, green from 10M.</summary>
         public static Color CountColour(int n) =>
-            n >= 10_000_000 ? new Color(0f, 1f, 0.5f) : n >= 100_000 ? Color.white : Value;
+            n >= 10_000_000 ? new Color(0.4f, 1f, 0.6f) : n >= 100_000 ? Color.white : Value;
 
         public static string FormatXp(long xp) =>
             xp >= 10_000_000 ? (xp / 1_000_000f).ToString("0.#") + "M" : xp >= 10_000 ? (xp / 1000f).ToString("0.#") + "K" : xp.ToString("N0");

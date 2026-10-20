@@ -1,133 +1,135 @@
 /*
- * R'th interface theme. The look of Old School RuneScape (bevelled stone-brown frames, chunky
- * pixel text with drop shadows, orange headings, yellow numbers) in original styling.
+ * R'th interface theme: dark fantasy RPG. Charcoal-brown panels inside thin bronze frames with
+ * gold corner accents, Cinzel for titles, Alegreya Sans for everything you read.
+ * Textures live in Resources/UI/Skin (drawn by tools/ui-skin/make_skin.py); slice sizes here
+ * must match the ones noted there.
  *
  * Colour roles
- *   surface   #3b3227   window body          well      #2a231b   recessed areas (slots, lists)
- *   bevel hi  #6b5a41   top/left edges       bevel lo  #17120d   bottom/right edges
- *   heading   #ff981f   titles               value     #ffff00   numbers
- *   text      #e8dcc0   body                 muted     #a8987a   hints
- *   active    #6e2a1a   selected tab / on    good      #3cd83c   bad       #ff4a3a
+ *   text    #ddd3bf   body             title   #e0c387   window titles, headings
+ *   value   #f0d58c   numbers          muted   #8f8471   hints, inactive
+ *   good    #7ccf62   bad     #e0604e  accent  #c9a25e   bronze lines, focus
  */
 
 .rth-root {
-    font-size: 13px;
-    color: rgb(232, 220, 192);
-    text-shadow: 1px 1px 0 rgb(0, 0, 0);
+    -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Medium");
+    font-size: 14px;
+    color: rgb(221, 211, 191);
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.85);
 }
 
 /* ---------------------------------------------------------------- windows */
 
 .window {
     position: absolute;
-    background-color: rgb(59, 50, 39);
-    border-width: 2px;
-    border-top-color: rgb(107, 90, 65);
-    border-left-color: rgb(107, 90, 65);
-    border-bottom-color: rgb(23, 18, 13);
-    border-right-color: rgb(23, 18, 13);
-    border-radius: 2px;
+    background-color: rgb(16, 15, 13);
+    border-radius: 5px;
+    background-image: resource("UI/Skin/window");
+    -unity-slice-left: 14;
+    -unity-slice-right: 14;
+    -unity-slice-top: 14;
+    -unity-slice-bottom: 14;
+    padding: 3px;
 }
 
 .window--bare {
-    background-color: rgba(0, 0, 0, 0);
     background-image: none;
-    border-width: 0;
+    background-color: rgba(0, 0, 0, 0);
+    padding: 0;
 }
 
 .window__titlebar {
     flex-direction: row;
     align-items: center;
-    min-height: 26px;
-    background-color: rgb(42, 35, 27);
-    border-bottom-width: 1px;
-    border-bottom-color: rgb(23, 18, 13);
-    padding: 0 2px 0 2px;
+    height: 32px;
+    background-image: resource("UI/Skin/title");
+    -unity-background-scale-mode: stretch-to-fill;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    padding: 0 4px 0 6px;
 }
 
 .window__title-icon {
     width: 20px;
     height: 20px;
-    margin: 0 4px 0 2px;
+    margin-right: 6px;
     -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: rgb(224, 195, 135);
 }
 
 .window__title {
     flex-grow: 1;
-    color: rgb(255, 152, 31);
+    -unity-font-definition: resource("UI/Fonts/Cinzel");
     -unity-font-style: bold;
-    font-size: 13px;
+    font-size: 14px;
+    color: rgb(224, 195, 135);
+    letter-spacing: 1px;
     -unity-text-align: middle-left;
 }
 
 .window__tabs {
     flex-direction: row;
-    flex-wrap: wrap;
     flex-grow: 1;
     flex-shrink: 1;
-    align-items: flex-end;
+    align-self: stretch;
+    align-items: stretch;
 }
 
 .tab {
     width: 28px;
-    height: 26px;
-    margin: 2px 1px 0 0;
-    background-color: rgb(52, 44, 34);
-    border-width: 1px;
-    border-bottom-width: 0;
-    border-top-color: rgb(96, 81, 59);
-    border-left-color: rgb(96, 81, 59);
-    border-right-color: rgb(23, 18, 13);
-    border-top-left-radius: 3px;
-    border-top-right-radius: 3px;
+    margin-right: 1px;
     align-items: center;
     justify-content: center;
 }
 
 .tab:hover {
-    background-color: rgb(70, 60, 46);
+    background-color: rgba(255, 230, 180, 0.06);
 }
 
 .tab--active {
-    background-color: rgb(110, 42, 26);
-    border-top-color: rgb(170, 80, 50);
-    border-left-color: rgb(170, 80, 50);
+    background-image: resource("UI/Skin/tab-active");
+    -unity-background-scale-mode: stretch-to-fill;
 }
 
 .tab__icon {
     width: 22px;
     height: 22px;
     -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: rgb(139, 128, 108);
+}
+
+.tab:hover > .tab__icon {
+    -unity-background-image-tint-color: rgb(205, 185, 143);
+}
+
+.tab--active > .tab__icon {
+    -unity-background-image-tint-color: rgb(240, 213, 140);
 }
 
 .window__button {
-    width: 20px;
-    height: 20px;
-    margin: 2px;
-    background-color: rgb(52, 44, 34);
-    border-width: 1px;
-    border-top-color: rgb(96, 81, 59);
-    border-left-color: rgb(96, 81, 59);
-    border-bottom-color: rgb(23, 18, 13);
-    border-right-color: rgb(23, 18, 13);
+    width: 22px;
+    height: 22px;
+    margin-left: 4px;
     -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: rgb(143, 132, 113);
 }
 
 .window__button:hover {
-    background-color: rgb(110, 42, 26);
+    -unity-background-image-tint-color: rgb(240, 120, 100);
 }
 
 .window__header {
-    color: rgb(255, 152, 31);
+    -unity-font-definition: resource("UI/Fonts/Cinzel");
     -unity-font-style: bold;
     font-size: 13px;
+    color: rgb(224, 195, 135);
+    letter-spacing: 1px;
     -unity-text-align: middle-center;
-    margin: 0 0 4px 0;
+    margin: 2px 0 6px 0;
 }
 
 .window__body {
     flex-grow: 1;
-    padding: 5px;
+    padding: 8px;
     overflow: hidden;
 }
 
@@ -137,24 +139,24 @@
 
 .window__grip {
     position: absolute;
-    right: 1px;
-    bottom: 1px;
+    right: 4px;
+    bottom: 4px;
     width: 10px;
     height: 10px;
     border-right-width: 2px;
     border-bottom-width: 2px;
-    border-color: rgb(130, 110, 80);
+    border-color: rgba(201, 162, 94, 0.6);
 }
 
 .window__handle {
     position: absolute;
-    left: -3px;
-    top: -3px;
+    left: -4px;
+    top: -4px;
     width: 14px;
     height: 14px;
-    background-color: rgb(110, 42, 26);
-    border-width: 1px;
-    border-color: rgb(23, 18, 13);
+    background-color: rgb(201, 162, 94);
+    border-width: 2px;
+    border-color: rgb(14, 12, 10);
     border-radius: 7px;
     opacity: 0;
 }
@@ -163,63 +165,208 @@
     opacity: 1;
 }
 
-.rth-root--locked .window__grip,
-.rth-root--locked .window__handle,
-.rth-root--locked .window__close {
+.window--fixed > .window__grip {
     display: none;
 }
 
-.drop-target {
-    border-color: rgb(255, 152, 31);
+.rth-root--locked .window__grip,
+.rth-root--locked .window__handle {
+    display: none;
 }
 
-/* ---------------------------------------------------------------- surfaces and text */
+/* ---------------------------------------------------------------- modal windows */
 
-/* A recessed area: slot grids, lists, tables. */
-.well {
-    background-color: rgb(42, 35, 27);
-    border-width: 1px;
-    border-top-color: rgb(23, 18, 13);
-    border-left-color: rgb(23, 18, 13);
-    border-bottom-color: rgb(84, 71, 52);
-    border-right-color: rgb(84, 71, 52);
+.modal-backdrop {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.55);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal {
+    background-color: rgb(16, 15, 13);
+    border-radius: 5px;
+    background-image: resource("UI/Skin/window");
+    -unity-slice-left: 14;
+    -unity-slice-right: 14;
+    -unity-slice-top: 14;
+    -unity-slice-bottom: 14;
     padding: 3px;
 }
 
-/* A raised box: tiles, cards. */
-.raised {
-    background-color: rgb(66, 56, 43);
-    border-width: 1px;
-    border-top-color: rgb(107, 90, 65);
-    border-left-color: rgb(107, 90, 65);
-    border-bottom-color: rgb(23, 18, 13);
-    border-right-color: rgb(23, 18, 13);
+.modal__tabs {
+    flex-direction: row;
+    padding: 0 10px;
+    height: 38px;
+    align-items: stretch;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(201, 162, 94, 0.35);
 }
 
-.heading {
-    color: rgb(255, 152, 31);
+.modal-tab {
+    flex-direction: row;
+    align-items: center;
+    padding: 0 14px;
+    margin-right: 2px;
+    border-bottom-width: 2px;
+    border-bottom-color: rgba(0, 0, 0, 0);
+}
+
+.modal-tab:hover {
+    background-color: rgba(255, 230, 180, 0.05);
+}
+
+.modal-tab--active {
+    border-bottom-color: rgb(224, 195, 135);
+    background-color: rgba(224, 195, 135, 0.08);
+}
+
+.modal-tab__icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 6px;
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: rgb(143, 132, 113);
+}
+
+.modal-tab--active > .modal-tab__icon {
+    -unity-background-image-tint-color: rgb(240, 213, 140);
+}
+
+.modal-tab__label {
+    -unity-font-definition: resource("UI/Fonts/Cinzel");
     -unity-font-style: bold;
-    margin: 4px 0 3px 0;
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: rgb(143, 132, 113);
+}
+
+.modal-tab--active > .modal-tab__label {
+    color: rgb(240, 213, 140);
+}
+
+.modal__body {
+    flex-grow: 1;
+    padding: 12px 14px;
+}
+
+/* Master-detail inside a modal: a list on the left, the selected thing on the right. */
+.master {
+    width: 230px;
+    margin-right: 12px;
+}
+
+.master-row {
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 2px;
+}
+
+.master-row:hover {
+    background-color: rgba(255, 230, 180, 0.06);
+}
+
+.master-row--selected {
+    background-color: rgba(224, 195, 135, 0.14);
+}
+
+.detail {
+    flex-grow: 1;
+}
+
+/* ---------------------------------------------------------------- surfaces */
+
+.hud {
+    background-color: rgba(13, 12, 10, 0.94);
+    border-radius: 4px;
+    background-image: resource("UI/Skin/hud");
+    -unity-slice-left: 12;
+    -unity-slice-right: 12;
+    -unity-slice-top: 12;
+    -unity-slice-bottom: 12;
+    padding: 8px 10px;
+}
+
+.card {
+    background-image: resource("UI/Skin/card");
+    -unity-slice-left: 6;
+    -unity-slice-right: 6;
+    -unity-slice-top: 6;
+    -unity-slice-bottom: 6;
+    padding: 8px;
+}
+
+.well {
+    background-color: rgba(6, 5, 4, 0.55);
+    border-width: 1px;
+    border-color: rgb(42, 37, 31);
+    border-radius: 3px;
+    padding: 4px;
+}
+
+.divider {
+    height: 9px;
+    margin: 6px 0;
+    background-image: resource("UI/Skin/divider");
+    -unity-background-scale-mode: stretch-to-fill;
+}
+
+.rule {
+    height: 1px;
+    margin: 6px 0;
+    background-color: rgba(201, 162, 94, 0.3);
+}
+
+/* ---------------------------------------------------------------- text */
+
+.heading {
+    -unity-font-definition: resource("UI/Fonts/Cinzel");
+    -unity-font-style: bold;
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: rgb(224, 195, 135);
+    margin: 4px 0 4px 0;
+}
+
+.title-large {
+    -unity-font-definition: resource("UI/Fonts/Cinzel");
+    -unity-font-style: bold;
+    font-size: 18px;
+    letter-spacing: 1px;
+    color: rgb(240, 213, 140);
 }
 
 .value {
-    color: rgb(255, 255, 0);
+    color: rgb(240, 213, 140);
 }
 
 .muted {
-    color: rgb(168, 152, 122);
+    color: rgb(143, 132, 113);
 }
 
 .good {
-    color: rgb(60, 216, 60);
+    color: rgb(124, 207, 98);
 }
 
 .bad {
-    color: rgb(255, 74, 58);
+    color: rgb(224, 96, 78);
 }
 
 .small {
-    font-size: 11px;
+    font-size: 12px;
+}
+
+.bold {
+    -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
+}
+
+.prose {
+    white-space: normal;
 }
 
 .row {
@@ -231,53 +378,85 @@
     flex-grow: 1;
 }
 
-.scroll {
-    flex-grow: 1;
-}
-
 .icon {
     -unity-background-scale-mode: scale-to-fit;
     flex-shrink: 0;
 }
 
+/* ---------------------------------------------------------------- tooltip and menu */
+
 .tooltip {
     position: absolute;
-    max-width: 300px;
-    padding: 6px 8px;
-    background-color: rgba(20, 16, 12, 0.97);
+    max-width: 320px;
+    padding: 8px 10px;
+    background-color: rgba(12, 10, 9, 0.97);
     border-width: 1px;
-    border-top-color: rgb(130, 110, 80);
-    border-left-color: rgb(130, 110, 80);
-    border-bottom-color: rgb(60, 50, 38);
-    border-right-color: rgb(60, 50, 38);
-    color: rgb(232, 220, 192);
+    border-color: rgb(110, 90, 58);
+    border-radius: 3px;
     white-space: normal;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .drag-ghost {
     position: absolute;
-    padding: 3px 8px;
-    background-color: rgba(110, 42, 26, 0.9);
-    color: rgb(255, 152, 31);
-    -unity-font-style: bold;
-    border-width: 1px;
-    border-color: rgb(23, 18, 13);
     flex-direction: row;
     align-items: center;
+    padding: 4px 8px;
+    background-color: rgba(12, 10, 9, 0.9);
+    border-width: 1px;
+    border-color: rgb(201, 162, 94);
+    border-radius: 3px;
+}
+
+.menu {
+    min-width: 170px;
+    background-color: rgba(12, 10, 9, 0.97);
+    border-width: 1px;
+    border-color: rgb(110, 90, 58);
+    border-radius: 3px;
+    padding-bottom: 3px;
+}
+
+.menu__title {
+    -unity-font-definition: resource("UI/Fonts/Cinzel");
+    -unity-font-style: bold;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: rgb(224, 195, 135);
+    padding: 5px 10px 4px 10px;
+    margin-bottom: 2px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(201, 162, 94, 0.3);
+}
+
+.menu__option {
+    padding: 3px 10px;
+}
+
+.menu__option:hover {
+    background-color: rgba(224, 195, 135, 0.16);
+    color: rgb(255, 240, 200);
+}
+
+.hover-text {
+    position: absolute;
+    left: 10px;
+    top: 6px;
+    font-size: 15px;
+    color: rgb(240, 232, 214);
+    text-shadow: 0 1px 2px rgb(0, 0, 0);
 }
 
 /* ---------------------------------------------------------------- bars */
 
 .bar {
-    height: 16px;
-    background-color: rgb(20, 16, 12);
-    border-width: 1px;
-    border-top-color: rgb(10, 8, 6);
-    border-left-color: rgb(10, 8, 6);
-    border-bottom-color: rgb(84, 71, 52);
-    border-right-color: rgb(84, 71, 52);
+    height: 18px;
     flex-grow: 1;
+    background-color: rgb(9, 8, 7);
+    border-width: 1px;
+    border-color: rgb(58, 51, 42);
+    border-radius: 3px;
+    overflow: hidden;
 }
 
 .bar__fill {
@@ -292,92 +471,109 @@
     left: 0;
     right: 0;
     top: 0;
-    height: 45%;
-    background-color: rgba(255, 255, 255, 0.16);
+    bottom: 0;
+    background-image: resource("UI/Skin/gloss");
+    -unity-background-scale-mode: stretch-to-fill;
 }
 
 .bar__label {
     position: absolute;
     left: 0;
     right: 0;
-    top: -1px;
+    top: 0;
     bottom: 0;
     -unity-text-align: middle-center;
+    -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
     font-size: 12px;
     color: rgb(255, 255, 255);
+    text-shadow: 0 1px 2px rgb(0, 0, 0);
 }
 
 .bar-row {
     flex-direction: row;
     align-items: center;
-    margin-bottom: 3px;
 }
 
 .bar-row__icon {
     width: 18px;
     height: 18px;
-    margin-right: 3px;
+    margin-right: 4px;
     -unity-background-scale-mode: scale-to-fit;
 }
 
-/* ---------------------------------------------------------------- buttons and toggles */
+/* ---------------------------------------------------------------- buttons and inputs */
 
 .button {
-    padding: 3px 8px;
+    padding: 4px 12px;
     margin: 2px;
-    background-color: rgb(78, 66, 50);
-    border-width: 1px;
-    border-top-color: rgb(120, 101, 74);
-    border-left-color: rgb(120, 101, 74);
-    border-bottom-color: rgb(23, 18, 13);
-    border-right-color: rgb(23, 18, 13);
-    color: rgb(255, 152, 31);
+    background-image: resource("UI/Skin/button");
+    -unity-slice-left: 6;
+    -unity-slice-right: 6;
+    -unity-slice-top: 6;
+    -unity-slice-bottom: 6;
+    -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
+    font-size: 13px;
+    color: rgb(240, 222, 176);
     -unity-text-align: middle-center;
 }
 
 .button:hover {
-    background-color: rgb(98, 83, 62);
-}
-
-.button:active {
-    border-top-color: rgb(23, 18, 13);
-    border-left-color: rgb(23, 18, 13);
-    border-bottom-color: rgb(120, 101, 74);
-    border-right-color: rgb(120, 101, 74);
+    background-image: resource("UI/Skin/button-hover");
 }
 
 .button--on {
-    background-color: rgb(110, 42, 26);
-    color: rgb(255, 255, 0);
+    background-image: resource("UI/Skin/button-on");
+    color: rgb(255, 245, 215);
+}
+
+.button--icon {
+    padding: 3px;
+    width: 30px;
+    height: 30px;
+    align-items: center;
+    justify-content: center;
 }
 
 .check {
     flex-direction: row;
     align-items: center;
-    padding: 3px 2px;
+    padding: 4px 2px;
 }
 
 .check:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: rgba(255, 230, 180, 0.05);
 }
 
 .check__box {
-    width: 14px;
-    height: 14px;
-    margin-right: 6px;
-    background-color: rgb(20, 16, 12);
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    background-color: rgb(9, 8, 7);
     border-width: 1px;
-    border-top-color: rgb(10, 8, 6);
-    border-left-color: rgb(10, 8, 6);
-    border-bottom-color: rgb(84, 71, 52);
-    border-right-color: rgb(84, 71, 52);
+    border-color: rgb(110, 90, 58);
+    border-radius: 3px;
 }
 
 .check--on > .check__box {
-    background-color: rgb(255, 152, 31);
+    background-color: rgb(201, 162, 94);
+    border-color: rgb(240, 213, 140);
 }
 
-/* ---------------------------------------------------------------- slots: pack, worn, books */
+.input > .unity-text-field__input {
+    background-color: rgb(9, 8, 7);
+    border-width: 1px;
+    border-color: rgb(58, 51, 42);
+    border-radius: 3px;
+    color: rgb(240, 232, 214);
+    padding: 2px 6px;
+    font-size: 14px;
+}
+
+.input:focus > .unity-text-field__input {
+    border-color: rgb(201, 162, 94);
+}
+
+/* ---------------------------------------------------------------- slots */
 
 .slot-grid {
     flex-direction: row;
@@ -385,14 +581,27 @@
 }
 
 .slot {
-    width: 42px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
+    margin: 2px;
     align-items: center;
     justify-content: center;
+    background-image: resource("UI/Skin/slot");
+    -unity-slice-left: 6;
+    -unity-slice-right: 6;
+    -unity-slice-top: 6;
+    -unity-slice-bottom: 6;
+    border-width: 1px;
+    border-color: rgba(0, 0, 0, 0);
+    border-radius: 3px;
 }
 
 .slot:hover {
-    background-color: rgba(255, 255, 255, 0.06);
+    border-color: rgba(201, 162, 94, 0.8);
+}
+
+.slot--bare {
+    background-image: none;
 }
 
 .slot__icon {
@@ -403,130 +612,85 @@
 
 .slot__count {
     position: absolute;
-    left: 1px;
-    top: -2px;
+    left: 2px;
+    top: 0;
+    -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
     font-size: 12px;
-    color: rgb(255, 255, 0);
+    color: rgb(240, 213, 140);
+    text-shadow: 0 1px 1px rgb(0, 0, 0);
 }
 
-.slot--dragging > .slot__icon {
-    opacity: 0.35;
-}
-
-/* A framed slot (worn equipment, ability and focus icons). */
-.socket {
-    width: 40px;
-    height: 40px;
-    margin: 2px;
-    align-items: center;
-    justify-content: center;
-    background-color: rgb(42, 35, 27);
-    border-width: 2px;
-    border-top-color: rgb(23, 18, 13);
-    border-left-color: rgb(23, 18, 13);
-    border-bottom-color: rgb(96, 81, 59);
-    border-right-color: rgb(96, 81, 59);
-}
-
-.socket:hover {
-    border-bottom-color: rgb(255, 152, 31);
-    border-right-color: rgb(255, 152, 31);
-}
-
-.socket--empty > .slot__icon {
-    opacity: 0.5;
-}
-
-.socket--on {
-    background-color: rgb(110, 42, 26);
-    border-bottom-color: rgb(255, 200, 80);
-    border-right-color: rgb(255, 200, 80);
-}
-
-.socket--locked > .slot__icon {
-    opacity: 0.3;
-}
-
-.socket__badge {
+.slot__badge {
     position: absolute;
-    right: 1px;
-    top: -2px;
+    right: 2px;
+    top: 0;
+    -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
     font-size: 11px;
-    color: rgb(255, 210, 120);
+    color: rgb(240, 213, 140);
 }
 
-.socket__level {
+.slot__level {
     position: absolute;
     left: 0;
     right: 0;
-    bottom: -1px;
+    bottom: 0;
+    -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
     font-size: 11px;
     -unity-text-align: middle-center;
-    color: rgb(255, 74, 58);
+    color: rgb(224, 96, 78);
 }
 
-.socket-caption {
-    width: 44px;
-    font-size: 10px;
+.slot--dragging > .slot__icon {
+    opacity: 0.3;
+}
+
+.slot--empty > .slot__icon {
+    opacity: 0.22;
+}
+
+.slot--locked > .slot__icon {
+    opacity: 0.3;
+}
+
+.slot--on {
+    border-color: rgb(240, 213, 140);
+    background-color: rgba(224, 195, 135, 0.18);
+}
+
+.slot--drop {
+    border-color: rgb(124, 207, 98);
+}
+
+.slot-caption {
+    width: 46px;
+    font-size: 11px;
     -unity-text-align: upper-center;
     white-space: normal;
-    color: rgb(232, 220, 192);
 }
 
-/* ---------------------------------------------------------------- action bar */
-
-.actionbar {
-    background-color: rgb(59, 50, 39);
-    border-width: 2px;
-    border-top-color: rgb(107, 90, 65);
-    border-left-color: rgb(107, 90, 65);
-    border-bottom-color: rgb(23, 18, 13);
-    border-right-color: rgb(23, 18, 13);
-    border-top-left-radius: 3px;
-    border-top-right-radius: 3px;
-    padding: 5px 6px 4px 6px;
-}
+/* ---------------------------------------------------------------- action bars */
 
 .ability {
-    width: 44px;
-    height: 44px;
+    width: 42px;
+    height: 42px;
     margin: 0 1px;
-    align-items: center;
-    justify-content: center;
-    border-width: 2px;
-    border-top-color: rgb(23, 18, 13);
-    border-left-color: rgb(23, 18, 13);
-    border-bottom-color: rgb(96, 81, 59);
-    border-right-color: rgb(96, 81, 59);
-}
-
-.ability:hover {
-    border-bottom-color: rgb(255, 152, 31);
-    border-right-color: rgb(255, 152, 31);
-}
-
-.ability--queued {
-    border-color: rgb(255, 170, 40);
-}
-
-.ability--unusable > .slot__icon {
-    opacity: 0.35;
 }
 
 .ability__key {
     position: absolute;
-    right: 2px;
-    bottom: -1px;
+    right: 3px;
+    bottom: 0;
+    -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
     font-size: 11px;
-    color: rgb(255, 255, 255);
+    color: rgb(221, 211, 191);
 }
 
-.ability__kind {
-    position: absolute;
-    left: 2px;
-    top: -2px;
-    font-size: 11px;
-    color: rgb(255, 210, 120);
+.ability--queued {
+    border-color: rgb(255, 180, 60);
+}
+
+.ability--unusable > .slot__icon {
+    opacity: 0.3;
 }
 
 .ability__cooldown {
@@ -534,7 +698,8 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.62);
+    background-color: rgba(0, 0, 0, 0.65);
+    border-radius: 3px;
 }
 
 .ability__timer {
@@ -544,82 +709,72 @@
     top: 0;
     bottom: 0;
     -unity-text-align: middle-center;
-    font-size: 15px;
+    -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
+    font-size: 16px;
     color: rgb(255, 255, 255);
 }
 
 .chip {
-    padding: 0 5px;
-    margin: 0 2px;
-    font-size: 11px;
-    background-color: rgb(42, 35, 27);
-    border-radius: 2px;
+    padding: 0 6px;
+    margin: 0 3px;
+    font-size: 12px;
+}
+
+.bile-value {
+    width: 40px;
+    margin-left: 6px;
+    -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
+    font-size: 13px;
+    -unity-text-align: middle-center;
+    background-color: rgb(9, 8, 7);
+    border-width: 1px;
+    border-color: rgb(58, 51, 42);
+    border-radius: 3px;
 }
 
 /* ---------------------------------------------------------------- chat */
 
-.chatbox {
-    background-color: rgba(212, 196, 156, 0.86);
-    border-width: 1px;
-    border-top-color: rgb(120, 101, 74);
-    border-left-color: rgb(120, 101, 74);
-    border-bottom-color: rgb(240, 228, 196);
-    border-right-color: rgb(240, 228, 196);
-    padding: 3px 5px;
-    text-shadow: 0 0 0 rgba(0, 0, 0, 0);
-}
-
 .chat-line {
     white-space: normal;
-    font-size: 13px;
-    color: rgb(0, 0, 0);
-    text-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    font-size: 14px;
 }
 
 .chat-line--warning {
-    color: rgb(150, 20, 10);
+    color: rgb(240, 140, 100);
 }
 
 .chat-line--assayer {
-    color: rgb(90, 30, 130);
+    color: rgb(200, 170, 255);
 }
 
-.chat-filters {
-    flex-direction: row;
-    margin-top: 3px;
-}
-
-.chat-filter {
-    flex-grow: 1;
-    padding: 2px 0;
+.chat-tab {
+    padding: 2px 12px;
     margin-right: 2px;
-    font-size: 12px;
-    -unity-text-align: middle-center;
-    background-color: rgb(52, 44, 34);
-    border-width: 1px;
-    border-top-color: rgb(96, 81, 59);
-    border-left-color: rgb(96, 81, 59);
-    border-bottom-color: rgb(23, 18, 13);
-    border-right-color: rgb(23, 18, 13);
-    color: rgb(232, 220, 192);
+    -unity-font-definition: resource("UI/Fonts/Cinzel");
+    -unity-font-style: bold;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: rgb(143, 132, 113);
+    border-bottom-width: 2px;
+    border-bottom-color: rgba(0, 0, 0, 0);
 }
 
-.chat-filter--on {
-    background-color: rgb(110, 42, 26);
-    color: rgb(255, 255, 0);
+.chat-tab:hover {
+    color: rgb(205, 185, 143);
+}
+
+.chat-tab--on {
+    color: rgb(240, 213, 140);
+    border-bottom-color: rgb(224, 195, 135);
 }
 
 .chat-input-row {
     flex-direction: row;
     align-items: center;
+    margin-top: 4px;
+    padding-top: 4px;
     border-top-width: 1px;
-    border-top-color: rgb(120, 101, 74);
-    margin-top: 2px;
-}
-
-.chat-input-row > .chat-name {
-    color: rgb(0, 0, 0);
-    text-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    border-top-color: rgba(201, 162, 94, 0.3);
 }
 
 .chat-input {
@@ -630,193 +785,125 @@
 .chat-input > .unity-text-field__input {
     background-color: rgba(0, 0, 0, 0);
     border-width: 0;
-    color: rgb(0, 0, 160);
-    font-size: 13px;
-    padding: 1px 2px;
-    text-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    color: rgb(150, 200, 255);
+    font-size: 14px;
+    padding: 1px 4px;
 }
 
 /* ---------------------------------------------------------------- minimap */
 
-.minimap-frame {
-    position: absolute;
-    width: 172px;
-    height: 172px;
-    border-radius: 86px;
-    border-width: 4px;
-    border-top-color: rgb(107, 90, 65);
-    border-left-color: rgb(107, 90, 65);
-    border-bottom-color: rgb(23, 18, 13);
-    border-right-color: rgb(23, 18, 13);
-    background-color: rgb(59, 50, 39);
-}
-
 .minimap {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: 82px;
+    border-width: 1px;
+    border-color: rgb(58, 51, 42);
+    border-radius: 3px;
     overflow: hidden;
     background-color: rgb(10, 10, 10);
 }
 
 .minimap__dot {
     position: absolute;
-    width: 5px;
-    height: 5px;
-    border-radius: 2px;
+    width: 6px;
+    height: 6px;
+    border-radius: 3px;
     border-width: 1px;
     border-color: rgb(0, 0, 0);
 }
 
-.orb {
+.minimap__compass {
     position: absolute;
-    flex-direction: row;
-    align-items: center;
-}
-
-.orb__number {
-    width: 30px;
-    height: 18px;
-    margin-right: -4px;
-    padding-right: 6px;
-    -unity-text-align: middle-right;
-    font-size: 12px;
-    color: rgb(60, 216, 60);
-    background-color: rgb(23, 18, 13);
-    border-top-left-radius: 3px;
-    border-bottom-left-radius: 3px;
-}
-
-.orb__circle {
-    width: 32px;
-    height: 32px;
-    border-radius: 16px;
-    border-width: 2px;
-    border-top-color: rgb(107, 90, 65);
-    border-left-color: rgb(107, 90, 65);
-    border-bottom-color: rgb(23, 18, 13);
-    border-right-color: rgb(23, 18, 13);
-    background-color: rgb(20, 16, 12);
-    overflow: hidden;
+    left: 6px;
+    top: 6px;
+    width: 34px;
+    height: 34px;
+    border-radius: 17px;
+    background-color: rgba(12, 10, 9, 0.8);
+    border-width: 1px;
+    border-color: rgb(110, 90, 58);
     align-items: center;
     justify-content: center;
 }
 
-.orb__circle:hover {
-    border-top-color: rgb(255, 152, 31);
-    border-left-color: rgb(255, 152, 31);
+.minimap__clock {
+    position: absolute;
+    right: 6px;
+    top: 6px;
+    padding: 1px 8px;
+    border-radius: 3px;
+    background-color: rgba(12, 10, 9, 0.8);
+    border-width: 1px;
+    border-color: rgb(110, 90, 58);
+    -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
+    font-size: 13px;
+    color: rgb(240, 213, 140);
 }
 
-.orb__fill {
-    position: absolute;
-    left: 0;
-    right: 0;
+.run-gauge {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    margin: 2px;
+    background-image: resource("UI/Skin/button");
+    -unity-slice-left: 6;
+    -unity-slice-right: 6;
+    -unity-slice-top: 6;
+    -unity-slice-bottom: 6;
+}
+
+.run-gauge:hover {
+    background-image: resource("UI/Skin/button-hover");
+}
+
+.run-gauge--on {
+    background-image: resource("UI/Skin/button-on");
+}
+
+/* ---------------------------------------------------------------- scrollbars: slim and quiet */
+
+.rth-root .unity-scroller--vertical {
+    width: 8px;
+    margin-left: 2px;
+    border-width: 0;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.rth-root .unity-scroller--vertical > .unity-scroller__low-button,
+.rth-root .unity-scroller--vertical > .unity-scroller__high-button {
+    display: none;
+}
+
+.rth-root .unity-scroller--vertical > .unity-scroller__slider {
+    margin: 0;
+    top: 0;
     bottom: 0;
 }
 
-.orb__icon {
-    width: 20px;
-    height: 20px;
-    -unity-background-scale-mode: scale-to-fit;
-}
-
-.round-button {
-    position: absolute;
-    width: 30px;
-    height: 30px;
-    border-radius: 15px;
-    border-width: 2px;
-    border-top-color: rgb(107, 90, 65);
-    border-left-color: rgb(107, 90, 65);
-    border-bottom-color: rgb(23, 18, 13);
-    border-right-color: rgb(23, 18, 13);
-    background-color: rgb(59, 50, 39);
-    align-items: center;
-    justify-content: center;
-}
-
-.round-button:hover {
-    background-color: rgb(110, 42, 26);
-}
-
-.clock {
-    position: absolute;
-    padding: 0 5px;
-    font-size: 12px;
-    color: rgb(255, 255, 0);
-    background-color: rgb(23, 18, 13);
-    border-radius: 3px;
-}
-
-/* ---------------------------------------------------------------- scrollbars */
-
-.rth-root .unity-scroller--vertical {
-    width: 10px;
-    border-width: 0;
-    background-color: rgb(30, 25, 19);
-}
-
 .rth-root .unity-scroller--vertical .unity-base-slider__tracker {
-    background-color: rgb(30, 25, 19);
+    background-color: rgba(0, 0, 0, 0.35);
     border-width: 0;
+    border-radius: 4px;
+    left: 2px;
+    right: 2px;
 }
 
 .rth-root .unity-scroller--vertical .unity-base-slider__dragger {
-    background-color: rgb(110, 92, 66);
-    border-width: 1px;
-    border-top-color: rgb(150, 128, 94);
-    border-left-color: rgb(150, 128, 94);
-    border-bottom-color: rgb(23, 18, 13);
-    border-right-color: rgb(23, 18, 13);
+    background-color: rgba(201, 162, 94, 0.55);
+    border-width: 0;
+    border-radius: 4px;
     left: 1px;
     right: 1px;
+    width: auto;
 }
 
-.rth-root .unity-scroller__low-button,
-.rth-root .unity-scroller__high-button {
+.rth-root .unity-scroller--vertical .unity-base-slider__dragger:hover {
+    background-color: rgba(224, 195, 135, 0.85);
+}
+
+.rth-root .unity-scroller--vertical .unity-base-slider__dragger-border {
     display: none;
 }
 
 .rth-root .unity-scroller--horizontal {
     display: none;
-}
-
-/* ---------------------------------------------------------------- right-click menu */
-
-.menu {
-    min-width: 150px;
-    background-color: rgb(93, 84, 71);
-    border-width: 1px;
-    border-color: rgb(0, 0, 0);
-    padding-bottom: 2px;
-}
-
-.menu__title {
-    background-color: rgb(0, 0, 0);
-    color: rgb(93, 84, 71);
-    padding: 2px 6px;
-    margin-bottom: 2px;
-    text-shadow: 0 0 0 rgba(0, 0, 0, 0);
-}
-
-.menu__option {
-    padding: 1px 6px;
-    color: rgb(255, 255, 255);
-}
-
-.menu__option:hover {
-    color: rgb(255, 255, 0);
-    background-color: rgba(0, 0, 0, 0.18);
-}
-
-.hover-text {
-    position: absolute;
-    left: 8px;
-    top: 4px;
-    font-size: 14px;
-    color: rgb(255, 255, 255);
-    text-shadow: 1px 1px 0 rgb(0, 0, 0);
 }

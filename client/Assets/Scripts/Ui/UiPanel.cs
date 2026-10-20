@@ -6,12 +6,12 @@ namespace Rth.Client.Ui
 {
     /// <summary>
     /// One piece of the interface (the pack, the minimap, the chat...). Panels live in windows
-    /// the player can move, resize, combine as tabs and split apart. A panel only reads client
-    /// state and sends intents through <see cref="GameSession"/>; it never decides outcomes.
+    /// the player can move and combine as tabs; resizable ones can be resized. A panel only reads
+    /// client state and sends intents through <see cref="GameSession"/>; it never decides outcomes.
     ///
     /// Panels register themselves: any concrete subclass with a parameterless constructor is
     /// found by <see cref="UiRoot"/> and placed by its <see cref="DefaultWindow"/> group. Adding
-    /// an interface is adding a class.
+    /// an interface is adding a class. Bigger, occasional interfaces are <see cref="UiModal"/>s.
     /// </summary>
     public abstract class UiPanel
     {
@@ -30,16 +30,25 @@ namespace Rth.Client.Ui
         /// <summary>Order among panels sharing a default window (tab order).</summary>
         public virtual int Order => 0;
 
-        /// <summary>Whether it is open in the default layout. Big windows (the world map) are not.</summary>
+        /// <summary>Whether it is open in the default layout.</summary>
         public virtual bool OpenByDefault => true;
 
-        /// <summary>Drawn without a frame or title (bars, the minimap); moved by a small handle.</summary>
+        /// <summary>Drawn without a window frame or title (bars, the minimap); moved by a small handle.</summary>
         public virtual bool Bare => false;
+
+        /// <summary>
+        /// A size the window always has (bars, chat, bank): it can be moved but not resized. Null
+        /// means the player can resize it.
+        /// </summary>
+        public virtual Vector2? FixedSize => null;
 
         public virtual Vector2 MinSize => new Vector2(170f, 120f);
 
         /// <summary>Size of a window made just for this panel.</summary>
-        public virtual Vector2 DefaultSize => new Vector2(260f, 320f);
+        public virtual Vector2 DefaultSize => FixedSize ?? new Vector2(260f, 320f);
+
+        /// <summary>A key that opens it, brings it forward, or closes it again.</summary>
+        public virtual Key Hotkey => Key.None;
 
         /// <summary>
         /// For windows the server opens (bank, shop, dialogue): whether it is open right now, and
@@ -51,9 +60,6 @@ namespace Rth.Client.Ui
         public virtual void OnClosedByPlayer()
         {
         }
-
-        /// <summary>A key that opens it, brings it forward, or closes it again.</summary>
-        public virtual Key Hotkey => Key.None;
 
         public VisualElement Root { get; private set; }
         protected UiRoot Ui { get; private set; }

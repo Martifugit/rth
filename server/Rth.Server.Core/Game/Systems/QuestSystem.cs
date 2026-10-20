@@ -201,12 +201,27 @@ namespace Rth.Server.Game
             foreach (QuestDef quest in World.Content.Quests.Values)
             {
                 QuestStage? stage = CurrentStage(player, quest);
+                bool complete = IsComplete(player, quest.Id);
+
+                // The story so far: every stage up to the current one, then the ending.
+                var log = new List<string>();
+                foreach (QuestStage s in quest.Stages.OrderBy(s => s.Stage))
+                    if (complete || (stage != null && s.Stage <= stage.Stage)) log.Add(s.Journal);
+                if (complete && !string.IsNullOrEmpty(quest.Completed)) log.Add(quest.Completed);
+
                 message.Quests.Add(new QuestEntry
                 {
+                    Id = quest.Id,
                     Name = quest.Name,
-                    State = IsComplete(player, quest.Id) ? QuestState.Complete : stage != null ? QuestState.InProgress : QuestState.NotStarted,
-                    Journal = IsComplete(player, quest.Id) ? quest.Completed : stage?.Journal ?? quest.Summary,
+                    Summary = quest.Summary,
+                    State = complete ? QuestState.Complete : stage != null ? QuestState.InProgress : QuestState.NotStarted,
+                    Journal = complete ? quest.Completed : stage?.Journal ?? quest.Summary,
                     Progress = stage != null ? ProgressText(player, quest.Id) : "",
+                    Log = log,
+                    Requirements = quest.Requirements.Select(r => World.Content.SkillName(r.Skill) + " " + r.Level).ToList(),
+                    Rewards = quest.Rewards.Xp.Select(x => x.Amount.ToString("N0") + " " + World.Content.SkillName(x.Skill) + " XP")
+                        .Concat(quest.Rewards.Items.Select(i => (i.Count > 1 ? i.Count + " x " : "") + (World.Content.Item(i.Item)?.Name ?? i.Item)))
+                        .ToList(),
                 });
             }
             player.Connection.Send(message);

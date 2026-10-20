@@ -1,85 +1,89 @@
 # Interface
 
-The game looks like Old School RuneScape but plays like RS3, with more combat resources than
-either. That means more interface than OSRS has. This file lists every piece and how they are
-organised.
+The world looks like Old School RuneScape; the interface is a modern dark-fantasy RPG interface
+(the designer's RS3 screenshots in `images/` are references, not templates). The game has more
+combat resources than either RuneScape, so it has more interface than OSRS. This file lists
+every piece and how they are organised.
 
-**Built (Milestone 8):** the window system and the panels marked ✓ below, plus the bank,
-shop, conversation box, the Assayer and the right-click menu, all in one style.
+## Look (decided)
 
-## Look
+- **Dark fantasy, not retro:** near-black charcoal-brown panels inside thin bronze frames with
+  small gold corner accents, recessed wells for slots and lists, raised cards, gold primary
+  buttons. Theme: `client/Assets/Resources/UI/Rth.uss`; textures in `Resources/UI/Skin`, drawn
+  by `tools/ui-skin/make_skin.py`. Every surface uses the same style (the chat included).
+- **Fonts:** Cinzel (titles, headings, tabs: all capitals, letter-spaced) and Alegreya Sans
+  (everything you read), both SIL Open Font License. Small text stays readable.
+- **Icons:** silhouettes from game-icons.net (CC BY 3.0, see `CREDITS.md`), tinted in code: an
+  item in its own colour, an ability by its bile pole, interface icons in gold.
+  `tools/icons/icons.json` maps our ids to them. A PNG at `Resources/Icons/<id>.png` is the
+  icon, so real art replaces them one at a time.
+- **Resources** are shown the modern way: an icon, the numbers above, a slim bar beneath.
 
-- **Theme:** `client/Assets/Resources/UI/Rth.uss`. Bevelled stone-brown frames, recessed wells
-  for slots and lists, raised tiles, glossy bars, OSRS colour roles (orange headings, yellow
-  numbers, parchment body text, a red-brown active tab), drop-shadowed pixel text. Panels
-  compose the classes in `UiKit` rather than styling by hand.
-- **Font:** Pixelify Sans (SIL Open Font License, `Resources/UI/Fonts/OFL.txt`).
-- **Icons:** original 16x16 pixel art, written as text in `Resources/UI/pixelicons.txt` and
-  drawn by `IconLibrary` (point-filtered, scaled by whole steps). Item icons are tinted with the
-  item's colour. Items, abilities and skills name their icon in the content files (`"icon"`).
-  A PNG at `Resources/Icons/<id>.png` replaces the icon of the same id, so real art can
-  arrive one icon at a time.
+## Window kinds
+
+| Kind | What it is | Examples |
+|---|---|---|
+| **Panel** (`UiPanel`) | Lives in a movable window; can share it as a tab. Resizable unless it has a fixed size. | Pack, worn, character, abilities, focuses, skills, quests, task, XP tracker |
+| **Fixed panel** (`FixedSize`) | Movable, never resized: the size it has to be. | Action bars, minimap, chat, target, bank, shop, conversation |
+| **Server window** (`ServerOpen`) | Opens and closes when the server says; closing it tells the server. | Bank, shop, conversation, the Assayer |
+| **Modal** (`UiModal`) | Centred, fixed size, tabs of related pages, one at a time; Escape or a click outside closes it. | Journal, guide, world map, settings |
 
 ## Always on screen
 
 | Piece | Contents |
 |---|---|
-| **Main action bar** ✓ | Ability slots and the key combat resource bars: blood, phlegm, the bile axis, breath. |
-| **Secondary action bars** | Several more slot bars; can be shown or hidden. |
-| **Minimap** ✓ | Compass, run energy (an indicator and the run toggle; energy comes with the breath skill), world map button, in-game clock, a menu of every panel. |
-| **Chat** ✓ | Game messages and public chat (Enter to type). Private messages and group chat to come. |
+| **Main action bar** ✓ | Blood, phlegm and breath as three equal gauges; the bile axis (no text on it, the value beside it); 14 slots on keys 1 to 0, - and =. Fixed size. |
+| **Secondary action bars** ✓ | Two more bars of 14 slots (from the window menu). Abilities and items are dragged onto any bar; layouts are kept on the server. |
+| **Minimap** ✓ | Square; compass and clock in its corners; beneath it the run toggle and buttons for the world map, journal, guide, settings and a menu of every window. No blood orb: blood is on the action bar. |
+| **Chat** ✓ | Filters (all, game, public) and the line you type on (Enter). Fixed size. Private and group chat to come. |
 | **Target** ✓ | What you are fighting, and its health. |
-| **Side panel** | Tabs for the small panels below. |
+| **Side window** | Tabs for the panels below. |
 
-## Side panel tabs (small panels)
+## Side window tabs
 
-- **Inventory** (28 slots). ✓
-- **Worn equipment**, with bonuses. ✓
-- **Ability books:** one per combat style (Occultism first). ✓
-- **Verses** (melee's resource, from Religion).
-- **Focuses:** breath's deflections and similar stances (the prayer analogue). ✓
-- **Grimoires:** the occultists' *workings* (their spells), one grimoire per occult house.
-- **Quest list** (simple). ✓
-- **Skills:** every level at a glance, total level, XP and level targets (right-click). ✓
-- **Friends.**
-- **Group** (party).
-- **Metrics:** XP gained, rates, time to target. ✓
-- **Task:** the current task and points. ✓
-- **Settings** shortcut.
+- **Pack** (28 slots; drag to move, onto a bar, onto the bank). ✓
+- **Worn equipment** (the figure only). ✓
+- **Character:** total level and every combat stat. ✓
+- **Ability books:** one per combat style (Occultism first); drag onto a bar. ✓
+- **Focuses:** breath's stances (the prayer analogue). ✓
+- **Skills:** tiles and total level; click for the guide, right-click for a level target. ✓
+- **Quests:** the list; click for the journal. ✓
+- **Task** and **XP tracker**. ✓
+- To come: **verses** (melee), **grimoires** (the occult houses' *workings*), **friends**,
+  **group**.
 
-## Larger windows (opened when needed)
+## Modals
 
-- **World map** ✓ (regions to scale, where you are), and later travel by **waystone** (the lodestone analogue): you attune to
-  waystones on the roads, then travel between them from the map.
-- **Quest journal.**
-- **Bestiary** with drop logs (creatures and bosses).
-- **Achievement diary.**
-- **Settings** ✓ (roofs, lock, scale, reset layout, log out).
-- **Announcements:** level up, quest complete, new drop log entry and similar.
-- **Skill unlocks:** what each skill unlocks at each level.
-- **Ability reference:** a fuller view of each style's abilities.
-- **Player examine:** a summary of another player.
-- **Bank** ✓ (search, withdraw menus, deposit pack), **shop** ✓ (stock, prices), the
-  **conversation box** ✓ and **the Assayer** ✓. The server opens these (`UiPanel.ServerOpen`);
-  closing one tells the server.
+- **Journal** (J) ✓: **quests** (summary, requirements, the story so far, rewards),
+  **achievements** (the diary by area and tier, with progress and rewards) and the
+  **bestiary** (every creature: how dangerous, how many you've killed, a drop log that includes
+  what its carcass yields).
+- **Guide** (G) ✓: **skills** (pick a skill; its unlocks level by level, filterable and
+  sortable, gathered from the content itself) and **abilities** (every ability as a full card).
+- **World map** (M) ✓: the regions to scale and where you are. Waystone travel will be a tab.
+- **Settings** ✓: general (roofs, lock, scale, reset layout, log out) and controls.
+- To come: announcements (level up, quest complete, new drop), player examine.
 
-## Layout (decided)
+## Server windows
 
-**RS3-style from the start:** every panel lives in a window you can drag, resize, combine
-with other panels as tabs, or split out again. The look is still OSRS. The **default layout
-is carefully arranged** to feel like a classic fixed layout: minimap top right, a tabbed
-side window bottom right, chat bottom left, and the action bars bottom centre. Players can
-lock the interface, and reset it to the default.
+- **Bank** ✓: search; how many a click moves (1, 5, 10, X, All; X asks for a number); withdraw
+  as **notes** (the server makes a note for every unstackable item; notes stack, and any bank
+  takes them back as the item); on the right, tabs for the **pack** and **worn equipment**
+  (click to deposit; a beast of burden would be another tab). Drag from the pack onto the
+  bank to deposit.
+- **Shop** ✓: stock, prices, buy 1 / 5 / 10 / X.
+- **Conversation** ✓: two parts, as in the modern game. The **message** (portrait, name, the
+  words, continue with Space) and then, if there's anything to answer, the **reply** ("What
+  would you like to say?", numbered answers).
 
 ## Architecture
 
-- **One panel registry.** Every piece above is a panel with an id, a title, an icon, a default
-  place (side tab, bar, centre window, overlay), an optional hotkey and an optional
-  server-driven open state. New interfaces register themselves; nothing lists them by hand.
-  This is the same pattern as the server's systems.
-- **Panels read client state and send intents.** They never decide outcomes. Windows the
-  server opens (bank, shop, dialogue) keep going through `InterfaceSystem`.
-- **Layout is saved per player.** Start in PlayerPrefs. Later, use a save section so it follows
-  the player between machines.
-- **Theme:** chunky OSRS-style stone and leather frames and a pixel-style font, all from one
-  stylesheet, with original art only.
+- **Registries.** Panels and modals register themselves (any concrete subclass); modals list
+  their tabs. `UiDefaultLayout` holds where panels start. Nothing lists interfaces by hand.
+- **Panels read state and send intents.** They never decide outcomes.
+- **Drag and drop** goes through `UiRoot.BeginDrag` and drop targets (`AddDropTarget`), with
+  payloads in `DragData.cs`; any slot can offer or accept drags.
+- **Server state for the interface** arrives as `JsonStateMessage`s ("achievements",
+  "bestiary", "client") read with `GameSession.ServerState<T>`. The client keeps its own
+  state (action bar layouts) on the server with `SetClientState`; it follows the player.
+- **Window layout** is saved per machine in PlayerPrefs.

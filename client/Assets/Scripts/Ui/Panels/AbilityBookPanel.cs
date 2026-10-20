@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Rth.Client.Ui.Modals;
 using Rth.Shared.Combat;
 using Rth.Shared.Skills;
 using UnityEngine;
@@ -8,9 +9,9 @@ using UnityEngine.UIElements;
 namespace Rth.Client.Ui.Panels
 {
     /// <summary>
-    /// A combat style's abilities as a book of icons, basics, thresholds and ultimates, like a
-    /// spellbook. Locked ones are dimmed with the level they need; hover for the full card,
-    /// click to use. Occultism is the only style so far; each style gets a book.
+    /// A combat style's abilities as a book of icons: basics, thresholds and ultimates. Locked
+    /// ones are dimmed with the level they need. Click to use, drag onto an action bar to place
+    /// it, hover for the full card. Occultism is the only style so far; each style gets a book.
     /// </summary>
     public sealed class AbilityBookPanel : UiPanel
     {
@@ -18,21 +19,23 @@ namespace Rth.Client.Ui.Panels
         public override string Title => "Occultism abilities";
         public override string Icon => "book";
         public override string DefaultWindow => UiDefaultLayout.Side;
-        public override int Order => 2;
+        public override int Order => 3;
         public override Key Hotkey => Key.A;
 
         private ScrollView _list;
         private Label _level;
         private int _builtFor = -1;
-        private readonly List<(string Id, VisualElement Socket, Label Level)> _sockets = new List<(string, VisualElement, Label)>();
+        private readonly List<(string Id, VisualElement Slot, Label Level)> _slots = new List<(string, VisualElement, Label)>();
 
         protected override void Build(VisualElement root)
         {
-            _level = UiKit.Text(root, "", "muted", "small");
-            _level.style.unityTextAlign = TextAnchor.MiddleCenter;
-            _list = new ScrollView();
-            _list.AddToClassList("scroll");
-            root.Add(_list);
+            VisualElement top = UiKit.El(root, "row");
+            _level = UiKit.Text(top, "", "muted", "small");
+            UiKit.El(top, "spacer");
+            UiKit.Button(top, "Guide", () => Ui.OpenModal<GuideModal>("abilities"));
+            _list = UiKit.Scroll(root);
+            Label hint = UiKit.Text(root, "Drag an ability onto an action bar.", "muted", "small");
+            hint.style.unityTextAlign = TextAnchor.MiddleCenter;
         }
 
         public override void Refresh()
@@ -40,26 +43,25 @@ namespace Rth.Client.Ui.Panels
             if (Session.Content == null) return;
             if (Session.Content.Abilities.Count != _builtFor) Rebuild();
             _level.text = "Occultism level " + Session.Level("occultism");
-            foreach ((string id, VisualElement socket, Label level) in _sockets)
+            foreach ((string id, VisualElement slot, Label level) in _slots)
             {
                 AbilityDef a = Session.Ability(id);
                 if (a == null) continue;
                 int needed = LevelNeeded(a);
                 bool locked = needed > Session.Level(SkillOf(a));
-                socket.EnableInClassList("socket--locked", locked);
+                slot.EnableInClassList("slot--locked", locked);
                 level.text = locked ? needed.ToString() : "";
-                socket.EnableInClassList("socket--on", Session.PlayerState != null && Session.PlayerState.QueuedAbility == id);
             }
         }
 
-        private static int LevelNeeded(AbilityDef a)
+        public static int LevelNeeded(AbilityDef a)
         {
             int level = 1;
             foreach (SkillRequirement r in a.Requirements) level = Mathf.Max(level, r.Level);
             return level;
         }
 
-        private static string SkillOf(AbilityDef a)
+        public static string SkillOf(AbilityDef a)
         {
             foreach (SkillRequirement r in a.Requirements) return r.Skill;
             return "occultism";
@@ -69,27 +71,50 @@ namespace Rth.Client.Ui.Panels
         {
             _builtFor = Session.Content.Abilities.Count;
             _list.Clear();
-            _sockets.Clear();
+            _slots.Clear();
             foreach ((AbilityType type, string title) in new[] { (AbilityType.Basic, "Basics"), (AbilityType.Threshold, "Thresholds"), (AbilityType.Ultimate, "Ultimates") })
             {
-                UiKit.Text(_list, title, "heading", "small");
+                UiKit.Heading(_list, title);
                 VisualElement grid = UiKit.El(_list, "slot-grid");
                 foreach (AbilityDef ability in Session.Content.Abilities)
                 {
                     if (ability.Type != type) continue;
                     string id = ability.Id;
-                    VisualElement socket = UiKit.El(grid, "socket");
-                    socket.style.backgroundColor = Color.Lerp(GameText.AbilityColor(ability), Color.black, 0.5f);
-                    UiKit.Icon(socket, IconLibrary.ForAbility(ability), 32f, "slot__icon").pickingMode = PickingMode.Ignore;
-                    Label level = UiKit.Text(socket, "", "socket__level");
+                    VisualElement slot = UiKit.El(grid, "slot");
+                    VisualElement icon = UiKit.El(slot, "slot__icon");
+                    icon.pickingMode = PickingMode.Ignore;
+                    UiKit.SetIcon(icon, IconLibrary.ForAbility(ability), IconLibrary.AbilityTint(ability));
+                    Label level = UiKit.Text(slot, "", "slot__level");
                     level.pickingMode = PickingMode.Ignore;
-                    socket.RegisterCallback<ClickEvent>(_ => Session.UseAbility(id));
-                    UiKit.Tooltip(socket, () =>
+
+                    bool pressed = false;
+                    Vector2 pressedAt = default;
+                    slot.RegisterCallback<PointerDownEvent>(e =>
+                    {
+                        if (e.button != 0) return;
+                        pressed = true;
+                        pressedAt = e.position;
+                    });
+                    slot.RegisterCallback<PointerMoveEvent>(e =>
+                    {
+                        if (!pressed || Ui.IsDragging || ((Vector2)e.position - pressedAt).magnitude < 6f) return;
+                        pressed = false;
+                        AbilityDef a = Session.Ability(id);
+                        Ui.BeginDrag(new UiRoot.Drag { Data = new AbilityDrag { AbilityId = id }, Icon = IconLibrary.ForAbility(a), Tint = IconLibrary.AbilityTint(a) });
+                    });
+                    slot.RegisterCallback<PointerUpEvent>(e =>
+                    {
+                        if (e.button != 0 || !pressed) return;
+                        pressed = false;
+                        Session.UseAbility(id);
+                    });
+                    slot.RegisterCallback<PointerLeaveEvent>(_ => pressed = false);
+                    UiKit.Tooltip(slot, () =>
                     {
                         AbilityDef a = Session.Ability(id);
                         return a == null ? null : GameText.Describe(a, Session.TickSeconds, Session.AbilityProblem(a));
                     });
-                    _sockets.Add((id, socket, level));
+                    _slots.Add((id, slot, level));
                 }
             }
         }

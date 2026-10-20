@@ -6,9 +6,9 @@ using UnityEngine.UIElements;
 namespace Rth.Client.Ui.Panels
 {
     /// <summary>
-    /// The chatbox: game messages and chat on parchment, filter buttons (all, game, public), and
-    /// the line you type on, prefixed with your name. Enter starts typing (keys stop being
-    /// hotkeys), Enter sends, Escape stops. New channels (private, group) become more filters.
+    /// The chatbox, a fixed size: filter tabs (all, game, public), game messages and chat, and the
+    /// line you type on. Enter starts typing (keys stop being hotkeys), Enter sends, Escape stops.
+    /// New channels (private, group) become more filters.
     /// </summary>
     public sealed class ChatPanel : UiPanel
     {
@@ -18,7 +18,7 @@ namespace Rth.Client.Ui.Panels
         public override string Title => "Chat";
         public override string Icon => "chat";
         public override string DefaultWindow => UiDefaultLayout.Chat;
-        public override Vector2 MinSize => new Vector2(260f, 110f);
+        public override Vector2? FixedSize => new Vector2(480f, 230f);
 
         private enum Filter
         {
@@ -37,28 +37,24 @@ namespace Rth.Client.Ui.Panels
 
         protected override void Build(VisualElement root)
         {
-            VisualElement box = UiKit.El(root, "chatbox");
-            box.style.flexGrow = 1;
-            _scroll = new ScrollView(ScrollViewMode.Vertical);
-            _scroll.AddToClassList("scroll");
-            box.Add(_scroll);
+            VisualElement filters = UiKit.El(root, "row");
+            filters.style.marginBottom = 4f;
+            foreach (Filter f in new[] { Filter.All, Filter.Game, Filter.Public })
+            {
+                Filter filter = f;
+                Label button = UiKit.Text(filters, f.ToString().ToUpperInvariant(), "chat-tab");
+                button.RegisterCallback<ClickEvent>(_ => SetFilter(filter));
+                _filterButtons.Add((f, button));
+            }
 
-            VisualElement inputRow = UiKit.El(box, "chat-input-row");
-            _name = UiKit.Text(inputRow, "", "chat-name");
+            _scroll = UiKit.Scroll(root);
+
+            VisualElement inputRow = UiKit.El(root, "chat-input-row");
+            _name = UiKit.Text(inputRow, "", "bold");
             _input = new TextField { maxLength = ChatMessage.MaxLength };
             _input.AddToClassList("chat-input");
             inputRow.Add(_input);
             _input.RegisterCallback<KeyDownEvent>(OnKey, TrickleDown.TrickleDown);
-            UiKit.Tooltip(inputRow, () => UiKit.Colour("Press Enter to chat.", UiKit.Muted));
-
-            VisualElement filters = UiKit.El(root, "chat-filters");
-            foreach (Filter f in new[] { Filter.All, Filter.Game, Filter.Public })
-            {
-                Filter filter = f;
-                Label button = UiKit.Text(filters, f.ToString(), "chat-filter");
-                button.RegisterCallback<ClickEvent>(_ => SetFilter(filter));
-                _filterButtons.Add((f, button));
-            }
             SetFilter(Filter.All);
         }
 
@@ -90,7 +86,7 @@ namespace Rth.Client.Ui.Panels
         private void SetFilter(Filter filter)
         {
             _filter = filter;
-            foreach ((Filter f, Label button) in _filterButtons) button.EnableInClassList("chat-filter--on", f == filter);
+            foreach ((Filter f, Label button) in _filterButtons) button.EnableInClassList("chat-tab--on", f == filter);
             _scroll.contentContainer.Clear();
             foreach (GameSession.LogLine line in _lines) Show(line);
             ScrollToEnd();
@@ -116,7 +112,8 @@ namespace Rth.Client.Ui.Panels
 
         public override void Refresh()
         {
-            _name.text = Session.PlayerName + ": ";
+            _name.text = Session.PlayerName + ":";
+            _input.Q(className: "unity-text-field__input")?.SetEnabled(true);
         }
 
         private bool Passes(GameSession.LogLine line) =>
@@ -125,19 +122,15 @@ namespace Rth.Client.Ui.Panels
         private void Show(GameSession.LogLine line)
         {
             if (!Passes(line)) return;
-            Label label;
             if (line.From != null)
             {
-                // Classic public chat: the name in black, what they said in blue.
-                label = UiKit.Text(_scroll, "<color=#000000>" + Escape(line.From) + ":</color> <color=#0000b4>" + Escape(line.Text) + "</color>", "chat-line");
+                UiKit.Text(_scroll, UiKit.Colour(Escape(line.From) + ":", UiKit.HeadingColour) + " " + UiKit.Colour(Escape(line.Text), new Color(0.6f, 0.8f, 1f)), "chat-line");
+                return;
             }
-            else
-            {
-                string text = line.Kind == TextKind.Assayer ? "The Assayer: " + line.Text : line.Text;
-                label = UiKit.Text(_scroll, Escape(text), "chat-line");
-                if (line.Kind == TextKind.Warning) label.AddToClassList("chat-line--warning");
-                if (line.Kind == TextKind.Assayer) label.AddToClassList("chat-line--assayer");
-            }
+            string text = line.Kind == TextKind.Assayer ? "The Assayer: " + line.Text : line.Text;
+            Label label = UiKit.Text(_scroll, Escape(text), "chat-line");
+            if (line.Kind == TextKind.Warning) label.AddToClassList("chat-line--warning");
+            if (line.Kind == TextKind.Assayer) label.AddToClassList("chat-line--assayer");
         }
 
         /// <summary>Stops players' text being read as rich-text tags.</summary>

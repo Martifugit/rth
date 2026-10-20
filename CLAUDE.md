@@ -264,7 +264,8 @@ region-level "music/area name" finer than a whole region, world-map/minimap.
 
 ## Milestone 8: the interface (done)
 
-RS3-style movable windows with an OSRS look; see `docs/interface.md`.
+Movable windows of panels, fixed-size bars and server windows, and tabbed modals, in a modern
+dark-fantasy style; see `docs/interface.md` (its "Window kinds" table says which is which).
 
 - [x] UI Toolkit runtime interface (`client/Assets/Scripts/Ui/`): `UiRoot` (document, layout,
       hotkeys, pointer-over-UI and typing checks), `UiWindow` (drag with snapping, resize,
@@ -277,18 +278,27 @@ RS3-style movable windows with an OSRS look; see `docs/interface.md`.
       worn + bonuses, ability book, focuses (deflection), skills (total level, targets),
       quests, task, XP metrics, chat, world map (regions to scale), settings.
 - [x] Public chat: `ChatSystem` (protocol 8), overhead text, Enter to type.
-- [x] Visual pass: theme stylesheet, pixel font (OFL), original pixel-art icon library with
-      tinting, OSRS-style inner layouts (paper-doll equipment, spellbook-style ability and
-      focus books, skill tiles, orbs, parchment chat with filters). Bank, shop, conversation,
-      the Assayer and the right-click menu moved into the window system too; only the login
-      box and world labels are still IMGUI.
+- [x] Look: dark-fantasy theme (skin textures from `tools/ui-skin`), Cinzel and Alegreya Sans
+      (OFL), game-icons.net silhouettes tinted in code (CC BY 3.0, `CREDITS.md`,
+      `tools/icons`). Fixed-size bars, minimap, chat, bank, shop and conversation.
+- [x] Action bars: a main bar (blood, phlegm and breath gauges, the bile axis, 14 slots on
+      1-0 - =) and two secondary bars; abilities and items dragged onto them; layouts kept on
+      the server (`ClientStateSystem`, "client" state). One drag-and-drop system for all slots.
+- [x] Modals (`UiModal`, tabs, Escape): journal (quests in full, achievement diary, bestiary),
+      guide (skill unlocks gathered from content, ability reference), world map, settings.
+- [x] Bank: pack and worn tabs beside it, quantity buttons with withdraw-X, bank notes
+      (generated for every unstackable item), deposit worn items.
+- [x] Conversation in two parts (message, then reply). Server windows stay closed when closed.
+- [x] Server: `AchievementSystem` (achievements.json; objectives counted from events),
+      `BestiarySystem` (kills, drops and carcass yields per creature), `RegionSystem`,
+      `ClientStateSystem`; events `ItemsObtained`, `ObjectUsed`, `NpcActionUsed`,
+      `RegionEntered`; quests send their whole story (protocol 9).
 
-Not yet: player-arranged action bars (needs a server-saved bar layout), secondary bars, run
-energy, friends/group/private chat, the larger windows (bestiary, diary, skill unlocks, quest
-journal, ability reference, player examine), waystones on the world map, item art.
+Not yet: run energy, friends/group/private chat, announcements, player examine, waystones on
+the world map, item art, world labels and the login box (still IMGUI).
 
-**Next: not chosen yet.** Candidates: player-arranged action bars and the breath skill (run
-energy, focuses, courses), an art pass on Tolling, more quests, a second combat style.
+**Next: not chosen yet.** Candidates: the breath skill (run energy, focuses, courses), an art
+pass on Tolling, more quests and achievements, a second combat style.
 
 ---
 
@@ -330,6 +340,11 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | A sign, notice or flavour action | An object action with a `message` in objects.json (no handler needed). |
 | An interface panel | A `UiPanel` subclass in `client/Assets/Scripts/Ui/Panels/` (id, title, icon, default window, `Build`, `Refresh`); it registers itself. Build it from `UiKit` pieces so it matches the theme (`Resources/UI/Rth.uss`). A new default spot goes in `UiDefaultLayout`. A window the server opens overrides `ServerOpen` and `OnClosedByPlayer`. |
 | An icon | 16 rows of pixel art in `client/Assets/Resources/UI/pixelicons.txt` (or a PNG at `Resources/Icons/<id>.png`); name it with `"icon"` on the item, ability or skill. |
+| A modal (big tabbed window) | A `UiModal` subclass in `client/Assets/Scripts/Ui/Modals/` listing `ModalTab`s; it registers itself. `MasterDetail` gives the list-and-detail layout. |
+| Something draggable, or a place to drop it | `UiRoot.BeginDrag` with a payload from `DragData.cs` (or a new one); `UiRoot.AddDropTarget` on the receiving element. |
+| An achievement | An entry in achievements.json (kind kill, talk, recipe, level, quest, object, region or obtain). A new kind: count the event that proves it in `AchievementSystem`. |
+| Player state the interface shows | Send it as `JsonStateMessage.Of(key, value)` from the system's `SendState`; the client reads `GameSession.ServerState<T>(key)`. |
+| Client settings that follow the player | `GameSession.SetClientState(key, json)`; read `GameSession.ClientState`. |
 | A chat channel (private, group) | A `ChatChannel` value and its routing in `ChatSystem`; the chat panel shows `ChatLineMessage`s. |
 | A new kind of content file | A field on `ContentParts`, load it in `GameContent.Load`, validate in `Create`. Client-visible content goes in `ClientContent` (sent as JSON, so no codec changes). |
 | A client message | A message class in `shared/Net/Messages.cs`, a case in `MessageCodec.Decode`, bump `Protocol.Version`. |

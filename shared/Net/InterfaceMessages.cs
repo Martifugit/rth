@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using Rth.Shared.Items;
 using Rth.Shared.World;
 
 namespace Rth.Shared.Net
@@ -10,6 +11,11 @@ namespace Rth.Shared.Net
         public string Id = "";
         public string Name = "";
         public string Examine = "";
+        /// <summary>For the bestiary: blood, hardest hit, style, whether it attacks on sight.</summary>
+        public int Blood;
+        public int MaxHit;
+        public Rth.Shared.Combat.CombatStyle Style;
+        public bool Aggressive;
         /// <summary>Whether "Attack" appears in its menu.</summary>
         public bool Attackable = true;
         /// <summary>Other menu options ("Talk-to", "Bank", "Trade"), dispatched by id on the server.</summary>
@@ -63,8 +69,11 @@ namespace Rth.Shared.Net
     /// <summary>Put items from the pack into the bank. Slot -1 deposits the whole pack; Count 0 means all of that item.</summary>
     public sealed class BankDepositMessage : Message
     {
+        /// <summary>The slot to deposit from; -1 deposits everything in that container.</summary>
         public int Slot;
         public int Count;
+        /// <summary>Where from: the pack, or worn equipment.</summary>
+        public ContainerKind From = ContainerKind.Inventory;
 
         public override MessageType Type => MessageType.BankDeposit;
 
@@ -72,9 +81,11 @@ namespace Rth.Shared.Net
         {
             w.Write((short)Slot);
             w.Write(Count);
+            w.Write((byte)From);
         }
 
-        internal static BankDepositMessage Read(BinaryReader r) => new BankDepositMessage { Slot = r.ReadInt16(), Count = r.ReadInt32() };
+        internal static BankDepositMessage Read(BinaryReader r) =>
+            new BankDepositMessage { Slot = r.ReadInt16(), Count = r.ReadInt32(), From = (ContainerKind)r.ReadByte() };
     }
 
     /// <summary>Take items out of the bank. Count 0 means as many as fit.</summary>
@@ -82,6 +93,8 @@ namespace Rth.Shared.Net
     {
         public int Slot;
         public int Count;
+        /// <summary>Take bank notes instead of the items themselves (they stack; not usable until exchanged).</summary>
+        public bool Noted;
 
         public override MessageType Type => MessageType.BankWithdraw;
 
@@ -89,9 +102,11 @@ namespace Rth.Shared.Net
         {
             w.Write((short)Slot);
             w.Write(Count);
+            w.Write(Noted);
         }
 
-        internal static BankWithdrawMessage Read(BinaryReader r) => new BankWithdrawMessage { Slot = r.ReadInt16(), Count = r.ReadInt32() };
+        internal static BankWithdrawMessage Read(BinaryReader r) =>
+            new BankWithdrawMessage { Slot = r.ReadInt16(), Count = r.ReadInt32(), Noted = r.ReadBoolean() };
     }
 
     public sealed class ShopBuyMessage : Message
@@ -225,7 +240,16 @@ namespace Rth.Shared.Net
 
     public struct QuestEntry
     {
+        public string Id;
         public string Name;
+        /// <summary>What the quest is about, shown before it starts.</summary>
+        public string Summary;
+        /// <summary>Journal entries reached so far, oldest first (the full story once complete).</summary>
+        public List<string> Log;
+        /// <summary>"Occultism 5"... what's needed to start.</summary>
+        public List<string> Requirements;
+        /// <summary>"250 Distillation XP", "Sleeper's ribbon"...</summary>
+        public List<string> Rewards;
         public QuestState State;
         /// <summary>Summary, current stage's journal text, or the completion text.</summary>
         public string Journal;
@@ -240,26 +264,11 @@ namespace Rth.Shared.Net
 
         public override MessageType Type => MessageType.Quests;
 
-        internal override void WriteBody(BinaryWriter w)
-        {
-            w.Write((byte)Quests.Count);
-            foreach (QuestEntry q in Quests)
-            {
-                w.Write(q.Name ?? "");
-                w.Write((byte)q.State);
-                w.Write(q.Journal ?? "");
-                w.Write(q.Progress ?? "");
-            }
-        }
+        // JSON, so the journal can grow fields without codec changes.
+        internal override void WriteBody(BinaryWriter w) => w.Write(Newtonsoft.Json.JsonConvert.SerializeObject(Quests));
 
-        internal static QuestsMessage Read(BinaryReader r)
-        {
-            var m = new QuestsMessage();
-            int count = r.ReadByte();
-            for (int i = 0; i < count; i++)
-                m.Quests.Add(new QuestEntry { Name = r.ReadString(), State = (QuestState)r.ReadByte(), Journal = r.ReadString(), Progress = r.ReadString() });
-            return m;
-        }
+        internal static QuestsMessage Read(BinaryReader r) =>
+            new QuestsMessage { Quests = Newtonsoft.Json.JsonConvert.DeserializeObject<List<QuestEntry>>(r.ReadString()) ?? new List<QuestEntry>() };
     }
 
     /// <summary>The player's current task (if any) and their point balances. Sent whenever they change.</summary>

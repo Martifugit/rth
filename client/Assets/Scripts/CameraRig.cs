@@ -47,7 +47,7 @@ namespace Rth.Client
             Mouse mouse = Mouse.current;
             float dt = Time.deltaTime;
 
-            if (keyboard != null)
+            if (keyboard != null && !Ui.UiRoot.IsTyping)
             {
                 if (keyboard.leftArrowKey.isPressed) yaw += keyRotateSpeed * dt;
                 if (keyboard.rightArrowKey.isPressed) yaw -= keyRotateSpeed * dt;
@@ -63,8 +63,10 @@ namespace Rth.Client
                     yaw += delta.x * dragRotateSpeed;
                     pitch -= delta.y * dragRotateSpeed;
                 }
+                // The wheel zooms only over the world; over a window it scrolls the window.
                 float scroll = mouse.scroll.ReadValue().y;
-                if (Mathf.Abs(scroll) > 0.01f) distance *= scroll > 0f ? 0.9f : 1.1f;
+                if (Mathf.Abs(scroll) > 0.01f && !Ui.UiRoot.IsPointerOverUi(mouse.position.ReadValue()) && !Ui.UiRoot.IsModalOpen)
+                    distance *= scroll > 0f ? 0.9f : 1.1f;
             }
 
             pitch = Mathf.Clamp(pitch, minPitch, maxPitch);

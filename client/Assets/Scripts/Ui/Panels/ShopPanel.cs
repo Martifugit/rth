@@ -7,9 +7,9 @@ using UnityEngine.UIElements;
 namespace Rth.Client.Ui.Panels
 {
     /// <summary>
-    /// A shop, while the server has it open: its stock as item slots with the stock count on each
-    /// and the price beneath, out-of-stock items dimmed. Click to buy one, right-click for more.
-    /// If the shop buys, click items in your pack to sell them.
+    /// A shop, while the server has it open, a fixed size: its stock as item slots with the stock
+    /// count on each and the price beneath, out-of-stock items dimmed. Click to buy one,
+    /// right-click for more. If the shop buys, click items in your pack to sell them.
     /// </summary>
     public sealed class ShopPanel : UiPanel
     {
@@ -18,8 +18,7 @@ namespace Rth.Client.Ui.Panels
         public override string Icon => "coins";
         public override string DefaultWindow => UiDefaultLayout.Town;
         public override bool OpenByDefault => false;
-        public override Vector2 MinSize => new Vector2(300f, 200f);
-        public override Vector2 DefaultSize => new Vector2(430f, 360f);
+        public override Vector2? FixedSize => new Vector2(500f, 400f);
         public override bool? ServerOpen => Session.OpenInterface == InterfaceKind.Shop && Session.Shop != null;
         public override void OnClosedByPlayer() => Session.CloseInterface();
 
@@ -31,13 +30,10 @@ namespace Rth.Client.Ui.Panels
         {
             VisualElement well = UiKit.El(root, "well");
             well.style.flexGrow = 1;
-            var scroll = new ScrollView();
-            scroll.AddToClassList("scroll");
-            well.Add(scroll);
+            ScrollView scroll = UiKit.Scroll(well);
             _grid = UiKit.El(scroll, "slot-grid");
-            _footer = UiKit.Text(root, "", "small");
-            _footer.style.whiteSpace = WhiteSpace.Normal;
-            _footer.style.marginTop = 4f;
+            _footer = UiKit.Text(root, "", "prose", "small");
+            _footer.style.marginTop = 6f;
         }
 
         public override void Refresh()
@@ -57,25 +53,28 @@ namespace Rth.Client.Ui.Panels
                 ItemDef def = Session.Item(entry.ItemId);
 
                 VisualElement cell = UiKit.El(_grid);
-                cell.style.width = 64f;
+                cell.style.width = 70f;
                 cell.style.alignItems = Align.Center;
-                cell.style.marginBottom = 4f;
-                VisualElement socket = UiKit.El(cell, "socket");
-                UiKit.Icon(socket, IconLibrary.ForItem(def), 32f, "slot__icon").pickingMode = PickingMode.Ignore;
+                cell.style.marginBottom = 6f;
+                VisualElement slot = UiKit.El(cell, "slot");
+                slot.style.width = slot.style.height = 48f;
+                VisualElement icon = UiKit.El(slot, "slot__icon");
+                icon.pickingMode = PickingMode.Ignore;
+                UiKit.SetItem(icon, def);
                 if (entry.Stock >= 0)
                 {
-                    Label stock = UiKit.Text(socket, UiKit.FormatCount(entry.Stock), "slot__count");
+                    Label stock = UiKit.Text(slot, UiKit.FormatCount(entry.Stock), "slot__count");
                     stock.pickingMode = PickingMode.Ignore;
                     stock.style.color = entry.Stock == 0 ? UiKit.Bad : UiKit.Value;
                 }
-                if (entry.Stock == 0) socket.AddToClassList("socket--locked");
+                if (entry.Stock == 0) slot.AddToClassList("slot--locked");
 
                 VisualElement price = UiKit.El(cell, "row");
-                UiKit.Icon(price, currency, 12f).style.marginRight = 2f;
-                UiKit.Text(price, entry.Price.ToString("N0"), "value", "small");
+                UiKit.Icon(price, currency, 14f).style.unityBackgroundImageTintColor = UiKit.Value;
+                UiKit.Text(price, entry.Price.ToString("N0"), "value", "small").style.marginLeft = 2f;
 
                 string name = def?.Name ?? entry.ItemId;
-                socket.RegisterCallback<PointerDownEvent>(e =>
+                slot.RegisterCallback<PointerDownEvent>(e =>
                 {
                     if (e.button == 0) Session.ShopBuy(index, 1);
                     else if (e.button == 1)
@@ -84,9 +83,10 @@ namespace Rth.Client.Ui.Panels
                             ("Buy 1", () => Session.ShopBuy(index, 1)),
                             ("Buy 5", () => Session.ShopBuy(index, 5)),
                             ("Buy 10", () => Session.ShopBuy(index, 10)),
+                            ("Buy X...", () => Ui.PromptNumber("Buy how many?", n => Session.ShopBuy(index, n))),
                         });
                 });
-                UiKit.Tooltip(socket, () => (def != null ? GameText.Describe(def, 1) : UiKit.Title(name)) +
+                UiKit.Tooltip(slot, () => (def != null ? GameText.Describe(def, 1) : UiKit.Title(name)) +
                     "\n\nPrice: " + UiKit.Colour(entry.Price.ToString("N0") + " " + shop.CurrencyName.ToLowerInvariant(), UiKit.Value) +
                     (entry.Stock < 0 ? "" : "\nIn stock: " + UiKit.Colour(entry.Stock.ToString(), entry.Stock > 0 ? UiKit.Value : UiKit.Bad)));
             }

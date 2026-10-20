@@ -1,0 +1,121 @@
+[
+  {
+    "id": "tolling_ledger",
+    "name": "Entered in the Ledger",
+    "description": "Speak with Clerk Ambrose at the Synod treasury.",
+    "area": "Tolling",
+    "tier": "Easy",
+    "objective": { "kind": "talk", "target": "clerk_ambrose" },
+    "reward": { "items": [ { "item": "marks", "count": 10 } ] }
+  },
+  {
+    "id": "tolling_strongbox",
+    "name": "Something Put By",
+    "description": "Open the Synod strongbox in the treasury.",
+    "area": "Tolling",
+    "tier": "Easy",
+    "objective": { "kind": "object", "target": "synod_strongbox:bank" }
+  },
+  {
+    "id": "tolling_rats",
+    "name": "Reed Work",
+    "description": "Kill 5 fen rats in the reed beds.",
+    "area": "Tolling",
+    "tier": "Easy",
+    "objective": { "kind": "kill", "target": "fen_rat", "count": 5 },
+    "reward": { "xp": [ { "skill": "occultism", "amount": 40 } ] }
+  },
+  {
+    "id": "tolling_first_skin",
+    "name": "Off the Bone",
+    "description": "Butcher a fen rat carcass at the skinning rack.",
+    "area": "Tolling",
+    "tier": "Easy",
+    "objective": { "kind": "recipe", "target": "butcher_fen_rat" },
+    "reward": { "xp": [ { "skill": "butchering", "amount": 30 } ] }
+  },
+  {
+    "id": "tolling_apothecary",
+    "name": "A Word with the Apothecary",
+    "description": "Speak with Corvin Sallow in his apothecary.",
+    "area": "Tolling",
+    "tier": "Easy",
+    "objective": { "kind": "talk", "target": "corvin_sallow" }
+  },
+  {
+    "id": "tolling_waystone",
+    "name": "Eleven Days East",
+    "description": "Read the waystone on the Pilgrim Road.",
+    "area": "Tolling",
+    "tier": "Easy",
+    "objective": { "kind": "object", "target": "waystone:read" }
+  },
+  {
+    "id": "tolling_mite",
+    "name": "Sour Hollow",
+    "description": "Kill a vitriol mite in Sour Hollow.",
+    "area": "Tolling",
+    "tier": "Medium",
+    "objective": { "kind": "kill", "target": "vitriol_mite" },
+    "reward": { "xp": [ { "skill": "occultism", "amount": 75 } ] }
+  },
+  {
+    "id": "tolling_waygate",
+    "name": "Barred from the Far Side",
+    "description": "Try the wardens' waygate at the end of the Pilgrim Road.",
+    "area": "Tolling",
+    "tier": "Medium",
+    "objective": { "kind": "object", "target": "pilgrim_waygate:open" }
+  },
+  {
+    "id": "tolling_salts",
+    "name": "Under the Counter",
+    "description": "Distil a batch of choleric salts at Corvin's still.",
+    "area": "Tolling",
+    "tier": "Medium",
+    "objective": { "kind": "recipe", "target": "distil_choleric_salts" },
+    "reward": { "xp": [ { "skill": "distillation", "amount": 60 } ] }
+  },
+  {
+    "id": "tolling_dreamless",
+    "name": "The Door Left Open",
+    "description": "Complete the Dreamless quest.",
+    "area": "Tolling",
+    "tier": "Medium",
+    "objective": { "kind": "quest", "target": "dreamless" }
+  },
+  {
+    "id": "tolling_hooks",
+    "name": "Glass Teeth",
+    "description": "Obtain a glass flensing hook.",
+    "area": "Tolling",
+    "tier": "Medium",
+    "objective": { "kind": "obtain", "target": "glass_flensing_hook" }
+  },
+  {
+    "id": "tolling_vermin",
+    "name": "Vermin Warden",
+    "description": "Kill 100 fen rats.",
+    "area": "Tolling",
+    "tier": "Hard",
+    "objective": { "kind": "kill", "target": "fen_rat", "count": 100 },
+    "reward": { "items": [ { "item": "marks", "count": 250 } ] }
+  },
+  {
+    "id": "tolling_lye",
+    "name": "Into the Lye",
+    "description": "Butcher 25 vitriol mite carcasses at the lye vat.",
+    "area": "Tolling",
+    "tier": "Hard",
+    "objective": { "kind": "recipe", "target": "butcher_vitriol_mite", "count": 25 },
+    "reward": { "xp": [ { "skill": "butchering", "amount": 500 } ] }
+  },
+  {
+    "id": "tolling_occult",
+    "name": "Black and Yellow",
+    "description": "Reach Occultism level 20.",
+    "area": "Tolling",
+    "tier": "Hard",
+    "objective": { "kind": "level", "target": "occultism", "count": 20 }
+  }
+]

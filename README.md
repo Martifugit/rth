@@ -31,29 +31,33 @@ pressing Play in a region scene loads the Game scene beside it.
 
 - Left-click a tile (or a spot on the minimap) to walk there. **R** toggles running (2 tiles per tick).
 - **The interface is made of windows**: drag a title bar to move one (edges snap), drag the
-  corner to resize, drag a tab out to make its own window or onto another window to combine
-  them. The minimap's buttons open the world map, settings (lock, scale, reset layout, log
-  out) and a menu of every panel. Keys: **B** pack, **E** worn, **A** abilities, **F** focuses,
-  **K** skills, **Q** quests, **M** world map; **Enter** to chat.
-- Left-click a creature to attack it. **1-8** (or clicking the action bar) queue Occult
-  abilities; hover a slot to see what it does and what bile or phlegm it needs.
+  corner of a resizable one to resize it, drag a tab out to make its own window or onto
+  another window to combine them. The buttons under the minimap open the world map, the
+  **journal** (quests, achievement diary, bestiary), the **guide** (skill unlocks, abilities),
+  settings and a menu of every window. Keys: **B** pack, **E** worn, **A** abilities,
+  **F** focuses, **K** skills, **Q** quests, **J** journal, **G** guide, **M** world map,
+  **Enter** to chat, **Escape** closes. Settings > Controls lists them all.
+- Left-click a creature to attack it. **1 to 0, -, =** (or clicking the action bar) use what's
+  on the main bar. Drag abilities from the book, or items from your pack, onto any bar; drag
+  a slot off the bars to clear it. Hover a slot to see what it does.
 - **Z / X / C** toggle deflecting melee, ranged or occult attacks, which spends breath.
 - **Right-click** anything in the world for all its options (attack, take each item on the tile,
   walk here). The top-left text shows what a left-click will do.
 - The side window at bottom right has your **Pack** (click an item to use it: eat, drink, wield;
-  right-click for drop and examine; drag to rearrange), what you've **Worn** (with your
-  bonuses), the ability **Book**, **Focus** (deflection), **Skills**, **Quests**, your **Task**
-  and **XP** gained this session.
+  right-click for drop and examine; drag to rearrange), what you've **Worn**, your
+  **Character** stats, the ability **Book**, **Focus** (deflection), **Skills**, **Quests**,
+  your **Task** and **XP** gained this session.
 - Creatures drop their **carcass**. Take it to the right workstation and click it to
   **butcher** it for the loot: fen rats at the skinning rack by the spawn (you start with a
   skinning knife), vitriol mites at the lye vat in the north-east (needs butchering 10 and a
   glass flensing hook, which rats sometimes yield). You keep going until you run out.
 - Ground items are only visible to you at first; after a minute anyone can see them, and after
   three minutes they're gone.
-- **Townsfolk**: left-click to talk (right-click for Bank or Trade). In conversation, press the
-  number keys or click to answer; space continues; Escape closes.
-  - **Clerk Ambrose** by the red strongbox runs your **bank** (the strongbox works too). Click
-    items in your pack to deposit them while it's open.
+- **Townsfolk**: left-click to talk (right-click for Bank or Trade). A conversation shows what
+  they say (Space continues), then your answers (number keys or click); Escape closes.
+  - **Clerk Ambrose** by the red strongbox runs your **bank** (the strongbox works too). Your
+    pack and worn items show beside it: click to deposit. Choose how many a click moves (1, 5,
+    10, X, All) and whether items come out as stackable **bank notes**.
   - **Corvin Sallow** in the hut sells food, draughts and reagents, and buys things back. Ask
     him about the humours once you're a decent butcher.
   - **Wenna Thole** at the skinning rack hands out butchering tasks for **yard tokens**,
@@ -61,8 +65,9 @@ pressing Play in a region scene loads the Game scene beside it.
 - Occult thresholds and ultimates burn **reagents** (choleric salts, melancholic tincture,
   vitriol salts). You start with some; Corvin sells them; **Distillation** makes them from the
   galls and glands butchering yields.
-- **Quests**: someone is talking in her sleep by the pond. The **Quests** tab tracks what you've
-  started (hover a quest for its journal entry).
+- **Quests**: someone is talking in her sleep by the pond. The **Quests** tab lists them; click
+  one for the journal, which tells the story so far. The journal also holds the **achievement
+  diary** and the **bestiary** (kill counts and drop logs).
 - The **Skills** tab shows your levels. Occultism (from fighting) unlocks thresholds at 5 and
   ultimates at 10, and adds ability damage per level.
 - Arrow keys or middle-drag rotate the camera; the scroll wheel zooms.
@@ -101,8 +106,7 @@ Friends connect on TCP port **43600**, so open that port on your router if they'
 
 Player saves are plain JSON files in `server/saves/`, one per player.
 
-The interface font is Pixelify Sans, used under the SIL Open Font License
-(`client/Assets/Resources/UI/Fonts/OFL.txt`). Every icon is original pixel art.
+Fonts and icons are third-party, used under their licences: see `CREDITS.md`.
 
 ## Editing the map
 

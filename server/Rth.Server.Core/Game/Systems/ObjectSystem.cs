@@ -63,6 +63,7 @@ namespace Rth.Server.Game
             ActionDef? action = def.Actions.FirstOrDefault(a => a.Id == m.ActionId);
             if (action == null) return;
             if (!Unlocked(World, player, action)) return;
+            World.Events.Publish(new ObjectUsed(player, placed, action.Id));
             if (action.Message != null) World.Tell(player, TextKind.Info, action.Message);
             if (_actions.TryGetValue(m.ActionId, out Action<Player, PlacedObject, ObjectDef>? handler)) handler(player, placed, def);
             else if (action.Message == null) World.Log("No handler for object action '" + m.ActionId + "'.");

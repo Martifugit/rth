@@ -8,9 +8,9 @@ namespace Rth.Client.Ui
     /// A movable window holding one or more panels. With one panel the title bar shows its icon
     /// and name; with several it shows a strip of icon tabs, and the active panel's name heads the
     /// body. Drag the title bar to move the window (edges snap to the screen and other windows),
-    /// the corner to resize it, a tab (or a lone panel's icon) to pull the panel out or drop it on
-    /// another window. A window with a single bare panel (bars, the minimap) has no frame, just a
-    /// handle that shows on hover.
+    /// a tab (or a lone panel's icon) to pull the panel out or drop it on another window. Windows
+    /// of resizable panels have a corner grip; fixed-size panels (bars, chat, bank) don't. A
+    /// window with a single bare panel (bars, the minimap) has no frame, just a hover handle.
     ///
     /// Position is kept relative to an anchor (a corner, an edge's middle, or the centre), so
     /// layouts survive a change of resolution.
@@ -49,6 +49,17 @@ namespace Rth.Client.Ui
         private bool _tabDragging;
 
         public bool IsBare => Panels.Count == 1 && Panels[0].Bare;
+
+        /// <summary>The size every panel in it insists on, if any: the window then can't be resized.</summary>
+        public Vector2? FixedSize
+        {
+            get
+            {
+                foreach (UiPanel p in Panels)
+                    if (p.FixedSize.HasValue) return p.FixedSize;
+                return null;
+            }
+        }
 
         public UiWindow(UiRoot ui)
         {
@@ -129,7 +140,7 @@ namespace Rth.Client.Ui
             if (panel != null) _body.Add(panel.Root);
             foreach (KeyValuePair<UiPanel, VisualElement> t in _tabElements)
                 t.Value.EnableInClassList("tab--active", t.Key == panel);
-            _header.text = panel?.Title ?? "";
+            _header.text = panel?.Title.ToUpperInvariant() ?? "";
             if (Panels.Count == 1 && panel != null) _title.text = panel.Title;
         }
 
@@ -138,6 +149,7 @@ namespace Rth.Client.Ui
             bool bare = IsBare;
             bool single = Panels.Count == 1;
             Root.EnableInClassList("window--bare", bare);
+            Root.EnableInClassList("window--fixed", FixedSize.HasValue);
             _titleBar.style.display = bare ? DisplayStyle.None : DisplayStyle.Flex;
             _tabs.style.display = single ? DisplayStyle.None : DisplayStyle.Flex;
             _titleIcon.style.display = _title.style.display = single ? DisplayStyle.Flex : DisplayStyle.None;
@@ -166,7 +178,7 @@ namespace Rth.Client.Ui
         /// <summary>Puts the window where its anchor and offset say, kept on screen.</summary>
         public void Apply(Vector2 screen)
         {
-            Size = Vector2.Max(MinSize, Vector2.Min(Size, screen));
+            Size = FixedSize ?? Vector2.Max(MinSize, Vector2.Min(Size, screen));
             Vector2 pos = new Vector2(Anchor.x * (screen.x - Size.x), Anchor.y * (screen.y - Size.y)) + Offset;
             pos.x = Mathf.Clamp(pos.x, 0f, Mathf.Max(0f, screen.x - Size.x));
             pos.y = Mathf.Clamp(pos.y, 0f, Mathf.Max(0f, screen.y - Size.y));
@@ -193,6 +205,8 @@ namespace Rth.Client.Ui
         private void BeginMove(PointerDownEvent e)
         {
             if (_ui.Locked || e.button != 0) return;
+            // Buttons in the title bar (close) must get their own click: don't start a drag on them.
+            if (e.target is VisualElement target && target.ClassListContains("window__button")) return;
             _moving = true;
             _pointerStart = e.position;
             _rectStart = new Vector2(Root.resolvedStyle.left, Root.resolvedStyle.top);
@@ -202,7 +216,7 @@ namespace Rth.Client.Ui
 
         private void BeginResize(PointerDownEvent e)
         {
-            if (_ui.Locked || e.button != 0) return;
+            if (_ui.Locked || e.button != 0 || FixedSize.HasValue) return;
             _resizing = true;
             _pointerStart = e.position;
             _sizeStart = Size;
@@ -295,7 +309,7 @@ namespace Rth.Client.Ui
         {
             if (_tabPressed == null || _ui.Locked) return;
             if (!_tabDragging && ((Vector2)e.position - _tabPressedAt).magnitude > TabDragThreshold) _tabDragging = true;
-            if (_tabDragging) _ui.ShowDragGhost(_tabPressed.Title, IconLibrary.Get(_tabPressed.Icon), e.position);
+            if (_tabDragging) _ui.ShowDragGhost(_tabPressed.Title, IconLibrary.Get(_tabPressed.Icon), UiKit.IconTint, e.position);
         }
 
         private void ReleaseTab(VisualElement tab, UiPanel panel, PointerUpEvent e)
