@@ -1,6 +1,0 @@
-[
-  { "type": "skinning_rack", "plane": 0, "x": 12, "y": 8 },
-  { "type": "lye_vat", "plane": 0, "x": 24, "y": 18 },
-  { "type": "synod_strongbox", "plane": 0, "x": 9, "y": 12 },
-  { "type": "apothecary_still", "plane": 0, "x": 13, "y": 18 }
-]

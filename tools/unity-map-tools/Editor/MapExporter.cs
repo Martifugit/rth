@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using Rth.Shared.World;
 using UnityEditor;
@@ -52,14 +52,46 @@ namespace Rth.MapTools.Editor
 
         public static string Export(MapArea area)
         {
+            if (area.origin.x % 8 != 0 || area.origin.y % 8 != 0 || area.size.x % 8 != 0 || area.size.y % 8 != 0)
+                Debug.LogError($"[R'th] Region '{area.exportName}' must start and end on whole zones: origin and size multiples of 8. The server will refuse it.", area);
             MapData map = Build(area);
             string path = OutputPathFor(area);
             map.Save(path);
             int npcs = ExportNpcSpawns(area, map, Path.ChangeExtension(path, null) + ".spawns.json");
             int objects = ExportObjects(area, Path.ChangeExtension(path, null) + ".objects.json");
+            ExportRegionInfo(area, Path.ChangeExtension(path, null) + ".region.json");
+            AddSceneToBuild(area.gameObject.scene.path);
             CollisionPreview.Show(map, area.plane);
             Debug.Log($"[R'th] Exported '{area.exportName}' ({map.Width}x{map.Height}, spawn {map.Spawn}, {npcs} NPCs, {objects} objects) to {path}");
             return path;
+        }
+
+        /// <summary>
+        /// Writes what the server and clients need to know about the region besides collision:
+        /// which scene draws it, its title, and whether it has a spawn point.
+        /// </summary>
+        private static void ExportRegionInfo(MapArea area, string path)
+        {
+            string Quote(string s) => "\"" + (s ?? "").Replace("\\", "").Replace("\"", "'") + "\"";
+            bool hasSpawn = area.GetComponentInChildren<MapSpawn>() != null;
+            string title = string.IsNullOrWhiteSpace(area.title) ? area.exportName : area.title.Trim();
+            File.WriteAllText(path,
+                "{\n" +
+                "  \"scene\": " + Quote(area.gameObject.scene.name) + ",\n" +
+                "  \"title\": " + Quote(title) + ",\n" +
+                "  \"hasSpawn\": " + (hasSpawn ? "true" : "false") + "\n" +
+                "}\n");
+        }
+
+        /// <summary>Region scenes are streamed in by name at runtime, so each must be in the build.</summary>
+        private static void AddSceneToBuild(string scenePath)
+        {
+            if (string.IsNullOrEmpty(scenePath)) return;
+            var scenes = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
+            if (scenes.Exists(s => s.path == scenePath)) return;
+            scenes.Add(new EditorBuildSettingsScene(scenePath, true));
+            EditorBuildSettings.scenes = scenes.ToArray();
+            Debug.Log("[R'th] Added " + scenePath + " to the build, so the client can stream it in.");
         }
 
         /// <summary>Writes the interactive objects as JSON next to the map. Returns how many.</summary>

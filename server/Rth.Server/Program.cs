@@ -6,9 +6,9 @@ using Rth.Server;
 using Rth.Server.Game;
 
 // Standalone R'th server. Usage:
-//   dotnet run --project server/Rth.Server -- [--port N] [--map path] [--saves dir] [--content dir]
+//   dotnet run --project server/Rth.Server -- [--port N] [--maps dir] [--spawn region] [--saves dir] [--content dir]
 //                                             [--tick-ms N] [--no-hot-reload]
-// Paths default to server/data/maps/tolling.rthmap and server/saves (found from the working directory).
+// Paths default to server/data/maps (every region in it) and server/saves (found from the working directory).
 
 var config = new ServerConfig
 {
@@ -16,7 +16,7 @@ var config = new ServerConfig
 };
 
 string serverDir = FindServerDirectory();
-config.MapPath = Path.Combine(serverDir, "data", "maps", "tolling.rthmap");
+config.MapDirectory = Path.Combine(serverDir, "data", "maps");
 config.SaveDirectory = Path.Combine(serverDir, "saves");
 config.ContentDirectory = Path.Combine(serverDir, "data", "content");
 
@@ -26,7 +26,8 @@ for (int i = 0; i < args.Length; i++)
     switch (args[i])
     {
         case "--port": config.Port = int.Parse(Next()); break;
-        case "--map": config.MapPath = Next(); break;
+        case "--maps": config.MapDirectory = Next(); break;
+        case "--spawn": config.SpawnRegion = Next(); break;
         case "--saves": config.SaveDirectory = Next(); break;
         case "--content": config.ContentDirectory = Next(); break;
         case "--no-hot-reload": config.HotReloadContent = false; break;
@@ -37,10 +38,10 @@ for (int i = 0; i < args.Length; i++)
     }
 }
 
-if (!File.Exists(config.MapPath))
+if (!Directory.Exists(config.MapDirectory) || Directory.GetFiles(config.MapDirectory, "*.rthmap").Length == 0)
 {
-    Console.Error.WriteLine("Map not found: " + Path.GetFullPath(config.MapPath));
-    Console.Error.WriteLine("Export it from Unity (R'th > Export Map) or pass --map.");
+    Console.Error.WriteLine("No maps in " + Path.GetFullPath(config.MapDirectory));
+    Console.Error.WriteLine("Export them from Unity (R'th > Export Map) or pass --maps.");
     return 1;
 }
 

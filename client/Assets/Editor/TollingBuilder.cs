@@ -13,7 +13,8 @@ namespace Rth.Client.Editor
     /// player wakes. West bank: the town square and bell tower, the Synod treasury, Corvin's
     /// apothecary, the skinning yard, cottages and fields. North: the Backwards Mill and its
     /// millpond. South: reed beds full of fen rats. East bank: woods and Sour Hollow. South-east:
-    /// the Wash. Once built, the scene is the source of truth; rebuilding replaces edits.
+    /// the Wash; and the Pilgrim Road leaving east. Once built, the scene is the source of truth;
+    /// rebuilding replaces edits. A region scene: the Game scene supplies camera, light and HUD.
     /// </summary>
     public static class TollingBuilder
     {
@@ -23,15 +24,11 @@ namespace Rth.Client.Editor
         [MenuItem("R'th/Dev/Rebuild Tolling Scene", priority = 101)]
         private static void BuildMenu()
         {
-            if (File.Exists(ScenePath) &&
-                !EditorUtility.DisplayDialog("Rebuild Tolling", "This replaces " + ScenePath + " and any edits made to it.", "Rebuild", "Cancel"))
-                return;
-            Build();
+            if (WorldKit.ConfirmRebuild(ScenePath)) Build();
         }
 
         public static void Build()
         {
-            EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
             var kit = new WorldKit(seed: 1729);
 
             Material grass = kit.Mat("Grass", new Color(0.36f, 0.55f, 0.22f));
@@ -64,14 +61,9 @@ namespace Rth.Client.Editor
             Material lye = kit.Mat("Lye", new Color(0.78f, 0.85f, 0.62f));
             Material bronze = kit.Mat("Bronze", new Color(0.6f, 0.45f, 0.2f));
 
-            var root = new GameObject("Tolling");
-            var area = root.AddComponent<MapArea>();
-            area.exportName = "tolling";
-            area.origin = Vector2Int.zero;
-            area.size = new Vector2Int(Size, Size);
-            Transform map = root.transform;
-
-            WorldKit.Box("Ground", map, new Vector3(Size / 2f, -0.1f, Size / 2f), new Vector3(Size, 0.2f, Size), grass);
+            // Tolling's south-west corner is the world's origin; every other region is placed from it.
+            MapArea area = WorldKit.BeginRegion("tolling", "Tolling", Vector2Int.zero, new Vector2Int(Size, Size), grass);
+            Transform map = area.transform;
 
             // ---------------------------------------------------------- water: the river, the Wash, the millpond
             var riverLine = new List<Vector2>
@@ -132,6 +124,7 @@ namespace Rth.Client.Editor
             AddRoad(new Vector2(40f, 50f), new Vector2(bx0, 50f));                                     // square to bridge
             AddRoad(new Vector2(bx1, 50f), new Vector2(58f, 51f), new Vector2(66f, 58f), new Vector2(71f, 64f)); // east to Sour Hollow
             AddRoad(new Vector2(58f, 51f), new Vector2(62f, 40f), new Vector2(72f, 28f), new Vector2(81f, 18f));              // down to the Wash
+            AddRoad(new Vector2(62f, 40f), new Vector2(76f, 42f), new Vector2(88f, 45f), new Vector2(96f, 46f));              // east: the Pilgrim Road to Cruor
             AddRoad(new Vector2(35f, 56f), new Vector2(35f, 68f), new Vector2(38.5f, 72.5f));           // north to the mill
             AddRoad(new Vector2(31f, 45f), new Vector2(31f, 38f));                                       // south to the skinning yard
             AddRoad(new Vector2(29f, 50f), new Vector2(18f, 50f), new Vector2(8f, 52f));                // west to the fields
@@ -295,39 +288,7 @@ namespace Rth.Client.Editor
             spawn.transform.position = new Vector3(33.5f, 0f, 53.5f);
             spawn.AddComponent<MapSpawn>();
 
-            // ---------------------------------------------------------- camera, light, game objects
-            Camera cam = Camera.main;
-            cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = new Color(0.55f, 0.72f, 0.88f);
-            cam.fieldOfView = 45f;
-            cam.farClipPlane = 200f;
-            var rig = cam.gameObject.AddComponent<CameraRig>();
-            cam.gameObject.AddComponent<CameraOcclusion>();
-            rig.idleFocus = new Vector3(33.5f, 0f, 53.5f);
-            Light sun = Object.FindAnyObjectByType<Light>();
-            if (sun != null)
-            {
-                sun.transform.rotation = Quaternion.Euler(50f, -35f, 0f);
-                sun.shadows = LightShadows.Soft;
-                sun.color = new Color(1f, 0.96f, 0.88f);
-            }
-            var game = new GameObject("Game");
-            var world = game.AddComponent<WorldView>();
-            var session = game.AddComponent<GameSession>();
-            session.world = world;
-            session.cameraRig = rig;
-            var hud = game.AddComponent<CombatHud>();
-            hud.session = session;
-            hud.world = world;
-
-            Directory.CreateDirectory(Path.GetDirectoryName(ScenePath));
-            EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), ScenePath);
-            var scenes = new List<EditorBuildSettingsScene> { new EditorBuildSettingsScene(ScenePath, true) };
-            foreach (EditorBuildSettingsScene s in EditorBuildSettings.scenes)
-                if (s.path != ScenePath) scenes.Add(s);
-            EditorBuildSettings.scenes = scenes.ToArray();
-            MapExporter.Export(area);
-            Debug.Log("[R'th] Built " + ScenePath);
+            WorldKit.SaveRegion(area, ScenePath);
         }
 
         private static bool InRect(int x, int z, int x0, int z0, int x1, int z1) => x >= x0 && x < x1 && z >= z0 && z < z1;

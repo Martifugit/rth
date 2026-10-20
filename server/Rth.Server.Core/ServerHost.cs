@@ -34,11 +34,10 @@ namespace Rth.Server
         public void Start()
         {
             if (IsRunning) throw new InvalidOperationException("Server already running.");
-            MapData map = MapData.Load(_config.MapPath);
+            WorldLoader.Result loaded = WorldLoader.Load(_config.MapDirectory, _config.SpawnRegion);
             GameContent content = GameContent.Load(_config.ContentDirectory);
-            MapPlacements placements = MapPlacements.Load(_config.MapPath);
             var store = new JsonPlayerStore(_config.SaveDirectory);
-            var world = new World(_config, map, store, content, placements);
+            var world = new World(_config, loaded.Map, store, content, loaded.Placements);
 
             var network = new NetworkServer(_config.Port, world.AcceptConnection, _config.Log);
             network.Start();
@@ -49,7 +48,8 @@ namespace Rth.Server
             _loop = new TickLoop(world.Tick, TimeSpan.FromMilliseconds(_config.TickMillis), new SystemClock(), _config.Log);
             _loop.Start();
             IsRunning = true;
-            _config.Log("Server listening on port " + Port + ", map " + map.Width + "x" + map.Height + ", " +
+            _config.Log("Server listening on port " + Port + ", " + loaded.Map.Regions.Count + " regions (" +
+                        string.Join(", ", loaded.Map.Regions.Select(r => r.Name)) + "), " +
                         world.Npcs.Count() + " NPCs, tick " + _config.TickMillis + " ms.");
         }
 

@@ -29,5 +29,30 @@
         "lockedMessage": "That's Corvin's, and it's behind his counter. Perhaps ask him about it."
       }
     ]
+    },
+  {
+    "id": "waystone",
+    "name": "Waystone",
+    "examine": "A mossy marker stone on the Pilgrim Road, cut with the Synod's drop of blood.",
+    "actions": [
+      {
+        "id": "read",
+        "label": "Read",
+        "message": "CRUOR, ELEVEN DAYS EAST. TOLLING, AN HOUR WEST. Under the second line someone has scratched a small bell."
+      }
+    ]
+  },
+  {
+    "id": "pilgrim_waygate",
+    "name": "Waygate",
+    "examine": "A wardens' gate in the palisade, sealed with Synod wax. The road to Cruor runs on beyond it.",
+    "actions": [
+      {
+        "id": "open",
+        "label": "Open",
+        "requiresFlag": "pilgrim_road_open",
+        "lockedMessage": "Barred from the far side. A notice under the seal reads: THE ROAD TO CRUOR IS CLOSED UNTIL THE CAUSEWAY IS MENDED. BY ORDER OF THE WARDENS."
+      }
+    ]
   }
 ]

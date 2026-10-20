@@ -16,7 +16,7 @@ namespace Rth.Shared.World
         private static readonly int[] StepY = { 0, 0, -1, 1, -1, -1, 1, 1 };
 
         /// <summary>The tiles to walk through, in order, excluding the start. Empty if there is nowhere better to go.</summary>
-        public static List<TileCoord> FindPath(MapData map, int plane, TileCoord start, TileCoord goal, int searchRadius = DefaultSearchRadius)
+        public static List<TileCoord> FindPath(CollisionMap map, int plane, TileCoord start, TileCoord goal, int searchRadius = DefaultSearchRadius)
         {
             var path = new List<TileCoord>();
             if (start == goal) return path;

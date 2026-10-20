@@ -16,7 +16,7 @@ public sealed class IntegrationTests : IDisposable
     {
         Directory.CreateDirectory(_dir);
         string mapPath = Path.Combine(_dir, "test.rthmap");
-        MapData map = Maps.Open(30, 30, new TileCoord(5, 5));
+        MapData map = Maps.Open(32, 32, new TileCoord(5, 5));
         map.AddWall(0, 10, 5, WallSide.East);
         map.Save(mapPath);
 
@@ -24,7 +24,7 @@ public sealed class IntegrationTests : IDisposable
         {
             Port = 0,
             TickMillis = 20,
-            MapPath = mapPath,
+            MapDirectory = _dir,
             SaveDirectory = Path.Combine(_dir, "saves"),
             ContentDirectory = Repo.ContentDirectory,
             HotReloadContent = false,

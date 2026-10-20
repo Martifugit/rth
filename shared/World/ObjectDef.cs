@@ -26,6 +26,8 @@ namespace Rth.Shared.World
         public string? RequiresFlag;
         /// <summary>Said when the flag is missing.</summary>
         public string? LockedMessage;
+        /// <summary>Said when the action is used (signposts, notices). Needs no handler.</summary>
+        public string? Message;
     }
 
     /// <summary>One placed object, as exported from the scene (<c>&lt;map&gt;.objects.json</c>).</summary>

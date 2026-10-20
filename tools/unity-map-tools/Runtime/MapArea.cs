@@ -3,15 +3,21 @@ using UnityEngine;
 namespace Rth.MapTools
 {
     /// <summary>
-    /// The rectangle of tiles that gets exported. One Unity unit is one tile: tile (x, y) covers
-    /// world X [x, x+1] and Z [y, y+1]. Everything the exporter looks at sits under this object.
+    /// One region of the world: the rectangle of tiles that gets exported. One Unity unit is one
+    /// tile: tile (x, y) covers world X [x, x+1] and Z [y, y+1], in absolute world coordinates, so
+    /// neighbouring region scenes line up when loaded together. Origin and size must be multiples
+    /// of 8 (whole zones) and regions must not overlap. Everything the exporter looks at sits
+    /// under this object.
     /// </summary>
     public sealed class MapArea : MonoBehaviour
     {
-        [Tooltip("File name (without extension) written to server/data/maps/.")]
-        public string exportName = "test";
+        [Tooltip("File name (without extension) written to server/data/maps/. Unique per region.")]
+        public string exportName = "region";
 
-        [Tooltip("Tile coordinate of the south-west corner.")]
+        [Tooltip("Shown to players as they walk in: \"Tolling\".")]
+        public string title = "";
+
+        [Tooltip("Absolute tile coordinate of the south-west corner (a multiple of 8). Tolling's is (0, 0).")]
         public Vector2Int origin = Vector2Int.zero;
 
         public Vector2Int size = new Vector2Int(32, 32);

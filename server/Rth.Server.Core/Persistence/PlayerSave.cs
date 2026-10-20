@@ -10,7 +10,7 @@ namespace Rth.Server.Persistence
 
         public int Version = CurrentVersion;
         public string Name = "";
-        /// <summary>Which map (region) the position is on. A save from another map starts at this map's spawn.</summary>
+        /// <summary>The region the position is in, for reference. Positions are absolute world tiles.</summary>
         public string? Map;
         public int Plane;
         public int X;

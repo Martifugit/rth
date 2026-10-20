@@ -11,7 +11,11 @@ namespace Rth.Server
         /// <summary>Length of one game tick. 600 for real play; tests and debugging may go faster.</summary>
         public int TickMillis = 600;
 
-        public string MapPath = "data/maps/test.rthmap";
+        /// <summary>Every region map (*.rthmap) in this folder is loaded into one world.</summary>
+        public string MapDirectory = "data/maps";
+
+        /// <summary>The region whose spawn point new players start at (else the first with a spawn).</summary>
+        public string? SpawnRegion = "tolling";
         public string SaveDirectory = "saves";
 
         /// <summary>Autosave every this many ticks (300 ticks = 3 minutes at 600 ms).</summary>

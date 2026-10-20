@@ -110,7 +110,7 @@ public class WorldTests
     }
 
     [Fact]
-    public void ASaveFromAnotherMapStartsAtThisMapsSpawn()
+    public void ASaveWhoseLandIsGoneStartsAtTheSpawn()
     {
         var fx = OpenWorld();
         FakeConnection first = fx.Login("Alice");
@@ -118,9 +118,8 @@ public class WorldTests
         fx.Ticks(10);
         first.FromClient(new LogoutMessage());
         fx.Ticks(1);
-        Assert.Equal(fx.World.MapName, fx.Store.Saves["alice"].Map);
 
-        fx.Store.Saves["alice"].Map = "somewhere_else";
+        fx.Store.Saves["alice"].X = 5000; // nothing is built out there
         fx.Login("Alice");
         Assert.Equal(Spawn, fx.Player("Alice").Position);
     }

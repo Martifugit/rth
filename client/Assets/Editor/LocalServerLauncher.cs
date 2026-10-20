@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Net.Sockets;
 using Rth.MapTools;
 using Rth.MapTools.Editor;
@@ -61,25 +61,22 @@ namespace Rth.Client.Editor
             if (_host != null || _triedThisPlay) return;
             _triedThisPlay = true;
 
-            string exportName = "test";
-            MapArea area = Object.FindAnyObjectByType<MapArea>();
-            if (area != null)
-            {
-                MapExporter.Export(area); // keep the server's map in step with the scene being played
-                exportName = area.exportName;
-            }
+            // Keep the server in step with whatever region scenes are open; the rest of the world
+            // comes from their last export.
+            foreach (MapArea area in Object.FindObjectsByType<MapArea>(FindObjectsInactive.Exclude))
+                MapExporter.Export(area);
 
             string serverDir = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "..", "server"));
             var config = new ServerConfig
             {
-                MapPath = Path.Combine(serverDir, "data", "maps", exportName + ".rthmap"),
+                MapDirectory = Path.Combine(serverDir, "data", "maps"),
                 SaveDirectory = Path.Combine(serverDir, "saves"),
                 ContentDirectory = Path.Combine(serverDir, "data", "content"),
                 Log = line => Debug.Log("[Server] " + line),
             };
-            if (!File.Exists(config.MapPath))
+            if (!Directory.Exists(config.MapDirectory) || Directory.GetFiles(config.MapDirectory, "*.rthmap").Length == 0)
             {
-                Debug.LogError("[Server] No map at " + config.MapPath + ". Open a scene with a MapArea and use R'th > Export Map.");
+                Debug.LogError("[Server] No maps in " + config.MapDirectory + ". Open a region scene and use R'th > Export Map.");
                 return;
             }
 
@@ -88,6 +85,10 @@ namespace Rth.Client.Editor
             {
                 host.Start();
                 _host = host;
+            }
+            catch (System.ArgumentException e)
+            {
+                Debug.LogError("[Server] The world's regions don't fit together: " + e.Message);
             }
             catch (SocketException e) when (e.SocketErrorCode == SocketError.AddressAlreadyInUse)
             {

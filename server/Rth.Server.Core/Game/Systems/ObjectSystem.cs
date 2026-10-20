@@ -9,7 +9,8 @@ namespace Rth.Server.Game
     /// <summary>
     /// Interactive objects placed in the map (workstations now; rocks, doors and altars later).
     /// Each object type lists its actions in objects.json; systems register what an action id does
-    /// with <see cref="RegisterAction"/> (the recipe system handles "process"). "examine" is built in.
+    /// with <see cref="RegisterAction"/> (the recipe system handles "process"). "examine" is built in,
+    /// and an action with a <c>message</c> just says it (signposts), so it needs no handler.
     /// </summary>
     public sealed class ObjectSystem : GameSystem
     {
@@ -62,8 +63,9 @@ namespace Rth.Server.Game
             ActionDef? action = def.Actions.FirstOrDefault(a => a.Id == m.ActionId);
             if (action == null) return;
             if (!Unlocked(World, player, action)) return;
+            if (action.Message != null) World.Tell(player, TextKind.Info, action.Message);
             if (_actions.TryGetValue(m.ActionId, out Action<Player, PlacedObject, ObjectDef>? handler)) handler(player, placed, def);
-            else World.Log("No handler for object action '" + m.ActionId + "'.");
+            else if (action.Message == null) World.Log("No handler for object action '" + m.ActionId + "'.");
         }
     }
 }

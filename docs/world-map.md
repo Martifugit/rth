@@ -102,16 +102,28 @@ broad mere where the river widens before it runs on east towards the Cradle. It 
 
 ## Build phases
 
-The engine handles one map area at a time well, so the world is built a region at a time.
+The world is one tile grid built from regions, one Unity scene each (see CLAUDE.md,
+"Regions"). Tolling's south-west corner is (0, 0); east is +x, north is +y. Regions are
+usually 96 x 96 tiles. Most of the land between places should be sparse: a road, a few trees
+and rocks, one landmark. Unbuilt land is impassable and fades into the fog.
+
+| Region | Tiles (x, y) | Scene |
+|---|---|---|
+| Tolling | 0-95, 0-95 | `Tolling.unity` |
+| The Pilgrim Road | 96-191, 0-95 | `PilgrimRoad.unity` |
 
 1. **Tolling and the river** (built: `client/Assets/Scenes/Tolling.unity`). One riverside town
    on the western outskirts of the Keeping: the river and its bridge, the Backwards Mill and
    millpond, fields, reed beds with fen rats, a lightly wooded east bank with Sour Hollow (vitriol
    mites around a cask that leaked after the Scalding), the Wash at the south-east corner, and
    the sleepers' graves south of town. The townsfolk live here. 96 x 96 tiles.
-2. **Cruor and the bay shore.** The first capital. Needs a second map area (regions and
-   walking between them), so it's also the engine milestone for a multi-region world.
+   **The Pilgrim Road** (built: `PilgrimRoad.unity`) runs east from Tolling along the Wash's
+   north shore: open heath, a waystone, the old toll-house, and the wardens' palisade with
+   the barred waygate (flag `pilgrim_road_open`), the current edge of the world.
+2. **Cruor and the bay shore.** The first capital, days east along the Pilgrim Road. The
+   region engine is built; what's left is the land between (mostly sparse road regions) and
+   the city itself (about 30 buildings at RuneScape scale).
 3. The fens and the occult north-east.
-4. Lammas and the western passes.
+4. Sere and the western passes (the Lantern Pass).
 5. Tithe and the south-east coast.
 6. The range: passes, Meridian, the dwarven cart-lines and the depths (the deep storyline).

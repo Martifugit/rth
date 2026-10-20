@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,13 +41,13 @@ namespace Rth.Server.Game
         private readonly List<int> _deaths = new List<int>();
 
         /// <summary>Creates a world with the standard systems.</summary>
-        public World(ServerConfig config, MapData map, IPlayerStore store, GameContent content, MapPlacements? placements = null)
+        public World(ServerConfig config, CollisionMap map, IPlayerStore store, GameContent content, MapPlacements? placements = null)
             : this(config, map, store, content, StandardSystems(placements ?? new MapPlacements()))
         {
         }
 
         /// <summary>Creates a world with exactly the given systems, in order (useful for tests and tools).</summary>
-        public World(ServerConfig config, MapData map, IPlayerStore store, GameContent content, IEnumerable<GameSystem> systems)
+        public World(ServerConfig config, CollisionMap map, IPlayerStore store, GameContent content, IEnumerable<GameSystem> systems)
         {
             _config = config;
             _store = store;
@@ -86,9 +86,14 @@ namespace Rth.Server.Game
         };
 
         public ServerConfig Config => _config;
-        public MapData Map { get; }
-        /// <summary>The map's name (its file name without extension), stored in saves.</summary>
-        public string MapName => System.IO.Path.GetFileNameWithoutExtension(_config.MapPath);
+        /// <summary>The world's collision: a <see cref="WorldMap"/> of every region, or one map in tests.</summary>
+        public CollisionMap Map { get; }
+
+        /// <summary>The regions clients stream in. Empty when the world is a single bare map.</summary>
+        public IReadOnlyList<WorldRegion> Regions => Map is WorldMap world ? world.Regions : (IReadOnlyList<WorldRegion>)Array.Empty<WorldRegion>();
+
+        /// <summary>Which entities are in which zone; rebuilt every tick in the zone phase.</summary>
+        public ZoneIndex Zones { get; } = new ZoneIndex();
         public GameContent Content { get; private set; }
         public CombatRules Rules => Content.Rules;
         public GameEvents Events { get; } = new GameEvents();
@@ -149,6 +154,17 @@ namespace Rth.Server.Game
 
         public bool CanSee(Player viewer, int plane, TileCoord tile) =>
             viewer.Plane == plane && viewer.Position.ChebyshevDistance(tile) <= _config.ViewRadius;
+
+        /// <summary>Players and live NPCs within a radius (Chebyshev) of a tile, found through the zone index.</summary>
+        public IEnumerable<Entity> EntitiesNear(int plane, TileCoord tile, int radius)
+        {
+            foreach (Entity entity in Zones.Near(plane, tile, radius))
+            {
+                if (entity.Plane != plane || entity.Position.ChebyshevDistance(tile) > radius) continue;
+                if (FindEntity(entity.Id) != entity) continue; // left the world since the index was built
+                yield return entity;
+            }
+        }
 
         // ------------------------------------------------------------------ helpers for systems
 
@@ -411,7 +427,9 @@ namespace Rth.Server.Game
 
             PlayerSave? save = _store.Load(key);
             var player = new Player(NextEntityId(), key, save?.Name ?? name, connection);
-            if (save != null && save.Map == MapName && Map.Contains(save.Plane, save.X, save.Y) && !Map.IsBlocked(save.Plane, save.X, save.Y))
+            // Positions are absolute, so a save is good anywhere in the world, unless the land
+            // under it has gone (a region was rebuilt or removed): then start at the spawn.
+            if (save != null && Map.Contains(save.Plane, save.X, save.Y) && !Map.IsBlocked(save.Plane, save.X, save.Y))
             {
                 player.Plane = save.Plane;
                 player.Position = new TileCoord(save.X, save.Y);
@@ -428,6 +446,7 @@ namespace Rth.Server.Game
             _players.Add(player.Id, player);
             connection.Send(new LoginOkMessage { PlayerId = player.Id, TickMillis = _config.TickMillis });
             connection.Send(Content.ToMessage());
+            connection.Send(new RegionsMessage { Regions = Regions.ToList() });
             foreach (GameSystem system in _systems) system.OnLogin(player, save);
             _log(player.Name + " logged in at " + player.Position + (save == null ? " (new player)." : "."));
             return null;
@@ -446,6 +465,7 @@ namespace Rth.Server.Game
         private void ProcessZones()
         {
             foreach (GameSystem system in _systems) system.OnZones();
+            Zones.Rebuild(VisibleEntities());
         }
 
         // ------------------------------------------------------------------ 7. updates
@@ -457,7 +477,7 @@ namespace Rth.Server.Game
                 var update = new WorldUpdateMessage { Tick = CurrentTick };
                 var seen = new HashSet<int>();
 
-                foreach (Entity other in VisibleEntities())
+                foreach (Entity other in Zones.Near(viewer.Plane, viewer.Position, _config.ViewRadius))
                 {
                     if (!CanSee(viewer, other)) continue;
                     seen.Add(other.Id);
@@ -521,7 +541,7 @@ namespace Rth.Server.Game
                 var save = new PlayerSave
                 {
                     Name = player.Name,
-                    Map = MapName,
+                    Map = (Map as WorldMap)?.RegionAt(player.Position.X, player.Position.Y)?.Name,
                     // Logging out while dead counts as having respawned.
                     Plane = player.IsDead ? Map.SpawnPlane : player.Plane,
                     X = player.IsDead ? Map.Spawn.X : player.Position.X,

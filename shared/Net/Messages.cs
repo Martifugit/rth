@@ -11,7 +11,7 @@ namespace Rth.Shared.Net
     public static class Protocol
     {
         /// <summary>Bump whenever a message layout changes, so mismatched builds are refused at login.</summary>
-        public const int Version = 6;
+        public const int Version = 7;
         public const int DefaultPort = 43600;
         /// <summary>Sanity limits on a single frame's length, in bytes.</summary>
         public const int MaxClientFrame = 4 * 1024;
@@ -54,6 +54,7 @@ namespace Rth.Shared.Net
         Shop = 111,
         Task = 112,
         Quests = 113,
+        Regions = 114,
     }
 
     public abstract class Message
@@ -514,6 +515,22 @@ namespace Rth.Shared.Net
         internal override void WriteBody(BinaryWriter w) => w.Write(Json);
 
         internal static ContentInfoMessage Read(BinaryReader r) => new ContentInfoMessage { Json = r.ReadString() };
+    }
+
+    /// <summary>
+    /// The world's regions, sent at login, so the client knows which scene to stream in where.
+    /// JSON, like content, so regions can grow fields without codec changes.
+    /// </summary>
+    public sealed class RegionsMessage : Message
+    {
+        public List<WorldRegion> Regions = new List<WorldRegion>();
+
+        public override MessageType Type => MessageType.Regions;
+
+        internal override void WriteBody(BinaryWriter w) => w.Write(JsonConvert.SerializeObject(Regions));
+
+        internal static RegionsMessage Read(BinaryReader r) =>
+            new RegionsMessage { Regions = JsonConvert.DeserializeObject<List<WorldRegion>>(r.ReadString()) ?? new List<WorldRegion>() };
     }
 
     public struct GroundItemAdded

@@ -19,12 +19,15 @@ Run `dotnet build` **before** opening the Unity project the first time, and agai
 change anything under `/shared` or `/server`. Unity uses the built DLLs, and without them it opens
 in Safe Mode with missing-type errors.
 
-Then open `client/` in Unity and load `Assets/Scenes/Tolling.unity`.
+Then open `client/` in Unity and load `Assets/Scenes/Game.unity` (or any region scene, such as
+`Assets/Scenes/Tolling.unity`).
 
 ## Playing in the Editor
 
-Press Play. The Editor exports the scene's map and starts a local server in the same process
-(turn this off under **R'th > Start Local Server On Play**). Type a name and log in.
+Press Play. The Editor exports any open region scenes and starts a local server in the same
+process, which loads every region in `server/data/maps/` (turn this off under **R'th > Start
+Local Server On Play**). Type a name and log in. Region scenes stream in and out as you walk;
+pressing Play in a region scene loads the Game scene beside it.
 
 - Left-click a tile to walk there. **R** toggles running (2 tiles per tick).
 - Left-click a creature to attack it. **1-8** (or clicking the action bar) queue Occult
@@ -64,6 +67,10 @@ the reed beds along the river, and over the bridge, the east woods and Sour Holl
 mites nest around a leaking cask (aggressive; they spit from range). The Wash, a broad mere, is to the south-east.
 Tolling sits at the far western edge of Cruor's lands.
 
+**The Pilgrim Road** leaves Tolling to the east: open heath along the Wash's north shore, a
+waystone, the shell of an old toll-house, and the wardens' palisade where the road to Cruor is
+barred (for now, the edge of the built world).
+
 ## Tuning content
 
 Abilities, creatures, combat rules, items, drop tables, the starter kit and the Assayer's lines
@@ -78,7 +85,7 @@ Edit and save them while the server runs: the server reloads them within a secon
 
 ```powershell
 dotnet run --project server/Rth.Server
-# options: --port 43600  --map server/data/maps/test.rthmap  --saves server/saves  --tick-ms 600
+# options: --port 43600  --maps server/data/maps  --spawn tolling  --saves server/saves  --tick-ms 600
 ```
 
 Type `players` to list who is online, and `stop` (or Ctrl+C) to save everyone and shut down. If
@@ -89,12 +96,22 @@ Player saves are plain JSON files in `server/saves/`, one per player.
 
 ## Editing the map
 
-The map is designed in the Unity scene. Mark things with the components from the
-**R'th Map Tools** package:
+The world is made of **regions**: each is one Unity scene with one `MapArea`, placed at absolute
+tile coordinates (Tolling's south-west corner is (0, 0); the Pilgrim Road starts at (96, 0)).
+Region origins and sizes are multiples of 8 and regions must not overlap. Space with no region
+is blocked (and drawn as plain land in the fog). Region scenes hold only the map; the camera,
+light, fog and HUD are in `Game.unity` (**R'th > Dev > Rebuild Game Scene**).
+
+To add a region, write a builder like `PilgrimRoadBuilder` using `WorldKit.BeginRegion` /
+`SaveRegion`, or make a scene by hand with a `MapArea` and export it. Exporting also adds the
+scene to the build, which is how the client finds it. Most regions between places should be
+sparse: a road, a few trees and rocks, a landmark.
+
+Mark things with the components from the **R'th Map Tools** package:
 
 | Component   | Effect |
 |-------------|--------|
-| `MapArea`   | The rectangle that's exported (1 Unity unit = 1 tile). Everything below goes under it. |
+| `MapArea`   | The region's rectangle (1 Unity unit = 1 tile), export name and title. Everything below goes under it. |
 | `MapBlocker`| Nobody can stand on the tiles its colliders cover (rocks, trees, water). |
 | `MapWall`   | A thin wall or fence on a grid line; blocks crossing that tile edge. |
 | `MapSpawn`  | Where new players appear. |
@@ -102,6 +119,6 @@ The map is designed in the Unity scene. Mark things with the components from the
 | `MapObject` | An interactive object, e.g. a workstation (`objectType` from `objects.json`). Pair with `MapBlocker`. |
 
 Tiles with no ground collider are blocked. **R'th > Export Map** writes
-`server/data/maps/<name>.rthmap`, and the Scene view then shows blocked tiles in red and walls
+`server/data/maps/<name>.rthmap` (plus `.region.json`, `.spawns.json`, `.objects.json`), and the Scene view then shows blocked tiles in red and walls
 in yellow (**R'th > Show Collision Preview** toggles it). Commit the exported map along with
 the scene.

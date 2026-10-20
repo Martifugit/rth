@@ -20,6 +20,22 @@ public class ContentAndRulesTests
     }
 
     [Fact]
+    public void TheShippedRegionsFitTogetherIntoOneWorld()
+    {
+        WorldLoader.Result world = WorldLoader.Load(Path.Combine(Repo.ServerDirectory, "data", "maps"), "tolling");
+        Assert.Contains(world.Map.Regions, r => r.Name == "tolling" && r.X == 0 && r.Y == 0);
+        Assert.Equal(new TileCoord(33, 53), world.Map.Spawn);
+        Assert.False(world.Map.IsBlocked(0, world.Map.Spawn.X, world.Map.Spawn.Y));
+
+        // The Pilgrim Road joins Tolling: walk from the town's east road over the border.
+        if (world.Map.FindRegion("pilgrim_road") != null)
+        {
+            List<TileCoord> path = Pathfinder.FindPath(world.Map, 0, new TileCoord(88, 45), new TileCoord(104, 47));
+            Assert.Equal(new TileCoord(104, 47), path[^1]);
+        }
+    }
+
+    [Fact]
     public void EveryShippedMapPlacesOnlyRealNpcsAndObjectsOnOpenGround()
     {
         GameContent content = GameContent.Load(Repo.ContentDirectory);
@@ -131,8 +147,8 @@ public class ContentAndRulesTests
             fx.Store.Save("old", save);
             fx.Login("Old");
             var old = fx.Player("Old");
-            // Saves from before maps were recorded start at the spawn; everything else carries over.
-            Assert.Equal((new TileCoord(1, 1), old.MaxBlood, old.MaxBreath, 0), (old.Position, old.Blood, old.Breath, old.Bile));
+            // Positions are absolute world tiles, so even the oldest saves keep theirs.
+            Assert.Equal((new TileCoord(7, 6), old.MaxBlood, old.MaxBreath, 0), (old.Position, old.Blood, old.Breath, old.Bile));
         }
         finally
         {

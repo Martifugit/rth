@@ -1,0 +1,5 @@
+[
+  { "npc": "fen_rat", "plane": 0, "x": 116, "y": 33, "wander": 3 },
+  { "npc": "fen_rat", "plane": 0, "x": 127, "y": 28, "wander": 3 },
+  { "npc": "fen_rat", "plane": 0, "x": 133, "y": 22, "wander": 3 }
+]

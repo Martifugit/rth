@@ -172,6 +172,8 @@ internal static class TestContent
     {
         new ObjectDef { Id = "rack", Name = "Rack", Examine = "A rack.", Actions = { new ActionDef { Id = "process", Label = "Butcher" } } },
         new ObjectDef { Id = "vat", Name = "Vat", Actions = { new ActionDef { Id = "process", Label = "Butcher" } } },
+        new ObjectDef { Id = "sign", Name = "Signpost", Actions = { new ActionDef { Id = "read", Label = "Read", Message = "Tolling, west." } } },
+        new ObjectDef { Id = "gate", Name = "Gate", Actions = { new ActionDef { Id = "open", Label = "Open", RequiresFlag = "gate_open", LockedMessage = "Barred.", Message = "It creaks open." } } },
     };
 
     public static List<RecipeDef> Recipes() => new()
@@ -289,7 +291,7 @@ internal static class TestContent
 /// <summary>A world with a fake store and helpers for logging in fake clients.</summary>
 internal sealed class WorldFixture
 {
-    public WorldFixture(MapData map, ServerConfig? config = null, GameContent? content = null, IEnumerable<NpcSpawn>? spawns = null, IEnumerable<PlacedObject>? objects = null)
+    public WorldFixture(CollisionMap map, ServerConfig? config = null, GameContent? content = null, IEnumerable<NpcSpawn>? spawns = null, IEnumerable<PlacedObject>? objects = null)
     {
         Config = config ?? new ServerConfig();
         Config.RandomSeed ??= 12345;

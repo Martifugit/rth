@@ -236,6 +236,25 @@ public class SkillTests
     }
 
     [Fact]
+    public void SignpostsAndGatesSpeakWithoutCode()
+    {
+        var sign = new PlacedObject { Type = "sign", X = 6, Y = 6 };
+        var gate = new PlacedObject { Type = "gate", X = 7, Y = 6 };
+        var fx = new WorldFixture(Maps.Open(40, 40, Spawn), objects: new[] { sign, gate });
+        FakeConnection client = fx.Login("Alice");
+
+        Act(client, sign, "read");
+        Act(client, gate, "open");
+        fx.Ticks(1);
+        Assert.Equal(new[] { "Tolling, west.", "Barred." }, client.Texts.ToArray());
+
+        fx.World.Get<FlagSystem>().Set(fx.Player("Alice"), "gate_open", "1");
+        Act(client, gate, "open");
+        fx.Ticks(1);
+        Assert.Equal("It creaks open.", client.Texts.Last());
+    }
+
+    [Fact]
     public void WalkingAwayStopsWork()
     {
         var fx = World();

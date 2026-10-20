@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using System.IO;
 using Rth.MapTools;
+using Rth.MapTools.Editor;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace Rth.Client.Editor
@@ -48,6 +50,40 @@ namespace Rth.Client.Editor
             _materials[name] = material;
             return material;
         }
+
+        // ------------------------------------------------------------------ region scenes
+
+        /// <summary>
+        /// Starts a new, empty region scene: a root with the <see cref="MapArea"/> and flat ground
+        /// over the whole rectangle. Region scenes hold only the map; the camera, light and game
+        /// objects live in the Game scene, which streams regions in around the player.
+        /// </summary>
+        public static MapArea BeginRegion(string exportName, string title, Vector2Int origin, Vector2Int size, Material ground)
+        {
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            var root = new GameObject(title);
+            var area = root.AddComponent<MapArea>();
+            area.exportName = exportName;
+            area.title = title;
+            area.origin = origin;
+            area.size = size;
+            Box("Ground", root.transform, new Vector3(origin.x + size.x / 2f, -0.1f, origin.y + size.y / 2f), new Vector3(size.x, 0.2f, size.y), ground);
+            return area;
+        }
+
+        /// <summary>Saves a region scene and exports it (which also adds it to the build).</summary>
+        public static void SaveRegion(MapArea area, string scenePath)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(scenePath));
+            EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), scenePath);
+            MapExporter.Export(area);
+            Debug.Log("[R'th] Built region " + area.exportName + " at " + scenePath);
+        }
+
+        /// <summary>Asks before replacing a scene that already exists (rebuilding loses hand edits).</summary>
+        public static bool ConfirmRebuild(string scenePath) =>
+            !File.Exists(scenePath) ||
+            EditorUtility.DisplayDialog("Rebuild " + Path.GetFileNameWithoutExtension(scenePath), "This replaces " + scenePath + " and any edits made to it.", "Rebuild", "Cancel");
 
         // ------------------------------------------------------------------ primitives
 
@@ -118,8 +154,12 @@ namespace Rth.Client.Editor
             }
         }
 
-        /// <summary>Tiles within <paramref name="halfWidth"/> of a polyline, e.g. a river or road.</summary>
-        public static HashSet<Vector2Int> Along(IList<Vector2> line, float halfWidth, int size)
+        /// <summary>Tiles within <paramref name="halfWidth"/> of a polyline, clipped to a region at the origin.</summary>
+        public static HashSet<Vector2Int> Along(IList<Vector2> line, float halfWidth, int size) =>
+            Along(line, halfWidth, new RectInt(0, 0, size, size));
+
+        /// <summary>Tiles within <paramref name="halfWidth"/> of a polyline (a river or road), clipped to a region's tiles.</summary>
+        public static HashSet<Vector2Int> Along(IList<Vector2> line, float halfWidth, RectInt bounds)
         {
             var tiles = new HashSet<Vector2Int>();
             for (int i = 0; i + 1 < line.Count; i++)
@@ -130,8 +170,8 @@ namespace Rth.Client.Editor
                 int maxX = Mathf.CeilToInt(Mathf.Max(a.x, b.x) + halfWidth) + 1;
                 int minZ = Mathf.FloorToInt(Mathf.Min(a.y, b.y) - halfWidth) - 1;
                 int maxZ = Mathf.CeilToInt(Mathf.Max(a.y, b.y) + halfWidth) + 1;
-                for (int z = Mathf.Max(0, minZ); z <= Mathf.Min(size - 1, maxZ); z++)
-                for (int x = Mathf.Max(0, minX); x <= Mathf.Min(size - 1, maxX); x++)
+                for (int z = Mathf.Max(bounds.yMin, minZ); z <= Mathf.Min(bounds.yMax - 1, maxZ); z++)
+                for (int x = Mathf.Max(bounds.xMin, minX); x <= Mathf.Min(bounds.xMax - 1, maxX); x++)
                     if (DistanceToSegment(new Vector2(x + 0.5f, z + 0.5f), a, b) <= halfWidth) tiles.Add(new Vector2Int(x, z));
             }
             return tiles;

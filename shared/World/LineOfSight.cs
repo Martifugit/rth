@@ -8,7 +8,7 @@ namespace Rth.Shared.World
     /// </summary>
     public static class LineOfSight
     {
-        public static bool Has(MapData map, int plane, TileCoord from, TileCoord to)
+        public static bool Has(CollisionMap map, int plane, TileCoord from, TileCoord to)
         {
             int x = from.X;
             int y = from.Y;
@@ -41,7 +41,7 @@ namespace Rth.Shared.World
             return true;
         }
 
-        private static bool EdgeOpen(MapData map, int plane, int x, int y, int dx, int dy)
+        private static bool EdgeOpen(CollisionMap map, int plane, int x, int y, int dx, int dy)
         {
             if (dx != 0 && dy != 0)
             {
@@ -52,15 +52,10 @@ namespace Rth.Shared.World
             return Straight(map, plane, x, y, dx, dy);
         }
 
-        private static bool Straight(MapData map, int plane, int x, int y, int dx, int dy)
+        private static bool Straight(CollisionMap map, int plane, int x, int y, int dx, int dy)
         {
-            CollisionFlags from = map.GetFlags(plane, x, y);
-            CollisionFlags to = map.GetFlags(plane, x + dx, y + dy);
             if (!map.Contains(plane, x + dx, y + dy)) return false;
-            if (dy == 1) return (from & CollisionFlags.WallNorth) == 0 && (to & CollisionFlags.WallSouth) == 0;
-            if (dy == -1) return (from & CollisionFlags.WallSouth) == 0 && (to & CollisionFlags.WallNorth) == 0;
-            if (dx == 1) return (from & CollisionFlags.WallEast) == 0 && (to & CollisionFlags.WallWest) == 0;
-            return (from & CollisionFlags.WallWest) == 0 && (to & CollisionFlags.WallEast) == 0;
+            return CollisionMap.NoWallBetween(map.GetFlags(plane, x, y), map.GetFlags(plane, x + dx, y + dy), dx, dy);
         }
     }
 }
