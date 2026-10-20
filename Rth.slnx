@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/server/">
+    <Project Path="server/Rth.Server.Core/Rth.Server.Core.csproj" />
+    <Project Path="server/Rth.Server/Rth.Server.csproj" />
+    <Project Path="server/Rth.Tests/Rth.Tests.csproj" />
+  </Folder>
+  <Folder Name="/shared/">
+    <Project Path="shared/Rth.Shared.csproj" />
+  </Folder>
+</Solution>

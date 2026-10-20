@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <!-- Keep bin/obj out of source folders (and out of anything Unity might import). -->
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+    <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts</ArtifactsPath>
+    <RthUnityPluginDir>$(MSBuildThisFileDirectory)client\Assets\Plugins\Rth\</RthUnityPluginDir>
+  </PropertyGroup>
+</Project>

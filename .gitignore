@@ -1,0 +1,26 @@
+# .NET build output (UseArtifactsOutput puts it all here)
+/artifacts/
+bin/
+obj/
+*.user
+.vs/
+.idea/
+
+# Server runtime data
+/server/saves/
+
+# Unity
+/client/[Ll]ibrary/
+/client/[Tt]emp/
+/client/[Oo]bj/
+/client/[Bb]uild/
+/client/[Bb]uilds/
+/client/[Ll]ogs/
+/client/[Uu]ser[Ss]ettings/
+/client/MemoryCaptures/
+/client/*.csproj
+/client/*.sln
+/client/*.slnx
+/client/.vsconfig
+/client/Assets/Plugins/Rth/
+/client/Assets/Plugins/Rth.meta

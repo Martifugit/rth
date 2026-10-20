@@ -1,0 +1,11 @@
+<Project>
+  <!--
+    Projects that set RthCopyToUnity=true are netstandard2.1 libraries the Unity client loads.
+    After each build their DLL (and PDB, for debugging) is copied into the Unity project so the
+    Editor always runs the same code as the standalone server.
+  -->
+  <Target Name="RthCopyToUnity" AfterTargets="Build" Condition="'$(RthCopyToUnity)' == 'true' And Exists('$(MSBuildThisFileDirectory)client\Assets')">
+    <MakeDir Directories="$(RthUnityPluginDir)" />
+    <Copy SourceFiles="$(TargetPath);$(TargetDir)$(TargetName).pdb" DestinationFolder="$(RthUnityPluginDir)" SkipUnchangedFiles="true" ContinueOnError="true" />
+  </Target>
+</Project>

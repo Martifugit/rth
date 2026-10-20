@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Loaded by Unity: netstandard2.1, C# 9, no UnityEngine and no NuGet dependencies. -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <RootNamespace>Rth.Shared</RootNamespace>
+    <RthCopyToUnity>true</RthCopyToUnity>
+  </PropertyGroup>
+
+</Project>

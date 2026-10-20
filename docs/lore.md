@@ -1,0 +1,250 @@
+# A Chronicle of the Basin
+
+*A first sketch of R'th's history, its people and the powers that move it. Every name is a
+proposal. The thing in the bay is deliberately left undefined.*
+
+---
+
+## I. The shape of the known world
+
+The known kingdoms live in a basin. A ring of mountains encloses the lowlands on the north and the
+west, and they open to the sea in the south and east. In the middle lies a round bay. Its water
+rises and falls more steadily than any tide should, and out of it rises a shape that can be seen
+from anywhere in the lowlands. Nobody agrees what it is. Nobody who has tried to find out has come
+back with an answer worth keeping.
+
+Around the bay lies the **heartland**: green river country, and the oldest seat of the faith of
+Blood at **Brazenhithe**. Across the bay's narrow channel to the south-east lies **Noonhaven**, the
+second seat of the same faith, harder, hotter and prouder. West of the heartland, in the rain
+shadow of the mountains, the dry kingdom of **Lammas** grows rich on salt and caravans and poor in
+water. The north-east is broken country, fen and scar, divided between the **occult houses**.
+The mountains themselves belong, on their surface, to the **Rationalists**, whose capital stands
+where the range comes down to the sea. Beneath them they belong to the **dwarves**, and beneath the
+dwarves to peoples older still.
+
+Over all of it hang **two moons**. One of them is cracked.
+
+## II. The four humours
+
+Every culture of the basin agrees that a living thing is made of four humours: blood, phlegm and
+two biles, yellow and black. What they disagree about is which of them is *true*.
+
+- **The Sanguine Synod (Blood).** Blood is life and covenant. To bleed for something is to make it
+  holy. The Synod is liturgical, martial and proud, and it fights in plate at close quarters. It is
+  ruled by pontiffs, two of them at present, which is one too many.
+- **The Rationalists (Phlegm).** Calm, cold reason. Religion is a fever and occultism a poison.
+  They measure, calculate and shoot from a long way off. Their neutrality in the wars of faith is
+  policy, profitable and much resented.
+- **The occultists (Bile).** The flesh is unfinished, and the will can finish it. Bile, yellow and
+  black, is the solvent and the fire of transformation. Their arts burn, dissolve and explode, and
+  they make their practitioners terribly strong and slowly strange. The faith calls them
+  apostates. They call themselves the only honest people in the basin.
+- **The Pneuma ascetics (Breath).** The fourth way, which is not really one of the four. Breath is
+  what moves through the humours. The ascetics live far outside the basin, refuse to fight, and
+  are the only people everyone else trusts a little.
+
+## III. A short history
+
+### Before memory
+The mountains were already old when anything that remembers came to them. Something lies under
+them, bound in the deep by peoples who were there before the dwarves. The dwarves arrived later
+and found the bindings. They do not know who made them, but they understood enough to keep them.
+They have done so ever since, in silence.
+
+### The Covenant
+The first settlers of the heartland came to the bay. What happened there is told in a hundred
+versions. The Synod's version is that a covenant was made at the water's edge, in blood, with
+something that answered. The faith of Blood begins there, and so does Brazenhithe, built on the
+bay's rim facing what lies in it.
+
+### The Cracking
+On a night still kept as a feast in some places and a fast in others, the second moon cracked. The
+first fragment fell in the western hills and burned for a month. From the scholars and
+sky-watchers who studied the falls came the **Rationalists**: they predicted the second fall and
+were right, and in the basin that is a kind of power. They took to the mountains for clearer skies.
+There they met the dwarves and struck the **Under-Treaty**: the surface to the scholars, the deep
+to the dwarves, and no questions asked in either direction. Both sides have broken the last clause
+many times.
+
+### The Great Schism
+The faith split over a single question: **what the covenant asks of the faithful**.
+- **Brazenhithe** teaches that the covenant is a *keeping*. The faithful guard what is in the bay,
+  and they guard the world from it.
+- **Noonhaven** teaches that the covenant is a *debt*. One day it will be called in, and the
+  faithful must be found worthy when it is.
+
+The two sees have fought three wars over the difference and made peace four times. Today they are
+allies, for now. Each keeps spies in the other's cathedral.
+
+### The Apostasy and the Scalding
+The occult arts were once practised openly in the fens. As the occultists grew stronger and
+stranger, both sees, for once united, declared crusade. Driven back against the northern mountains,
+the occult masters answered with **vitriol on a scale nobody has dared since**. The acid ate the
+crusade, the fens and the mountains themselves. Where it fell, the range is broken open and the land
+is still poisonous: **the Scald**. The occultists lost the war and were outlawed everywhere. They
+did not die out. They went into the cities, under the counters of apothecaries and behind the doors
+of quiet neighbours, and into the fens and sea caves the Synod cannot hold.
+
+### The present
+An uneasy calm. The sees are allied and suspicious of each other. Lammas plays them off against the
+Rationalists for water and metal. The occult houses are rebuilding, each alone. Fragments still fall.
+
+And people have begun to fall asleep and not wake.
+
+## IV. The player
+
+The player wakes in a riverside town at the edge of the heartland, as one of the sleepers. Of all
+the sleepers in the town, the player is the only one who woke. They remember everything about
+themselves, and something else too: a dream that is not theirs.
+
+That is why everyone is interested in them:
+- **The Synod** wants to know whether they are blessed or tainted.
+- **The occultists** want to know what was taken out of them, and what was put in.
+- **The Rationalists** want to measure them.
+- **The Dreamweaver** chose them, because whatever passed through them left a trail.
+
+The player begins **unaligned**, and the game never forces a single loyalty. They can serve a see,
+learn from a house, study under the scholars or walk with the ascetics. Most players will do
+something with all of them. The story is built so that each faction's quests show the others from
+inside: the Synod's crusade looks different once you have had tea with an apothecary.
+
+Over the long arc, the player moves from local troubles (a missing survey, a sleepwalker who knows
+things she shouldn't, a moonfall in the hills) to the questions underneath them: what was bound in
+the deep, what the nightmare is, who has been arranging the basin's catastrophes, and what lies in
+the bay.
+
+## V. The powers that are neither good nor evil
+
+### The Dreamweaver
+A vast being of silver starlight and lavender thread, with more eyes than anyone has counted. She
+keeps the **archive**: every dream, memory and nightmare that mortals and gods have let go of,
+spun into orbs and hung in the mist of the **Veilwood**. She is not cruel and she is not kind. She
+is doing her job, and she is very good at it.
+
+She cannot act in the waking world. When something escapes her archive, she needs a waking agent.
+Her dealings with the player are courteous, precise and faintly alarming. She will show them almost
+anything, and she will not lie, but she answers exactly the question asked.
+
+### The Assayer
+When a body fails, its humours come apart. **The Assayer** weighs them, and the dead of R'th meet it
+often. It appears as a figure at a long table with scales of every size. It tallies what each
+person was made of and decides what goes back into them. Players meet it every time they die. It is
+dry, patient and occasionally funny. Over many deaths it comes to know them, and it remarks on how
+their balance is changing: more blood since the crusade, more bile since that business in the fens.
+
+It takes no side. It has opinions. In the late game, the question of what it does with the humours
+it keeps becomes very important.
+
+### What lies in the bay
+Left open on purpose. It is the one thing in the basin that every faith, school and house has built
+its story around, and the one thing none of them understands.
+
+## VI. The twist engine: the Physician
+
+The basin has suffered a remarkable number of catastrophes for a land so small: the Schism, the
+Scalding, the plague years, the war of the three Lammas kings. In memory orbs from centuries
+apart, the player keeps seeing the same figure at the edge of the scene. It is someone in a plain
+coat, carrying a case of instruments, and always in the right place.
+
+**The Physician** believes the world is sick. Not wicked: *ill*, unbalanced in its humours like a
+feverish patient, and dying of it slowly. The Physician has spent longer than any life lasts
+treating it the way humoral medicine treats a body:
+- **Bleeding,** when there is too much blood. Wars between the faithful are bloodletting.
+- **Purging,** when there is too much bile. The Scalding was a purge.
+- **Cooling** with phlegm, or **heating** with it, as needed.
+
+Every great disaster was a treatment, and every treatment was meant to help.
+
+Why the Physician is a reliable source of twists:
+- **They are almost never the villain in the moment.** They help the player, often, because the
+  player is useful to the cure. A trusted ally turns out to be one of their **patients**, someone
+  they have been quietly dosing for years. A victory turns out to have been the next step of a
+  course of treatment.
+- **They are not lying about the illness.** Something really is wrong with the world. The arguments
+  are over the diagnosis, and over whether the cure is worse than the disease.
+- **Each faction sees them differently.** The Synod calls them the Bloodletter and blames them for
+  the Schism. The occult houses call them the Master Chirurgeon and half revere them. The
+  Rationalists say they do not exist, that the pattern is a statistical artefact, and they say it a
+  little too firmly.
+- **They can't be fought head-on for most of the game,** because there is never one Physician
+  act to oppose, only consequences. When the player finally confronts them, it should be the
+  argument of the game, and then the fight.
+
+How this differs from a trickster god: the Physician isn't playing. They are deadly serious, they
+don't want power or entertainment, and they believe every word of their prognosis. The horror is
+that they might be right.
+
+## VII. The great threads
+
+### The nightmare loose in the archive
+Something in the Dreamweaver's archive refused to stay archived. It slipped its orb and moves from
+sleeper to sleeper, wearing their dreams. Those it passes through wake with pieces missing, or don't
+wake at all. The player is the one it left behind, and the trail it left is how they follow it.
+
+It grows slowly over many updates. At first there are shared bad dreams in a few villages. Later
+there are sleepwalkers who speak in other people's voices. Later still, the nightmare reaches into
+the waking world in the places where the most people are dreaming of the same thing.
+
+**As a boss** it is fought inside memory orbs, and it takes the shape of whatever that memory
+feared most. In one orb it is a crusader of the Scalding, in another a fever ward, in another
+something the Synod has struck from its histories. Which orb it hides in changes on a rotation, so
+the same boss is a different fight from week to week. Each fight teaches a piece of the world's
+real history while the player survives it.
+
+The question at the bottom: **whose nightmare is it?**
+
+### The deep
+A Rationalist survey team goes missing in the lower mines. The dwarves begin closing halls and
+buying explosives, and won't say why. It is the start of a grandmaster-length story, told in acts
+across years:
+1. Find the team, and what took it. It isn't the real danger, only something fleeing from it.
+2. Earn the trust of the dwarves. Ride the cart lines to the **Frostpeak Forge**, and learn that
+   the dwarves only *keep* the seals. They did not make them.
+3. Discover the cause. The Rationalists have been boring deep for moon-touched stone, without
+   understanding what their bores were weakening. The scholars' neutrality was never as clean as
+   they claimed.
+4. Meet the older peoples below the dwarves, who are fleeing upward. They are not the enemy; they
+   are the warning.
+5. Descend, seal by seal, to the bound thing. Each seal is a great fight, and the last one is the
+   deep's grandmaster encounter.
+
+### The broken moon
+Fragments keep falling. Each fall marks an area for a while:
+- the crater glows with **anima**;
+- **moonborn creatures** crawl out of it;
+- the largest falls bring a **world boss**.
+
+The Rationalists forecast falls, so knowing the sky is a skill and a source of power. Factions
+race each other to every crater. The scholars' own figures say the cracks are widening, and that
+one day something much larger will come down. They have not told anyone.
+
+### The faith divided
+The covenant debate between the sees is not academic. If Brazenhithe is right, the faithful are
+guards. If Noonhaven is right, they are debtors, and the debt is coming due. Both sees watch the
+bay. Both are preparing for different things. When it matters most, the player will have to decide
+which of them understood the covenant, or whether either did.
+
+## VIII. People the player meets
+
+| Character | Who they are at the start | How they change |
+| --- | --- | --- |
+| **Sister Odile Vane** | A young blood-knight of Brazenhithe, devout, brave and a little insufferable. Assigned to watch the woken sleeper. | Comes to doubt her see through what she sees at the player's side. She can end as the reformer who reconciles the sees, or as a martyr for a covenant she no longer understands. The player's choices tip it. |
+| **Brother Cassius Ember** | A Noonhaven inquisitor who suspects the player is tainted and says so. | The most honest person in either see, and he never warms to the player. He is the first to see the Physician's hand in the Schism, and nobody believes him. |
+| **Corvin Sallow** | The friendly apothecary in the player's home town who sells them their first potions. | Revealed as an occultist, then as far more: a would-be house master, and one of the Physician's oldest patients. Whether he masters his own transformation or is consumed by it is one of the long tragedies. |
+| **Magister Ilse Varrow** | Chief astronomer of the Rationalist capital, forecaster of moonfalls, brilliant and cold. | Carries the secret of the coming great fall, and later the guilt of the deep bores. She turns from the player's most useful patron into the person they must decide whether to expose. |
+| **Brannoch** | Master of the cart lines: a dwarf who talks to the player like weather talks to a field. | Slowly opens up about the seals. Late in the deep story he reveals that his family has kept one of them for thirty generations, and that it is failing. |
+| **Queen Saffiya of Lammas** | A pragmatic young monarch with a thirsty kingdom. | Plays every power against every other with real skill. She becomes either the player's best ally or the most dangerous opponent in the lowlands, depending on what the player gives her. |
+| **The Breathless Pilgrim** | A Pneuma ascetic walking the basin, gentle and serene, who seems to know things. | Never changes, which turns out to be the point. Their calm is a fixed mark the player can steer by when everything else shifts. |
+| **The Physician** | A pleasant, helpful stranger met briefly, early, and soon forgotten. | Section VI. |
+
+## IX. Where the bosses come from
+
+Every boss is a turning point in somebody's story:
+- **The heartland:** fights over contested relics and the champions of the schism.
+- **The occult houses:** each house master, at a different stage of finishing their own flesh.
+- **The mountains:** the guardians and breakers of the deep's seals, ending in its grandmaster
+  encounter.
+- **Moonfalls:** moonborn world bosses.
+- **The archive:** the nightmare's rotations, and whatever else the orbs remember.
+- **The Physician's treatments:** catastrophes the player arrives in the middle of, and the
+  creatures and people those treatments made.
