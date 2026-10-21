@@ -899,5 +899,54 @@ namespace Rth.Client.Editor
             }
             return g;
         }
+
+        // ------------------------------------------------------------------ rings, armillaries, rails
+
+        /// <summary>A ring of short segments round <paramref name="center"/> in the plane given by <paramref name="rotation"/> (identity: the XY plane, facing +z). Scenery only.</summary>
+        public static Transform Ring(Transform parent, Vector3 center, float radius, float thickness, Quaternion rotation, Material material, int segments = 16)
+        {
+            Transform g = Group(parent, "Ring");
+            for (int i = 0; i < segments; i++)
+            {
+                Quaternion spin = rotation * Quaternion.Euler(0f, 0f, i * 360f / segments);
+                Prop("Segment", g, center + spin * new Vector3(0f, radius, 0f), new Vector3(radius * 2f * Mathf.PI / segments + 0.04f, thickness, thickness), material).transform.rotation = spin;
+            }
+            return g;
+        }
+
+        /// <summary>
+        /// An armillary sphere on a stand: a meridian ring, an equator ring, a tilted ecliptic ring
+        /// and a ball at the heart (with an optional second, smaller one: two moons). Scenery only.
+        /// </summary>
+        public static Transform Armillary(Transform parent, Vector3 foot, float radius, Material brass, Material stand, Material heart = null, Material moon = null)
+        {
+            Transform g = Group(parent, "Armillary");
+            float h = radius * 1.4f;
+            Cylinder("Stand", g, foot + Vector3.up * (h / 2f), new Vector3(radius * 0.25f, h / 2f, radius * 0.25f), stand, collider: false);
+            Vector3 c = foot + Vector3.up * (h + radius);
+            Ring(g, c, radius, radius * 0.06f, Quaternion.identity, brass, 20);
+            Ring(g, c, radius * 0.97f, radius * 0.05f, Quaternion.Euler(90f, 0f, 0f), brass, 20);
+            Ring(g, c, radius * 0.94f, radius * 0.05f, Quaternion.Euler(66f, 30f, 0f), brass, 20);
+            if (heart != null) Prop("Heart", g, c, Vector3.one * radius * 0.3f, heart, 45f);
+            if (moon != null) Prop("Moon", g, c + new Vector3(radius * 0.6f, radius * 0.2f, 0f), Vector3.one * radius * 0.14f, moon, 20f);
+            return g;
+        }
+
+        /// <summary>A pair of rails on sleepers from a to b (any slope): a cart-line, a funicular, a quarry track. Scenery only.</summary>
+        public static Transform Rails(Transform parent, Vector3 a, Vector3 b, float gauge, Material rail, Material sleeper)
+        {
+            Transform g = Group(parent, "Rails");
+            Vector3 dir = (b - a).normalized;
+            Vector3 side = Vector3.Cross(Vector3.up, dir).normalized * (gauge / 2f);
+            foreach (int s in new[] { -1, 1 })
+                Beam("Rail", g, a + side * s + Vector3.up * 0.1f, b + side * s + Vector3.up * 0.1f, 0.08f, 0.1f, rail);
+            float length = Vector3.Distance(a, b);
+            for (float t = 0.4f; t < length; t += 0.8f)
+            {
+                Vector3 p = a + dir * t;
+                Beam("Sleeper", g, p - side * 1.5f + Vector3.up * 0.03f, p + side * 1.5f + Vector3.up * 0.03f, 0.25f, 0.06f, sleeper);
+            }
+            return g;
+        }
     }
 }

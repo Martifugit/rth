@@ -258,5 +258,113 @@
     "name": "Signpost",
     "examine": "A weathered signpost by the Pass Gate, its arms written in three scripts.",
     "actions": [ { "id": "read", "label": "Read", "message": "NORTH: LUCERN PASS, AND CONCORDIA BEYOND (by the beacons). EAST: VENARIA AND THE CRADLE. Someone has added, under NORTH, in chalk: carry twice the water you think." } ]
+  },
+  {
+    "id": "meridian_gnomon",
+    "name": "Gnomon plaque",
+    "examine": "A brass plaque on the gnomon's plinth, polished by a great many thumbs.",
+    "actions": [
+      {
+        "id": "read",
+        "label": "Read",
+        "message": "THIS LINE IS THE MERIDIAN OF CONCORDIA. ALL MEASURE BEGINS HERE. At noon the shadow lies on the brass. Under it, smaller: Corrected after the fall of the second year, by a hand's width."
+      }
+    ]
+  },
+  {
+    "id": "concord_rostrum",
+    "name": "Rostrum",
+    "examine": "The rostrum of the Concord, a brass lectern and a sand-glass. The sand is all in the bottom.",
+    "actions": [
+      {
+        "id": "look",
+        "label": "Look",
+        "message": "The sand-glass is labelled ONE SPEAKER, ONE GLASS. Somebody has scratched beside it: the Synod's envoy turns it over when it's half done."
+      }
+    ]
+  },
+  {
+    "id": "standard_measures",
+    "name": "The standards",
+    "examine": "A glazed case: the standard ell, a nest of brass weights, a balance.",
+    "actions": [
+      {
+        "id": "look",
+        "label": "Look",
+        "message": "Every ell and pound in Concordia is checked against these. A card in the case reads: The Synod's ell is three fingers shorter. Trade accordingly."
+      }
+    ]
+  },
+  {
+    "id": "moonfall_almanac",
+    "name": "Almanac board",
+    "examine": "The season's moonfall forecast, pinned up on slate and updated by semaphore.",
+    "actions": [
+      {
+        "id": "read",
+        "label": "Read",
+        "message": "MOONFALL FORECAST. North-west sectors: likely. The Cradle: unlikely. Calcinia: none expected. Below, in a different hand and struck through: Revised upward. See Magister Varrow."
+      }
+    ]
+  },
+  {
+    "id": "moon_fragment",
+    "name": "Fragment rail",
+    "examine": "A brass rail round a piece of the cracked moon. The label on it is very small.",
+    "actions": [
+      {
+        "id": "look",
+        "label": "Look",
+        "message": "Fragment, Selenfall, eleventh year. Do not touch. Do not sleep within ten paces. The stone hums, low, just under hearing, and the green in it moves when you don't look at it."
+      }
+    ]
+  },
+  {
+    "id": "orrery_lift",
+    "name": "Funicular gate",
+    "examine": "The turnstile of the funicular up to the Orrery. Locked, with a brass plate.",
+    "actions": [
+      {
+        "id": "use",
+        "label": "Ride",
+        "message": "The plate reads: ASCENTS BY APPOINTMENT OF THE ORRERY ONLY. The cable above you hums as a car comes down empty."
+      }
+    ]
+  },
+  {
+    "id": "concord_toll_board",
+    "name": "Toll board",
+    "examine": "The tolls for the pass, painted white on slate.",
+    "actions": [
+      {
+        "id": "read",
+        "label": "Read",
+        "message": "CROSSING TOLL, BY ORDER OF THE CONCORD. By head: one. By mule: three. By cart: by weight. Scholars of the Orrery, dwarves under the Treaty: none. Pilgrims of the Synod: by head, and no argument."
+      }
+    ]
+  },
+  {
+    "id": "survey_notice",
+    "name": "Notice",
+    "examine": "A fresh notice on the survey office's board.",
+    "actions": [
+      {
+        "id": "read",
+        "label": "Read",
+        "message": "SURVEY OF THE CONCORD. Bore Nine has reached its depth. All work suspended pending the Magister's review. Spoil is NOT to be taken home, burned, or eaten."
+      }
+    ]
+  },
+  {
+    "id": "bore_nine",
+    "name": "Survey sign",
+    "examine": "A slate sign on the fence round the derrick.",
+    "actions": [
+      {
+        "id": "read",
+        "label": "Read",
+        "message": "BORE NINE. AUTHORISED SURVEYORS ONLY. Under it, in chalk, in a dwarf's square letters: you are too deep."
+      }
+    ]
   }
 ]

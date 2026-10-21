@@ -343,5 +343,90 @@
     "shape": "Capsule",
     "color": "#6a7a3a",
     "scale": 1.0
+  },
+  {
+    "id": "concord_warden",
+    "name": "Concord warden",
+    "examine": "A warden of the Concord in blue-grey, a sword at the hip and a long bow on the back, keeping the peace by looking as if they've already measured you.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 2,
+    "held": "watchmans_sword",
+    "shape": "Capsule",
+    "color": "#56667a",
+    "scale": 1.0
+  },
+  {
+    "id": "concord_scholar",
+    "name": "Scholar",
+    "examine": "A scholar of the Academy, ink on the cuffs, arguing pleasantly with nobody in particular.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 4,
+    "shape": "Capsule",
+    "color": "#c8ccd2",
+    "scale": 1.0
+  },
+  {
+    "id": "almanac_clerk",
+    "name": "Almanac clerk",
+    "examine": "A clerk of the Almanac Office with a satchel of forecasts and a squint from reading semaphore.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 2,
+    "shape": "Capsule",
+    "color": "#7a8aa0",
+    "scale": 1.0
+  },
+  {
+    "id": "concord_marksman",
+    "name": "Marksman",
+    "examine": "Shooting at the Butts. Hits, mostly, and writes each one down.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 0,
+    "shape": "Capsule",
+    "color": "#4a5a50",
+    "scale": 1.0
+  },
+  {
+    "id": "dwarf_carter",
+    "name": "Dwarven carter",
+    "examine": "A dwarf of the cart-line, short, broad and unimpressed by daylight.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 3,
+    "shape": "Capsule",
+    "color": "#6a5a48",
+    "scale": 0.8
+  },
+  {
+    "id": "concord_surveyor",
+    "name": "Surveyor",
+    "examine": "A surveyor of the Concord with a chain over one shoulder and green dust in the creases of the hands.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 2,
+    "shape": "Capsule",
+    "color": "#8a8060",
+    "scale": 1.0
+  },
+  {
+    "id": "meridian_fisher",
+    "name": "Fisher",
+    "examine": "Mending nets on the quay, knots all the same size.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 4,
+    "shape": "Capsule",
+    "color": "#4a6a80",
+    "scale": 1.0
   }
 ]
