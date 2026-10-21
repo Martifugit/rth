@@ -812,5 +812,92 @@ namespace Rth.Client.Editor
             FxKit.Mist(q, center + new Vector3(0f, 0.5f, 0f), new Vector2(50f, 40f) * scale, mist, Color.white);
             return q;
         }
+
+        // ------------------------------------------------------------------ pits, windcatchers, water wheels
+
+        /// <summary>
+        /// Cuts a hole of whole tiles out of the region's flat ground (made by <see cref="BeginRegion"/>),
+        /// so something can go down into it: a stepwell, a quarry, a mine mouth. The ground is
+        /// replaced by up to four slabs round the hole; the hole's tiles have no ground, so the
+        /// exporter blocks them. What's inside the pit is the builder's.
+        /// </summary>
+        public static void CutGround(MapArea area, RectInt hole)
+        {
+            Transform ground = area.transform.Find("Ground");
+            if (ground == null) throw new System.InvalidOperationException("The region has no Ground to cut.");
+            Material material = ground.GetComponent<Renderer>().sharedMaterial;
+            int ax0 = area.origin.x, az0 = area.origin.y, ax1 = area.origin.x + area.size.x, az1 = area.origin.y + area.size.y;
+            var slabs = new List<RectInt>
+            {
+                new RectInt(ax0, az0, ax1 - ax0, hole.y - az0),                      // south of the hole, full width
+                new RectInt(ax0, hole.yMax, ax1 - ax0, az1 - hole.yMax),             // north of it, full width
+                new RectInt(ax0, hole.y, hole.x - ax0, hole.height),                 // west, beside it
+                new RectInt(hole.xMax, hole.y, ax1 - hole.xMax, hole.height),        // east, beside it
+            };
+            bool first = true;
+            foreach (RectInt r in slabs)
+            {
+                if (r.width <= 0 || r.height <= 0) continue;
+                var center = new Vector3(r.x + r.width / 2f, -0.1f, r.y + r.height / 2f);
+                var size = new Vector3(r.width, 0.2f, r.height);
+                if (first)
+                {
+                    // Reuse the original ground for the first slab: same object, new extent.
+                    ground.position = center;
+                    ground.localScale = size;
+                    first = false;
+                }
+                else Box("Ground", area.transform, center, size, material);
+            }
+        }
+
+        /// <summary>
+        /// A windcatcher: a tall square tower on a roof (or the ground) whose top is open on all sides
+        /// behind slats, catching the wind and sending it down into the house or the cistern below.
+        /// <paramref name="foot"/> is the centre of its base. Scenery only.
+        /// </summary>
+        public static Transform Windcatcher(Transform parent, Vector3 foot, float size, float height, Material wall, Material slats, Material cap = null)
+        {
+            Transform g = Group(parent, "Windcatcher");
+            float shaft = height * 0.72f, head = height - shaft;
+            Prop("Shaft", g, foot + Vector3.up * (shaft / 2f), new Vector3(size, shaft, size), wall);
+            // The head: four corner piers with slats between, open to the wind.
+            foreach (Vector2 c in new[] { new Vector2(-1f, -1f), new Vector2(1f, -1f), new Vector2(-1f, 1f), new Vector2(1f, 1f) })
+                Prop("Pier", g, foot + new Vector3(c.x * size * 0.42f, shaft + head / 2f, c.y * size * 0.42f), new Vector3(size * 0.16f, head, size * 0.16f), wall);
+            for (int i = 0; i < 4; i++)
+            {
+                float y = shaft + head * (0.2f + i * 0.2f);
+                Prop("Slats", g, foot + new Vector3(0f, y, 0f), new Vector3(size * 0.86f, head * 0.07f, size * 0.86f), slats);
+            }
+            Prop("Cap", g, foot + Vector3.up * (height + 0.12f), new Vector3(size * 1.15f, 0.24f, size * 1.15f), cap ?? wall);
+            return g;
+        }
+
+        /// <summary>
+        /// A water wheel lifting water: a ring of spokes and pots turning in the plane facing
+        /// <paramref name="facing"/> (its axle runs that way), centred at <paramref name="hub"/>.
+        /// A noria in a well, or an undershot wheel on a mill race. Scenery only.
+        /// </summary>
+        public static Transform WaterWheel(Transform parent, Vector3 hub, float radius, float width, float facing, Material wood, Material pots = null, int spokes = 12)
+        {
+            Transform g = Group(parent, "Water wheel");
+            Quaternion turn = Quaternion.Euler(0f, facing, 0f);
+            Cylinder("Axle", g, hub, new Vector3(0.3f, width / 2f + 0.4f, 0.3f), wood, collider: false).transform.rotation = turn * Quaternion.Euler(90f, 0f, 0f);
+            for (int i = 0; i < spokes; i++)
+            {
+                float a = i * 360f / spokes;
+                Quaternion spin = turn * Quaternion.Euler(0f, 0f, a);
+                Prop("Spoke", g, hub + spin * new Vector3(0f, radius / 2f, 0f), new Vector3(0.14f, radius, 0.14f), wood).transform.rotation = spin;
+                foreach (float side in new[] { -width / 2f, width / 2f })
+                {
+                    Vector3 rim = hub + spin * new Vector3(0f, radius, side);
+                    GameObject seg = Prop("Rim", g, rim, new Vector3(radius * 2f * Mathf.PI / spokes + 0.05f, 0.18f, 0.14f), wood);
+                    seg.transform.rotation = spin;
+                }
+                if (pots != null)
+                    Prop("Pot", g, hub + spin * new Vector3(0f, radius + 0.15f, 0f), new Vector3(0.35f, 0.35f, width * 0.7f), pots).transform.rotation = spin;
+            }
+            return g;
+        }
     }
 }

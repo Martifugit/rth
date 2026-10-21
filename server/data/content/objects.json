@@ -222,5 +222,41 @@
     "name": "Salt heap",
     "examine": "Raked salt from the pans of Salinas, drying in the glare.",
     "actions": [ { "id": "look", "label": "Look-at", "message": "The salt is so white at noon it hurts to look at. The rakers wear veils; the heaps cast no shadow you can see." } ]
+  },
+  {
+    "id": "cistern_deepwell",
+    "name": "The Deepwell",
+    "examine": "The deepest well in the west: five terraces down to water you can see but not reach.",
+    "actions": [ { "id": "look", "label": "Look-down", "message": "Far below, the water is bright turquoise and perfectly still, except where the wheel dips into it. A guard watches you look. In Cistern, nobody draws from the Deepwell without a tally from the Water Office." } ]
+  },
+  {
+    "id": "cistern_water_rolls",
+    "name": "The Rolls",
+    "examine": "Long scrolls listing every household's water ration, re-inked every dry season.",
+    "actions": [ { "id": "read", "label": "Read", "message": "House of the tanner Iskar: four jars the week. House of the widow Daoud: three jars, and one for the fig tree, by the Queen's mercy. Strangers and pilgrims: one cup the day, at the seller's price. At the bottom, in a newer hand: rations to be cut by a fifth from the new moon." } ]
+  },
+  {
+    "id": "dry_fountain",
+    "name": "The dry fountain",
+    "examine": "A great fountain basin, cracked dry. The green stains on the bowl are the only water it remembers.",
+    "actions": [ { "id": "look", "label": "Look-at", "message": "Coins lie in the cracks of the dry basin: people still throw them in, though nobody remembers what for. A water-seller watches you, in case you're thirsty." } ]
+  },
+  {
+    "id": "great_cistern",
+    "name": "Cistern stair",
+    "examine": "Steps going down under the Great Cistern's dome into cool darkness. The air coming up smells of stone and water.",
+    "actions": [ { "id": "listen", "label": "Listen", "message": "From deep under the dome comes the slow drip of water into a tank as big as a cathedral, and, once, something like a voice counting. Then only the drip." } ]
+  },
+  {
+    "id": "saffiya_doors",
+    "name": "Palace doors",
+    "examine": "Gilded doors in the deep tiled arch of the palace.",
+    "actions": [ { "id": "enter", "label": "Enter", "message": "Two guards cross their spears. 'The Queen hears petitions on the first day of the month. Bring water, or bring something better than water.'" } ]
+  },
+  {
+    "id": "lucern_signpost",
+    "name": "Signpost",
+    "examine": "A weathered signpost by the Pass Gate, its arms written in three scripts.",
+    "actions": [ { "id": "read", "label": "Read", "message": "NORTH: LUCERN PASS, AND CONCORDIA BEYOND (by the beacons). EAST: VENARIA AND THE CRADLE. Someone has added, under NORTH, in chalk: carry twice the water you think." } ]
   }
 ]

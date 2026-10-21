@@ -270,5 +270,78 @@
     "shape": "Capsule",
     "color": "#d8d0c0",
     "scale": 1.0
+  },
+  {
+    "id": "sere_guard",
+    "name": "Guard of Sere",
+    "examine": "A palace guard in saffron, with a water-skin on the hip as well as a sword. Both are kept full.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 2,
+    "held": "watchmans_sword",
+    "shape": "Capsule",
+    "color": "#b07a28",
+    "scale": 1.0
+  },
+  {
+    "id": "water_seller",
+    "name": "Water-seller",
+    "examine": "Clay cups on chains, skins on the shoulder. Cries the price of a cup, which rises through the afternoon.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 3,
+    "shape": "Capsule",
+    "color": "#7a5a3a",
+    "scale": 1.0
+  },
+  {
+    "id": "water_clerk",
+    "name": "Water clerk",
+    "examine": "Ink on the fingers, tally sticks in the sash. Knows who drinks what in every street.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 2,
+    "shape": "Capsule",
+    "color": "#d8c8a8",
+    "scale": 1.0
+  },
+  {
+    "id": "caravaneer",
+    "name": "Caravaneer",
+    "examine": "Dust in every fold, a face burnt dark by the passes. Counting loads, and complaining about the toll at Tithe.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 3,
+    "shape": "Capsule",
+    "color": "#5a4a3a",
+    "scale": 1.0
+  },
+  {
+    "id": "sere_courtier",
+    "name": "Courtier",
+    "examine": "A courtier of Queen Saffiya, in turquoise silk, walking by the long pool so everyone can see the water.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 3,
+    "shape": "Capsule",
+    "color": "#2a6a6a",
+    "scale": 1.0
+  },
+  {
+    "id": "fig_picker",
+    "name": "Fig-picker",
+    "examine": "Picking saltfigs into a basket, a white bloom of salt on the hands.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 4,
+    "shape": "Capsule",
+    "color": "#6a7a3a",
+    "scale": 1.0
   }
 ]

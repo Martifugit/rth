@@ -366,7 +366,7 @@ Not yet: weapon models in the hand, one- and two-handed kinds, shields and dual 
 raising monuments and reliquaries, tools for gathering (with Mining), final ability names.
 
 **World building (in progress):** the capitals blocked out as regions, one builder each, with an
-asset list for the art pass. Cruor and Tithe are done (`docs/regions/`).
+asset list for the art pass. Cruor, Tithe and Cistern are done (`docs/regions/`).
 
 **Next: not chosen yet.** Candidates: the first gathering skills (mining, woodcutting) on the
 node system with tools, ranged, an art pass on Tolling, more quests and achievements.
@@ -419,7 +419,7 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | A status (buff or debuff icon) | An entry in statuses.json (name, icon, `{value}` text, `debuff`); a system implementing `IStatusSource` lists who has it each tick. Timed ability effects show as the status named after their `EffectType`. |
 | A new kind of map placement | A marker component in tools/unity-map-tools, an export file in `MapExporter`, a field on `MapPlacements` (merged across regions by `WorldLoader`). |
 | A new region of the world | A scene with a `MapArea` at its absolute, zone-aligned rectangle (a builder using `WorldKit.BeginRegion`/`SaveRegion`); export it. No server code. |
-| A city or town blockout | A builder using `WorldKit.City.cs` (buildings with roofs, walk-in halls with doors, city walls, towers, gatehouse arches, bridges, statues, braziers, banners, stalls, boats, domes, colonnades, shade sails, the Quaere's silhouette); see `CruorBuilder`, `TitheBuilder` and `docs/regions/`. |
+| A city or town blockout | A builder using `WorldKit.City.cs` (buildings with roofs, walk-in halls with doors, city walls, towers, gatehouse arches, bridges, statues, braziers, banners, stalls, boats, domes, colonnades, shade sails, windcatchers, water wheels, the Quaere's silhouette; `CutGround` for a pit); see `CruorBuilder`, `TitheBuilder`, `CisternBuilder` and `docs/regions/`. |
 | A stand-in for an asset still to be made | `WorldKit.Asset(go, "region/id", note)` adds a `BlockoutAsset`; saving the region writes `docs/regions/<region>-assets.md` (count, size, notes). |
 | A region's own light (sun colour and strength, ambient, fog) | `ownAtmosphere` and its fields on the `MapArea`; exported to `.region.json`, blended in by `RegionAtmosphereView`. |
 | Something per region (music, rules, title) | A field on `WorldRegion`, written to `<name>.region.json` by `MapExporter`; it reaches clients in `RegionsMessage` as JSON. |
