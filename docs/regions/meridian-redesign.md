@@ -474,7 +474,7 @@ of the Pass; a loose paving stone on the meridian where the brass line has a sea
 | Phase | Content | Done when |
 |---|---|---|
 | **0. Height and levels** (done) | The feature in 3.2: ground snap, `MapLevel`, the `climb` action, level display. | A test scene with a slope and a two-storey hut: you walk up the slope, climb the ladder, see the upper floor, and clicks, camera and the collision preview work on both levels. |
-| **1. Terrain and routes** | The five tiers, retaining walls, stairs, ramps, the Cut and its bridges, the Span, the Ore Road. **No buildings.** | You can walk every loop and see the next tier from each; nothing exports as walkable that should not (check the collision preview). |
+| **1. Terrain and routes** (built, see 9.4) | The five tiers, retaining walls, stairs, ramps, the Cut and its bridges, the Span, the Ore Road. **No buildings.** | You can walk every loop and see the next tier from each; nothing exports as walkable that should not (check the collision preview). |
 | **2. Landmarks and building shells** | Every building in 6 as an enterable shell with its door, floors, stairs and roof (hideable); the Rows from one template. | Every building can be entered; the building count and 25% rule hold. |
 | **3. Interiors and objects** | Stations, shops' counters, benches, readables, view points, nodes, gates. | The "every 15 tiles" rule holds on every route. |
 | **4. Placement and data** | NPCs, their dialogue, shops, stations and nodes in the content files, region data. | Every building has what 7.2 says. |
@@ -495,6 +495,9 @@ stations and nodes, then dialogue and quests.
 | `Interior` helpers | A counter, a shelf, a workbench, a hearth, benches, a dais: so every building gets furniture without hand-placing it. |
 | `Backdrop(...)` | Distant buildings across the gorge: silhouettes with no ground, never walkable. |
 
+Built in phase 1: `Terrace`, `Retain`, `Stair` and `Ramp` became one `Terraces` map (it places the
+retaining walls itself), plus `Viaduct` and `Stream`. The rest come with phase 2.
+
 **The funicular.** Build both stations, the rails and the car. The ride itself (the car moves,
 the player is carried to the other station) needs an object action and the client's long-jump
 handling; plan it as a follow-up and let the stair be the route in the meantime.
@@ -504,6 +507,50 @@ handling; plan it as a follow-up and let the stair be the route in the meantime.
 `Meridian` becomes 192 x 192 at (-512, -256). Update `docs/world-map.md`'s region table (to
 -512..-321, -256..-65) when the scene is rebuilt. Keep the atmosphere and the `meridian` music
 track. The Orrery stays scenery.
+
+### 9.4 Phase 1 as built
+
+`MeridianBuilder` now builds the ground and the routes only (the first blockout's buildings are
+gone until phase 2; its code is in git history, and `meridian-assets.md` keeps the old list until
+the scene is rebuilt). The ground is a `Terraces` map (`WorldKit.Terraces.cs`): terraces, stairs,
+ramps and bridge decks described tile by tile, built as solid blocks, with a `MapWall` drawn as a
+kerb or parapet on every drop of more than 0.5 m and wherever high ground falls into nothing. It
+warns about a step over 0.5 m or a ramp steeper than 1 in 3. A headless check of the builder
+finds every open tile reachable from the quay and no drop without a wall.
+
+![Phase 1 plan](img/meridian-p1-plan.png)
+
+Local coordinates (add -512, -256 for world tiles):
+
+| Ground | Height | Tiles |
+|---|---|---|
+| The Strand (quay), the west quay, the mole | 0 m | x 60-191, z 14-47; x 8-47, z 14-23; x 126-133, z 0-13 |
+| Meridian Square and the Rows; the Pass Road's ground | +5 | x 60-149, z 48-95; x 150-191, z 48-87 |
+| The Academy Terraces; the Forum Terrace | +14 | x 60-131, z 96-135; x 132-191, z 88-127 |
+| Undergate Heights; the Span Head | +20 | x 8-47, z 78-139; x 60-65, z 106-117 |
+| The Crag; the pine slope's top | +24 | x 60-149, z 136-177; x 150-191, z 160-177 |
+| The knoll (the beacon) | +30 | x 118-143, z 162-177 |
+| The Gorge (the Cut) | none | x 48-59, the whole length, but for its three bridges |
+
+| Connector | Joins | Tiles, width |
+|---|---|---|
+| Harbour Stair | Strand to Square | x 92-100, z 34-47; 9 wide, a landing halfway |
+| East Ramp | Strand to the Pass Road | x 181-188, z 30-47; 8 wide |
+| Line Street stair | Square to Academy | x 92-100, z 92-115; 9 wide, two landings |
+| Arcade Stair | Square (east) to the Forum Terrace | x 140-145, z 70-91; 6 wide, a landing |
+| Span Head stair | Academy to the Span Head | x 66-81, z 108-115; 8 wide |
+| Crag stair | Academy to the Crag | x 114-119, z 124-147; 6 wide, two landings |
+| Knoll ramp | Crag to the knoll | x 98-117, z 164-171; 8 wide |
+| Pine slope | Forum Terrace to the Crag's east end | x 150-191, z 128-159; a 42-wide ramp through the pines |
+| The Ore Road | west quay to the low bridge (+5) to the Heights (+20) | three ramps: x 40-47 z 24-63; x 16-35 z 64-69; x 16-43 z 72-77 |
+| Harbour bridge, low bridge, the Span | across the Cut at 0, +5 and +20 | z 16-21, z 64-69 (the Parallel), z 108-113 |
+
+The meridian's brass line runs up every stair from the quay to the Crag; the funicular's rails
+climb the Crag's face on it. The Orrery stands on its own peak behind the city.
+
+![From over the harbour](img/meridian-p1-view-harbour.png)
+
+![The Cut, the Span and the Ore Road](img/meridian-p1-view-gorge.png)
 
 ## 10. Decisions I made, and what I need
 
