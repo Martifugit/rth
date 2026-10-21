@@ -774,13 +774,15 @@
     border-bottom-color: rgb(224, 195, 135);
 }
 
-/* The filter tabs: a slim row of their own over the text, with a faint line under it. */
+/* The filter tabs: a slim row of their own over the text, with a faint line under it from edge to edge. */
 .chat-tabs {
     flex-direction: row;
     flex-shrink: 0;
     height: 17px;
     align-items: stretch;
-    margin-bottom: 2px;
+    /* Out over the window body's padding, so the line under it runs to the frame on both sides. */
+    margin: -6px -8px 2px -8px;
+    padding: 0 6px;
     border-bottom-width: 1px;
     border-bottom-color: rgba(201, 162, 94, 0.18);
 }
