@@ -102,7 +102,7 @@ brine) without that being the only place it grows.
 |---|---|---|---|---|---|---|
 | 1 | 1 | copper | alder | perch | yarrow | reed |
 | 2 | 10 | iron | ash | eel | rue | reed |
-| 3 | 20 | steel (iron + charcoal) | elm | pike | feverfew | flax |
+| 3 | 20 | steel (hematite + charcoal) | elm | pike | feverfew | flax |
 | 4 | 30 | bog iron | black poplar | lamprey | bog myrtle | flax |
 | 5 | 40 | cinnabar | sere cedar | cistern carp | sere sage | silkweed |
 | 6 | 50 | glare-silver | tamarisk | glarefish | saltwort | silkweed |
@@ -520,12 +520,44 @@ The herblore. Not for healing (food does that), apart from one mild tick-heal.
 ## 7. Gathering
 
 ### Mining
-- Ore by tier (2.2), plus **salt** (rock salt by the river, brine salt in the Saltmarch, sere
-  salt in Sere): rites, Cooking and Medicine. **Stone** for slings and
-  shortcuts, **gems** as rare extras (jewellery).
-- Tool: pickaxe (Smithing). Station-free.
-- Moonfall craters spawn temporary tier-8 **verdigris** nodes when a fragment falls (a world
-  event).
+**Decided (2026-10-21).** Ore, gems, salt and stone. Tool: pickaxe (Smithing); no station. Ore
+rocks deplete on every success (2.3) and come back after their respawn time.
+
+**Ores.** Each tier's ore has one quirk that makes it different to mine, built from mechanics
+that already exist (nodes, tools, flags, the clock, world events, hazards). "Where it tends to
+be" is the kind of place, not a fixed region (2.2).
+
+| Tier | Ore | Where it tends to be | Its quirk |
+|---|---|---|---|
+| 1 | **Copper** | river cliffs, road cuttings | none: the plain one, to learn on |
+| 2 | **Iron** | hills, quarries | none: the workhorse |
+| 3 | **Hematite** | old Synod quarries, red hills | "the rock bleeds": rust-red streaks. Smelted with charcoal into steel. |
+| 4 | **Bog iron** | fens, marsh pits | not in rock: **dredged from wet pits**, a node that refills over time instead of depleting |
+| 5 | **Cinnabar** | dry red country | **toxic**: mining it slowly poisons you unless you wear gloves for it or drink a ward |
+| 6 | **Glare-silver** | salt flats, white stone | **only there in daylight** (the game clock) |
+| 7 | **Frostiron** | high cold places, dwarven halls | some veins need the dwarves' leave (a quest flag) |
+| 8 | **Verdigris** | moonfall craters | **appears only after a moonfall** (a world event), then fades |
+| 9 | **Deepglass** | the Undermost | **brittle**: a rock can shatter before it's worked out, unless your pickaxe has conservation |
+| 10 | (none) | | tier 10 is old-blood alloy (2.2) |
+
+**Gems** are a rare extra from any rock, and the one place Mining touches the humours: each gem
+carries one, and jewellery set with it leans towards that humour's style (Smithing).
+
+| Gem | Humour | Jewellery leans to | Found from |
+|---|---|---|---|
+| **Garnet** | blood | melee | low tiers up |
+| **Amber** | yellow bile | occult, the yellow pole | low tiers up |
+| **Jet** | black bile | occult, the black pole | low tiers up |
+| **Moonstone** | phlegm | ranged | mid tiers up |
+| **Bloodstone** | blood, pure | melee, top tier | high tiers, rarely |
+
+**Salt** is its own line: **rock salt** (river cliffs; low), **sere salt** (dry country; mid) and
+**glare salt** (raked from white flats; high). It feeds Cooking, Medicine and Occultism's rites,
+and the higher rites ask for the purer salts.
+
+**Stone** never depletes: sling ammunition and shortcuts.
+
+**Trained by** mining ore (main), salt and gems (extras).
 
 ### Woodcutting
 - Logs by tier: crossbow stocks and bolt shafts (Artifice), fuel for campfires (Cooking),
@@ -570,8 +602,10 @@ Dreamweaver's archive. It arrives with the Veilwood region; the design is ready 
 - **Smelting** at a furnace (ore + charcoal from tier 3), **smithing** at an anvil: melee
   weapons, plate, shields, all tools (pickaxe, hatchet, sickle, knives, cleaver), bolt heads,
   and jewellery settings (gems from Mining).
-- **Jewellery** (neck and ring): metal + gem, with small bonuses (one stat per gem kind). At
-  higher tiers a ring or amulet is steeped in a reagent to add a humour effect.
+- **Jewellery** (neck and ring): metal + gem. The gem's humour decides the style it leans to
+  (garnet and bloodstone melee, amber and jet the two occult poles, moonstone ranged; see
+  Mining), and the metal's tier decides how much. At higher tiers a ring or amulet is steeped in
+  a reagent to strengthen its humour.
 - **Trained by** smelting (a little) and smithing (most).
 
 ### Artifice
