@@ -168,7 +168,7 @@ public class ContentAndRulesTests
                 Removed = { 5 },
                 Health = { new HealthEvent { Id = 1, Percent = 30 } },
                 Hits = { new HitEvent { TargetId = 1, SourceId = 2, Amount = 77, Kind = HitKind.Deflected } },
-                Actions = { new ActionEvent { SourceId = 2, TargetId = 1, AbilityId = "x", Pole = -1 } },
+                Actions = { new ActionEvent { SourceId = 2, TargetId = 1, AbilityId = "x", Pole = -1 }, new ActionEvent { SourceId = 2, TargetId = 2, AbilityId = "anim:work", Face = new TileCoord(-3, 9) } },
                 Deaths = { 1 },
             },
             new PlayerStateMessage

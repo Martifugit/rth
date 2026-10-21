@@ -185,10 +185,14 @@ namespace Rth.Server.Game
         public void AddDeath(int entityId) => _deaths.Add(entityId);
 
         /// <summary>Plays a character animation (a clip or role in the client's animations.json) for everyone who can see it.</summary>
-        public void Animate(Entity entity, string animation)
+        /// <summary>Turns an entity to face a tile, with no animation (talking to someone).</summary>
+        public void Face(Entity entity, TileCoord tile) =>
+            AddAction(new ActionEvent { SourceId = entity.Id, TargetId = entity.Id, AbilityId = ActionEvent.AnimationPrefix, Face = tile });
+
+        public void Animate(Entity entity, string animation, TileCoord? face = null)
         {
             if (!string.IsNullOrEmpty(animation))
-                AddAction(new ActionEvent { SourceId = entity.Id, TargetId = entity.Id, AbilityId = ActionEvent.AnimationPrefix + animation });
+                AddAction(new ActionEvent { SourceId = entity.Id, TargetId = entity.Id, AbilityId = ActionEvent.AnimationPrefix + animation, Face = face });
         }
 
         public void SetPath(Entity entity, TileCoord target)

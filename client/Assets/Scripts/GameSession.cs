@@ -153,6 +153,7 @@ namespace Rth.Client
         }
         /// <summary>What a left-click would do on whatever is under the pointer ("Attack Fen rat").</summary>
         public string HoverText { get; private set; } = "";
+        private int _hoveredEntity;
         public List<LogLine> Log { get; } = new List<LogLine>();
         /// <summary>How many lines have ever been logged, so views can tell what's new after old lines drop off.</summary>
         public int LogTotal { get; private set; }
@@ -375,6 +376,13 @@ namespace Rth.Client
                         foreach (KeyValuePair<string, int> s in stats.Stats) Stats[s.Key] = s.Value;
                         break;
                     case SkillsMessage skills:
+                        // XP drops for what went up (not the first message, which is the whole save).
+                        bool first = SkillXp.Count == 0;
+                        foreach (KeyValuePair<string, long> s in skills.Xp)
+                        {
+                            long before = SkillXp.TryGetValue(s.Key, out long had) ? had : 0;
+                            if (!first && s.Value > before) world.ShowXpDrop(SkillName(s.Key), s.Value - before);
+                        }
                         SkillXp.Clear();
                         foreach (KeyValuePair<string, long> s in skills.Xp) SkillXp[s.Key] = s.Value;
                         break;
@@ -436,7 +444,9 @@ namespace Rth.Client
             Vector2 pointer = mouse.position.ReadValue();
             bool overHud = CombatHud.IsPointerOverHud(pointer) || PopupMenu.IsOpen || Ui.UiRoot.IsPointerOverUi(pointer);
             string title = "";
+            _hoveredEntity = 0;
             List<(string Label, Action Action)> options = overHud ? null : WorldOptionsAt(pointer, out title);
+            world.HoveredId = _hoveredEntity;
             HoverText = options != null && options.Count > 0 ? options[0].Label : "";
             if (options == null || options.Count == 0) return;
 
@@ -485,6 +495,7 @@ namespace Rth.Client
             if (npc != null)
             {
                 int id = npc.Id;
+                _hoveredEntity = id;
                 NpcInfo info = Npc(npc.TypeId);
                 if (info == null || info.Attackable) options.Add(("Attack " + npc.DisplayName, () => Attack(id)));
                 if (info != null)

@@ -22,6 +22,7 @@ namespace Rth.Client
             public Color Color;
             public float Time;
             public float Offset;
+            public int Row;
         }
 
         private readonly Dictionary<int, EntityView> _entities = new Dictionary<int, EntityView>();
@@ -42,7 +43,11 @@ namespace Rth.Client
         private float _tickSeconds = 0.6f;
         private GUIStyle _labelStyle;
         private GUIStyle _splatStyle;
+        private GUIStyle _xpStyle;
         private Texture2D _white;
+
+        /// <summary>The entity under the pointer, or 0 (set by the session each frame): its name shows.</summary>
+        public int HoveredId { get; set; }
 
         public int LocalId { get; private set; } = -1;
         /// <summary>The entity the local player is fighting, highlighted in the HUD.</summary>
@@ -56,6 +61,23 @@ namespace Rth.Client
 
         private const float OverheadSeconds = 4f;
         private readonly Dictionary<int, (string Text, float Time)> _overhead = new Dictionary<int, (string, float)>();
+
+        private const float XpDropSeconds = 1.6f;
+        private readonly List<(string Text, float Time)> _xpDrops = new List<(string, float)>();
+
+        /// <summary>A little "+12 Melee" rising beside the local player; drops for the same skill close together add up.</summary>
+        public void ShowXpDrop(string skill, long amount)
+        {
+            for (int i = _xpDrops.Count - 1; i >= 0; i--)
+            {
+                (string text, float time) = _xpDrops[i];
+                if (Time.time - time > 0.3f || !text.EndsWith(" " + skill)) continue;
+                long had = long.TryParse(text.Substring(1, text.IndexOf(' ') - 1), out long n) ? n : 0;
+                _xpDrops[i] = ("+" + (had + amount) + " " + skill, time);
+                return;
+            }
+            _xpDrops.Add(("+" + amount + " " + skill, Time.time));
+        }
 
         /// <summary>Shows what someone said above their head for a few seconds.</summary>
         public void ShowOverheadText(int entityId, string text) => _overhead[entityId] = (text, Time.time);
@@ -154,7 +176,8 @@ namespace Rth.Client
                 : AbilityLookup(action.AbilityId)?.Animation;
             if (target == null || target == source)
             {
-                source.PlayAction(string.IsNullOrEmpty(animation) ? "cast" : animation);
+                if (action.Face.HasValue) source.FaceTowards(TileMath.Center(action.Face.Value));
+                if (action.AbilityId != AnimPrefix) source.PlayAction(string.IsNullOrEmpty(animation) ? "cast" : animation); // bare "anim:" only turns
                 return 0f;
             }
             source.FaceTowards(target.transform.position);
@@ -209,15 +232,15 @@ namespace Rth.Client
             {
                 case HitKind.Miss:
                     text = "0";
-                    color = new Color(0.45f, 0.65f, 1f);
+                    color = new Color(0.22f, 0.38f, 0.75f);
                     break;
                 case HitKind.Heal:
                     text = "+" + hit.Amount;
-                    color = new Color(0.4f, 0.95f, 0.4f);
+                    color = new Color(0.18f, 0.6f, 0.22f);
                     break;
                 case HitKind.Deflected:
                     text = hit.Amount.ToString();
-                    color = new Color(0.75f, 0.85f, 1f);
+                    color = new Color(0.32f, 0.48f, 0.72f);
                     break;
                 case HitKind.Bleed:
                     text = hit.Amount.ToString();
@@ -225,15 +248,16 @@ namespace Rth.Client
                     break;
                 default:
                     text = hit.Amount.ToString();
-                    color = new Color(1f, 0.25f, 0.2f);
+                    color = new Color(0.78f, 0.12f, 0.1f);
                     break;
             }
 
-            // Stagger splats that land on the same entity at once.
+            // Splats that land on the same entity close together fan out: beside, then above.
             int stacked = 0;
             foreach (Hitsplat h in _hitsplats)
-                if (h.EntityId == hit.TargetId && Time.time - h.Time < 0.3f) stacked++;
-            _hitsplats.Add(new Hitsplat { EntityId = hit.TargetId, Text = text, Color = color, Time = Time.time, Offset = stacked * 18f });
+                if (h.EntityId == hit.TargetId && Time.time - h.Time < HitsplatSeconds * 0.6f) stacked++;
+            float offset = (stacked % 3 == 1 ? -1 : stacked % 3 == 2 ? 1 : 0) * 34f;
+            _hitsplats.Add(new Hitsplat { EntityId = hit.TargetId, Text = text, Color = color, Time = Time.time, Offset = offset, Row = stacked / 3 });
         }
 
         public void Clear()
@@ -247,6 +271,7 @@ namespace Rth.Client
             _hitsplats.Clear();
             _overhead.Clear();
             _later.Clear();
+            _xpDrops.Clear();
             LocalId = -1;
             TargetId = 0;
         }
@@ -293,9 +318,17 @@ namespace Rth.Client
                     y -= 8f;
                 }
 
-                Color nameColor = view.Id == TargetId ? new Color(1f, 0.55f, 0.3f) : view.Kind == EntityKind.Npc ? new Color(1f, 1f, 0.4f) : Color.white;
-                _labelStyle.normal.textColor = nameColor;
-                GUI.Label(new Rect(x - 70f, y - 18f, 140f, 18f), view.DisplayName, _labelStyle);
+                // Names: players always; creatures and townsfolk when pointed at, targeted or fighting,
+                // so a busy scene isn't a wall of labels.
+                bool showName = view.Kind != EntityKind.Npc || view.Id == HoveredId || view.Id == TargetId || Time.time - view.LastHitTime < HealthBarSeconds;
+                if (showName)
+                {
+                    Color nameColor = view.Id == TargetId ? new Color(1f, 0.55f, 0.3f) : view.Kind == EntityKind.Npc ? new Color(1f, 1f, 0.4f) : Color.white;
+                    _labelStyle.normal.textColor = new Color(0f, 0f, 0f, 0.75f);
+                    GUI.Label(new Rect(x - 69f, y - 17f, 140f, 18f), view.DisplayName, _labelStyle);
+                    _labelStyle.normal.textColor = nameColor;
+                    GUI.Label(new Rect(x - 70f, y - 18f, 140f, 18f), view.DisplayName, _labelStyle);
+                }
 
                 if (_overhead.TryGetValue(view.Id, out (string Text, float Time) said) && Time.time - said.Time < OverheadSeconds)
                 {
@@ -306,20 +339,49 @@ namespace Rth.Client
                 }
             }
 
+            // XP drops rise from beside the local player's head.
+            _xpDrops.RemoveAll(d => Time.time - d.Time > XpDropSeconds);
+            EntityView local = Local;
+            if (local != null && _xpDrops.Count > 0)
+            {
+                Vector3 head = cam.WorldToScreenPoint(local.transform.position + Vector3.up * (local.Height + 0.2f));
+                if (head.z > 0f)
+                    for (int i = 0; i < _xpDrops.Count; i++)
+                    {
+                        float age = (Time.time - _xpDrops[i].Time) / XpDropSeconds;
+                        float alpha = age < 0.7f ? 1f : 1f - (age - 0.7f) / 0.3f;
+                        var rect = new Rect(head.x + 34f, Screen.height - head.y - age * 50f - (_xpDrops.Count - 1 - i) * 16f, 160f, 18f);
+                        _xpStyle.normal.textColor = new Color(0f, 0f, 0f, 0.8f * alpha);
+                        GUI.Label(new Rect(rect.x + 1f, rect.y + 1f, rect.width, rect.height), _xpDrops[i].Text, _xpStyle);
+                        _xpStyle.normal.textColor = new Color(1f, 0.85f, 0.35f, alpha);
+                        GUI.Label(rect, _xpDrops[i].Text, _xpStyle);
+                    }
+            }
+
+            // Hitsplats: a coloured badge that pops in on the body, holds, then lifts and fades.
             foreach (Hitsplat h in _hitsplats)
             {
                 EntityView view = Find(h.EntityId);
                 if (view == null) continue;
-                float age = (Time.time - h.Time) / HitsplatSeconds;
-                Vector3 screen = cam.WorldToScreenPoint(view.transform.position + Vector3.up * (view.Height * 0.6f));
+                float seconds = Time.time - h.Time;
+                float age = seconds / HitsplatSeconds;
+                Vector3 screen = cam.WorldToScreenPoint(view.transform.position + Vector3.up * (view.Height * 0.55f));
                 if (screen.z <= 0f || Ui.UiRoot.IsPointerOverUi(screen)) continue;
-                var rect = new Rect(screen.x - 30f + h.Offset, Screen.height - screen.y - 12f - age * 30f, 60f, 24f);
-                Color c = h.Color;
-                c.a = 1f - age * age;
-                _splatStyle.normal.textColor = new Color(0f, 0f, 0f, c.a);
-                GUI.Label(new Rect(rect.x + 1f, rect.y + 1f, rect.width, rect.height), h.Text, _splatStyle);
-                _splatStyle.normal.textColor = c;
-                GUI.Label(rect, h.Text, _splatStyle);
+                float pop = seconds < 0.12f ? Mathf.Lerp(1.4f, 1f, seconds / 0.12f) : 1f;
+                float fade = age < 0.6f ? 1f : 1f - (age - 0.6f) / 0.4f;
+                float lift = age < 0.6f ? 0f : (age - 0.6f) * 40f;
+                float width = (16f + 10f * h.Text.Length) * pop;
+                float height = 24f * pop;
+                float cx = screen.x + h.Offset;
+                float cy = Screen.height - screen.y - lift - h.Row * 26f;
+                var badge = new Rect(cx - width / 2f, cy - height / 2f, width, height);
+                DrawRect(new Rect(badge.x - 2f, badge.y - 2f, badge.width + 4f, badge.height + 4f), new Color(0f, 0f, 0f, 0.7f * fade));
+                Color back = h.Color;
+                back.a = 0.92f * fade;
+                DrawRect(badge, back);
+                _splatStyle.fontSize = Mathf.RoundToInt(16f * pop);
+                _splatStyle.normal.textColor = new Color(1f, 1f, 1f, fade);
+                GUI.Label(badge, h.Text, _splatStyle);
             }
         }
 
@@ -328,6 +390,7 @@ namespace Rth.Client
             if (_labelStyle != null) return;
             _labelStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold };
             _splatStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold, fontSize = 18 };
+            _xpStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleLeft, fontStyle = FontStyle.Bold, fontSize = 13 };
             _white = Texture2D.whiteTexture;
         }
 

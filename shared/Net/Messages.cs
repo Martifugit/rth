@@ -11,7 +11,7 @@ namespace Rth.Shared.Net
     public static class Protocol
     {
         /// <summary>Bump whenever a message layout changes, so mismatched builds are refused at login.</summary>
-        public const int Version = 13;
+        public const int Version = 14;
         public const int DefaultPort = 43600;
         /// <summary>Sanity limits on a single frame's length, in bytes.</summary>
         public const int MaxClientFrame = 4 * 1024;
@@ -249,6 +249,8 @@ namespace Rth.Shared.Net
         public string AbilityId;
         /// <summary>-1, 0 or +1: which bile pole the action draws on, for its colour.</summary>
         public sbyte Pole;
+        /// <summary>A tile the source turns to face as it acts (the station or node it works at), or null.</summary>
+        public TileCoord? Face;
     }
 
     public struct HealthEvent
@@ -325,6 +327,8 @@ namespace Rth.Shared.Net
                 w.Write(a.TargetId);
                 w.Write(a.AbilityId ?? "");
                 w.Write(a.Pole);
+                w.Write(a.Face.HasValue);
+                if (a.Face.HasValue) WriteTile(w, a.Face.Value);
             }
             w.Write((ushort)Deaths.Count);
             foreach (int id in Deaths) w.Write(id);
@@ -378,7 +382,11 @@ namespace Rth.Shared.Net
                 msg.Hits.Add(new HitEvent { TargetId = r.ReadInt32(), SourceId = r.ReadInt32(), Amount = r.ReadInt32(), Kind = (HitKind)r.ReadByte() });
             count = r.ReadUInt16();
             for (int i = 0; i < count; i++)
-                msg.Actions.Add(new ActionEvent { SourceId = r.ReadInt32(), TargetId = r.ReadInt32(), AbilityId = r.ReadString(), Pole = r.ReadSByte() });
+            {
+                var action = new ActionEvent { SourceId = r.ReadInt32(), TargetId = r.ReadInt32(), AbilityId = r.ReadString(), Pole = r.ReadSByte() };
+                if (r.ReadBoolean()) action.Face = ReadTile(r);
+                msg.Actions.Add(action);
+            }
             count = r.ReadUInt16();
             for (int i = 0; i < count; i++) msg.Deaths.Add(r.ReadInt32());
             count = r.ReadUInt16();

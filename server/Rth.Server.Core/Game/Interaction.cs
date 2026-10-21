@@ -89,7 +89,15 @@ namespace Rth.Server.Game
 
         protected override bool Work(World world, Player player)
         {
-            if (world.FindEntity(NpcId) is Npc npc) _then(player, npc);
+            if (world.FindEntity(NpcId) is Npc npc)
+            {
+                world.Face(player, npc.Position);
+                world.Face(npc, player.Position);
+                // Townsfolk stop wandering off while someone deals with them.
+                npc.Waypoints.Clear();
+                npc.NextWanderTick = world.CurrentTick + 25;
+                _then(player, npc);
+            }
             return false;
         }
     }
