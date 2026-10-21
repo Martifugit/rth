@@ -180,5 +180,47 @@
     "name": "Sky-glass",
     "examine": "A brass telescope on a tripod outside the Concordian consulate. A small sign: FORECASTS WITHIN.",
     "actions": [ { "id": "look", "label": "Look-through", "message": "The glass is aimed at the Quaere, not the sky. Someone has scratched tally marks along the brass, hundreds of them." } ]
+  },
+  {
+    "id": "tithe_toll_board",
+    "name": "The toll board",
+    "examine": "A tall black board in gilt letters: the toll on every cargo that leaves the bay, rewritten each season.",
+    "actions": [ { "id": "read", "label": "Read", "message": "GRAIN, the hundredweight: two marks. SALT, outbound: none (it is ours). PILGRIMS, the head: one mark, waived for the dead. BLOOD, in any vessel: not to pass. Masters will heave to under the Tollkeep and wait to be weighed." } ]
+  },
+  {
+    "id": "chain_winch",
+    "name": "Chain capstan",
+    "examine": "The capstan that winds the chain across the Mouth. The bars are polished by hands; the chain is not.",
+    "actions": [ { "id": "look", "label": "Look-at", "message": "The chain runs from the Tollkeep down into the water and away across the Mouth on its floats. A tollman says it has been wound up three times in three hundred years, and each time Cruor paid to have it lowered." } ]
+  },
+  {
+    "id": "tithe_balance",
+    "name": "The Balance",
+    "examine": "The public scale of Tithe. Gold in one pan, salt in the other, and they hang level.",
+    "actions": [ { "id": "read", "label": "Read-plaque", "message": "The plaque reads: WHAT IS GIVEN WILL BE CALLED IN. BE FOUND LEVEL. Under it, smaller, someone has scratched: and Cruor?" } ]
+  },
+  {
+    "id": "tithe_ledger",
+    "name": "The Ledger",
+    "examine": "A book as wide as a door, open on a black lectern. Every soul in Tithe has a line in it.",
+    "actions": [ { "id": "read", "label": "Read", "message": "An auditor turns the great pages for you without being asked, finds the place where your name would go, and runs a finger down a column that is entirely empty. 'Not yet,' she says. 'But you were looked for.'" } ]
+  },
+  {
+    "id": "chantry_altar",
+    "name": "Altar",
+    "examine": "The Chantry altar: an open ledger and a small gold balance on a plain stone block.",
+    "actions": [ { "id": "pray", "label": "Pray", "animation": "kneel" } ]
+  },
+  {
+    "id": "tithe_saltery_door",
+    "name": "Saltery door",
+    "examine": "A black door in a white wall, with no handle on this side.",
+    "actions": [ { "id": "knock", "label": "Knock", "message": "A shutter opens at eye height. 'Living?' Yes. 'Then come back when you aren't, and we'll keep you for the reckoning.' The shutter closes." } ]
+  },
+  {
+    "id": "tithe_salt_heap",
+    "name": "Salt heap",
+    "examine": "Raked salt from the pans of Salinas, drying in the glare.",
+    "actions": [ { "id": "look", "label": "Look-at", "message": "The salt is so white at noon it hurts to look at. The rakers wear veils; the heaps cast no shadow you can see." } ]
   }
 ]

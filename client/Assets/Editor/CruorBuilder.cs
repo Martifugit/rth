@@ -239,26 +239,7 @@ namespace Rth.Client.Editor
         /// </summary>
         private static void BuildQuaere(Transform map)
         {
-            Transform q = WorldKit.Group(map, "The Quaere (distant)");
-            Vector3 c = P(66f, 0f, -48f);
-            WorldKit.Prop("Skirt", q, c + new Vector3(0f, 1f, 0f), new Vector3(34f, 3f, 26f), M.QuaereStone, 12f);
-            // Leaning slabs, none of them quite vertical, rising to a broken crown.
-            (Vector3 off, Vector3 size, Vector3 tilt)[] slabs =
-            {
-                (new Vector3(0f, 14f, 0f), new Vector3(9f, 28f, 7f), new Vector3(0f, 8f, 4f)),
-                (new Vector3(-6f, 10f, 3f), new Vector3(6f, 20f, 5f), new Vector3(-3f, -14f, 9f)),
-                (new Vector3(7f, 9f, -2f), new Vector3(5f, 18f, 6f), new Vector3(6f, 22f, -8f)),
-                (new Vector3(2f, 30f, 1f), new Vector3(5f, 14f, 4f), new Vector3(0f, 30f, -6f)),
-                (new Vector3(-2f, 37f, 0f), new Vector3(2.5f, 8f, 2.5f), new Vector3(12f, 0f, 14f)),
-                (new Vector3(-12f, 4f, -4f), new Vector3(7f, 8f, 6f), new Vector3(0f, 40f, 12f)),
-                (new Vector3(13f, 3f, 5f), new Vector3(6f, 6f, 8f), new Vector3(8f, -20f, 0f)),
-            };
-            foreach ((Vector3 off, Vector3 size, Vector3 tilt) in slabs)
-                WorldKit.Prop("Mass", q, c + off, size, M.QuaereStone).transform.rotation = Quaternion.Euler(tilt);
-            // The seam: a thin line of cold light down the tallest face.
-            WorldKit.Prop("Seam", q, c + new Vector3(0.4f, 18f, -3.6f), new Vector3(0.35f, 30f, 0.2f), M.QuaereGlow).transform.rotation = Quaternion.Euler(4f, 8f, 4f);
-            FxKit.PointLight(q, "Seam light", c + new Vector3(0f, 16f, -8f), new Color(0.6f, 0.85f, 0.9f), 2f, 18f);
-            FxKit.Mist(q, c + new Vector3(0f, 0.5f, 0f), new Vector2(50f, 40f), M.SeaMist, Color.white);
+            Transform q = WorldKit.QuaereSilhouette(map, P(66f, 0f, -48f), 1f, M.QuaereStone, M.QuaereGlow, M.SeaMist);
             Tag(q, "the_quaere_far", "Hero silhouette, seen only from across the bay (40+ tiles, through fog). Undefined on purpose: dark leaning masses, " +
                 "no clean shape, a pale seam of light. One low-poly mesh; it must read at a glance from anywhere on the shore.");
         }

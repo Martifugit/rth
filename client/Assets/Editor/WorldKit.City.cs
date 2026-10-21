@@ -130,6 +130,8 @@ namespace Rth.Client.Editor
             Battlements,
             /// <summary>A stepped spire (towers, belfries).</summary>
             Spire,
+            /// <summary>A stepped dome on a short drum (vaults, shrines, southern houses).</summary>
+            Dome,
             /// <summary>No roof (a ruin, or something with its own).</summary>
             None,
         }
@@ -290,6 +292,10 @@ namespace Rth.Client.Editor
                 case RoofKind.Spire:
                     Spire(b, new Vector3((x0 + x1) / 2f, eave, (z0 + z1) / 2f), Mathf.Min(x1 - x0, z1 - z0) + 0.3f, Mathf.Min(x1 - x0, z1 - z0) * 2.2f, f.Roof, f.Trim);
                     break;
+                case RoofKind.Dome:
+                    Prop("Roof", b, new Vector3((x0 + x1) / 2f, eave + 0.05f, (z0 + z1) / 2f), new Vector3(x1 - x0 + 0.1f, 0.1f, z1 - z0 + 0.1f), f.Trim ?? f.Walls);
+                    Dome(b, new Vector3((x0 + x1) / 2f, eave, (z0 + z1) / 2f), Mathf.Min(x1 - x0, z1 - z0) * 0.42f, Mathf.Min(x1 - x0, z1 - z0) * 0.4f, f.Roof, f.Trim);
+                    break;
             }
         }
 
@@ -349,8 +355,10 @@ namespace Rth.Client.Editor
                 Prop("Lintel", walls, alongX ? new Vector3(mid, (doorTop + height) / 2f, line) : new Vector3(line, (doorTop + height) / 2f, mid),
                     alongX ? new Vector3(span, height - doorTop, 0.3f) : new Vector3(0.3f, height - doorTop, span), f.Walls);
             }
+            // The cornice is a ring round the wall tops, not a slab: a lid would hide the interior when the roof does.
             if (f.Trim != null)
-                Prop("Cornice", walls, new Vector3((x0 + x1) / 2f, height, (z0 + z1) / 2f), new Vector3(x1 - x0 + 0.5f, 0.2f, z1 - z0 + 0.5f), f.Trim);
+                foreach ((Vector3 a, Vector3 c) in Edges(x0 - 0.1f, z0 - 0.1f, x1 + 0.1f, z1 + 0.1f, height))
+                    Beam("Cornice", walls, a, c, 0.45f, 0.2f, f.Trim);
             Fades(walls, 0.3f);
 
             Transform roof = GableRoof(hall, x0, z0, x1, z1, height, f.Roof, f.Gable ?? f.Walls, f.Pitch);
@@ -705,6 +713,104 @@ namespace Rth.Client.Editor
             Prop("Arm", g, foot + new Vector3(0.2f, 2.7f, 0f), new Vector3(0.45f, 0.06f, 0.06f), iron);
             Prop("Lantern", g, foot + new Vector3(0.38f, 2.45f, 0f), new Vector3(0.22f, 0.32f, 0.22f), glow);
             return g;
+        }
+
+        // ------------------------------------------------------------------ domes, colonnades, shade
+
+        /// <summary>
+        /// A stepped dome: a short drum, then rings shrinking towards the top along a quarter circle,
+        /// with a small lantern and an optional finial. Scenery only. Returns its group.
+        /// </summary>
+        public static Transform Dome(Transform parent, Vector3 baseCenter, float radius, float height, Material roof, Material finial = null, int tiers = 6)
+        {
+            Transform group = Group(parent, "Dome");
+            float drum = Mathf.Max(0.3f, height * 0.12f);
+            Cylinder("Drum", group, baseCenter + Vector3.up * (drum / 2f), new Vector3(radius * 2.06f, drum / 2f, radius * 2.06f), roof, collider: false);
+            float rise = height - drum;
+            for (int i = 0; i < tiers; i++)
+            {
+                float a0 = i / (float)tiers * Mathf.PI / 2f, a1 = (i + 1) / (float)tiers * Mathf.PI / 2f;
+                float y0 = Mathf.Sin(a0) * rise, y1 = Mathf.Sin(a1) * rise;
+                float r = radius * (Mathf.Cos(a0) + Mathf.Cos(a1)) / 2f;
+                Cylinder("Ring", group, baseCenter + Vector3.up * (drum + (y0 + y1) / 2f), new Vector3(r * 2f, (y1 - y0) / 2f, r * 2f), roof, collider: false);
+            }
+            Vector3 top = baseCenter + Vector3.up * height;
+            Cylinder("Lantern", group, top + Vector3.up * 0.3f, new Vector3(radius * 0.3f, 0.3f, radius * 0.3f), roof, collider: false);
+            if (finial != null) Prop("Finial", group, top + Vector3.up * 1f, new Vector3(0.12f, 0.8f, 0.12f), finial);
+            return group;
+        }
+
+        /// <summary>
+        /// A row of columns from tile <paramref name="from"/> to tile <paramref name="to"/> (inclusive,
+        /// along a row or a column), one every <paramref name="spacing"/> tiles, carrying an
+        /// entablature at <paramref name="height"/>. Each column blocks its tile; the gaps between are
+        /// open. With <paramref name="roofDepth"/> &gt; 0 a flat roof runs back from the beam that far
+        /// (towards +z or +x, or the other way when negative): a loggia or a cloister walk.
+        /// </summary>
+        public static Transform Colonnade(Transform parent, string name, Vector2Int from, Vector2Int to, float height, Material column, Material beam,
+            int spacing = 2, float roofDepth = 0f)
+        {
+            Transform g = Group(parent, name);
+            bool alongX = from.y == to.y;
+            int a = alongX ? Mathf.Min(from.x, to.x) : Mathf.Min(from.y, to.y), b = alongX ? Mathf.Max(from.x, to.x) : Mathf.Max(from.y, to.y);
+            int line = alongX ? from.y : from.x;
+            for (int t = a; t <= b; t += spacing)
+            {
+                int x = alongX ? t : line, z = alongX ? line : t;
+                Cylinder("Column", g, new Vector3(x + 0.5f, height / 2f, z + 0.5f), new Vector3(0.55f, height / 2f, 0.55f), column, collider: false);
+                Prop("Base", g, new Vector3(x + 0.5f, 0.12f, z + 0.5f), new Vector3(0.8f, 0.24f, 0.8f), beam);
+                Prop("Capital", g, new Vector3(x + 0.5f, height - 0.12f, z + 0.5f), new Vector3(0.8f, 0.24f, 0.8f), beam);
+                BlockTiles(g, "Column footprint", x, z, x + 1, z + 1);
+            }
+            Vector3 p0 = alongX ? new Vector3(a, height + 0.25f, line + 0.5f) : new Vector3(line + 0.5f, height + 0.25f, a);
+            Vector3 p1 = alongX ? new Vector3(b + 1f, height + 0.25f, line + 0.5f) : new Vector3(line + 0.5f, height + 0.25f, b + 1f);
+            Beam("Entablature", g, p0, p1, 0.8f, 0.5f, beam);
+            if (Mathf.Abs(roofDepth) > 0.01f)
+            {
+                Vector3 off = alongX ? new Vector3(0f, 0f, roofDepth / 2f) : new Vector3(roofDepth / 2f, 0f, 0f);
+                float len = b + 1 - a;
+                Prop("Walk roof", g, (p0 + p1) / 2f + off + Vector3.up * 0.3f,
+                    alongX ? new Vector3(len, 0.15f, Mathf.Abs(roofDepth) + 0.4f) : new Vector3(Mathf.Abs(roofDepth) + 0.4f, 0.15f, len), beam);
+            }
+            Fades(g, 0.3f);
+            return g;
+        }
+
+        /// <summary>A shade sail of cloth strung from <paramref name="a"/> to <paramref name="b"/> over a street, sagging in the middle. Scenery only.</summary>
+        public static Transform ShadeSail(Transform parent, Vector3 a, Vector3 b, float width, Material cloth, float sag = 0.5f)
+        {
+            Transform g = Group(parent, "Shade sail");
+            Vector3 mid = (a + b) / 2f + Vector3.down * sag;
+            foreach ((Vector3 p, Vector3 q) in new[] { (a, mid), (mid, b) })
+                Beam("Cloth", g, p, q, width, 0.04f, cloth);
+            return g;
+        }
+
+        /// <summary>
+        /// The Quaere as seen from the shore: dark leaning masses with no clean shape, a seam of cold
+        /// light down the tallest face, mist at its foot. Only a silhouette, nothing walkable; every
+        /// region on the bay's rim places one where it should stand in the distance. Returns its group.
+        /// </summary>
+        public static Transform QuaereSilhouette(Transform parent, Vector3 center, float scale, Material stone, Material seam, Material mist)
+        {
+            Transform q = Group(parent, "The Quaere (distant)");
+            Prop("Skirt", q, center + new Vector3(0f, 1f, 0f) * scale, new Vector3(34f, 3f, 26f) * scale, stone, 12f);
+            (Vector3 off, Vector3 size, Vector3 tilt)[] slabs =
+            {
+                (new Vector3(0f, 14f, 0f), new Vector3(9f, 28f, 7f), new Vector3(0f, 8f, 4f)),
+                (new Vector3(-6f, 10f, 3f), new Vector3(6f, 20f, 5f), new Vector3(-3f, -14f, 9f)),
+                (new Vector3(7f, 9f, -2f), new Vector3(5f, 18f, 6f), new Vector3(6f, 22f, -8f)),
+                (new Vector3(2f, 30f, 1f), new Vector3(5f, 14f, 4f), new Vector3(0f, 30f, -6f)),
+                (new Vector3(-2f, 37f, 0f), new Vector3(2.5f, 8f, 2.5f), new Vector3(12f, 0f, 14f)),
+                (new Vector3(-12f, 4f, -4f), new Vector3(7f, 8f, 6f), new Vector3(0f, 40f, 12f)),
+                (new Vector3(13f, 3f, 5f), new Vector3(6f, 6f, 8f), new Vector3(8f, -20f, 0f)),
+            };
+            foreach ((Vector3 off, Vector3 size, Vector3 tilt) in slabs)
+                Prop("Mass", q, center + off * scale, size * scale, stone).transform.rotation = Quaternion.Euler(tilt);
+            Prop("Seam", q, center + new Vector3(0.4f, 18f, -3.6f) * scale, new Vector3(0.35f, 30f, 0.2f) * scale, seam).transform.rotation = Quaternion.Euler(4f, 8f, 4f);
+            FxKit.PointLight(q, "Seam light", center + new Vector3(0f, 16f, -8f) * scale, new Color(0.6f, 0.85f, 0.9f), 2f, 18f * scale);
+            FxKit.Mist(q, center + new Vector3(0f, 0.5f, 0f), new Vector2(50f, 40f) * scale, mist, Color.white);
+            return q;
         }
     }
 }

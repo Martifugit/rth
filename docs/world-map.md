@@ -127,6 +127,7 @@ and rocks, one landmark. Unbuilt land is impassable and fades into the fog.
 | Tolling | 0-95, 0-95 | `Tolling.unity` |
 | Palmerway | 96-191, 0-95 | `Palmerway.unity` |
 | Cruor (blockout, not yet joined by road) | 384-527, 40-175 | `Cruor.unity` |
+| Tithe (blockout, not yet joined by road) | 608-751, -160..-17 | `Tithe.unity` |
 
 1. **Tolling and the river** (built: `client/Assets/Scenes/Tolling.unity`). One riverside town
    on the western outskirts of Venaria: the river and its bridge, Widdermill and its millpond,
@@ -141,5 +142,6 @@ and rocks, one landmark. Unbuilt land is impassable and fades into the fog.
    regions), art for the assets the blockout lists, and the townsfolk's roles.
 3. Slough's fens and the occult north-east.
 4. Sere and the western passes (Lucern Pass).
-5. Tithe and Calcinia's coast.
+5. Tithe and Calcinia's coast. The city is blocked out (`docs/regions/tithe.md`); Calcinia
+   beyond it (Salinas, Saltglare, the flats of Ascia) is not.
 6. Candora: passes, Meridian, the dwarven cart-lines and Undermost (the deep storyline).

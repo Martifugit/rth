@@ -185,5 +185,90 @@
     "shape": "Capsule",
     "color": "#5c4a36",
     "scale": 1.0
+  },
+  {
+    "id": "tithe_marine",
+    "name": "Marine",
+    "examine": "One of the swords Tithe's treasury hires. Paid on the day, every day, and it shows.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 3,
+    "held": "watchmans_sword",
+    "shape": "Capsule",
+    "color": "#3a4660",
+    "scale": 1.0
+  },
+  {
+    "id": "tithe_tollman",
+    "name": "Tollman",
+    "examine": "Counts hulls, weighs samples, writes everything down twice. Never raises his voice; never needs to.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 3,
+    "shape": "Capsule",
+    "color": "#2c3a5a",
+    "scale": 1.0
+  },
+  {
+    "id": "tithe_auditor",
+    "name": "Auditor",
+    "examine": "An examiner of accounts in black. Looks at you as if adding you up.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 2,
+    "shape": "Capsule",
+    "color": "#1e1e24",
+    "scale": 1.0
+  },
+  {
+    "id": "tithe_chorister",
+    "name": "Chorister",
+    "examine": "A singer of the Chantry in salt-white, humming one long note under the breath.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 2,
+    "shape": "Capsule",
+    "color": "#e8e4d8",
+    "scale": 1.0
+  },
+  {
+    "id": "tithe_merchant",
+    "name": "Merchant",
+    "examine": "A shipping-house factor, rings on every finger, a ledger under one arm.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 4,
+    "shape": "Capsule",
+    "color": "#6a4a62",
+    "scale": 1.0
+  },
+  {
+    "id": "tithe_sailor",
+    "name": "Sailor",
+    "examine": "Waiting to be weighed and let go. Has opinions about the toll.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 4,
+    "shape": "Capsule",
+    "color": "#6b5a40",
+    "scale": 1.0
+  },
+  {
+    "id": "salt_raker",
+    "name": "Salt raker",
+    "examine": "Veiled against the glare, rake over one shoulder, salt to the elbows.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 4,
+    "shape": "Capsule",
+    "color": "#d8d0c0",
+    "scale": 1.0
   }
 ]
