@@ -361,18 +361,6 @@ namespace Rth.Client
                     }
                 }
 
-                // Names: players always; creatures and townsfolk when pointed at, targeted or fighting,
-                // so a busy scene isn't a wall of labels.
-                bool showName = view.Kind != EntityKind.Npc || view.Id == HoveredId || view.Id == TargetId || Time.time - view.LastHitTime < HealthBarSeconds;
-                if (showName)
-                {
-                    Color nameColor = view.Id == TargetId ? new Color(1f, 0.55f, 0.3f) : view.Kind == EntityKind.Npc ? new Color(1f, 1f, 0.4f) : Color.white;
-                    Ink(_labelStyle, new Color(0f, 0f, 0f, 0.75f));
-                    GUI.Label(new Rect(x - 69f, y - 17f, 140f, 18f), view.DisplayName, _labelStyle);
-                    Ink(_labelStyle, nameColor);
-                    GUI.Label(new Rect(x - 70f, y - 18f, 140f, 18f), view.DisplayName, _labelStyle);
-                }
-
                 if (_overhead.TryGetValue(view.Id, out (string Text, float Time) said) && Time.time - said.Time < OverheadSeconds)
                 {
                     float sayY = y - 38f - (string.IsNullOrEmpty(view.Overhead) ? 0f : 34f); // above the overhead icon
