@@ -24,6 +24,29 @@ public class WorldTests
     }
 
     [Fact]
+    public void AWalkFurtherThanOneSearchKeepsGoing()
+    {
+        var fx = new WorldFixture(Maps.Open(40, 40, Spawn), new ServerConfig { PathSearchRadius = 8 });
+        FakeConnection client = fx.Login("Alice");
+        client.FromClient(new WalkToMessage { X = 35, Y = 30, Run = true });
+        fx.Ticks(30);
+        Assert.Equal(new TileCoord(35, 30), fx.Player("Alice").Position);
+    }
+
+    [Fact]
+    public void AWalkToSomewhereUnreachableStopsAtTheClosestTile()
+    {
+        var map = Maps.Open(40, 40, Spawn);
+        for (int y = 0; y < 40; y++) map.Block(0, 20, y); // a wall right across
+        var fx = new WorldFixture(map, new ServerConfig { PathSearchRadius = 8 });
+        FakeConnection client = fx.Login("Alice");
+        client.FromClient(new WalkToMessage { X = 30, Y = 5, Run = true });
+        fx.Ticks(30);
+        Assert.Equal(new TileCoord(19, 5), fx.Player("Alice").Position);
+        Assert.Null(fx.Player("Alice").WalkGoal);
+    }
+
+    [Fact]
     public void WalkingMovesOneTilePerTick()
     {
         var fx = OpenWorld();

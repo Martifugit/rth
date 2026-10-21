@@ -85,14 +85,37 @@ namespace Rth.Client
             foreach (EntityMoved moved in update.Moved)
                 if (_entities.TryGetValue(moved.Id, out EntityView view)) view.AddSteps(moved.Steps, moved.Running);
 
+            // A blow lands a moment after it starts: when the swing connects or the projectile
+            // arrives. Its hitsplat, the flinch, the health bar and a death all wait for that.
+            var impact = new Dictionary<int, float>(); // target id -> seconds until the last blow on it lands
+            var landsAt = new Dictionary<(int, int), float>(); // (source, target) -> seconds until it lands
+            foreach (ActionEvent action in update.Actions)
+            {
+                float delay = ShowAction(action);
+                landsAt[(action.SourceId, action.TargetId)] = delay;
+                impact[action.TargetId] = Mathf.Max(delay, impact.TryGetValue(action.TargetId, out float d) ? d : 0f);
+            }
+            foreach (HitEvent hit in update.Hits)
+            {
+                float delay = landsAt.TryGetValue((hit.SourceId, hit.TargetId), out float d) ? d : 0f;
+                Later(delay, () => ShowHit(hit));
+            }
             foreach (HealthEvent health in update.Health)
-                if (_entities.TryGetValue(health.Id, out EntityView view)) view.HealthPercent = health.Percent;
-
-            foreach (ActionEvent action in update.Actions) ShowAction(action);
-            foreach (HitEvent hit in update.Hits) ShowHit(hit);
-
+            {
+                HealthEvent h = health;
+                Later(impact.TryGetValue(h.Id, out float d) ? d : 0f, () =>
+                {
+                    if (_entities.TryGetValue(h.Id, out EntityView view) && view != null) view.HealthPercent = h.Percent;
+                });
+            }
             foreach (int id in update.Deaths)
-                if (_entities.TryGetValue(id, out EntityView view)) view.PlayDeath();
+            {
+                int dead = id;
+                Later(impact.TryGetValue(dead, out float d) ? d : 0f, () =>
+                {
+                    if (_entities.TryGetValue(dead, out EntityView view) && view != null) view.PlayDeath();
+                });
+            }
 
             foreach (int id in update.GroundRemoved) RemoveGroundItem(id);
             foreach (GroundItemAdded added in update.GroundAdded)
@@ -116,23 +139,61 @@ namespace Rth.Client
         public static Color ParseColor(string hex) =>
             hex != null && ColorUtility.TryParseHtmlString(hex, out Color c) ? c : new Color(0.6f, 0.6f, 0.6f);
 
-        private void ShowAction(ActionEvent action)
+        /// <summary>
+        /// Animates an attack or ability, and returns how long until it lands: the swing's contact
+        /// for melee, the projectile's flight from further off, nothing for something used on oneself.
+        /// </summary>
+        private float ShowAction(ActionEvent action)
         {
             EntityView source = Find(action.SourceId);
             EntityView target = Find(action.TargetId);
-            if (source == null || target == null) return;
+            if (source == null) return 0f;
+            // The ability says how it looks; "anim:<name>" plays a named animation (skilling).
+            string animation = action.AbilityId != null && action.AbilityId.StartsWith(AnimPrefix)
+                ? action.AbilityId.Substring(AnimPrefix.Length)
+                : AbilityLookup(action.AbilityId)?.Animation;
+            if (target == null || target == source)
+            {
+                source.PlayAction(string.IsNullOrEmpty(animation) ? "cast" : animation);
+                return 0f;
+            }
             source.FaceTowards(target.transform.position);
             source.LastHitTime = Time.time;
-            // The ability says how it looks (NPC attacks and unknown ones use the default).
-            string animation = AbilityLookup(action.AbilityId)?.Animation;
             source.PlayAction(string.IsNullOrEmpty(animation) ? "cast" : animation);
 
             // Melee needs no projectile; anything thrown from further off gets one.
-            if (Vector3.Distance(source.transform.position, target.transform.position) < 1.6f) return;
+            float distance = Vector3.Distance(source.transform.position, target.transform.position);
+            if (distance < 1.6f) return MeleeContactSeconds;
             Color color = action.Pole > 0 ? new Color(0.98f, 0.82f, 0.2f)
                 : action.Pole < 0 ? new Color(0.25f, 0.12f, 0.35f)
                 : new Color(0.55f, 0.75f, 0.4f);
-            Projectile.Launch(source.transform.position + Vector3.up * source.Height * 0.7f, target, color, _tickSeconds * 0.5f);
+            // Quick enough to read as one blow, slow enough to see; further shots fly a little longer.
+            float flight = Mathf.Clamp(0.12f + distance * 0.045f, 0.2f, _tickSeconds * 0.75f);
+            Projectile.Launch(source.transform.position + Vector3.up * source.Height * 0.7f, target, color, flight);
+            return flight;
+        }
+
+        private const string AnimPrefix = ActionEvent.AnimationPrefix;
+        /// <summary>How long into a melee swing the blow connects.</summary>
+        private const float MeleeContactSeconds = 0.22f;
+
+        private readonly List<(float Time, System.Action Run)> _later = new List<(float, System.Action)>();
+
+        private void Later(float seconds, System.Action run)
+        {
+            if (seconds <= 0f) run();
+            else _later.Add((Time.time + seconds, run));
+        }
+
+        private void Update()
+        {
+            for (int i = 0; i < _later.Count; i++)
+            {
+                if (Time.time < _later[i].Time) continue;
+                System.Action run = _later[i].Run;
+                _later.RemoveAt(i--);
+                run();
+            }
         }
 
         private void ShowHit(HitEvent hit)
@@ -185,6 +246,7 @@ namespace Rth.Client
             _groundItems.Clear();
             _hitsplats.Clear();
             _overhead.Clear();
+            _later.Clear();
             LocalId = -1;
             TargetId = 0;
         }

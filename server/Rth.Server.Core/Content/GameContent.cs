@@ -127,6 +127,8 @@ namespace Rth.Server.Content
         public int ExtraRollEveryLevels;
         public int Ticks = 4;
         public double Xp;
+        /// <summary>The character animation played for each one made (a clip or role in animations.json).</summary>
+        public string Animation = "work";
     }
 
     /// <summary>Damage dealt with a combat style trains a skill.</summary>

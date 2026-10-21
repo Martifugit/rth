@@ -184,6 +184,13 @@ namespace Rth.Server.Game
         public void AddAction(ActionEvent action) => _actions.Add(action);
         public void AddDeath(int entityId) => _deaths.Add(entityId);
 
+        /// <summary>Plays a character animation (a clip or role in the client's animations.json) for everyone who can see it.</summary>
+        public void Animate(Entity entity, string animation)
+        {
+            if (!string.IsNullOrEmpty(animation))
+                AddAction(new ActionEvent { SourceId = entity.Id, TargetId = entity.Id, AbilityId = ActionEvent.AnimationPrefix + animation });
+        }
+
         public void SetPath(Entity entity, TileCoord target)
         {
             List<TileCoord> path = Pathfinder.FindPath(Map, entity.Plane, entity.Position, target, _config.PathSearchRadius);
@@ -279,6 +286,7 @@ namespace Rth.Server.Game
         public void StartInteraction(Player player, Interaction interaction)
         {
             StopInteraction(player);
+            player.WalkGoal = null;
             player.Interaction = interaction;
         }
 
@@ -370,8 +378,27 @@ namespace Rth.Server.Game
             if (player.IsDead) return;
             // Walking away is how you stop doing anything else.
             StopInteraction(player);
-            SetPath(player, new TileCoord(walk.X, walk.Y));
+            var goal = new TileCoord(walk.X, walk.Y);
+            SetPath(player, goal);
+            player.WalkGoal = goal;
             player.Running = walk.Run;
+        }
+
+        /// <summary>
+        /// A walk further than one path search reaches stops at the closest tile it found; from
+        /// there, search again towards the clicked tile, for as long as that gets closer.
+        /// </summary>
+        private void ContinueWalk(Player player)
+        {
+            if (player.WalkGoal is not TileCoord goal || player.Waypoints.Count > 0) return;
+            int before = player.Position.ChebyshevDistance(goal);
+            if (before == 0)
+            {
+                player.WalkGoal = null;
+                return;
+            }
+            SetPath(player, goal);
+            if (player.Waypoints.Count == 0 || player.Waypoints.Last().ChebyshevDistance(goal) >= before) player.WalkGoal = null;
         }
 
         private void ProcessNpcs()
@@ -394,6 +421,7 @@ namespace Rth.Server.Game
                     }
                     else
                     {
+                        ContinueWalk(player);
                         ProcessMovement(player);
                     }
                 }

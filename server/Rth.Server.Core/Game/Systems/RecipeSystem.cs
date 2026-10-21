@@ -119,6 +119,7 @@ namespace Rth.Server.Game
                 }
                 world.Tell(player, TextKind.Info, "You begin to " + _current.Verb + " the " + _current.Name + ".");
                 _readyAt = world.CurrentTick + (uint)_current.Ticks;
+                world.Animate(player, _current.Animation);
                 return true;
             }
 
@@ -135,6 +136,7 @@ namespace Rth.Server.Game
             if (next != _current) world.Tell(player, TextKind.Info, "You begin to " + next.Verb + " the " + next.Name + ".");
             _current = next;
             _readyAt = world.CurrentTick + (uint)next.Ticks;
+            world.Animate(player, next.Animation);
             return true;
         }
     }

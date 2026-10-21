@@ -33,6 +33,8 @@ namespace Rth.Shared.World
         public List<Rth.Shared.Skills.SkillRequirement> Requirements = new List<Rth.Shared.Skills.SkillRequirement>();
         /// <summary>The verb for messages ("empower", "mine").</summary>
         public string Verb = "gather";
+        /// <summary>The character animation played on each attempt (a clip or role in animations.json).</summary>
+        public string Animation = "work";
         /// <summary>Ticks between attempts.</summary>
         public int Ticks = 4;
         /// <summary>Success chance: clamp(BaseChance + PerLevel x (level - Level), MinChance, MaxChance).</summary>

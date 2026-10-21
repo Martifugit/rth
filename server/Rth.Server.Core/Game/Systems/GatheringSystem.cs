@@ -148,6 +148,7 @@ namespace Rth.Server.Game
         /// <summary>The player starts working a node: its message, its words, its cut.</summary>
         internal void Begin(Player player, Node node, NodeDef def)
         {
+            World.Animate(player, def.Animation);
             if (def.StartMessage != null) World.Tell(player, TextKind.Info, def.StartMessage);
             if (def.StartSay != null) World.Find<ChatSystem>()?.Say(player, def.StartSay);
             if (def.StartDamage > 0 && player.Blood > 1)
@@ -158,6 +159,7 @@ namespace Rth.Server.Game
         internal bool Attempt(Player player, Node node, NodeDef def)
         {
             uint now = World.CurrentTick;
+            World.Animate(player, def.Animation);
             if (World.Random.NextDouble() >= SuccessChance(player, def)) return true;
 
             ItemSystem? items = World.Find<ItemSystem>();

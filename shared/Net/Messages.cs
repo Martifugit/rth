@@ -241,6 +241,9 @@ namespace Rth.Shared.Net
     /// <summary>Someone used an attack or ability: the client animates it (projectile, swing).</summary>
     public struct ActionEvent
     {
+        /// <summary>An ability id of "anim:&lt;name&gt;" only plays that animation (skilling, working at a station).</summary>
+        public const string AnimationPrefix = "anim:";
+
         public int SourceId;
         public int TargetId;
         public string AbilityId;

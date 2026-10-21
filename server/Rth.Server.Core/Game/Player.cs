@@ -20,6 +20,9 @@ namespace Rth.Server.Game
         public string Key { get; }
         public IConnection Connection { get; }
 
+        /// <summary>The tile a walk was clicked to, while it's further than one path search reaches; else null.</summary>
+        public Rth.Shared.World.TileCoord? WalkGoal { get; set; }
+
         /// <summary>What the player is busy doing (attacking, picking up...), or null.</summary>
         public Interaction? Interaction { get; set; }
 
