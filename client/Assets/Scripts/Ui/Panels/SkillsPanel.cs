@@ -8,8 +8,8 @@ using UnityEngine.UIElements;
 namespace Rth.Client.Ui.Panels
 {
     /// <summary>
-    /// Every skill at a glance, as tiles of icon and level, three across, with the total level
-    /// on a footer row. A thin bar under each shows progress to the next level. Click a skill for
+    /// Every skill at a glance, as tiles of icon and level, three across, with the combat and
+    /// total levels on a footer row. A thin bar under each shows progress to the next level. Click a skill for
     /// its guide (what it unlocks); right-click to set a level or XP target, shown in gold and in
     /// the XP tracker.
     /// </summary>
@@ -28,6 +28,7 @@ namespace Rth.Client.Ui.Panels
 
         private VisualElement _grid;
         private Label _total;
+        private Label _combat;
         private int _builtFor = -1;
         private readonly List<Tile> _tiles = new List<Tile>();
 
@@ -46,9 +47,14 @@ namespace Rth.Client.Ui.Panels
             _grid.style.alignSelf = Align.Center;
             UiKit.El(root, "spacer");
             VisualElement total = UiKit.El(root, "footer-row");
-            UiKit.Text(total, "Total level", "heading").style.marginTop = total.style.marginBottom = 0f;
+            UiKit.Text(total, "Combat", "heading").style.marginTop = total.style.marginBottom = 0f;
+            _combat = UiKit.Text(total, "", "value", "bold");
+            _combat.style.marginLeft = 6f;
+            UiKit.Tooltip(_combat, () => UiKit.Title("Combat level") + "\nYour best of melee, ranged and occultism, with defence and half of religion.");
             UiKit.El(total, "spacer");
+            UiKit.Text(total, "Total level", "heading").style.marginTop = 0f;
             _total = UiKit.Text(total, "", "value", "bold");
+            _total.style.marginLeft = 6f;
         }
 
         public override void Refresh()
@@ -75,6 +81,7 @@ namespace Rth.Client.Ui.Panels
                 if (goal > xp) tile.Target.style.width = Length.Percent(goal > from ? (xp - from) * 100f / (goal - from) : 100f);
             }
             _total.text = total.ToString();
+            _combat.text = Session.CombatLevel.ToString();
         }
 
         private void Rebuild()

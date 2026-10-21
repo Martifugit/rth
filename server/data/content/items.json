@@ -41,7 +41,7 @@
     "color": "#8a5a7a",
     "tags": [ "food" ],
     "consumable": { "verb": "Eat", "cooldownGroup": "food", "cooldownTicks": 2, "attackDelayTicks": 2,
-      "effects": [ { "op": "healBlood", "amount": 60 }, { "op": "restoreBreath", "amount": 40 } ] }
+      "effects": [ { "op": "healBlood", "amount": 60 }, { "op": "restoreDevotion", "amount": 5 } ] }
   },
 
   {
@@ -128,11 +128,11 @@
     "id": "cracked_moonstone_ring",
     "name": "Cracked moonstone ring",
     "icon": "ring",
-    "examine": "A sliver of the second moon, set badly. You breathe easier wearing it.",
+    "examine": "A sliver of the second moon, set badly. Hymns come easier wearing it.",
     "value": 120,
     "color": "#c7d4e8",
     "tags": [ "moon-touched" ],
-    "equipment": { "slot": "Ring", "stats": { "maxBreath": 60 }, "requirements": [ { "skill": "occultism", "level": 8 } ] }
+    "equipment": { "slot": "Ring", "stats": { "maxDevotion": 20, "devotionBonus": 10 }, "requirements": [ { "skill": "occultism", "level": 8 } ] }
   },
   {
     "id": "gallstone_amulet",
@@ -247,7 +247,7 @@
     "value": 90,
     "color": "#6d7b4c",
     "tags": [ "occult" ],
-    "equipment": { "slot": "Hands", "stats": { "accuracy": 4, "damageBonus": 3 }, "requirements": [ { "skill": "distillation", "level": 10 } ] }
+    "equipment": { "slot": "Hands", "stats": { "accuracy": 4, "damageBonus": 3 }, "requirements": [ { "skill": "occultism", "level": 10 } ] }
   },
   {
     "id": "dreamless_draught",
@@ -265,7 +265,7 @@
     "examine": "Edda's mother tied it round your wrist and said it would keep the bad nights off. It smells faintly of lavender.",
     "value": 40,
     "color": "#b7a3d6",
-    "equipment": { "slot": "Neck", "stats": { "maxBreath": 40, "ward": 1 } }
+    "equipment": { "slot": "Neck", "stats": { "devotionBonus": 5, "ward": 1 } }
   },
   {
     "id": "rat_pelt",

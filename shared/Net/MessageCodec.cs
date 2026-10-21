@@ -43,7 +43,7 @@ namespace Rth.Shared.Net
                     MessageType.Logout => new LogoutMessage(),
                     MessageType.Attack => AttackMessage.Read(r),
                     MessageType.UseAbility => UseAbilityMessage.Read(r),
-                    MessageType.SetDeflect => SetDeflectMessage.Read(r),
+                    MessageType.SetHymn => SetHymnMessage.Read(r),
                     MessageType.ItemAction => ItemActionMessage.Read(r),
                     MessageType.MoveItem => MoveItemMessage.Read(r),
                     MessageType.Pickup => PickupMessage.Read(r),

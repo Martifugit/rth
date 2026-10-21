@@ -20,7 +20,6 @@ namespace Rth.Server.Game
                 player.Deaths++;
                 player.QueuedAbility = null;
                 player.StalledAbility = null;
-                player.Deflect = CombatStyle.None;
                 player.RespawnAtTick = World.CurrentTick + (uint)World.Rules.RespawnDelayTicks;
                 World.Tell(player, TextKind.Info, "Your humours come apart.");
                 World.Tell(player, TextKind.Assayer, AssayerRemark(player));

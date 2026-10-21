@@ -11,7 +11,7 @@ namespace Rth.Shared.Net
     public static class Protocol
     {
         /// <summary>Bump whenever a message layout changes, so mismatched builds are refused at login.</summary>
-        public const int Version = 11;
+        public const int Version = 12;
         public const int DefaultPort = 43600;
         /// <summary>Sanity limits on a single frame's length, in bytes.</summary>
         public const int MaxClientFrame = 4 * 1024;
@@ -26,7 +26,7 @@ namespace Rth.Shared.Net
         Logout = 3,
         Attack = 4,
         UseAbility = 5,
-        SetDeflect = 6,
+        SetHymn = 6,
         ItemAction = 7,
         MoveItem = 8,
         Pickup = 9,
@@ -131,14 +131,21 @@ namespace Rth.Shared.Net
         internal static UseAbilityMessage Read(BinaryReader r) => new UseAbilityMessage { AbilityId = r.ReadString() };
     }
 
-    /// <summary>Turn on deflection against one style (spending breath), or off with <see cref="CombatStyle.None"/>.</summary>
-    public sealed class SetDeflectMessage : Message
+    /// <summary>Start or stop singing a hymn (Religion's prayers, which drain devotion).</summary>
+    public sealed class SetHymnMessage : Message
     {
-        public CombatStyle Style;
+        public string HymnId = "";
+        public bool On;
 
-        public override MessageType Type => MessageType.SetDeflect;
-        internal override void WriteBody(BinaryWriter w) => w.Write((byte)Style);
-        internal static SetDeflectMessage Read(BinaryReader r) => new SetDeflectMessage { Style = (CombatStyle)r.ReadByte() };
+        public override MessageType Type => MessageType.SetHymn;
+
+        internal override void WriteBody(BinaryWriter w)
+        {
+            w.Write(HymnId);
+            w.Write(On);
+        }
+
+        internal static SetHymnMessage Read(BinaryReader r) => new SetHymnMessage { HymnId = r.ReadString(), On = r.ReadBoolean() };
     }
 
     // ---------------------------------------------------------------- server to client
@@ -410,9 +417,10 @@ namespace Rth.Shared.Net
         public int MaxBlood;
         public int Phlegm;
         public int Bile;
-        public int Breath;
-        public int MaxBreath;
-        public CombatStyle Deflect;
+        public int Devotion;
+        public int MaxDevotion;
+        /// <summary>The hymns being sung.</summary>
+        public List<string> Hymns = new List<string>();
         public bool InCombat;
         /// <summary>The entity being fought, or 0.</summary>
         public int TargetId;
@@ -432,9 +440,10 @@ namespace Rth.Shared.Net
             w.Write(MaxBlood);
             w.Write(Phlegm);
             w.Write(Bile);
-            w.Write(Breath);
-            w.Write(MaxBreath);
-            w.Write((byte)Deflect);
+            w.Write(Devotion);
+            w.Write(MaxDevotion);
+            w.Write((byte)Hymns.Count);
+            foreach (string hymn in Hymns) w.Write(hymn);
             w.Write(InCombat);
             w.Write(TargetId);
             w.Write(GlobalCooldownReadyTick);
@@ -464,16 +473,17 @@ namespace Rth.Shared.Net
                 MaxBlood = r.ReadInt32(),
                 Phlegm = r.ReadInt32(),
                 Bile = r.ReadInt32(),
-                Breath = r.ReadInt32(),
-                MaxBreath = r.ReadInt32(),
-                Deflect = (CombatStyle)r.ReadByte(),
-                InCombat = r.ReadBoolean(),
-                TargetId = r.ReadInt32(),
-                GlobalCooldownReadyTick = r.ReadUInt32(),
-                QueuedAbility = r.ReadString(),
-                StalledAbility = r.ReadString(),
+                Devotion = r.ReadInt32(),
+                MaxDevotion = r.ReadInt32(),
             };
             int count = r.ReadByte();
+            for (int i = 0; i < count; i++) m.Hymns.Add(r.ReadString());
+            m.InCombat = r.ReadBoolean();
+            m.TargetId = r.ReadInt32();
+            m.GlobalCooldownReadyTick = r.ReadUInt32();
+            m.QueuedAbility = r.ReadString();
+            m.StalledAbility = r.ReadString();
+            count = r.ReadByte();
             for (int i = 0; i < count; i++) m.Cooldowns.Add(new CooldownState { AbilityId = r.ReadString(), ReadyTick = r.ReadUInt32() });
             count = r.ReadByte();
             for (int i = 0; i < count; i++) m.Statuses.Add(new StatusState { Id = r.ReadString(), Magnitude = r.ReadInt32(), EndTick = r.ReadUInt32() });
@@ -501,6 +511,8 @@ namespace Rth.Shared.Net
         public List<RecipeInfo> Recipes = new List<RecipeInfo>();
         public List<Rth.Shared.Progress.AchievementDef> Achievements = new List<Rth.Shared.Progress.AchievementDef>();
         public List<StatusDef> Statuses = new List<StatusDef>();
+        public List<Rth.Shared.Religion.HymnDef> Hymns = new List<Rth.Shared.Religion.HymnDef>();
+        public CombatLevelDef CombatLevel = new CombatLevelDef();
     }
 
     /// <summary>

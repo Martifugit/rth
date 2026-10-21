@@ -18,7 +18,6 @@ namespace Rth.Server.Persistence
 
         // Added in version 2. Missing (older saves) means full.
         public int? Blood;
-        public int? Breath;
         public int Bile;
         /// <summary>The Assayer keeps count.</summary>
         public int Deaths;

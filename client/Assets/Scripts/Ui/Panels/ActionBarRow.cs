@@ -9,8 +9,8 @@ namespace Rth.Client.Ui.Panels
 {
     /// <summary>
     /// One row of 14 action bar slots, shared by the main and secondary bars. Shows each slot's
-    /// ability, focus or item, its key, cooldown and whether it can be used. Click to use; drag an
-    /// ability from the book, a focus from the focuses tab or an item from the pack onto a slot to
+    /// ability, hymn or item, its key, cooldown and whether it can be used. Click to use; drag an
+    /// ability from the book, a hymn from the religion tab or an item from the pack onto a slot to
     /// place it; drag between slots to swap; drag a slot off the bars to clear it, or right-click
     /// it. While the bars are locked none of that dragging works and slots show no tooltips.
     /// </summary>
@@ -88,7 +88,7 @@ namespace Rth.Client.Ui.Panels
         }
 
         private static bool Accepts(object data) =>
-            data is AbilityDrag || data is FocusDrag || data is BarSlotDrag || (data is ItemDrag item && item.From == ContainerKind.Inventory);
+            data is AbilityDrag || data is HymnDrag || data is BarSlotDrag || (data is ItemDrag item && item.From == ContainerKind.Inventory);
 
         private void Drop(int index, object data)
         {
@@ -99,8 +99,8 @@ namespace Rth.Client.Ui.Panels
                 case AbilityDrag a:
                     bars.Set(_bar, index, ActionBars.Ability(a.AbilityId));
                     break;
-                case FocusDrag f:
-                    bars.Set(_bar, index, ActionBars.Focus(f.FocusId));
+                case HymnDrag h:
+                    bars.Set(_bar, index, ActionBars.Hymn(h.HymnId));
                     break;
                 case ItemDrag i:
                     bars.Set(_bar, index, ActionBars.Item(i.ItemId));
@@ -118,10 +118,10 @@ namespace Rth.Client.Ui.Panels
                 AbilityDef def = Session.Ability(ability);
                 return (IconLibrary.ForAbility(def), IconLibrary.AbilityTint(def));
             }
-            if (ActionBars.IsFocus(value, out string focus))
+            if (ActionBars.IsHymn(value, out string hymn))
             {
-                Focuses.Focus f = Focuses.Get(focus);
-                return (f == null ? null : IconLibrary.Get(f.Icon), Focuses.Tint);
+                Rth.Shared.Religion.HymnDef h = Hymns.Get(Session, hymn);
+                return (h == null ? null : IconLibrary.Get(h.Icon), Hymns.Tint);
             }
             if (ActionBars.IsItem(value, out string item))
             {
@@ -138,17 +138,17 @@ namespace Rth.Client.Ui.Panels
                 AbilityDef a = Session.Ability(ability);
                 return a == null ? null : GameText.Describe(a, Session.TickSeconds, Session.AbilityProblem(a));
             }
-            if (ActionBars.IsFocus(value, out string focus))
+            if (ActionBars.IsHymn(value, out string hymn))
             {
-                Focuses.Focus f = Focuses.Get(focus);
-                return f == null ? null : Focuses.Describe(f);
+                Rth.Shared.Religion.HymnDef h = Hymns.Get(Session, hymn);
+                return h == null ? null : Hymns.Describe(Session, h);
             }
             if (ActionBars.IsItem(value, out string item))
             {
                 ItemDef def = Session.Item(item);
                 return def == null ? null : GameText.Describe(def, Session.CountInPack(item));
             }
-            return UiKit.Colour("Empty. Drag an ability, a focus or an item from your pack here.", UiKit.Muted);
+            return UiKit.Colour("Empty. Drag an ability, a hymn or an item from your pack here.", UiKit.Muted);
         }
 
         public void Refresh()
@@ -202,9 +202,11 @@ namespace Rth.Client.Ui.Panels
                         total = Mathf.Max(ability.CooldownTicks, gcd);
                     }
                 }
-                else if (ActionBars.IsFocus(value, out string focus))
+                else if (ActionBars.IsHymn(value, out string hymn))
                 {
-                    held = Focuses.Get(focus)?.IsHeld(state) ?? false;
+                    held = Hymns.IsSung(state, hymn);
+                    Rth.Shared.Religion.HymnDef h = Hymns.Get(Session, hymn);
+                    usable = h != null && Hymns.Problem(Session, h) == null;
                 }
                 else if (ActionBars.IsItem(value, out string item))
                 {

@@ -650,12 +650,15 @@ namespace Rth.Client
             _client.Send(new UseAbilityMessage { AbilityId = abilityId });
         }
 
-        public void ToggleDeflect(CombatStyle style)
+        /// <summary>Starts or stops singing a hymn; the server decides whether it can be sung.</summary>
+        public void SetHymn(string hymnId, bool on)
         {
             if (_state != State.InGame) return;
-            bool on = PlayerState != null && PlayerState.Deflect == style;
-            _client.Send(new SetDeflectMessage { Style = on ? CombatStyle.None : style });
+            _client.Send(new SetHymnMessage { HymnId = hymnId, On = on });
         }
+
+        /// <summary>The player's combat level, by the content's formula.</summary>
+        public int CombatLevel => Content == null ? 1 : Content.CombatLevel.Of(Level);
 
         public void ToggleRun() => Running = !Running;
 

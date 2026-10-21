@@ -70,6 +70,30 @@ namespace Rth.Shared.Skills
         public int MaxFor(SkillDef? skill) => skill != null && skill.MaxLevel > 0 ? skill.MaxLevel : MaxLevel;
     }
 
+    /// <summary>
+    /// How combat level comes from skill levels: the best offence skill times its weight, plus the
+    /// other skills times theirs, over a divisor. With the defaults in skills.json it runs from 1
+    /// (everything at 1) to 100 (everything at 100).
+    /// </summary>
+    public sealed class CombatLevelDef
+    {
+        /// <summary>Skills of which only the highest counts (melee, ranged, occultism).</summary>
+        public List<string> Offence = new List<string>();
+        public double OffenceWeight = 1.3;
+        /// <summary>Other skills that count, with their weights (defence 1, religion 0.5).</summary>
+        public Dictionary<string, double> Others = new Dictionary<string, double>();
+        public double Divisor = 2.8;
+
+        public int Of(Func<string, int> levelOf)
+        {
+            int best = 1;
+            foreach (string skill in Offence) best = Math.Max(best, levelOf(skill));
+            double total = best * OffenceWeight;
+            foreach (KeyValuePair<string, double> other in Others) total += levelOf(other.Key) * other.Value;
+            return Math.Max(1, (int)Math.Floor(total / Math.Max(0.01, Divisor) + 1e-9));
+        }
+    }
+
     /// <summary>"Needs level N in skill S": used by abilities, equipment, recipes, and later quests and areas.</summary>
     public sealed class SkillRequirement
     {

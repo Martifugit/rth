@@ -86,7 +86,9 @@ namespace Rth.Shared.Items
     {
         public const string HealBlood = "healBlood";
         public const string HealBloodPercent = "healBloodPercent";
-        public const string RestoreBreath = "restoreBreath";
+        public const string RestoreDevotion = "restoreDevotion";
+        /// <summary>Restores a percentage of max devotion.</summary>
+        public const string RestoreDevotionPercent = "restoreDevotionPercent";
         public const string AddPhlegm = "addPhlegm";
         public const string ShiftBile = "shiftBile";
         public const string SettleBile = "settleBile";

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Rth.Server.Content;
 using Rth.Server.Persistence;
+using Rth.Shared.Combat;
 using Rth.Shared.Net;
 using Rth.Shared.Skills;
 
@@ -32,7 +33,9 @@ namespace Rth.Server.Game
     /// <summary>
     /// Skills, XP and levels for every skill defined in skills.json. Other systems award XP with
     /// <see cref="AddXp"/> and check levels with <see cref="Level"/>; combat XP comes from the
-    /// <see cref="DamageDealt"/> event. Levels can add stats (<c>statsPerLevel</c>).
+    /// <see cref="DamageDealt"/> event, split with Defence by the player's Train defence setting.
+    /// Levels can add stats (<c>statsPerLevel</c>). A retired skill's XP moves into the skill that
+    /// replaced it when a save is loaded.
     /// </summary>
     public sealed class SkillSystem : GameSystem, IStatContributor
     {
@@ -73,8 +76,15 @@ namespace Rth.Server.Game
         private void OnDamage(DamageDealt e)
         {
             if (!(e.Source is Player player) || e.Target == player) return;
+            string? defence = World.Content.DefenceSkill;
+            double share = defence == null ? 0 : CombatOptions.DefenceShare(World.Find<CombatSystem>()?.Options(player).TrainDefence ?? TrainDefence.Balanced);
             foreach (DamageXpRule rule in World.Content.DamageXp)
-                if (rule.Style == e.Style) AddXp(player, rule.Skill, e.Amount * rule.XpPerDamage);
+            {
+                if (rule.Style != e.Style) continue;
+                double xp = e.Amount * rule.XpPerDamage;
+                AddXp(player, rule.Skill, xp * (1 - share));
+                if (defence != null) AddXp(player, defence, xp * share);
+            }
         }
 
         public void Contribute(Player player, StatBlock stats)
@@ -93,6 +103,12 @@ namespace Rth.Server.Game
             Dictionary<string, double>? saved = save?.Section<Dictionary<string, double>>(SaveSection);
             if (saved != null)
                 foreach (KeyValuePair<string, double> s in saved) skills.Xp[s.Key] = s.Value; // unknown skills are kept
+            foreach (KeyValuePair<string, string> retired in World.Content.RetiredSkills)
+            {
+                if (!skills.Xp.TryGetValue(retired.Key, out double xp)) continue;
+                skills.Xp.Remove(retired.Key);
+                skills.Xp[retired.Value] = Math.Min(XpCurve.MaxXp, Xp(player, retired.Value) + xp);
+            }
             skills.Dirty = true;
         }
 

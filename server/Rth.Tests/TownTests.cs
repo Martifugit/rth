@@ -498,6 +498,6 @@ public class TownTests
         fx.Ticks(15);
         Assert.Equal(tinctureBefore + 6, Count(fx, "melancholic_tincture")); // 3 per gall
         Assert.Equal(0, Count(fx, "rat_gall"));
-        Assert.True(fx.World.Get<SkillSystem>().Xp(alice, "distillation") >= 20);
+        Assert.True(fx.World.Get<SkillSystem>().Xp(alice, "occultism") >= 20);
     }
 }

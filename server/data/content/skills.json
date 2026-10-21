@@ -2,11 +2,37 @@
   "xpCurve": { "maxLevel": 100 },
   "skills": [
     {
+      "id": "melee",
+      "name": "Melee",
+      "icon": "melee",
+      "description": "Close fighting with blades and every other weapon in reach: attack and strength in one. Trained by dealing melee damage."
+    },
+    {
+      "id": "ranged",
+      "name": "Ranged",
+      "icon": "ranged",
+      "description": "The Rationalists' patient art of fighting from a distance. Trained by dealing ranged damage."
+    },
+    {
       "id": "occultism",
       "name": "Occultism",
       "icon": "eye",
-      "description": "Working the humours as weapons. Trained by dealing occult damage.",
+      "description": "Working the humours as weapons, and the house rites that make what its spells burn. Trained by dealing occult damage and by performing rites.",
       "statsPerLevel": { "abilityDamage": 2 }
+    },
+    {
+      "id": "defence",
+      "name": "Defence",
+      "icon": "defence",
+      "description": "Taking a blow and staying up: armour, and more blood to lose. Trained by fighting in any style (see Train defence in the combat settings).",
+      "statsPerLevel": { "maxBlood": 90 }
+    },
+    {
+      "id": "religion",
+      "name": "Religion",
+      "icon": "religion",
+      "description": "The faith of Blood: Tithe's hymns for every style, and Cruor's verses for melee. Each level adds 10 devotion.",
+      "statsPerLevel": { "maxDevotion": 10 }
     },
     {
       "id": "butchering",
@@ -15,13 +41,77 @@
       "description": "Taking carcasses apart at the right station with the right tool. Higher levels get more out of each one."
     },
     {
-      "id": "distillation",
-      "name": "Distillation",
-      "icon": "alembic",
-      "description": "Rendering galls and glands into the salts and tinctures occult workings burn. The Synod calls it a crime."
+      "id": "mining",
+      "name": "Mining",
+      "icon": "mining",
+      "description": "Ore, salt, stone and the humour gems."
+    },
+    {
+      "id": "woodcutting",
+      "name": "Woodcutting",
+      "icon": "woodcutting",
+      "description": "Logs for bows, bolts, fires and casings, and charcoal for the forge."
+    },
+    {
+      "id": "fishing",
+      "name": "Fishing",
+      "icon": "fishing",
+      "description": "Fish for the pot, and brine for the rites."
+    },
+    {
+      "id": "foraging",
+      "name": "Foraging",
+      "icon": "foraging",
+      "description": "Herbs, fibres, fungi and fruit, from the roadsides to the deep fens."
+    },
+    {
+      "id": "dreaming",
+      "name": "Dreaming",
+      "icon": "dreaming",
+      "description": "Pulling fragments out of the memories hung in the Veilwood."
+    },
+    {
+      "id": "smithing",
+      "name": "Smithing",
+      "icon": "smithing",
+      "description": "Bars into melee weapons, plate and the tools of gathering."
+    },
+    {
+      "id": "artifice",
+      "name": "Artifice",
+      "icon": "artifice",
+      "description": "The Rationalist craft: ranged weapons, ammunition and fishing gear."
+    },
+    {
+      "id": "tailoring",
+      "name": "Tailoring",
+      "icon": "tailoring",
+      "description": "Hides into leathers and fibre into robes."
+    },
+    {
+      "id": "cooking",
+      "name": "Cooking",
+      "icon": "cooking",
+      "description": "Fish and meat into food, which is how blood comes back."
+    },
+    {
+      "id": "medicine",
+      "name": "Medicine",
+      "icon": "medicine",
+      "description": "Herbs and extracts into potions: phlegm, bile, boosts and cures."
     }
   ],
   "damageXp": [
+    { "style": "Melee", "skill": "melee", "xpPerDamage": 0.25 },
+    { "style": "Ranged", "skill": "ranged", "xpPerDamage": 0.25 },
     { "style": "Occult", "skill": "occultism", "xpPerDamage": 0.25 }
-  ]
+  ],
+  "defenceSkill": "defence",
+  "combatLevel": {
+    "offence": [ "melee", "ranged", "occultism" ],
+    "offenceWeight": 1.3,
+    "others": { "defence": 1, "religion": 0.5 },
+    "divisor": 2.8
+  },
+  "retired": { "distillation": "occultism" }
 }

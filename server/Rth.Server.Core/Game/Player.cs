@@ -29,9 +29,9 @@ namespace Rth.Server.Game
 
         public int Phlegm { get; set; }
         public int Bile { get; set; }
-        public int Breath { get; set; }
-        public int MaxBreath { get; set; }
-        public CombatStyle Deflect { get; set; }
+        /// <summary>What hymns drain (Religion). Fractional, since drains are fractions of a point a tick.</summary>
+        public double Devotion { get; set; }
+        public int MaxDevotion { get; set; }
 
         /// <summary>Ability id to fire as soon as the global cooldown allows, or null.</summary>
         public string? QueuedAbility { get; set; }

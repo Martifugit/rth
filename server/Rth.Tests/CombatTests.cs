@@ -206,11 +206,13 @@ public class CombatTests
         alice.Effects.Clear();
         fx.World.RecalculateStats(alice);
 
-        alice.Deflect = CombatStyle.Melee;
+        ReligionSystem religion = fx.World.Get<ReligionSystem>();
+        religion.SetHymn(alice, "deflect_melee", true);
         Assert.Equal(50, Take(100));
-        alice.Deflect = CombatStyle.Ranged; // wrong style: no help
+        religion.SetHymn(alice, "deflect_ranged", true); // wrong style: no help, and it replaces the melee one
+        Assert.Equal(new[] { "deflect_ranged" }, religion.Singing(alice));
         Assert.Equal(100, Take(100));
-        alice.Deflect = CombatStyle.None;
+        religion.Silence(alice);
 
         alice.Bile = -100; // warding
         Assert.Equal(100 - rules.WardingMaxPercent, Take(100));
@@ -275,19 +277,21 @@ public class CombatTests
     }
 
     [Fact]
-    public void DeflectionDrainsBreathAndDropsWhenEmpty()
+    public void HymnsDrainDevotionAndFallSilentWhenItRunsOut()
     {
         var fx = Arena();
         FakeConnection client = fx.Login("Alice");
         Player alice = fx.Player("Alice");
-        alice.Breath = 5;
-        client.FromClient(new SetDeflectMessage { Style = CombatStyle.Occult });
+        Assert.Equal(100, alice.Devotion); // a new character starts full
+        alice.Devotion = 5;
+        client.FromClient(new SetHymnMessage { HymnId = "deflect_melee", On = true });
         fx.Ticks(5);
-        Assert.Equal(0, alice.Breath);
-        Assert.Equal(CombatStyle.None, alice.Deflect);
-        Assert.Contains(client.Texts, t => t.Contains("out of breath"));
-        fx.Ticks(10);
-        Assert.Equal(10, alice.Breath); // regenerates out of combat
+        Assert.Equal(0, alice.Devotion);
+        Assert.Empty(fx.World.Get<ReligionSystem>().Singing(alice));
+        Assert.Contains(client.Texts, t => t.Contains("devotion is spent"));
+        Assert.Equal(0, alice.Stats.Get(StatIds.DeflectMelee));
+        fx.Ticks(20);
+        Assert.Equal(0, alice.Devotion); // devotion never comes back by itself
     }
 
     [Fact]
@@ -436,14 +440,14 @@ public class CombatTests
         alice.Deaths = 3;
         alice.Blood = 420;
         alice.Bile = -35;
-        alice.Breath = 100;
+        alice.Devotion = 42;
         alice.LastCombatTick = fx.World.CurrentTick + 1; // in combat, so nothing regenerates on the way out
         client.FromClient(new LogoutMessage());
         fx.Ticks(1);
 
         fx.Login("Alice");
         Player again = fx.Player("Alice");
-        Assert.Equal((3, -35, 100), (again.Deaths, again.Bile, again.Breath));
+        Assert.Equal((3, -35, 42.0), (again.Deaths, again.Bile, again.Devotion));
         Assert.True(again.Blood >= 420);
     }
 
@@ -537,7 +541,7 @@ public class CombatTests
             Assert.InRange(alice.Phlegm, 0, 100);
             Assert.InRange(alice.Bile, -100, 100);
             Assert.InRange(alice.Blood, 0, alice.MaxBlood);
-            Assert.InRange(alice.Breath, 0, alice.MaxBreath);
+            Assert.InRange(alice.Devotion, 0, alice.MaxDevotion);
             foreach (Npc n in fx.World.Npcs) Assert.InRange(n.Blood, 0, n.MaxBlood);
         }
         Assert.True(kills >= 5, "Expected a steady stream of kills, got " + kills);

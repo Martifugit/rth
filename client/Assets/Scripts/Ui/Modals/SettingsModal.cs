@@ -27,6 +27,7 @@ namespace Rth.Client.Ui.Modals
         private UiKit.Check _barLock;
         private UiKit.Check _queueing;
         private readonly Dictionary<RevolutionMode, UiKit.Check> _revolution = new Dictionary<RevolutionMode, UiKit.Check>();
+        private readonly Dictionary<TrainDefence, UiKit.Check> _trainDefence = new Dictionary<TrainDefence, UiKit.Check>();
         private Label _scale;
         private Label _who;
 
@@ -76,6 +77,14 @@ namespace Rth.Client.Ui.Modals
             })
                 _revolution[mode] = new UiKit.Check(combat, label, () => Session.SetClientState(CombatOptions.RevolutionKey, CombatOptions.RevolutionValue(mode)));
             UiKit.Text(combat, "When nothing is pressed, the leftmost ready ability on the main bar fires after each global cooldown.", "muted", "small");
+            UiKit.Text(combat, "Train defence: where combat XP goes", "value").style.marginTop = 6f;
+            foreach ((TrainDefence mode, string label) in new[]
+            {
+                (TrainDefence.Offence, "Offence: all to the style you fight with"),
+                (TrainDefence.Balanced, "Balanced: half to the style, half to Defence"),
+                (TrainDefence.Defence, "Defence: all to Defence"),
+            })
+                _trainDefence[mode] = new UiKit.Check(combat, label, () => Session.SetClientState(CombatOptions.TrainDefenceKey, CombatOptions.TrainDefenceValue(mode)));
 
             UiKit.Heading(scroll, "Account").style.marginTop = 12f;
             VisualElement account = UiKit.El(scroll, "card", "row");
@@ -96,6 +105,7 @@ namespace Rth.Client.Ui.Modals
             CombatOptions options = Options();
             _queueing.Set(options.Queueing);
             foreach (KeyValuePair<RevolutionMode, UiKit.Check> r in _revolution) r.Value.Set(options.Revolution == r.Key);
+            foreach (KeyValuePair<TrainDefence, UiKit.Check> t in _trainDefence) t.Value.Set(options.TrainDefence == t.Key);
             _scale.text = Mathf.RoundToInt(Ui.Scale * 100f) + "%";
             EntityView local = Ui.world.Local;
             _who.text = "Logged in as " + UiKit.Colour(Session.PlayerName, UiKit.Value) + (local != null ? UiKit.Colour("   at " + local.Tile, UiKit.Muted) : "");
@@ -105,6 +115,7 @@ namespace Rth.Client.Ui.Modals
         {
             Queueing = CombatOptions.QueueingFrom(Session.ClientState.TryGetValue(CombatOptions.QueueingKey, out string q) ? q : null),
             Revolution = CombatOptions.RevolutionFrom(Session.ClientState.TryGetValue(CombatOptions.RevolutionKey, out string r) ? r : null),
+            TrainDefence = CombatOptions.TrainDefenceFrom(Session.ClientState.TryGetValue(CombatOptions.TrainDefenceKey, out string t) ? t : null),
         };
     }
 
@@ -124,13 +135,13 @@ namespace Rth.Client.Ui.Modals
                 ("Right-click", "Every option for what's under the pointer"),
                 ("R", "Run on or off"),
                 ("1 - 0, -, =", "Main action bar"),
-                ("Drag onto a bar", "Abilities, focuses and items; drag a slot off to clear it"),
+                ("Drag onto a bar", "Abilities, hymns and items; drag a slot off to clear it"),
                 ("Arrow keys, middle-drag", "Turn the camera"),
                 ("Mouse wheel", "Zoom (over the world)"),
             });
             Section(scroll, "Windows", new[]
             {
-                ("B / E / A / F / K / Q", "Pack, worn, abilities, focuses, skills, quests"),
+                ("B / E / A / F / K / Q", "Pack, worn, abilities, religion, skills, quests"),
                 ("J / G / M", "Journal, guide, world map"),
                 ("Enter", "Type in chat; Enter again sends"),
                 ("Space, 1 - 9", "Continue a conversation, choose an answer"),

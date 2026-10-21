@@ -272,7 +272,7 @@ public class AbilityFlowTests
         Player alice = fx.Player("Alice");
         Set(client, CombatOptions.RevolutionKey, "builders");
         // Items and focuses on the bar are skipped; the spender is skipped in builders mode.
-        Set(client, CombatOptions.BarsKey, "[[\"i:bread\",\"f:deflect_melee\",\"a:flare\",\"a:draught\",\"a:spark\"],[],[]]");
+        Set(client, CombatOptions.BarsKey, "[[\"i:bread\",\"h:bulwark\",\"a:flare\",\"a:draught\",\"a:spark\"],[],[]]");
         alice.Phlegm = 60;
         alice.Bile = 40;
         client.FromClient(new AttackMessage { TargetId = fx.Npc("dummy").Id });

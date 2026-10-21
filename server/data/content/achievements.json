@@ -74,7 +74,7 @@
     "area": "Tolling",
     "tier": "Medium",
     "objective": { "kind": "recipe", "target": "distil_choleric_salts" },
-    "reward": { "xp": [ { "skill": "distillation", "amount": 60 } ] }
+    "reward": { "xp": [ { "skill": "occultism", "amount": 60 } ] }
   },
   {
     "id": "tolling_dreamless",

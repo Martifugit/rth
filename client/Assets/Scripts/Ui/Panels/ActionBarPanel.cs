@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 namespace Rth.Client.Ui.Panels
 {
     /// <summary>
-    /// The main action bar, a fixed size: blood, phlegm and breath as three equal gauges side by
+    /// The main action bar, a fixed size: blood, phlegm and devotion as three equal gauges side by
     /// side; the bile axis between its two poles with the value beside it; then 14 slots on keys
     /// 1 to 0, - and =. Secondary bars (<see cref="SecondaryBarPanel"/>) are just slots.
     /// </summary>
@@ -21,7 +21,7 @@ namespace Rth.Client.Ui.Panels
 
         private UiKit.Gauge _blood;
         private UiKit.Gauge _phlegm;
-        private UiKit.Gauge _breath;
+        private UiKit.Gauge _devotion;
         private BileAxis _bile;
         private ActionBarRow _slots;
 
@@ -34,11 +34,11 @@ namespace Rth.Client.Ui.Panels
             VisualElement gauges = UiKit.El(frame, "row");
             _blood = new UiKit.Gauge(gauges, "blood", UiKit.BloodColour);
             _phlegm = new UiKit.Gauge(gauges, "phlegm", UiKit.PhlegmColour);
-            _breath = new UiKit.Gauge(gauges, "breath", UiKit.BreathColour);
-            _breath.Root.style.marginRight = 0f;
+            _devotion = new UiKit.Gauge(gauges, "devotion", UiKit.DevotionColour);
+            _devotion.Root.style.marginRight = 0f;
             UiKit.Tooltip(_blood.Root, () => UiKit.Title("Blood") + "\nYour life. Food restores it.");
             UiKit.Tooltip(_phlegm.Root, () => UiKit.Title("Phlegm") + "\nBuilt by builder abilities, spent by spenders and ultimates. Fades out of combat.");
-            UiKit.Tooltip(_breath.Root, () => UiKit.Title("Breath") + "\nHeld focuses spend it, such as deflection (F). Recovers out of combat.");
+            UiKit.Tooltip(_devotion.Root, () => UiKit.Title("Devotion") + "\nHymns drain it while you sing them (F). It doesn't come back by itself: pray at an altar.");
 
             _bile = new BileAxis(frame);
             _bile.Root.style.marginTop = 5f;
@@ -56,8 +56,9 @@ namespace Rth.Client.Ui.Panels
 
             _blood.Set(state.Blood / (float)Mathf.Max(1, state.MaxBlood), state.Blood.ToString("N0") + " / " + state.MaxBlood.ToString("N0"));
             _phlegm.Set(state.Phlegm / (float)Mathf.Max(1, content.MaxPhlegm), state.Phlegm + "%");
-            _breath.Set(state.Breath / (float)Mathf.Max(1, state.MaxBreath), state.Breath + " / " + state.MaxBreath + (state.Deflect != CombatStyle.None ? "  deflecting" : ""));
-            _breath.Fill = state.Deflect != CombatStyle.None ? new Color(0.6f, 0.82f, 1f) : UiKit.BreathColour;
+            bool singing = state.Hymns.Count > 0;
+            _devotion.Set(state.Devotion / (float)Mathf.Max(1, state.MaxDevotion), state.Devotion + " / " + state.MaxDevotion + (singing ? "  singing" : ""));
+            _devotion.Fill = singing ? new Color(1f, 0.93f, 0.7f) : UiKit.DevotionColour;
             _bile.Set(state.Bile, content);
             _slots.Refresh();
         }

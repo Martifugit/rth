@@ -3,7 +3,7 @@
     "globalCooldownTicks": 3,
     "playerAbilityDamage": 100,
     "playerMaxBlood": 1000,
-    "playerMaxBreath": 300,
+    "playerMaxDevotion": 10,
     "playerAccuracy": 0.9,
     "maxPhlegm": 100,
 
@@ -17,10 +17,6 @@
     "bileDecayPerTick": 1,
     "phlegmDecayPerTick": 2,
     "bloodRegenPercentPerTick": 0.5,
-    "breathRegenPerTick": 1,
-
-    "breathDrainPerTick": 1,
-    "deflectReductionPercent": 50,
 
     "respawnDelayTicks": 4
   },

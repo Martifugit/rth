@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using Rth.Shared.Combat;
 using Rth.Shared.Items;
 using Rth.Shared.Net;
+using Rth.Shared.Religion;
 using Rth.Shared.Skills;
 using Rth.Shared.World;
 
@@ -139,6 +140,14 @@ namespace Rth.Server.Content
         public XpCurve XpCurve = new XpCurve();
         public List<SkillDef> Skills = new List<SkillDef>();
         public List<DamageXpRule> DamageXp = new List<DamageXpRule>();
+        /// <summary>The skill that takes its share of combat XP (the Train defence setting), or null for none.</summary>
+        public string? DefenceSkill;
+        /// <summary>
+        /// Skills that no longer exist, to the skill their XP moves into when a save is loaded
+        /// (Distillation became part of Occultism).
+        /// </summary>
+        public Dictionary<string, string> Retired = new Dictionary<string, string>();
+        public CombatLevelDef CombatLevel = new CombatLevelDef();
     }
 
     public sealed class ContentException : Exception
@@ -167,6 +176,7 @@ namespace Rth.Server.Content
         public List<QuestDef> Quests = new List<QuestDef>();
         public List<Rth.Shared.Progress.AchievementDef> Achievements = new List<Rth.Shared.Progress.AchievementDef>();
         public List<StatusDef> Statuses = new List<StatusDef>();
+        public HymnsFile Hymns = new HymnsFile();
     }
 
     /// <summary>
@@ -203,6 +213,12 @@ namespace Rth.Server.Content
         public IReadOnlyDictionary<string, QuestDef> Quests { get; private set; } = new Dictionary<string, QuestDef>();
         public IReadOnlyDictionary<string, Rth.Shared.Progress.AchievementDef> Achievements { get; private set; } = new Dictionary<string, Rth.Shared.Progress.AchievementDef>();
         public IReadOnlyDictionary<string, StatusDef> Statuses { get; private set; } = new Dictionary<string, StatusDef>();
+        public IReadOnlyDictionary<string, HymnDef> Hymns { get; private set; } = new Dictionary<string, HymnDef>();
+        /// <summary>The skill hymns need and train, and how much singing trains it.</summary>
+        public HymnsFile HymnSettings { get; private set; } = new HymnsFile();
+        public string? DefenceSkill { get; private set; }
+        public CombatLevelDef CombatLevel { get; private set; } = new CombatLevelDef();
+        public IReadOnlyDictionary<string, string> RetiredSkills { get; private set; } = new Dictionary<string, string>();
 
         public ItemDef? Item(string? id) => id != null && Items.TryGetValue(id, out ItemDef? def) ? def : null;
 
@@ -231,6 +247,7 @@ namespace Rth.Server.Content
                 Quests = ReadJson<List<QuestDef>>(directory, "quests.json"),
                 Achievements = ReadJson<List<Rth.Shared.Progress.AchievementDef>>(directory, "achievements.json"),
                 Statuses = ReadJson<List<StatusDef>>(directory, "statuses.json"),
+                Hymns = ReadJson<HymnsFile>(directory, "hymns.json"),
             });
         }
 
@@ -288,6 +305,15 @@ namespace Rth.Server.Content
             if (curve.MaxLevel < 2 || curve.MaxLevel > 120) problems.Add("XP curve: maxLevel must be 2 to 120.");
             foreach (DamageXpRule rule in parts.Skills.DamageXp)
                 if (!skills.ContainsKey(rule.Skill)) problems.Add("Damage XP rule for " + rule.Style + ": skill '" + rule.Skill + "' doesn't exist.");
+            if (parts.Skills.DefenceSkill != null && !skills.ContainsKey(parts.Skills.DefenceSkill))
+                problems.Add("defenceSkill '" + parts.Skills.DefenceSkill + "' doesn't exist.");
+            foreach (string s in parts.Skills.CombatLevel.Offence.Concat(parts.Skills.CombatLevel.Others.Keys))
+                if (!skills.ContainsKey(s)) problems.Add("combatLevel: skill '" + s + "' doesn't exist.");
+            foreach (KeyValuePair<string, string> retired in parts.Skills.Retired)
+            {
+                if (skills.ContainsKey(retired.Key)) problems.Add("Retired skill '" + retired.Key + "' still exists.");
+                if (!skills.ContainsKey(retired.Value)) problems.Add("Retired skill '" + retired.Key + "' moves into '" + retired.Value + "', which doesn't exist.");
+            }
 
             void CheckRequirements(IEnumerable<SkillRequirement> reqs, string where)
             {
@@ -429,6 +455,19 @@ namespace Rth.Server.Content
             foreach (string id in givenOut)
                 if (!statuses.ContainsKey(id)) problems.Add("Statuses: '" + id + "' is given out by the server but not defined.");
 
+            HymnsFile hymnFile = parts.Hymns ?? new HymnsFile();
+            Dictionary<string, HymnDef> hymns = Index(hymnFile.Hymns, h => h.Id, "hymn", problems);
+            if (!skills.ContainsKey(hymnFile.Skill)) problems.Add("Hymns: skill '" + hymnFile.Skill + "' doesn't exist.");
+            foreach (HymnDef h in hymnFile.Hymns)
+            {
+                string where = "Hymn '" + h.Id + "'";
+                if (string.IsNullOrWhiteSpace(h.Name)) problems.Add(where + ": needs a name.");
+                if (h.Drain < 0) problems.Add(where + ": drain can't be negative.");
+                foreach (string stat in h.Stats.Keys)
+                    if (!StatIds.IsKnown(stat)) problems.Add(where + ": unknown stat '" + stat + "'.");
+                CheckRequirements(h.Requirements, where);
+            }
+
             if (problems.Count > 0) throw new ContentException(string.Join(Environment.NewLine, problems));
 
             AddBankNotes(items);
@@ -456,6 +495,11 @@ namespace Rth.Server.Content
                 Quests = quests,
                 Achievements = achievements,
                 Statuses = statuses,
+                Hymns = hymns,
+                HymnSettings = hymnFile,
+                DefenceSkill = parts.Skills.DefenceSkill,
+                RetiredSkills = parts.Skills.Retired,
+                CombatLevel = parts.Skills.CombatLevel,
             };
         }
 
@@ -488,7 +532,7 @@ namespace Rth.Server.Content
 
         private static readonly HashSet<string> KnownEffectOps = new HashSet<string>
         {
-            EffectOp.HealBlood, EffectOp.HealBloodPercent, EffectOp.RestoreBreath, EffectOp.AddPhlegm,
+            EffectOp.HealBlood, EffectOp.HealBloodPercent, EffectOp.RestoreDevotion, EffectOp.RestoreDevotionPercent, EffectOp.AddPhlegm,
             EffectOp.ShiftBile, EffectOp.SettleBile, EffectOp.ApplyEffect,
         };
 
@@ -622,6 +666,8 @@ namespace Rth.Server.Content
             }).ToList(),
             Achievements = Achievements.Values.ToList(),
             Statuses = Statuses.Values.ToList(),
+            Hymns = Hymns.Values.ToList(),
+            CombatLevel = CombatLevel,
             BileLimit = Rules.BileLimit,
             MaxPhlegm = Rules.MaxPhlegm,
             GlobalCooldownTicks = Rules.GlobalCooldownTicks,

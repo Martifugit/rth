@@ -12,7 +12,7 @@ namespace Rth.Server.Game
 {
     /// <summary>
     /// Fighting: attack and ability intents, ranges and chasing, damage and healing, death, and the
-    /// per-tick humours (phlegm, bile, breath, regeneration). Deaths are published as
+    /// per-tick humours (phlegm, bile, regeneration). Deaths are published as
     /// <see cref="EntityDied"/>; what happens next (respawns, loot, the Assayer) belongs to whoever
     /// listens.
     /// </summary>
@@ -29,7 +29,6 @@ namespace Rth.Server.Game
         {
             World.OnMessage<AttackMessage>((p, m) => HandleAttack(p, m.TargetId));
             World.OnMessage<UseAbilityMessage>((p, m) => HandleUseAbility(p, m.AbilityId));
-            World.OnMessage<SetDeflectMessage>((p, m) => HandleDeflect(p, m.Style));
         }
 
         // ------------------------------------------------------------------ lifecycle and saving
@@ -38,7 +37,6 @@ namespace Rth.Server.Game
         {
             World.RecalculateStats(player);
             player.Blood = Clamp(save?.Blood ?? player.MaxBlood, 1, player.MaxBlood);
-            player.Breath = Clamp(save?.Breath ?? player.MaxBreath, 0, player.MaxBreath);
             player.Bile = Rules.ClampBile(save?.Bile ?? 0);
             player.Deaths = save?.Deaths ?? 0;
         }
@@ -46,7 +44,6 @@ namespace Rth.Server.Game
         public override void OnSave(Player player, PlayerSave save)
         {
             save.Blood = player.IsDead ? player.MaxBlood : player.Blood;
-            save.Breath = player.Breath;
             save.Bile = player.IsDead ? 0 : player.Bile;
             save.Deaths = player.Deaths;
         }
@@ -56,7 +53,7 @@ namespace Rth.Server.Game
         {
             stats.Add(StatIds.AbilityDamage, Rules.PlayerAbilityDamage);
             stats.Add(StatIds.MaxBlood, Rules.PlayerMaxBlood);
-            stats.Add(StatIds.MaxBreath, Rules.PlayerMaxBreath);
+            stats.Add(StatIds.MaxDevotion, Rules.PlayerMaxDevotion);
             foreach (ActiveEffect e in player.Effects)
             {
                 if (e.Type == EffectType.Ward) stats.Add(StatIds.Ward, e.Magnitude);
@@ -172,6 +169,7 @@ namespace Rth.Server.Game
             {
                 Queueing = CombatOptions.QueueingFrom(state?.Get(player, CombatOptions.QueueingKey)),
                 Revolution = CombatOptions.RevolutionFrom(state?.Get(player, CombatOptions.RevolutionKey)),
+                TrainDefence = CombatOptions.TrainDefenceFrom(state?.Get(player, CombatOptions.TrainDefenceKey)),
             };
         }
 
@@ -218,16 +216,6 @@ namespace Rth.Server.Game
             return ability.CheckRequirements(player.Phlegm, player.Bile,
                 skills == null ? (Func<string, int>?)null : s => skills.Level(player, s), skills == null ? null : (Func<string, string>)skills.Name,
                 items == null ? (Func<string, int>?)null : i => items.CountOf(player, i), i => World.Content.Item(i)?.Name ?? i);
-        }
-
-        private void HandleDeflect(Player player, CombatStyle style)
-        {
-            if (style != CombatStyle.None && player.Breath <= 0)
-            {
-                World.Tell(player, TextKind.Warning, "You have no breath left to deflect with.");
-                return;
-            }
-            player.Deflect = style;
         }
 
         // ------------------------------------------------------------------ engaging
@@ -421,13 +409,14 @@ namespace Rth.Server.Game
             if (ability.DamageMax > 0)
             {
                 double evasion = target is Npc npc ? npc.Def.Evasion : 0;
-                double accuracy = Rules.PlayerAccuracy + player.Stats.Get(StatIds.Accuracy) / 100.0;
+                double accuracy = Rules.PlayerAccuracy + (player.Stats.Get(StatIds.Accuracy) + StyleStat(player, StatIds.AccuracyFor(ability.Style))) / 100.0;
                 double hitChance = Math.Max(0.05, Math.Min(1.0, accuracy - evasion));
                 if (World.Random.NextDouble() < hitChance)
                 {
                     int percent = World.Random.Next(ability.DamageMin, ability.DamageMax + 1);
                     double damage = player.Stats.Get(StatIds.AbilityDamage) * percent / 100.0;
-                    damage *= Math.Max(0, 1 + (Rules.BileDamageDealtPercent(player.Bile) + player.Stats.Get(StatIds.DamageBonus)) / 100.0);
+                    int bonus = player.Stats.Get(StatIds.DamageBonus) + StyleStat(player, StatIds.DamageFor(ability.Style));
+                    damage *= Math.Max(0, 1 + (Rules.BileDamageDealtPercent(player.Bile) + bonus) / 100.0);
                     dealt = Damage(target, (int)Math.Round(damage), player, HitKind.Normal, ability.Style);
                 }
                 else
@@ -454,7 +443,7 @@ namespace Rth.Server.Game
             ShiftBile(player, ability.BileShift);
             if (ability.BileTowardZero > 0) SettleBile(player, ability.BileTowardZero);
 
-            int heal = dealt * ability.HealPercentOfDamage / 100 + player.MaxBlood * ability.HealPercentOfMaxBlood / 100;
+            int heal = dealt * (ability.HealPercentOfDamage + player.Stats.Get(StatIds.Lifesteal)) / 100 + player.MaxBlood * ability.HealPercentOfMaxBlood / 100;
             if (heal > 0) Heal(player, heal);
 
             if (ability.Effect != EffectType.None && ability.EffectTicks > 0)
@@ -475,8 +464,7 @@ namespace Rth.Server.Game
             else if (player.Bile < 0) player.Bile = Math.Min(0, player.Bile + amount);
         }
 
-        public void RestoreBreath(Player player, int amount) =>
-            player.Breath = Clamp(player.Breath + amount, 0, player.MaxBreath);
+        private static int StyleStat(Player player, string? stat) => stat == null ? 0 : player.Stats.Get(stat);
 
         public void ApplyEffect(Entity entity, EffectType type, int magnitude, int ticks)
         {
@@ -497,9 +485,10 @@ namespace Rth.Server.Game
                 // Warding and wards lower it; choleric raises it (a negative ward).
                 double ward = defender.Stats.Get(StatIds.Ward) - Rules.BileDamageTakenPercent(defender.Bile);
                 double scaled = amount * Math.Max(0, 1 - Math.Min(90, ward) / 100.0);
-                if (style != CombatStyle.None && defender.Deflect == style && defender.Breath > 0)
+                int deflect = StyleStat(defender, StatIds.DeflectFor(style));
+                if (deflect > 0)
                 {
-                    scaled *= 1 - Rules.DeflectReductionPercent / 100.0;
+                    scaled *= 1 - Math.Min(90, deflect) / 100.0;
                     kind = HitKind.Deflected;
                 }
                 amount = (int)Math.Round(scaled);
@@ -608,23 +597,7 @@ namespace Rth.Server.Game
         private void TickResources(Player player)
         {
             CombatRules rules = Rules;
-            bool inCombat = InCombat(player);
-
-            if (player.Deflect != CombatStyle.None)
-            {
-                player.Breath = Math.Max(0, player.Breath - rules.BreathDrainPerTick);
-                if (player.Breath == 0)
-                {
-                    player.Deflect = CombatStyle.None;
-                    World.Tell(player, TextKind.Warning, "You are out of breath. Your deflection falls.");
-                }
-            }
-            else if (!inCombat)
-            {
-                RestoreBreath(player, rules.BreathRegenPerTick);
-            }
-
-            if (inCombat) return;
+            if (InCombat(player)) return;
 
             // Out of combat the body settles: bile drifts back, phlegm fades, blood returns.
             SettleBile(player, rules.BileDecayPerTick);
@@ -647,9 +620,8 @@ namespace Rth.Server.Game
                 MaxBlood = p.MaxBlood,
                 Phlegm = p.Phlegm,
                 Bile = p.Bile,
-                Breath = p.Breath,
-                MaxBreath = p.MaxBreath,
-                Deflect = p.Deflect,
+                Devotion = (int)Math.Ceiling(p.Devotion),
+                MaxDevotion = p.MaxDevotion,
                 InCombat = InCombat(p),
                 TargetId = p.TargetId,
                 GlobalCooldownReadyTick = Math.Max(p.GlobalCooldownReadyTick, p.ActionDelayUntilTick),
@@ -658,6 +630,8 @@ namespace Rth.Server.Game
             };
             foreach (KeyValuePair<string, uint> cd in p.Cooldowns)
                 if (cd.Value > now) state.Cooldowns.Add(new CooldownState { AbilityId = cd.Key, ReadyTick = cd.Value });
+            ReligionSystem? religion = World.Find<ReligionSystem>();
+            if (religion != null) state.Hymns.AddRange(religion.Singing(p));
             state.Statuses.AddRange(World.StatusesOf(p));
             p.Connection.Send(state);
         }

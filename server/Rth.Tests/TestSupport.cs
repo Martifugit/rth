@@ -4,6 +4,7 @@ using Rth.Server.Content;
 using Rth.Server.Game;
 using Rth.Shared.Combat;
 using Rth.Shared.Items;
+using Rth.Shared.Religion;
 using Rth.Shared.Skills;
 using Rth.Server.Net;
 using Rth.Server.Persistence;
@@ -101,7 +102,7 @@ internal static class Maps
 /// </summary>
 internal static class TestContent
 {
-    public static CombatRules Rules() => new CombatRules { PlayerAccuracy = 1.0, PlayerAbilityDamage = 100 };
+    public static CombatRules Rules() => new CombatRules { PlayerAccuracy = 1.0, PlayerAbilityDamage = 100, PlayerMaxDevotion = 100 };
 
     public static List<AbilityDef> Abilities() => new()
     {
@@ -164,6 +165,8 @@ internal static class TestContent
             new SkillDef { Id = "occultism", Name = "Occultism" },
             new SkillDef { Id = "butchering", Name = "Butchering" },
             new SkillDef { Id = "might", Name = "Might", StatsPerLevel = { [StatIds.AbilityDamage] = 3 } },
+            new SkillDef { Id = "religion", Name = "Religion", StatsPerLevel = { [StatIds.MaxDevotion] = 10 } },
+            new SkillDef { Id = "defence", Name = "Defence", StatsPerLevel = { [StatIds.MaxBlood] = 90 } },
         },
         DamageXp = { new DamageXpRule { Style = CombatStyle.Occult, Skill = "occultism", XpPerDamage = 0.5 } },
     };
@@ -283,6 +286,32 @@ internal static class TestContent
         DropTables = DropTables(),
         World = new WorldSettings { InventorySize = 28, GroundItemPrivateTicks = 10, GroundItemDespawnTicks = 30 },
         Statuses = Statuses(),
+        Hymns = Hymns(),
+    };
+
+    /// <summary>
+    /// Hymns that drain a whole point a tick, so tests can count: two defence tiers (one line),
+    /// melee and ranged deflection and life steal (overheads), an occult boost, and one locked
+    /// behind Religion 50.
+    /// </summary>
+    public static HymnsFile Hymns() => new()
+    {
+        Skill = "religion",
+        XpPerDevotion = 1,
+        Hymns =
+        {
+            new HymnDef { Id = "guard", Name = "Guard", Line = "defence", Drain = 1, Stats = { [StatIds.Ward] = 10 } },
+            new HymnDef { Id = "guard2", Name = "Greater guard", Line = "defence", Drain = 2, Stats = { [StatIds.Ward] = 20 } },
+            new HymnDef { Id = "deflect_melee", Name = "Deflect melee", Overhead = true, Drain = 1, Stats = { [StatIds.DeflectMelee] = 50 } },
+            new HymnDef { Id = "deflect_ranged", Name = "Deflect ranged", Overhead = true, Drain = 1, Stats = { [StatIds.DeflectRanged] = 50 } },
+            new HymnDef { Id = "leech", Name = "Leech", Overhead = true, Drain = 1, Stats = { [StatIds.Lifesteal] = 50 } },
+            new HymnDef { Id = "occult_boost", Name = "Occult boost", Line = "occult", Drain = 1, Stats = { [StatIds.OccultDamage] = 50 } },
+            new HymnDef
+            {
+                Id = "hard", Name = "Hard", Drain = 1, Stats = { [StatIds.Ward] = 1 },
+                Requirements = { new SkillRequirement { Skill = "religion", Level = 50 } },
+            },
+        },
     };
 
     /// <summary>Every status the server gives out, with plain names.</summary>

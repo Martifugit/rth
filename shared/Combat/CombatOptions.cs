@@ -11,6 +11,14 @@ namespace Rth.Shared.Combat
         All = 2,
     }
 
+    /// <summary>Where combat XP goes: the style that dealt the damage, Defence, or half to each.</summary>
+    public enum TrainDefence : byte
+    {
+        Offence = 0,
+        Balanced = 1,
+        Defence = 2,
+    }
+
     /// <summary>
     /// A player's combat preferences. Kept as client state (so they follow the player) under the
     /// keys below, as plain strings, and read by the server, which applies them.
@@ -19,13 +27,37 @@ namespace Rth.Shared.Combat
     {
         public const string QueueingKey = "combat.queue";
         public const string RevolutionKey = "combat.revolution";
-        /// <summary>The action bar layout (a string[][] of "a:id", "f:id" and "i:id" slots); bar 0 is the main bar.</summary>
+        public const string TrainDefenceKey = "combat.trainDefence";
+        /// <summary>The action bar layout (a string[][] of "a:id", "h:id" and "i:id" slots); bar 0 is the main bar.</summary>
         public const string BarsKey = "bars";
         public const string AbilityPrefix = "a:";
 
         /// <summary>Whether an ability pressed during the global cooldown waits and fires when it ends.</summary>
         public bool Queueing = true;
         public RevolutionMode Revolution = RevolutionMode.Manual;
+        public TrainDefence TrainDefence = TrainDefence.Balanced;
+
+        public static TrainDefence TrainDefenceFrom(string? value) => value switch
+        {
+            "offence" => TrainDefence.Offence,
+            "defence" => TrainDefence.Defence,
+            _ => TrainDefence.Balanced,
+        };
+
+        public static string TrainDefenceValue(TrainDefence mode) => mode switch
+        {
+            TrainDefence.Offence => "offence",
+            TrainDefence.Defence => "defence",
+            _ => "balanced",
+        };
+
+        /// <summary>The share of combat XP that goes to Defence (0 to 1).</summary>
+        public static double DefenceShare(TrainDefence mode) => mode switch
+        {
+            TrainDefence.Offence => 0,
+            TrainDefence.Defence => 1,
+            _ => 0.5,
+        };
 
         public static bool QueueingFrom(string? value) => value != "false";
         public static string QueueingValue(bool on) => on ? "true" : "false";

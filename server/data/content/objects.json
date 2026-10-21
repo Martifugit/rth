@@ -39,7 +39,8 @@
         "id": "read",
         "label": "Read",
         "message": "CRUOR, ELEVEN DAYS EAST. TOLLING, AN HOUR WEST. Under the second line someone has scratched a small bell."
-      }
+      },
+      { "id": "pray", "label": "Pray" }
     ]
   },
   {

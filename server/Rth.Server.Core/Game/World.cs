@@ -75,6 +75,7 @@ namespace Rth.Server.Game
             new GroundItemSystem(),
             new LootSystem(),
             new ObjectSystem(placements.Objects),
+            new ReligionSystem(),
             new RecipeSystem(),
             new InterfaceSystem(),
             new DialogueSystem(),
@@ -250,7 +251,7 @@ namespace Rth.Server.Game
 
         /// <summary>
         /// Rebuilds a player's stats from every <see cref="IStatContributor"/>, then applies the
-        /// ones the world itself uses (max blood and breath).
+        /// ones the world itself uses (max blood and devotion).
         /// </summary>
         public void RecalculateStats(Player player)
         {
@@ -258,9 +259,9 @@ namespace Rth.Server.Game
             foreach (GameSystem system in _systems)
                 if (system is IStatContributor contributor) contributor.Contribute(player, player.Stats);
             player.MaxBlood = Math.Max(1, player.Stats.Get(StatIds.MaxBlood));
-            player.MaxBreath = Math.Max(0, player.Stats.Get(StatIds.MaxBreath));
+            player.MaxDevotion = Math.Max(0, player.Stats.Get(StatIds.MaxDevotion));
             if (player.Blood > player.MaxBlood) player.Blood = player.MaxBlood;
-            if (player.Breath > player.MaxBreath) player.Breath = player.MaxBreath;
+            if (player.Devotion > player.MaxDevotion) player.Devotion = player.MaxDevotion;
             player.StatsChanged = true;
         }
 

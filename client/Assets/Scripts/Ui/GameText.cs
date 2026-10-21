@@ -19,12 +19,23 @@ namespace Rth.Client.Ui
             StatIds.DamageBonus => "Damage bonus",
             StatIds.Ward => "Ward",
             StatIds.MaxBlood => "Max blood",
-            StatIds.MaxBreath => "Max breath",
+            StatIds.MaxDevotion => "Max devotion",
+            StatIds.DevotionBonus => "Devotion bonus",
+            StatIds.Lifesteal => "Life steal",
+            StatIds.MeleeAccuracy => "Melee accuracy",
+            StatIds.RangedAccuracy => "Ranged accuracy",
+            StatIds.OccultAccuracy => "Occult accuracy",
+            StatIds.MeleeDamage => "Melee damage",
+            StatIds.RangedDamage => "Ranged damage",
+            StatIds.OccultDamage => "Occult damage",
+            StatIds.DeflectMelee => "Melee deflection",
+            StatIds.DeflectRanged => "Ranged deflection",
+            StatIds.DeflectOccult => "Occult deflection",
             _ => stat,
         };
 
         public static string StatUnit(string stat) =>
-            stat == StatIds.Accuracy || stat == StatIds.DamageBonus || stat == StatIds.Ward ? "%" : "";
+            stat == StatIds.AbilityDamage || stat == StatIds.MaxBlood || stat == StatIds.MaxDevotion ? "" : "%";
 
         /// <summary>A tooltip card for an item (rich text).</summary>
         public static string Describe(ItemDef def, int count)
@@ -51,7 +62,8 @@ namespace Rth.Client.Ui
         private static string EffectLabel(EffectOp op) => op.Op switch
         {
             "healBlood" => "Heals " + op.Amount + " blood",
-            "restoreBreath" => "Restores " + op.Amount + " breath",
+            "restoreDevotion" => "Restores " + op.Amount + " devotion",
+            "restoreDevotionPercent" => "Restores " + op.Amount + "% of your devotion",
             "addPhlegm" => "+" + op.Amount + " phlegm",
             "shiftBile" => "Bile " + (op.Amount > 0 ? "+" : "") + op.Amount,
             _ => op.Op + " " + op.Amount,

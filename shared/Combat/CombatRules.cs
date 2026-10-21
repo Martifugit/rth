@@ -11,7 +11,8 @@ namespace Rth.Shared.Combat
         public int GlobalCooldownTicks = 3;
         public int PlayerAbilityDamage = 100;
         public int PlayerMaxBlood = 1000;
-        public int PlayerMaxBreath = 300;
+        /// <summary>Devotion before Religion levels add to it (each level adds its own, in skills.json).</summary>
+        public int PlayerMaxDevotion = 10;
         /// <summary>Chance a player's attack lands before the target's evasion is subtracted.</summary>
         public double PlayerAccuracy = 0.9;
         public int MaxPhlegm = 100;
@@ -33,11 +34,6 @@ namespace Rth.Shared.Combat
         public int BileDecayPerTick = 1;
         public int PhlegmDecayPerTick = 2;
         public double BloodRegenPercentPerTick = 0.5;
-        public int BreathRegenPerTick = 1;
-
-        // Breath and deflection.
-        public int BreathDrainPerTick = 1;
-        public int DeflectReductionPercent = 50;
 
         public int RespawnDelayTicks = 4;
 

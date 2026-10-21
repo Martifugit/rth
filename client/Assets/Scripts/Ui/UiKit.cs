@@ -23,7 +23,7 @@ namespace Rth.Client.Ui
 
         public static readonly Color BloodColour = new Color(0.72f, 0.12f, 0.1f);
         public static readonly Color PhlegmColour = new Color(0.4f, 0.66f, 0.38f);
-        public static readonly Color BreathColour = new Color(0.36f, 0.6f, 0.9f);
+        public static readonly Color DevotionColour = new Color(0.86f, 0.8f, 0.58f);
         public static readonly Color YellowBile = new Color(0.92f, 0.74f, 0.16f);
         public static readonly Color BlackBile = new Color(0.5f, 0.3f, 0.7f);
 

@@ -126,7 +126,7 @@ public class ContentAndRulesTests
     }
 
     [Fact]
-    public void VersionOneSavesLoadWithFullBloodAndBreath()
+    public void VersionOneSavesLoadWithFullBloodAndDevotion()
     {
         string dir = Path.Combine(Path.GetTempPath(), "rth-v1-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(dir);
@@ -139,7 +139,7 @@ public class ContentAndRulesTests
             fx.Login("Old");
             var old = fx.Player("Old");
             // Positions are absolute world tiles, so even the oldest saves keep theirs.
-            Assert.Equal((new TileCoord(7, 6), old.MaxBlood, old.MaxBreath, 0), (old.Position, old.Blood, old.Breath, old.Bile));
+            Assert.Equal((new TileCoord(7, 6), old.MaxBlood, (double)old.MaxDevotion, 0), (old.Position, old.Blood, old.Devotion, old.Bile));
         }
         finally
         {
@@ -157,7 +157,7 @@ public class ContentAndRulesTests
             new LogoutMessage(),
             new AttackMessage { TargetId = 42 },
             new UseAbilityMessage { AbilityId = "gall_spark" },
-            new SetDeflectMessage { Style = CombatStyle.Occult },
+            new SetHymnMessage { HymnId = "bulwark", On = true },
             new LoginOkMessage { PlayerId = 7, TickMillis = 600 },
             new LoginRejectedMessage { Reason = "no" },
             new WorldUpdateMessage
@@ -173,8 +173,8 @@ public class ContentAndRulesTests
             },
             new PlayerStateMessage
             {
-                Tick = 5, Blood = 900, MaxBlood = 1000, Phlegm = 55, Bile = -42, Breath = 10, MaxBreath = 300,
-                Deflect = CombatStyle.Melee, InCombat = true, TargetId = 3, GlobalCooldownReadyTick = 8, QueuedAbility = "q", StalledAbility = "s",
+                Tick = 5, Blood = 900, MaxBlood = 1000, Phlegm = 55, Bile = -42, Devotion = 10, MaxDevotion = 300,
+                Hymns = { "bulwark", "zeal" }, InCombat = true, TargetId = 3, GlobalCooldownReadyTick = 8, QueuedAbility = "q", StalledAbility = "s",
                 Cooldowns = { new CooldownState { AbilityId = "a", ReadyTick = 20 } },
                 Statuses = { new StatusState { Id = "ward", Magnitude = 30, EndTick = 15 }, new StatusState { Id = "infused", Magnitude = 4 } },
             },

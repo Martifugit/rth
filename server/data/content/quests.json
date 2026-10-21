@@ -25,7 +25,7 @@
     ],
     "completed": "Edda sleeps without dreaming now. Before she drank, she spoke in a voice that wasn't hers: \"The weaver says you left the door open.\" I don't know what that means. I suspect Corvin would very much like to.",
     "rewards": {
-      "xp": [ { "skill": "distillation", "amount": 250 }, { "skill": "occultism", "amount": 150 } ],
+      "xp": [ { "skill": "occultism", "amount": 400 } ],
       "items": [ { "item": "sleepers_ribbon", "count": 1 }, { "item": "marks", "count": 60 } ]
     }
   }

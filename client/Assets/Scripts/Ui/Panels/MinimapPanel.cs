@@ -12,7 +12,7 @@ namespace Rth.Client.Ui.Panels
     /// The minimap: a square top-down view that turns with the camera (dots: gold creatures,
     /// white players; click to walk), shaded at its edges, with the compass in one corner (click
     /// to face north), the clock in the other and the region's name along the bottom. Beneath it,
-    /// a row of round buttons: the run toggle (run energy comes with the breath skill), then the
+    /// a row of round buttons: the run toggle (running is free: there is no run energy), then the
     /// world map, journal, guide, settings and a menu of every window.
     /// </summary>
     public sealed class MinimapPanel : UiPanel
