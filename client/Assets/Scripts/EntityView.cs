@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Rth.Client.Characters;
 using Rth.Shared.Net;
 using Rth.Shared.World;
 using UnityEngine;
@@ -12,8 +13,6 @@ namespace Rth.Client
     /// </summary>
     public sealed class EntityView : MonoBehaviour
     {
-        private static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
-
         private readonly Queue<Vector3> _pending = new Queue<Vector3>();
         private float _tickSeconds = 0.6f;
         private int _stepsPerTick = 1;
@@ -21,9 +20,8 @@ namespace Rth.Client
         private Vector3 _from;
         private Vector3 _to;
         private float _t;
-        private Transform _body;
-        private Vector3 _bodyScale;
-        private Vector3 _bodyPosition;
+        private EntityBody _body;
+        private Quaternion _facing = Quaternion.identity;
         private float _deathTime = -1f;
 
         public int Id { get; private set; }
@@ -33,7 +31,7 @@ namespace Rth.Client
         public string DisplayName { get; private set; }
         public TileCoord Tile { get; private set; }
         /// <summary>Top of the model, for labels and health bars.</summary>
-        public float Height { get; private set; } = 1.8f;
+        public float Height => _body != null ? _body.Height : 1.8f;
         public int HealthPercent { get; set; } = 100;
         /// <summary>Last time it took or dealt a hit; health bars show for a while after.</summary>
         public float LastHitTime { get; set; } = -100f;
@@ -49,60 +47,20 @@ namespace Rth.Client
             view.DisplayName = added.Name;
             view.HealthPercent = added.HealthPercent;
             view._tickSeconds = tickSeconds;
-            view.BuildBody(added.Shape, color, added.Scale / 10f);
+            view.BuildBody(added, color);
             view.Teleport(added.Position);
             return view;
         }
 
-        private void BuildBody(EntityShape shape, Color color, float scale)
+        private void BuildBody(EntityAdded added, Color color)
         {
-            var block = new MaterialPropertyBlock();
-            block.SetColor(BaseColor, color);
-
-            PrimitiveType type = shape switch
-            {
-                EntityShape.Box => PrimitiveType.Cube,
-                EntityShape.Cylinder => PrimitiveType.Cylinder,
-                EntityShape.Sphere => PrimitiveType.Sphere,
-                _ => PrimitiveType.Capsule,
-            };
-            GameObject body = GameObject.CreatePrimitive(type);
-            Destroy(body.GetComponent<Collider>());
-            body.name = "Body";
-            body.transform.SetParent(transform, false);
-
-            // Sizes chosen so a scale-1 entity is about player-sized.
-            Vector3 size = shape switch
-            {
-                EntityShape.Box => new Vector3(0.8f, 0.6f, 1.0f),
-                EntityShape.Sphere => new Vector3(0.9f, 0.9f, 0.9f),
-                EntityShape.Cylinder => new Vector3(0.5f, 0.9f, 0.5f), // a cylinder primitive is 2 tall
-                _ => new Vector3(0.6f, 0.85f, 0.6f),                   // so is a capsule
-            } * scale;
-            float height = shape == EntityShape.Capsule || shape == EntityShape.Cylinder ? size.y * 2f : size.y;
-            body.transform.localScale = size;
-            body.transform.localPosition = new Vector3(0f, height / 2f, 0f);
-            body.GetComponent<Renderer>().SetPropertyBlock(block);
-            _body = body.transform;
-            _bodyScale = body.transform.localScale;
-            _bodyPosition = body.transform.localPosition;
-            Height = height;
-
-            // A face, so you can see which way it's heading.
-            GameObject face = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            Destroy(face.GetComponent<Collider>());
-            face.transform.SetParent(transform, false);
-            face.transform.localPosition = new Vector3(0f, height * 0.75f, size.z * 0.45f);
-            face.transform.localScale = new Vector3(0.3f, 0.15f, 0.12f) * Mathf.Max(0.6f, scale);
-            block.SetColor(BaseColor, Kind == EntityKind.Player ? new Color(0.95f, 0.85f, 0.7f) : Color.Lerp(color, Color.black, 0.5f));
-            face.GetComponent<Renderer>().SetPropertyBlock(block);
-            face.transform.SetParent(_body, true);
+            _body = EntityBody.Create(added, color, transform);
 
             // One collider on the root so clicks find the entity.
             var hitbox = gameObject.AddComponent<CapsuleCollider>();
-            hitbox.center = new Vector3(0f, height / 2f, 0f);
-            hitbox.height = Mathf.Max(height, 0.8f);
-            hitbox.radius = Mathf.Max(0.35f, Mathf.Max(size.x, size.z) * 0.5f);
+            hitbox.center = new Vector3(0f, Height / 2f, 0f);
+            hitbox.height = Mathf.Max(Height, 0.8f);
+            hitbox.radius = Mathf.Max(0.35f, _body.Radius);
         }
 
         public void Teleport(TileCoord tile)
@@ -111,6 +69,7 @@ namespace Rth.Client
             _moving = false;
             Tile = tile;
             transform.position = TileMath.Center(tile);
+            transform.rotation = _facing;
         }
 
         public void AddSteps(IList<TileCoord> steps, bool running)
@@ -125,10 +84,23 @@ namespace Rth.Client
 
         public void FaceTowards(Vector3 point) => Face(point - transform.position);
 
-        /// <summary>Sinks and shrinks; the server removes or respawns it shortly after.</summary>
+        /// <summary>It attacked or used an ability.</summary>
+        public void PlayAction()
+        {
+            if (_body != null) _body.PlayAction();
+        }
+
+        /// <summary>It took a hit.</summary>
+        public void PlayHit()
+        {
+            if (!IsDying && _body != null) _body.PlayHit();
+        }
+
+        /// <summary>Plays its death; the server removes or respawns it shortly after.</summary>
         public void PlayDeath()
         {
             _deathTime = Time.time;
+            if (_body != null) _body.PlayDeath();
             HealthPercent = 0;
             var hitbox = GetComponent<Collider>();
             if (hitbox != null) hitbox.enabled = false;
@@ -136,15 +108,15 @@ namespace Rth.Client
 
         private void Update()
         {
+            // A script reload during Play drops the body; nothing to draw until it is re-sent.
+            if (_body == null) return;
             if (IsDying)
             {
-                float k = Mathf.Clamp01((Time.time - _deathTime) / 1.0f);
-                _body.localScale = Vector3.Lerp(_bodyScale, _bodyScale * 0.3f, k);
-                _body.localPosition = Vector3.Lerp(_bodyPosition, new Vector3(0f, _bodyScale.y * 0.15f, 0f), k);
-                _body.localRotation = Quaternion.Euler(0f, 0f, Mathf.Lerp(0f, 80f, k));
+                _body.Animate(0f, false, Time.deltaTime);
                 return;
             }
 
+            Vector3 before = transform.position;
             float dt = Time.deltaTime;
             while (dt > 0f)
             {
@@ -176,12 +148,19 @@ namespace Rth.Client
                     dt = 0f;
                 }
             }
+
+            // Turn smoothly rather than snapping to each new heading.
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, _facing, 720f * Time.deltaTime);
+            Vector3 moved = transform.position - before;
+            moved.y = 0f;
+            float speed = Time.deltaTime > 0f ? moved.magnitude / Time.deltaTime : 0f;
+            _body.Animate(speed, _stepsPerTick == 2, Time.deltaTime);
         }
 
         private void Face(Vector3 direction)
         {
             direction.y = 0f;
-            if (direction.sqrMagnitude > 0.0001f) transform.rotation = Quaternion.LookRotation(direction);
+            if (direction.sqrMagnitude > 0.0001f) _facing = Quaternion.LookRotation(direction);
         }
     }
 }

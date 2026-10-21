@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Rth.Shared.Items;
 using Rth.Shared.Net;
 using UnityEngine;
@@ -121,6 +121,7 @@ namespace Rth.Client
             if (source == null || target == null) return;
             source.FaceTowards(target.transform.position);
             source.LastHitTime = Time.time;
+            source.PlayAction();
 
             // Melee needs no projectile; anything thrown from further off gets one.
             if (Vector3.Distance(source.transform.position, target.transform.position) < 1.6f) return;
@@ -135,6 +136,7 @@ namespace Rth.Client
             EntityView target = Find(hit.TargetId);
             if (target == null) return;
             target.LastHitTime = Time.time;
+            if (hit.Kind != HitKind.Heal) target.PlayHit();
 
             string text;
             Color color;
