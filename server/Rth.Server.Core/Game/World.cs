@@ -185,6 +185,18 @@ namespace Rth.Server.Game
         public void AddAction(ActionEvent action) => _actions.Add(action);
         public void AddDeath(int entityId) => _deaths.Add(entityId);
 
+        private readonly List<ObjectEffectEvent> _objectEffects = new List<ObjectEffectEvent>();
+
+        /// <summary>
+        /// Object effects carry further than entities are seen (a boss arena's telegraph must reach
+        /// its far end); clients keep whole region scenes loaded around them anyway.
+        /// </summary>
+        public const int ObjectEffectRadius = 32;
+
+        /// <summary>Has a placed object play an effect for everyone who can see it (a symbol flaring, a sigil lighting).</summary>
+        public void PlayObjectEffect(PlacedObject placed, string effect, string arg = "") =>
+            _objectEffects.Add(new ObjectEffectEvent { ObjectType = placed.Type, Plane = placed.Plane, X = placed.X, Y = placed.Y, Effect = effect, Arg = arg });
+
         /// <summary>Plays a character animation (a clip or role in the client's animations.json) for everyone who can see it.</summary>
         /// <summary>Turns an entity to face a tile, with no animation (talking to someone).</summary>
         public void Face(Entity entity, TileCoord tile) =>
@@ -554,6 +566,8 @@ namespace Rth.Server.Game
                     if (seen.Contains(hit.TargetId)) update.Hits.Add(hit);
                 foreach (ActionEvent action in _actions)
                     if (seen.Contains(action.SourceId) || seen.Contains(action.TargetId)) update.Actions.Add(action);
+                foreach (ObjectEffectEvent e in _objectEffects)
+                    if (viewer.Plane == e.Plane && viewer.Position.ChebyshevDistance(new TileCoord(e.X, e.Y)) <= ObjectEffectRadius) update.ObjectEffects.Add(e);
                 foreach (int id in _deaths)
                     if (seen.Contains(id)) update.Deaths.Add(id);
 
@@ -581,6 +595,7 @@ namespace Rth.Server.Game
             _hits.Clear();
             _actions.Clear();
             _deaths.Clear();
+            _objectEffects.Clear();
             foreach (GameSystem system in _systems) system.OnCleanup();
         }
 

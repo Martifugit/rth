@@ -56,6 +56,7 @@ namespace Rth.Client.Editor
             m.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha);
             m.SetFloat("_DstBlend", additive ? (float)BlendMode.One : (float)BlendMode.OneMinusSrcAlpha);
             m.SetFloat("_ZWrite", 0f);
+            m.SetFloat("_Cull", 0f); // both sides: halos and beams are seen from anywhere
             m.SetOverrideTag("RenderType", "Transparent");
             m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
             m.renderQueue = (int)RenderQueue.Transparent;
@@ -271,6 +272,66 @@ namespace Rth.Client.Editor
             shape.shapeType = ParticleSystemShapeType.Circle;
             shape.radius = 0.3f;
             shape.rotation = new Vector3(-90f, 0f, 0f);
+        }
+
+        /// <summary>A soft glow behind something (a symbol's halo): a quad facing south, drawn additively.</summary>
+        public static Renderer Halo(Transform parent, Vector3 at, float size, Material glow)
+        {
+            GameObject quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            quad.name = "Halo";
+            Object.DestroyImmediate(quad.GetComponent<Collider>());
+            quad.transform.SetParent(parent, false);
+            quad.transform.position = at;
+            quad.transform.localScale = new Vector3(size, size, 1f);
+            var r = quad.GetComponent<Renderer>();
+            r.sharedMaterial = glow;
+            r.shadowCastingMode = ShadowCastingMode.Off;
+            r.receiveShadows = false;
+            return r;
+        }
+
+        /// <summary>A burst of sparks, emitted on demand (not looping): a symbol flaring.</summary>
+        public static ParticleSystem Burst(Transform parent, Vector3 at, Material spark)
+        {
+            ParticleSystem ps = System("Burst", parent, at, spark, 120);
+            var main = ps.main;
+            main.loop = false;
+            main.playOnAwake = false;
+            main.prewarm = false;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.5f, 1.1f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(1.5f, 3.5f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.06f, 0.16f);
+            main.gravityModifier = 0.15f;
+            var emission = ps.emission;
+            emission.rateOverTime = 0f;
+            var shape = ps.shape;
+            shape.shapeType = ParticleSystemShapeType.Circle;
+            shape.radius = 0.8f;
+            shape.radiusThickness = 0f;
+            var col = ps.colorOverLifetime;
+            col.enabled = true;
+            col.color = FadeInOut(Color.white);
+            return ps;
+        }
+
+        /// <summary>Faint holy motes rising slowly around something sacred.</summary>
+        public static void Motes(Transform parent, Vector3 at, float radius, Material mote, Color colour)
+        {
+            ParticleSystem ps = System("Motes", parent, at, mote, 30);
+            var main = ps.main;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(3f, 5f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.1f, 0.3f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.04f, 0.09f);
+            main.startColor = colour;
+            var emission = ps.emission;
+            emission.rateOverTime = 4f;
+            var shape = ps.shape;
+            shape.shapeType = ParticleSystemShapeType.Circle;
+            shape.radius = radius;
+            shape.rotation = new Vector3(90f, 0f, 0f);
+            var col = ps.colorOverLifetime;
+            col.enabled = true;
+            col.color = FadeInOut(Color.white);
         }
 
         // ------------------------------------------------------------------ light

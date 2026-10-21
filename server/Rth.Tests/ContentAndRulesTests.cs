@@ -171,6 +171,7 @@ public class ContentAndRulesTests
                 Hits = { new HitEvent { TargetId = 1, SourceId = 2, Amount = 77, Kind = HitKind.Deflected } },
                 Actions = { new ActionEvent { SourceId = 2, TargetId = 1, AbilityId = "x", Pole = -1 }, new ActionEvent { SourceId = 2, TargetId = 2, AbilityId = "anim:work", Face = new TileCoord(-3, 9) } },
                 Deaths = { 1 },
+                ObjectEffects = { new ObjectEffectEvent { ObjectType = "holy_symbol", Plane = 0, X = 1037, Y = 1053, Effect = "flare", Arg = "colour=#ff0000;delay=0.7" } },
             },
             new PlayerStateMessage
             {

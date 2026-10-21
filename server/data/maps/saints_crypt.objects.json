@@ -1,4 +1,10 @@
 [
+  { "type": "crypt_sigil", "plane": 0, "x": 1039, "y": 1030 },
+  { "type": "crypt_sigil", "plane": 0, "x": 1048, "y": 1030 },
+  { "type": "crypt_sigil", "plane": 0, "x": 1039, "y": 1038 },
+  { "type": "crypt_sigil", "plane": 0, "x": 1048, "y": 1038 },
+  { "type": "crypt_sigil", "plane": 0, "x": 1039, "y": 1046 },
+  { "type": "crypt_sigil", "plane": 0, "x": 1048, "y": 1046 },
   { "type": "crypt_stair", "plane": 0, "x": 1043, "y": 1025 },
   { "type": "unquiet_saint", "plane": 0, "x": 1043, "y": 1052 },
   { "type": "holy_symbol", "plane": 0, "x": 1037, "y": 1053 },

@@ -41,11 +41,14 @@ namespace Rth.Server.Game
                         Say(player, "Gave " + (count - left) + " " + args[1] + (left > 0 ? " (" + left + " didn't fit)." : "."));
                     }
                     break;
+                case "believer":
+                    Believer(player, args.Length >= 2 && int.TryParse(args[1], out int length) ? length : 4);
+                    break;
                 case "devotion":
                     World.Get<ReligionSystem>().Restore(player, player.MaxDevotion);
                     break;
                 default:
-                    Say(player, "Commands: ::tele x y | ::tele region | ::level skill n | ::give item [count] | ::devotion");
+                    Say(player, "Commands: ::tele x y | ::tele region | ::level skill n | ::give item [count] | ::devotion | ::believer [length]");
                     break;
             }
         }
@@ -78,6 +81,28 @@ namespace Rth.Server.Game
             player.Position = tile;
             player.Teleported = true;
             Say(player, "Teleported to " + tile + ".");
+        }
+
+        /// <summary>
+        /// Plays Are you a believer?'s telegraph on the holy symbols in view: each one in turn, left
+        /// to right, flares in a random combat style's colour (a stand-in until the encounter exists).
+        /// </summary>
+        private void Believer(Player player, int length)
+        {
+            var symbols = World.Get<ObjectSystem>().Placed
+                .Where(o => o.Type == "holy_symbol" && o.Plane == player.Plane && o.Tile.ChebyshevDistance(player.Position) <= World.ObjectEffectRadius).OrderBy(o => o.X).ToList();
+            if (symbols.Count == 0)
+            {
+                Say(player, "No holy symbols in view.");
+                return;
+            }
+            var styles = new[] { Rth.Shared.Combat.CombatStyle.Melee, Rth.Shared.Combat.CombatStyle.Ranged, Rth.Shared.Combat.CombatStyle.Occult };
+            for (int i = 0; i < Math.Max(1, length); i++)
+            {
+                var style = styles[World.Random.Next(styles.Length)];
+                PlacedObject symbol = symbols[i % symbols.Count];
+                World.PlayObjectEffect(symbol, "flare", "colour=" + Rth.Shared.Combat.CombatStyles.Colour(style) + ";delay=" + (i * 0.7f).ToString(System.Globalization.CultureInfo.InvariantCulture) + ";hold=0.6");
+            }
         }
 
         private TileCoord? Nearest(int plane, TileCoord from)

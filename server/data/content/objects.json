@@ -40,7 +40,7 @@
         "label": "Read",
         "message": "CRUOR, ELEVEN DAYS EAST. TOLLING, AN HOUR WEST. Under the second line someone has scratched a small bell."
       },
-      { "id": "pray", "label": "Pray" }
+      { "id": "pray", "label": "Pray", "animation": "kneel" }
     ]
   },
   {
@@ -106,7 +106,7 @@
     "id": "unquiet_saint",
     "name": "The Unquiet Saint",
     "examine": "A martyr of Cruor on his bier, under a red pall. He should be dust by now. He is not quite.",
-    "actions": [ { "id": "requiem", "label": "Pray", "message": "You kneel at the bier and begin to pray. High above, the stone face seems to bow a little lower. (The Requiem itself is not built yet.)" } ]
+    "actions": [ { "id": "requiem", "label": "Pray", "animation": "kneel", "message": "You kneel at the bier and begin to pray. High above, the stone face seems to bow a little lower. (The Requiem itself is not built yet.)" } ]
   },
   {
     "id": "holy_symbol",
@@ -127,6 +127,11 @@
     "id": "crypt_fount",
     "name": "Fount",
     "examine": "A bowl ringed with little bronze teeth, like the monuments' above. Older."
+  },
+  {
+    "id": "crypt_sigil",
+    "name": "Sigil",
+    "examine": "A drop cut into the floor inside a bronze ring. The Saint's debts are not collected here."
   },
   {
     "id": "crypt_stair",

@@ -22,6 +22,8 @@ namespace Rth.Client
         public float minAlpha = 0.25f;
         [Tooltip("Alpha change per second; higher fades faster.")]
         public float fadeSpeed = 3.5f;
+        [Tooltip("Also fade when hiding anything this far around the player, not just the player (arenas: the fight is all around you). 0 = only the player.")]
+        public float guardRadius;
 
         private Renderer[] _renderers;
         private Material[][] _opaque;

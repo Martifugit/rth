@@ -11,7 +11,7 @@ namespace Rth.Shared.Net
     public static class Protocol
     {
         /// <summary>Bump whenever a message layout changes, so mismatched builds are refused at login.</summary>
-        public const int Version = 16;
+        public const int Version = 17;
         public const int DefaultPort = 43600;
         /// <summary>Sanity limits on a single frame's length, in bytes.</summary>
         public const int MaxClientFrame = 4 * 1024;
@@ -215,6 +215,20 @@ namespace Rth.Shared.Net
         public string Overhead = "";
     }
 
+    /// <summary>
+    /// A placed object plays an effect (a holy symbol flaring, a sigil lighting). What the effect
+    /// and its argument mean is up to the object's art on the client.
+    /// </summary>
+    public struct ObjectEffectEvent
+    {
+        public string ObjectType;
+        public int Plane;
+        public int X;
+        public int Y;
+        public string Effect;
+        public string Arg;
+    }
+
     /// <summary>Something visible about an entity changed: what it holds, or the overhead it sings.</summary>
     public struct AppearanceEvent
     {
@@ -285,12 +299,13 @@ namespace Rth.Shared.Net
         public List<GroundItemAdded> GroundAdded = new List<GroundItemAdded>();
         public List<int> GroundRemoved = new List<int>();
         public List<AppearanceEvent> Appearances = new List<AppearanceEvent>();
+        public List<ObjectEffectEvent> ObjectEffects = new List<ObjectEffectEvent>();
 
         public override MessageType Type => MessageType.WorldUpdate;
 
         public bool IsEmpty =>
             Added.Count == 0 && Moved.Count == 0 && Removed.Count == 0 && Health.Count == 0 &&
-            Hits.Count == 0 && Actions.Count == 0 && Deaths.Count == 0 && GroundAdded.Count == 0 && GroundRemoved.Count == 0 && Appearances.Count == 0;
+            Hits.Count == 0 && Actions.Count == 0 && Deaths.Count == 0 && GroundAdded.Count == 0 && GroundRemoved.Count == 0 && Appearances.Count == 0 && ObjectEffects.Count == 0;
 
         internal override void WriteBody(BinaryWriter w)
         {
@@ -365,6 +380,15 @@ namespace Rth.Shared.Net
                 w.Write(a.Held ?? "");
                 w.Write(a.Overhead ?? "");
             }
+            w.Write((ushort)ObjectEffects.Count);
+            foreach (ObjectEffectEvent e in ObjectEffects)
+            {
+                w.Write(e.ObjectType ?? "");
+                w.Write((byte)e.Plane);
+                WriteTile(w, new TileCoord(e.X, e.Y));
+                w.Write(e.Effect ?? "");
+                w.Write(e.Arg ?? "");
+            }
         }
 
         internal static WorldUpdateMessage Read(BinaryReader r)
@@ -420,6 +444,17 @@ namespace Rth.Shared.Net
             for (int i = 0; i < count; i++) msg.GroundRemoved.Add(r.ReadInt32());
             count = r.ReadUInt16();
             for (int i = 0; i < count; i++) msg.Appearances.Add(new AppearanceEvent { Id = r.ReadInt32(), Held = r.ReadString(), Overhead = r.ReadString() });
+            count = r.ReadUInt16();
+            for (int i = 0; i < count; i++)
+            {
+                var e = new ObjectEffectEvent { ObjectType = r.ReadString(), Plane = r.ReadByte() };
+                TileCoord t = ReadTile(r);
+                e.X = t.X;
+                e.Y = t.Y;
+                e.Effect = r.ReadString();
+                e.Arg = r.ReadString();
+                msg.ObjectEffects.Add(e);
+            }
             return msg;
         }
 

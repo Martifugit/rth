@@ -108,6 +108,9 @@ namespace Rth.Client
                 _entities[added.Id] = view;
             }
 
+            foreach (ObjectEffectEvent effect in update.ObjectEffects)
+                ObjectEffects.Play(effect.ObjectType, effect.X, effect.Y, effect.Effect, effect.Arg);
+
             foreach (AppearanceEvent appearance in update.Appearances)
                 if (_entities.TryGetValue(appearance.Id, out EntityView view) && view != null)
                 {

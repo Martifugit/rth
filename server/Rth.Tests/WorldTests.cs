@@ -80,6 +80,20 @@ public class WorldTests
     }
 
     [Fact]
+    public void ObjectEffectsReachViewersFurtherThanTheViewRadius()
+    {
+        var symbols = new[] { new PlacedObject { Type = "holy_symbol", X = 5, Y = 30 }, new PlacedObject { Type = "holy_symbol", X = 8, Y = 30 } };
+        var fx = new WorldFixture(Maps.Open(40, 40, Spawn), new ServerConfig { DevCommands = true }, null, null, symbols);
+        FakeConnection client = fx.Login("Alice");
+        client.FromClient(new ChatMessage { Channel = ChatChannel.Public, Text = "::believer 4" });
+        fx.Ticks(1);
+        var effects = client.Updates.SelectMany(u => u.ObjectEffects).ToList();
+        Assert.Equal(4, effects.Count); // 25 tiles away: beyond sight, within the effect radius
+        Assert.All(effects, e => Assert.Equal("flare", e.Effect));
+        Assert.Contains("delay=0.7", effects[1].Arg);
+    }
+
+    [Fact]
     public void WalkingMovesOneTilePerTick()
     {
         var fx = OpenWorld();

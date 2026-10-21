@@ -4,7 +4,9 @@ namespace Rth.Client
 {
     /// <summary>
     /// Keeps the player in sight: every frame, any <see cref="Occluder"/> whose bounds cross the
-    /// lines from the camera to the player's head and feet is asked to fade. Lives on the camera.
+    /// lines from the camera to the player's head and feet is asked to fade. One with a guard
+    /// radius also fades when it hides the ground around the player (in an arena, what happens
+    /// near you matters as much as you do). Lives on the camera.
     /// </summary>
     public sealed class CameraOcclusion : MonoBehaviour
     {
@@ -27,10 +29,18 @@ namespace Rth.Client
                     Vector3 feet = local.transform.position + Vector3.up * 0.2f;
                     Vector3 head = local.transform.position + Vector3.up * (local.Height + 0.1f);
                     blocking = Crosses(o.Bounds, eye, head) || Crosses(o.Bounds, eye, feet);
+                    for (int i = 0; !blocking && o.guardRadius > 0f && i < GuardPoints; i++)
+                    {
+                        float a = i * Mathf.PI * 2f / GuardPoints;
+                        Vector3 around = feet + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * o.guardRadius + Vector3.up * 0.8f;
+                        blocking = Crosses(o.Bounds, eye, around);
+                    }
                 }
                 o.SetBlocking(blocking);
             }
         }
+
+        private const int GuardPoints = 12;
 
         private bool Crosses(Bounds bounds, Vector3 from, Vector3 to)
         {

@@ -17,8 +17,8 @@ namespace Rth.Client.Editor
     public static class SaintCryptBuilder
     {
         public const string ScenePath = "Assets/Scenes/SaintsCrypt.unity";
-        private static readonly Vector2Int Origin = new Vector2Int(1016, 1016);
-        private static readonly Vector2Int Size = new Vector2Int(56, 48);
+        private static readonly Vector2Int Origin = new Vector2Int(1016, 1008);
+        private static readonly Vector2Int Size = new Vector2Int(56, 56);
 
         // The nave, in absolute tiles: x 1035..1052, y 1026..1053. Layout below is nave-local.
         private const int NaveX = 1035, NaveY = 1026, NaveW = 18, NaveL = 28;
@@ -39,8 +39,15 @@ namespace Rth.Client.Editor
         // The four holy symbols' pillars, flanking the dais; each symbol has its own shape.
         private static readonly (Vector2Int Tile, string Shape)[] Pillars =
         {
-            (new Vector2Int(2, 27), "disc"), (new Vector2Int(5, 27), "diamond"), (new Vector2Int(12, 27), "cross"), (new Vector2Int(15, 27), "bar"),
+            (new Vector2Int(2, 27), "wound"), (new Vector2Int(5, 27), "chalice"), (new Vector2Int(12, 27), "sun"), (new Vector2Int(15, 27), "crown"),
         };
+        // The walls stand this far out from the playable nave on each side; the band between is floor
+        // a step down, with the piers against the walls so they stay out of the camera's way.
+        private const float Margin = 4.5f;
+        // The grand stair down into the nave, south of it: this many tiles long. Scenery only.
+        private const int StairLen = 12;
+        // Walls, piers and arches fade whenever they'd hide anything this close to you: a lot happens down here.
+        private const float Guard = 5f;
 
         [MenuItem("R'th/Dev/Rebuild Saint's Crypt Scene", priority = 103)]
         private static void BuildMenu()
@@ -74,12 +81,17 @@ namespace Rth.Client.Editor
             Material bloodGlow = FxKit.Glow("FountBloodGlow", new Color(0.3f, 0.015f, 0.03f), 0.35f);
             Material channelGlow = FxKit.Glow("BloodChannelGlow", new Color(0.35f, 0.02f, 0.04f), 0.6f);
             Material eyes = FxKit.Glow("SaintEyes", new Color(1f, 0.15f, 0.1f), 2.5f);
-            Material coals = FxKit.Glow("BrazierCoals", new Color(1f, 0.35f, 0.08f), 1.6f);
-            Material flame = FxKit.ParticleMat("FxFlame", new Color(1f, 0.6f, 0.25f, 0.9f), additive: true);
+            Material coals = FxKit.Glow("BrazierCoals", new Color(1f, 0.35f, 0.08f), 0.9f);
+            Material flame = FxKit.ParticleMat("FxFlame", new Color(1f, 0.55f, 0.22f, 0.6f), additive: true);
             Material ember = FxKit.ParticleMat("FxEmber", new Color(1f, 0.55f, 0.2f, 1f), additive: true);
             Material mist = FxKit.ParticleMat("FxMist", new Color(0.32f, 0.25f, 0.26f, 0.12f), additive: false);
             Material mote = FxKit.ParticleMat("FxMote", new Color(0.8f, 0.85f, 1f, 0.6f), additive: true);
-            Material blood = FxKit.ParticleMat("FxBlood", new Color(0.5f, 0.03f, 0.05f, 1f), additive: false);
+            Material blood = FxKit.ParticleMat("FxBlood", new Color(0.85f, 0.06f, 0.08f, 1f), additive: false);
+            Material bloodShine = FxKit.ParticleMat("FxBloodShine", new Color(0.9f, 0.08f, 0.1f, 0.35f), additive: true);
+            Material holyInlay = FxKit.Glow("HolyInlay", new Color(1f, 0.88f, 0.62f), 0.7f);
+            Material halo = FxKit.ParticleMat("FxHalo", new Color(1f, 1f, 1f, 0.2f), additive: true);
+            Material spark = FxKit.ParticleMat("FxSpark", Color.white, additive: true);
+            Material sigilInlay = FxKit.Glow("SigilInlay", new Color(0.85f, 0.72f, 0.48f), 0.22f);
             Material beam = FxKit.ParticleMat("FxLightBeam", new Color(0.5f, 0.6f, 0.8f, 0.13f), additive: true);
 
             MapArea area = WorldKit.BeginRegion("saints_crypt", "The Saint's Crypt", Origin, Size, earth);
@@ -96,12 +108,12 @@ namespace Rth.Client.Editor
             // The region's ground is the dark beyond; only the nave floor below can be walked on.
             Object.DestroyImmediate(map.Find("Ground").GetComponent<Collider>());
 
-            BuildNave(map, floor, flag, ring, sigil, darkStone);
+            BuildNave(map, floor, flag, ring, sigil, darkStone, bronze, sigilInlay);
             BuildArcades(map, stone, darkStone, banner, iron, coals, flame, ember);
             BuildEntrance(map, darkStone, dais, iron, coals, flame, ember);
-            BuildDais(map, dais, stone, synodRed, bronze, bone, wax);
-            BuildColossus(map, darkStone, stone, robe, bone, bronze, eyes, blood, iron, coals, flame, ember);
-            BuildCentre(map, dais, synodRed, bronze, channelGlow, beam, mote);
+            BuildDais(map, dais, stone, darkStone, synodRed, bronze, bone, wax, holyInlay, halo, spark, mote, channelGlow);
+            BuildColossus(map, darkStone, stone, robe, bone, bronze, eyes, blood, bloodShine, iron, coals, flame, ember);
+            BuildCentre(map, dais, darkStone, synodRed, bronze, wax, channelGlow, beam, mote);
             BuildFounts(map, stone, bronze, bloodGlow, blood);
 
             // Mist over the whole nave, and post-processing so glows glow and the edges close in.
@@ -114,30 +126,64 @@ namespace Rth.Client.Editor
 
         // ------------------------------------------------------------------ the nave floor
 
-        private static void BuildNave(Transform map, Material floor, Material flag, Material ring, Material sigil, Material darkStone)
+        private static void BuildNave(Transform map, Material floor, Material flag, Material ring, Material sigil, Material darkStone, Material bronze, Material sigilInlay)
         {
             Transform nave = WorldKit.Group(map, "Nave");
             // The one walkable surface (it has the collider).
             WorldKit.Patch("Floor", nave, NaveX, NaveY, NaveX + NaveW, NaveY + NaveL, floor);
             // A flagstone aisle up the middle, the way Believer's projectiles come.
             NoCollider(WorldKit.Patch("Aisle", nave, NaveX + 7, NaveY, NaveX + 11, NaveY + DaisFrom, flag, 0.006f));
-            // The side aisles, a step down and out of reach: dark floor under the arcades.
-            foreach (float x in new[] { NaveX - 5f, NaveX + NaveW + 5f })
-                WorldKit.Box("Side aisle", nave, new Vector3(x, -0.35f, NaveY + NaveL / 2f + 2f), new Vector3(10f, 0.1f, NaveL + 12f), darkStone, collider: false);
-            // A kerb along each long edge, where the nave drops to the aisles.
+            // The side floors, a step down and out of reach, running to the walls.
+            foreach (float x in new[] { NaveX - Margin / 2f, NaveX + NaveW + Margin / 2f })
+                WorldKit.Box("Side floor", nave, new Vector3(x, -0.25f, NaveY + NaveL / 2f + 2f), new Vector3(Margin, 0.1f, NaveL + 8f), flag, collider: false);
+            // The floor of the stair hall, south of the nave.
+            WorldKit.Box("Stair hall floor", nave, new Vector3(Mid, -0.25f, NaveY - StairLen / 2f), new Vector3(NaveW + 2f * Margin, 0.1f, StairLen), flag, collider: false);
+            // A kerb along each long edge, where the nave steps down to them.
             foreach (float x in new[] { NaveX - 0.1f, NaveX + NaveW + 0.1f })
-                WorldKit.Box("Kerb", nave, new Vector3(x, -0.1f, NaveY + NaveL / 2f), new Vector3(0.3f, 0.5f, NaveL), darkStone, collider: false);
+                WorldKit.Box("Kerb", nave, new Vector3(x, -0.08f, NaveY + NaveL / 2f), new Vector3(0.25f, 0.3f, NaveL), darkStone, collider: false);
 
+            // The safe sigils: placed objects you stand on (no blocker), so the encounter can light
+            // them. A dark engraved disc in a bronze ring, with a faintly glowing rune of a drop.
             Transform sigils = WorldKit.Group(map, "Safe sigils");
             foreach (Vector2Int s in Sigils)
             {
-                WorldKit.Cylinder("Sigil", sigils, Center(s, 0.012f), new Vector3(0.9f, 0.005f, 0.9f), sigil, collider: false);
-                WorldKit.Box("Sigil mark", sigils, Center(s, 0.02f), new Vector3(0.12f, 0.005f, 0.7f), darkStone, collider: false, yaw: 45f);
-                WorldKit.Box("Sigil mark", sigils, Center(s, 0.02f), new Vector3(0.12f, 0.005f, 0.7f), darkStone, collider: false, yaw: -45f);
+                Vector2Int t = At(s);
+                var go = new GameObject("Sigil");
+                go.transform.SetParent(sigils, false);
+                go.transform.position = Center(s);
+                go.AddComponent<MapObject>().objectType = "crypt_sigil";
+                Vector3 c = Center(s);
+                WorldKit.Cylinder("Engraving", go.transform, c + new Vector3(0f, 0.01f, 0f), new Vector3(0.94f, 0.004f, 0.94f), darkStone, collider: false);
+                Ring(go.transform, c + new Vector3(0f, 0.016f, 0f), 0.43f, 16, new Vector3(0.12f, 0.012f, 0.05f), bronze);
+                // The rune: a drop (a rotated square and its tip) inside a cross of four short strokes.
+                WorldKit.Box("Inlay", go.transform, c + new Vector3(0f, 0.02f, -0.04f), new Vector3(0.2f, 0.006f, 0.2f), sigilInlay, collider: false, yaw: 45f);
+                WorldKit.Box("Inlay", go.transform, c + new Vector3(0f, 0.02f, 0.12f), new Vector3(0.1f, 0.006f, 0.1f), sigilInlay, collider: false, yaw: 45f);
+                for (int i = 0; i < 4; i++)
+                {
+                    float a = i * Mathf.PI / 2f;
+                    WorldKit.Box("Inlay", go.transform, c + new Vector3(Mathf.Cos(a) * 0.3f, 0.02f, Mathf.Sin(a) * 0.3f), new Vector3(0.05f, 0.006f, 0.14f), sigilInlay, collider: false, yaw: -i * 90f + 90f);
+                }
             }
-            // Blockout: the 3x3 rings Let there be light uses, drawn faintly round every fount.
-            foreach (Vector2Int f in NearFounts) NoCollider(WorldKit.Patch("Ring footprint", nave, At(f).x - 1, At(f).y - 1, At(f).x + 2, At(f).y + 2, ring, 0.008f));
-            foreach (Vector2Int f in FarFounts) NoCollider(WorldKit.Patch("Ring footprint", nave, At(f).x - 1, At(f).y - 1, At(f).x + 2, At(f).y + 2, ring, 0.008f));
+            // Where Let there be light rises around each fount: a circle of bronze studs set in the floor.
+            foreach (Vector2Int f in NearFounts) LightRing(nave, Center(f), ring, darkStone);
+            foreach (Vector2Int f in FarFounts) LightRing(nave, Center(f), ring, darkStone);
+        }
+
+        private static void LightRing(Transform parent, Vector3 centre, Material stud, Material inlaid)
+        {
+            Transform ring = WorldKit.Group(parent, "Light ring");
+            WorldKit.Cylinder("Inlaid floor", ring, centre + new Vector3(0f, 0.004f, 0f), new Vector3(2.9f, 0.002f, 2.9f), inlaid, collider: false);
+            Ring(ring, centre + new Vector3(0f, 0.012f, 0f), 1.45f, 24, new Vector3(0.12f, 0.02f, 0.12f), stud);
+        }
+
+        /// <summary>Small boxes in a flat circle on the floor, each turned to follow it.</summary>
+        private static void Ring(Transform parent, Vector3 centre, float radius, int count, Vector3 size, Material material)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                float a = i / (float)count * Mathf.PI * 2f;
+                WorldKit.Box("Ring", parent, centre + new Vector3(Mathf.Cos(a) * radius, 0f, Mathf.Sin(a) * radius), size, material, collider: false, yaw: -a * Mathf.Rad2Deg + 90f);
+            }
         }
 
         private static void NoCollider(GameObject go) => Object.DestroyImmediate(go.GetComponent<Collider>());
@@ -149,36 +195,46 @@ namespace Rth.Client.Editor
             Transform arcades = WorldKit.Group(map, "Arcades");
             for (int side = -1; side <= 1; side += 2)
             {
-                float x = side < 0 ? NaveX - 1f : NaveX + NaveW + 1f;
-                float outer = side < 0 ? NaveX - 10.5f : NaveX + NaveW + 10.5f;
+                float wall = side < 0 ? NaveX - Margin : NaveX + NaveW + Margin; // the wall's face
+                float x = wall - side * 0.55f; // piers stand half out of it
                 for (int i = 0; i < 8; i++)
                 {
                     float y = NaveY + 0.5f + i * 4f;
                     // One pier: a plinth, a shaft far taller than anyone, and a capital.
                     Transform pier = WorldKit.Group(arcades, "Pier");
-                    WorldKit.Box("Plinth", pier, new Vector3(x, 0.4f, y), new Vector3(2.2f, 0.8f, 2.2f), darkStone, collider: false);
-                    WorldKit.Box("Shaft", pier, new Vector3(x, PierHeight / 2f, y), new Vector3(1.5f, PierHeight, 1.5f), stone, collider: false);
-                    WorldKit.Box("Capital", pier, new Vector3(x, PierHeight + 0.3f, y), new Vector3(2.1f, 0.6f, 2.1f), darkStone, collider: false);
-                    WorldKit.Fades(pier, 0.25f);
+                    WorldKit.Box("Plinth", pier, new Vector3(x, 0.4f, y), new Vector3(1.9f, 0.8f, 2.1f), darkStone, collider: false);
+                    WorldKit.Box("Shaft", pier, new Vector3(x, PierHeight / 2f, y), new Vector3(1.3f, PierHeight, 1.5f), stone, collider: false);
+                    WorldKit.Box("Capital", pier, new Vector3(x, PierHeight + 0.3f, y), new Vector3(1.8f, 0.6f, 2.1f), darkStone, collider: false);
+                    WorldKit.Fades(pier, 0.05f).guardRadius = Guard;
                     if (i == 7) continue;
-                    // Arches between piers, stepped in to suggest a point, high in the dark.
+                    // Blind arches between the piers, stepped in to suggest a point, high in the dark.
                     Transform arch = WorldKit.Group(arcades, "Arch");
                     for (int step = 0; step < 4; step++)
-                    {
-                        float rise = PierHeight + 0.6f + step * 0.7f;
-                        float span = 4f - step * 0.9f;
-                        WorldKit.Box("Voussoir", arch, new Vector3(x, rise, y + 2f), new Vector3(1.3f, 0.7f, span), stone, collider: false);
-                    }
-                    WorldKit.Fades(arch, 0.25f);
-                    // A long red banner hanging in the arch, on the aisle side.
-                    WorldKit.Box("Banner", arcades, new Vector3(x + side * 0.9f, PierHeight - 4.5f, y + 2f), new Vector3(0.05f, 8f, 1.6f), banner, collider: false);
+                        WorldKit.Box("Voussoir", arch, new Vector3(x, PierHeight + 0.6f + step * 0.7f, y + 2f), new Vector3(1.1f, 0.7f, 4f - step * 0.9f), stone, collider: false);
+                    WorldKit.Fades(arch, 0.05f).guardRadius = Guard;
+                    // Between each pair: a long red banner high on the wall, and a sconce's fire below it.
+                    WorldKit.Box("Banner", arcades, new Vector3(wall - side * 0.06f, PierHeight - 5f, y + 2f), new Vector3(0.05f, 7f, 1.5f), banner, collider: false);
+                    Sconce(arcades, new Vector3(wall - side * 0.35f, 2.6f, y + 2f), side, iron, coals, flame, ember);
                 }
-                // The outer wall of the aisle, taller still, and blind.
-                WorldKit.Box("Aisle wall", arcades, new Vector3(outer, 9f, NaveY + NaveL / 2f + 2f), new Vector3(1f, 18f, NaveL + 12f), darkStone, collider: false);
-                // Braziers on tall iron stands in the aisles, seen through the arches.
-                for (int i = 0; i < 3; i++)
-                    Brazier(arcades, new Vector3(x + side * 3.2f, 0f, NaveY + 6.5f + i * 8f), 1.8f, iron, coals, flame, ember);
+                // The wall itself, taller still, and blind, running back along the stair hall too.
+                // It fades almost away whenever it stands between the camera and you.
+                float from = NaveY - StairLen - 0.5f, to = NaveY + NaveL + 8f;
+                Transform wallGroup = WorldKit.Group(arcades, "Side wall");
+                WorldKit.Box("Wall", wallGroup, new Vector3(wall + side * 0.5f, 10f, (from + to) / 2f), new Vector3(1f, 20f, to - from), darkStone, collider: false);
+                WorldKit.Fades(wallGroup, 0.06f).guardRadius = Guard;
             }
+        }
+
+        /// <summary>A fire in an iron bowl on a bracket from the wall, facing into the nave.</summary>
+        private static void Sconce(Transform parent, Vector3 at, int side, Material iron, Material coals, Material flame, Material ember)
+        {
+            Transform s = WorldKit.Group(parent, "Sconce");
+            WorldKit.Box("Bracket", s, at + new Vector3(side * 0.25f, -0.25f, 0f), new Vector3(0.6f, 0.1f, 0.12f), iron, collider: false);
+            WorldKit.Cylinder("Bowl", s, at, new Vector3(0.55f, 0.1f, 0.55f), iron, collider: false);
+            WorldKit.Cylinder("Coals", s, at + new Vector3(0f, 0.1f, 0f), new Vector3(0.42f, 0.02f, 0.42f), coals, collider: false);
+            FxKit.Fire(s, at + new Vector3(0f, 0.1f, 0f), 0.7f, flame);
+            FxKit.Embers(s, at + new Vector3(0f, 0.25f, 0f), 5f, ember);
+            FxKit.PointLight(s, "Firelight", at + new Vector3(-side * 0.6f, 0.6f, 0f), new Color(1f, 0.5f, 0.2f), 4.5f, 8f, flicker: 0.35f);
         }
 
         private static void Brazier(Transform parent, Vector3 foot, float height, Material iron, Material coals, Material flame, Material ember)
@@ -196,28 +252,89 @@ namespace Rth.Client.Editor
 
         private static void BuildEntrance(Transform map, Material darkStone, Material dais, Material iron, Material coals, Material flame, Material ember)
         {
-            Transform entry = WorldKit.Group(map, "Entrance");
-            // The south wall: a cliff of stone with one tall, narrow door. Fades when it's in the way.
-            float y = NaveY - 0.4f, west = NaveX - 11f, east = NaveX + NaveW + 11f;
-            WorldKit.Box("South wall W", entry, new Vector3((west + Mid - 1f) / 2f, 9f, y), new Vector3(Mid - 1f - west, 18f, 0.8f), darkStone, collider: false);
-            WorldKit.Box("South wall E", entry, new Vector3((Mid + 1f + east) / 2f, 9f, y), new Vector3(east - Mid - 1f, 18f, 0.8f), darkStone, collider: false);
-            WorldKit.Box("Above the door", entry, new Vector3(Mid, 12f, y), new Vector3(2.4f, 12f, 0.8f), darkStone, collider: false);
-            WorldKit.Fades(entry, 0.15f);
-            // The stair beyond the door, climbing out of sight.
-            Transform stairGroup = WorldKit.Group(map, "Stair");
-            for (int i = 0; i < 10; i++)
-                WorldKit.Box("Step", stairGroup, new Vector3(Mid, 0.15f + i * 0.3f, NaveY - 1.2f - i * 0.55f), new Vector3(2f, 0.3f, 0.6f), dais, collider: false);
+            // The grand stair: a wide flight climbing south from the foot of the nave to a high, far
+            // door, in two runs with a landing between, a balustrade either side, kneeling stone
+            // penitents on the landing and pale light falling down it from the door.
+            Transform stairGroup = WorldKit.Group(map, "Grand stair");
+            const float rise = 0.3f, tread = 0.5f, width = 7f;
+            const int run = 10;
+            float z = NaveY - 0.25f, h = 0f;
+            float landingZ = 0f, landingH = 0f;
+            for (int flight = 0; flight < 2; flight++)
+            {
+                for (int i = 0; i < run; i++)
+                {
+                    h += rise;
+                    z -= tread;
+                    WorldKit.Box("Step", stairGroup, new Vector3(Mid, h / 2f, z), new Vector3(width, h, tread + 0.02f), dais, collider: false);
+                    foreach (int side in new[] { -1, 1 }) // the balustrade rises with the steps
+                        WorldKit.Box("Balustrade", stairGroup, new Vector3(Mid + side * (width / 2f + 0.25f), h + 0.45f, z), new Vector3(0.5f, 0.9f + rise, tread + 0.02f), darkStone, collider: false);
+                }
+                if (flight == 1) break;
+                // The landing.
+                z -= 1f;
+                landingZ = z + 0.25f;
+                landingH = h;
+                WorldKit.Box("Landing", stairGroup, new Vector3(Mid, h / 2f, landingZ), new Vector3(width + 4f, h, 2f), dais, collider: false);
+                foreach (int side in new[] { -1, 1 })
+                {
+                    Penitent(stairGroup, new Vector3(Mid + side * (width / 2f + 1.2f), h, landingZ), side, darkStone);
+                    Brazier(stairGroup, new Vector3(Mid + side * (width / 2f - 0.6f), h, landingZ), 1.2f, iron, coals, flame, ember);
+                }
+            }
+            float top = z - tread / 2f;
+            // The door at the top, tall and narrow, with cold light behind it falling down the stair.
+            Transform wallGroup = WorldKit.Group(map, "South wall");
+            float y = top - 0.5f, west = NaveX - Margin - 1f, east = NaveX + NaveW + Margin + 1f;
+            WorldKit.Box("South wall W", wallGroup, new Vector3((west + Mid - 1.4f) / 2f, 11f, y), new Vector3(Mid - 1.4f - west, 22f, 1f), darkStone, collider: false);
+            WorldKit.Box("South wall E", wallGroup, new Vector3((Mid + 1.4f + east) / 2f, 11f, y), new Vector3(east - Mid - 1.4f, 22f, 1f), darkStone, collider: false);
+            WorldKit.Box("Above the door", wallGroup, new Vector3(Mid, h + 4.5f + (22f - h - 4.5f) / 2f, y), new Vector3(2.8f, 22f - h - 4.5f, 1f), darkStone, collider: false);
+            WorldKit.Box("Below the door", wallGroup, new Vector3(Mid, h / 2f, y), new Vector3(2.8f, h, 1f), darkStone, collider: false);
+            WorldKit.Fades(wallGroup, 0.05f).guardRadius = Guard;
+            Renderer doorLight = FxKit.Halo(stairGroup, new Vector3(Mid, h + 2.2f, y + 0.4f), 3f, Door());
+            doorLight.transform.localScale = new Vector3(2.6f, 4.5f, 1f);
+            var fall = new GameObject("Light from the door");
+            fall.transform.SetParent(stairGroup, false);
+            fall.transform.position = new Vector3(Mid, h + 3.5f, y + 0.6f);
+            fall.transform.LookAt(new Vector3(Mid, 0f, NaveY + 1f));
+            var light = fall.AddComponent<Light>();
+            light.type = LightType.Spot;
+            light.color = new Color(0.7f, 0.78f, 1f);
+            light.intensity = 25f;
+            light.range = StairLen + 12f;
+            light.spotAngle = 40f;
+            light.shadows = LightShadows.None;
+
+            // The way out, at the foot of the stair (the walkable floor ends here).
             Transform stair = WorldKit.Station(stairGroup, "Stair", "crypt_stair", NaveX + 8, NaveY - 1);
             WorldKit.Box("Threshold", stair, new Vector3(Mid - 0.5f, 0.05f, NaveY - 0.5f), new Vector3(0.9f, 0.1f, 0.9f), dais); // the blocker's collider
-            // Two braziers either side of the door, the first thing you see coming down.
-            Transform doorFires = WorldKit.Group(map, "Door braziers"); // not under the wall, which fades
-            Brazier(doorFires, new Vector3(Mid - 2.5f, 0f, NaveY + 0.5f), 1.4f, iron, coals, flame, ember);
-            Brazier(doorFires, new Vector3(Mid + 2.5f, 0f, NaveY + 0.5f), 1.4f, iron, coals, flame, ember);
+            // Two braziers at the foot, the first fires you pass coming down.
+            Transform footFires = WorldKit.Group(map, "Foot braziers");
+            Brazier(footFires, new Vector3(Mid - 2.5f, 0f, NaveY + 0.5f), 1.4f, iron, coals, flame, ember);
+            Brazier(footFires, new Vector3(Mid + 2.5f, 0f, NaveY + 0.5f), 1.4f, iron, coals, flame, ember);
         }
+
+        /// <summary>A stone penitent kneeling on a pedestal, head bowed towards the nave.</summary>
+        private static void Penitent(Transform parent, Vector3 at, int side, Material stone)
+        {
+            Transform p = WorldKit.Group(parent, "Penitent");
+            WorldKit.Box("Pedestal", p, at + new Vector3(0f, 0.4f, 0f), new Vector3(1.3f, 0.8f, 1.3f), stone, collider: false);
+            Vector3 b = at + new Vector3(0f, 0.8f, 0f);
+            WorldKit.Box("Shin", p, b + new Vector3(0f, 0.15f, 0.2f), new Vector3(0.45f, 0.3f, 0.8f), stone, collider: false);
+            WorldKit.Box("Thigh", p, b + new Vector3(0f, 0.55f, -0.05f), new Vector3(0.5f, 0.6f, 0.4f), stone, collider: false);
+            GameObject body = WorldKit.Box("Body", p, b + new Vector3(0f, 1.2f, 0.1f), new Vector3(0.6f, 0.8f, 0.4f), stone, collider: false);
+            body.transform.rotation = Quaternion.Euler(18f, 0f, 0f);
+            GameObject head = WorldKit.Box("Head", p, b + new Vector3(0f, 1.72f, 0.3f), new Vector3(0.32f, 0.36f, 0.34f), stone, collider: false);
+            head.transform.rotation = Quaternion.Euler(30f, 0f, 0f);
+            p.RotateAround(at, Vector3.up, side * -25f); // turned a little towards the stair
+        }
+
+        private static Material Door() => FxKit.ParticleMat("FxDoorLight", new Color(0.75f, 0.82f, 1f, 0.55f), additive: true);
 
         // ------------------------------------------------------------------ the dais: the martyr, the symbols
 
-        private static void BuildDais(Transform map, Material dais, Material stone, Material synodRed, Material bronze, Material bone, Material wax)
+        private static void BuildDais(Transform map, Material dais, Material stone, Material darkStone, Material synodRed, Material bronze, Material bone, Material wax,
+            Material holyInlay, Material halo, Material spark, Material mote, Material bloodPool)
         {
             Transform group = WorldKit.Group(map, "Dais");
             WorldKit.Box("Dais", group, new Vector3(Mid, 0.06f, NaveY + DaisFrom + (NaveL - DaisFrom) / 2f), new Vector3(NaveW - 0.4f, 0.12f, NaveL - DaisFrom), dais, collider: false);
@@ -231,6 +348,8 @@ namespace Rth.Client.Editor
             WorldKit.Box("Pall", saint, c + new Vector3(0f, 1.02f, 0f), new Vector3(2.1f, 0.06f, 1.35f), synodRed, collider: false);
             WorldKit.Box("Body", saint, c + new Vector3(0f, 1.18f, 0f), new Vector3(1.5f, 0.24f, 0.4f), bone, collider: false);
             WorldKit.Box("Head", saint, c + new Vector3(-0.85f, 1.2f, 0f), new Vector3(0.3f, 0.28f, 0.28f), bone, collider: false);
+            // Where the chalice's stream lands: a pool of blood on the pall, catching the light.
+            WorldKit.Cylinder("Pool", saint, c + new Vector3(0.1f, 1.06f, 0f), new Vector3(1.1f, 0.01f, 0.8f), bloodPool, collider: false);
             // Candles crowding the bier.
             for (int i = 0; i < 8; i++)
             {
@@ -241,39 +360,101 @@ namespace Rth.Client.Editor
             }
             FxKit.PointLight(group, "Candlelight", c + new Vector3(0f, 1.5f, -0.6f), new Color(1f, 0.7f, 0.4f), 3f, 5f, flicker: 0.15f);
 
-            // The holy symbols high on four pillars either side, unlit until Are you a believer?
+            // The holy symbols high on four pillars either side: a faint holy glow at rest, flaring
+            // in combat styles' colours for Are you a believer? (HolySymbol, driven by the server).
             foreach ((Vector2Int tile, string shape) in Pillars)
+                SymbolPillar(group, At(tile), shape, stone, darkStone, bronze, holyInlay, halo, spark, mote);
+        }
+
+        private static void SymbolPillar(Transform parent, Vector2Int t, string shape, Material stone, Material darkStone, Material bronze,
+            Material inlay, Material halo, Material spark, Material mote)
+        {
+            Transform pillar = WorldKit.Station(parent, "Holy symbol (" + shape + ")", "holy_symbol", t.x, t.y);
+            var p = new Vector3(t.x + 0.5f, 0f, t.y + 0.5f);
+            // A stepped base (its collider blocks the tile), a fluted shaft, a capital with a bracket.
+            WorldKit.Box("Base", pillar, p + new Vector3(0f, 0.3f, 0f), new Vector3(0.96f, 0.6f, 0.96f), darkStone);
+            WorldKit.Box("Plinth", pillar, p + new Vector3(0f, 0.12f, 0f), new Vector3(1.35f, 0.24f, 1.35f), darkStone, collider: false);
+            WorldKit.Cylinder("Shaft", pillar, p + new Vector3(0f, 2.1f, 0f), new Vector3(0.62f, 1.7f, 0.62f), stone, collider: false);
+            for (int f = 0; f < 8; f++)
             {
-                Vector2Int t = At(tile);
-                Transform pillar = WorldKit.Station(group, "Holy symbol (" + shape + ")", "holy_symbol", t.x, t.y);
-                var p = new Vector3(t.x + 0.5f, 0f, t.y + 0.5f);
-                WorldKit.Box("Base", pillar, p + new Vector3(0f, 0.3f, 0f), new Vector3(1f, 0.6f, 1f), stone);
-                WorldKit.Cylinder("Pillar", pillar, p + new Vector3(0f, 4f, 0f), new Vector3(0.7f, 4f, 0.7f), stone, collider: false);
-                Vector3 s = p + new Vector3(0f, 8.6f, -0.2f);
-                switch (shape)
-                {
-                    case "disc":
-                        WorldKit.Cylinder("Symbol", pillar, s, new Vector3(1.5f, 0.05f, 1.5f), bronze, collider: false).transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-                        break;
-                    case "diamond":
-                        WorldKit.Box("Symbol", pillar, s, new Vector3(1.1f, 1.1f, 0.1f), bronze, collider: false).transform.rotation = Quaternion.Euler(0f, 0f, 45f);
-                        break;
-                    case "cross":
-                        WorldKit.Box("Symbol", pillar, s, new Vector3(0.3f, 1.6f, 0.1f), bronze, collider: false);
-                        WorldKit.Box("Symbol", pillar, s + new Vector3(0f, 0.25f, 0f), new Vector3(1.1f, 0.3f, 0.1f), bronze, collider: false);
-                        break;
-                    default:
-                        WorldKit.Box("Symbol", pillar, s, new Vector3(1.5f, 0.35f, 0.1f), bronze, collider: false);
-                        WorldKit.Box("Symbol", pillar, s + new Vector3(0f, -0.55f, 0f), new Vector3(0.9f, 0.35f, 0.1f), bronze, collider: false);
-                        break;
-                }
+                float a = f / 8f * Mathf.PI * 2f;
+                WorldKit.Box("Flute", pillar, p + new Vector3(Mathf.Cos(a) * 0.32f, 2.1f, Mathf.Sin(a) * 0.32f), new Vector3(0.1f, 3.4f, 0.1f), stone, collider: false, yaw: -a * Mathf.Rad2Deg);
             }
+            WorldKit.Box("Collar", pillar, p + new Vector3(0f, 3.9f, 0f), new Vector3(0.95f, 0.3f, 0.95f), darkStone, collider: false);
+            WorldKit.Box("Capital", pillar, p + new Vector3(0f, 4.25f, 0f), new Vector3(1.2f, 0.4f, 1.2f), stone, collider: false);
+            WorldKit.Box("Post", pillar, p + new Vector3(0f, 4.8f, 0f), new Vector3(0.2f, 0.8f, 0.2f), bronze, collider: false);
+
+            // The symbol faces down the nave (south), a bronze frame with a glowing inlay.
+            var symbol = new GameObject("Symbol").transform;
+            symbol.SetParent(pillar, false);
+            symbol.position = p + new Vector3(0f, 5.8f, -0.1f);
+            var glowing = new System.Collections.Generic.List<Renderer>();
+            void Frame(Vector2 at, Vector2 size, float turn) => Plate(symbol, at, size, 0.12f, 0f, turn, bronze);
+            void Inlay(Vector2 at, Vector2 size, float turn) => glowing.Add(Plate(symbol, at, size, 0.06f, -0.08f, turn, inlay).GetComponent<Renderer>());
+            switch (shape)
+            {
+                case "wound": // a lozenge frame round a falling drop
+                    Frame(Vector2.zero, new Vector2(1.25f, 1.25f), 45f);
+                    Frame(Vector2.zero, new Vector2(0.95f, 0.95f), 45f);
+                    Inlay(new Vector2(0f, -0.12f), new Vector2(0.42f, 0.42f), 45f);
+                    Inlay(new Vector2(0f, 0.2f), new Vector2(0.22f, 0.22f), 45f);
+                    Inlay(new Vector2(0f, 0.38f), new Vector2(0.1f, 0.1f), 45f);
+                    break;
+                case "chalice": // Cruor's cup inside a ring
+                    for (int i = 0; i < 16; i++)
+                    {
+                        float a = i / 16f * Mathf.PI * 2f;
+                        Frame(new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * 0.82f, new Vector2(0.34f, 0.14f), a * Mathf.Rad2Deg + 90f);
+                    }
+                    Inlay(new Vector2(0f, 0.25f), new Vector2(0.72f, 0.3f), 0f);
+                    Inlay(new Vector2(0f, 0.06f), new Vector2(0.48f, 0.14f), 0f);
+                    Inlay(new Vector2(0f, -0.22f), new Vector2(0.12f, 0.42f), 0f);
+                    Inlay(new Vector2(0f, -0.47f), new Vector2(0.5f, 0.1f), 0f);
+                    break;
+                case "sun": // the Keeping: a disc with eight rays
+                    Frame(Vector2.zero, new Vector2(0.95f, 0.95f), 0f);
+                    Frame(Vector2.zero, new Vector2(0.95f, 0.95f), 45f);
+                    Inlay(Vector2.zero, new Vector2(0.42f, 0.42f), 45f);
+                    for (int i = 0; i < 8; i++)
+                    {
+                        float a = i / 8f * Mathf.PI * 2f;
+                        Inlay(new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * 0.82f, new Vector2(0.4f, 0.1f), a * Mathf.Rad2Deg);
+                    }
+                    break;
+                default: // a crown of thorns
+                    for (int i = 0; i < 12; i++)
+                    {
+                        float a = i / 12f * Mathf.PI * 2f;
+                        Frame(new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * 0.55f, new Vector2(0.3f, 0.12f), a * Mathf.Rad2Deg + 90f);
+                        Inlay(new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * 0.85f, new Vector2(0.36f, 0.07f), a * Mathf.Rad2Deg);
+                    }
+                    Inlay(Vector2.zero, new Vector2(0.24f, 0.24f), 45f);
+                    break;
+            }
+            Renderer haloRenderer = FxKit.Halo(symbol, symbol.position + new Vector3(0f, 0f, 0.15f), 3.4f, halo);
+            Light light = FxKit.PointLight(symbol, "Glow", symbol.position + new Vector3(0f, 0f, -1.1f), new Color(1f, 0.88f, 0.62f), 1.2f, 5f);
+            ParticleSystem burst = FxKit.Burst(symbol, symbol.position + new Vector3(0f, 0f, -0.3f), spark);
+            FxKit.Motes(pillar, p + new Vector3(0f, 4.6f, 0f), 0.6f, mote, new Color(1f, 0.9f, 0.7f, 0.7f));
+
+            var holy = pillar.gameObject.AddComponent<HolySymbol>();
+            holy.inlay = glowing.ToArray();
+            holy.halo = haloRenderer;
+            holy.glow = light;
+            holy.burst = burst;
+        }
+
+        /// <summary>A thin plate in a symbol's plane (facing south), at a 2D position, turned about its centre.</summary>
+        private static GameObject Plate(Transform symbol, Vector2 at, Vector2 size, float depth, float forward, float turn, Material material)
+        {
+            GameObject plate = WorldKit.Box("Plate", symbol, symbol.position + new Vector3(at.x, at.y, forward), new Vector3(size.x, size.y, depth), material, collider: false);
+            plate.transform.rotation = Quaternion.Euler(0f, 0f, turn);
+            return plate;
         }
 
         // ------------------------------------------------------------------ the colossus
 
         private static void BuildColossus(Transform map, Material darkStone, Material stone, Material robe, Material bone, Material bronze, Material eyes, Material blood,
-            Material iron, Material coals, Material flame, Material ember)
+            Material bloodShine, Material iron, Material coals, Material flame, Material ember)
         {
             // The martyr as Cruor remembers him, twenty metres of him, behind the dais and bowed over
             // it, a chalice tipped in his hands so that blood falls onto his own body on the bier.
@@ -310,7 +491,27 @@ namespace Rth.Client.Editor
             WorldKit.Cylinder("Cup", cup, chalice + new Vector3(0f, 0.4f, 0f), new Vector3(1.2f, 0.5f, 1.2f), bronze, collider: false);
             WorldKit.Cylinder("Stem", cup, chalice + new Vector3(0f, -0.4f, 0f), new Vector3(0.3f, 0.4f, 0.3f), bronze, collider: false);
             cup.RotateAround(chalice, Vector3.right, 35f); // tipped towards the bier
-            FxKit.BloodStream(colossus, chalice + new Vector3(0f, -0.1f, -0.7f), 8.2f, blood);
+            // The blood fountain: the stream, a brighter sheen running down it, and lights that pick
+            // it out of the dark from either side and glow where it lands.
+            Vector3 lip = chalice + new Vector3(0f, -0.1f, -0.7f);
+            FxKit.BloodStream(colossus, lip, 8.2f, blood);
+            FxKit.BloodStream(colossus, lip, 8.2f, bloodShine);
+            for (int side = -1; side <= 1; side += 2)
+            {
+                var rim = new GameObject("Stream light");
+                rim.transform.SetParent(colossus, false);
+                rim.transform.position = lip + new Vector3(side * 5f, -2f, -4f);
+                rim.transform.LookAt(lip + new Vector3(0f, -4f, 0f));
+                var l = rim.AddComponent<Light>();
+                l.type = LightType.Spot;
+                l.color = new Color(1f, 0.55f, 0.45f);
+                l.intensity = 35f;
+                l.range = 14f;
+                l.spotAngle = 30f;
+                l.shadows = LightShadows.None;
+            }
+            FxKit.PointLight(colossus, "Stream glow", lip + new Vector3(0f, -4f, -0.3f), new Color(1f, 0.1f, 0.12f), 3f, 4f, flicker: 0.15f);
+            FxKit.PointLight(colossus, "Pool glow", lip + new Vector3(0f, -7.6f, -0.4f), new Color(1f, 0.12f, 0.12f), 4f, 4.5f, flicker: 0.2f);
             // Fires at his feet throw their light up the robe, and two spots from the dais find his face.
             for (int side = -1; side <= 1; side += 2)
             {
@@ -333,13 +534,28 @@ namespace Rth.Client.Editor
 
         // ------------------------------------------------------------------ the altar, the channel, the shaft of light
 
-        private static void BuildCentre(Transform map, Material dais, Material synodRed, Material bronze, Material channelGlow, Material beam, Material mote)
+        private static void BuildCentre(Transform map, Material dais, Material darkStone, Material synodRed, Material bronze, Material wax, Material channelGlow, Material beam, Material mote)
         {
             Transform centre = WorldKit.Group(map, "Altar");
             Vector2Int altar = At(Altar);
             Transform altarStation = WorldKit.Station(centre, "Altar", "crypt_altar", altar.x, altar.y);
-            WorldKit.Box("Altar", altarStation, altarStation.position + new Vector3(0f, 0.5f, 0f), new Vector3(0.98f, 1f, 0.98f), dais);
-            WorldKit.Box("Cloth", altarStation, altarStation.position + new Vector3(0f, 1.01f, 0f), new Vector3(1.05f, 0.03f, 0.55f), synodRed, collider: false);
+            Vector3 a = altarStation.position;
+            // A stepped plinth, a carved block (its collider blocks the tile), a heavy top, a red runner
+            // hanging over both ends, and the Requiem's bowl with the channel's blood in it.
+            WorldKit.Box("Plinth", altarStation, a + new Vector3(0f, 0.08f, 0f), new Vector3(1.6f, 0.16f, 1.5f), darkStone, collider: false);
+            WorldKit.Box("Step", altarStation, a + new Vector3(0f, 0.22f, 0f), new Vector3(1.3f, 0.14f, 1.2f), dais, collider: false);
+            WorldKit.Box("Block", altarStation, a + new Vector3(0f, 0.6f, 0f), new Vector3(0.96f, 0.8f, 0.9f), dais);
+            foreach (float z in new[] { -0.46f, 0.46f })
+                WorldKit.Box("Carving", altarStation, a + new Vector3(0f, 0.6f, z), new Vector3(0.66f, 0.46f, 0.04f), darkStone, collider: false);
+            WorldKit.Box("Top", altarStation, a + new Vector3(0f, 1.06f, 0f), new Vector3(1.3f, 0.12f, 1.15f), dais, collider: false);
+            WorldKit.Box("Runner", altarStation, a + new Vector3(0f, 1.125f, 0f), new Vector3(0.5f, 0.02f, 1.2f), synodRed, collider: false);
+            foreach (float z in new[] { -0.6f, 0.6f })
+                WorldKit.Box("Runner end", altarStation, a + new Vector3(0f, 0.88f, z), new Vector3(0.5f, 0.5f, 0.03f), synodRed, collider: false);
+            WorldKit.Cylinder("Bowl", altarStation, a + new Vector3(0f, 1.2f, 0f), new Vector3(0.6f, 0.07f, 0.6f), bronze, collider: false);
+            WorldKit.Cylinder("Requiem", altarStation, a + new Vector3(0f, 1.27f, 0f), new Vector3(0.48f, 0.01f, 0.48f), channelGlow, collider: false);
+            foreach (Vector2 corner in new[] { new Vector2(-0.5f, -0.45f), new Vector2(0.5f, -0.45f), new Vector2(-0.5f, 0.45f), new Vector2(0.5f, 0.45f) })
+                WorldKit.Cylinder("Candle", altarStation, a + new Vector3(corner.x, 1.25f, corner.y), new Vector3(0.08f, 0.12f, 0.08f), wax, collider: false);
+            FxKit.PointLight(centre, "Altar candles", a + new Vector3(0f, 1.8f, -0.5f), new Color(1f, 0.72f, 0.45f), 1.8f, 4f, flicker: 0.12f);
             Vector2Int offertory = At(Offertory);
             Transform basin = WorldKit.Station(centre, "Offertory", "crypt_offertory", offertory.x, offertory.y);
             WorldKit.Cylinder("Stand", basin, basin.position + new Vector3(0f, 0.4f, 0f), new Vector3(0.4f, 0.4f, 0.4f), dais);

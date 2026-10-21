@@ -213,6 +213,15 @@ namespace Rth.Shared.Combat
             return style == CombatStyle.None ? unarmed : style;
         }
 
+        /// <summary>Each style's colour (#RRGGBB) where the world signals it: holy symbols, telegraphs.</summary>
+        public static string Colour(CombatStyle style) => style switch
+        {
+            CombatStyle.Melee => "#ff4a3a",
+            CombatStyle.Ranged => "#4fe06a",
+            CombatStyle.Occult => "#b06cff",
+            _ => "#ffe7b0",
+        };
+
         public static string WeaponPhrase(CombatStyle style) => style switch
         {
             CombatStyle.Melee => "a melee weapon",
