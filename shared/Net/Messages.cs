@@ -512,6 +512,8 @@ namespace Rth.Shared.Net
         public int BileLimit;
         public int MaxPhlegm;
         public int GlobalCooldownTicks = 3;
+        /// <summary>Scars (Martyrdom) that make the next ultimate free.</summary>
+        public int ScarsForFreeUltimate = 10;
         public List<RecipeInfo> Recipes = new List<RecipeInfo>();
         public List<Rth.Shared.Progress.AchievementDef> Achievements = new List<Rth.Shared.Progress.AchievementDef>();
         public List<StatusDef> Statuses = new List<StatusDef>();

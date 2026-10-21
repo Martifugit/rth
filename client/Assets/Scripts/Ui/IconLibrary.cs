@@ -42,9 +42,11 @@ namespace Rth.Client.Ui
         public static Texture2D ForAbility(AbilityDef def) =>
             def == null ? null : Get(!string.IsNullOrEmpty(def.Icon) ? def.Icon : def.BileShift > 0 ? "flare" : def.BileShift < 0 ? "draught" : "balance");
 
-        /// <summary>The colour an ability's icon is drawn in: by its bile pole.</summary>
+        /// <summary>The colour an ability's icon is drawn in: blood for melee (pale for verses), else by its bile pole.</summary>
         public static Color AbilityTint(AbilityDef def) =>
             def == null ? Color.white
+            : def.Type == AbilityType.Verse ? new Color(1f, 0.72f, 0.66f)
+            : def.Style == CombatStyle.Melee ? new Color(1f, 0.42f, 0.4f)
             : def.BileShift > 0 ? new Color(1f, 0.82f, 0.36f)
             : def.BileShift < 0 ? new Color(0.78f, 0.6f, 1f)
             : new Color(0.75f, 0.9f, 0.7f);

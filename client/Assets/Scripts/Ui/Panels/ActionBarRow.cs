@@ -136,7 +136,7 @@ namespace Rth.Client.Ui.Panels
             if (ActionBars.IsAbility(value, out string ability))
             {
                 AbilityDef a = Session.Ability(ability);
-                return a == null ? null : GameText.Describe(a, Session.TickSeconds, Session.AbilityProblem(a));
+                return a == null ? null : GameText.Describe(a, Session.TickSeconds, Session.AbilityProblem(a), Session.ItemName);
             }
             if (ActionBars.IsHymn(value, out string hymn))
             {

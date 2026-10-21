@@ -1,4 +1,5 @@
 """Builds client/Assets/Resources/Icons from game-icons.net (CC BY 3.0) per icons.json.
+Pass icon ids to fetch only those.
 
 Each icon is downloaded white on transparent, scaled to 96 px with a soft dark edge so it reads
 on dark slots, and saved under our own id. The client tints them (an item's colour, the theme's
@@ -30,14 +31,15 @@ def main():
     mapping = json.load(open(os.path.join(HERE, "icons.json")))
     os.makedirs(OUT, exist_ok=True)
     failed = []
+    only = set(sys.argv[1:])  # optional: just these ids
     for key, path in mapping.items():
-        if key.startswith("_"):
+        if key.startswith("_") or (only and key not in only):
             continue
         try:
             process(fetch(path)).save(os.path.join(OUT, key + ".png"))
         except Exception as e:
             failed.append(key + " (" + path + "): " + str(e))
-    print(len(mapping) - 1 - len(failed), "icons written to", os.path.normpath(OUT))
+    print((len(only) if only else len(mapping) - 1) - len(failed), "icons written to", os.path.normpath(OUT))
     for f in failed:
         print("FAILED", f)
     return 1 if failed else 0

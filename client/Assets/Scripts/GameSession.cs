@@ -102,9 +102,39 @@ namespace Rth.Client
             return skill;
         }
 
-        /// <summary>Why an ability can't be used right now (level, reagents, phlegm, bile), or null.</summary>
+        /// <summary>Why an ability can't be used right now (weapon, level, scriptures, blood, phlegm, bile), or null.</summary>
         public string AbilityProblem(AbilityDef ability) =>
-            PlayerState == null ? null : ability.CheckRequirements(PlayerState.Phlegm, PlayerState.Bile, Level, SkillName, CountInPack, id => Item(id)?.Name ?? id);
+            PlayerState == null ? null : ability.CheckRequirements(new AbilityUser
+            {
+                Phlegm = PlayerState.Phlegm,
+                Bile = PlayerState.Bile,
+                Blood = PlayerState.Blood,
+                MaxBlood = PlayerState.MaxBlood,
+                WeaponStyle = WeaponStyle,
+                FreeUltimate = Scars >= Mathf.Max(1, Content?.ScarsForFreeUltimate ?? 10),
+                LevelOf = Level,
+                SkillName = SkillName,
+                CountOf = CountInPack,
+                ItemName = id => Item(id)?.Name ?? id,
+            });
+
+        /// <summary>The weapon in hand, or null for empty hands.</summary>
+        public ItemDef Weapon => (int)EquipSlot.Weapon < Equipment.Count ? Item(Equipment[(int)EquipSlot.Weapon].ItemId) : null;
+
+        /// <summary>The style the player fights with: their weapon's, or that of empty hands.</summary>
+        public CombatStyle WeaponStyle => CombatStyles.OfWeapon(Weapon, Ability(Content?.AutoAttack)?.Style ?? CombatStyle.Occult);
+
+        /// <summary>Martyrdom's scar stacks, from the status bar.</summary>
+        public int Scars
+        {
+            get
+            {
+                if (PlayerState != null)
+                    foreach (StatusState s in PlayerState.Statuses)
+                        if (s.Id == StatusIds.Scar) return s.Magnitude;
+                return 0;
+            }
+        }
 
         public int CountInPack(string itemId)
         {
@@ -139,6 +169,8 @@ namespace Rth.Client
 
         public ItemDef Item(string id) => !string.IsNullOrEmpty(id) && _items.TryGetValue(id, out ItemDef d) ? d : null;
 
+        public string ItemName(string id) => Item(id)?.Name ?? id;
+
         private void LateUpdate() => CombatHud.ClearClaims();
 
         private void Start()
@@ -148,6 +180,9 @@ namespace Rth.Client
             if (regions == null) regions = GetComponent<RegionStreamer>();
             if (regions == null) regions = gameObject.AddComponent<RegionStreamer>();
             regions.world = world;
+            NodeViews nodes = GetComponent<NodeViews>();
+            if (nodes == null) nodes = gameObject.AddComponent<NodeViews>();
+            nodes.session = this;
             Ui.UiRoot ui = GetComponent<Ui.UiRoot>();
             if (ui == null) ui = gameObject.AddComponent<Ui.UiRoot>();
             ui.session = this;

@@ -741,6 +741,7 @@ namespace Rth.Server.Content
             BileLimit = Rules.BileLimit,
             MaxPhlegm = Rules.MaxPhlegm,
             GlobalCooldownTicks = Rules.GlobalCooldownTicks,
+            ScarsForFreeUltimate = Rules.ScarsForFreeUltimate,
         });
     }
 }

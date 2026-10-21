@@ -90,6 +90,29 @@ namespace Rth.Client.Editor
             WorldKit.Box("Stone", waystone, waystone.position + new Vector3(0f, 0.7f, 0f), new Vector3(0.6f, 1.4f, 0.35f), mossy);
             WorldKit.Box("Cap", waystone, waystone.position + new Vector3(0f, 1.45f, 0f), new Vector3(0.7f, 0.12f, 0.45f), stone, collider: false);
 
+            // ---------------------------------------------------------- Cruor's monument
+            // A red needle on a stepped plinth where the road leaves Tolling, with four founts cut
+            // into its lowest step (Religion: empowering), and Brother Hollis who keeps it.
+            Material bronze = kit.Mat("Bronze", new Color(0.6f, 0.45f, 0.2f)); // shared with Tolling
+            Material bloodPool = kit.Mat("FountBlood", new Color(0.35f, 0.03f, 0.05f));
+            Transform monumentGroup = WorldKit.Group(map, "Cruorian monument");
+            const int mx = 163, mz = 59;
+            WorldKit.Box("Step", monumentGroup, new Vector3(mx + 0.5f, 0.06f, mz + 0.5f), new Vector3(5.2f, 0.12f, 5.2f), stone, collider: false);
+            WorldKit.Box("Step", monumentGroup, new Vector3(mx + 0.5f, 0.16f, mz + 0.5f), new Vector3(3.4f, 0.1f, 3.4f), stone, collider: false);
+            Transform monument = WorldKit.Station(monumentGroup, "Monument", "cruorian_monument", mx, mz);
+            WorldKit.Box("Plinth", monument, monument.position + new Vector3(0f, 0.45f, 0f), new Vector3(0.95f, 0.6f, 0.95f), stone);
+            WorldKit.Box("Needle", monument, monument.position + new Vector3(0f, 2.1f, 0f), new Vector3(0.5f, 2.8f, 0.5f), synodRed, collider: false);
+            WorldKit.Box("Tip", monument, monument.position + new Vector3(0f, 3.65f, 0f), new Vector3(0.28f, 0.35f, 0.28f), bronze, collider: false, yaw: 45f);
+            foreach (Vector2Int f in new[] { new Vector2Int(mx - 2, mz), new Vector2Int(mx + 2, mz), new Vector2Int(mx, mz + 2), new Vector2Int(mx, mz - 2) })
+            {
+                Transform fount = WorldKit.Station(monumentGroup, "Fount", "monument_fount", f.x, f.y);
+                WorldKit.Cylinder("Pedestal", fount, fount.position + new Vector3(0f, 0.3f, 0f), new Vector3(0.45f, 0.3f, 0.45f), stone);
+                WorldKit.Cylinder("Bowl", fount, fount.position + new Vector3(0f, 0.66f, 0f), new Vector3(0.7f, 0.08f, 0.7f), bronze, collider: false);
+                WorldKit.Cylinder("Blood", fount, fount.position + new Vector3(0f, 0.76f, 0f), new Vector3(0.55f, 0.02f, 0.55f), bloodPool, collider: false);
+            }
+            Transform keeper = WorldKit.Group(map, "Monument keeper");
+            WorldKit.Spawn(keeper, "brother_hollis", 160, 55, 1);
+
             // ---------------------------------------------------------- the old toll-house
             // Tolling's toll was collected here once, before the town was too small to bother with.
             // Roofless and broken: walls with gaps, no door.

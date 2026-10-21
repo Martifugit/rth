@@ -195,7 +195,7 @@ namespace Rth.Server.Game
                 {
                     PointsSystem? points = World.Find<PointsSystem>();
                     points?.Add(player, def.Points, def.PointsAmount);
-                    if (points != null) World.Tell(player, TextKind.Info, "You gain " + def.PointsAmount + " " + points.PoolName(def.Points).ToLowerInvariant() + ".");
+                    if (points != null) World.Tell(player, TextKind.Info, "You gain " + def.PointsAmount + " " + Singular(points.PoolName(def.Points).ToLowerInvariant(), def.PointsAmount) + ".");
                 }
             }
 
@@ -207,6 +207,10 @@ namespace Rth.Server.Game
             World.Tell(player, TextKind.Info, def.DepletedMessage);
             return false;
         }
+
+        /// <summary>"pledges" for one is "pledge" (pool names are plural).</summary>
+        private static string Singular(string plural, int count) =>
+            count == 1 && plural.EndsWith("s", StringComparison.Ordinal) ? plural.Substring(0, plural.Length - 1) : plural;
 
         // ------------------------------------------------------------------ what clients see
 

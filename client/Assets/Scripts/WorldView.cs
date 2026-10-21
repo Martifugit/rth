@@ -140,7 +140,7 @@ namespace Rth.Client
             EntityView target = Find(hit.TargetId);
             if (target == null) return;
             target.LastHitTime = Time.time;
-            if (hit.Kind != HitKind.Heal) target.PlayHit();
+            if (hit.Kind != HitKind.Heal && hit.Kind != HitKind.Bleed) target.PlayHit();
 
             string text;
             Color color;
@@ -157,6 +157,10 @@ namespace Rth.Client
                 case HitKind.Deflected:
                     text = hit.Amount.ToString();
                     color = new Color(0.75f, 0.85f, 1f);
+                    break;
+                case HitKind.Bleed:
+                    text = hit.Amount.ToString();
+                    color = new Color(0.62f, 0.08f, 0.12f);
                     break;
                 default:
                     text = hit.Amount.ToString();

@@ -211,7 +211,7 @@ namespace Rth.Client.Ui.Modals
                         unlocks.Add(new Unlock
                         {
                             Level = r.Level, Kind = Kind.Abilities, Icon = IconLibrary.ForAbility(a), Tint = IconLibrary.AbilityTint(a),
-                            Text = a.Name + "  (" + a.Type.ToString().ToLowerInvariant() + ")", Tooltip = GameText.Describe(a, Session.TickSeconds),
+                            Text = a.Name + "  (" + a.Type.ToString().ToLowerInvariant() + ")", Tooltip = GameText.Describe(a, Session.TickSeconds, null, Session.ItemName),
                         });
             foreach (ItemDef item in content.Items)
                 if (item.Equipment != null)
@@ -258,7 +258,7 @@ namespace Rth.Client.Ui.Modals
         {
             if (Session.Content == null) return;
             var styles = Session.Content.Abilities.Where(a => a.Type != AbilityType.Auto).Select(a => a.Style).Distinct()
-                .Select(s => new MasterDetail.Entry { Id = s.ToString(), Text = s == CombatStyle.Occult ? "Occultism" : s.ToString(), Icon = "book" }).ToList();
+                .Select(s => new MasterDetail.Entry { Id = s.ToString(), Text = GameText.StyleName(s), Icon = "book" }).ToList();
             _view.SetEntries(styles, "Combat styles");
         }
 
@@ -266,9 +266,11 @@ namespace Rth.Client.Ui.Modals
         {
             VisualElement d = _view.Detail;
             UiKit.Text(d, (styleName == CombatStyle.Occult.ToString() ? "Occultism" : styleName).ToUpperInvariant(), "title-large");
-            UiKit.Text(d, "Builders build phlegm; spenders and ultimates spend it. Many push bile one way or the other.", "muted", "prose");
+            UiKit.Text(d, styleName == CombatStyle.Melee.ToString()
+                ? "Builders build phlegm; spenders and ultimates spend it. Many hit harder the less blood you have. Cruor's verses (Religion) are read over scripture, paid for in blood."
+                : "Builders build phlegm; spenders and ultimates spend it. Many push bile one way or the other.", "muted", "prose");
             UiKit.Divider(d);
-            foreach (AbilityType type in new[] { AbilityType.Builder, AbilityType.Spender, AbilityType.Ultimate })
+            foreach (AbilityType type in new[] { AbilityType.Builder, AbilityType.Spender, AbilityType.Ultimate, AbilityType.Verse })
             {
                 List<AbilityDef> list = Session.Content.Abilities.Where(a => a.Style.ToString() == styleName && a.Type == type).ToList();
                 if (list.Count == 0) continue;
@@ -285,7 +287,7 @@ namespace Rth.Client.Ui.Modals
                     text.style.flexGrow = 1;
                     text.style.flexShrink = 1;
                     text.style.marginLeft = 10f;
-                    Label described = UiKit.Text(text, GameText.Describe(a, Session.TickSeconds, null), "prose", "small");
+                    Label described = UiKit.Text(text, GameText.Describe(a, Session.TickSeconds, null, Session.ItemName), "prose", "small");
                     described.style.fontSize = 13;
                 }
             }
