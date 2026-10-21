@@ -32,7 +32,7 @@ every piece and how they are organised.
 
 | Piece | Contents |
 |---|---|
-| **Main action bar** ✓ | Blood, phlegm and breath as three equal gauges; the bile axis (no text on it, the value beside it); 14 slots on keys 1 to 0, - and =. Fixed size. |
+| **Main action bar** ✓ | Blood, phlegm and breath as three equal gauges; the bile axis (two halves filling outward from a black centre that holds the value); 14 slots on keys 1 to 0, - and =. Fixed size. |
 | **Secondary action bars** ✓ | Two more bars of 14 slots (from the window menu). Abilities and items are dragged onto any bar; layouts are kept on the server. |
 | **Minimap** ✓ | Square; compass and clock in its corners; beneath it the run toggle and buttons for the world map, journal, guide, settings and a menu of every window. No blood orb: blood is on the action bar. |
 | **Chat** ✓ | Filters (all, game, public) and the line you type on (Enter). Fixed size. Private and group chat to come. |
