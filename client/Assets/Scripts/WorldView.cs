@@ -101,8 +101,13 @@ namespace Rth.Client
                     : FromRgb(added.Color);
                 EntityView view = EntityView.Create(added, color, _tickSeconds);
                 view.transform.SetParent(transform, true);
+                if (!string.IsNullOrEmpty(added.Held)) view.SetHeld(ItemLookup(added.Held));
                 _entities[added.Id] = view;
             }
+
+            foreach (AppearanceEvent appearance in update.Appearances)
+                if (_entities.TryGetValue(appearance.Id, out EntityView view) && view != null)
+                    view.SetHeld(string.IsNullOrEmpty(appearance.Held) ? null : ItemLookup(appearance.Held));
 
             foreach (EntityMoved moved in update.Moved)
                 if (_entities.TryGetValue(moved.Id, out EntityView view)) view.AddSteps(moved.Steps, moved.Running);

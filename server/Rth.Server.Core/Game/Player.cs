@@ -69,6 +69,7 @@ namespace Rth.Server.Game
             Position = Position,
             Shape = EntityShape.Capsule,
             HealthPercent = HealthPercent,
+            Held = Held,
         };
     }
 }

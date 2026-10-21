@@ -538,6 +538,8 @@ namespace Rth.Server.Game
                         update.Moved.Add(new EntityMoved { Id = other.Id, Running = other.Running, Steps = new List<TileCoord>(other.StepsThisTick) });
                     if (other.HealthChanged)
                         update.Health.Add(new HealthEvent { Id = other.Id, Percent = other.HealthPercent });
+                    if (other.AppearanceChanged)
+                        update.Appearances.Add(new AppearanceEvent { Id = other.Id, Held = other.Held });
                 }
 
                 foreach (int id in viewer.KnownEntities.ToList())
@@ -573,6 +575,7 @@ namespace Rth.Server.Game
                 entity.StepsThisTick.Clear();
                 entity.Teleported = false;
                 entity.HealthChanged = false;
+                entity.AppearanceChanged = false;
             }
             _hits.Clear();
             _actions.Clear();

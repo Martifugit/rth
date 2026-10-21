@@ -27,6 +27,8 @@ namespace Rth.Client.Characters
         public abstract void PlayHit();
         /// <summary>It died; the server removes or respawns it shortly after.</summary>
         public abstract void PlayDeath();
+        /// <summary>Shows what it holds (null for nothing). Bodies without hands ignore it.</summary>
+        public virtual void SetHeld(Rth.Shared.Items.ItemDef item) { }
 
         public static EntityBody Create(EntityAdded added, Color color, Transform parent)
         {

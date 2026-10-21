@@ -74,6 +74,19 @@ namespace Rth.Server.Game
         public List<Bleed> Bleeds { get; } = new List<Bleed>();
         public bool HealthChanged { get; set; }
 
+        /// <summary>The item in its hand, as viewers draw it ("" for none).</summary>
+        public string Held { get; private set; } = "";
+        /// <summary>Set when <see cref="Held"/> changed this tick, so viewers are told.</summary>
+        public bool AppearanceChanged { get; set; }
+
+        public void SetHeld(string? item)
+        {
+            item ??= "";
+            if (item == Held) return;
+            Held = item;
+            AppearanceChanged = true;
+        }
+
         public byte HealthPercent => MaxBlood <= 0 ? (byte)0 : (byte)Math.Max(Blood > 0 ? 1 : 0, (int)Math.Round(100.0 * Blood / MaxBlood));
 
         public bool InCombat(uint tick, int timeoutTicks) => LastCombatTick != 0 && tick - LastCombatTick < timeoutTicks;

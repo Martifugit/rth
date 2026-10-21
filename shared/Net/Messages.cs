@@ -11,7 +11,7 @@ namespace Rth.Shared.Net
     public static class Protocol
     {
         /// <summary>Bump whenever a message layout changes, so mismatched builds are refused at login.</summary>
-        public const int Version = 14;
+        public const int Version = 15;
         public const int DefaultPort = 43600;
         /// <summary>Sanity limits on a single frame's length, in bytes.</summary>
         public const int MaxClientFrame = 4 * 1024;
@@ -209,6 +209,15 @@ namespace Rth.Shared.Net
         /// <summary>Size in tenths (10 = normal).</summary>
         public byte Scale = 10;
         public byte HealthPercent = 100;
+        /// <summary>The item in its hand (a weapon), drawn by the client; empty for nothing.</summary>
+        public string Held = "";
+    }
+
+    /// <summary>Something visible about an entity changed (what it holds).</summary>
+    public struct AppearanceEvent
+    {
+        public int Id;
+        public string Held;
     }
 
     /// <summary>An entity in view that moved this tick, with each tile it stepped through in order.</summary>
@@ -272,12 +281,13 @@ namespace Rth.Shared.Net
         public List<int> Deaths = new List<int>();
         public List<GroundItemAdded> GroundAdded = new List<GroundItemAdded>();
         public List<int> GroundRemoved = new List<int>();
+        public List<AppearanceEvent> Appearances = new List<AppearanceEvent>();
 
         public override MessageType Type => MessageType.WorldUpdate;
 
         public bool IsEmpty =>
             Added.Count == 0 && Moved.Count == 0 && Removed.Count == 0 && Health.Count == 0 &&
-            Hits.Count == 0 && Actions.Count == 0 && Deaths.Count == 0 && GroundAdded.Count == 0 && GroundRemoved.Count == 0;
+            Hits.Count == 0 && Actions.Count == 0 && Deaths.Count == 0 && GroundAdded.Count == 0 && GroundRemoved.Count == 0 && Appearances.Count == 0;
 
         internal override void WriteBody(BinaryWriter w)
         {
@@ -295,6 +305,7 @@ namespace Rth.Shared.Net
                 w.Write(a.Color);
                 w.Write(a.Scale);
                 w.Write(a.HealthPercent);
+                w.Write(a.Held ?? "");
             }
             w.Write((ushort)Moved.Count);
             foreach (EntityMoved m in Moved)
@@ -343,6 +354,12 @@ namespace Rth.Shared.Net
             }
             w.Write((ushort)GroundRemoved.Count);
             foreach (int id in GroundRemoved) w.Write(id);
+            w.Write((ushort)Appearances.Count);
+            foreach (AppearanceEvent a in Appearances)
+            {
+                w.Write(a.Id);
+                w.Write(a.Held ?? "");
+            }
         }
 
         internal static WorldUpdateMessage Read(BinaryReader r)
@@ -363,6 +380,7 @@ namespace Rth.Shared.Net
                     Color = r.ReadInt32(),
                     Scale = r.ReadByte(),
                     HealthPercent = r.ReadByte(),
+                    Held = r.ReadString(),
                 });
             }
             count = r.ReadUInt16();
@@ -394,6 +412,8 @@ namespace Rth.Shared.Net
                 msg.GroundAdded.Add(new GroundItemAdded { Id = r.ReadInt32(), ItemId = r.ReadString(), Count = r.ReadInt32(), Plane = r.ReadByte(), Position = ReadTile(r) });
             count = r.ReadUInt16();
             for (int i = 0; i < count; i++) msg.GroundRemoved.Add(r.ReadInt32());
+            count = r.ReadUInt16();
+            for (int i = 0; i < count; i++) msg.Appearances.Add(new AppearanceEvent { Id = r.ReadInt32(), Held = r.ReadString() });
             return msg;
         }
 

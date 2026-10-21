@@ -48,6 +48,7 @@ namespace Rth.Server.Game
             Color = Def.ColorRgb,
             Scale = (byte)Math.Max(1, Math.Min(255, (int)Math.Round(Def.Scale * 10))),
             HealthPercent = HealthPercent,
+            Held = Def.Held ?? "",
         };
     }
 }

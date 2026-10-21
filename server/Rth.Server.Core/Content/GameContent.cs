@@ -40,6 +40,8 @@ namespace Rth.Server.Content
         public bool Regenerates;
         /// <summary>Drop table rolled when it dies (drops.json), or null for none.</summary>
         public string? DropTable;
+        /// <summary>An item drawn in its hand (Brother Hollis's mace), or null.</summary>
+        public string? Held;
         /// <summary>Labels other systems match on ("occult-made" for Abjuration).</summary>
         public List<string> Tags = new List<string>();
 

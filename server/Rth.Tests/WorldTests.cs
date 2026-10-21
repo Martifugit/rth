@@ -47,6 +47,22 @@ public class WorldTests
     }
 
     [Fact]
+    public void WieldingAWeaponShowsItInHandToEveryone()
+    {
+        var fx = OpenWorld();
+        FakeConnection alice = fx.Login("Alice");
+        FakeConnection bob = fx.Login("Bob");
+        Rth.Server.Game.Player a = fx.Player("Alice");
+        int slot = fx.World.Get<Rth.Server.Game.ItemSystem>().Of(a).Inventory.FirstFreeSlot();
+        fx.World.Get<Rth.Server.Game.ItemSystem>().Of(a).Inventory.Set(slot, "sword", 1);
+        alice.FromClient(new ItemActionMessage { Container = Rth.Shared.Items.ContainerKind.Inventory, Slot = slot, ActionId = "equip" });
+        fx.Ticks(1);
+        Assert.Contains(bob.Updates.SelectMany(u => u.Appearances), e => e.Id == a.Id && e.Held == "sword");
+        FakeConnection cass = fx.Login("Cass");
+        Assert.Contains(cass.Updates.SelectMany(u => u.Added), e => e.Id == a.Id && e.Held == "sword");
+    }
+
+    [Fact]
     public void WalkingMovesOneTilePerTick()
     {
         var fx = OpenWorld();

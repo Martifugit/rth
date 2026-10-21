@@ -54,6 +54,22 @@ namespace Rth.Client.Characters
             if (_animator != null && !_animator.Play(animation)) _animator.Play("cast");
         }
 
+        private GameObject _held;
+        private string _heldId;
+
+        public override void SetHeld(Rth.Shared.Items.ItemDef item)
+        {
+            if ((item?.Id ?? "") == (_heldId ?? "")) return;
+            _heldId = item?.Id;
+            if (_held != null) _model.Detach(_held);
+            _held = null;
+            GameObject art = HeldItemArt.Build(item);
+            if (art == null) return;
+            _held = _model.Attach(art, socket: "grip.R");
+            Destroy(art);
+            HeldItemArt.Tint(_held, item);
+        }
+
         public override void PlayHit()
         {
             if (_animator == null || !_animator.Play("hit")) _hitTime = Time.time;

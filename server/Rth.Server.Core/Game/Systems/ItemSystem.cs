@@ -217,6 +217,9 @@ namespace Rth.Server.Game
         public void Contribute(Player player, StatBlock stats)
         {
             ItemContainer equipment = Of(player).Equipment;
+            // Stats are recalculated whenever what's worn changes, so the hand follows here too.
+            int weapon = (int)EquipSlot.Weapon;
+            player.SetHeld(equipment.InRange(weapon) && !equipment.IsEmpty(weapon) ? equipment[weapon].ItemId : null);
             for (int i = 0; i < equipment.Size; i++)
             {
                 ItemDef? def = equipment.IsEmpty(i) ? null : World.Content.Item(equipment[i].ItemId);

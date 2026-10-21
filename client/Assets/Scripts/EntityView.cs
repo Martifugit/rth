@@ -55,6 +55,12 @@ namespace Rth.Client
             return view;
         }
 
+        /// <summary>Shows the item in its hand (null for none).</summary>
+        public void SetHeld(Rth.Shared.Items.ItemDef item)
+        {
+            if (_body != null) _body.SetHeld(item);
+        }
+
         private void BuildBody(EntityAdded added, Color color)
         {
             _body = EntityBody.Create(added, color, transform);
