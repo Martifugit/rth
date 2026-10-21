@@ -84,7 +84,27 @@
     "value": 40,
     "color": "#9e9e9e",
     "tags": [ "occult" ],
-    "equipment": { "slot": "Weapon", "stats": { "abilityDamage": 10, "accuracy": 2 } }
+    "equipment": { "slot": "Weapon", "style": "Occult", "stats": { "abilityDamage": 10, "accuracy": 2 } }
+  },
+  {
+    "id": "watchmans_sword",
+    "name": "Watchman's sword",
+    "icon": "sword",
+    "examine": "Short, plain and Synod-issue. The wardens of Palmerway carry one each and sharpen them on Sundays.",
+    "value": 40,
+    "color": "#b8b8c0",
+    "tags": [ "melee" ],
+    "equipment": { "slot": "Weapon", "style": "Melee", "stats": { "abilityDamage": 10, "meleeAccuracy": 2 } }
+  },
+  {
+    "id": "penitents_mace",
+    "name": "Penitent's mace",
+    "icon": "mace",
+    "examine": "Iron flanges on an ash haft. Pilgrims to Cruor carry them for the road, and for themselves.",
+    "value": 300,
+    "color": "#8a4a4a",
+    "tags": [ "melee" ],
+    "equipment": { "slot": "Weapon", "style": "Melee", "stats": { "abilityDamage": 18, "meleeDamage": 3 }, "requirements": [ { "skill": "melee", "level": 8 } ] }
   },
   {
     "id": "occultist_robe",
@@ -94,7 +114,7 @@
     "value": 60,
     "color": "#4a3b5c",
     "tags": [ "occult" ],
-    "equipment": { "slot": "Body", "stats": { "ward": 3, "abilityDamage": 5 } }
+    "equipment": { "slot": "Body", "stats": { "ward": 3, "occultPower": 5 } }
   },
   {
     "id": "fen_leather_hood",
@@ -143,6 +163,47 @@
     "color": "#b07f2a",
     "tags": [ "occult" ],
     "equipment": { "slot": "Neck", "stats": { "damageBonus": 5, "maxBlood": -50 }, "requirements": [ { "skill": "occultism", "level": 12 } ] }
+  },
+
+  {
+    "id": "scripture_i",
+    "name": "Scripture of the First Hour",
+    "icon": "scripture",
+    "examine": "A strip of vellum sealed in Cruor's red wax. What's inside is older than the words on it. Read by the lesser verses.",
+    "stackable": true,
+    "value": 10,
+    "color": "#d9a07a",
+    "tags": [ "scripture" ]
+  },
+  {
+    "id": "scripture_ii",
+    "name": "Scripture of the Second Hour",
+    "icon": "scripture",
+    "examine": "Two seals, two hands. The wax is still faintly warm. Read by Death's Dance.",
+    "stackable": true,
+    "value": 25,
+    "color": "#c97050",
+    "tags": [ "scripture" ]
+  },
+  {
+    "id": "scripture_iii",
+    "name": "Scripture of the Third Hour",
+    "icon": "scripture",
+    "examine": "Heavy for its size, as if it were soaked through. Read by Hemospike and Redemption.",
+    "stackable": true,
+    "value": 50,
+    "color": "#b04038",
+    "tags": [ "scripture" ]
+  },
+  {
+    "id": "scripture_iv",
+    "name": "Scripture of the Last Hour",
+    "icon": "scripture",
+    "examine": "Cruor concentrates very few of these. It beats, if you hold it long enough. Read by Martyrdom and Stigmata.",
+    "stackable": true,
+    "value": 125,
+    "color": "#8a1c2c",
+    "tags": [ "scripture" ]
   },
 
   {

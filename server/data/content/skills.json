@@ -5,7 +5,8 @@
       "id": "melee",
       "name": "Melee",
       "icon": "melee",
-      "description": "Close fighting with blades and every other weapon in reach: attack and strength in one. Trained by dealing melee damage."
+      "description": "Close fighting with blades and every other weapon in reach: attack and strength in one. Trained by dealing melee damage.",
+      "statsPerLevel": { "meleePower": 2 }
     },
     {
       "id": "ranged",
@@ -18,7 +19,7 @@
       "name": "Occultism",
       "icon": "eye",
       "description": "Working the humours as weapons, and the house rites that make what its spells burn. Trained by dealing occult damage and by performing rites.",
-      "statsPerLevel": { "abilityDamage": 2 }
+      "statsPerLevel": { "occultPower": 2 }
     },
     {
       "id": "defence",

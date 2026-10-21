@@ -35,12 +35,31 @@ namespace Rth.Shared.Combat
         public const string DeflectMelee = "deflectMelee";
         public const string DeflectRanged = "deflectRanged";
         public const string DeflectOccult = "deflectOccult";
+        // Flat ability damage with one style only (its skill's levels, its armour), on top of abilityDamage.
+        public const string MeleePower = "meleePower";
+        public const string RangedPower = "rangedPower";
+        public const string OccultPower = "occultPower";
+
+        // Blood and the hits you take (mostly Cruor's verses).
+        /// <summary>Percent of each hit taken that is held back and bled out over the next few ticks instead.</summary>
+        public const string DeferDamage = "deferDamage";
+        /// <summary>Percent of the next hit taken that is blocked outright.</summary>
+        public const string BlockHit = "blockHit";
+        /// <summary>Phlegm gained for blocking a hit as big as your max blood (in proportion for smaller ones).</summary>
+        public const string BlockedPhlegm = "blockedPhlegm";
+        /// <summary>Scar stacks gained each time you take damage; enough of them make the next ultimate free.</summary>
+        public const string ScarOnHit = "scarOnHit";
+        /// <summary>Extra phlegm from each builder.</summary>
+        public const string BuilderPhlegm = "builderPhlegm";
+        /// <summary>Percent of max blood that each ability you use costs (never your last point).</summary>
+        public const string BloodPerAbility = "bloodPerAbility";
 
         public static readonly IReadOnlyList<string> All = new[]
         {
             AbilityDamage, Accuracy, DamageBonus, Ward, MaxBlood, MaxDevotion, DevotionBonus, Lifesteal,
             MeleeAccuracy, RangedAccuracy, OccultAccuracy, MeleeDamage, RangedDamage, OccultDamage,
-            DeflectMelee, DeflectRanged, DeflectOccult,
+            DeflectMelee, DeflectRanged, DeflectOccult, MeleePower, RangedPower, OccultPower,
+            DeferDamage, BlockHit, BlockedPhlegm, ScarOnHit, BuilderPhlegm, BloodPerAbility,
         };
 
         public static bool IsKnown(string id)
@@ -64,6 +83,15 @@ namespace Rth.Shared.Combat
             CombatStyle.Melee => MeleeDamage,
             CombatStyle.Ranged => RangedDamage,
             CombatStyle.Occult => OccultDamage,
+            _ => null,
+        };
+
+        /// <summary>A style's flat ability damage ("meleePower"), or null for no style.</summary>
+        public static string? PowerFor(CombatStyle style) => style switch
+        {
+            CombatStyle.Melee => MeleePower,
+            CombatStyle.Ranged => RangedPower,
+            CombatStyle.Occult => OccultPower,
             _ => null,
         };
 

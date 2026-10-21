@@ -11,7 +11,7 @@ namespace Rth.Shared.Net
     public static class Protocol
     {
         /// <summary>Bump whenever a message layout changes, so mismatched builds are refused at login.</summary>
-        public const int Version = 12;
+        public const int Version = 13;
         public const int DefaultPort = 43600;
         /// <summary>Sanity limits on a single frame's length, in bytes.</summary>
         public const int MaxClientFrame = 4 * 1024;
@@ -226,6 +226,8 @@ namespace Rth.Shared.Net
         /// <summary>Reduced by deflection.</summary>
         Deflected = 2,
         Heal = 3,
+        /// <summary>Blood lost to a bleed, or paid for a verse: not a blow.</summary>
+        Bleed = 4,
     }
 
     public struct HitEvent
@@ -500,6 +502,8 @@ namespace Rth.Shared.Net
         public List<AbilityDef> Abilities = new List<AbilityDef>();
         /// <summary>Ids of the abilities on the player's action bar, in slot order.</summary>
         public List<string> ActionBar = new List<string>();
+        /// <summary>The auto-attack with empty hands; its style is the unarmed style.</summary>
+        public string AutoAttack = "";
         public List<ItemDef> Items = new List<ItemDef>();
         public List<SkillDef> Skills = new List<SkillDef>();
         public XpCurve XpCurve = new XpCurve();

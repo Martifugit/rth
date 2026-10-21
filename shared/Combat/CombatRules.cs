@@ -37,6 +37,12 @@ namespace Rth.Shared.Combat
 
         public int RespawnDelayTicks = 4;
 
+        // Blood (melee and Cruor's verses).
+        /// <summary>Damage held back by deferDamage (Death's Dance) bleeds out over this many ticks.</summary>
+        public int DeferredBleedTicks = 10;
+        /// <summary>Scar stacks (Martyrdom) that make the next ultimate cost no phlegm, consuming them.</summary>
+        public int ScarsForFreeUltimate = 10;
+
         public int ClampBile(int bile) => Math.Max(-BileLimit, Math.Min(BileLimit, bile));
 
         /// <summary>Bile leaning yellow at all: infused and choleric.</summary>

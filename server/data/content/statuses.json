@@ -42,5 +42,69 @@
     "icon": "status_fervour",
     "color": "#ffb04c",
     "description": "Burning with purpose. You deal {value}% more damage."
+  },
+  {
+    "id": "bleeding",
+    "name": "Bleeding",
+    "icon": "status_bleeding",
+    "color": "#c8323c",
+    "debuff": true,
+    "description": "You have {value} blood still to lose, a little each tick."
+  },
+  {
+    "id": "scar",
+    "name": "Scars",
+    "icon": "status_scar",
+    "color": "#d06a6a",
+    "description": "{value} scars. At ten, your next ultimate costs no phlegm."
+  },
+  {
+    "id": "siphon",
+    "name": "Siphon",
+    "icon": "siphon",
+    "color": "#d0404a",
+    "description": "{value}% of the damage you deal comes back to you as blood."
+  },
+  {
+    "id": "abjuration",
+    "name": "Abjuration",
+    "icon": "abjuration",
+    "color": "#f2d58a",
+    "description": "Your abilities do four times their damage to the occult-made, and none to anything else."
+  },
+  {
+    "id": "deaths_dance",
+    "name": "Death's Dance",
+    "icon": "deaths_dance",
+    "color": "#b0384a",
+    "description": "Hits you take are {value}% lighter now; you bleed out the difference afterwards."
+  },
+  {
+    "id": "hemospike",
+    "name": "Hemospike",
+    "icon": "hemospike",
+    "color": "#e0503c",
+    "description": "Builders give {value} more phlegm, and every ability costs you blood."
+  },
+  {
+    "id": "redemption",
+    "name": "Redemption",
+    "icon": "redemption",
+    "color": "#f0e0b0",
+    "description": "The next blow you take is stopped completely, and paid back in phlegm."
+  },
+  {
+    "id": "martyrdom",
+    "name": "Martyrdom",
+    "icon": "martyrdom",
+    "color": "#a83040",
+    "description": "Every wound you take leaves a scar."
+  },
+  {
+    "id": "stigmata",
+    "name": "Stigmata",
+    "icon": "stigmata",
+    "color": "#ff4050",
+    "description": "While you're below 30% blood you deal {value}% more damage."
   }
 ]

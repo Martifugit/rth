@@ -21,6 +21,7 @@
     "respawnDelayTicks": 4
   },
   "autoAttack": "bile_lash",
+  "autoAttacks": { "Melee": "strike", "Occult": "bile_lash" },
   "actionBar": [
     "gall_spark",
     "black_draught",

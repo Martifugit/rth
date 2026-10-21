@@ -21,7 +21,7 @@ namespace Rth.Server.Game
     /// ability then takes the fight back up (chasing, or stalling if out of range). The target is
     /// lost only by attacking something else, by it dying or leaving, or by dropping out of combat.
     /// </remarks>
-    public sealed class CombatSystem : GameSystem, IStatContributor, IStatusSource
+    public sealed partial class CombatSystem : GameSystem, IStatContributor, IStatusSource
     {
         private CombatRules Rules => World.Rules;
 
@@ -56,7 +56,12 @@ namespace Rth.Server.Game
             stats.Add(StatIds.MaxDevotion, Rules.PlayerMaxDevotion);
             foreach (ActiveEffect e in player.Effects)
             {
-                if (e.Type == EffectType.Ward) stats.Add(StatIds.Ward, e.Magnitude);
+                if (e.Buff != null)
+                {
+                    if (!e.Buff.Conditional)
+                        foreach (KeyValuePair<string, int> stat in e.Buff.Stats) stats.Add(stat.Key, stat.Value);
+                }
+                else if (e.Type == EffectType.Ward) stats.Add(StatIds.Ward, e.Magnitude);
                 else if (e.Type == EffectType.Fervour) stats.Add(StatIds.DamageBonus, e.Magnitude);
             }
         }
@@ -106,8 +111,8 @@ namespace Rth.Server.Game
         private void HandleUseAbility(Player player, string abilityId)
         {
             if (player.IsDead) return;
-            if (!World.Content.Abilities.TryGetValue(abilityId, out AbilityDef? ability) || !World.Content.ActionBar.Contains(abilityId)) return;
-            if (ability.KeepsStall)
+            if (!World.Content.Abilities.TryGetValue(abilityId, out AbilityDef? ability) || ability.Type == AbilityType.Auto) return;
+            if (ability.OnSelf)
             {
                 if (!InCombat(player))
                 {
@@ -127,7 +132,7 @@ namespace Rth.Server.Game
                 return;
             }
             if (!IsReady(player, ability, World.CurrentTick) && !Options(player).Queueing) return;
-            if (!ability.KeepsStall && !ResumeAttack(player)) return;
+            if (!ability.OnSelf && !ResumeAttack(player)) return;
             player.QueuedAbility = abilityId;
         }
 
@@ -208,15 +213,34 @@ namespace Rth.Server.Game
             public List<string> Abilities = new List<string>();
         }
 
-        /// <summary>Why the player can't use an ability right now (levels, phlegm, bile), or null.</summary>
+        /// <summary>Why the player can't use an ability right now (weapon, levels, items, blood, phlegm, bile), or null.</summary>
         private string? Requirements(Player player, AbilityDef ability)
         {
             SkillSystem? skills = World.Find<SkillSystem>();
             ItemSystem? items = World.Find<ItemSystem>();
-            return ability.CheckRequirements(player.Phlegm, player.Bile,
-                skills == null ? (Func<string, int>?)null : s => skills.Level(player, s), skills == null ? null : (Func<string, string>)skills.Name,
-                items == null ? (Func<string, int>?)null : i => items.CountOf(player, i), i => World.Content.Item(i)?.Name ?? i);
+            return ability.CheckRequirements(new AbilityUser
+            {
+                Phlegm = player.Phlegm,
+                Bile = player.Bile,
+                Blood = player.Blood,
+                MaxBlood = player.MaxBlood,
+                WeaponStyle = WeaponStyle(player),
+                FreeUltimate = HasFreeUltimate(player),
+                LevelOf = skills == null ? (Func<string, int>?)null : s => skills.Level(player, s),
+                SkillName = skills == null ? null : (Func<string, string>)skills.Name,
+                CountOf = items == null ? (Func<string, int>?)null : i => items.CountOf(player, i),
+                ItemName = i => World.Content.Item(i)?.Name ?? i,
+            });
         }
+
+        /// <summary>The weapon the player holds, or null for empty hands.</summary>
+        public ItemDef? Weapon(Player player) => World.Find<ItemSystem>()?.Worn(player, EquipSlot.Weapon);
+
+        /// <summary>The style the player fights with: their weapon's, or the unarmed style.</summary>
+        public CombatStyle WeaponStyle(Player player) => CombatStyles.OfWeapon(Weapon(player), World.Content.UnarmedStyle);
+
+        /// <summary>The auto-attack the player makes with what they hold.</summary>
+        public AbilityDef AutoAttack(Player player) => World.Content.AutoAttackFor(Weapon(player));
 
         // ------------------------------------------------------------------ engaging
 
@@ -283,10 +307,11 @@ namespace Rth.Server.Game
             uint now = World.CurrentTick;
             FireSelfAbility(player, now);
             AbilityDef? queued = AbilityOrNull(player.QueuedAbility);
-            if (queued != null && queued.KeepsStall) queued = null; // used where you stand, once ready: see FireSelfAbility
+            if (queued != null && queued.OnSelf) queued = null; // used where you stand, once ready: see FireSelfAbility
             AbilityDef? stalled = AbilityOrNull(player.StalledAbility);
             if (player.StalledAbility != null && stalled == null) player.StalledAbility = null; // removed by a content reload
-            int range = World.Content.AutoAttack.Range;
+            AbilityDef auto = AutoAttack(player);
+            int range = auto.Range;
             if (stalled != null && queued != null) range = Math.Min(stalled.Range, queued.Range);
             else if (stalled != null) range = stalled.Range;
             else if (queued != null) range = queued.Range;
@@ -342,20 +367,21 @@ namespace Rth.Server.Game
 
             if (now >= player.NextAttackTick)
             {
-                UseAbility(player, target, World.Content.AutoAttack);
-                player.NextAttackTick = now + (uint)Math.Max(1, World.Content.AutoAttack.CooldownTicks);
+                UseAbility(player, target, auto);
+                player.NextAttackTick = now + (uint)Math.Max(1, auto.CooldownTicks);
             }
             return true;
         }
 
         /// <summary>
-        /// Fires a queued <see cref="AbilityDef.KeepsStall"/> ability once it's ready: on the player,
-        /// wherever they stand, leaving any stall in place and keeping them in combat.
+        /// Fires a queued ability used on yourself (<see cref="AbilityDef.OnSelf"/>: keepsStall
+        /// abilities and verses) once it's ready, wherever the player stands, leaving any stall in
+        /// place and keeping them in combat.
         /// </summary>
         private void FireSelfAbility(Player player, uint now)
         {
             AbilityDef? ability = AbilityOrNull(player.QueuedAbility);
-            if (ability == null || !ability.KeepsStall || !IsReady(player, ability, now)) return;
+            if (ability == null || !ability.OnSelf || !IsReady(player, ability, now)) return;
             player.QueuedAbility = null;
             if (!CanStillUse(player, ability)) return;
             UseAbility(player, player, ability);
@@ -404,20 +430,29 @@ namespace Rth.Server.Game
         {
             sbyte pole = (sbyte)Math.Sign(ability.BileShift);
             World.AddAction(new ActionEvent { SourceId = player.Id, TargetId = target.Id, AbilityId = ability.Id, Pole = pole });
+            bool freeUltimate = ability.Type == AbilityType.Ultimate && HasFreeUltimate(player);
+
+            // Blood is paid up front: the verse's price, and Hemospike's toll on every ability.
+            int bloodCost = ability.BloodCost(player.Blood, player.MaxBlood);
+            if (ability.Type != AbilityType.Auto && ability.Type != AbilityType.Verse)
+                bloodCost += player.MaxBlood * player.Stats.Get(StatIds.BloodPerAbility) / 100;
+            PayBlood(player, bloodCost);
 
             int dealt = 0;
             if (ability.DamageMax > 0)
             {
                 double evasion = target is Npc npc ? npc.Def.Evasion : 0;
-                double accuracy = Rules.PlayerAccuracy + (player.Stats.Get(StatIds.Accuracy) + StyleStat(player, StatIds.AccuracyFor(ability.Style))) / 100.0;
+                double accuracy = Rules.PlayerAccuracy + (Stat(player, target, StatIds.Accuracy) + StyleStat(player, target, StatIds.AccuracyFor(ability.Style))) / 100.0;
                 double hitChance = Math.Max(0.05, Math.Min(1.0, accuracy - evasion));
                 if (World.Random.NextDouble() < hitChance)
                 {
                     int percent = World.Random.Next(ability.DamageMin, ability.DamageMax + 1);
-                    double damage = player.Stats.Get(StatIds.AbilityDamage) * percent / 100.0;
-                    int bonus = player.Stats.Get(StatIds.DamageBonus) + StyleStat(player, StatIds.DamageFor(ability.Style));
+                    double damage = (player.Stats.Get(StatIds.AbilityDamage) + StyleStat(player, target, StatIds.PowerFor(ability.Style))) * percent / 100.0;
+                    double bonus = Stat(player, target, StatIds.DamageBonus) + StyleStat(player, target, StatIds.DamageFor(ability.Style));
+                    if (ability.LowBloodBonus > 0) bonus += ability.LowBloodBonus * (1 - player.Blood / (double)Math.Max(1, player.MaxBlood));
                     damage *= Math.Max(0, 1 + (Rules.BileDamageDealtPercent(player.Bile) + bonus) / 100.0);
                     dealt = Damage(target, (int)Math.Round(damage), player, HitKind.Normal, ability.Style);
+                    if (ability.BleedPercent > 0 && dealt > 0) AddBleed(target, dealt * ability.BleedPercent / 100, ability.BleedTicks, player, ability.Style);
                 }
                 else
                 {
@@ -429,11 +464,12 @@ namespace Rth.Server.Game
             switch (ability.Type)
             {
                 case AbilityType.Builder:
-                    AddPhlegm(player, ability.PhlegmGain);
+                    AddPhlegm(player, ability.PhlegmGain + player.Stats.Get(StatIds.BuilderPhlegm));
                     break;
                 case AbilityType.Spender:
                 case AbilityType.Ultimate:
-                    AddPhlegm(player, -ability.PhlegmCost);
+                    if (freeUltimate) Of(player).Scars = 0;
+                    else AddPhlegm(player, -ability.PhlegmCost);
                     break;
             }
             ItemSystem? items = World.Find<ItemSystem>();
@@ -443,11 +479,16 @@ namespace Rth.Server.Game
             ShiftBile(player, ability.BileShift);
             if (ability.BileTowardZero > 0) SettleBile(player, ability.BileTowardZero);
 
-            int heal = dealt * (ability.HealPercentOfDamage + player.Stats.Get(StatIds.Lifesteal)) / 100 + player.MaxBlood * ability.HealPercentOfMaxBlood / 100;
+            int heal = dealt * (ability.HealPercentOfDamage + Stat(player, target, StatIds.Lifesteal)) / 100 + player.MaxBlood * ability.HealPercentOfMaxBlood / 100;
             if (heal > 0) Heal(player, heal);
 
             if (ability.Effect != EffectType.None && ability.EffectTicks > 0)
                 ApplyEffect(player, ability.Effect, ability.EffectMagnitude, ability.EffectTicks);
+            if (ability.Buff != null) ApplyBuff(player, ability.Buff);
+
+            SkillSystem? skills = World.Find<SkillSystem>();
+            if (skills != null)
+                foreach (Rth.Shared.Progress.XpReward xp in ability.Xp) skills.AddXp(player, xp.Skill, xp.Amount);
         }
 
         // ------------------------------------------------------------------ the humours (also used by items and other systems)
@@ -466,9 +507,11 @@ namespace Rth.Server.Game
 
         private static int StyleStat(Player player, string? stat) => stat == null ? 0 : player.Stats.Get(stat);
 
+        private int StyleStat(Player player, Entity target, string? stat) => stat == null ? 0 : Stat(player, target, stat);
+
         public void ApplyEffect(Entity entity, EffectType type, int magnitude, int ticks)
         {
-            entity.Effects.RemoveAll(e => e.Type == type);
+            entity.Effects.RemoveAll(e => e.Buff == null && e.Type == type);
             entity.Effects.Add(new ActiveEffect { Type = type, Magnitude = magnitude, EndTick = World.CurrentTick + (uint)ticks });
             if (entity is Player p) World.RecalculateStats(p);
         }
@@ -480,7 +523,7 @@ namespace Rth.Server.Game
         {
             if (target.IsDead) return 0;
 
-            if (target is Player defender && amount > 0)
+            if (target is Player defender && amount > 0 && kind != HitKind.Bleed)
             {
                 // Warding and wards lower it; choleric raises it (a negative ward).
                 double ward = defender.Stats.Get(StatIds.Ward) - Rules.BileDamageTakenPercent(defender.Bile);
@@ -491,14 +534,18 @@ namespace Rth.Server.Game
                     scaled *= 1 - Math.Min(90, deflect) / 100.0;
                     kind = HitKind.Deflected;
                 }
-                amount = (int)Math.Round(scaled);
+                amount = TakeBlow(defender, (int)Math.Round(scaled), ref kind);
             }
 
             amount = Math.Min(amount, target.Blood);
             target.Blood -= amount;
             target.HealthChanged |= amount > 0;
             World.AddHit(new HitEvent { TargetId = target.Id, SourceId = source?.Id ?? 0, Amount = amount, Kind = kind });
-            if (amount > 0) World.Events.Publish(new DamageDealt(target, source, amount, style));
+            if (amount > 0)
+            {
+                World.Events.Publish(new DamageDealt(target, source, amount, style));
+                if (target is Player hurt) Scar(hurt);
+            }
 
             if (source != null)
             {
@@ -541,6 +588,8 @@ namespace Rth.Server.Game
             victim.DiedAtTick = World.CurrentTick;
             victim.ClearCombat();
             victim.Waypoints.Clear();
+            victim.Bleeds.Clear();
+            if (victim is Player scarred) Of(scarred).Scars = 0;
             World.AddDeath(victim.Id);
             foreach (Entity other in World.AllEntities())
             {
@@ -561,7 +610,10 @@ namespace Rth.Server.Game
             DropKeptTarget(player);
             DropStallOutOfCombat(player);
             TickResources(player);
+            TickBleeds(player);
+            if (player.IsDead) return;
             if (player.Effects.RemoveAll(e => World.CurrentTick >= e.EndTick) > 0) World.RecalculateStats(player);
+            if (!InCombat(player)) Of(player).Scars = 0;
         }
 
         /// <summary>
@@ -591,7 +643,11 @@ namespace Rth.Server.Game
 
         public override void OnNpcs()
         {
-            foreach (Npc npc in World.Npcs) npc.Effects.RemoveAll(e => World.CurrentTick >= e.EndTick);
+            foreach (Npc npc in World.Npcs)
+            {
+                npc.Effects.RemoveAll(e => World.CurrentTick >= e.EndTick);
+                if (!npc.IsDead) TickBleeds(npc);
+            }
         }
 
         private void TickResources(Player player)
@@ -652,7 +708,11 @@ namespace Rth.Server.Game
                 statuses.Add(new StatusState { Id = StatusIds.Melancholic, Magnitude = Rules.MelancholicPercent(bile) });
             }
             foreach (ActiveEffect e in player.Effects)
-                statuses.Add(new StatusState { Id = StatusIds.ForEffect(e.Type), Magnitude = e.Magnitude, EndTick = e.EndTick });
+                statuses.Add(new StatusState { Id = e.Status, Magnitude = e.Buff != null ? BuffMagnitude(e.Buff) : e.Magnitude, EndTick = e.EndTick });
+            int bleeding = player.Bleeds.Sum(b => b.Remaining);
+            if (bleeding > 0) statuses.Add(new StatusState { Id = StatusIds.Bleeding, Magnitude = bleeding });
+            int scars = Of(player).Scars;
+            if (scars > 0) statuses.Add(new StatusState { Id = StatusIds.Scar, Magnitude = scars });
         }
 
         private static int Clamp(int value, int min, int max) => Math.Max(min, Math.Min(max, value));

@@ -34,6 +34,7 @@
     "leashRadius": 10,
     "respawnTicks": 30,
     "dropTable": "vitriol_mite",
+    "tags": [ "occult-made" ],
     "shape": "Sphere",
     "color": "#c9b62f",
     "scale": 0.7

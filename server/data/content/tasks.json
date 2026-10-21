@@ -1,7 +1,8 @@
 {
   "pools": [
     { "id": "yard_tokens", "name": "Yard tokens" },
-    { "id": "corvins_favour", "name": "Corvin's favour" }
+    { "id": "corvins_favour", "name": "Corvin's favour" },
+    { "id": "pledges", "name": "Pledges" }
   ],
   "givers": [
     {

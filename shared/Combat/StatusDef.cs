@@ -29,10 +29,14 @@ namespace Rth.Shared.Combat
         public const string Warding = "warding";
         /// <summary>Black bile: less damage dealt.</summary>
         public const string Melancholic = "melancholic";
+        /// <summary>Losing blood over time (a bleed, or damage held back by a verse).</summary>
+        public const string Bleeding = "bleeding";
+        /// <summary>Martyrdom's stacks; the value is how many.</summary>
+        public const string Scar = "scar";
 
         /// <summary>The status shown for a timed ability effect (<see cref="EffectType"/>).</summary>
         public static string ForEffect(EffectType type) => type.ToString().ToLowerInvariant();
 
-        public static readonly string[] BuiltIn = { Infused, Choleric, Warding, Melancholic };
+        public static readonly string[] BuiltIn = { Infused, Choleric, Warding, Melancholic, Bleeding, Scar };
     }
 }

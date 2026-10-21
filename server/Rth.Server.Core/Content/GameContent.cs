@@ -40,6 +40,8 @@ namespace Rth.Server.Content
         public bool Regenerates;
         /// <summary>Drop table rolled when it dies (drops.json), or null for none.</summary>
         public string? DropTable;
+        /// <summary>Labels other systems match on ("occult-made" for Abjuration).</summary>
+        public List<string> Tags = new List<string>();
 
         public string Examine = "";
         /// <summary>Whether players can attack it at all (townsfolk can't).</summary>
@@ -161,6 +163,8 @@ namespace Rth.Server.Content
         public CombatRules Rules = new CombatRules();
         public List<AbilityDef> Abilities = new List<AbilityDef>();
         public string AutoAttack = "";
+        /// <summary>Each weapon style's auto-attack; a style missing here uses <see cref="AutoAttack"/>.</summary>
+        public Dictionary<CombatStyle, string> AutoAttacks = new Dictionary<CombatStyle, string>();
         public List<string> ActionBar = new List<string>();
         public List<NpcDef> Npcs = new List<NpcDef>();
         public AssayerLines Assayer = new AssayerLines();
@@ -189,12 +193,17 @@ namespace Rth.Server.Content
         {
             public CombatRules Rules = new CombatRules();
             public string AutoAttack = "";
+            public Dictionary<CombatStyle, string> AutoAttacks = new Dictionary<CombatStyle, string>();
             public List<string> ActionBar = new List<string>();
         }
 
         public CombatRules Rules { get; private set; } = new CombatRules();
         public IReadOnlyDictionary<string, AbilityDef> Abilities { get; private set; } = new Dictionary<string, AbilityDef>();
+        /// <summary>The auto-attack with empty hands (or a weapon of no style); its style is the unarmed style.</summary>
         public AbilityDef AutoAttack { get; private set; } = new AbilityDef();
+        public IReadOnlyDictionary<CombatStyle, AbilityDef> AutoAttacks { get; private set; } = new Dictionary<CombatStyle, AbilityDef>();
+        /// <summary>The style of empty hands: the unarmed auto-attack's.</summary>
+        public CombatStyle UnarmedStyle => AutoAttack.Style;
         public IReadOnlyList<string> ActionBar { get; private set; } = new List<string>();
         public IReadOnlyDictionary<string, NpcDef> Npcs { get; private set; } = new Dictionary<string, NpcDef>();
         public AssayerLines Assayer { get; private set; } = new AssayerLines();
@@ -222,6 +231,14 @@ namespace Rth.Server.Content
 
         public ItemDef? Item(string? id) => id != null && Items.TryGetValue(id, out ItemDef? def) ? def : null;
 
+        /// <summary>The auto-attack a weapon makes: its own, else its style's, else the unarmed one.</summary>
+        public AbilityDef AutoAttackFor(ItemDef? weapon)
+        {
+            if (weapon?.Equipment?.AutoAttack != null && Abilities.TryGetValue(weapon.Equipment.AutoAttack, out AbilityDef? own)) return own;
+            CombatStyle style = CombatStyles.OfWeapon(weapon, UnarmedStyle);
+            return AutoAttacks.TryGetValue(style, out AbilityDef? auto) ? auto : AutoAttack;
+        }
+
         public string SkillName(string id) => Skills.TryGetValue(id, out SkillDef? s) ? s.Name : id;
 
         public static GameContent Load(string directory)
@@ -231,6 +248,7 @@ namespace Rth.Server.Content
             {
                 Rules = combat.Rules,
                 AutoAttack = combat.AutoAttack,
+                AutoAttacks = combat.AutoAttacks,
                 ActionBar = combat.ActionBar,
                 Abilities = ReadJson<List<AbilityDef>>(directory, "abilities.json"),
                 Npcs = ReadJson<List<NpcDef>>(directory, "npcs.json"),
@@ -264,7 +282,25 @@ namespace Rth.Server.Content
                 if (a.CooldownTicks < 0) problems.Add("Ability '" + a.Id + "': negative cooldown.");
                 if (a.BileMin > a.BileMax) problems.Add("Ability '" + a.Id + "': bileMin is above bileMax.");
                 if (a.PhlegmCost > a.PhlegmRequired && a.Type != AbilityType.Builder) problems.Add("Ability '" + a.Id + "': costs more phlegm than it requires.");
-                if (a.KeepsStall && a.DamageMax > 0) problems.Add("Ability '" + a.Id + "': keepsStall abilities are used on yourself and can't deal damage.");
+                if (a.OnSelf && a.DamageMax > 0) problems.Add("Ability '" + a.Id + "': keepsStall abilities and verses are used on yourself and can't deal damage.");
+                if (a.BloodCostCurrent < 0 || a.BloodCostCurrent >= 100 || a.BloodCostMax < 0 || a.BloodCostMax >= 100)
+                    problems.Add("Ability '" + a.Id + "': blood costs must be 0-99%.");
+                if (a.BleedPercent < 0 || (a.BleedPercent > 0 && a.BleedTicks < 1)) problems.Add("Ability '" + a.Id + "': a bleed needs bleedTicks of at least 1.");
+                if (a.Buff != null)
+                {
+                    if (a.Buff.Ticks < 1) problems.Add("Ability '" + a.Id + "': its buff needs ticks of at least 1.");
+                    if (string.IsNullOrWhiteSpace(a.Buff.Status)) problems.Add("Ability '" + a.Id + "': its buff needs a status.");
+                    foreach (string stat in a.Buff.Stats.Keys.Concat(a.Buff.Otherwise.Keys))
+                        if (!StatIds.IsKnown(stat)) problems.Add("Ability '" + a.Id + "': its buff has unknown stat '" + stat + "'.");
+                }
+            }
+
+            var autoAttacks = new Dictionary<CombatStyle, AbilityDef>();
+            foreach (KeyValuePair<CombatStyle, string> pair in parts.AutoAttacks ?? new Dictionary<CombatStyle, string>())
+            {
+                if (!abilities.TryGetValue(pair.Value, out AbilityDef? styleAuto) || styleAuto.Type != AbilityType.Auto)
+                    problems.Add("autoAttacks: the " + pair.Key + " auto-attack '" + pair.Value + "' isn't an Auto ability.");
+                else autoAttacks[pair.Key] = styleAuto;
             }
 
             if (!abilities.TryGetValue(parts.AutoAttack ?? "", out AbilityDef? auto)) problems.Add("autoAttack '" + parts.AutoAttack + "' is not an ability.");
@@ -274,6 +310,7 @@ namespace Rth.Server.Content
             {
                 if (!abilities.TryGetValue(id, out AbilityDef? a)) problems.Add("Action bar ability '" + id + "' doesn't exist.");
                 else if (a.Type == AbilityType.Auto) problems.Add("Action bar ability '" + id + "' is an auto-attack.");
+                else if (a.Type == AbilityType.Verse) problems.Add("Action bar ability '" + id + "' is a verse; the default bar holds abilities.");
             }
 
             Dictionary<string, ItemDef> items = Index(parts.Items, i => i.Id, "item", problems);
@@ -325,9 +362,19 @@ namespace Rth.Server.Content
                 CheckRequirements(a.Requirements, "Ability '" + a.Id + "'");
                 foreach (ItemCost r in a.Reagents)
                     if (!items.ContainsKey(r.Item) || r.Count < 1) problems.Add("Ability '" + a.Id + "': bad reagent '" + r.Item + "' x" + r.Count + ".");
+                foreach (Rth.Shared.Progress.XpReward xp in a.Xp)
+                    if (!skills.ContainsKey(xp.Skill)) problems.Add("Ability '" + a.Id + "': gives XP in unknown skill '" + xp.Skill + "'.");
             }
             foreach (ItemDef i in parts.Items)
-                if (i.Equipment != null) CheckRequirements(i.Equipment.Requirements, "Item '" + i.Id + "'");
+            {
+                if (i.Equipment == null) continue;
+                CheckRequirements(i.Equipment.Requirements, "Item '" + i.Id + "'");
+                string? ownAuto = i.Equipment.AutoAttack;
+                if (ownAuto != null && (!abilities.TryGetValue(ownAuto, out AbilityDef? own) || own.Type != AbilityType.Auto))
+                    problems.Add("Item '" + i.Id + "': autoAttack '" + ownAuto + "' isn't an Auto ability.");
+                if ((i.Equipment.Style != CombatStyle.None || ownAuto != null) && i.Equipment.Slot != EquipSlot.Weapon)
+                    problems.Add("Item '" + i.Id + "': only weapons have a combat style or an auto-attack.");
+            }
 
             Dictionary<string, ObjectDef> objects = Index(parts.Objects, o => o.Id, "object", problems);
             Dictionary<string, RecipeDef> recipes = Index(parts.Recipes, r => r.Id, "recipe", problems);
@@ -454,6 +501,9 @@ namespace Rth.Server.Content
                 .Where(t => t != EffectType.None).Select(StatusIds.ForEffect));
             foreach (string id in givenOut)
                 if (!statuses.ContainsKey(id)) problems.Add("Statuses: '" + id + "' is given out by the server but not defined.");
+            foreach (AbilityDef a in parts.Abilities)
+                if (a.Buff != null && !string.IsNullOrWhiteSpace(a.Buff.Status) && !statuses.ContainsKey(a.Buff.Status))
+                    problems.Add("Ability '" + a.Id + "': buff status '" + a.Buff.Status + "' isn't in statuses.json.");
 
             HymnsFile hymnFile = parts.Hymns ?? new HymnsFile();
             Dictionary<string, HymnDef> hymns = Index(hymnFile.Hymns, h => h.Id, "hymn", problems);
@@ -477,6 +527,7 @@ namespace Rth.Server.Content
                 Rules = rules,
                 Abilities = abilities,
                 AutoAttack = auto!,
+                AutoAttacks = autoAttacks,
                 ActionBar = parts.ActionBar.ToList(),
                 Npcs = npcs,
                 Assayer = parts.Assayer ?? new AssayerLines(),
@@ -650,6 +701,7 @@ namespace Rth.Server.Content
         {
             Abilities = Abilities.Values.ToList(),
             ActionBar = ActionBar.ToList(),
+            AutoAttack = AutoAttack.Id,
             Items = Items.Values.ToList(),
             Skills = Skills.Values.ToList(),
             XpCurve = XpCurve,

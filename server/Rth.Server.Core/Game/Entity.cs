@@ -6,11 +6,30 @@ using Rth.Shared.World;
 
 namespace Rth.Server.Game
 {
-    public struct ActiveEffect
+    /// <summary>
+    /// A timed effect on an entity: a simple ward or fervour (consumables, older abilities) or an
+    /// ability's buff, which carries its own stats and status.
+    /// </summary>
+    public sealed class ActiveEffect
     {
         public EffectType Type;
         public int Magnitude;
         public uint EndTick;
+        /// <summary>The buff it came from, for buffs; null for a plain <see cref="Type"/> effect.</summary>
+        public BuffDef? Buff;
+
+        /// <summary>The status it shows as.</summary>
+        public string Status => Buff?.Status ?? StatusIds.ForEffect(Type);
+    }
+
+    /// <summary>Blood still to be lost over time: a bleed from an ability, or damage a verse held back.</summary>
+    public sealed class Bleed
+    {
+        public int Remaining;
+        public int TicksLeft;
+        /// <summary>Who caused it (credited with its damage and the kill), or 0 for nobody.</summary>
+        public int SourceId;
+        public CombatStyle Style;
     }
 
     /// <summary>Anything that stands on a tile, moves and can fight: players and NPCs.</summary>
@@ -52,6 +71,7 @@ namespace Rth.Server.Game
         /// <summary>Last tick this entity dealt or took damage; 0 if never.</summary>
         public uint LastCombatTick { get; set; }
         public List<ActiveEffect> Effects { get; } = new List<ActiveEffect>();
+        public List<Bleed> Bleeds { get; } = new List<Bleed>();
         public bool HealthChanged { get; set; }
 
         public byte HealthPercent => MaxBlood <= 0 ? (byte)0 : (byte)Math.Max(Blood > 0 ? 1 : 0, (int)Math.Round(100.0 * Blood / MaxBlood));

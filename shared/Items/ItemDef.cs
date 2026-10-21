@@ -61,6 +61,13 @@ namespace Rth.Shared.Items
         public Dictionary<string, int> Stats = new Dictionary<string, int>();
         /// <summary>Skill levels needed to wear it.</summary>
         public List<SkillRequirement> Requirements = new List<SkillRequirement>();
+        /// <summary>
+        /// For a weapon: the style it fights with, which decides its auto-attack and which abilities
+        /// it can use. None counts as empty hands.
+        /// </summary>
+        public CombatStyle Style;
+        /// <summary>For a weapon: its own auto-attack (an Auto ability), instead of its style's.</summary>
+        public string? AutoAttack;
     }
 
     /// <summary>Something eaten or drunk: applies its effect operations, then is used up.</summary>

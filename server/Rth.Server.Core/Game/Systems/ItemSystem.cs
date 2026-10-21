@@ -111,6 +111,14 @@ namespace Rth.Server.Game
 
         public int CountOf(Player player, string itemId) => Of(player).Inventory.CountOf(itemId);
 
+        /// <summary>What the player wears in a slot, or null if it's empty.</summary>
+        public ItemDef? Worn(Player player, EquipSlot slot)
+        {
+            ItemContainer equipment = Of(player).Equipment;
+            int i = (int)slot;
+            return equipment.InRange(i) && !equipment.IsEmpty(i) ? World.Content.Item(equipment[i].ItemId) : null;
+        }
+
         /// <summary>Removes items from the inventory if there are enough. Returns whether it did.</summary>
         public bool Take(Player player, string itemId, int count)
         {
