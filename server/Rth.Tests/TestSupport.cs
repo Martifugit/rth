@@ -158,7 +158,7 @@ internal static class TestContent
 
     public static SkillsFile Skills() => new()
     {
-        XpCurve = new XpCurve { MaxLevel = 99, FirstLevelXp = 100, Growth = 1.1 },
+        XpCurve = new XpCurve { MaxLevel = 100 },
         Skills =
         {
             new SkillDef { Id = "occultism", Name = "Occultism" },

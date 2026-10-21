@@ -35,23 +35,29 @@ public class SkillTests
 
     [Theory]
     [InlineData(1, 0)]
-    [InlineData(2, 100)]
-    [InlineData(3, 210)]
-    [InlineData(4, 331)]
-    public void TheXpCurveGrowsGeometrically(int level, long xp)
+    [InlineData(2, 83)]
+    [InlineData(10, 1154)]
+    [InlineData(50, 101333)]
+    [InlineData(92, 6517253)]
+    [InlineData(99, 13034431)]
+    [InlineData(100, 14391160)]
+    public void TheXpCurveIsRuneScapesRunningToOneHundred(int level, long xp)
     {
-        var curve = new XpCurve { MaxLevel = 99, FirstLevelXp = 100, Growth = 1.1 };
+        var curve = new XpCurve();
         Assert.Equal(xp, curve.XpForLevel(level));
         Assert.Equal(level, curve.LevelForXp(xp));
         if (xp > 0) Assert.Equal(level - 1, curve.LevelForXp(xp - 1));
     }
 
     [Fact]
-    public void TheCurveStopsAtMaxLevel()
+    public void LevelsStopAtTheCapAndASkillCanCapLower()
     {
-        var curve = new XpCurve { MaxLevel = 10, FirstLevelXp = 100, Growth = 1.1 };
-        Assert.Equal(10, curve.LevelForXp(long.MaxValue / 2));
-        Assert.Equal(curve.XpForLevel(10), curve.XpForLevel(50));
+        var curve = new XpCurve();
+        Assert.Equal(100, curve.LevelForXp(XpCurve.MaxXp));
+        Assert.Equal(curve.XpForLevel(100), curve.XpForLevel(120));
+        var shortSkill = new SkillDef { Id = "short", MaxLevel = 20 };
+        Assert.Equal(20, curve.LevelForXp(XpCurve.MaxXp, curve.MaxFor(shortSkill)));
+        Assert.Equal(100, curve.MaxFor(new SkillDef()));
     }
 
     [Fact]
@@ -163,7 +169,7 @@ public class SkillTests
         var fx = World();
         FakeConnection client = fx.Login("Alice");
         Player alice = fx.Player("Alice");
-        fx.World.Get<SkillSystem>().AddXp(alice, "butchering", new XpCurve { FirstLevelXp = 100, Growth = 1.1 }.XpForLevel(11));
+        fx.World.Get<SkillSystem>().AddXp(alice, "butchering", new XpCurve().XpForLevel(11));
         alice.Position = new TileCoord(9, 5);
         Give(fx, "knife");
         Give(fx, "carcass");

@@ -41,11 +41,11 @@ namespace Rth.Client.Ui.Panels
             UiKit.Tooltip(_breath.Root, () => UiKit.Title("Breath") + "\nHeld focuses spend it, such as deflection (F). Recovers out of combat.");
 
             _bile = new BileAxis(frame);
-            _bile.Root.style.marginTop = 6f;
+            _bile.Root.style.marginTop = 3f;
             UiKit.Tooltip(_bile.Root, () => BileTooltip());
 
             VisualElement slots = UiKit.El(frame);
-            slots.style.marginTop = 7f;
+            slots.style.marginTop = 5f;
             _slots = new ActionBarRow(Ui, slots, 0);
         }
 
@@ -81,7 +81,7 @@ namespace Rth.Client.Ui.Panels
             return text + "\n\n" + UiKit.Colour(now + ".", UiKit.Value);
         }
 
-        /// <summary>The bile axis: no text on it; the value sits in a box beside it, coloured by pole.</summary>
+        /// <summary>The bile axis between its poles' icons; its value sits centred above it, coloured by pole.</summary>
         private sealed class BileAxis
         {
             public readonly VisualElement Root;
@@ -93,11 +93,13 @@ namespace Rth.Client.Ui.Panels
 
             public BileAxis(VisualElement parent)
             {
-                Root = UiKit.El(parent, "row");
-                VisualElement black = UiKit.Icon(Root, IconLibrary.Get("bile"), 16f);
+                Root = UiKit.El(parent);
+                _value = UiKit.Text(Root, "0", "bile-value");
+                VisualElement row = UiKit.El(Root, "row");
+                VisualElement black = UiKit.Icon(row, IconLibrary.Get("bile"), 22f);
                 black.style.unityBackgroundImageTintColor = UiKit.BlackBile;
                 black.style.marginRight = 6f;
-                _track = UiKit.El(Root, "bar");
+                _track = UiKit.El(row, "bar");
                 _track.style.height = 10f;
                 _fill = UiKit.El(_track, "bar__fill");
                 UiKit.El(_track, "bar__gloss");
@@ -116,10 +118,9 @@ namespace Rth.Client.Ui.Panels
                 _needle.style.top = 0f;
                 _needle.style.bottom = 0f;
                 _needle.style.backgroundColor = Color.white;
-                VisualElement yellow = UiKit.Icon(Root, IconLibrary.Get("bile"), 16f);
+                VisualElement yellow = UiKit.Icon(row, IconLibrary.Get("bile"), 22f);
                 yellow.style.unityBackgroundImageTintColor = UiKit.YellowBile;
                 yellow.style.marginLeft = 6f;
-                _value = UiKit.Text(Root, "0", "bile-value");
             }
 
             public void Set(int bile, ClientContent content)

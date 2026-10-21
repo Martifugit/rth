@@ -25,7 +25,6 @@ namespace Rth.Client.Ui
         private readonly VisualElement _titleIcon;
         private readonly Label _title;
         private readonly VisualElement _tabs;
-        private readonly Label _header;
         private readonly VisualElement _body;
         private readonly Dictionary<UiPanel, VisualElement> _tabElements = new Dictionary<UiPanel, VisualElement>();
 
@@ -85,7 +84,6 @@ namespace Rth.Client.Ui
             _titleIcon.RegisterCallback<PointerUpEvent>(e => { if (Panels.Count == 1) ReleaseTab(_titleIcon, Panels[0], e); });
 
             _body = UiKit.El(Root, "window__body");
-            _header = UiKit.Text(_body, "", "window__header");
 
             VisualElement grip = UiKit.El(Root, "window__grip");
             grip.RegisterCallback<PointerDownEvent>(BeginResize);
@@ -140,7 +138,6 @@ namespace Rth.Client.Ui
             if (panel != null) _body.Add(panel.Root);
             foreach (KeyValuePair<UiPanel, VisualElement> t in _tabElements)
                 t.Value.EnableInClassList("tab--active", t.Key == panel);
-            _header.text = panel?.Title.ToUpperInvariant() ?? "";
             if (Panels.Count == 1 && panel != null) _title.text = panel.Title;
         }
 
@@ -153,7 +150,6 @@ namespace Rth.Client.Ui
             _titleBar.style.display = bare ? DisplayStyle.None : DisplayStyle.Flex;
             _tabs.style.display = single ? DisplayStyle.None : DisplayStyle.Flex;
             _titleIcon.style.display = _title.style.display = single ? DisplayStyle.Flex : DisplayStyle.None;
-            _header.style.display = single ? DisplayStyle.None : DisplayStyle.Flex;
             if (single)
             {
                 UiKit.SetIcon(_titleIcon, IconLibrary.Get(Panels[0].Icon));

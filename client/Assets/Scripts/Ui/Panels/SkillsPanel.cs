@@ -8,9 +8,10 @@ using UnityEngine.UIElements;
 namespace Rth.Client.Ui.Panels
 {
     /// <summary>
-    /// Every skill at a glance, as tiles of icon and level, three across, with the total level.
-    /// A thin bar under each shows progress to the next level. Click a skill for its guide
-    /// (what it unlocks); right-click to set a level target, shown in gold and in the XP tracker.
+    /// Every skill at a glance, as tiles of icon and level, three across, with the total level
+    /// on a footer row. A thin bar under each shows progress to the next level. Click a skill for
+    /// its guide (what it unlocks); right-click to set a level or XP target, shown in gold and in
+    /// the XP tracker.
     /// </summary>
     public sealed class SkillsPanel : UiPanel
     {
@@ -43,9 +44,9 @@ namespace Rth.Client.Ui.Panels
             _grid = UiKit.El(root, "slot-grid");
             _grid.style.width = 3 * (TileWidth + 4f);
             _grid.style.alignSelf = Align.Center;
-            VisualElement total = UiKit.El(root, "card", "row");
-            total.style.marginTop = 8f;
-            UiKit.Text(total, "TOTAL LEVEL", "heading").style.marginTop = total.style.marginBottom = 0f;
+            UiKit.El(root, "spacer");
+            VisualElement total = UiKit.El(root, "footer-row");
+            UiKit.Text(total, "Total level", "heading").style.marginTop = total.style.marginBottom = 0f;
             UiKit.El(total, "spacer");
             _total = UiKit.Text(total, "", "value", "bold");
         }
@@ -60,20 +61,18 @@ namespace Rth.Client.Ui.Panels
             foreach (Tile tile in _tiles)
             {
                 Session.SkillXp.TryGetValue(tile.Skill, out long xp);
-                int level = content.XpCurve.LevelForXp(xp);
+                int cap = content.XpCurve.MaxFor(Session.Skill(tile.Skill));
+                int level = Session.Level(tile.Skill);
                 total += level;
-                long from = content.XpCurve.XpForLevel(level);
-                long to = content.XpCurve.XpForLevel(level + 1);
+                long from = content.XpCurve.XpForLevel(level, cap);
+                long to = content.XpCurve.XpForLevel(level + 1, cap);
                 tile.Level.text = level.ToString();
                 tile.Progress.style.width = Length.Percent(to > from ? (xp - from) * 100f / (to - from) : 100f);
 
-                int target = SkillTargets.Get(Session.PlayerName, tile.Skill);
-                tile.Target.style.display = target > level ? DisplayStyle.Flex : DisplayStyle.None;
-                if (target > level)
-                {
-                    long goal = content.XpCurve.XpForLevel(target);
-                    tile.Target.style.width = Length.Percent(goal > from ? (xp - from) * 100f / (goal - from) : 100f);
-                }
+                // The target bar runs from the start of this level to the goal.
+                long goal = SkillTargets.GoalXp(Session, tile.Skill);
+                tile.Target.style.display = goal > xp ? DisplayStyle.Flex : DisplayStyle.None;
+                if (goal > xp) tile.Target.style.width = Length.Percent(goal > from ? (xp - from) * 100f / (goal - from) : 100f);
             }
             _total.text = total.ToString();
         }
@@ -121,26 +120,32 @@ namespace Rth.Client.Ui.Panels
                 tile.RegisterCallback<PointerDownEvent>(e =>
                 {
                     if (e.button == 0) Ui.OpenModal<GuideModal>("skills", id);
-                    else if (e.button == 1) Ui.Menu(e.position, skill.Name, TargetOptions(id));
+                    else if (e.button == 1) Ui.Menu(e.position, skill.Name, TargetOptions(skill));
                 });
                 UiKit.Tooltip(tile, () => Describe(skill));
                 _tiles.Add(new Tile { Skill = id, Level = level, Progress = progress, Target = target });
             }
         }
 
-        private List<(string Label, System.Action Action)> TargetOptions(string skill)
+        private List<(string Label, System.Action Action)> TargetOptions(SkillDef skill)
         {
-            Session.SkillXp.TryGetValue(skill, out long xp);
-            int level = Session.Content.XpCurve.LevelForXp(xp);
-            int max = Session.Content.XpCurve.MaxLevel;
-            string player = Session.PlayerName;
-            var options = new List<(string Label, System.Action Action)>();
-            foreach (int step in new[] { 1, 5, 10 })
+            string id = skill.Id;
+            int max = Session.Content.XpCurve.MaxFor(skill);
+            var options = new List<(string Label, System.Action Action)>
             {
-                int goal = Mathf.Min(max, level + step);
-                if (goal > level) options.Add(("Set target: level " + goal, () => SkillTargets.Set(player, skill, goal)));
-            }
-            if (SkillTargets.Get(player, skill) > 0) options.Add(("Clear target", () => SkillTargets.Set(player, skill, 0)));
+                ("Set level target", () => Ui.PromptNumber("Target level for " + skill.Name + "?", n =>
+                {
+                    if (n > Session.Level(id) && n <= max) SkillTargets.Set(Session, id, new SkillTargets.Target { IsLevel = true, Value = n });
+                    else Session.Notify("Choose a level above your current one, up to " + max + ".");
+                })),
+                ("Set exp target", () => Ui.PromptNumber("Target XP for " + skill.Name + "?", n =>
+                {
+                    Session.SkillXp.TryGetValue(id, out long xp);
+                    if (n > xp && n <= XpCurve.MaxXp) SkillTargets.Set(Session, id, new SkillTargets.Target { IsLevel = false, Value = n });
+                    else Session.Notify("Choose an amount above the XP you have, up to " + XpCurve.MaxXp.ToString("N0") + ".");
+                })),
+            };
+            if (SkillTargets.Get(Session, id) != null) options.Add(("Clear target", () => SkillTargets.Set(Session, id, null)));
             return options;
         }
 
@@ -148,14 +153,17 @@ namespace Rth.Client.Ui.Panels
         {
             var curve = Session.Content.XpCurve;
             Session.SkillXp.TryGetValue(skill.Id, out long xp);
-            int level = curve.LevelForXp(xp);
+            int cap = curve.MaxFor(skill);
+            int level = Session.Level(skill.Id);
             var lines = new List<string> { UiKit.Title(skill.Name + " " + level) };
             if (!string.IsNullOrEmpty(skill.Description)) lines.Add(skill.Description);
             lines.Add("");
             lines.Add("XP: " + UiKit.Colour(xp.ToString("N0"), UiKit.Value));
-            if (level < curve.MaxLevel) lines.Add("Next level: " + UiKit.Colour((curve.XpForLevel(level + 1) - xp).ToString("N0") + " to go", UiKit.Value));
-            int target = SkillTargets.Get(Session.PlayerName, skill.Id);
-            if (target > level) lines.Add("Target " + target + ": " + UiKit.Colour((curve.XpForLevel(target) - xp).ToString("N0") + " to go", UiKit.Value));
+            if (level < cap) lines.Add("Next level: " + UiKit.Colour((curve.XpForLevel(level + 1, cap) - xp).ToString("N0") + " to go", UiKit.Value));
+            SkillTargets.Target target = SkillTargets.Get(Session, skill.Id);
+            long goal = SkillTargets.GoalXp(Session, skill.Id);
+            if (target != null && goal > xp) lines.Add("Target (" + SkillTargets.Describe(target) + "): " + UiKit.Colour((goal - xp).ToString("N0") + " XP to go", UiKit.Value));
+            else if (target != null) lines.Add("Target (" + SkillTargets.Describe(target) + "): " + UiKit.Colour("reached", UiKit.Good));
             lines.Add(UiKit.Colour("Click for the skill guide. Right-click to set a target.", UiKit.Muted));
             return string.Join("\n", lines);
         }

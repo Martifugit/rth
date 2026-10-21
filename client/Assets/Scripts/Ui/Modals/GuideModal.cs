@@ -72,13 +72,21 @@ namespace Rth.Client.Ui.Modals
             columns.style.alignItems = Align.Stretch;
 
             VisualElement left = UiKit.El(columns, "well");
-            left.style.width = 168f;
+            left.style.width = 196f;
             left.style.marginRight = 12f;
             left.style.alignItems = Align.Center;
-            _skillName = UiKit.Text(left, "", "heading");
-            _skillName.style.marginBottom = 0f;
-            _skillLevel = UiKit.Text(left, "", "title-large");
-            _skillLevel.style.marginBottom = 8f;
+            // Name and level on one line.
+            VisualElement title = UiKit.El(left, "row");
+            title.style.marginBottom = 8f;
+            title.style.alignSelf = Align.Stretch;
+            title.style.justifyContent = Justify.Center;
+            _skillName = UiKit.Text(title, "", "heading", "nowrap");
+            _skillName.style.marginTop = _skillName.style.marginBottom = 0f;
+            _skillName.style.flexShrink = 0;
+            _skillName.style.letterSpacing = 0f; // Unity measures text without it, which cut long names short
+            _skillLevel = UiKit.Text(title, "", "title-large", "nowrap");
+            _skillLevel.style.marginLeft = 8f;
+            _skillLevel.style.flexShrink = 0;
             _picker = UiKit.El(left, "slot-grid");
             _picker.style.width = 3 * 44f;
 
@@ -89,7 +97,7 @@ namespace Rth.Client.Ui.Modals
             foreach (Kind k in new[] { Kind.All, Kind.Abilities, Kind.Equipment, Kind.Recipes })
             {
                 Kind kind = k;
-                Label button = UiKit.Text(bar, k.ToString().ToUpperInvariant(), "chat-tab");
+                Label button = UiKit.Text(bar, k.ToString().ToUpperInvariant(), "filter-tab");
                 button.RegisterCallback<ClickEvent>(_ =>
                 {
                     _filter = kind;
@@ -107,6 +115,9 @@ namespace Rth.Client.Ui.Modals
             _summary.style.marginBottom = 4f;
             VisualElement well = UiKit.El(right, "well");
             well.style.flexGrow = 1;
+            // The rows run edge to edge inside the frame.
+            well.style.paddingLeft = well.style.paddingRight = well.style.paddingTop = well.style.paddingBottom = 0f;
+            well.style.overflow = Overflow.Hidden;
             _list = UiKit.Scroll(well);
         }
 
@@ -146,15 +157,16 @@ namespace Rth.Client.Ui.Modals
             SkillDef skill = Session.Content?.Skills.FirstOrDefault(s => s.Id == _skill);
             if (skill == null) return;
             foreach (KeyValuePair<string, VisualElement> slot in _pickerSlots) slot.Value.EnableInClassList("slot--on", slot.Key == _skill);
-            foreach ((Kind k, Label button) in _filterButtons) button.EnableInClassList("chat-tab--on", k == _filter);
+            foreach ((Kind k, Label button) in _filterButtons) button.EnableInClassList("filter-tab--on", k == _filter);
             _sortButton.text = _descending ? "Level: high - low" : "Level: low - high";
 
             XpCurve curve = Session.Content.XpCurve;
             Session.SkillXp.TryGetValue(skill.Id, out long xp);
-            int level = curve.LevelForXp(xp);
-            _skillName.text = skill.Name.ToUpperInvariant();
+            int cap = curve.MaxFor(skill);
+            int level = Session.Level(skill.Id);
+            _skillName.text = skill.Name;
             _skillLevel.text = level.ToString();
-            _summary.text = xp.ToString("N0") + " XP" + (level < curve.MaxLevel ? ",  " + (curve.XpForLevel(level + 1) - xp).ToString("N0") + " to level " + (level + 1) : "") +
+            _summary.text = xp.ToString("N0") + " XP" + (level < cap ? ",  " + (curve.XpForLevel(level + 1, cap) - xp).ToString("N0") + " to level " + (level + 1) : "") +
                             (string.IsNullOrEmpty(skill.Description) ? "" : ".  " + skill.Description);
 
             List<Unlock> unlocks = UnlocksFor(skill.Id).Where(u => _filter == Kind.All || u.Kind == _filter).ToList();
@@ -168,7 +180,7 @@ namespace Rth.Client.Ui.Modals
                 VisualElement row = UiKit.El(_list, "row");
                 row.style.paddingTop = row.style.paddingBottom = 3f;
                 row.style.paddingLeft = 6f;
-                row.style.backgroundColor = i % 2 == 0 ? new Color(1f, 1f, 1f, 0.035f) : new Color(0f, 0f, 0f, 0f);
+                row.style.backgroundColor = new Color(1f, 0.95f, 0.85f, i % 2 == 0 ? 0.011f : 0.004f); // barely-there stripes (blended in linear space)
                 VisualElement slot = UiKit.El(row, "slot");
                 slot.style.width = slot.style.height = 34f;
                 VisualElement icon = UiKit.El(slot, "slot__icon");

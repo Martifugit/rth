@@ -37,8 +37,7 @@ namespace Rth.Client.Ui.Panels
 
         protected override void Build(VisualElement root)
         {
-            VisualElement filters = UiKit.El(root, "row");
-            filters.style.marginBottom = 4f;
+            VisualElement filters = UiKit.El(root, "chat-tabs");
             foreach (Filter f in new[] { Filter.All, Filter.Game, Filter.Public })
             {
                 Filter filter = f;
@@ -48,6 +47,7 @@ namespace Rth.Client.Ui.Panels
             }
 
             _scroll = UiKit.Scroll(root);
+            _scroll.style.flexShrink = 1;
 
             VisualElement inputRow = UiKit.El(root, "chat-input-row");
             _name = UiKit.Text(inputRow, "", "bold");

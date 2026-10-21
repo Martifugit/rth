@@ -84,7 +84,15 @@ namespace Rth.Client
         public List<QuestEntry> Quests { get; } = new List<QuestEntry>();
 
         public int Level(string skill) =>
-            Content == null ? 1 : Content.XpCurve.LevelForXp(SkillXp.TryGetValue(skill, out long xp) ? xp : 0);
+            Content == null ? 1 : Content.XpCurve.LevelForXp(SkillXp.TryGetValue(skill, out long xp) ? xp : 0, Content.XpCurve.MaxFor(Skill(skill)));
+
+        public SkillDef Skill(string id)
+        {
+            if (Content != null)
+                foreach (SkillDef s in Content.Skills)
+                    if (s.Id == id) return s;
+            return null;
+        }
 
         public string SkillName(string skill)
         {
@@ -354,6 +362,9 @@ namespace Rth.Client
             }
         }
 
+        /// <summary>A game message from the interface itself (not the server), shown in chat.</summary>
+        public void Notify(string text) => AddLog(TextKind.Info, text);
+
         private void AddLog(TextKind kind, string text)
         {
             Log.Add(new LogLine { Kind = kind, Text = text });
@@ -373,9 +384,6 @@ namespace Rth.Client
                 if (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame)
                     Ui.UiRoot.Instance?.Panel<Ui.Panels.ChatPanel>()?.Focus();
                 if (keyboard.rKey.wasPressedThisFrame) ToggleRun();
-                if (keyboard.zKey.wasPressedThisFrame) ToggleDeflect(CombatStyle.Melee);
-                if (keyboard.xKey.wasPressedThisFrame) ToggleDeflect(CombatStyle.Ranged);
-                if (keyboard.cKey.wasPressedThisFrame) ToggleDeflect(CombatStyle.Occult);
                 // In conversation the dialogue window owns Space and the number keys.
                 if (Dialogue != null)
                 {

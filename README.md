@@ -40,7 +40,8 @@ pressing Play in a region scene loads the Game scene beside it.
 - Left-click a creature to attack it. **1 to 0, -, =** (or clicking the action bar) use what's
   on the main bar. Drag abilities from the book, or items from your pack, onto any bar; drag
   a slot off the bars to clear it. Hover a slot to see what it does.
-- **Z / X / C** toggle deflecting melee, ranged or occult attacks, which spends breath.
+- **Focuses** (F) such as deflecting melee, ranged or occult attacks spend breath: click one
+  to hold it, or drag it onto an action bar and use it from there.
 - **Right-click** anything in the world for all its options (attack, take each item on the tile,
   walk here). The top-left text shows what a left-click will do.
 - The side window at bottom right has your **Pack** (click an item to use it: eat, drink, wield;

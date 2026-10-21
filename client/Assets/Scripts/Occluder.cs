@@ -75,6 +75,7 @@ namespace Rth.Client
             for (int i = 0; i < _renderers.Length; i++)
             {
                 Renderer r = _renderers[i];
+                if (r == null) continue; // destroyed with an unloaded region
                 r.enabled = visible;
                 if (fade != _usingFade) r.sharedMaterials = fade ? _faded[i] : _opaque[i];
                 if (fade)

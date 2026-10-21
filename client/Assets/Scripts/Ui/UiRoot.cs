@@ -119,6 +119,8 @@ namespace Rth.Client.Ui
             _ghostIcon = UiKit.Icon(_ghost, null, 28f);
             _ghostText = UiKit.Text(_ghost, "");
             _ghostText.style.marginLeft = 4f;
+            // The ghost follows the pointer: none of it may catch the pointer, or drops would land on it.
+            _ghostIcon.pickingMode = _ghostText.pickingMode = PickingMode.Ignore;
 
             foreach (Type type in typeof(UiPanel).Assembly.GetTypes())
             {
@@ -339,6 +341,42 @@ namespace Rth.Client.Ui
         /// <summary>Makes an element a place things can be dropped.</summary>
         public void AddDropTarget(VisualElement element, Func<object, bool> accepts, Action<object> drop) =>
             _dropTargets[element] = new DropTarget { Accepts = accepts, Drop = drop };
+
+        /// <summary>
+        /// Makes an element something to drag or click: pressing and moving a few pixels starts the
+        /// drag <paramref name="drag"/> describes (null: not draggable now); pressing and releasing
+        /// in place is a click.
+        /// </summary>
+        public void DragSource(VisualElement element, Func<Drag> drag, Action click = null)
+        {
+            // The press captures the pointer, so the moves that start a drag still arrive after
+            // the pointer has left the (small) slot, and a release anywhere ends the press.
+            bool pressed = false;
+            Vector2 pressedAt = default;
+            element.RegisterCallback<PointerDownEvent>(e =>
+            {
+                if (e.button != 0) return;
+                pressed = true;
+                pressedAt = e.position;
+                element.CapturePointer(e.pointerId);
+            });
+            element.RegisterCallback<PointerMoveEvent>(e =>
+            {
+                if (!pressed || ((Vector2)e.position - pressedAt).magnitude < 6f) return;
+                pressed = false;
+                element.ReleasePointer(e.pointerId);
+                Drag d = IsDragging ? null : drag();
+                if (d != null) BeginDrag(d);
+            });
+            element.RegisterCallback<PointerUpEvent>(e =>
+            {
+                if (e.button != 0 || !pressed) return;
+                pressed = false;
+                element.ReleasePointer(e.pointerId);
+                if (element.worldBound.Contains(e.position)) click?.Invoke();
+            });
+            element.RegisterCallback<PointerCaptureOutEvent>(_ => pressed = false);
+        }
 
         /// <summary>
         /// Starts dragging (call once the pointer has moved a few pixels with the button held).

@@ -87,28 +87,11 @@ namespace Rth.Client.Ui.Panels
                     Label level = UiKit.Text(slot, "", "slot__level");
                     level.pickingMode = PickingMode.Ignore;
 
-                    bool pressed = false;
-                    Vector2 pressedAt = default;
-                    slot.RegisterCallback<PointerDownEvent>(e =>
+                    Ui.DragSource(slot, () =>
                     {
-                        if (e.button != 0) return;
-                        pressed = true;
-                        pressedAt = e.position;
-                    });
-                    slot.RegisterCallback<PointerMoveEvent>(e =>
-                    {
-                        if (!pressed || Ui.IsDragging || ((Vector2)e.position - pressedAt).magnitude < 6f) return;
-                        pressed = false;
                         AbilityDef a = Session.Ability(id);
-                        Ui.BeginDrag(new UiRoot.Drag { Data = new AbilityDrag { AbilityId = id }, Icon = IconLibrary.ForAbility(a), Tint = IconLibrary.AbilityTint(a) });
-                    });
-                    slot.RegisterCallback<PointerUpEvent>(e =>
-                    {
-                        if (e.button != 0 || !pressed) return;
-                        pressed = false;
-                        Session.UseAbility(id);
-                    });
-                    slot.RegisterCallback<PointerLeaveEvent>(_ => pressed = false);
+                        return new UiRoot.Drag { Data = new AbilityDrag { AbilityId = id }, Icon = IconLibrary.ForAbility(a), Tint = IconLibrary.AbilityTint(a) };
+                    }, () => Session.UseAbility(id));
                     UiKit.Tooltip(slot, () =>
                     {
                         AbilityDef a = Session.Ability(id);

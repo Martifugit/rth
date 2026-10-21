@@ -45,8 +45,10 @@ every piece and how they are organised.
 - **Worn equipment** (the figure only). ✓
 - **Character:** total level and every combat stat. ✓
 - **Ability books:** one per combat style (Occultism first); drag onto a bar. ✓
-- **Focuses:** breath's stances (the prayer analogue). ✓
-- **Skills:** tiles and total level; click for the guide, right-click for a level target. ✓
+- **Focuses:** breath's stances (the prayer analogue). Click to hold or let go, or drag onto
+  an action bar and use them like abilities; no keys of their own. ✓
+- **Skills:** tiles, the total level on a footer row; click for the guide, right-click to
+  "Set level target" or "Set exp target" (each asks for a number). Targets follow the player. ✓
 - **Quests:** the list; click for the journal. ✓
 - **Task** and **XP tracker**. ✓
 - To come: **verses** (melee), **grimoires** (the occult houses' *workings*), **friends**,
@@ -81,8 +83,12 @@ every piece and how they are organised.
 - **Registries.** Panels and modals register themselves (any concrete subclass); modals list
   their tabs. `UiDefaultLayout` holds where panels start. Nothing lists interfaces by hand.
 - **Panels read state and send intents.** They never decide outcomes.
-- **Drag and drop** goes through `UiRoot.BeginDrag` and drop targets (`AddDropTarget`), with
-  payloads in `DragData.cs`; any slot can offer or accept drags.
+- **Drag and drop** goes through `UiRoot.DragSource` (drag or click) / `BeginDrag` and drop
+  targets (`AddDropTarget`), with payloads in `DragData.cs`; any slot can offer or accept
+  drags. Dropping a pack item on another swaps them.
+- **Action bar slots** hold "a:" abilities, "f:" focuses or "i:" items. A radial sweep shows
+  the slot's cooldown: the global cooldown, or the ability's own when longer. Bars can be
+  locked (right-click a slot, or Settings): no dragging, no tooltips.
 - **Server state for the interface** arrives as `JsonStateMessage`s ("achievements",
   "bestiary", "client") read with `GameSession.ServerState<T>`. The client keeps its own
   state (action bar layouts) on the server with `SetClientState`; it follows the player.

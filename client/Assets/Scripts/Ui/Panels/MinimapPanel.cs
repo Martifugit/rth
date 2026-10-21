@@ -10,9 +10,10 @@ namespace Rth.Client.Ui.Panels
 {
     /// <summary>
     /// The minimap: a square top-down view that turns with the camera (dots: gold creatures,
-    /// white players; click to walk), the compass in its corner (click to face north) and the
-    /// clock in the other. Beneath it, one row: the run toggle (run energy comes with the breath
-    /// skill), then the world map, journal, guide, settings and a menu of every window.
+    /// white players; click to walk), shaded at its edges, with the compass in one corner (click
+    /// to face north), the clock in the other and the region's name along the bottom. Beneath it,
+    /// a row of round buttons: the run toggle (run energy comes with the breath skill), then the
+    /// world map, journal, guide, settings and a menu of every window.
     /// </summary>
     public sealed class MinimapPanel : UiPanel
     {
@@ -35,6 +36,8 @@ namespace Rth.Client.Ui.Panels
         private VisualElement _compass;
         private VisualElement _run;
         private Label _clock;
+        private Label _region;
+        private static Texture2D _edgeShade;
         private readonly List<VisualElement> _dotPool = new List<VisualElement>();
         private bool _fogWas;
 
@@ -63,8 +66,12 @@ namespace Rth.Client.Ui.Panels
             you.style.borderTopLeftRadius = you.style.borderTopRightRadius = you.style.borderBottomLeftRadius = you.style.borderBottomRightRadius = 4f;
             you.style.backgroundColor = Color.white;
 
+            VisualElement shade = UiKit.El(_map, "minimap__shade");
+            shade.pickingMode = PickingMode.Ignore;
+            shade.style.backgroundImage = EdgeShade();
+
             VisualElement compassButton = UiKit.El(_map, "minimap__compass");
-            _compass = UiKit.Icon(compassButton, IconLibrary.Get("compass"), 26f);
+            _compass = UiKit.Icon(compassButton, IconLibrary.Get("compass"), 28f);
             _compass.style.unityBackgroundImageTintColor = UiKit.IconTint;
             _compass.pickingMode = PickingMode.Ignore;
             compassButton.RegisterCallback<PointerDownEvent>(e =>
@@ -76,23 +83,52 @@ namespace Rth.Client.Ui.Panels
 
             _clock = UiKit.Text(_map, "", "minimap__clock");
             UiKit.Tooltip(_clock, () => UiKit.Title("Time in R'th") + "\nA day passes every real hour.");
+            _region = UiKit.Text(_map, "", "minimap__region");
+            _region.pickingMode = PickingMode.Ignore;
 
-            VisualElement buttons = UiKit.El(frame, "row");
-            buttons.style.marginTop = 6f;
-            _run = UiKit.El(buttons, "run-gauge");
-            UiKit.Icon(_run, IconLibrary.Get("run"), 20f).style.unityBackgroundImageTintColor = UiKit.IconTint;
-            _run.RegisterCallback<ClickEvent>(_ => Session.ToggleRun());
-            UiKit.Tooltip(_run, () => UiKit.Title("Run") + "\nTwo tiles a tick instead of one.\n" + UiKit.Colour("Click or press R.", UiKit.Muted));
-            UiKit.El(buttons, "spacer");
-            UiKit.IconButton(buttons, "map", "World map (M)", () => Ui.ToggleModal(Ui.Modal<WorldMapModal>()));
-            UiKit.IconButton(buttons, "journal", "Journal: quests, achievements, bestiary (J)", () => Ui.ToggleModal(Ui.Modal<JournalModal>()));
-            UiKit.IconButton(buttons, "guide", "Guide: skills and abilities (G)", () => Ui.ToggleModal(Ui.Modal<GuideModal>()));
-            UiKit.IconButton(buttons, "settings", "Settings", () => Ui.ToggleModal(Ui.Modal<SettingsModal>()));
-            VisualElement menu = UiKit.IconButton(buttons, "menu", "Open or close any window", null);
+            VisualElement buttons = UiKit.El(frame, "minimap__orbs");
+            _run = Orb(buttons, "run", () => UiKit.Title("Run") + "\nTwo tiles a tick instead of one.\n" + UiKit.Colour("Click or press R.", UiKit.Muted), () => Session.ToggleRun());
+            Orb(buttons, "map", () => "World map (M)", () => Ui.ToggleModal(Ui.Modal<WorldMapModal>()));
+            Orb(buttons, "journal", () => "Journal: quests, achievements, bestiary (J)", () => Ui.ToggleModal(Ui.Modal<JournalModal>()));
+            Orb(buttons, "guide", () => "Guide: skills and abilities (G)", () => Ui.ToggleModal(Ui.Modal<GuideModal>()));
+            Orb(buttons, "settings", () => "Settings", () => Ui.ToggleModal(Ui.Modal<SettingsModal>()));
+            VisualElement menu = Orb(buttons, "menu", () => "Open or close any window", null);
             menu.RegisterCallback<PointerDownEvent>(e => Ui.Menu(e.position, "Windows", PanelOptions()));
 
             RenderPipelineManager.beginCameraRendering += BeforeRender;
             RenderPipelineManager.endCameraRendering += AfterRender;
+        }
+
+        /// <summary>A round button under the map.</summary>
+        private static VisualElement Orb(VisualElement parent, string icon, Func<string> tooltip, Action onClick)
+        {
+            VisualElement orb = UiKit.El(parent, "orb");
+            VisualElement i = UiKit.Icon(orb, IconLibrary.Get(icon), 18f);
+            i.AddToClassList("orb__icon");
+            i.pickingMode = PickingMode.Ignore;
+            if (onClick != null) orb.RegisterCallback<ClickEvent>(_ => onClick());
+            UiKit.Tooltip(orb, tooltip);
+            return orb;
+        }
+
+        /// <summary>A soft dark fade at the map's edges (9-sliced, so the middle stays clear).</summary>
+        private static Texture2D EdgeShade()
+        {
+            if (_edgeShade != null) return _edgeShade;
+            const int size = 32;
+            const float band = 14f;
+            _edgeShade = new Texture2D(size, size, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, name = "Minimap edge shade" };
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float edge = Mathf.Min(Mathf.Min(x, size - 1 - x), Mathf.Min(y, size - 1 - y)) + 0.5f;
+                    float a = Mathf.Pow(Mathf.Clamp01(1f - edge / band), 2f) * 0.7f;
+                    _edgeShade.SetPixel(x, y, new Color(0f, 0f, 0f, a));
+                }
+            }
+            _edgeShade.Apply();
+            return _edgeShade;
         }
 
         private void CreateCamera()
@@ -135,7 +171,10 @@ namespace Rth.Client.Ui.Panels
                 UpdateDots(local);
             }
             _compass.style.rotate = new Rotate(-Yaw);
-            _run.EnableInClassList("run-gauge--on", Session.Running);
+            _run.EnableInClassList("orb--on", Session.Running);
+            string region = Ui.regions != null && Ui.regions.Current != null ? Ui.regions.Current.Title : "";
+            _region.text = region;
+            _region.style.display = string.IsNullOrEmpty(region) ? DisplayStyle.None : DisplayStyle.Flex;
 
             double seconds = (DateTime.UtcNow - DateTime.UtcNow.Date).TotalSeconds % GameDayRealSeconds;
             int minutes = (int)(seconds / GameDayRealSeconds * 24 * 60);

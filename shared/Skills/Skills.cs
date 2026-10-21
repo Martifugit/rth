@@ -13,35 +13,61 @@ namespace Rth.Shared.Skills
         public string Icon = "";
         /// <summary>Stat id to amount gained per level above 1 (e.g. occultism raises ability damage).</summary>
         public Dictionary<string, int> StatsPerLevel = new Dictionary<string, int>();
+        /// <summary>This skill's highest level; 0 means the curve's (100).</summary>
+        public int MaxLevel;
     }
 
     /// <summary>
-    /// How much XP each level needs. One curve for every skill, defined in data: level 2 costs
-    /// <see cref="FirstLevelXp"/> and each level after costs <see cref="Growth"/> times the one before.
+    /// How much XP each level needs: RuneScape's growth formula (each level costs a quarter of
+    /// level + 300 x 2^(level / 7) more than the one before), running to level 100 rather than
+    /// 99. Level 2 is 83 XP, 50 is 101,333, 99 is 13,034,431 and 100 is 14,391,160. Skills can cap
+    /// lower with <see cref="SkillDef.MaxLevel"/>.
     /// </summary>
     public sealed class XpCurve
     {
-        public int MaxLevel = 99;
-        public double FirstLevelXp = 60;
-        public double Growth = 1.105;
+        /// <summary>The cap for skills that don't set their own.</summary>
+        public int MaxLevel = 100;
 
-        /// <summary>Total XP needed to reach a level (level 1 is 0 XP).</summary>
-        public long XpForLevel(int level)
+        /// <summary>No skill holds more XP than this.</summary>
+        public const long MaxXp = 200_000_000;
+
+        private const int TableSize = 127; // the formula, far enough past any cap
+        private static readonly long[] Table = BuildTable();
+
+        private static long[] BuildTable()
         {
-            if (level <= 1) return 0;
-            level = Math.Min(level, MaxLevel);
-            double total = Math.Abs(Growth - 1) < 1e-9
-                ? FirstLevelXp * (level - 1)
-                : FirstLevelXp * (Math.Pow(Growth, level - 1) - 1) / (Growth - 1);
-            return (long)Math.Floor(total);
+            var table = new long[TableSize + 1];
+            double points = 0;
+            for (int level = 1; level < TableSize; level++)
+            {
+                points += Math.Floor(level + 300 * Math.Pow(2, level / 7.0));
+                table[level + 1] = (long)Math.Floor(points / 4);
+            }
+            return table;
         }
 
-        public int LevelForXp(long xp)
+        /// <summary>Total XP needed to reach a level (level 1 is 0 XP). Capped at the curve's max level.</summary>
+        public long XpForLevel(int level) => XpForLevel(level, MaxLevel);
+
+        public long XpForLevel(int level, int cap)
         {
+            level = Math.Min(level, Math.Min(cap, TableSize));
+            return level <= 1 ? 0 : Table[level];
+        }
+
+        public int LevelForXp(long xp) => LevelForXp(xp, MaxLevel);
+
+        /// <summary>The level an amount of XP gives, up to a cap (a skill's own max level).</summary>
+        public int LevelForXp(long xp, int cap)
+        {
+            cap = Math.Min(cap, TableSize);
             int level = 1;
-            while (level < MaxLevel && xp >= XpForLevel(level + 1)) level++;
+            while (level < cap && xp >= Table[level + 1]) level++;
             return level;
         }
+
+        /// <summary>A skill's cap: its own if it sets one, else the curve's.</summary>
+        public int MaxFor(SkillDef? skill) => skill != null && skill.MaxLevel > 0 ? skill.MaxLevel : MaxLevel;
     }
 
     /// <summary>"Needs level N in skill S": used by abilities, equipment, recipes, and later quests and areas.</summary>

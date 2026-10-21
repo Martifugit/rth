@@ -498,6 +498,7 @@ namespace Rth.Shared.Net
         public int BilePassiveThreshold;
         public int BileExtreme;
         public int MaxPhlegm;
+        public int GlobalCooldownTicks = 3;
         public List<RecipeInfo> Recipes = new List<RecipeInfo>();
         public List<Rth.Shared.Progress.AchievementDef> Achievements = new List<Rth.Shared.Progress.AchievementDef>();
     }

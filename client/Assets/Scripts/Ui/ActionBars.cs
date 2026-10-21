@@ -9,15 +9,17 @@ namespace Rth.Client.Ui
 {
     /// <summary>
     /// The player's action bars: a main bar and secondary bars of 14 slots each. A slot holds an
-    /// ability ("a:gall_spark") or an item ("i:riverbread", used from the pack). Arranged by
-    /// dragging from the ability book or the pack; kept on the server as client state, so a
-    /// layout follows the player. A new character's main bar starts as the content's default.
+    /// ability ("a:gall_spark"), a focus ("f:deflect_melee") or an item ("i:riverbread", used from
+    /// the pack). Arranged by dragging from the ability book, the focuses tab or the pack; kept on
+    /// the server as client state, so a layout follows the player. A new character's main bar
+    /// starts as the content's default. Locked bars can't be rearranged and show no tooltips.
     /// </summary>
     public sealed class ActionBars
     {
         public const int SlotCount = 14;
         public const int BarCount = 3;
         private const string StateKey = "bars";
+        private const string LockKey = "bars.locked";
 
         /// <summary>Main bar keys: 1 to 0, - and =; the last two slots have no key.</summary>
         public static readonly Key[] MainKeys =
@@ -72,6 +74,17 @@ namespace Rth.Client.Ui
 
         public string Get(int bar, int slot) => _bars[bar][slot];
 
+        /// <summary>Locked bars ignore dragging (to, from and between slots) and show no tooltips.</summary>
+        public bool Locked
+        {
+            get => _session.ClientState.TryGetValue(LockKey, out string v) && v == "true";
+            set
+            {
+                _session.SetClientState(LockKey, value ? "true" : "false");
+                Version++;
+            }
+        }
+
         public void Set(int bar, int slot, string value)
         {
             _bars[bar][slot] = string.IsNullOrEmpty(value) ? null : value;
@@ -91,9 +104,11 @@ namespace Rth.Client.Ui
 
         public static string Ability(string id) => "a:" + id;
         public static string Item(string id) => "i:" + id;
+        public static string Focus(string id) => "f:" + id;
 
         public static bool IsAbility(string slot, out string id) => Is(slot, "a:", out id);
         public static bool IsItem(string slot, out string id) => Is(slot, "i:", out id);
+        public static bool IsFocus(string slot, out string id) => Is(slot, "f:", out id);
 
         private static bool Is(string slot, string prefix, out string id)
         {
@@ -101,13 +116,18 @@ namespace Rth.Client.Ui
             return id != null;
         }
 
-        /// <summary>Uses a slot: an ability, or the first of an item in the pack (eat, drink, wield).</summary>
+        /// <summary>Uses a slot: an ability, a focus (hold or let go), or the first of an item in the pack (eat, drink, wield).</summary>
         public void Use(GameSession session, int bar, int slot)
         {
             string value = _bars[bar][slot];
             if (IsAbility(value, out string ability))
             {
                 session.UseAbility(ability);
+                return;
+            }
+            if (IsFocus(value, out string focus))
+            {
+                Focuses.Get(focus)?.Toggle(session);
                 return;
             }
             if (!IsItem(value, out string item)) return;

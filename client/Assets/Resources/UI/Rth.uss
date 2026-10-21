@@ -6,13 +6,15 @@
  *
  * Colour roles
  *   text    #ddd3bf   body             title   #e0c387   window titles, headings
- *   value   #f0d58c   numbers          muted   #8f8471   hints, inactive
+ *   value   #f0d58c   numbers          muted   #a89c86   hints, inactive
+ *
+ * Text sizes: 15 body, 13 small (never smaller), 14 tooltips. Slot numbers are bold.
  *   good    #7ccf62   bad     #e0604e  accent  #c9a25e   bronze lines, focus
  */
 
 .rth-root {
     -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Medium");
-    font-size: 14px;
+    font-size: 15px;
     color: rgb(221, 211, 191);
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.85);
 }
@@ -115,16 +117,6 @@
 
 .window__button:hover {
     -unity-background-image-tint-color: rgb(240, 120, 100);
-}
-
-.window__header {
-    -unity-font-definition: resource("UI/Fonts/Cinzel");
-    -unity-font-style: bold;
-    font-size: 13px;
-    color: rgb(224, 195, 135);
-    letter-spacing: 1px;
-    -unity-text-align: middle-center;
-    margin: 2px 0 6px 0;
 }
 
 .window__body {
@@ -322,6 +314,17 @@
     background-color: rgba(201, 162, 94, 0.3);
 }
 
+/* A row pinned under a panel's content (skills' total level), set off by a faint line. */
+.footer-row {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+    margin-top: 6px;
+    padding: 6px 4px 0 4px;
+    border-top-width: 1px;
+    border-top-color: rgba(201, 162, 94, 0.2);
+}
+
 /* ---------------------------------------------------------------- text */
 
 .heading {
@@ -346,7 +349,7 @@
 }
 
 .muted {
-    color: rgb(143, 132, 113);
+    color: rgb(168, 156, 134);
 }
 
 .good {
@@ -358,11 +361,15 @@
 }
 
 .small {
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .bold {
     -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
+}
+
+.nowrap {
+    white-space: nowrap;
 }
 
 .prose {
@@ -387,14 +394,14 @@
 
 .tooltip {
     position: absolute;
-    max-width: 320px;
+    max-width: 340px;
     padding: 8px 10px;
     background-color: rgba(12, 10, 9, 0.97);
     border-width: 1px;
     border-color: rgb(110, 90, 58);
     border-radius: 3px;
     white-space: normal;
-    font-size: 13px;
+    font-size: 14px;
 }
 
 .drag-ghost {
@@ -420,7 +427,7 @@
 .menu__title {
     -unity-font-definition: resource("UI/Fonts/Cinzel");
     -unity-font-style: bold;
-    font-size: 12px;
+    font-size: 13px;
     letter-spacing: 1px;
     color: rgb(224, 195, 135);
     padding: 5px 10px 4px 10px;
@@ -484,7 +491,7 @@
     bottom: 0;
     -unity-text-align: middle-center;
     -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
-    font-size: 12px;
+    font-size: 13px;
     color: rgb(255, 255, 255);
     text-shadow: 0 1px 2px rgb(0, 0, 0);
 }
@@ -512,7 +519,7 @@
     -unity-slice-top: 6;
     -unity-slice-bottom: 6;
     -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
-    font-size: 13px;
+    font-size: 14px;
     color: rgb(240, 222, 176);
     -unity-text-align: middle-center;
 }
@@ -566,7 +573,7 @@
     border-radius: 3px;
     color: rgb(240, 232, 214);
     padding: 2px 6px;
-    font-size: 14px;
+    font-size: 15px;
 }
 
 .input:focus > .unity-text-field__input {
@@ -586,18 +593,20 @@
     margin: 2px;
     align-items: center;
     justify-content: center;
+    background-color: rgba(0, 0, 0, 0.35);
     background-image: resource("UI/Skin/slot");
     -unity-slice-left: 6;
     -unity-slice-right: 6;
     -unity-slice-top: 6;
     -unity-slice-bottom: 6;
     border-width: 1px;
-    border-color: rgba(0, 0, 0, 0);
+    border-color: rgb(74, 64, 50);
+    border-top-color: rgb(40, 35, 28);
     border-radius: 3px;
 }
 
 .slot:hover {
-    border-color: rgba(201, 162, 94, 0.8);
+    border-color: rgba(201, 162, 94, 0.85);
 }
 
 .slot--bare {
@@ -612,11 +621,11 @@
 
 .slot__count {
     position: absolute;
-    left: 2px;
-    top: 0;
+    left: 1px;
+    top: -2px;
     -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
-    font-size: 12px;
-    color: rgb(240, 213, 140);
+    font-size: 13px;
+    color: rgb(245, 220, 140);
     text-shadow: 0 1px 1px rgb(0, 0, 0);
 }
 
@@ -625,7 +634,7 @@
     right: 2px;
     top: 0;
     -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
-    font-size: 11px;
+    font-size: 12px;
     color: rgb(240, 213, 140);
 }
 
@@ -635,9 +644,10 @@
     right: 0;
     bottom: 0;
     -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
-    font-size: 11px;
+    font-size: 13px;
     -unity-text-align: middle-center;
-    color: rgb(224, 96, 78);
+    color: rgb(240, 110, 90);
+    text-shadow: 0 1px 1px rgb(0, 0, 0);
 }
 
 .slot--dragging > .slot__icon {
@@ -662,8 +672,8 @@
 }
 
 .slot-caption {
-    width: 46px;
-    font-size: 11px;
+    width: 52px;
+    font-size: 13px;
     -unity-text-align: upper-center;
     white-space: normal;
 }
@@ -678,28 +688,25 @@
 
 .ability__key {
     position: absolute;
-    right: 3px;
-    bottom: 0;
+    right: 1px;
+    bottom: -2px;
     -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
-    font-size: 11px;
-    color: rgb(221, 211, 191);
+    font-size: 13px;
+    color: rgb(255, 252, 240);
+    text-shadow: 1px 1px 1px rgb(0, 0, 0);
 }
 
 .ability--queued {
     border-color: rgb(255, 180, 60);
 }
 
-.ability--unusable > .slot__icon {
-    opacity: 0.3;
+/* Used out of range: held until the player reaches the target. */
+.ability--stalled {
+    border-color: rgb(120, 200, 255);
 }
 
-.ability__cooldown {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.65);
-    border-radius: 3px;
+.ability--unusable > .slot__icon {
+    opacity: 0.3;
 }
 
 .ability__timer {
@@ -717,26 +724,24 @@
 .chip {
     padding: 0 6px;
     margin: 0 3px;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .bile-value {
-    width: 40px;
-    margin-left: 6px;
     -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
     font-size: 13px;
     -unity-text-align: middle-center;
-    background-color: rgb(9, 8, 7);
-    border-width: 1px;
-    border-color: rgb(58, 51, 42);
-    border-radius: 3px;
+    margin-bottom: 1px;
 }
 
 /* ---------------------------------------------------------------- chat */
 
 .chat-line {
     white-space: normal;
-    font-size: 14px;
+    font-size: 15px;
+    margin: 0;
+    padding: 0 2px;
+    margin-bottom: 1px;
 }
 
 .chat-line--warning {
@@ -747,16 +752,51 @@
     color: rgb(200, 170, 255);
 }
 
-.chat-tab {
+/* Filter buttons over a list (the skill guide's kinds). */
+.filter-tab {
     padding: 2px 12px;
     margin-right: 2px;
     -unity-font-definition: resource("UI/Fonts/Cinzel");
     -unity-font-style: bold;
-    font-size: 11px;
+    font-size: 12px;
     letter-spacing: 1px;
-    color: rgb(143, 132, 113);
+    color: rgb(168, 156, 134);
     border-bottom-width: 2px;
     border-bottom-color: rgba(0, 0, 0, 0);
+}
+
+.filter-tab:hover {
+    color: rgb(205, 185, 143);
+}
+
+.filter-tab--on {
+    color: rgb(240, 213, 140);
+    border-bottom-color: rgb(224, 195, 135);
+}
+
+/* The filter tabs: a slim row of their own over the text, with a faint line under it. */
+.chat-tabs {
+    flex-direction: row;
+    flex-shrink: 0;
+    height: 17px;
+    align-items: stretch;
+    margin-bottom: 2px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(201, 162, 94, 0.18);
+}
+
+.chat-tab {
+    padding: 0 7px;
+    margin: 0 1px 0 0;
+    -unity-font-definition: resource("UI/Fonts/Cinzel");
+    -unity-font-style: bold;
+    font-size: 10px;
+    letter-spacing: 1px;
+    -unity-text-align: middle-center;
+    color: rgb(168, 156, 134);
+    border-bottom-width: 2px;
+    border-bottom-color: rgba(0, 0, 0, 0);
+    margin-bottom: -1px;
 }
 
 .chat-tab:hover {
@@ -770,11 +810,12 @@
 
 .chat-input-row {
     flex-direction: row;
+    flex-shrink: 0;
     align-items: center;
     margin-top: 4px;
     padding-top: 4px;
     border-top-width: 1px;
-    border-top-color: rgba(201, 162, 94, 0.3);
+    border-top-color: rgba(201, 162, 94, 0.18);
 }
 
 .chat-input {
@@ -786,18 +827,19 @@
     background-color: rgba(0, 0, 0, 0);
     border-width: 0;
     color: rgb(150, 200, 255);
-    font-size: 14px;
+    font-size: 15px;
     padding: 1px 4px;
 }
 
 /* ---------------------------------------------------------------- minimap */
 
 .minimap {
-    border-width: 1px;
-    border-color: rgb(58, 51, 42);
-    border-radius: 3px;
+    border-width: 2px;
+    border-color: rgb(92, 76, 52);
+    border-radius: 4px;
     overflow: hidden;
     background-color: rgb(10, 10, 10);
+    align-self: center;
 }
 
 .minimap__dot {
@@ -811,59 +853,112 @@
 
 .minimap__compass {
     position: absolute;
-    left: 6px;
-    top: 6px;
-    width: 34px;
-    height: 34px;
-    border-radius: 17px;
-    background-color: rgba(12, 10, 9, 0.8);
-    border-width: 1px;
-    border-color: rgb(110, 90, 58);
+    left: 5px;
+    top: 5px;
+    width: 38px;
+    height: 38px;
+    border-radius: 19px;
+    background-color: rgba(14, 12, 10, 0.88);
+    border-width: 2px;
+    border-color: rgb(150, 120, 74);
     align-items: center;
     justify-content: center;
+}
+
+.minimap__compass:hover {
+    border-color: rgb(224, 195, 135);
+}
+
+.minimap__shade {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    -unity-slice-left: 14;
+    -unity-slice-right: 14;
+    -unity-slice-top: 14;
+    -unity-slice-bottom: 14;
+}
+
+.minimap__region {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 4px;
+    -unity-font-definition: resource("UI/Fonts/Cinzel");
+    -unity-font-style: bold;
+    font-size: 12px;
+    letter-spacing: 1px;
+    -unity-text-align: middle-center;
+    color: rgb(240, 222, 176);
+    text-shadow: 0 1px 2px rgb(0, 0, 0);
+}
+
+.minimap__orbs {
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 7px;
+    padding: 0 2px;
+    margin-bottom: 1px;
+}
+
+.orb {
+    width: 32px;
+    height: 32px;
+    border-radius: 16px;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(24, 21, 17);
+    border-width: 2px;
+    border-color: rgb(92, 76, 52);
+    border-top-color: rgb(130, 106, 70);
+}
+
+.orb:hover {
+    border-color: rgb(201, 162, 94);
+    background-color: rgb(36, 31, 24);
+}
+
+.orb:hover > .orb__icon {
+    -unity-background-image-tint-color: rgb(250, 230, 180);
+}
+
+.orb__icon {
+    -unity-background-image-tint-color: rgb(205, 185, 143);
+}
+
+.orb--on {
+    border-color: rgb(124, 207, 98);
+    background-color: rgb(28, 44, 22);
+}
+
+.orb--on > .orb__icon {
+    -unity-background-image-tint-color: rgb(170, 235, 140);
 }
 
 .minimap__clock {
     position: absolute;
-    right: 6px;
-    top: 6px;
+    right: 5px;
+    top: 5px;
     padding: 1px 8px;
     border-radius: 3px;
-    background-color: rgba(12, 10, 9, 0.8);
+    background-color: rgba(14, 12, 10, 0.88);
     border-width: 1px;
-    border-color: rgb(110, 90, 58);
+    border-color: rgb(150, 120, 74);
     -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
-    font-size: 13px;
+    font-size: 14px;
     color: rgb(240, 213, 140);
 }
 
-.run-gauge {
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    margin: 2px;
-    background-image: resource("UI/Skin/button");
-    -unity-slice-left: 6;
-    -unity-slice-right: 6;
-    -unity-slice-top: 6;
-    -unity-slice-bottom: 6;
-}
+/* ---------------------------------------------------------------- scrollbars: thin and quiet */
 
-.run-gauge:hover {
-    background-image: resource("UI/Skin/button-hover");
-}
-
-.run-gauge--on {
-    background-image: resource("UI/Skin/button-on");
-}
-
-/* ---------------------------------------------------------------- scrollbars: slim and quiet */
-
-.rth-root .unity-scroller--vertical {
-    width: 8px;
-    margin-left: 2px;
+.rth-root .unity-scroller--vertical,
+.rth-root .unity-scroll-view__vertical-scroller {
+    width: 6px;
+    min-width: 6px;
+    max-width: 6px;
+    margin-left: 3px;
     border-width: 0;
     background-color: rgba(0, 0, 0, 0);
 }
@@ -874,26 +969,35 @@
 }
 
 .rth-root .unity-scroller--vertical > .unity-scroller__slider {
+    width: 6px;
+    min-width: 6px;
     margin: 0;
     top: 0;
     bottom: 0;
 }
 
-.rth-root .unity-scroller--vertical .unity-base-slider__tracker {
-    background-color: rgba(0, 0, 0, 0.35);
-    border-width: 0;
-    border-radius: 4px;
-    left: 2px;
-    right: 2px;
+.rth-root .unity-scroller--vertical .unity-base-slider__drag-container {
+    width: 6px;
+    min-width: 6px;
 }
 
-.rth-root .unity-scroller--vertical .unity-base-slider__dragger {
-    background-color: rgba(201, 162, 94, 0.55);
+.rth-root .unity-scroller--vertical .unity-base-slider__tracker {
+    background-color: rgba(0, 0, 0, 0.3);
     border-width: 0;
-    border-radius: 4px;
+    border-radius: 3px;
     left: 1px;
     right: 1px;
     width: auto;
+}
+
+.rth-root .unity-scroller--vertical .unity-base-slider__dragger {
+    background-color: rgba(201, 162, 94, 0.5);
+    border-width: 0;
+    border-radius: 3px;
+    left: 0;
+    right: 0;
+    width: auto;
+    min-width: 0;
 }
 
 .rth-root .unity-scroller--vertical .unity-base-slider__dragger:hover {

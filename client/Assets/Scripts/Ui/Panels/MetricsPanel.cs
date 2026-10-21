@@ -96,15 +96,15 @@ namespace Rth.Client.Ui.Panels
                 row.Gained.text = "+" + UiKit.FormatXp(gained);
                 row.Rate.text = UiKit.FormatXp((long)perHour) + "/h";
 
-                int level = content.XpCurve.LevelForXp(xp);
-                int target = SkillTargets.Get(Session.PlayerName, skill.Id);
-                row.Target.Root.style.display = target > level ? DisplayStyle.Flex : DisplayStyle.None;
-                if (target > level)
+                int level = Session.Level(skill.Id);
+                SkillTargets.Target target = SkillTargets.Get(Session, skill.Id);
+                long goal = SkillTargets.GoalXp(Session, skill.Id);
+                row.Target.Root.style.display = target != null && goal > xp ? DisplayStyle.Flex : DisplayStyle.None;
+                if (target != null && goal > xp)
                 {
-                    long from = content.XpCurve.XpForLevel(level);
-                    long goal = content.XpCurve.XpForLevel(target);
+                    long from = content.XpCurve.XpForLevel(level, content.XpCurve.MaxFor(skill));
                     float hoursLeft = perHour > 0f ? (goal - xp) / perHour : float.PositiveInfinity;
-                    row.Target.Set((xp - from) / (float)Mathf.Max(1, goal - from), "Level " + target + " in " + FormatHours(hoursLeft));
+                    row.Target.Set((xp - from) / (float)Mathf.Max(1, goal - from), SkillTargets.Describe(target) + " in " + FormatHours(hoursLeft));
                 }
             }
             _empty.style.display = totalGained > 0 ? DisplayStyle.None : DisplayStyle.Flex;

@@ -205,7 +205,8 @@ Items are kept on death for now. Items have placeholder icons (tinted squares) u
 
 ## Milestone 4: skills and carcass butchering (done)
 
-- [x] Skills with XP and levels (skills.json): one data-defined XP curve, level-up event and
+- [x] Skills with XP and levels (skills.json): RuneScape's XP formula run to level 100 (a skill
+      may cap lower with `maxLevel`; 200M XP max), level-up event and
       message, stats per level, XP from damage by combat style.
 - [x] "Needs level N" requirements on abilities (spenders occultism 5, ultimates 10),
       equipment and recipes.
@@ -284,8 +285,9 @@ dark-fantasy style; see `docs/interface.md` (its "Window kinds" table says which
       (OFL), game-icons.net silhouettes tinted in code (CC BY 3.0, `CREDITS.md`,
       `tools/icons`). Fixed-size bars, minimap, chat, bank, shop and conversation.
 - [x] Action bars: a main bar (blood, phlegm and breath gauges, the bile axis, 14 slots on
-      1-0 - =) and two secondary bars; abilities and items dragged onto them; layouts kept on
-      the server (`ClientStateSystem`, "client" state). One drag-and-drop system for all slots.
+      1-0 - =) and two secondary bars; abilities, focuses and items dragged onto them; radial
+      cooldowns; lockable; layouts kept on the server (`ClientStateSystem`, "client" state).
+      One drag-and-drop system for all slots. Skill targets (level or XP) are client state too.
 - [x] Modals (`UiModal`, tabs, Escape): journal (quests in full, achievement diary, bestiary),
       guide (skill unlocks gathered from content, ability reference), world map, settings.
 - [x] Bank: pack and worn tabs beside it, quantity buttons with withdraw-X, bank notes

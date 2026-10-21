@@ -280,7 +280,7 @@ namespace Rth.Server.Content
                 foreach (string stat in s.StatsPerLevel.Keys)
                     if (!StatIds.IsKnown(stat)) problems.Add("Skill '" + s.Id + "': unknown stat '" + stat + "'.");
             XpCurve curve = parts.Skills.XpCurve;
-            if (curve.MaxLevel < 2 || curve.FirstLevelXp <= 0 || curve.Growth < 1) problems.Add("XP curve: need maxLevel >= 2, firstLevelXp > 0, growth >= 1.");
+            if (curve.MaxLevel < 2 || curve.MaxLevel > 120) problems.Add("XP curve: maxLevel must be 2 to 120.");
             foreach (DamageXpRule rule in parts.Skills.DamageXp)
                 if (!skills.ContainsKey(rule.Skill)) problems.Add("Damage XP rule for " + rule.Style + ": skill '" + rule.Skill + "' doesn't exist.");
 
@@ -612,6 +612,7 @@ namespace Rth.Server.Content
             BilePassiveThreshold = Rules.BilePassiveThreshold,
             BileExtreme = Rules.BileExtreme,
             MaxPhlegm = Rules.MaxPhlegm,
+            GlobalCooldownTicks = Rules.GlobalCooldownTicks,
         });
     }
 }

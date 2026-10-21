@@ -1,5 +1,5 @@
 {
-  "xpCurve": { "maxLevel": 99, "firstLevelXp": 60, "growth": 1.105 },
+  "xpCurve": { "maxLevel": 100 },
   "skills": [
     {
       "id": "occultism",

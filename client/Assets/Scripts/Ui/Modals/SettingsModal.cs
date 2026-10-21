@@ -24,6 +24,7 @@ namespace Rth.Client.Ui.Modals
 
         private UiKit.Check _roofs;
         private UiKit.Check _lock;
+        private UiKit.Check _barLock;
         private UiKit.Check _queueing;
         private readonly Dictionary<RevolutionMode, UiKit.Check> _revolution = new Dictionary<RevolutionMode, UiKit.Check>();
         private Label _scale;
@@ -41,6 +42,10 @@ namespace Rth.Client.Ui.Modals
             UiKit.Heading(scroll, "Interface").style.marginTop = 12f;
             VisualElement ui = UiKit.El(scroll, "card");
             _lock = new UiKit.Check(ui, "Lock windows in place", () => Ui.Locked = !Ui.Locked);
+            _barLock = new UiKit.Check(ui, "Lock action bars (no dragging, no tooltips)", () =>
+            {
+                if (Session.Bars != null) Session.Bars.Locked = !Session.Bars.Locked;
+            });
             VisualElement scaleRow = UiKit.El(ui, "row");
             scaleRow.style.marginTop = 4f;
             UiKit.Text(scaleRow, "Interface scale");
@@ -87,6 +92,7 @@ namespace Rth.Client.Ui.Modals
         {
             _roofs.Set(RoofHider.ShowRoofs);
             _lock.Set(Ui.Locked);
+            _barLock.Set(Session.Bars != null && Session.Bars.Locked);
             CombatOptions options = Options();
             _queueing.Set(options.Queueing);
             foreach (KeyValuePair<RevolutionMode, UiKit.Check> r in _revolution) r.Value.Set(options.Revolution == r.Key);
@@ -118,7 +124,7 @@ namespace Rth.Client.Ui.Modals
                 ("Right-click", "Every option for what's under the pointer"),
                 ("R", "Run on or off"),
                 ("1 - 0, -, =", "Main action bar"),
-                ("Z / X / C", "Deflect melee / ranged / occult"),
+                ("Drag onto a bar", "Abilities, focuses and items; drag a slot off to clear it"),
                 ("Arrow keys, middle-drag", "Turn the camera"),
                 ("Mouse wheel", "Zoom (over the world)"),
             });

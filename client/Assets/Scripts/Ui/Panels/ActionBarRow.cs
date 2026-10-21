@@ -9,9 +9,10 @@ namespace Rth.Client.Ui.Panels
 {
     /// <summary>
     /// One row of 14 action bar slots, shared by the main and secondary bars. Shows each slot's
-    /// ability or item, its key, cooldown and whether it can be used. Click to use; drag an
-    /// ability from the book or an item from the pack onto a slot to place it; drag between
-    /// slots to swap; drag a slot off the bars to clear it, or right-click it.
+    /// ability, focus or item, its key, cooldown and whether it can be used. Click to use; drag an
+    /// ability from the book, a focus from the focuses tab or an item from the pack onto a slot to
+    /// place it; drag between slots to swap; drag a slot off the bars to clear it, or right-click
+    /// it. While the bars are locked none of that dragging works and slots show no tooltips.
     /// </summary>
     public sealed class ActionBarRow
     {
@@ -27,14 +28,13 @@ namespace Rth.Client.Ui.Panels
         {
             public VisualElement Root;
             public VisualElement Icon;
-            public VisualElement Cooldown;
+            public RadialCooldown Cooldown;
             public Label Timer;
             public Label Count;
-            public Vector2 PressedAt;
-            public bool Pressed;
         }
 
         private GameSession Session => _ui.session;
+        private bool BarsLocked => Session.Bars == null || Session.Bars.Locked;
 
         public ActionBarRow(UiRoot ui, VisualElement parent, int bar)
         {
@@ -49,55 +49,43 @@ namespace Rth.Client.Ui.Panels
                 slot.Icon = UiKit.El(slot.Root, "slot__icon");
                 slot.Icon.style.width = slot.Icon.style.height = 30f;
                 slot.Icon.pickingMode = PickingMode.Ignore;
-                slot.Cooldown = UiKit.El(slot.Root, "ability__cooldown");
-                slot.Cooldown.pickingMode = PickingMode.Ignore;
+                slot.Cooldown = new RadialCooldown();
+                slot.Root.Add(slot.Cooldown);
                 slot.Count = UiKit.Text(slot.Root, "", "slot__count");
                 slot.Count.pickingMode = PickingMode.Ignore;
                 if (bar == 0) UiKit.Text(slot.Root, ActionBars.MainKeyLabels[i], "ability__key").pickingMode = PickingMode.Ignore;
                 slot.Timer = UiKit.Text(slot.Root, "", "ability__timer");
                 slot.Timer.pickingMode = PickingMode.Ignore;
 
-                slot.Root.RegisterCallback<PointerDownEvent>(e =>
+                _ui.DragSource(slot.Root, () =>
                 {
-                    if (e.button == 0)
-                    {
-                        slot.Pressed = true;
-                        slot.PressedAt = e.position;
-                    }
-                    else if (e.button == 1 && Session.Bars?.Get(_bar, index) != null)
-                    {
-                        _ui.Menu(e.position, "Action bar", new List<(string, System.Action)> { ("Remove from bar", () => Session.Bars.Set(_bar, index, null)) });
-                    }
-                });
-                slot.Root.RegisterCallback<PointerMoveEvent>(e =>
-                {
-                    if (!slot.Pressed || _ui.IsDragging || _ui.Locked) return;
-                    if (((Vector2)e.position - slot.PressedAt).magnitude < 6f || Session.Bars?.Get(_bar, index) == null) return;
-                    slot.Pressed = false;
-                    (Texture2D icon, Color tint) = IconFor(Session.Bars.Get(_bar, index));
-                    _ui.BeginDrag(new UiRoot.Drag
+                    string value = Session.Bars?.Get(_bar, index);
+                    if (value == null || BarsLocked) return null;
+                    (Texture2D icon, Color tint) = IconFor(value);
+                    return new UiRoot.Drag
                     {
                         Data = new BarSlotDrag { Bar = _bar, Slot = index },
                         Icon = icon,
                         Tint = tint,
                         OnNowhere = () => Session.Bars?.Set(_bar, index, null), // dragged off the bars: cleared
-                    });
-                });
-                slot.Root.RegisterCallback<PointerUpEvent>(e =>
+                    };
+                }, () => Session.Bars?.Use(Session, _bar, index));
+                slot.Root.RegisterCallback<PointerDownEvent>(e =>
                 {
-                    if (e.button != 0 || !slot.Pressed) return;
-                    slot.Pressed = false;
-                    Session.Bars?.Use(Session, _bar, index);
+                    if (e.button != 1 || Session.Bars == null) return;
+                    var options = new List<(string, System.Action)>();
+                    if (Session.Bars.Get(_bar, index) != null && !BarsLocked) options.Add(("Remove from bar", () => Session.Bars.Set(_bar, index, null)));
+                    options.Add((BarsLocked ? "Unlock action bars" : "Lock action bars", () => Session.Bars.Locked = !Session.Bars.Locked));
+                    _ui.Menu(e.position, "Action bar", options);
                 });
-                slot.Root.RegisterCallback<PointerLeaveEvent>(_ => slot.Pressed = false);
-                _ui.AddDropTarget(slot.Root, Accepts, data => Drop(index, data));
-                UiKit.Tooltip(slot.Root, () => Describe(Session.Bars?.Get(_bar, index)));
+                _ui.AddDropTarget(slot.Root, data => !BarsLocked && Accepts(data), data => Drop(index, data));
+                UiKit.Tooltip(slot.Root, () => BarsLocked ? null : Describe(Session.Bars?.Get(_bar, index)));
                 _slots[i] = slot;
             }
         }
 
         private static bool Accepts(object data) =>
-            data is AbilityDrag || data is BarSlotDrag || (data is ItemDrag item && item.From == ContainerKind.Inventory);
+            data is AbilityDrag || data is FocusDrag || data is BarSlotDrag || (data is ItemDrag item && item.From == ContainerKind.Inventory);
 
         private void Drop(int index, object data)
         {
@@ -107,6 +95,9 @@ namespace Rth.Client.Ui.Panels
             {
                 case AbilityDrag a:
                     bars.Set(_bar, index, ActionBars.Ability(a.AbilityId));
+                    break;
+                case FocusDrag f:
+                    bars.Set(_bar, index, ActionBars.Focus(f.FocusId));
                     break;
                 case ItemDrag i:
                     bars.Set(_bar, index, ActionBars.Item(i.ItemId));
@@ -124,6 +115,11 @@ namespace Rth.Client.Ui.Panels
                 AbilityDef def = Session.Ability(ability);
                 return (IconLibrary.ForAbility(def), IconLibrary.AbilityTint(def));
             }
+            if (ActionBars.IsFocus(value, out string focus))
+            {
+                Focuses.Focus f = Focuses.Get(focus);
+                return (f == null ? null : IconLibrary.Get(f.Icon), Focuses.Tint);
+            }
             if (ActionBars.IsItem(value, out string item))
             {
                 ItemDef def = Session.Item(item);
@@ -139,12 +135,17 @@ namespace Rth.Client.Ui.Panels
                 AbilityDef a = Session.Ability(ability);
                 return a == null ? null : GameText.Describe(a, Session.TickSeconds, Session.AbilityProblem(a));
             }
+            if (ActionBars.IsFocus(value, out string focus))
+            {
+                Focuses.Focus f = Focuses.Get(focus);
+                return f == null ? null : Focuses.Describe(f);
+            }
             if (ActionBars.IsItem(value, out string item))
             {
                 ItemDef def = Session.Item(item);
                 return def == null ? null : GameText.Describe(def, Session.CountInPack(item));
             }
-            return UiKit.Colour("Empty. Drag an ability from the book, or an item from your pack.", UiKit.Muted);
+            return UiKit.Colour("Empty. Drag an ability, a focus or an item from your pack here.", UiKit.Muted);
         }
 
         public void Refresh()
@@ -165,25 +166,35 @@ namespace Rth.Client.Ui.Panels
             }
 
             float now = Session.EstimatedTick;
+            int gcd = Mathf.Max(1, Session.Content?.GlobalCooldownTicks ?? 3);
             for (int i = 0; i < _slots.Length; i++)
             {
                 Slot slot = _slots[i];
                 string value = bars.Get(_bar, i);
                 float remaining = 0f;
-                float total = 3f;
+                float total = gcd;
                 bool usable = true;
                 bool queued = false;
+                bool stalled = false;
+                bool held = false;
                 slot.Count.text = "";
                 if (ActionBars.IsAbility(value, out string id) && Session.Ability(id) is AbilityDef ability)
                 {
                     usable = Session.AbilityProblem(ability) == null;
                     queued = state.QueuedAbility == ability.Id;
-                    // Cooldown: whichever is later, the ability's own or the global one.
-                    float ready = state.GlobalCooldownReadyTick;
+                    stalled = state.StalledAbility == ability.Id; // used out of range: fires on reaching the target
+                    // The slot's cooldown: its ability's own when that runs longer, else the global one.
+                    remaining = state.GlobalCooldownReadyTick - now;
                     foreach (CooldownState cd in state.Cooldowns)
-                        if (cd.AbilityId == ability.Id) ready = Mathf.Max(ready, cd.ReadyTick);
-                    remaining = ready - now;
-                    total = Mathf.Max(ability.CooldownTicks, 3);
+                    {
+                        if (cd.AbilityId != ability.Id || cd.ReadyTick - now <= remaining) continue;
+                        remaining = cd.ReadyTick - now;
+                        total = Mathf.Max(ability.CooldownTicks, gcd);
+                    }
+                }
+                else if (ActionBars.IsFocus(value, out string focus))
+                {
+                    held = Focuses.Get(focus)?.IsHeld(state) ?? false;
                 }
                 else if (ActionBars.IsItem(value, out string item))
                 {
@@ -193,9 +204,11 @@ namespace Rth.Client.Ui.Panels
                 }
                 slot.Root.EnableInClassList("ability--unusable", !usable);
                 slot.Root.EnableInClassList("ability--queued", queued);
-                slot.Cooldown.style.height = Length.Percent(remaining > 0f ? Mathf.Clamp01(remaining / total) * 100f : 0f);
+                slot.Root.EnableInClassList("ability--stalled", stalled);
+                slot.Root.EnableInClassList("slot--on", held);
+                slot.Cooldown.Remaining = remaining > 0f ? remaining / total : 0f;
                 float seconds = remaining * Session.TickSeconds;
-                slot.Timer.text = seconds > 0.95f ? Mathf.CeilToInt(seconds).ToString() : "";
+                slot.Timer.text = seconds > 2.4f ? Mathf.CeilToInt(seconds).ToString() : "";
             }
         }
     }

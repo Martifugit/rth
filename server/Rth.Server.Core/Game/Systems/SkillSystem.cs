@@ -46,7 +46,8 @@ namespace Rth.Server.Game
 
         public double Xp(Player player, string skill) => Of(player).Xp.TryGetValue(skill, out double xp) ? xp : 0;
 
-        public int Level(Player player, string skill) => Curve.LevelForXp((long)Xp(player, skill));
+        public int Level(Player player, string skill) =>
+            Curve.LevelForXp((long)Xp(player, skill), Curve.MaxFor(World.Content.Skills.TryGetValue(skill, out SkillDef? def) ? def : null));
 
         public string Name(string skill) => World.Content.SkillName(skill);
 
@@ -59,8 +60,7 @@ namespace Rth.Server.Game
             if (amount <= 0 || !World.Content.Skills.ContainsKey(skill)) return;
             PlayerSkills skills = Of(player);
             int before = Level(player, skill);
-            double max = Curve.XpForLevel(Curve.MaxLevel) * 1.5; // a little room past max level, then it stops
-            skills.Xp[skill] = Math.Min(max, Xp(player, skill) + amount);
+            skills.Xp[skill] = Math.Min(XpCurve.MaxXp, Xp(player, skill) + amount);
             skills.Dirty = true;
 
             int after = Level(player, skill);
