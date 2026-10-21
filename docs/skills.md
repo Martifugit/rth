@@ -756,12 +756,16 @@ is fishing gear.
 - **Trained by** making ammunition (main) and weapons.
 
 ### Tailoring
-- **Leather:** tan hides at a tannery vat, then cut them at a workbench: ranged leathers
-  (body, legs, hands, feet, coif), quivers, pouches.
-- **Cloth:** spin fibre into thread on a wheel, weave it on a loom, then sew robes (hat, robe
-  top, skirt, gloves, boots). From tier 4, robes are **steeped** in a reagent from Occultism's
-  rites, which is where the house flavour (and pole bonus) comes from.
-- **Capes**, and dyes later.
+**Decided in outline (2026-10-21).** The craft of soft armour: **leathers** for ranged and
+**robes** for occultists, plus capes. A skeleton; the pieces and how each is made come with the
+content.
+
+- **Leather** from hides (Butchering): a hide's tier follows the creature it came from, so
+  leather supply follows Butchering.
+- **Cloth** from fibre (Foraging, and pale wool from Butchering).
+- **The loop:** process the raw material at a station (tanning, weaving), then sew, make-X.
+- **Cross-skill links are welcome** where they're done right (robes taking something from
+  Occultism, for example); which ones is decided with the content.
 - **Trained by** making leathers and robes.
 
 ### Cooking
@@ -798,6 +802,8 @@ Smaller decisions that can wait until the content that needs them:
 
 - Religion's numbers: all starting values; balance them in play (4.1–4.4).
 - Verses: which ones come from quests or boss codices; more verses later.
+- An ammunition slot: ranged needs somewhere to hold ammunition, and the 10 equipment slots have
+  none (a quiver slot, as in RuneScape, or the pack).
 - Tipped ammunition: the tips, their effects and trigger chances, and whether calibration stays
   and how it works with them (3.4, Artifice).
 - What the monuments are (their look, and Cruor's reason for each).
