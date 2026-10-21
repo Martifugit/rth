@@ -223,7 +223,7 @@ Items are kept on death for now. Items have placeholder icons (tinted squares) u
 - [x] Client: Skills tab with levels and progress; locked abilities grey out.
 
 Not yet: butchering task-givers and their points, the other four creature tiers, banks to
-stockpile carcasses, and old-blood.
+stockpile carcasses.
 
 ## Milestone 5: the town (done)
 

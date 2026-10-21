@@ -21,7 +21,7 @@ provisional.
 | Combat | **Occultism** | Bile abilities, house spellbooks, and the rites that make reagents. | Occult damage, reagents |
 | Combat | **Defence** | Armour, max blood, shared defensive abilities. Trained by any style. | Survival |
 | Faith | **Religion** | Tithe's hymns (prayers, any style) and Cruor's verses (melee's power), gathered at monuments. | Hymns, verses |
-| Hub | **Butchering** | Carcasses into everything else: meat, hide, gall, bone, old-blood. | Nearly every skill |
+| Hub | **Butchering** | Carcasses into everything else: meat, hide, gall, remains. | Nearly every skill |
 | Gathering | **Mining** | Ore, stone, salt, gems. | Smithing, Occultism, Medicine |
 | Gathering | **Woodcutting** | Logs, charcoal, resin. | Artifice, Smithing, Cooking, Medicine, Religion (casings) |
 | Gathering | **Fishing** | Fish, shells, brine. | Cooking, Medicine |
@@ -87,7 +87,7 @@ and the carcass is where combat and skilling meet.
   awarded). No other "max" rewards in v1.
 
 ### 2.2 The tier ladder
-Every making and gathering skill climbs **the same ten tiers**, one per ten levels, so a tier-5
+Every making and gathering skill climbs **the same tiers**, one per ten levels, so a tier-5
 pickaxe, tier-5 ore, tier-5 bar and tier-5 sword all ask for level 40.
 
 **Tiers are not tied to the build order.** A region's resources come from its **biome**:
@@ -130,10 +130,15 @@ obsolete, because the old one is still the best place for something.
 | 7 | 60 | frostiron | pale pine | ice char | frostcap | pale wool |
 | 8 | 70 | verdigris (moon-touched) | moonbark | lightfin | moonmoss | pale wool |
 | 9 | 80 | deepglass | mistwood | hushfin | hellebore | threadmoss |
-| 10 | 90 | old-blood alloy | (old-blood) | (old-blood) | (old-blood) | (old-blood) |
+| 10 | 90 | (open) | (open) | (open) | (open) | (open) |
 
-- Tier 10 isn't gathered. Its recipes take **old-blood** (Butchering's top yield, section 5) on
-  top of tier-9 materials, so every style's best gear goes through the same resource.
+- **Special equipment sits outside the ladder.** The best gear isn't a tier with one shared
+  resource. Each special piece is designed on its own: typically a special drop from a
+  difficult boss, a demanding process to make it, and sometimes a special place to make it in
+  (the great forge at Frostpeak Forge is one, for whatever kind of equipment needs the best
+  forge there is). No single resource or place feeds all of it.
+- **Tier 10 is open:** whether level 90 gets an ordinary gathered tier like the others, or the
+  ladder stops at tier 9 and the top levels are about special equipment and the hardest nodes.
 - Gear stats grow by tier from one formula (a tier-N item gets the tier's base value times the
   slot's share), so a new item needs only a tier and a slot in data. The formula is a combat
   tuning task, not a per-item one.
@@ -178,7 +183,7 @@ outputs, an output table, extra rolls per levels, XP). Rules on top of it:
   takes roughly a minute at most stations.
 - **Stations** are objects with a `process` action: furnace, anvil, range, campfire, tannery
   vat, loom, spinning wheel, workbench, apothecary bench, lectern. Each tier doesn't need a new
-  station; tiers 7+ may ask for a better one (the Frostpeak Forge's anvils, for example).
+  station. Special equipment may need a special place (see 2.2); ordinary tiers never do.
 - **Failure** only where it reads naturally, within what you're allowed to make: Cooking can
   burn food you have the level to cook, less as you level. Everything else always succeeds.
 - **Better outputs:** a recipe may name better or different outputs, not necessarily rare, each
@@ -253,8 +258,8 @@ On top of that, any style gets Defence XP for damage it **prevents** with defens
 Attack and strength in one skill. Plays as the close, hard-hitting style that wants to be hit:
 its power comes from blood lost.
 
-- **Weapons:** one-handed swords and maces (with a shield or a second weapon), two-handed
-  spears and greatswords. Ten tiers from Smithing.
+- **Weapons:** one-handed (with a shield or a second weapon) and two-handed, of every kind
+  (see Smithing), all from Smithing.
 - **Abilities:** builders, spenders and ultimates, as with Occultism. About eight at v1, more
   later. Spenders need Melee 5, ultimates Melee 10, the same steps as Occultism.
 - **Its power source is Religion's verses** (section 4.2), as bile is Occultism's.
@@ -311,7 +316,6 @@ reagents.
 | Spark salt / Flare salt / Sunfire salt | Gall | 15 / 45 / 75 | yellow |
 | Lampblack / Pitch / Night ink | Umber | 15 / 45 / 75 | black |
 | Green vitriol / Aqua fortis / Red vitriol | Mordant | 25 / 55 / 85 | both |
-| Old-blood tincture | any house's highest site | 90 | both |
 
 - **Favour:** each house keeps a favour score per player (points, which exist already), earned
   by its rites and quests. Its higher sites and spells ask for favour as well as a level.
@@ -444,7 +448,7 @@ Cruor keeps trying to expand, and its monuments are how that shows in the world.
 - **All over the world,** in every region, each with a Religion level requirement. Many also
   need something else from Cruor's expansion: a quest, a region opened, standing earned. Where a
   monument stands and what it took to raise it tells the story of Cruor pushing outward.
-- **Tiers:** monuments come in the same ten tiers as everything else (2.2), one per ten
+- **Tiers:** monuments come in the same tiers as everything else (2.2), one per ten
   levels, and like other nodes they are scattered: a region can hold a tier-2 and a tier-8
   monument side by side.
 - **Raising:** each monument is raised once, when you first meet its requirements, for a one-off
@@ -511,10 +515,8 @@ is how most materials enter the world, and the carcass is where combat and skill
   make stronger reliquaries (Religion, 4.4). The remains needed to **raise** certain monuments
   come from bosses and important creatures directly (their drops or quests), not from
   carcasses.
-- **Old-blood:** a rare yield from creatures of level 85 and above in any family, more from the
-  strongest. Every tier-10 recipe in every skill takes it.
-- **Task-givers,** one per family, paying points per family to spend at their shops on tools,
-  gear and yield boosts: Wenna Thole (wildlife) and Corvin Sallow (Scalth-touched) are built;
+- **Task-givers,** one per family, paying points per family to spend at their shops on the
+  family's butchering tool, gear and yield boosts: Wenna Thole (wildlife) and Corvin Sallow (Scalth-touched) are built;
   Brannoch takes the deep. The other three (a Synod quartermaster, a Concordian at a crater
   camp, someone in Slough) get designed with their regions.
 - **Stockpiling:** carcasses are unstackable but can be noted, and any butchering station takes
@@ -543,7 +545,7 @@ The herblore. Not for healing (food does that), apart from one mild tick-heal.
 | 50 | Strong tonic | lamprey tooth | start with 25 phlegm |
 | 50–80 | Super draughts (every style, defence) | tier herbs | +5 + 10% |
 | 70 | **Choler** / **Melancholia** (the overloads) | sunfire salt / night ink | holds bile at ±60 for 5 minutes and boosts that pole's abilities |
-| 90 | **Panacea** | old-blood | all super draughts in one, 5 minutes |
+| 90 | **Panacea** | a rare boss ingredient | all super draughts in one, 5 minutes |
 
 - **Trained by** making potions (main) and cleaning herbs (light).
 
@@ -569,7 +571,7 @@ fixed region (2.2).
 | 7 | **Frostiron** | Candora, dwarven halls | none |
 | 8 | **Verdigris** | moonfall craters, which can open anywhere | **appears only after a moonfall** (a world event), then fades |
 | 9 | **Deepglass** | Undermost | **brittle**: a rock can shatter before it's worked out, unless your pickaxe has conservation |
-| 10 | (none) | | tier 10 is old-blood alloy (2.2) |
+| 10 | (open) | | see 2.2 |
 
 **Gems** are a rare extra from any rock, and the one place Mining touches the humours: each gem
 carries one, and jewellery set with it leans towards that humour's style (Smithing).
@@ -698,9 +700,25 @@ Dreamweaver's archive. It arrives with the Veilwood region; the design is ready 
 ## 8. Making
 
 ### Smithing
-- **Smelting** at a furnace (ore + charcoal from tier 3), **smithing** at an anvil: melee
-  weapons, plate, shields, all tools (pickaxe, hatchet, sickle, knives, cleaver), bolt heads,
-  and jewellery settings (gems from Mining).
+**Decided (2026-10-21).** The craft of melee weapons and plate. Everything else it does is
+supplying: bars, the plain metal tools of gathering, and metal parts other skills ask for (those
+skills define them).
+
+- **The loop:** smelt ore into bars at a furnace (charcoal from tier 3), then smith bars into
+  items at an anvil, make-X, like other processing. Bars per item scale with its size (a dagger
+  takes 1, a plate body 5), and the big pieces give the big XP. **No better outputs:** a sword is
+  a sword wherever it's made. A more involved smithing process can come later.
+- **Melee weapons:** one-handed (main hand, or dual-wielded) and two-handed, of **every kind**:
+  daggers and short blades, swords, scythes, spears, large swords and anything else medieval or
+  somewhat far-out fantasy. No kind is excluded. Within a tier, a kind's stats come from its
+  **grip** (one-handed, off-hand, two-handed), as in RuneScape 3, so a kind is a choice of look
+  and feel, not a balance decision, and new kinds cost nothing to balance.
+- **Plate:** helm, body, legs, gauntlets, boots, and a shield (the off-hand alternative to a
+  second weapon).
+- **Tools:** pickaxe, hatchet and sickle. Butchering's tools are bought from each family's
+  task-giver (section 5), and fishing gear comes from Artifice.
+- **Special equipment** is not ordinary smithing: see 2.2. Some of it is smithed at special
+  forges, Frostpeak Forge's great forge among them.
 - **Jewellery** (neck and ring): metal + gem. The gem's humour decides the style it leans to
   (garnet and bloodstone melee, amber and jet the two occult poles, moonstone ranged; see
   Mining), and the metal's tier decides how much. At higher tiers a ring or amulet is steeped in
