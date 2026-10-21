@@ -272,14 +272,15 @@ its power comes from blood lost.
 ### 3.4 Ranged
 The Rationalists' style: patient, from a distance, precise.
 
-- **Weapons:** slings (tier 1–2, they throw stones you mine, so they cost nothing to run),
-  one-handed hand crossbows (paired, or with a sight in the off-hand), two-handed crossbows.
-  All from Artifice.
-- **Ammunition:** bolts (Artifice), one used per shot, some recovered from the ground at the
-  target's tile (one in three). Bolts are tiered by their heads. Special bolts (barbed, salted,
-  moon-touched) carry an effect.
-- **Its live meter is calibration** (`systems.md`): it builds while you keep shooting the same
-  target without moving, and ranged spenders cash it in.
+- **Weapons** of every kind, one-handed or two-handed, all from Artifice. Slings throw stones
+  you mine, so they cost nothing to run.
+- **Ammunition** from Artifice, one used per shot, some recovered from the ground at the
+  target's tile (one in three).
+- **Its power engine is tipped ammunition** (Artifice): tips with effects that trigger on a
+  shot. Their design is still to come.
+- **Calibration** (`systems.md`), its live meter, builds while you keep shooting the same target
+  without moving. Whether it stays, and how it works with tipped ammunition, is decided with the
+  tips.
 - **Trained by** ranged damage.
 
 ### 3.5 Occultism
@@ -735,14 +736,24 @@ skills define them).
 - **Trained by** smelting (a little) and smithing (most).
 
 ### Artifice
-The Rationalist craft: precision work in wood, metal, horn and glass.
+**Decided (2026-10-21).** The Rationalist craft: ranged weapons and ammunition. Its supplier role
+is fishing gear.
 
-- **Ranged weapons:** sling (cord + leather), hand crossbow, crossbow (stock + Smithing limbs +
-  sinew string).
-- **Bolts:** shaft (wood) + head (Smithing) + fletching (feathers); 15 per set. Special bolts at
-  higher levels (barbed, salted, moon-touched, deepglass).
-- **Sights** (ranged off-hand), and the finer tools: fishing gear, the moonglass knife.
-- **Trained by** making bolts (main) and weapons.
+- **Ranged weapons** of **every kind**, none excluded (slings, crossbows, hand crossbows, bows,
+  thrown weapons, and anything else that fits). As with Smithing, a kind's stats come from its
+  **grip** (one-handed, paired or with an off-hand; two-handed), so new kinds cost nothing to
+  balance. Weapons are built from parts: wood (Woodcutting), metal fittings (Smithing bars) and a
+  string of sinew (Butchering) or fibre.
+- **Ammunition** by tier: a head (a metal tier from Smithing bars, or stone for slings), a shaft
+  (wood) and fletching (feathers from Butchering), made in sets.
+- **Tipped ammunition** is ranged's power engine, as bile is Occultism's and verses are melee's:
+  RuneScape's formula of tipping ammo in particular ways for special effects that trigger on a
+  shot. Tips come from materials of other skills; the obvious first source is Mining's humour
+  gems (one humour per gem, so a tip leans the same way as that gem's jewellery). **The tips, their
+  effects and how they trigger still need proper design** (section 10).
+- **Fishing gear:** rods, nets, traps and the lantern.
+- **The loop:** a workbench, make-X, no better outputs.
+- **Trained by** making ammunition (main) and weapons.
 
 ### Tailoring
 - **Leather:** tan hides at a tannery vat, then cut them at a workbench: ranged leathers
@@ -787,6 +798,8 @@ Smaller decisions that can wait until the content that needs them:
 
 - Religion's numbers: all starting values; balance them in play (4.1–4.4).
 - Verses: which ones come from quests or boss codices; more verses later.
+- Tipped ammunition: the tips, their effects and trigger chances, and whether calibration stays
+  and how it works with them (3.4, Artifice).
 - What the monuments are (their look, and Cruor's reason for each).
 - Exact gear stat formula per tier and slot (2.2).
 - The names of the melee and ranged abilities, and the Defence ability list's numbers.
