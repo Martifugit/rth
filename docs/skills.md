@@ -5,7 +5,7 @@ takes in and gives out, and what each level band unlocks. Combat resources and t
 fight are in `docs/systems.md`; this file says which skill feeds which of them.
 
 **Status.** The roster and the combat split are **decided** (2026-10-21): melee, ranged,
-occultism and defence; Religion absorbs focuses; Breath is gone; Medicine is the herblore.
+occultism and defence; Religion's hymns and verses; Breath is gone; Medicine is the herblore.
 Everything else here is a **proposal** made so that building content doesn't keep raising new
 questions. Numbers are starting values to tune by playing, and every material name is
 provisional.
@@ -20,16 +20,16 @@ provisional.
 | Combat | **Ranged** | Rationalist crossbows and slings; calibration. | Ranged damage |
 | Combat | **Occultism** | Bile abilities, house spellbooks, and the rites that make reagents. | Occult damage, reagents |
 | Combat | **Defence** | Armour, max blood, shared defensive abilities. Trained by any style. | Survival |
-| Faith | **Religion** | Tithe's prayers (any style) and Cruor's power for melee. Under discussion (section 4). | Prayers, melee's power |
+| Faith | **Religion** | Tithe's hymns (prayers, any style) and Cruor's verses (melee's power), gathered at monuments. | Hymns, verses |
 | Hub | **Butchering** | Carcasses into everything else: meat, hide, gall, bone, old-blood. | Nearly every skill |
-| Gathering | **Mining** | Ore, stone, salt, gems. | Smithing, Religion, Occultism, Medicine |
-| Gathering | **Woodcutting** | Logs, charcoal, resin, galls. | Artifice, Smithing, Cooking, Medicine |
+| Gathering | **Mining** | Ore, stone, salt, gems. | Smithing, Occultism, Medicine |
+| Gathering | **Woodcutting** | Logs, charcoal, resin. | Artifice, Smithing, Cooking, Medicine, Religion (casings) |
 | Gathering | **Fishing** | Fish, shells, brine. | Cooking, Medicine |
-| Gathering | **Foraging** | Herbs, fibres, fungi, fruit. | Medicine, Tailoring, Cooking, Religion |
+| Gathering | **Foraging** | Herbs, fibres, fungi, fruit. | Medicine, Tailoring, Cooking |
 | Gathering | **Dreaming** | Fragments pulled from memory orbs in the Veilwood. | Occultism, Medicine, lore |
-| Making | **Smithing** | Metal into melee weapons, plate, tools, jewellery, bolt heads. | Melee, Defence, everyone's tools |
+| Making | **Smithing** | Metal into melee weapons, plate, tools, jewellery, bolt heads, reliquary casings. | Melee, Defence, Religion, everyone's tools |
 | Making | **Artifice** | Crossbows, bolts and sights (the Rationalist craft). | Ranged |
-| Making | **Tailoring** | Hide into leather, fibre into cloth: leathers, robes, vellum, capes. | Ranged, Occultism, Religion |
+| Making | **Tailoring** | Hide into leather, fibre into cloth: leathers, robes, capes. | Ranged, Occultism |
 | Making | **Cooking** | Fish and meat into food. | Blood |
 | Making | **Medicine** | Herbs and extracts into potions. | Phlegm, bile, boosts, cures |
 
@@ -50,8 +50,8 @@ its stranger cousin), Archaeology, Invention, Slayer (Butchering).
 | Potions (phlegm, bile, boosts) | Medicine | Foraging (herbs), Butchering, Fishing, Mining |
 | Reagents (occult spells) | Occultism's rites | Butchering (extracts), Mining (salts), Woodcutting (ash), Dreaming |
 | Ammunition (ranged) | Artifice | Smithing (heads), Woodcutting (shafts), Butchering (fletching) |
-| Melee's power | Religion (Cruor) | To be decided (section 4) |
-| Prayers (any style) | Religion (Tithe) | To be decided (section 4) |
+| Verses (melee's power) | Religion: pledges from monuments buy scriptures | Monuments; Butchering (remains), Smithing and Woodcutting (casings) for reliquaries |
+| Hymns (any style) | Religion (devotion) | To be decided (4.1) |
 | Weapons and armour | Smithing, Artifice, Tailoring | Mining, Woodcutting, Butchering, Foraging |
 | Tools | Smithing (+ Artifice for the fine ones) | Mining |
 
@@ -171,7 +171,7 @@ outputs, an output table, extra rolls per levels, XP). Rules on top of it:
 **Requirements are hard limits.** Without the level you can't do it at all: you can't mine the
 rock, make the potion or wield the sword. A level never becomes a chance of failure. The only
 way past a requirement is a **boost** that raises your level for a while (a potion, a food, a
-prayer), and requirements check the boosted level.
+hymn), and requirements check the boosted level.
 
 - **Weapons** need their style skill (a tier-5 sword needs Melee 40).
 - **Armour** needs Defence (a tier-5 plate body needs Defence 40), whichever style it is for.
@@ -192,7 +192,7 @@ Wearing another style's armour works but costs that style's accuracy (a light co
 done through stats, with no special code).
 
 ### 2.7 Every unlock is data
-Every level-gated thing (node, recipe, ability, prayer, item, shortcut) keeps its level in
+Every level-gated thing (node, recipe, ability, hymn, verse, monument, item, shortcut) keeps its level in
 content, so the Guide's skill pages fill themselves (that already works) and nothing is listed by
 hand.
 
@@ -237,8 +237,7 @@ its power comes from blood lost.
   spears and greatswords. Ten tiers from Smithing.
 - **Abilities:** builders, spenders and ultimates, as with Occultism. About eight at v1, more
   later. Spenders need Melee 5, ultimates Melee 10, the same steps as Occultism.
-- **Its power source is Religion's Cruor half** (section 4, under discussion), as bile is
-  Occultism's.
+- **Its power source is Religion's verses** (section 4.2), as bile is Occultism's.
 - **Trained by** melee damage.
 
 ### 3.4 Ranged
@@ -314,18 +313,103 @@ your ammunition).
 
 ## 4. Religion
 
-**Under discussion.** A first full design (prayers on credit with a debt; vows and martyrdom)
-was written and rejected on 2026-10-21. It is in git history (commit cf92a62) if any piece of
-it turns out useful. Decided so far:
+**Decided (2026-10-21).** Religion is the faith of Blood, in two halves that belong to the two
+sees. It replaces the breath skill: focuses become its hymns.
 
-- Religion replaces the breath skill. **Focuses fold into it**, so part of Religion plays much
-  like Prayer in RuneScape: prayers unlock as you level, for utility (overhead
-  protection/deflection) and for boosts (the damage-boosting kind).
-- Religion is also **melee's power source**, as bile is Occultism's.
-- The **prayer** half belongs to **Tithe**; the **melee-boosting** half to **Cruor**.
-- It needs its own identity, playing differently from RuneScape's Prayer and from
-  Distillation's rites.
-- It counts towards combat level (3.1).
+| Half | See | What it is | Who it serves | Paid with |
+|---|---|---|---|---|
+| **Hymns** | Tithe | Prayers, our equivalent of RuneScape's | Every style | **Devotion** |
+| **Verses** | Cruor | Melee's power engine, as bile is Occultism's and special ammo is Ranged's | Melee | Blood, **scriptures**, long cooldowns |
+
+### 4.1 Hymns (Tithe)
+Plain prayers, deliberately: nothing fancier than RuneScape's.
+
+- **Singing a hymn** turns it on; it does one specific thing while it lasts and drains
+  **devotion**. Several can be sung at once, except where they exclude each other (one
+  deflection at a time, one boost per stat).
+- **Devotion** is the bar that replaces breath on the main action bar.
+- **What hymns cover:** protection (deflecting melee, ranged or occult attacks), boosts
+  (damage, accuracy, defence), and utility. They work for every combat style, and unlock with
+  Religion level.
+- The hymn list, devotion's size and drain rates, and how devotion is restored are still to be
+  written (section 10).
+
+### 4.2 Verses (Cruor)
+Verses take melee beyond the rotation its abilities settle into: they raise its skill ceiling
+and its power. They **complement** melee abilities and never compete with them.
+
+- **Never a better damage button.** A verse changes how the fight goes (blood, damage taken,
+  phlegm, timing); its value shows in the melee abilities around it. A very few verses deal
+  damage in narrow cases (like Tuska's wrath in RuneScape), and are only worth reading then.
+- **Read on the global cooldown.** Each costs **blood** and **scriptures** (4.3), and most have
+  long cooldowns. Action bar room isn't a constraint: there are several bars.
+- **Melee only:** reading a verse needs a melee weapon. Some verses also need a Melee level.
+- **Unlocks differ per verse:** a Religion level always, and possibly a quest, or a codex-like
+  drop from a boss.
+- **"Taking damage" means hits and bleeds** (including the bleed from Death's Dance), never a
+  verse's own blood cost. This one rule applies to every verse that reacts to damage taken.
+- **The low-blood way.** Most of the set rewards fighting low on blood, Cruor's martyrdom as a
+  playstyle: Stigmata wants you under 30%, Death's Dance and Redemption keep you there, Siphon
+  keeps you alive, and healing back above the line costs you Stigmata's bonus.
+
+**The first verses.** Levels and numbers are placeholders; `x` marks a number still to set.
+Durations are given in ticks (0.6 s).
+
+| Level | Verse | Cost | Effect |
+|---|---|---|---|
+| 1 | **Siphon** | 2% current blood | Gain x% life steal for x ticks. |
+| 15 (+ Melee 15) | **Abjuration** | blood, scripture | Heavy damage, but **only against occult-made creatures**; nothing against anything else. |
+| 40 | **Death's Dance** | blood, scripture | For x ticks, damage from every hit you take is reduced by 20% up front, and the damage it stopped is applied to you as a bleed over time instead. |
+| 55 | **Hemospike** | each ability cast costs 2% blood | A bloody frenzy for 12 ticks: basic abilities generate 2 more phlegm, and every ability cast costs 2% blood. |
+| 70 | **Redemption** | 70% of current blood | Shields you: the next incoming attack within 10 ticks is blocked completely, and the damage it would have done becomes phlegm (at most 50). |
+| 85 | **Martyrdom** | 20% max blood | For 50 ticks, gain a stack of **Scar** each time you take damage. At 10 stacks, your next ultimate costs no phlegm and consumes the stacks. |
+| 90 | **Stigmata** | needs and consumes 80% max blood | For 20 ticks, while you're below 30% blood, you deal x% more damage. |
+
+### 4.3 Pledges and scriptures
+- **Pledges** are what Religion gathers. Empowering a monument (4.4) has a chance on each
+  success to give pledges, the way a rock gives ore. They are points (the existing points
+  system).
+- **Scriptures** are what verses consume. Players can't make them: they hold the perfect mix of
+  the blood of hundreds of thousands of the faithful, which only Cruor can concentrate. They are
+  **bought from Cruorian characters with pledges**. That is Cruor's bargain: power for the people
+  who carry its faith across the world.
+- **Scriptures are tiered:** higher verses need higher-tier scriptures, which cost more pledges.
+  Higher monuments give more pledges.
+
+### 4.4 Monuments
+Cruor keeps trying to expand, and its monuments are how that shows in the world.
+
+- **All over the world,** in every region, each with a Religion level requirement. Many also
+  need something else from Cruor's expansion: a quest, a region opened, standing earned. Where a
+  monument stands and what it took to raise it tells the story of Cruor pushing outward.
+- **Raising:** each monument is raised once, when you first meet its requirements, for a one-off
+  XP reward. Some cost **remains from bosses or other important creatures**, some of them quest
+  rewards.
+- **Empowering (the main method, AFK):** the monuments are strongest with fresh blood. A monument
+  has several **founts**, which work like gathering nodes (`skills.md` 2.3): your character
+  pushes an arm into one, the game says the fount cuts you open, your character says "Ouch!", and
+  you take a symbolic 5 damage (regenerated well before the fount changes). Then it runs like
+  woodcutting or Divination: attempts succeed by level, give Religion XP and sometimes pledges,
+  and now and then the fount is sated and another one wakes, so you move.
+- **Hungry founts (active):** sometimes a fount wakes hungry: short-lived and worth much more.
+  Moving to it is the reward for paying attention.
+- **Reliquaries (the costly, fast method):** remains sealed in a **casing** made from other
+  skills' materials (metal from Smithing, wood from Woodcutting, more at higher tiers), assembled
+  as an ordinary recipe at a workbench or chapel. Placed in a monument, a reliquary boosts the
+  XP **and pledges** of **everyone** empowering it, for a while. Most of the XP comes from using
+  it, a little from making it. Better remains (from stronger creatures, through Butchering) make
+  stronger reliquaries, which need higher Religion. This is the game's main use of bones and
+  remains, and a reason to train together.
+
+### 4.5 Training Religion
+- **Empowering monuments** (AFK, low XP, free) and **hungry founts** (active, more).
+- **Reliquaries** (fastest, costs remains and casings).
+- **Raising monuments** (one-off rewards).
+- **A trickle from fighting:** a little XP from singing hymns and reading verses.
+
+**Why it doesn't play like Distillation:** no rites. Empowering is gathering at a fixed place,
+reliquaries are an ordinary recipe, and what it produces (pledges) is spent at a shop, not burned
+by a spell.
 
 ---
 
@@ -346,8 +430,8 @@ As built (Milestone 4), extended:
 | The deep | 75 | **Frostpeak Forge** tools | **the Frostpeak Forge** | the Undermost's things |
 
 - **Yields** feed everyone: meat (Cooking), hide and sinew (Tailoring, Artifice), feathers
-  (Artifice), gall, glands, tallow and bile-salt (Occultism, Medicine), hearts and bones (Religion
-  offerings), and rarely tools, gear pieces and **old-blood**.
+  (Artifice), gall, glands, tallow and bile-salt (Occultism, Medicine), remains (Religion's
+  reliquaries), and rarely tools, gear pieces and **old-blood**.
 - **Old-blood:** a rare yield from any family's creatures at level 85 and above, more from the
   strongest. Every tier-10 recipe in every skill takes it.
 - **Task-givers** per family: Wenna Thole (wildlife, built), Corvin Sallow (Scald-touched,
@@ -386,7 +470,7 @@ The herblore. Not for healing (food does that), apart from one mild tick-heal.
 
 ### Mining
 - Ore by tier (2.2), plus **salt** (rock salt by the river, brine salt in the Saltmarch, sere
-  salt in Sere): offerings, rites, Cooking and Medicine. **Stone** for slings and
+  salt in Sere): rites, Cooking and Medicine. **Stone** for slings and
   shortcuts, **gems** as rare extras (jewellery).
 - Tool: pickaxe (Smithing). Station-free.
 - Moonfall craters spawn temporary tier-8 **verdigris** nodes when a fragment falls (a world
@@ -395,12 +479,12 @@ The herblore. Not for healing (food does that), apart from one mild tick-heal.
 ### Woodcutting
 - Logs by tier: crossbow stocks and bolt shafts (Artifice), fuel for campfires (Cooking),
   **charcoal** (burned at a kiln) for steel and higher smelts.
-- Extras: resin (Medicine), **oak galls** (ink for writs), bird nests (seeds for later, feathers
+- Extras: resin (Medicine), bird nests (seeds for later, feathers
   now).
 - Tool: hatchet (Smithing).
 
 ### Fishing
-- Fish by tier, and **brine** (Saltmarch spots) for rites. Extras: shells (offerings), eel slime
+- Fish by tier, and **brine** (Saltmarch spots) for rites. Extras: shells, eel slime
   and scales (Medicine).
 - Tools: rod, net, trap (Artifice: they're fine work). A spot offers one or two methods.
 - Spots move instead of depleting.
@@ -455,7 +539,7 @@ The Rationalist craft: precision work in wood, metal, horn and glass.
 - **Cloth:** spin fibre into thread on a wheel, weave it on a loom, then sew robes (hat, robe
   top, skirt, gloves, boots). From tier 4, robes are **steeped** in a reagent from Occultism's
   rites, which is where the house flavour (and pole bonus) comes from.
-- **Vellum** (for writs), **capes**, and dyes later.
+- **Capes**, and dyes later.
 - **Trained by** making leathers and robes.
 
 ### Cooking
@@ -474,20 +558,22 @@ The Rationalist craft: precision work in wood, metal, horn and glass.
 The code rework that follows this document, in short:
 
 - **Remove Breath:** `playerMaxBreath`, breath regen and drain, the breath gauge, the
-  `maxBreath` stat on two items. Deflection moves to Religion's prayers.
-- **Focuses move into Religion** once its design is settled.
-- **Add calibration** for ranged, and melee's power from Religion, when those styles are built.
+  `maxBreath` stat on two items. The bar's place goes to **devotion**.
+- **Focuses become hymns** (Religion), drained from devotion; deflection is three of them.
+- **Add verses, scriptures, pledges and monuments** with melee, and calibration with ranged.
 - **skills.json:** add melee, ranged, defence, religion, mining, woodcutting, fishing, foraging,
   dreaming, smithing, artifice, tailoring, cooking, medicine. Remove **distillation**: its XP in
   saves is **added to Occultism** on login, its recipes become Sallow rites, and the two
   requirements on it (gloves, recipes) become Occultism.
 - **Max blood** comes from Defence (3.6) instead of the fixed 1,000.
-- **Verses** are dropped.
 - **Combat level** and the **Train defence** setting.
 
 ## 10. Still open
 Smaller decisions that can wait until the content that needs them:
 
+- Hymns: the list, devotion's size and drain, and how devotion is restored (4.1).
+- Verses: the `x` numbers, cooldowns, scripture tiers and prices; which verses come from quests or boss codices; more verses later.
+- What the monuments are (their look, and Cruor's reason for each).
 - Exact gear stat formula per tier and slot (2.2).
 - The names of the melee and ranged abilities, and the Defence ability list's numbers.
 - Which quests teach each spellbook, and the favour costs per house.

@@ -20,12 +20,12 @@ confirmed. Every skill (what it does, how it trains, what it feeds) is in `docs/
 | **Blood** | Health pool | Max from Defence. Restored by food; Medicine has one mild tick-heal. |
 | **Phlegm** | Adrenaline (RS3-style) | Universal across all styles. Builder abilities build it, spenders and ultimates spend it. Nothing else uses it. |
 | **Bile** | Occultism's live axis, from −100 to +100 | Every player has it. Occult abilities push it either way. Some abilities also need a bile level, on top of phlegm. Holding a position (e.g. +30) gives a passive bonus. |
-| **Melee's power** | From Religion (Cruor) | **Decided (2026-10-21):** Religion is to melee what bile is to occultism. Its shape is under discussion. |
+| **Verses** | Melee's power engine (Religion, Cruor) | **Decided (2026-10-21):** to melee what bile is to occultism. Read on the global cooldown for blood and scriptures; they shape the fight rather than deal damage. See `skills.md` 4.2. |
 | **Calibration** | Ranged's live meter, 0–100 | Builds while you keep shooting one target without moving. |
-| **Prayers** | Religion (Tithe), any style | **Decided:** focuses fold into Religion's prayers (protection, boosts, utility). How they're paid for is under discussion. |
+| **Devotion** | Hymns (Religion, Tithe), any style | **Decided:** replaces breath. Hymns are plain prayers (protection, boosts, utility) that drain it. |
 
 **Removed (2026-10-21):** **breath** (the deflection resource, and the skill and faction behind
-it) and **verses**. Deflection and the other stances move to Religion's prayers.
+it). Deflection and the other focuses become Religion's hymns, on devotion.
 
 **Proposal: bile poles.** Humoral theory has two biles, and they map onto the axis.
 - **+ pole: yellow bile (choleric).** Hot, angry, offensive.
@@ -66,7 +66,7 @@ live in `server/data/content/` and hot-reload, so they're meant to be tuned by p
   - The options are client state (`combat.queue`, `combat.revolution`); the server reads them,
     and the main bar from `bars`.
 - **Breath (to be removed):** 300 max; deflecting one style drains 1 per tick and halves that
-  style's damage. It moves to Religion's prayers.
+  style's damage. It becomes a hymn, on devotion.
 - **Death:** the Assayer resets bile to 0 on respawn. That is the cost of dying in the
   prototype; there is nothing to lose until items exist.
 - **Abilities:** Gall Spark (+10), Black Draught (−10, heals 25% of damage), Still the Humours
@@ -78,8 +78,8 @@ live in `server/data/content/` and hot-reload, so they're meant to be tuned by p
 
 ## Calibration (Proposal)
 
-Ranged's meter, in the same shape as bile. Starting numbers, to tune in play. (Melee's power
-and Religion's prayers are under discussion; see `skills.md`, section 4.)
+Ranged's meter, in the same shape as bile. Starting numbers, to tune in play. (Melee's verses
+and Religion's hymns are in `skills.md`, section 4.)
 
 **Calibration (ranged).**
 - 0–100. **+10** for each hit on the same target from the same tile. A miss costs 20, a step
@@ -94,8 +94,8 @@ and Religion's prayers are under discussion; see `skills.md`, section 4.)
 **Decided (2026-10-21):** four combat skills. **Melee** (attack and strength in one),
 **Ranged**, **Occultism**, and **Defence**, which any style trains (see `skills.md`, 3.2).
 
-- **Melee: Blood / the Sanguine Synod.** Plate, close quarters. Its power comes from Religion's
-  Cruor half (under discussion).
+- **Melee: Blood / the Sanguine Synod.** Plate, close quarters. Its power comes from Cruor's
+  verses (Religion), read for blood and scriptures; most of them reward fighting low on blood.
 - **Ranged: the Rationalists (phlegm).** Its meter is calibration. Bolts come from **Artifice**,
   with moon-touched materials at higher tiers.
 - **Occultism: the occult houses (bile).** Moves the bile axis. Abilities cost phlegm and bile,
@@ -126,7 +126,7 @@ Works like magic in RuneScape 3: the ability bar and the spellbook are separate 
 
 ## Skills
 
-Moved to `docs/skills.md`: the v1 roster, the rules every skill follows, Religion (under discussion),
+Moved to `docs/skills.md`: the v1 roster, the rules every skill follows, Religion (hymns, verses, monuments),
 Butchering, Medicine, the gathering and making skills, and Distillation as Occultism's
 rites.
 
@@ -137,7 +137,7 @@ screen and comments on how the player's humour balance is changing.
 
 ## Open questions
 
-- Religion: its two halves (`skills.md`, section 4).
+- Hymns and verses: numbers and lists (`skills.md`, section 10).
 - Calibration: numbers, once ranged is playable.
 - Spellbooks: the first spellbook's spells and reagent costs (outline in `skills.md`, 3.5).
 - Final names for skills, resources and places.

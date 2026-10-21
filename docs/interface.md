@@ -23,7 +23,7 @@ every piece and how they are organised.
 
 | Kind | What it is | Examples |
 |---|---|---|
-| **Panel** (`UiPanel`) | Lives in a movable window; can share it as a tab. Resizable unless it has a fixed size. | Pack, worn, character, abilities, prayers, skills, quests, task, XP tracker |
+| **Panel** (`UiPanel`) | Lives in a movable window; can share it as a tab. Resizable unless it has a fixed size. | Pack, worn, character, abilities, hymns, skills, quests, task, XP tracker |
 | **Fixed panel** (`FixedSize`) | Movable, never resized: the size it has to be. | Action bars, minimap, chat, target, bank, shop, conversation |
 | **Server window** (`ServerOpen`) | Opens and closes when the server says; closing it tells the server. | Bank, shop, conversation, the Assayer |
 | **Modal** (`UiModal`) | Centred, fixed size, tabs of related pages, one at a time; Escape or a click outside closes it. | Journal, guide, world map, settings |
@@ -32,7 +32,7 @@ every piece and how they are organised.
 
 | Piece | Contents |
 |---|---|
-| **Main action bar** ✓ | Blood, phlegm and breath as three equal gauges; the bile axis (two halves filling outward from a black centre that holds the value); 14 slots on keys 1 to 0, - and =. Fixed size. **To change:** breath's gauge goes, and the style meter shown may follow the weapon you hold. |
+| **Main action bar** ✓ | Blood, phlegm and breath as three equal gauges; the bile axis (two halves filling outward from a black centre that holds the value); 14 slots on keys 1 to 0, - and =. Fixed size. **To change:** breath's gauge becomes **devotion**, and the style meter shown may follow the weapon you hold. |
 | **Secondary action bars** ✓ | Two more bars of 14 slots (from the window menu). Abilities and items are dragged onto any bar; layouts are kept on the server. |
 | **Minimap** ✓ | Square; compass and clock in its corners; beneath it the run toggle and buttons for the world map, journal, guide, settings and a menu of every window. No blood orb: blood is on the action bar. |
 | **Chat** ✓ | Filters (all, game, public) and the line you type on (Enter). Fixed size. Private and group chat to come. |
@@ -47,14 +47,14 @@ every piece and how they are organised.
 - **Character:** total level and every combat stat. ✓
 - **Ability books:** one per combat style (Occultism first); drag onto a bar. ✓
 - **Focuses:** breath's stances (the prayer analogue). Click to hold or let go, or drag onto
-  an action bar and use them like abilities; no keys of their own. ✓ **Moves into Religion**
-  once its design is settled.
+  an action bar and use them like abilities; no keys of their own. ✓ **To become Hymns**
+  (Religion), drained from devotion.
 - **Skills:** tiles, the total level on a footer row; click for the guide, right-click to
   "Set level target" or "Set exp target" (each asks for a number). Targets follow the player. ✓
 - **Quests:** the list; click for the journal. ✓
 - **Task** and **XP tracker**. ✓
-- To come: **spellbooks** (the occult houses' spells; choose the active one), **friends**,
-  **group**. (Verses were dropped.)
+- To come: **verses** (melee; drag onto a bar like abilities, with the scriptures you hold),
+  **spellbooks** (the occult houses' spells; choose the active one), **friends**, **group**.
 
 ## Modals
 
