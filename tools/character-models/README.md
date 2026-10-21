@@ -44,4 +44,10 @@ so the game can match stride to speed.
 
 `client/Assets/Resources/Characters/animations.json` tunes each clip by name, all fields optional:
 `weight` (0-1, how much of the clip shows; below 1 tones an exaggerated clip down), `speed`,
-`start`/`end` (seconds, to trim), `upperBody` (legs keep walking or standing underneath).
+`start`/`end` (seconds, to trim), `upperBody` (legs keep walking or standing underneath),
+`clip` (use another file, so one download serves several roles) and `pose` (hold the clip still
+at that many seconds: the combat stance is the first frame of `slash_sword_shield`).
+
+Current clips (Mixamo): `idle` = Unarmed Idle 01, `walk` = Standard Walk, `run` = Slow Run,
+`slash_sword_shield` = Sword And Shield Slash. Mixamo files may be used in the game but not
+shared on their own, so keep this repository private.

@@ -20,6 +20,7 @@ namespace Rth.Client.Characters
         private Transform _chest, _head;
         private float _scale = 1f;
         private float _hitTime = -10f;
+        private float _fallTime = -1f;
 
         public CharacterModel Model => _model;
         public override float Height => _model.Height * _scale;
@@ -55,11 +56,23 @@ namespace Rth.Client.Characters
             if (_animator == null || !_animator.Play("hit")) _hitTime = Time.time;
         }
 
-        public override void PlayDeath() => _animator?.Play("death", hold: true);
+        public override void PlayDeath()
+        {
+            // Without a death clip, topple backwards.
+            if (_animator == null || !_animator.Play("death", hold: true)) _fallTime = Time.time;
+        }
 
         // After the Animator has posed the bones this frame.
         private void LateUpdate()
         {
+            if (_fallTime >= 0f && _model != null)
+            {
+                float f = Mathf.Clamp01((Time.time - _fallTime) / 0.8f);
+                f = f * f * (3f - 2f * f);
+                _model.transform.localRotation = Quaternion.Euler(-85f * f, 0f, 0f);
+                _model.transform.localPosition = new Vector3(0f, 0.12f * f * _scale, -0.1f * f * _scale);
+            }
+
             float since = Time.time - _hitTime;
             if (since < 0f || since > StaggerSeconds || _chest == null) return;
             // Quick back, slower return.

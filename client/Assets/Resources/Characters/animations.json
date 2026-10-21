@@ -1,5 +1,5 @@
 {
-  "idle_combat": { "weight": 0.8 },
+  "idle_combat": { "clip": "slash_sword_shield", "pose": 0, "weight": 0.85 },
   "cast": { "weight": 0.75, "upperBody": true, "speed": 1.2 },
   "hit": { "weight": 0.35, "upperBody": true, "end": 0.5 },
   "death": { "weight": 1.0 }

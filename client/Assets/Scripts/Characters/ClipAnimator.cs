@@ -26,6 +26,10 @@ namespace Rth.Client.Characters
         /// <summary>How one clip is played; every field is optional in animations.json.</summary>
         public sealed class ClipTuning
         {
+            /// <summary>Play this clip file instead (one download can serve several roles).</summary>
+            public string Clip;
+            /// <summary>Hold the clip still at this many seconds in (a stance taken from one frame).</summary>
+            public float? Pose;
             /// <summary>0-1: how much of the clip shows over what's beneath it. Below 1 tones it down.</summary>
             public float Weight = 1f;
             /// <summary>Playback speed.</summary>
@@ -52,12 +56,13 @@ namespace Rth.Client.Characters
         private float _move, _runBlend, _combat;
         private float _combatWeight;
 
-        /// <summary>The clip with this name, or null if there isn't one.</summary>
+        /// <summary>The clip for this name (following its tuning's "clip"), or null if there isn't one.</summary>
         public static AnimationClip Clip(string name)
         {
             if (Clips.TryGetValue(name, out AnimationClip cached) && cached != null) return cached;
+            string file = string.IsNullOrEmpty(Tuning(name).Clip) ? name : Tuning(name).Clip;
             AnimationClip found = null;
-            foreach (AnimationClip clip in Resources.LoadAll<AnimationClip>(Folder + name))
+            foreach (AnimationClip clip in Resources.LoadAll<AnimationClip>(Folder + file))
                 if (!clip.name.StartsWith("__preview__")) { found = clip; break; }
             if (found != null) Clips[name] = found;
             return found;
@@ -142,7 +147,14 @@ namespace Rth.Client.Characters
         private AnimationClipPlayable Looping(AnimationClip clip, string name, bool randomStart)
         {
             var playable = AnimationClipPlayable.Create(_graph, clip);
-            playable.SetSpeed(Tuning(name).Speed);
+            ClipTuning tuning = Tuning(name);
+            if (tuning.Pose.HasValue)
+            {
+                playable.SetTime(Mathf.Clamp(tuning.Pose.Value, 0f, clip.length));
+                playable.SetSpeed(0);
+                return playable;
+            }
+            playable.SetSpeed(tuning.Speed);
             // Start somewhere different in an idle, so a crowd doesn't breathe in step.
             if (randomStart) playable.SetTime(Random.value * clip.length);
             return playable;
