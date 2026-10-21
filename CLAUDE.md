@@ -8,9 +8,10 @@ classic layout). It is set in its own world, **R'th**, built around the four hum
 **Status:** Milestones 1 (architecture), 2 (combat core: Occultism, bile, phlegm, breath),
 3 (items, equipment, consumables, loot), 4 (skills, workstations, carcass butchering) and
 5 (townsfolk: dialogue, bank, shops, tasks; Distillation and reagents), 6 (quests), 7 (a
-multi-region world streamed by the client), 8 (the window-based interface, chat) and 9 (the
-skills rework: Religion's hymns replace breath, the v1 skill roster) are done. The v1 skills
-are designed in `docs/skills.md`; most of them exist only as a skill and a level so far.
+multi-region world streamed by the client), 8 (the window-based interface, chat), 9 (the
+skills rework: Religion's hymns replace breath, the v1 skill roster) and 10 (melee: weapon
+styles, melee abilities, Cruor's verses, gathering nodes and the first monument) are done. The
+v1 skills are designed in `docs/skills.md`; most of them exist only as a skill and a level so far.
 
 **Build everything as extensible systems.** New features plug into the mechanisms under
 "Extending the server" below (systems, events, interactions, stats, item components, effect ops,
@@ -334,9 +335,38 @@ Not yet: verses, pledges, scriptures and monuments (they come with melee); the m
 styles; the gathering and making skills' content; a gear sink; the Turmoil-type hymns' drain on
 the target.
 
-**Next: not chosen yet.** Candidates: the melee style with Cruor's verses and monuments, the
-first gathering skills (mining, woodcutting) with nodes as data, an art pass on Tolling, more
-quests and achievements.
+## Milestone 10: melee (done)
+
+The second combat style, and the Religion half that powers it (`docs/skills.md` 3.3, 4.2-4.4).
+
+- [x] Weapons have a combat style (`equipment.style`) and may name their own auto-attack; the
+      auto-attack follows the weapon (combat.json `autoAttacks` per style), and abilities need
+      a weapon of their style. Empty hands fight with the unarmed auto-attack's style (occult).
+- [x] Eight melee abilities and a melee auto-attack (provisional names), the watchman's sword
+      (starter kit) and the penitent's mace. Per-style power stats (`meleePower`,
+      `occultPower`) from each style's levels and gear.
+- [x] Ability data, for every style: blood costs, bleeds on the target, a low-blood damage
+      bonus, timed buffs (`buff`: stats, a status, optionally only against a tag or below a
+      blood line, or ending on the next hit), XP per use.
+- [x] Cruor's seven verses as abilities of type `Verse` (used on yourself on the global
+      cooldown, blood and scriptures, Religion XP), driven by new stats that combat reads:
+      `deferDamage`, `blockHit`, `blockedPhlegm`, `scarOnHit`, `builderPhlegm`,
+      `bloodPerAbility`. Bleeding and scar statuses; `HitKind.Bleed` (protocol 13).
+- [x] Gathering nodes (`node` on an object type, the "gather" action, `GatheringSystem`):
+      attempts by level, XP, items, extras, points, shared depletion, surges. Clients get
+      nearby depleted or surging nodes as the "nodes" server state (`NodeViews` draws them).
+- [x] Cruor's monument by the road in Palmerway: four founts (Religion, AFK, the cut and
+      "Ouch!"), hungry founts, pledges; Brother Hollis trades scriptures for pledges.
+- [x] Client: ability book tabs per style, verses in the Religion panel, tooltips for the new
+      fields, bleed hitsplats, icons.
+- [x] Tests: `MeleeTests` (every verse, bleeds, weapons, 1000 ticks of the shipped kit) and
+      `GatheringTests`.
+
+Not yet: weapon models in the hand, one- and two-handed kinds, shields and dual wield,
+raising monuments and reliquaries, tools for gathering (with Mining), final ability names.
+
+**Next: not chosen yet.** Candidates: the first gathering skills (mining, woodcutting) on the
+node system with tools, ranged, an art pass on Tolling, more quests and achievements.
 
 ---
 
@@ -346,7 +376,7 @@ quests and achievements.
 and saving. Everything else is a `GameSystem` listed in `World.StandardSystems` (order matters:
 systems run in that order within each phase, and a system may use those before it while
 attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `DeathSystem`,
-`NpcSystem`, `GroundItemSystem`, `LootSystem`, `ObjectSystem`, `ReligionSystem`, `RecipeSystem`, `InterfaceSystem`,
+`NpcSystem`, `GroundItemSystem`, `LootSystem`, `ObjectSystem`, `ReligionSystem`, `RecipeSystem`, `GatheringSystem`, `InterfaceSystem`,
 `DialogueSystem`, `BankSystem`, `ShopSystem`, `PointsSystem`, `TaskSystem`, `QuestSystem`.
 
 | To add... | Use |
@@ -360,6 +390,11 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | A new item capability | A component class on `ItemDef`, an action provider in `shared/Items/ItemActions.cs`, and a handler via `ItemSystem.RegisterAction`. |
 | A new consumable/ritual effect | A constant in `EffectOp`, validation in `GameContent.KnownEffectOps`, a handler via `ItemSystem.RegisterEffectOp`. |
 | A hymn (prayer) | An entry in hymns.json: drain, `overhead`, `line`, `stats` and `requirements`. What it does is its stats; a new effect is a new stat that combat reads. |
+| A verse (Cruor) | An ability of `"type": "Verse"` in abilities.json: blood costs (`bloodCostCurrent`/`bloodCostMax`), a scripture in `reagents`, a `buff` (status, ticks, stats; `targetTag`/`otherwise`, `whileBloodBelow`, `endsOnHitTaken`), `xp`. A new effect is a new stat read in `CombatSystem.Blood.cs`. |
+| A timed buff on any ability | `buff` on the ability, and its status in statuses.json. Conditional stats are read at the moment of the hit (`CombatSystem.Stat`), the rest go into the stat block. |
+| A weapon of a style | `equipment.style` (and optionally `autoAttack`) on a Weapon item; the style's auto-attack is in combat.json `autoAttacks`. |
+| A bleed | `bleedPercent`/`bleedTicks` on an ability, or `CombatSystem.AddBleed`. |
+| A gathering node (rock, tree, fount) | `node` on an object type in objects.json (skill, level, chance, XP, items, extras, points, yields, respawn, an optional surge) and a `gather` action; place it with `MapObject` + `MapBlocker`. No code. |
 | Something that restores devotion | An object action `pray` in objects.json (an altar), or the `restoreDevotion` / `restoreDevotionPercent` effect ops on a consumable. |
 | A skill that replaced another | `retired` in skills.json (old id: new id); saves move the XP on login. |
 | A skill | An entry in skills.json; award XP with `SkillSystem.AddXp`, check with `Level`/`Check`; react to `LevelUp`. |

@@ -45,11 +45,24 @@ pressing Play in a region scene loads the Game scene beside it.
   action bar. They drain **devotion**, which only comes back by praying (the waystone east of
   Tolling has a Pray option), drinking a devotion draught, or dying. Higher hymns need Religion
   levels; singing in combat trains Religion a little.
+- **Your weapon decides your style.** Empty hands or the athame fight with occultism; a sword
+  or mace (you start with a watchman's sword in your pack) fights with **melee**: it changes
+  your auto-attack, and abilities need a weapon of their style. The ability book (A) has a tab
+  per style and opens on the one in your hand. Melee abilities hit harder the lower your blood,
+  and some leave the target **bleeding**.
+- **Verses** (the Religion tab, under the hymns) are Cruor's prayers for melee: read in combat
+  with a melee weapon, each costs blood and a **scripture**, and changes how the fight goes (life
+  steal, a blocked blow, damage held back as a bleed, scars that make an ultimate free...). Drag
+  them onto a bar like abilities.
+- **Cruor's monument** stands by the road in Palmerway. Empower its founts (Religion: they cut
+  you a little, then it's AFK) for XP and sometimes **pledges**; now and then a fount wakes
+  hungry and glows, and is worth moving to. **Brother Hollis** beside it trades scriptures for
+  pledges, and arms for marks.
 - **Right-click** anything in the world for all its options (attack, take each item on the tile,
   walk here). The top-left text shows what a left-click will do.
 - The side window at bottom right has your **Pack** (click an item to use it: eat, drink, wield;
   right-click for drop and examine; drag to rearrange), what you've **Worn**, your
-  **Character** stats, the ability **Book**, **Religion** (hymns), **Skills**, **Quests**,
+  **Character** stats, the ability **Book**, **Religion** (hymns and verses), **Skills**, **Quests**,
   your **Task** and **XP** gained this session.
 - Creatures drop their **carcass**. Take it to the right workstation and click it to
   **butcher** it for the loot: fen rats at the skinning rack by the spawn (you start with a
@@ -79,8 +92,9 @@ pressing Play in a region scene loads the Game scene beside it.
 - **Quests**: someone is talking in her sleep by the pond. The **Quests** tab lists them; click
   one for the journal, which tells the story so far. The journal also holds the **achievement
   diary** and the **bestiary** (kill counts and drop logs).
-- The **Skills** tab shows all sixteen skills, your combat level and total level. Occultism
-  (from fighting) unlocks spenders at 5 and ultimates at 10, and adds ability damage per level.
+- The **Skills** tab shows all sixteen skills, your combat level and total level. Occultism and
+  Melee (from fighting in that style) unlock spenders at 5 and ultimates at 10, and add that
+  style's ability damage per level.
   Combat XP is split with **Defence** (more max blood per level) by Settings > Combat > Train
   defence. Most other skills have no content yet: see `docs/skills.md`.
 - Arrow keys or middle-drag rotate the camera; the scroll wheel zooms.

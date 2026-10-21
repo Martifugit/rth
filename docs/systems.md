@@ -20,7 +20,7 @@ confirmed. Every skill (what it does, how it trains, what it feeds) is in `docs/
 | **Blood** | Health pool | Max from Defence. Restored by food; Medicine has one mild tick-heal. |
 | **Phlegm** | Adrenaline (RS3-style) | Universal across all styles. Builder abilities build it, spenders and ultimates spend it. Nothing else uses it. |
 | **Bile** | Occultism's live axis, from −100 to +100 | Every player has it. Occult abilities push it either way. Some abilities also need a bile level, on top of phlegm. Holding a position (e.g. +30) gives a passive bonus. |
-| **Verses** | Melee's power engine (Religion, Cruor) | **Decided (2026-10-21):** to melee what bile is to occultism. Read on the global cooldown for blood and scriptures; they shape the fight rather than deal damage. See `skills.md` 4.2. |
+| **Verses** | Melee's power engine (Religion, Cruor) | **Decided (2026-10-21):** to melee what bile is to occultism. Read on the global cooldown for blood and scriptures; they shape the fight rather than deal damage. See `skills.md` 4.2. Built in Milestone 10. |
 | **Calibration** | Ranged's live meter, 0–100 | Builds while you keep shooting one target without moving. |
 | **Devotion** | Hymns (Religion, Tithe), any style | **Decided:** replaces breath. Hymns are plain prayers (protection, boosts, utility) that drain it. |
 

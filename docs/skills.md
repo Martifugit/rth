@@ -269,6 +269,27 @@ its power comes from blood lost.
 - **Its power source is Religion's verses** (section 4.2), as bile is Occultism's.
 - **Trained by** melee damage.
 
+**Built (Milestone 10).** A weapon's style decides the auto-attack and which abilities can be
+used; empty hands fight with occultism. The first kit, with **provisional names** (to be
+decided), all range 1:
+
+| Ability | Type | Level | What it does |
+|---|---|---|---|
+| Strike | auto | 1 | The plain blow of whatever you hold. |
+| Hew | builder | 1 | A heavy cut. |
+| Let Blood | builder | 1 | A light cut that bleeds 120% of the hit over 8 ticks. |
+| Scourge | builder | 3 | Up to twice the damage the lower your blood. |
+| Flagellate | builder | 1 | Costs 5% of your blood; builds 14 phlegm. |
+| Sundering Blow | spender | 5 | A big hit, up to 50% more at low blood. |
+| Exsanguinate | spender | 5 | A hit that bleeds twice as much again over 10 ticks. |
+| Red Harvest | ultimate | 10 | The biggest hit, up to 50% more at low blood. |
+| Crimson Vow | ultimate | 10 | A hit, then 30% more damage for 10 ticks. |
+
+Weapons so far: the watchman's sword (starter kit, Brother Hollis) and the penitent's mace
+(Melee 8). Melee levels add melee power (flat ability damage with melee only), as Occultism's
+add occult power. Not yet: one- and two-handed weapons as kinds, shields and dual wielding,
+weapon models in the hand.
+
 ### 3.4 Ranged
 The Rationalists' style: patient, from a distance, precise.
 
@@ -414,6 +435,10 @@ and its power. They **complement** melee abilities and never compete with them.
 
 **The first verses.** Numbers are starting values to balance in play. Durations and cooldowns
 are in ticks (0.6 s). A verse can't be read if its blood cost would take your last blood.
+**All seven are built (Milestone 10)**, as abilities of type `Verse` in abilities.json: a buff
+with stats (some conditional), blood costs, scriptures as reagents, and Religion XP per read.
+Abjuration lasts 10 ticks (the table didn't say) and counts creatures tagged `occult-made`
+(vitriol mites so far). Martyrdom's scars last while you stay in combat.
 
 | Level | Verse | Blood | Scripture | Cooldown | Effect |
 |---|---|---|---|---|---|
@@ -449,6 +474,11 @@ are in ticks (0.6 s). A verse can't be read if its blood cost would take your la
 
 ### 4.4 Monuments
 Cruor keeps trying to expand, and its monuments are how that shows in the world.
+
+**Built (Milestone 10):** the gathering-node mechanism (2.3) with founts as its first nodes,
+hungry founts as node surges, pledges, and one tier-1 monument by the road in Palmerway with
+Brother Hollis, who trades scriptures for pledges. **Not yet:** raising, reliquaries, the other
+tiers and places.
 
 - **All over the world,** in every region, each with a Religion level requirement. Many also
   need something else from Cruor's expansion: a quest, a region opened, standing earned. Where a
@@ -787,7 +817,8 @@ document:
 - **Remove Breath:** `playerMaxBreath`, breath regen and drain, the breath gauge, the
   `maxBreath` stat on two items. The bar's place goes to **devotion**.
 - **Focuses become hymns** (Religion), drained from devotion; deflection is three of them.
-- **Not yet:** verses, scriptures, pledges and monuments (with melee), and calibration (with ranged).
+- **Not yet:** calibration (with ranged). Verses, scriptures, pledges and a first monument came
+  with melee in Milestone 10.
 - **skills.json:** add melee, ranged, defence, religion, mining, woodcutting, fishing, foraging,
   dreaming, smithing, artifice, tailoring, cooking, medicine. Remove **distillation**: its XP in
   saves is **added to Occultism** on login, its recipes become Sallow rites, and the two
@@ -812,6 +843,7 @@ Smaller decisions that can wait until the content that needs them:
   and how it works with them (3.4, Artifice).
 - What the monuments are (their look, and Cruor's reason for each).
 - Exact gear stat formula per tier and slot (2.2).
-- The names of the melee and ranged abilities, and the Defence ability list's numbers.
+- The names of the melee abilities (provisional ones are in 3.3) and the ranged ones, and the
+  Defence ability list's numbers.
 - Which quests teach each spellbook, and the favour costs per house.
 - Whether Farming joins later (as a slower, steadier herb and food source).
