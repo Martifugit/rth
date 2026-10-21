@@ -617,6 +617,14 @@ namespace Rth.Client
         {
             if (_state != State.InGame) return;
             _client.Send(new MoveItemMessage { From = from, To = to });
+            // Swap at once rather than waiting a tick for the server; its next pack update (the
+            // same swap) confirms it, or puts things back if it refused.
+            if (from >= 0 && to >= 0 && from < Inventory.Count && to < Inventory.Count && from != to)
+            {
+                ItemSlot moved = Inventory[from];
+                Inventory[from] = Inventory[to];
+                Inventory[to] = moved;
+            }
         }
 
         /// <summary>Asks the server to walk (or run, if toggled) the local player to a tile.</summary>

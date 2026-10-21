@@ -689,11 +689,13 @@
 
 .ability__key {
     position: absolute;
-    right: 1px;
-    bottom: -2px;
+    right: 0;
+    bottom: -3px;
     -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
-    font-size: 13px;
-    color: rgb(255, 252, 240);
+    font-size: 15px;
+    color: rgb(255, 214, 72);
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: rgb(0, 0, 0);
     text-shadow: 1px 1px 1px rgb(0, 0, 0);
 }
 
@@ -706,8 +708,21 @@
     border-color: rgb(120, 200, 255);
 }
 
+/* The global cooldown has ended: a brief flash says "act now". */
+.ability {
+    transition-property: background-color, border-color;
+    transition-duration: 0.25s;
+}
+
+.ability--ready {
+    border-color: rgb(255, 236, 170);
+    background-color: rgba(255, 236, 170, 0.12);
+    transition-duration: 0s;
+}
+
 .ability--unusable > .slot__icon {
-    opacity: 0.3;
+    /* Blended in linear space: this reads as about a quarter of full brightness. */
+    opacity: 0.06;
 }
 
 .ability__timer {
@@ -718,8 +733,11 @@
     bottom: 0;
     -unity-text-align: middle-center;
     -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
-    font-size: 16px;
+    font-size: 19px;
     color: rgb(255, 255, 255);
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: rgb(0, 0, 0);
+    text-shadow: 0 1px 2px rgb(0, 0, 0);
 }
 
 .chip {

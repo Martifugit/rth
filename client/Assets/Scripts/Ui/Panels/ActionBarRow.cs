@@ -22,6 +22,9 @@ namespace Rth.Client.Ui.Panels
         private readonly int _bar;
         private readonly Slot[] _slots = new Slot[ActionBars.SlotCount];
         private int _drawnVersion = -1;
+        private const float FlashSeconds = 0.18f;
+        private bool _wasOnGlobalCooldown;
+        private float _flashUntil;
         private ActionBars _drawnFor;
 
         private sealed class Slot
@@ -167,6 +170,11 @@ namespace Rth.Client.Ui.Panels
 
             float now = Session.EstimatedTick;
             int gcd = Mathf.Max(1, Session.Content?.GlobalCooldownTicks ?? 3);
+            // When the global cooldown runs out (the tick after its last), ready slots blink once.
+            bool onGlobal = state.GlobalCooldownReadyTick > now;
+            if (_wasOnGlobalCooldown && !onGlobal) _flashUntil = Time.unscaledTime + FlashSeconds;
+            _wasOnGlobalCooldown = onGlobal;
+            bool flashing = Time.unscaledTime < _flashUntil;
             for (int i = 0; i < _slots.Length; i++)
             {
                 Slot slot = _slots[i];
@@ -177,9 +185,11 @@ namespace Rth.Client.Ui.Panels
                 bool queued = false;
                 bool stalled = false;
                 bool held = false;
+                bool isAbility = false;
                 slot.Count.text = "";
                 if (ActionBars.IsAbility(value, out string id) && Session.Ability(id) is AbilityDef ability)
                 {
+                    isAbility = true;
                     usable = Session.AbilityProblem(ability) == null;
                     queued = state.QueuedAbility == ability.Id;
                     stalled = state.StalledAbility == ability.Id; // used out of range: fires on reaching the target
@@ -202,6 +212,7 @@ namespace Rth.Client.Ui.Panels
                     usable = count > 0;
                     slot.Count.text = count > 1 ? UiKit.FormatCount(count) : "";
                 }
+                slot.Root.EnableInClassList("ability--ready", flashing && isAbility && usable && remaining <= 0f);
                 slot.Root.EnableInClassList("ability--unusable", !usable);
                 slot.Root.EnableInClassList("ability--queued", queued);
                 slot.Root.EnableInClassList("ability--stalled", stalled);

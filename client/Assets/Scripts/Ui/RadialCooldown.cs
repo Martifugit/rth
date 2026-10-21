@@ -10,8 +10,7 @@ namespace Rth.Client.Ui
     /// </summary>
     public sealed class RadialCooldown : VisualElement
     {
-        private static readonly Color Fill = new Color(1f, 1f, 1f, 0.035f); // blended in linear space, so this reads as a light veil
-        private static readonly Color Edge = new Color(1f, 1f, 1f, 0.12f);
+        private static readonly Color Fill = new Color(1f, 1f, 1f, 0.022f); // blended in linear space, so this reads as a light veil
 
         private float _remaining;
 
@@ -59,14 +58,6 @@ namespace Rth.Client.Ui
             foreach (float angle in angles) painter.LineTo(OnEdge(rect, angle));
             painter.ClosePath();
             painter.Fill();
-
-            // A bright hand at the edge of the sweep, so it reads at a glance.
-            painter.strokeColor = Edge;
-            painter.lineWidth = 1.5f;
-            painter.BeginPath();
-            painter.MoveTo(centre);
-            painter.LineTo(OnEdge(rect, start));
-            painter.Stroke();
         }
 
         /// <summary>Where a ray from the centre at an angle meets the rectangle's edge.</summary>
