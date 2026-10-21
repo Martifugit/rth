@@ -70,6 +70,7 @@ namespace Rth.Server.Game
             Shape = EntityShape.Capsule,
             HealthPercent = HealthPercent,
             Held = Held,
+            Overhead = Overhead,
         };
     }
 }

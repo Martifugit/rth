@@ -192,6 +192,7 @@ namespace Rth.Client
             ui.regions = regions;
             world.ItemLookup = Item;
             world.AbilityLookup = Ability;
+            world.HymnIconLookup = id => Ui.Hymns.Get(this, id)?.Icon;
             _name = PlayerPrefs.GetString(NamePref, "");
             _host = PlayerPrefs.GetString(HostPref, "127.0.0.1");
             _clickMarker = CreateClickMarker();

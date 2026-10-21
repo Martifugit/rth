@@ -79,6 +79,17 @@ namespace Rth.Server.Game
         /// <summary>Set when <see cref="Held"/> changed this tick, so viewers are told.</summary>
         public bool AppearanceChanged { get; set; }
 
+        /// <summary>The overhead hymn it sings, shown above its head ("" for none).</summary>
+        public string Overhead { get; private set; } = "";
+
+        public void SetOverhead(string? hymn)
+        {
+            hymn ??= "";
+            if (hymn == Overhead) return;
+            Overhead = hymn;
+            AppearanceChanged = true;
+        }
+
         public void SetHeld(string? item)
         {
             item ??= "";

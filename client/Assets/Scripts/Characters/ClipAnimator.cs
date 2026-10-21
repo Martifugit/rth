@@ -50,6 +50,12 @@ namespace Rth.Client.Characters
             /// <summary>Only the hips and legs move; the arms keep their stance (a kick with any weapon).</summary>
             public bool LowerBody;
             /// <summary>
+            /// 0-1: how much of the clip the hips and legs take, on top of <see cref="Weight"/>. Below
+            /// 1 tames a lunge or a deep stance while the arms still play in full (a cast that throws
+            /// a hand forward without dropping into a crouch).
+            /// </summary>
+            public float Legs = 1f;
+            /// <summary>
             /// The clip's travel across the ground is taken out, so it plays on the spot (read by
             /// the importer). Big steps may make the feet slide a little.
             /// </summary>
@@ -58,7 +64,7 @@ namespace Rth.Client.Characters
 
         private static readonly Dictionary<string, AnimationClip> Clips = new Dictionary<string, AnimationClip>();
         private static Dictionary<string, ClipTuning> _tuning;
-        private static AvatarMask _upperBody, _lowerBody, _fullBody;
+        private static AvatarMask _upperBody, _lowerBody;
 
         private PlayableGraph _graph;
         private AnimationLayerMixerPlayable _layers;
@@ -66,7 +72,9 @@ namespace Rth.Client.Characters
         private AnimationClipPlayable _walk, _walkCombat, _run;
         private float _walkSpeed, _walkCombatSpeed, _runSpeed;
         private float _walkCombatWeight;
-        private AnimationClipPlayable _oneShot;
+        // A one-shot plays as two synced copies: the upper body on layer 1, hips and legs on layer 2,
+        // so each half can have its own strength.
+        private AnimationClipPlayable _oneShot, _oneShotLegs;
         private ClipTuning _oneShotTuning;
         private float _oneShotStart, _oneShotEnd;
         private bool _hold;
@@ -116,8 +124,6 @@ namespace Rth.Client.Characters
         public static bool HasLocomotion => Clip("idle") != null && Clip("walk") != null;
 
         public static bool Has(string name) => Clip(name) != null;
-
-        private static AvatarMask FullBodyMask => _fullBody != null ? _fullBody : _fullBody = new AvatarMask();
 
         private static bool IsLower(AvatarMaskBodyPart part) =>
             part == AvatarMaskBodyPart.Root || part == AvatarMaskBodyPart.LeftLeg || part == AvatarMaskBodyPart.RightLeg ||
@@ -184,10 +190,13 @@ namespace Rth.Client.Characters
             _walkSpeed = TravelSpeed(walk, DefaultWalkSpeed);
             _runSpeed = TravelSpeed(run, DefaultRunSpeed);
 
-            _layers = AnimationLayerMixerPlayable.Create(_graph, 2);
+            _layers = AnimationLayerMixerPlayable.Create(_graph, 3);
             Connect(_locomotion, _layers, 0);
             _layers.SetInputWeight(0, 1f);
             _layers.SetInputWeight(1, 0f);
+            _layers.SetInputWeight(2, 0f);
+            _layers.SetLayerMaskFromAvatarMask(1, UpperBodyMask);
+            _layers.SetLayerMaskFromAvatarMask(2, LowerBodyMask);
             output.SetSourcePlayable(_layers);
             Update(0f, false, false, 0f);
             _graph.Play();
@@ -256,8 +265,14 @@ namespace Rth.Client.Characters
                 float remaining = reverse ? t - _oneShotStart : _oneShotEnd - t;
                 float weight = Mathf.Clamp01(elapsed / FadeIn);
                 if (!_hold) weight = Mathf.Min(weight, Mathf.Clamp01(remaining / FadeOut));
-                else if (remaining <= 0f) _oneShot.SetSpeed(0);   // stay at the end (death)
-                _layers.SetInputWeight(1, weight * _oneShotTuning.Weight);
+                else if (remaining <= 0f)   // stay at the end (death)
+                {
+                    _oneShot.SetSpeed(0);
+                    _oneShotLegs.SetSpeed(0);
+                }
+                weight *= _oneShotTuning.Weight;
+                _layers.SetInputWeight(1, _oneShotTuning.LowerBody ? 0f : weight);
+                _layers.SetInputWeight(2, _oneShotTuning.UpperBody ? 0f : weight * Mathf.Clamp01(_oneShotTuning.Legs));
                 if (!_hold && remaining <= 0f) StopOneShot();
             }
         }
@@ -273,26 +288,36 @@ namespace Rth.Client.Characters
             if (clip == null) return false;
             StopOneShot();
             ClipTuning tuning = Tuning(name);
-            _oneShot = AnimationClipPlayable.Create(_graph, clip);
-            _oneShot.SetApplyFootIK(true);
             _oneShotTuning = tuning;
             _oneShotStart = Mathf.Clamp(tuning.Start, 0f, clip.length);
             _oneShotEnd = tuning.End > tuning.Start ? Mathf.Min(tuning.End, clip.length) : clip.length;
-            _oneShot.SetTime(tuning.Speed < 0f ? _oneShotEnd : _oneShotStart);
-            _oneShot.SetSpeed(tuning.Speed);
+            _oneShot = OneShotCopy(clip, tuning, 1);
+            _oneShotLegs = OneShotCopy(clip, tuning, 2);
             _hold = hold;
-            _graph.Connect(_oneShot, 0, _layers, 1);
-            _layers.SetLayerMaskFromAvatarMask(1, tuning.UpperBody ? UpperBodyMask : tuning.LowerBody ? LowerBodyMask : FullBodyMask);
-            _layers.SetInputWeight(1, 0f);
             return true;
+        }
+
+        private AnimationClipPlayable OneShotCopy(AnimationClip clip, ClipTuning tuning, int layer)
+        {
+            var playable = AnimationClipPlayable.Create(_graph, clip);
+            playable.SetApplyFootIK(true);
+            playable.SetTime(tuning.Speed < 0f ? _oneShotEnd : _oneShotStart);
+            playable.SetSpeed(tuning.Speed);
+            _graph.Connect(playable, 0, _layers, layer);
+            _layers.SetInputWeight(layer, 0f);
+            return playable;
         }
 
         private void StopOneShot()
         {
             if (!_oneShot.IsValid()) return;
-            _graph.Disconnect(_layers, 1);
+            for (int layer = 1; layer <= 2; layer++)
+            {
+                _graph.Disconnect(_layers, layer);
+                _layers.SetInputWeight(layer, 0f);
+            }
             _oneShot.Destroy();
-            _layers.SetInputWeight(1, 0f);
+            _oneShotLegs.Destroy();
         }
 
         public void Destroy()

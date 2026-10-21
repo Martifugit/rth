@@ -11,7 +11,7 @@ namespace Rth.Shared.Net
     public static class Protocol
     {
         /// <summary>Bump whenever a message layout changes, so mismatched builds are refused at login.</summary>
-        public const int Version = 15;
+        public const int Version = 16;
         public const int DefaultPort = 43600;
         /// <summary>Sanity limits on a single frame's length, in bytes.</summary>
         public const int MaxClientFrame = 4 * 1024;
@@ -211,13 +211,16 @@ namespace Rth.Shared.Net
         public byte HealthPercent = 100;
         /// <summary>The item in its hand (a weapon), drawn by the client; empty for nothing.</summary>
         public string Held = "";
+        /// <summary>The overhead hymn it sings (an icon above its head); empty for none.</summary>
+        public string Overhead = "";
     }
 
-    /// <summary>Something visible about an entity changed (what it holds).</summary>
+    /// <summary>Something visible about an entity changed: what it holds, or the overhead it sings.</summary>
     public struct AppearanceEvent
     {
         public int Id;
         public string Held;
+        public string Overhead;
     }
 
     /// <summary>An entity in view that moved this tick, with each tile it stepped through in order.</summary>
@@ -306,6 +309,7 @@ namespace Rth.Shared.Net
                 w.Write(a.Scale);
                 w.Write(a.HealthPercent);
                 w.Write(a.Held ?? "");
+                w.Write(a.Overhead ?? "");
             }
             w.Write((ushort)Moved.Count);
             foreach (EntityMoved m in Moved)
@@ -359,6 +363,7 @@ namespace Rth.Shared.Net
             {
                 w.Write(a.Id);
                 w.Write(a.Held ?? "");
+                w.Write(a.Overhead ?? "");
             }
         }
 
@@ -381,6 +386,7 @@ namespace Rth.Shared.Net
                     Scale = r.ReadByte(),
                     HealthPercent = r.ReadByte(),
                     Held = r.ReadString(),
+                    Overhead = r.ReadString(),
                 });
             }
             count = r.ReadUInt16();
@@ -413,7 +419,7 @@ namespace Rth.Shared.Net
             count = r.ReadUInt16();
             for (int i = 0; i < count; i++) msg.GroundRemoved.Add(r.ReadInt32());
             count = r.ReadUInt16();
-            for (int i = 0; i < count; i++) msg.Appearances.Add(new AppearanceEvent { Id = r.ReadInt32(), Held = r.ReadString() });
+            for (int i = 0; i < count; i++) msg.Appearances.Add(new AppearanceEvent { Id = r.ReadInt32(), Held = r.ReadString(), Overhead = r.ReadString() });
             return msg;
         }
 

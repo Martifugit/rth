@@ -46,6 +46,22 @@ public class ReligionTests
     }
 
     [Fact]
+    public void AnOverheadShowsAboveTheSingersHead()
+    {
+        var (fx, client, alice, religion) = Alice();
+        FakeConnection bob = fx.Login("Bob");
+        religion.SetHymn(alice, "guard", true);
+        religion.SetHymn(alice, "deflect_melee", true);
+        Assert.Equal("deflect_melee", alice.Overhead);
+        fx.Ticks(1);
+        Assert.Contains(bob.Updates.SelectMany(u => u.Appearances), e => e.Id == alice.Id && e.Overhead == "deflect_melee");
+        religion.SetHymn(alice, "leech", true); // one overhead replaces another
+        Assert.Equal("leech", alice.Overhead);
+        religion.SetHymn(alice, "leech", false);
+        Assert.Equal("", alice.Overhead);
+    }
+
+    [Fact]
     public void AHymnNeedsItsReligionLevel()
     {
         var (fx, client, alice, religion) = Alice();

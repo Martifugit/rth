@@ -164,7 +164,7 @@ public class ContentAndRulesTests
             {
                 Tick = 99,
                 Added = { new EntityAdded { Id = 1, Kind = EntityKind.Npc, Name = "Rat", Position = new TileCoord(1, 2), Shape = EntityShape.Box, Color = 0x123456, Scale = 6, HealthPercent = 40, Held = "sword" } },
-                Appearances = { new AppearanceEvent { Id = 1, Held = "mace" } },
+                Appearances = { new AppearanceEvent { Id = 1, Held = "mace", Overhead = "bulwark" } },
                 Moved = { new EntityMoved { Id = 1, Running = true, Steps = { new TileCoord(2, 2), new TileCoord(3, 2) } } },
                 Removed = { 5 },
                 Health = { new HealthEvent { Id = 1, Percent = 30 } },

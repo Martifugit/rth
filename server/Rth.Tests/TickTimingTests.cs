@@ -3,6 +3,11 @@ using Rth.Server.Timing;
 
 namespace Rth.Tests;
 
+/// <summary>Measures wall-clock time, so it runs alone: heavy simulations beside it skew the clock.</summary>
+[CollectionDefinition("RealTime", DisableParallelization = true)]
+public sealed class RealTimeCollection { }
+
+[Collection("RealTime")]
 public class TickTimingTests
 {
     private static readonly long Period = TimeSpan.FromMilliseconds(600).Ticks;

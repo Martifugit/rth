@@ -98,6 +98,8 @@ namespace Rth.Server.Game
 
         public void Contribute(Player player, StatBlock stats)
         {
+            // Stats are recalculated whenever the hymns sung change, so the overhead follows here too.
+            player.SetOverhead(Of(player).Singing.FirstOrDefault(id => World.Content.Hymns.TryGetValue(id, out HymnDef? h) && h.Overhead));
             foreach (string id in Of(player).Singing)
                 if (World.Content.Hymns.TryGetValue(id, out HymnDef? hymn))
                     foreach (KeyValuePair<string, int> stat in hymn.Stats) stats.Add(stat.Key, stat.Value);

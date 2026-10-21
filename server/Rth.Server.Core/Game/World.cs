@@ -539,7 +539,7 @@ namespace Rth.Server.Game
                     if (other.HealthChanged)
                         update.Health.Add(new HealthEvent { Id = other.Id, Percent = other.HealthPercent });
                     if (other.AppearanceChanged)
-                        update.Appearances.Add(new AppearanceEvent { Id = other.Id, Held = other.Held });
+                        update.Appearances.Add(new AppearanceEvent { Id = other.Id, Held = other.Held, Overhead = other.Overhead });
                 }
 
                 foreach (int id in viewer.KnownEntities.ToList())

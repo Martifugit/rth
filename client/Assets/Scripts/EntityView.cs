@@ -38,6 +38,8 @@ namespace Rth.Client
         public int HealthPercent { get; set; } = 100;
         /// <summary>Last time it took or dealt a hit; health bars show for a while after.</summary>
         public float LastHitTime { get; set; } = -100f;
+        /// <summary>The overhead hymn it sings ("" for none), drawn above its head.</summary>
+        public string Overhead { get; set; } = "";
         public bool IsDying => _deathTime >= 0f;
 
         public static EntityView Create(EntityAdded added, Color color, float tickSeconds)

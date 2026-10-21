@@ -31,6 +31,8 @@ namespace Rth.Client
         /// <summary>Looks up item definitions (set by the session from the server's content).</summary>
         public System.Func<string, ItemDef> ItemLookup { get; set; } = _ => null;
         public System.Func<string, AbilityDef> AbilityLookup { get; set; } = _ => null;
+        /// <summary>An overhead hymn's icon id, by hymn id.</summary>
+        public System.Func<string, string> HymnIconLookup { get; set; } = _ => null;
 
         public GroundItemView FindGroundItem(int id) => _groundItems.TryGetValue(id, out GroundItemView v) ? v : null;
 
@@ -102,12 +104,16 @@ namespace Rth.Client
                 EntityView view = EntityView.Create(added, color, _tickSeconds);
                 view.transform.SetParent(transform, true);
                 if (!string.IsNullOrEmpty(added.Held)) view.SetHeld(ItemLookup(added.Held));
+                view.Overhead = added.Overhead ?? "";
                 _entities[added.Id] = view;
             }
 
             foreach (AppearanceEvent appearance in update.Appearances)
                 if (_entities.TryGetValue(appearance.Id, out EntityView view) && view != null)
+                {
                     view.SetHeld(string.IsNullOrEmpty(appearance.Held) ? null : ItemLookup(appearance.Held));
+                    view.Overhead = appearance.Overhead ?? "";
+                }
 
             foreach (EntityMoved moved in update.Moved)
                 if (_entities.TryGetValue(moved.Id, out EntityView view)) view.AddSteps(moved.Steps, moved.Running);
@@ -323,6 +329,21 @@ namespace Rth.Client
                     y -= 8f;
                 }
 
+                // The overhead hymn, above everything else over its head (as prayers are in RuneScape).
+                if (!string.IsNullOrEmpty(view.Overhead) && !view.IsDying)
+                {
+                    Texture2D icon = Ui.IconLibrary.Get(HymnIconLookup(view.Overhead));
+                    if (icon != null)
+                    {
+                        Color old = GUI.color;
+                        GUI.color = new Color(0f, 0f, 0f, 0.6f);
+                        GUI.DrawTexture(new Rect(x - 15f, y - 50f, 32f, 32f), icon);
+                        GUI.color = Ui.Hymns.Tint;
+                        GUI.DrawTexture(new Rect(x - 16f, y - 51f, 32f, 32f), icon);
+                        GUI.color = old;
+                    }
+                }
+
                 // Names: players always; creatures and townsfolk when pointed at, targeted or fighting,
                 // so a busy scene isn't a wall of labels.
                 bool showName = view.Kind != EntityKind.Npc || view.Id == HoveredId || view.Id == TargetId || Time.time - view.LastHitTime < HealthBarSeconds;
@@ -337,10 +358,11 @@ namespace Rth.Client
 
                 if (_overhead.TryGetValue(view.Id, out (string Text, float Time) said) && Time.time - said.Time < OverheadSeconds)
                 {
+                    float sayY = y - 38f - (string.IsNullOrEmpty(view.Overhead) ? 0f : 34f); // above the overhead icon
                     _labelStyle.normal.textColor = new Color(0f, 0f, 0f, 0.8f);
-                    GUI.Label(new Rect(x - 159f, y - 37f, 320f, 18f), said.Text, _labelStyle);
+                    GUI.Label(new Rect(x - 159f, sayY + 1f, 320f, 18f), said.Text, _labelStyle);
                     _labelStyle.normal.textColor = new Color(1f, 1f, 0f);
-                    GUI.Label(new Rect(x - 160f, y - 38f, 320f, 18f), said.Text, _labelStyle);
+                    GUI.Label(new Rect(x - 160f, sayY, 320f, 18f), said.Text, _labelStyle);
                 }
             }
 
