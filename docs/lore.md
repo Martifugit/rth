@@ -8,28 +8,28 @@ left undefined.*
 
 ## I. The shape of the known world
 
-The known kingdoms live in a basin. A great mountain range, **the Pale**, curves around the
+The known kingdoms live in a basin. A great mountain range, **Candora**, curves around the
 continent like a wall, sloping down to the sea at both ends, and encloses the lowlands on the north and the west.
-Beyond it lies frozen country nobody farms: **the Rime**. In the middle of the lowlands lies a
+Beyond it lies frozen country nobody farms: **Nivil**. In the middle of the lowlands lies a
 round bay, **the Cradle**. Its
 water rises and falls more steadily than any tide should, and out of it rises a shape that can be
 seen from anywhere in the lowlands. Nobody agrees what it is. Nobody who has tried to find out has
-come back with an answer worth keeping. Most people call it **the Question**. The Synod calls it
-**the Answer**.
+come back with an answer worth keeping. Most people call it **the Quaere**, an old word for an open question. The Synod calls it
+**the Responsory**, the sung response to a call.
 
-Around the bay lies the **heartland**: green river country, **the Keeping**, ruled from the
+Around the bay lies the **heartland**: green river country, **Venaria**, ruled from the
 oldest seat of the faith of Blood at **Cruor**. Across the bay's narrow mouth to the south-east lies **Tithe**, the second seat
-of the same faith, harder, hotter and prouder, and its salt coast, **the Saltmarch**. West of the heartland, in the rain shadow of the
+of the same faith, harder, hotter and prouder, and its salt coast, **Calcinia**. West of the heartland, in the rain shadow of the
 mountains, the dry kingdom of **Sere** grows rich on salt and caravans and poor in water. Its capital is
 **Cistern**, built around the deepest wells in the west. In the
 far north-east the range itself gives out: eroded, broken open, and finally eaten away by the
-Scalding. That broken country of fen and scar, **the Wrack**, belongs to the **occult houses**: Gall,
+Scalding. That broken country of fen and scar, **Slough**, belongs to the **occult houses**: Gall,
 Umber, Mordant and the fallen house of Sallow.
 
 **The range is held in three layers.** Its liveable surface (the passes, the high valleys, the
-observatories) belongs to the **Rationalists** of **the Concord**, whose capital, **Meridian**, stands where the
-range comes down to the sea. Its caves and cart-lines belong to the **dwarves** of **Holdfast**, who trade from the hall
-of **Frostpeak Forge**. And beneath the dwarves are the depths, **the Undermost**, which belong to peoples older still, whom nobody visits on purpose.
+observatories) belongs to the **Rationalists** of **Concordia**, whose capital, **Meridian**, stands where the
+range comes down to the sea. Its caves and cart-lines belong to the **dwarves**, scattered through the mountains, who trade from the hall
+of **Frostpeak Forge**. And beneath the dwarves are the depths, **Undermost**, which belong to peoples older still, whom nobody visits on purpose.
 
 Over all of it hang **two moons**. One of them is cracked.
 
@@ -50,7 +50,7 @@ Every power in the basin holds its land for a reason the land itself gives it.
   It needs no wall but its people.
 - **Tithe** holds the south-east because it holds the bay's only mouth to the open sea. Every
   ship that leaves the bay passes under its towers and pays, which is where its name comes from.
-  Behind it lie the brine pans and the Shadowless Stones, salt flats and bare rock where no army
+  Behind it lie the salt pans of Salinas and the flats of Ascia, salt flats and bare rock where no army
   can live off the land. Cruor has tried to take it three times. The channel and the glare beat
   it every time, and so did Cruor's own debts: Tithe is the basin's creditor, and a see at war
   with its banker is ruined by winning.
@@ -64,7 +64,7 @@ Every power in the basin holds its land for a reason the land itself gives it.
 - **The dwarves** hold the caves because nobody else can find their way in them, and they hold
   the depths' bindings because nobody else knows they exist.
 - **The occult houses** survive in the north-east because nobody else wants it. The fens swallow
-  plate armour and cavalry, the Scald still burns, and where the range has fallen apart the coast
+  plate armour and cavalry, Scalth still burns, and where the range has fallen apart the coast
   is all inlets and sea caves. The Synod can burn a house, but it cannot hold the ground after.
 
 ## II. The four humours
@@ -100,9 +100,9 @@ Tithe stands on the south-eastern lip of the bay's narrow mouth, where the Cradl
 sea. Every ship that leaves the bay passes under its towers, and every ship pays. The city took
 its name from that toll; its people would say the toll took its name from them.
 
-The land behind it is salt coast: the Brine Pans, Saltglare, and the white flats of the
-Shadowless Stones, where the light comes from everywhere and no army can live off the ground.
-The Saltmarch feeds almost nobody. The city feeds on what passes through its gate. Tithe is a
+The land behind it is salt coast: the pans of Salinas, Saltglare, and the white flats of
+Ascia, where at noon nothing casts a shadow and no army can live off the ground.
+Calcinia feeds almost nobody. The city feeds on what passes through its gate. Tithe is a
 crowded, rich, salt-white port of shipping houses, counting halls and choirs, and the wealthiest
 treasury in the lowlands.
 
@@ -117,7 +117,7 @@ but an outsider can choose to take one on.
 
 **The liturgy.** Tithe doesn't preach, it sings. Its worship is sung by choirs under salt-white
 vaults, each hymn part of the account spoken aloud before the covenant: power drawn from one's own
-devotion, not borrowed from anyone else. Tithe salts and keeps its dead in the Shadowless Stones,
+devotion, not borrowed from anyone else. Tithe salts and keeps its dead in the flats of Ascia,
 because when the debt is called in, every debtor must be present to answer for it.
 
 **The auditors.** Tithe's inquisitors are examiners of accounts more than hunters of heretics.
@@ -184,7 +184,7 @@ bay's rim facing what lies in it.
 
 ### The Cracking
 On a night still kept as a feast in some places and a fast in others, the second moon cracked. The
-first fragment struck the range in the north-west, tore the Moon Breach through it, and burned for
+first fragment struck the range in the north-west, tore Selenfall through it, and burned for
 a month. From the scholars and
 sky-watchers who studied the falls came the **Rationalists**: they predicted the second fall and
 were right, and in the basin that is a kind of power. They took to the mountains for clearer skies.
@@ -208,7 +208,7 @@ The occult arts were once practised openly in the fens. As the occultists grew s
 stranger, both sees, for once united, declared crusade. Driven back against the northern mountains,
 the occult masters answered with **vitriol on a scale nobody has dared since**. The acid ate the
 crusade, the fens and the mountains themselves. Where it fell, the range is broken open and the land
-is still poisonous: **the Scald**. The occultists lost the war and were outlawed everywhere. They
+is still poisonous: **Scalth**. The occultists lost the war and were outlawed everywhere. They
 did not die out. They went into the cities, under the counters of apothecaries and behind the doors
 of quiet neighbours, and into the fens and sea caves the Synod cannot hold.
 

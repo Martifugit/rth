@@ -105,18 +105,18 @@ obsolete, because the old one is still the best place for something.
 - A material's name can say where it's most at home (sere cedar, glare salt) without that being
   the only place it grows.
 
-**Where each region is strongest** (region names are provisional and being replaced):
+**Where each region is strongest** (names from `docs/world-map.md`):
 
 | Region | Biome | Great for (its high tiers) | Decent for |
 |---|---|---|---|
-| **The Keeping** (Tolling, Cruor, the heartland) | green river country | Woodcutting low to mid (alder, ash, elm), Foraging (herbs, flax) | Fishing low to mid, Mining low |
-| **The Wrack** | fens, broken coast, sea caves | **Foraging top** (deep fen herbs), Fishing mid (lamprey) | bog iron, black poplar |
+| **Venaria** (Tolling, Cruor, the heartland) | green river country | Woodcutting low to mid (alder, ash, elm), Foraging (herbs, flax) | Fishing low to mid, Mining low |
+| **Slough** | fens, broken coast, sea caves | **Foraging top** (deep fen herbs), Fishing mid (lamprey) | bog iron, black poplar |
 | **Sere** | dry hills, wells | Mining mid (cinnabar), Fishing mid (cistern carp) | sere cedar, sere salt |
-| **The Saltmarch** | salt coast and flats | salt, Mining (glare-silver), Fishing (glarefish) | tamarisk |
-| **The Pale** (surface) | mountains, high forests | **Mining high** (frostiron), Woodcutting high (pale pine) | ice char |
+| **Calcinia** | salt coast and flats | salt, Mining (glare-silver), Fishing (glarefish) | tamarisk |
+| **Candora** (the range's surface) | mountains, high forests | **Mining high** (frostiron), Woodcutting high (pale pine) | ice char |
 | **The Veilwood** | the mist forest | **Woodcutting top**, Dreaming | moonbark |
 | **The Cradle's shores** | the bay | **Fishing top** | |
-| **The Undermost** | the depths | **Mining top** (deepglass) | |
+| **Undermost** | the depths | **Mining top** (deepglass) | |
 | **Craters** (anywhere, as events) | moonfall | verdigris, lightfin (both temporary) | |
 
 | Tier | Level | Metal | Wood | Fish | Herb | Fibre |
@@ -492,18 +492,18 @@ As built (Milestone 4), extended:
 | Family | From level | Tool | Station | Example creatures |
 |---|---|---|---|---|
 | Basin wildlife | 1 | skinning knife | skinning rack | fen rats, herons, boars, river wolves |
-| Scald-touched | 10 | glass flensing hook | lye vat | vitriol mites, cask toads, Scald wyrms (80) |
+| Scalth-touched | 10 | glass flensing hook | lye vat | vitriol mites, cask toads, Scalth wyrms (80) |
 | Occult-made | 30 | bone saw | rendering pot | failed workings, house familiars |
 | War-beasts | 45 | cleaver | flaying frame | Synod destriers, Sere's war-lizards |
 | Moonborn | 60 | moonglass knife | cold cellar | crater crawlers, anima-things |
-| The deep | 75 | **Frostpeak Forge** tools | **the Frostpeak Forge** | the Undermost's things |
+| The deep | 75 | **Frostpeak Forge** tools | **the Frostpeak Forge** | Undermost's things |
 
 - **Yields** feed everyone: meat (Cooking), hide and sinew (Tailoring, Artifice), feathers
   (Artifice), gall, glands, tallow and bile-salt (Occultism, Medicine), remains (Religion's
   reliquaries), and rarely tools, gear pieces and **old-blood**.
 - **Old-blood:** a rare yield from any family's creatures at level 85 and above, more from the
   strongest. Every tier-10 recipe in every skill takes it.
-- **Task-givers** per family: Wenna Thole (wildlife, built), Corvin Sallow (Scald-touched,
+- **Task-givers** per family: Wenna Thole (wildlife, built), Corvin Sallow (Scalth-touched,
   built), a Synod quartermaster (war-beasts), a Rationalist in a crater camp (moonborn), Brannoch
   (the deep). Tasks pay points per family, spent at their shops on tools, gear and yield
   boosts.
@@ -528,7 +528,7 @@ The herblore. Not for healing (food does that), apart from one mild tick-heal.
 | 25 | **Yellow draught** / **black draught** | spark salt / lampblack | sets bile to +30 / −30 and holds it there for 30 ticks |
 | 20 | Devotion draught | salt | restores 70 + 25% of max devotion |
 | 30 | Tisane of mending | fen honey | heals 1% blood per tick for 20 ticks (the tick-heal) |
-| 35 | Vitriol ward | lye | resist the Scald's corrosion (area hazard) |
+| 35 | Vitriol ward | lye | resist Scalth's corrosion (area hazard) |
 | 60 | Renewal draught | glarefish oil | restores 1% of max devotion per tick for 50 ticks |
 | 50 | Strong tonic | lamprey tooth | start with 25 phlegm |
 | 50–80 | Super draughts (every style, defence) | tier herbs | +5 + 10% |
@@ -555,9 +555,9 @@ be" is the kind of place, not a fixed region (2.2).
 | 4 | **Bog iron** | fens, marsh pits | not in rock: **dredged from wet pits**, a node that refills over time instead of depleting |
 | 5 | **Cinnabar** | dry red country | **toxic**: mining it slowly poisons you unless you wear gloves for it or drink a ward |
 | 6 | **Glare-silver** | salt flats, white stone | **only there in daylight** (the game clock) |
-| 7 | **Frostiron** | the Pale, dwarven halls | some veins need the dwarves' leave (a quest flag) |
+| 7 | **Frostiron** | Candora, dwarven halls | some veins need the dwarves' leave (a quest flag) |
 | 8 | **Verdigris** | moonfall craters, which can open anywhere | **appears only after a moonfall** (a world event), then fades |
-| 9 | **Deepglass** | the Undermost | **brittle**: a rock can shatter before it's worked out, unless your pickaxe has conservation |
+| 9 | **Deepglass** | Undermost | **brittle**: a rock can shatter before it's worked out, unless your pickaxe has conservation |
 | 10 | (none) | | tier 10 is old-blood alloy (2.2) |
 
 **Gems** are a rare extra from any rock, and the one place Mining touches the humours: each gem
@@ -588,13 +588,13 @@ fall by chance (2.3) and regrow.
 
 | Tier | Tree | Where it tends to be | Its quirk |
 |---|---|---|---|
-| 1 | **Alder** | the Keeping's riverbanks | none |
-| 2 | **Ash** | the Keeping's hedgerows and woods | none: the staple (bolt shafts) |
-| 3 | **Elm** | the Keeping's old fields and roadsides | **a big shared tree**: many players chop one, and it falls when their total is reached |
-| 4 | **Black poplar** | the Wrack's fens | **seeds itself**: when felled it regrows somewhere else nearby, so the node moves |
+| 1 | **Alder** | Venaria's riverbanks | none |
+| 2 | **Ash** | Venaria's hedgerows and woods | none: the staple (bolt shafts) |
+| 3 | **Elm** | Venaria's old fields and roadsides | **a big shared tree**: many players chop one, and it falls when their total is reached |
+| 4 | **Black poplar** | Slough's fens | **seeds itself**: when felled it regrows somewhere else nearby, so the node moves |
 | 5 | **Sere cedar** | Sere's dry hills | **the AFK tree**: slow attempts, but it almost never falls |
-| 6 | **Tamarisk** | the Saltmarch's coast | **salt-crusted**: its logs sometimes come with salt |
-| 7 | **Pale pine** | the Pale's high forests | **two actions**: chop it for logs, or tap it for resin |
+| 6 | **Tamarisk** | Calcinia's coast | **salt-crusted**: its logs sometimes come with salt |
+| 7 | **Pale pine** | Candora's high forests | **two actions**: chop it for logs, or tap it for resin |
 | 8 | **Moonbark** | the Veilwood's edges, old moonfall scars | **only wakes at night** (the mirror of glare-silver) |
 | 9 | **Mistwood** | the deep Veilwood | chopping **draws the attention** of things in the mist, and they come now and then |
 
@@ -606,7 +606,7 @@ fall by chance (2.3) and regrow.
 - **Trained by** cutting.
 
 ### Fishing
-- Fish by tier, and **brine** (Saltmarch spots) for rites. Extras: shells, eel slime
+- Fish by tier, and **brine** (salt-water spots) for rites. Extras: shells, eel slime
   and scales (Medicine).
 - Tools: rod, net, trap (Artifice: they're fine work). A spot offers one or two methods.
 - Spots move instead of depleting.
@@ -691,6 +691,9 @@ The code rework that follows this document, in short:
   requirements on it (gloves, recipes) become Occultism.
 - **Max blood** comes from Defence (3.6) instead of the fixed 1,000.
 - **Combat level** and the **Train defence** setting.
+- **Place names** (`docs/world-map.md`): the Pilgrim Road becomes Palmerway (scene, builder, flag,
+  region title), the Backwards Mill Widdermill, the Wash Wennow, and "Scald" becomes Scalth in
+  content ids and text (Corvin's Scald tasks, the Scald-touched creatures).
 
 ## 10. Still open
 Smaller decisions that can wait until the content that needs them:

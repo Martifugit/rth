@@ -7,25 +7,31 @@ should still look like Old School RuneScape.
 
 ## The shape of the land
 
-- **The range.** A great mountain range curves around the north and west of the continent and
-  slopes into the sea at both ends. On the sketch its peaks look like teeth on a wheel; in the
-  game they are mountains: a high, broken ridge with passes (the "gaps") through it. The
-  Rationalists hold the surface, the dwarves the caves, older peoples the depths.
-- **The north-east** is where the range gives out: eroded, broken, and finally eaten by the
-  Scalding. Fen and scar, inlets and sea caves. The occult houses.
-- **The heartland** is the green river country around the bay. Every river runs to the bay.
+- **The range, Candora.** A great mountain range curves around the north and west of the
+  continent and slopes into the sea at both ends. On the sketch its peaks look like teeth on a
+  wheel; in the game they are mountains: a high, broken ridge with passes (the "gaps") through
+  it. The Rationalists hold the surface, the dwarves the caves, older peoples the depths.
+- **The north-east, Slough,** is where the range gives out: eroded, broken, and finally eaten by
+  the Scalding. Fen and scar, inlets and sea caves. The occult houses.
+- **The heartland, Venaria,** is the green river country around the bay. Every river runs to
+  the bay.
 - **The west** is Sere: dry rain-shadow country under the range.
-- **The south-east** is Tithe's: salt coast, brine pans, bare stone, and the bay's only mouth.
-- **Beyond the range** lies frozen country (the white band on the sketch).
+- **The south-east** is Tithe's Calcinia: salt coast, salt pans, bare stone, and the bay's only
+  mouth.
+- **Beyond the range** lies frozen country, Nivil (the white band on the sketch).
 
 Why each power holds its ground is written up in `docs/lore.md`, section I.
 
 ## Names
 
-Every name on the sketch was a placeholder. The names below are **adopted for now** (approved
-2026-10-20) and used in lore and content; any of them can still change. Cruor, Tithe and
-Meridian are settled. A good name here is short, easy to say aloud, and hints at what the place
-is for. A player should be able to shout it across a chat channel.
+Every name on the sketch was a placeholder. The names below are **adopted** (renamed
+2026-10-21) and used in lore and content; any of them can still change. Cruor, Tithe and
+Meridian are settled.
+
+**The naming style:** a place gets a **proper name with a meaning under it**, not a description
+with "the" in front (Sere, Veilwood, Calcinia, Scalth). It should be short, easy to say aloud,
+and something a player could shout across a chat channel. Nicknames for things nobody
+understands (the Cradle, the Quaere) and buildings (the Orrery) may keep "the".
 
 ### Settled
 
@@ -35,18 +41,21 @@ is for. A player should be able to shout it across a chat channel.
 | **Tithe** | Second see. It guards the bay's mouth and taxes every ship. |
 | **Meridian** | Capital of the Rationalists, where the range comes down to the sea. |
 
-### realms and capitals
+### Realms and capitals
 
 | Realm | Capital | Why |
 |---|---|---|
-| **The Keeping** (the Blood see's lands) | Cruor | The covenant of blood is a *keeping*, so the realm is what the faith keeps. The phrase "the Keeping's edge" also names where Tolling sits. |
-| **The Saltmarch** (Tithe's lands) | Tithe | A border march of brine pans and bare stone. |
+| **Venaria** (Cruor's lands, the heartland; was "the Keeping") | Cruor | From *vena*, vein: every river in the basin runs to the bay like veins to a heart, and the blood faith rules the land they water. "Venaria's edge" names where Tolling sits. |
+| **Calcinia** (Tithe's lands; was "the Saltmarch") | Tithe | *Calcine* means burned white: salt flats under the glare. |
 | **Sere** (the dry western kingdom, replaces "Lammas") | **Cistern** | *Sere* means dried up. A capital named for its water store says what the kingdom fights over. |
-| **The Concord** (the Rationalists) | Meridian | They call themselves an agreement, not a nation. Fits their neutrality. |
-| **Holdfast** (the dwarven realm in the caves) | **Frostpeak Forge** (the trade hall, from the concept art) | A holdfast is a grip on rock, and the name says why nobody dislodges them. |
-| **The Wrack** (the occult north-east, replaces the unnamed "broken country") | none: the houses hold it between them | *Wrack* means wreckage and seaweed: broken land eaten by the sea. |
+| **Concordia** (the Rationalists; was "the Concord") | Meridian | They call themselves an agreement, not a nation. Fits their neutrality. |
+| **Slough** (the occult north-east; was "the Wrack") | none: the houses hold it between them | An old word for a bog, and for what a snake sheds: the flesh unfinished. |
 
-### the occult houses of the Wrack
+**The dwarves have no realm of their own.** They live scattered through the mountains' caves
+and trade from the hall of **Frostpeak Forge** (from the concept art). Their cart-line,
+**Dunstair**, climbs to it from the lowlands.
+
+### The occult houses of Slough
 
 Each house leans towards one bile and practises one art. Names are old words for bitter or
 staining things.
@@ -56,49 +65,56 @@ staining things.
 | **Gall** | Yellow bile, fire | The largest and loudest house. Burns first, argues later. |
 | **Umber** | Black bile, shadow | Old, quiet, patient. Keeps the archives and the grudges. |
 | **Mordant** | Both biles, corrosion | Acids, vitriols, the arts that eat. Their workshops gave Sour Hollow its cask. |
-| **Sallow** | Neither: refinement, the still | A minor house fallen on hard times. Corvin Sallow is its last son in the Keeping. Its rites are the first a player learns. |
+| **Sallow** | Neither: refinement, the still | A minor house fallen on hard times. Corvin Sallow is its last son in Venaria. Its rites are the first a player learns. |
 
-### the range
+### The range and beyond
 
 | Name | What it is |
 |---|---|
-| **The Pale** | The range itself. White peaks around the edge of the known world, and the old phrase "beyond the Pale" comes for free. |
-| **The Rime** | The frozen country beyond the Pale. |
-| **The Undermost** | The depths beneath the dwarves, held by the oldest peoples. |
-| **The Moon Breach** | Keep. The gap the first moon fragment tore through the Pale in the north-west. |
+| **Candora** (was "the Pale") | The range itself: white peaks around the edge of the known world. *Candor* is brilliant white, and the Rationalists like the honesty in it. |
+| **Nivil** (was "the Rime") | The frozen country beyond Candora, from *nivis*, snow. |
+| **Undermost** | The depths beneath the dwarves, held by the oldest peoples. |
+| **Selenfall** (was "the Moon Breach") | The gap the first moon fragment tore through Candora in the north-west. From *selene*, moon. |
 | **The Verdigris Moon** | Keep. The cracked moon. |
-| **The Lantern Pass** | The main western pass from Sere through the Pale, lit by Concord beacon towers. |
-| **The Orrery** | The Concord's great observatory on the high slopes above Meridian, where moonfall forecasts are made. |
-| **The Stair** | The dwarven cart-line climbing from the lowlands to Frostpeak Forge. |
-| **The Scald** | Keep. Where the Pale finally breaks apart in the north-east and the ground still burns. |
-| **The Gnaw** | A great sinkhole in the broken Pale (replaces "the Mainspring Pit"). |
-| **The Teeth** | Sea stacks where the Pale crumbles into the north-east sea (replaces "the Escapement"). |
+| **Lucern Pass** (was "the Lantern Pass") | The main western pass from Sere through Candora, lit by Concordian beacon towers. From *lucerna*, lamp. |
+| **The Orrery** | Concordia's great observatory on the high slopes above Meridian, where moonfall forecasts are made. |
+| **Dunstair** (was "the Stair") | The dwarven cart-line climbing from the lowlands to Frostpeak Forge. |
+| **Scalth** (was "the Scald") | Where Candora finally breaks apart in the north-east and the ground still burns, since the Scalding. |
+| **Swallow** (was "the Gnaw") | A great sinkhole in broken Candora. A swallow-hole is the real word for one. |
+| **Skerrin** (was "the Teeth") | Sea stacks where Candora crumbles into the north-east sea. From *skerry*, a rocky islet. |
 
-### the bay and the sea
+### The bay
 
 | Name | What it is |
 |---|---|
-| **The Cradle** | The round bay. Its water rises and falls like breathing. |
-| **The Question** | The shape in the bay (replaces "the Axle"). The Synod calls it *the Answer*. Which name you use says which side you're on. |
-| **The Ebb** | Keep for now. The open sea outside Tithe's mouth. |
+| **The Cradle** | The round bay. Its water rises and falls like breathing. A nickname kept on purpose. |
+| **The Quaere** (was "the Question") | The shape in the bay. *Quaere*, "ask!", is how old texts marked an open question. The Synod calls it **the Responsory**, the sung response to a call. Which name you use says which side you're on. |
 
-### Kept as they are
+The open sea beyond Tithe's mouth has no name: it's just the sea.
+
+### Smaller places
 
 | Name | Notes |
 |---|---|
 | **Tolling** | The starting town. The bell tolls for each sleeper. |
-| **The Backwards Mill** | The mill north of Tolling whose wheel turns against the river. |
+| **Widdermill** (was "the Backwards Mill") | The mill north of Tolling whose wheel turns against the river. *Widdershins*: against the way of the sun. |
+| **Wennow** (was "the Wash") | The broad mere where Tolling's river widens before running on east to the Cradle. |
+| **Palmerway** (was "the Pilgrim Road") | The road east from Tolling along Wennow's north shore. A palmer is a pilgrim. |
 | **The Sanguine Synod** | The church of Blood. |
-| Sodden, the Drowned Belfry, the Old Causey, Mereling | Places in the Wrack's fens. |
-| The Brine Pans, Saltglare, the Shadowless Stones | Places in the Saltmarch. |
+| Sodden, **Knellmere** (was "the Drowned Belfry"), **Causeholm** (was "the Old Causey"), Mereling | Places in Slough's fens. |
+| **Salinas** (was "the Brine Pans"), Saltglare, **Ascia** (was "the Shadowless Stones") | Places in Calcinia. *Ascia* is Greek for "shadowless": at noon there, nothing casts a shadow. |
+
+**In the game, not renamed yet:** the Pilgrim Road (scene `PilgrimRoad.unity`, flag
+`pilgrim_road_open`), the Backwards Mill, the Wash and "Scald" in content ids and text keep their
+old names until the skills rework renames them (`docs/skills.md`, section 9).
 
 ### Where Tolling sits
 
-Tolling is a small river town at the far western edge of **the Keeping**, many days upstream of
-Cruor, where the green heartland starts to dry out towards Sere. It is the Keeping's outskirts:
-the Synod keeps a clerk and a strongbox here and not much else. Trade from Sere passes
-through (hence Corvin's saltfigs). The open water at the map's south-east corner is **the Wash**, a
-broad mere where the river widens before it runs on east towards the Cradle. It is not the bay.
+Tolling is a small river town at the far western edge of **Venaria**, many days upstream of
+Cruor, where the green heartland starts to dry out towards Sere. It is Venaria's outskirts: the
+Synod keeps a clerk and a strongbox here and not much else. Trade from Sere passes through
+(hence Corvin's saltfigs). The open water at the map's south-east corner is **Wennow**, a broad
+mere where the river widens before it runs on east towards the Cradle. It is not the bay.
 
 ## Build phases
 
@@ -110,20 +126,20 @@ and rocks, one landmark. Unbuilt land is impassable and fades into the fog.
 | Region | Tiles (x, y) | Scene |
 |---|---|---|
 | Tolling | 0-95, 0-95 | `Tolling.unity` |
-| The Pilgrim Road | 96-191, 0-95 | `PilgrimRoad.unity` |
+| Palmerway (in game: the Pilgrim Road) | 96-191, 0-95 | `PilgrimRoad.unity` |
 
 1. **Tolling and the river** (built: `client/Assets/Scenes/Tolling.unity`). One riverside town
-   on the western outskirts of the Keeping: the river and its bridge, the Backwards Mill and
-   millpond, fields, reed beds with fen rats, a lightly wooded east bank with Sour Hollow (vitriol
-   mites around a cask that leaked after the Scalding), the Wash at the south-east corner, and
-   the sleepers' graves south of town. The townsfolk live here. 96 x 96 tiles.
-   **The Pilgrim Road** (built: `PilgrimRoad.unity`) runs east from Tolling along the Wash's
-   north shore: open heath, a waystone, the old toll-house, and the wardens' palisade with
-   the barred waygate (flag `pilgrim_road_open`), the current edge of the world.
-2. **Cruor and the bay shore.** The first capital, days east along the Pilgrim Road. The
-   region engine is built; what's left is the land between (mostly sparse road regions) and
-   the city itself (about 30 buildings at RuneScape scale).
-3. The fens and the occult north-east.
-4. Sere and the western passes (the Lantern Pass).
-5. Tithe and the south-east coast.
-6. The range: passes, Meridian, the dwarven cart-lines and the depths (the deep storyline).
+   on the western outskirts of Venaria: the river and its bridge, Widdermill and its millpond,
+   fields, reed beds with fen rats, a lightly wooded east bank with Sour Hollow (vitriol mites
+   around a cask that leaked after the Scalding), Wennow at the south-east corner, and the
+   sleepers' graves south of town. The townsfolk live here. 96 x 96 tiles.
+   **Palmerway** (built: `PilgrimRoad.unity`) runs east from Tolling along Wennow's north
+   shore: open heath, a waystone, the old toll-house, and the wardens' palisade with the barred
+   waygate (flag `pilgrim_road_open`), the current edge of the world.
+2. **Cruor and the bay shore.** The first capital, days east along Palmerway. The region engine
+   is built; what's left is the land between (mostly sparse road regions) and the city itself
+   (about 30 buildings at RuneScape scale).
+3. Slough's fens and the occult north-east.
+4. Sere and the western passes (Lucern Pass).
+5. Tithe and Calcinia's coast.
+6. Candora: passes, Meridian, the dwarven cart-lines and Undermost (the deep storyline).
