@@ -120,6 +120,10 @@
     "clip": "kneel_down", "speed": 1.4, "hold": 2.0, "next": "kneel_stand_up", "stopOnMove": true,
     "use": "Role: kneeling before a king, a shrine or a fallen martyr: down, a moment on one knee, up. Walking away cuts it short. Objects and NPCs use it with an action's \"animation\": \"kneel\"."
   },
+  "kneel_hold": {
+    "clip": "kneel_down", "speed": 1.4, "hold": -1, "stopOnMove": true,
+    "use": "Role: kneeling for as long as something lasts (a prayer): stays down until walking or another animation; send kneel_stand_up to rise."
+  },
 
   // ---- NPCs ----
   "idle_wealthy": {
