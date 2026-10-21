@@ -130,15 +130,16 @@ obsolete, because the old one is still the best place for something.
 | 7 | 60 | frostiron | pale pine | ice char | frostcap | pale wool |
 | 8 | 70 | verdigris (moon-touched) | moonbark | lightfin | moonmoss | pale wool |
 | 9 | 80 | deepglass | mistwood | hushfin | hellebore | threadmoss |
-| 10 | 90 | (open) | (open) | (open) | (open) | (open) |
+| 10 | 90 | orichalc | gloamwood | sturgeon | mandrake | gossamer |
 
 - **Special equipment sits outside the ladder.** The best gear isn't a tier with one shared
   resource. Each special piece is designed on its own: typically a special drop from a
   difficult boss, a demanding process to make it, and sometimes a special place to make it in
   (the great forge at Frostpeak Forge is one, for whatever kind of equipment needs the best
   forge there is). No single resource or place feeds all of it.
-- **Tier 10 is open:** whether level 90 gets an ordinary gathered tier like the others, or the
-  ladder stops at tier 9 and the top levels are about special equipment and the hardest nodes.
+- **Nothing special happens at the top.** Tier 10 is an ordinary tier, only harder: its nodes
+  are rare, slow and in the most dangerous parts of each skill's top region. Progress simply gets
+  more demanding: rare boss drops, long grinds to make things, or both.
 - Gear stats grow by tier from one formula (a tier-N item gets the tier's base value times the
   slot's share), so a new item needs only a tier and a slot in data. The formula is a combat
   tuning task, not a per-item one.
@@ -571,7 +572,7 @@ fixed region (2.2).
 | 7 | **Frostiron** | Candora, dwarven halls | none |
 | 8 | **Verdigris** | moonfall craters, which can open anywhere | **appears only after a moonfall** (a world event), then fades |
 | 9 | **Deepglass** | Undermost | **brittle**: a rock can shatter before it's worked out, unless your pickaxe has conservation |
-| 10 | (open) | | see 2.2 |
+| 10 | **Orichalc** | Undermost's deepest workings | none; rare and slow |
 
 **Gems** are a rare extra from any rock, and the one place Mining touches the humours: each gem
 carries one, and jewellery set with it leans towards that humour's style (Smithing).
@@ -610,6 +611,7 @@ fall by chance (2.3) and regrow.
 | 7 | **Pale pine** | Candora's high forests | none (resin is a common extra) |
 | 8 | **Moonbark** | the Veilwood's edges, old moonfall scars | none |
 | 9 | **Mistwood** | the deep Veilwood | chopping **draws the attention** of things in the mist, and they come now and then |
+| 10 | **Gloamwood** | the Veilwood's heart | none; rare and slow |
 
 - **Extras:** resin (Medicine), bird nests (feathers now; seeds if Farming ever comes).
 - **Charcoal:** burn logs at a kiln. Better logs give more charcoal per log. Steel and the higher
@@ -634,11 +636,12 @@ instead of depleting. Quirks are kept to a few tiers, so most fishing is plain.
 | 7 | **Ice char** | Candora's tarns, Nivil's edge | **cut your own hole**: you make the spot, and it freezes over after a while |
 | 8 | **Lightfin** | crater lakes, moonlit pools | **follows light**: a lantern in your off-hand draws the school to you |
 | 9 | **Hushfin** | the Cradle's shores | **only during the Cradle's event** (below) |
+| 10 | **Sturgeon** | the Cradle's shores | none beyond hushfin's: also only during the event, and much rarer |
 
 **The Cradle's event.** Every few hours (about every 3, to tune) the bay draws in its breath. The
 game announces it to everyone a few minutes ahead, and for about 15 minutes hushfin spots appear
 along the Cradle's shores. It is a world event, like a moonfall, and it's the only time tier-9
-fish can be caught, which makes the shore a place people gather.
+fish (and the rarer sturgeon) can be caught, which makes the shore a place people gather.
 
 - **Brine** comes from any salt-water spot, for rites.
 - **Extras:** shells, eel slime, scales and lamprey teeth (Medicine).
@@ -666,13 +669,16 @@ resource in the game**: every herb is common in two kinds of place and turns up 
 | 7 | **Frostcap** (a fungus) | Candora, Nivil's edge | the Veilwood |
 | 8 | **Moonmoss** | the Veilwood's edges, old moonfall scars | Candora's high valleys |
 | 9 | **Hellebore** | Slough's deep fens, Scalth's margins | the Veilwood's bogs |
+| 10 | **Mandrake** | Slough's deepest fens | nowhere else |
 
-Hellebore is the real plant humoral medicine used to purge black bile. Its one quirk: it doesn't
+Hellebore is the real plant humoral medicine used to purge black bile. Mandrake, the top herb,
+is just rarer. Hellebore's one quirk: it doesn't
 grow in patches, but as **single plants scattered through dangerous ground**, each picked once and
 then regrowing somewhere else nearby. The top herb means roaming, not standing at one patch.
 
 **Fibres** (Tailoring), two homes each: **reed** (Venaria, Slough; low), **flax** (Venaria, Sere;
-low to mid), **silkweed** (Sere, Calcinia; mid), **threadmoss** (Slough, the Veilwood; top). The
+low to mid), **silkweed** (Sere, Calcinia; mid), **threadmoss** (Slough, the Veilwood; high), **gossamer** (the Veilwood's heart, Slough's
+deepest fens; top). The
 tier 7–8 fibre, **pale wool**, comes from Butchering (mountain goats), not Foraging.
 
 **Food and other:** berries, mushrooms and saltfigs (Sere) for Cooking, and fen honey from wild
