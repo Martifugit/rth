@@ -25,6 +25,7 @@ namespace Rth.Client.Editor
             BuildQuay(WorldKit.Group(map, "The Strand"));
             BuildObserversWalk(WorldKit.Group(map, "The Observers' Walk"));
             BuildNodes(WorldKit.Group(map, "Gathering"));
+            BuildLandmarks(WorldKit.Group(map, "Landmarks"));
             BuildShortcuts(WorldKit.Group(map, "Shortcuts"));
         }
 
@@ -96,16 +97,36 @@ namespace Rth.Client.Editor
         }
 
         /// <summary>
+        /// Things to read or look at on the open ground between the buildings, so no route goes
+        /// long without one: the Span's plaques, the stairs' landings, the Academy lawn's statue,
+        /// the Under-Treaty stone on the Heights, the Butts' scoreboard and the Crag's weather posts.
+        /// </summary>
+        private static void BuildLandmarks(Transform g)
+        {
+            Place(g, "Span plaque", "span_plaque", 60, 107, M.Brass, 1.1f);
+            Place(g, "Span plaque", "span_plaque", 47, 107, M.Brass, 1.1f);
+            Place(g, "Scoreboard", "butts_scoreboard", 184, 101, M.Slate, 2f);
+            Place(g, "Drinking fountain", "stair_fountain", 90, 40, M.Granite, 1f);
+            Place(g, "Top landing", "line_street_view", 91, 114, M.Brass, 1.1f);
+            Place(g, "Rail telescope", "arcade_telescope", 145, 80, M.Brass, 1.3f);
+            Transform statue = Place(g, "Statue", "rationalist_statue", 86, 112, M.Granite, 1.2f);
+            WorldKit.Prop("Figure", statue, On(86.5f, 112.5f, 2.6f), new Vector3(0.7f, 2.2f, 0.5f), M.Ashlar);
+            Tag(statue, "rationalist_statue", "The first Rationalist: a robed figure with a set square on a plain granite plinth, the face left uncut.");
+            Transform stele = Place(g, "Treaty stone", "under_treaty_stele", 36, 118, M.DwarfStone, 3.2f);
+            Tag(stele, "under_treaty_stele", "The Under-Treaty stone: a tall slab of dark stone, the treaty cut in Concordian and dwarven side by side, bronze-banded.");
+            foreach ((int x, int z) in new[] { (72, 164), (86, 152), (104, 157), (128, 152) })
+            {
+                Transform post = Place(g, "Weather post", "crag_instrument", x, z, M.Iron, 2.4f);
+                if (x == 72) Tag(post, "weather_post", "A weather post: an iron pole with a wind vane, a rain gauge and a thermometer in a louvred box.");
+            }
+        }
+
+        /// <summary>
         /// The skill shortcuts: a climb object at each end, its landing on the far side, gated by
         /// the level in objects.json. A pair is two objects, as with stairs.
         /// </summary>
         private static void BuildShortcuts(Transform g)
         {
-            // The Span's brass plaques, one at each end, and the Butts' scoreboard: things to read on the way.
-            Place(g, "Span plaque", "span_plaque", 60, 107, M.Brass, 1.1f);
-            Place(g, "Span plaque", "span_plaque", 47, 107, M.Brass, 1.1f);
-            Place(g, "Scoreboard", "butts_scoreboard", 184, 101, M.Slate, 2f);
-
             // Rubble from the Ore Road's first bend (+5) up past the last leg to the Heights (+20).
             Transform rubble = WorldKit.Group(g, "Ore Road rubble");
             Shortcut(rubble, "Rubble", "ore_rubble", (46, 71), (46, 80), (46, 79), (46, 70), M.Rock);

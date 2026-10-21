@@ -1206,5 +1206,45 @@
     "actions": [
       {"id": "read", "label": "Read", "message": "Today's best, lane by lane. Lane four: struck through, and beside it in the range master's hand: TARGET RE-SURVEYED. GROUND MOVED 2 CM."}
     ]
+  },
+  {
+    "id": "line_street_view",
+    "name": "Top landing",
+    "examine": "The top landing of the Line Street stair, a brass rail along its edge.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "Straight down the brass line: the Rows, the gnomon, the Harbour Stair, the quay, the sea. Everything in Meridian is in a straight line from here, which is the point of it."}
+    ]
+  },
+  {
+    "id": "stair_fountain",
+    "name": "Drinking fountain",
+    "examine": "A granite drinking fountain at the foot of the Harbour Stair.",
+    "actions": [
+      {"id": "drink", "label": "Drink", "message": "Cold mountain water, a little metallic. A plate says it was tested this morning and found pure. A smaller plate says when it was last tested before that."}
+    ]
+  },
+  {
+    "id": "rationalist_statue",
+    "name": "Statue",
+    "examine": "A statue of a robed scholar holding a set square, on a plain plinth.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "THE FIRST OF THE RATIONALISTS, WHO MEASURED THE FEVER AND FOUND IT WANTING. The face has been left smooth: nobody agreed on what it looked like, so it was left uncut until they do."}
+    ]
+  },
+  {
+    "id": "crag_instrument",
+    "name": "Weather post",
+    "examine": "A post on the Crag hung with a wind vane, a rain gauge and a thermometer.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "Wind north-east, light. Rain, none. Cold, as ever. A card in a brass frame is filled in every hour, and the last few are signed by people who were asked to stay later."}
+    ]
+  },
+  {
+    "id": "under_treaty_stele",
+    "name": "Treaty stone",
+    "examine": "A tall dark stone carved in two scripts, Concordian and dwarven, side by side.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "THE UNDER-TREATY: what is above is Concordia's, what is beneath is the dwarves', and what is found between is shared. The last clause has been re-cut, deeper, by a dwarven hand."}
+    ]
   }
 ]
