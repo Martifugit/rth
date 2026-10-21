@@ -176,6 +176,7 @@ internal static class TestContent
         new ObjectDef { Id = "rack", Name = "Rack", Examine = "A rack.", Actions = { new ActionDef { Id = "process", Label = "Butcher" } } },
         new ObjectDef { Id = "vat", Name = "Vat", Actions = { new ActionDef { Id = "process", Label = "Butcher" } } },
         new ObjectDef { Id = "sign", Name = "Signpost", Actions = { new ActionDef { Id = "read", Label = "Read", Message = "Tolling, west." } } },
+        new ObjectDef { Id = "shrine", Name = "Shrine", Actions = { new ActionDef { Id = "kneel", Label = "Kneel", Animation = "kneel", Message = "You kneel." } } },
         new ObjectDef { Id = "gate", Name = "Gate", Actions = { new ActionDef { Id = "open", Label = "Open", RequiresFlag = "gate_open", LockedMessage = "Barred.", Message = "It creaks open." } } },
     };
 
@@ -197,6 +198,7 @@ internal static class TestContent
     public static List<NpcDef> TownNpcs() => new()
     {
         new NpcDef { Id = "banker", Name = "Banker", Attackable = false, Attacks = false, WanderRadius = 0, Actions = { new ActionDef { Id = "bank", Label = "Bank" } } },
+        new NpcDef { Id = "king", Name = "King", Attackable = false, Attacks = false, WanderRadius = 0, Actions = { new ActionDef { Id = "kneel", Label = "Kneel", Animation = "kneel" } } },
         new NpcDef { Id = "merchant", Name = "Merchant", Attackable = false, Attacks = false, WanderRadius = 0, Shop = "general", Dialogue = "merchant",
             Actions = { new ActionDef { Id = "talk", Label = "Talk-to" }, new ActionDef { Id = "trade", Label = "Trade" }, new ActionDef { Id = "secret", Label = "Whisper", RequiresFlag = "trusted", LockedMessage = "Not yet." } } },
     };

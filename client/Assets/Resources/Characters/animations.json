@@ -110,6 +110,17 @@
   },
   "talk": { "source": "Mixamo: Talking", "loop": true, "use": "Talking to someone in a conversation." },
 
+  // ---- Respect and devotion ----
+  "kneel_down": { "source": "Mixamo: Kneeling Down", "use": "Going down on one knee (2.8 s); ends kneeling." },
+  "kneel_stand_up": {
+    "source": "Mixamo: Standing", "speed": 1.4, "stopOnMove": true,
+    "use": "Rising from one knee; starts where kneel_down ends."
+  },
+  "kneel": {
+    "clip": "kneel_down", "speed": 1.4, "hold": 2.0, "next": "kneel_stand_up", "stopOnMove": true,
+    "use": "Role: kneeling before a king, a shrine or a fallen martyr: down, a moment on one knee, up. Walking away cuts it short. Objects and NPCs use it with an action's \"animation\": \"kneel\"."
+  },
+
   // ---- NPCs ----
   "idle_wealthy": {
     "source": "Mixamo: Dwarf Idle",

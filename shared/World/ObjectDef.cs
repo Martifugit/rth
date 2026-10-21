@@ -110,6 +110,12 @@ namespace Rth.Shared.World
         public string? LockedMessage;
         /// <summary>Said when the action is used (signposts, notices). Needs no handler.</summary>
         public string? Message;
+        /// <summary>
+        /// A character animation (a clip or role in the client's animations.json) the player plays
+        /// facing the thing, once they've walked up to it: kneeling at a shrine, bowing to a king.
+        /// Needs no handler; with one, the handler runs too.
+        /// </summary>
+        public string? Animation;
     }
 
     /// <summary>One placed object, as exported from the scene (<c>&lt;map&gt;.objects.json</c>).</summary>

@@ -48,7 +48,9 @@ namespace Rth.Server.Game
             }
             ActionDef? action = npc.Def.Actions.FirstOrDefault(a => a.Id == m.ActionId);
             if (action == null || !ObjectSystem.Unlocked(World, player, action)) return;
-            if (!_actions.TryGetValue(m.ActionId, out Action<Player, Npc>? handler))
+            // An action with only an animation or a message (kneeling to a king) needs no handler.
+            _actions.TryGetValue(m.ActionId, out Action<Player, Npc>? handler);
+            if (handler == null && action.Animation == null && action.Message == null)
             {
                 World.Log("No handler for NPC action '" + m.ActionId + "'.");
                 return;
@@ -58,7 +60,9 @@ namespace Rth.Server.Game
                 n.BusyUntilTick = World.CurrentTick + 20;
                 n.Waypoints.Clear();
                 World.Events.Publish(new NpcActionUsed(p, n, m.ActionId));
-                handler(p, n);
+                if (action.Animation != null) World.Animate(p, action.Animation, n.Position);
+                if (action.Message != null) World.Tell(p, TextKind.Info, action.Message);
+                handler?.Invoke(p, n);
             }));
         }
 

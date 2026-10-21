@@ -63,10 +63,18 @@ namespace Rth.Server.Game
             ActionDef? action = def.Actions.FirstOrDefault(a => a.Id == m.ActionId);
             if (action == null) return;
             if (!Unlocked(World, player, action)) return;
+            // An action with an animation is done standing at the thing; others happen at once.
+            if (action.Animation != null) World.StartInteraction(player, new ObjectOnceInteraction(placed, p => Use(p, placed, def, action)));
+            else Use(player, placed, def, action);
+        }
+
+        private void Use(Player player, PlacedObject placed, ObjectDef def, ActionDef action)
+        {
             World.Events.Publish(new ObjectUsed(player, placed, action.Id));
+            if (action.Animation != null) World.Animate(player, action.Animation, placed.Tile);
             if (action.Message != null) World.Tell(player, TextKind.Info, action.Message);
-            if (_actions.TryGetValue(m.ActionId, out Action<Player, PlacedObject, ObjectDef>? handler)) handler(player, placed, def);
-            else if (action.Message == null) World.Log("No handler for object action '" + m.ActionId + "'.");
+            if (_actions.TryGetValue(action.Id, out Action<Player, PlacedObject, ObjectDef>? handler)) handler(player, placed, def);
+            else if (action.Message == null && action.Animation == null) World.Log("No handler for object action '" + action.Id + "'.");
         }
     }
 }

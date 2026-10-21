@@ -60,6 +60,15 @@ namespace Rth.Client.Characters
             /// the importer). Big steps may make the feet slide a little.
             /// </summary>
             public bool InPlace;
+            /// <summary>
+            /// Seconds to stay on the clip's last frame once it ends (-1: until something else plays
+            /// or, with <see cref="StopOnMove"/>, until it moves). Then <see cref="Next"/> plays, or it fades out.
+            /// </summary>
+            public float Hold;
+            /// <summary>A clip or role that follows straight on, with no fade between (kneel, then stand up).</summary>
+            public string Next;
+            /// <summary>Starting to move ends it (it fades out under the walk).</summary>
+            public bool StopOnMove;
         }
 
         private static readonly Dictionary<string, AnimationClip> Clips = new Dictionary<string, AnimationClip>();
@@ -77,7 +86,10 @@ namespace Rth.Client.Characters
         private AnimationClipPlayable _oneShot, _oneShotLegs;
         private ClipTuning _oneShotTuning;
         private float _oneShotStart, _oneShotEnd;
-        private bool _hold;
+        private bool _hold;          // held for good (death): nothing interrupts it
+        private bool _chained;       // follows on from the clip before: no fade in
+        private float _holdLeft;     // seconds left on the last frame (NaN: not holding yet)
+        private float _leaving = -1f; // fading out, this many seconds left (-1: not leaving)
         private float _move, _runBlend, _combat;
         private float _combatWeight;
 
@@ -257,31 +269,67 @@ namespace Rth.Client.Characters
                 _run.SetSpeed(Mathf.Clamp(speed / _runSpeed, 0.5f, 2f) * Tuning("run").Speed);
             }
 
-            if (_oneShot.IsValid())
+            if (_oneShot.IsValid()) UpdateOneShot(moving, deltaTime);
+        }
+
+        private void UpdateOneShot(bool moving, float deltaTime)
+        {
+            ClipTuning tuning = _oneShotTuning;
+            float t = (float)_oneShot.GetTime();
+            bool reverse = tuning.Speed < 0f;
+            float elapsed = reverse ? _oneShotEnd - t : t - _oneShotStart;
+            float remaining = reverse ? t - _oneShotStart : _oneShotEnd - t;
+            bool ended = remaining <= 0f;
+            bool holds = _hold || tuning.Hold != 0f;
+
+            // Stay on the last frame: for good (death), for a while, or until interrupted.
+            if (ended && holds)
             {
-                float t = (float)_oneShot.GetTime();
-                bool reverse = _oneShotTuning.Speed < 0f;
-                float elapsed = reverse ? _oneShotEnd - t : t - _oneShotStart;
-                float remaining = reverse ? t - _oneShotStart : _oneShotEnd - t;
-                float weight = Mathf.Clamp01(elapsed / FadeIn);
-                if (!_hold) weight = Mathf.Min(weight, Mathf.Clamp01(remaining / FadeOut));
-                else if (remaining <= 0f)   // stay at the end (death)
-                {
-                    _oneShot.SetSpeed(0);
-                    _oneShotLegs.SetSpeed(0);
-                }
-                weight *= _oneShotTuning.Weight;
-                _layers.SetInputWeight(1, _oneShotTuning.LowerBody ? 0f : weight);
-                _layers.SetInputWeight(2, _oneShotTuning.UpperBody ? 0f : weight * Mathf.Clamp01(_oneShotTuning.Legs));
-                if (!_hold && remaining <= 0f) StopOneShot();
+                _oneShot.SetSpeed(0);
+                _oneShotLegs.SetSpeed(0);
+                if (float.IsNaN(_holdLeft)) _holdLeft = tuning.Hold;
+                else if (_holdLeft > 0f) _holdLeft = Mathf.Max(0f, _holdLeft - deltaTime);
             }
+            if (!_hold && tuning.StopOnMove && moving && _leaving < 0f) _leaving = FadeOut;
+
+            bool finished = !_hold && _leaving < 0f && ended && (!holds || _holdLeft == 0f);
+            if (finished && !string.IsNullOrEmpty(tuning.Next))
+            {
+                if (Play(tuning.Next, chained: true))
+                {
+                    UpdateOneShot(moving, 0f);   // weigh the new clip in now, so there's no gap
+                    return;
+                }
+            }
+            if (finished) _leaving = FadeOut;
+
+            float weight = _chained ? 1f : Mathf.Clamp01(elapsed / FadeIn);
+            if (_leaving >= 0f)
+            {
+                _leaving -= deltaTime;
+                weight = Mathf.Min(weight, Mathf.Clamp01(_leaving / FadeOut));
+                if (_leaving <= 0f)
+                {
+                    StopOneShot();
+                    return;
+                }
+            }
+            // A plain clip fades out as it ends; one that holds or hands on to another doesn't.
+            else if (!holds && string.IsNullOrEmpty(tuning.Next))
+                weight = Mathf.Min(weight, Mathf.Clamp01(remaining / FadeOut));
+
+            weight *= tuning.Weight;
+            _layers.SetInputWeight(1, tuning.LowerBody ? 0f : weight);
+            _layers.SetInputWeight(2, tuning.UpperBody ? 0f : weight * Mathf.Clamp01(tuning.Legs));
         }
 
         /// <summary>
-        /// Plays a clip once over the locomotion; <paramref name="hold"/> keeps its last frame
-        /// (death). Returns false if there is no such clip. A held clip isn't interrupted.
+        /// Plays a clip once over the locomotion; <paramref name="hold"/> keeps its last frame for
+        /// good (death). Returns false if there is no such clip. A clip held for good isn't
+        /// interrupted. <paramref name="chained"/> starts at full strength, following on from the
+        /// clip before (a tuning's "next").
         /// </summary>
-        public bool Play(string name, bool hold = false)
+        public bool Play(string name, bool hold = false, bool chained = false)
         {
             if (!_graph.IsValid() || (_hold && _oneShot.IsValid())) return false;
             AnimationClip clip = Clip(name);
@@ -294,6 +342,9 @@ namespace Rth.Client.Characters
             _oneShot = OneShotCopy(clip, tuning, 1);
             _oneShotLegs = OneShotCopy(clip, tuning, 2);
             _hold = hold;
+            _chained = chained;
+            _holdLeft = float.NaN;
+            _leaving = -1f;
             return true;
         }
 

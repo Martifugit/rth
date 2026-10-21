@@ -71,6 +71,23 @@ namespace Rth.Server.Game
         protected override (int Plane, TileCoord Tile)? Target(World world) => (Object.Plane, Object.Tile);
     }
 
+    /// <summary>Approaches a fixed world object and then does one thing.</summary>
+    public sealed class ObjectOnceInteraction : ObjectInteraction
+    {
+        private readonly System.Action<Player> _then;
+
+        public ObjectOnceInteraction(PlacedObject target, System.Action<Player> then) : base(target)
+        {
+            _then = then;
+        }
+
+        protected override bool Work(World world, Player player)
+        {
+            _then(player);
+            return false;
+        }
+    }
+
     /// <summary>Approaches an NPC (following it if it moves) and then does one thing.</summary>
     public sealed class NpcInteraction : ApproachInteraction
     {
