@@ -51,8 +51,9 @@ Every power in the basin holds its land for a reason the land itself gives it.
 - **Tithe** holds the south-east because it holds the bay's only mouth to the open sea. Every
   ship that leaves the bay passes under its towers and pays, which is where its name comes from.
   Behind it lie the brine pans and the Shadowless Stones, salt flats and bare rock where no army
-  can live off the land. Cruor could crush it, and has tried three times. The channel and the
-  glare beat it every time.
+  can live off the land. Cruor has tried to take it three times. The channel and the glare beat
+  it every time, and so did Cruor's own debts: Tithe is the basin's creditor, and a see at war
+  with its banker is ruined by winning.
 - **Sere** holds the west because nobody else can live there. The mountains take the rain,
   and only Sere knows the wells and cisterns. Armies that march in die of thirst. It also holds
   the lowland ends of the western passes, so the caravan trade through the range runs through
@@ -81,6 +82,91 @@ two biles, yellow and black. What they disagree about is which of them is *true*
   black, is the solvent and the fire of transformation. Their arts burn, dissolve and explode, and
   they make their practitioners terribly strong and slowly strange. The faith calls them
   apostates. They call themselves the only honest people in the basin.
+
+### The two sees of Blood
+
+The Sanguine Synod is one church with two seats, and they have grown into two very different
+societies. **Cruor** is the first: the river city on the bay's rim, the richest and most populous
+see, whose faith honours martyrdom and grows by spreading. Its power comes from the many. It
+gathers the blood of the faithful by the hundreds of thousands, and the more the faith spreads,
+the stronger it becomes. That is why Cruor keeps raising its monuments in every corner of the
+world.
+
+**Tithe** is the second, and it needs none of that.
+
+#### Tithe, the creditor see
+
+Tithe stands on the south-eastern lip of the bay's narrow mouth, where the Cradle meets the open
+sea. Every ship that leaves the bay passes under its towers, and every ship pays. The city took
+its name from that toll; its people would say the toll took its name from them.
+
+The land behind it is salt coast: the Brine Pans, Saltglare, and the white flats of the
+Shadowless Stones, where the light comes from everywhere and no army can live off the ground.
+The Saltmarch feeds almost nobody. The city feeds on what passes through its gate. Tithe is a
+crowded, rich, salt-white port of shipping houses, counting halls and choirs, and the wealthiest
+treasury in the lowlands.
+
+**The doctrine.** Tithe holds the same covenant, scripture and blood as Cruor. What it disputes is
+what the covenant asks. Something was given at the water's edge, and one day it will be called in.
+When it is, every soul will be weighed against what it owes, and the faithful must be found
+worthy. Tithe lives as though that day could come tomorrow. Every Tithian is born owing: the debt
+passes from parent to child, and living rightly is repayment. Each faithful soul has its entry in
+**the Ledger**, the account of what it owes and what it has repaid, and a Tithian's standing comes
+from that record, not from birth or rank. Tithe barely seeks converts. A debt can't be preached,
+but an outsider can choose to take one on.
+
+**The liturgy.** Tithe doesn't preach, it sings. Its worship is sung by choirs under salt-white
+vaults, each hymn part of the account spoken aloud before the covenant: power drawn from one's own
+devotion, not borrowed from anyone else. Tithe salts and keeps its dead in the Shadowless Stones,
+because when the debt is called in, every debtor must be present to answer for it.
+
+**The auditors.** Tithe's inquisitors are examiners of accounts more than hunters of heretics.
+They know what every soul owes, and so, in practice, they know everyone's secrets. Brother Cassius
+Ember is one of them. His office is the truth of what is owed, which is why he is the most honest
+person in either see, and why nobody wants to hear what he finds.
+
+**The creditor.** Tithe took its own doctrine literally. Centuries of tolls built a treasury, and
+the treasury lends: to Sere's queen, to the Rationalists' observatories, to the dwarves' trading
+halls, and above all **to Cruor**. Crusades, garrisons and the monuments Cruor raises across the
+world are paid for, in part, with Tithian money. Cruor spreads outward, and Tithe owns a share of
+everything it gains.
+
+**Why Cruor has never taken it.** Cruor has tried three times. Each time it met the channel, the
+glare, Tithe's fleet and the armies Tithe's treasury could hire. Worse, it met its own debts. A
+Cruor at war with Tithe sees its loans called in, its expansion stopped and the bay's mouth
+chained shut, and the bay is landlocked except through Tithe. One of the Synod's two pontiffs sits
+in Tithe, so a war between the sees splits every congregation in the basin, Cruor's included.
+Cruor could take Tithe's ground, but it would be ruined doing it. And Tithe can't feed itself
+without the heartland's grain. So the three wars ended in four peaces.
+
+**What Tithe waits for.** It isn't trying to win. It wants to be found worthy when the debt falls
+due, so it is patient, slow to go to war, and very hard to move. It watches the bay, as Cruor
+does, but it prepares for a different day: not to defend the world from what lies there, but to
+settle with it.
+
+#### What separates them
+
+| | **Cruor** (the Keeping) | **Tithe** (the Debt) |
+|---|---|---|
+| **The covenant is...** | a keeping: the faithful guard against what is in the bay | a debt: one day it will be called in, and the faithful must be found worthy |
+| **The faithful are...** | guards and martyrs | debtors |
+| **Holiness comes from...** | blood given: bleeding for the covenant makes it holy | a life lived in repayment |
+| **Power comes from...** | outside, from the many: the pooled blood of hundreds of thousands | inside, from the one: personal devotion, sung |
+| **Its engine** | expansion: more faithful, more blood, more monuments | credit: tolls and loans; it is paid whoever grows |
+| **How it grows** | by spreading the faith across the world | it doesn't need to; the world passes through its gate |
+| **Converts** | wanted, everywhere | rare; a debt can't be preached, only taken on |
+| **Worship** | blood given at monuments and altars | hymns sung by choirs; the Ledger |
+| **Its dead** | their blood returns to the keeping | salted and kept, to answer when the debt is called |
+| **The individual** | one of the many; the cause outlives you | accountable by name; your record is your own |
+| **Its clergy** | blood-knights | auditor-inquisitors |
+| **Its power in the world** | the largest army, the richest land, soldiers who would rather die than yield | the bay's mouth, the treasury, the Ledger's secrets |
+| **Its weakness** | its expansion runs on borrowed money | it can't feed itself |
+| **What it thinks of the other** | Tithe hoards grace and does nothing with it | Cruor spends blood that isn't its own, to pay a debt it won't admit it owes |
+| **In the game** | **verses**: melee's power, bought with pledges gathered at its monuments | **hymns**: prayers for every style, sung on your own devotion |
+| **What it prepares for** | to hold the line against what is in the bay | to settle with it |
+
+**What they share:** one covenant, one scripture, one blood, one Synod with two pontiffs, and one
+enemy, the occult houses, against whom they once united in the crusade that ended in the Scalding.
 
 ## III. A short history
 
@@ -114,7 +200,8 @@ The faith split over a single question: **what the covenant asks of the faithful
   faithful must be found worthy when it is.
 
 The two sees have fought three wars over the difference and made peace four times. Today they are
-allies, for now. Each keeps spies in the other's cathedral.
+allies, for now. Each keeps spies in the other's cathedral. (How differently they live is in
+section II, "The two sees of Blood".)
 
 ### The Apostasy and the Scalding
 The occult arts were once practised openly in the fens. As the occultists grew stronger and
@@ -269,7 +356,7 @@ which of them understood the covenant, or whether either did.
 | Character | Who they are at the start | How they change |
 | --- | --- | --- |
 | **Sister Odile Vane** | A young blood-knight of Cruor, devout, brave and a little insufferable. Assigned to watch the woken sleeper. | Comes to doubt her see through what she sees at the player's side. She can end as the reformer who reconciles the sees, or as a martyr for a covenant she no longer understands. The player's choices tip it. |
-| **Brother Cassius Ember** | A Tithe inquisitor who suspects the player is tainted and says so. | The most honest person in either see, and he never warms to the player. He is the first to see the Physician's hand in the Schism, and nobody believes him. |
+| **Brother Cassius Ember** | A Tithe inquisitor, an auditor of souls, who suspects the player is tainted and says so. | The most honest person in either see, and he never warms to the player. He is the first to see the Physician's hand in the Schism, and nobody believes him. |
 | **Corvin Sallow** | The friendly apothecary in the player's home town who sells them their first potions. | Revealed as an occultist, then as far more: a would-be house master, and one of the Physician's oldest patients. Whether he masters his own transformation or is consumed by it is one of the long tragedies. |
 | **Magister Ilse Varrow** | Chief astronomer of Meridian, forecaster of moonfalls, brilliant and cold. | Carries the secret of the coming great fall, and later the guilt of the deep bores. She turns from the player's most useful patron into the person they must decide whether to expose. |
 | **Brannoch** | Master of the cart lines: a dwarf who talks to the player like weather talks to a field. | Slowly opens up about the seals. Late in the deep story he reveals that his family has kept one of them for thirty generations, and that it is failing. |

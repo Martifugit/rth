@@ -325,8 +325,8 @@ sees. It replaces the breath skill: focuses become its hymns.
 Plain prayers, deliberately: nothing fancier than RuneScape's.
 
 - **Singing a hymn** turns it on; it does one specific thing while it lasts and drains
-  **devotion**. Several can be sung at once, except where they exclude each other (one
-  deflection at a time, one boost per stat).
+  **devotion**. Any number can be sung at once, except that **only one overhead** can be up at a
+  time (Bulwark, Glare, Salt Ward, Sacrament).
 - **Devotion** is the bar that replaces breath on the main action bar.
 - **What hymns cover:** protection (deflecting melee, ranged or occult attacks) and boosts
   (damage, accuracy, defence). They work for every combat style, and unlock with Religion level.
@@ -350,8 +350,9 @@ the RuneScape prayer each one is based on.
 | 80 | **Penance** / **Contrition** / **Atonement** | Turmoil / Anguish / Torment | melee / ranged / occult: your hits weaken the target and strengthen you |
 | 90 | **Sacrament** | Soul Split | a share of the damage you deal returns as blood |
 
-Exclusions as in RuneScape: one protection at a time, one boost per style (each style's tiers
-and its Turmoil-type hymn exclude each other), and one defence tier.
+**Only one overhead at a time:** Bulwark, Glare, Salt Ward and Sacrament. Everything else can be
+sung together. A higher tier of the same line simply replaces the lower one (Fervour replaces
+Zeal).
 
 ### 4.2 Verses (Cruor)
 Verses take melee beyond the rotation its abilities settle into: they raise its skill ceiling
