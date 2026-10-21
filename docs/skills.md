@@ -543,19 +543,20 @@ The herblore. Not for healing (food does that), apart from one mild tick-heal.
 **Decided (2026-10-21).** Ore, gems, salt and stone. Tool: pickaxe (Smithing); no station. Ore
 rocks deplete on every success (2.3) and come back after their respawn time.
 
-**Ores.** Each tier's ore has one quirk that makes it different to mine, built from mechanics
-that already exist (nodes, tools, flags, the clock, world events, hazards). "Where it tends to
-be" is the kind of place, not a fixed region (2.2).
+**Ores.** Most ores are plain; a few tiers have a quirk that makes them different to mine, built
+from mechanics that already exist (nodes, tools, world events). Quirks are kept to three or four
+per gathering skill so they stay special. "Where it tends to be" is the kind of place, not a
+fixed region (2.2).
 
 | Tier | Ore | Where it tends to be | Its quirk |
 |---|---|---|---|
 | 1 | **Copper** | river cliffs, road cuttings | none: the plain one, to learn on |
 | 2 | **Iron** | hills, quarries | none: the workhorse |
-| 3 | **Hematite** | old Synod quarries, red hills | "the rock bleeds": rust-red streaks. Smelted with charcoal into steel. |
+| 3 | **Hematite** | old Synod quarries, red hills | none (its rust-red streaks are why miners say "the rock bleeds"); smelted with charcoal into steel |
 | 4 | **Bog iron** | fens, marsh pits | not in rock: **dredged from wet pits**, a node that refills over time instead of depleting |
-| 5 | **Cinnabar** | dry red country | **toxic**: mining it slowly poisons you unless you wear gloves for it or drink a ward |
-| 6 | **Glare-silver** | salt flats, white stone | **only there in daylight** (the game clock) |
-| 7 | **Frostiron** | Candora, dwarven halls | some veins need the dwarves' leave (a quest flag) |
+| 5 | **Cinnabar** | dry red country | none |
+| 6 | **Glare-silver** | salt flats, white stone | none |
+| 7 | **Frostiron** | Candora, dwarven halls | none |
 | 8 | **Verdigris** | moonfall craters, which can open anywhere | **appears only after a moonfall** (a world event), then fades |
 | 9 | **Deepglass** | Undermost | **brittle**: a rock can shatter before it's worked out, unless your pickaxe has conservation |
 | 10 | (none) | | tier 10 is old-blood alloy (2.2) |
@@ -584,18 +585,18 @@ and the higher rites ask for the purer salts.
 and Religion (reliquary casings), and charcoal for Smithing. Tool: hatchet (Smithing). Trees
 fall by chance (2.3) and regrow.
 
-**Trees.** One quirk each, as with Mining's ores.
+**Trees.** Mostly plain, with a quirk on a few tiers, as with Mining's ores.
 
 | Tier | Tree | Where it tends to be | Its quirk |
 |---|---|---|---|
 | 1 | **Alder** | Venaria's riverbanks | none |
 | 2 | **Ash** | Venaria's hedgerows and woods | none: the staple (bolt shafts) |
 | 3 | **Elm** | Venaria's old fields and roadsides | **a big shared tree**: many players chop one, and it falls when their total is reached |
-| 4 | **Black poplar** | Slough's fens | **seeds itself**: when felled it regrows somewhere else nearby, so the node moves |
+| 4 | **Black poplar** | Slough's fens | none |
 | 5 | **Sere cedar** | Sere's dry hills | **the AFK tree**: slow attempts, but it almost never falls |
-| 6 | **Tamarisk** | Calcinia's coast | **salt-crusted**: its logs sometimes come with salt |
-| 7 | **Pale pine** | Candora's high forests | **two actions**: chop it for logs, or tap it for resin |
-| 8 | **Moonbark** | the Veilwood's edges, old moonfall scars | **only wakes at night** (the mirror of glare-silver) |
+| 6 | **Tamarisk** | Calcinia's coast | none |
+| 7 | **Pale pine** | Candora's high forests | none (resin is a common extra) |
+| 8 | **Moonbark** | the Veilwood's edges, old moonfall scars | none |
 | 9 | **Mistwood** | the deep Veilwood | chopping **draws the attention** of things in the mist, and they come now and then |
 
 - **Extras:** resin (Medicine), bird nests (feathers now; seeds if Farming ever comes).
