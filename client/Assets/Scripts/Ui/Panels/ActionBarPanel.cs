@@ -83,7 +83,7 @@ namespace Rth.Client.Ui.Panels
 
         /// <summary>
         /// The bile axis between its poles' icons: two half-bars filling outward from a black
-        /// centre that holds the value (up to "+100"), coloured by pole. Marks show where the
+        /// stretch of the bar at its centre that holds the value (up to "+100"), coloured by pole. Marks show where the
         /// passives begin (pale) and where fever and torpor set in (red).
         /// </summary>
         private sealed class BileAxis
@@ -118,7 +118,7 @@ namespace Rth.Client.Ui.Panels
             private static VisualElement Half(VisualElement parent, out VisualElement fill, bool left)
             {
                 VisualElement track = UiKit.El(parent, "bar", left ? "bile-half--left" : "bile-half--right");
-                track.style.height = 10f;
+                track.style.height = 14f;
                 fill = UiKit.El(track, "bar__fill");
                 if (left)
                 {

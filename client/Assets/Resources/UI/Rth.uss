@@ -747,21 +747,22 @@
 }
 
 .bile-value {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
     -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
-    font-size: 13px;
+    font-size: 12px;
     -unity-text-align: middle-center;
     margin: 0;
     padding: 0;
 }
 
-/* The bile axis's centre: black, wide enough for "+100", the value on it. */
+/* The bile axis's centre: a black stretch of the bar itself, wide enough for "+100", the value on it. */
 .bile-centre {
-    height: 16px;
-    justify-content: center;
+    height: 14px;
     background-color: rgb(0, 0, 0);
-    border-width: 1px;
-    border-color: rgb(58, 51, 42);
-    border-radius: 3px;
 }
 
 .bile-half--left {
