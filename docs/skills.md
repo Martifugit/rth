@@ -483,30 +483,40 @@ by a spell.
 ---
 
 ## 5. Butchering
-As built (Milestone 4), extended:
+**Decided (2026-10-21)**, extending what Milestone 4 built. Butchering is the hub: killing things
+is how most materials enter the world, and the carcass is where combat and skilling meet.
 
-- **Six creature families,** each with its own tool and workstation. A family spans many
-  levels: its tool and station come at its start, and stronger creatures of that family ask for
-  more.
+- **Six creature families,** each with its own tool and workstation, and each **most at home in
+  its own part of the world**, following the same regional balance as the gathering skills
+  (2.2). A family spans many levels: its tool and station come at its start, and stronger
+  creatures of the family ask for more. No other quirks: six tools and six stations are variety
+  enough.
 
-| Family | From level | Tool | Station | Example creatures |
+| Family | From level | Tool | Station | Most at home |
 |---|---|---|---|---|
-| Basin wildlife | 1 | skinning knife | skinning rack | fen rats, herons, boars, river wolves |
-| Scalth-touched | 10 | glass flensing hook | lye vat | vitriol mites, cask toads, Scalth wyrms (80) |
-| Occult-made | 30 | bone saw | rendering pot | failed workings, house familiars |
-| War-beasts | 45 | cleaver | flaying frame | Synod destriers, Sere's war-lizards |
-| Moonborn | 60 | moonglass knife | cold cellar | crater crawlers, anima-things |
-| The deep | 75 | **Frostpeak Forge** tools | **the Frostpeak Forge** | Undermost's things |
+| **Wildlife** | 1 | skinning knife | skinning rack | everywhere, Venaria above all |
+| **Scalth-touched** | 10 | glass flensing hook | lye vat | Scalth, and wherever vitriol leaked (Sour Hollow) |
+| **Occult-made** | 30 | bone saw | rendering pot | Slough |
+| **War-beasts** | 45 | cleaver | flaying frame | Sere, Calcinia, Venaria's garrisons |
+| **Moonborn** | 60 | moonglass knife | cold cellar | moonfall craters (events), Candora's high valleys |
+| **The deep** | 75 | Frostpeak Forge tools | Frostpeak Forge | Undermost |
 
+  **The creatures themselves aren't designed yet.** Only what's built is settled (fen rats are
+  wildlife; vitriol mites are Scalth-touched). Every other creature gets designed with its
+  region.
 - **Yields** feed everyone: meat (Cooking), hide and sinew (Tailoring, Artifice), feathers
-  (Artifice), gall, glands, tallow and bile-salt (Occultism, Medicine), remains (Religion's
-  reliquaries), and rarely tools, gear pieces and **old-blood**.
-- **Old-blood:** a rare yield from any family's creatures at level 85 and above, more from the
+  (Artifice), pale wool from mountain wildlife (Tailoring's tier 7–8 cloth), gall, glands,
+  tallow and bile-salt (Occultism, Medicine), and rarely tools and gear pieces.
+- **Remains** come from every family, in tiers: stronger creatures give better remains, which
+  make stronger reliquaries (Religion, 4.4). The remains needed to **raise** certain monuments
+  come from bosses and important creatures directly (their drops or quests), not from
+  carcasses.
+- **Old-blood:** a rare yield from creatures of level 85 and above in any family, more from the
   strongest. Every tier-10 recipe in every skill takes it.
-- **Task-givers** per family: Wenna Thole (wildlife, built), Corvin Sallow (Scalth-touched,
-  built), a Synod quartermaster (war-beasts), a Rationalist in a crater camp (moonborn), Brannoch
-  (the deep). Tasks pay points per family, spent at their shops on tools, gear and yield
-  boosts.
+- **Task-givers,** one per family, paying points per family to spend at their shops on tools,
+  gear and yield boosts: Wenna Thole (wildlife) and Corvin Sallow (Scalth-touched) are built;
+  Brannoch takes the deep. The other three (a Synod quartermaster, a Concordian at a crater
+  camp, someone in Slough) get designed with their regions.
 - **Stockpiling:** carcasses are unstackable but can be noted, and any butchering station takes
   notes, so a long session needs one bank trip.
 - **Trained by** butchering carcasses (main) and task completions.
