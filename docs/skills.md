@@ -90,13 +90,34 @@ and the carcass is where combat and skilling meet.
 Every making and gathering skill climbs **the same ten tiers**, one per ten levels, so a tier-5
 pickaxe, tier-5 ore, tier-5 bar and tier-5 sword all ask for level 40.
 
-**Tiers are not tied to regions.** Each region holds its own mix of tiers across skills: a
-region may have tier-1 trees beside tier-7 ore, and a tier-3 fishing spot in the same place as
-a tier-9 herb patch. That keeps every region worth visiting at every point in a player's
-progress, instead of each new region making the last one obsolete. What a region holds comes
-from its character (rock country has ore, the fens have herbs and fish), not from where it
-sits in the build order. A material's name can say where it's from (sere cedar, Saltmarch
-brine) without that being the only place it grows.
+**Tiers are not tied to the build order.** A region's resources come from its **biome**:
+mountains are good for ore, forests for trees, coasts for fish. So each region is great for one
+or two skills and ordinary for the rest, and the important resources end up spread across the
+world because each belongs to a different kind of place. No new region makes an old one
+obsolete, because the old one is still the best place for something.
+
+- **Abundant at home, sparse elsewhere.** A resource is abundant where its biome is strongest.
+  Lower-level resources also turn up **in small numbers** in other regions where they make sense
+  (a few iron rocks in a river valley, a stand of ash on a mountain's lower slopes), so a player
+  is rarely far from something to gather.
+- **Each skill's best tiers sit in a different region** from the other skills' best tiers, so no
+  region is the endgame region.
+- A material's name can say where it's most at home (sere cedar, glare salt) without that being
+  the only place it grows.
+
+**Where each region is strongest** (region names are provisional and being replaced):
+
+| Region | Biome | Great for (its high tiers) | Decent for |
+|---|---|---|---|
+| **The Keeping** (Tolling, Cruor, the heartland) | green river country | Woodcutting low to mid (alder, ash, elm), Foraging (herbs, flax) | Fishing low to mid, Mining low |
+| **The Wrack** | fens, broken coast, sea caves | **Foraging top** (deep fen herbs), Fishing mid (lamprey) | bog iron, black poplar |
+| **Sere** | dry hills, wells | Mining mid (cinnabar), Fishing mid (cistern carp) | sere cedar, sere salt |
+| **The Saltmarch** | salt coast and flats | salt, Mining (glare-silver), Fishing (glarefish) | tamarisk |
+| **The Pale** (surface) | mountains, high forests | **Mining high** (frostiron), Woodcutting high (pale pine) | ice char |
+| **The Veilwood** | the mist forest | **Woodcutting top**, Dreaming | moonbark |
+| **The Cradle's shores** | the bay | **Fishing top** | |
+| **The Undermost** | the depths | **Mining top** (deepglass) | |
+| **Craters** (anywhere, as events) | moonfall | verdigris, lightfin (both temporary) | |
 
 | Tier | Level | Metal | Wood | Fish | Herb | Fibre |
 |---|---|---|---|---|---|---|
@@ -108,7 +129,7 @@ brine) without that being the only place it grows.
 | 6 | 50 | glare-silver | tamarisk | glarefish | saltwort | silkweed |
 | 7 | 60 | frostiron | pale pine | ice char | frostcap | pale wool |
 | 8 | 70 | verdigris (moon-touched) | moonbark | lightfin | moonmoss | pale wool |
-| 9 | 80 | deepglass | stalkwood | blind cavefish | deepbloom | threadmoss |
+| 9 | 80 | deepglass | mistwood | (a fish of the Cradle) | deepbloom | threadmoss |
 | 10 | 90 | old-blood alloy | (old-blood) | (old-blood) | (old-blood) | (old-blood) |
 
 - Tier 10 isn't gathered. Its recipes take **old-blood** (Butchering's top yield, section 5) on
@@ -116,15 +137,10 @@ brine) without that being the only place it grows.
 - Gear stats grow by tier from one formula (a tier-N item gets the tier's base value times the
   slot's share), so a new item needs only a tier and a slot in data. The formula is a combat
   tuning task, not a per-item one.
-- Danger and rarity go together, not tier and region: the best spot for a tier tends to be in
-  a dangerous place (the Scald, crater edges, the Undermost, the bay), and a safer spot for the
-  same tier exists somewhere else.
+- Danger and rarity go together: within a region, the richest spots tend to be its dangerous
+  places, and safer, sparser ones exist too.
 - When a region is designed, its nodes are checked against the ladder so that, across the
   regions built so far, every tier of every gathering skill exists somewhere.
-- **No region is the endgame region.** High-level content is spread, not stacked: each
-  resource of tier 7 and above should exist in at least three regions of different kinds, and
-  no region should hold the top tier of more than two skills. The Undermost, the craters and the
-  Pale have their own high-level things, but none of them holds all of it.
 
 ### 2.3 Gathering nodes
 One mechanism for ore, trees, fishing spots, herb patches and dream orbs (data on the object):
@@ -539,9 +555,9 @@ be" is the kind of place, not a fixed region (2.2).
 | 4 | **Bog iron** | fens, marsh pits | not in rock: **dredged from wet pits**, a node that refills over time instead of depleting |
 | 5 | **Cinnabar** | dry red country | **toxic**: mining it slowly poisons you unless you wear gloves for it or drink a ward |
 | 6 | **Glare-silver** | salt flats, white stone | **only there in daylight** (the game clock) |
-| 7 | **Frostiron** | high cold places, dwarven halls, frozen northern coasts | some veins need the dwarves' leave (a quest flag) |
+| 7 | **Frostiron** | the Pale, dwarven halls | some veins need the dwarves' leave (a quest flag) |
 | 8 | **Verdigris** | moonfall craters, which can open anywhere | **appears only after a moonfall** (a world event), then fades |
-| 9 | **Deepglass** | burnt ground (the Scald), deep caves, sinkholes | **brittle**: a rock can shatter before it's worked out, unless your pickaxe has conservation |
+| 9 | **Deepglass** | the Undermost | **brittle**: a rock can shatter before it's worked out, unless your pickaxe has conservation |
 | 10 | (none) | | tier 10 is old-blood alloy (2.2) |
 
 **Gems** are a rare extra from any rock, and the one place Mining touches the humours: each gem
@@ -572,15 +588,15 @@ fall by chance (2.3) and regrow.
 
 | Tier | Tree | Where it tends to be | Its quirk |
 |---|---|---|---|
-| 1 | **Alder** | riverbanks | none |
-| 2 | **Ash** | hedgerows, woods | none: the staple (bolt shafts) |
-| 3 | **Elm** | old fields, roadsides | **a big shared tree**: many players chop one, and it falls when their total is reached |
-| 4 | **Black poplar** | fens, wet ground | **seeds itself**: when felled it regrows somewhere else nearby, so the node moves |
-| 5 | **Sere cedar** | dry hills | **the AFK tree**: slow attempts, but it almost never falls |
-| 6 | **Tamarisk** | salt coasts | **salt-crusted**: its logs sometimes come with salt |
-| 7 | **Pale pine** | high slopes, cold northern woods | **two actions**: chop it for logs, or tap it for resin |
-| 8 | **Moonbark** | crater edges, old moonfall scars, places the moon's light lingers | **only wakes at night** (the mirror of glare-silver) |
-| 9 | **Stalkwood** | deep caves, sinkholes, sea caves | giant fungus stalks; chopping **draws attention**, and creatures come now and then |
+| 1 | **Alder** | the Keeping's riverbanks | none |
+| 2 | **Ash** | the Keeping's hedgerows and woods | none: the staple (bolt shafts) |
+| 3 | **Elm** | the Keeping's old fields and roadsides | **a big shared tree**: many players chop one, and it falls when their total is reached |
+| 4 | **Black poplar** | the Wrack's fens | **seeds itself**: when felled it regrows somewhere else nearby, so the node moves |
+| 5 | **Sere cedar** | Sere's dry hills | **the AFK tree**: slow attempts, but it almost never falls |
+| 6 | **Tamarisk** | the Saltmarch's coast | **salt-crusted**: its logs sometimes come with salt |
+| 7 | **Pale pine** | the Pale's high forests | **two actions**: chop it for logs, or tap it for resin |
+| 8 | **Moonbark** | the Veilwood's edges, old moonfall scars | **only wakes at night** (the mirror of glare-silver) |
+| 9 | **Mistwood** | the deep Veilwood | chopping **draws the attention** of things in the mist, and they come now and then |
 
 - **Extras:** resin (Medicine), bird nests (feathers now; seeds if Farming ever comes).
 - **Charcoal:** burn logs at a kiln. Better logs give more charcoal per log. Steel and the higher
