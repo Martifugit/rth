@@ -366,5 +366,53 @@
         "message": "BORE NINE. AUTHORISED SURVEYORS ONLY. Under it, in chalk, in a dwarf's square letters: you are too deep."
       }
     ]
+  },
+  {
+    "id": "ladder_up",
+    "name": "Ladder",
+    "examine": "Rungs worn smooth in the middle. It goes up.",
+    "actions": [ { "id": "climb", "label": "Climb up" } ]
+  },
+  {
+    "id": "ladder_down",
+    "name": "Ladder",
+    "examine": "Rungs worn smooth in the middle. It goes down.",
+    "actions": [ { "id": "climb", "label": "Climb down" } ]
+  },
+  {
+    "id": "stairs_up",
+    "name": "Stairs",
+    "examine": "A stair, going up.",
+    "actions": [ { "id": "climb", "label": "Go up" } ]
+  },
+  {
+    "id": "stairs_down",
+    "name": "Stairs",
+    "examine": "A stair, going down.",
+    "actions": [ { "id": "climb", "label": "Go down" } ]
+  },
+  {
+    "id": "trapdoor_down",
+    "name": "Trapdoor",
+    "examine": "A trapdoor with an iron ring. There are steps below.",
+    "actions": [ { "id": "climb", "label": "Climb down" } ]
+  },
+  {
+    "id": "trapdoor_up",
+    "name": "Trapdoor",
+    "examine": "The underside of a trapdoor, and a ladder up to it.",
+    "actions": [ { "id": "climb", "label": "Climb up" } ]
+  },
+  {
+    "id": "cave_mouth",
+    "name": "Cave mouth",
+    "examine": "A dark opening in the rock. Cold air breathes out of it.",
+    "actions": [ { "id": "climb", "label": "Enter" } ]
+  },
+  {
+    "id": "cave_exit",
+    "name": "Cave exit",
+    "examine": "Daylight, a long way up the passage.",
+    "actions": [ { "id": "climb", "label": "Leave" } ]
   }
 ]

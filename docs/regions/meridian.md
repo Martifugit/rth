@@ -1,5 +1,9 @@
 # Meridian
 
+> **Superseded layout:** the first blockout below was too crowded, closed and empty. The next
+> pass follows [meridian-redesign.md](meridian-redesign.md); the mood and asset notes here still
+> stand.
+
 The capital of Concordia, the Rationalists, "where the range comes down to the sea"
 (`docs/world-map.md`). Concordia calls itself an agreement, not a nation, and its city is built
 like one: a grid, straight streets, everything measured, no wall. Its neutrality is its wall, and

@@ -27,7 +27,7 @@ namespace Rth.Client
             // Scatter piles a little within the tile so several items on one tile stay visible.
             float jx = ((added.Id * 37) % 7 - 3) * 0.06f;
             float jz = ((added.Id * 53) % 7 - 3) * 0.06f;
-            go.transform.position = TileMath.Center(added.Position) + new Vector3(jx, 0.12f, jz);
+            go.transform.position = GroundHeight.Centre(added.Position, added.Plane) + new Vector3(jx, 0.12f, jz);
             go.transform.localScale = new Vector3(0.3f, 0.24f, 0.3f);
             go.transform.rotation = Quaternion.Euler(0f, added.Id * 41 % 90, 0f);
 

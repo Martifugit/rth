@@ -26,6 +26,9 @@ namespace Rth.Client
         private EntityBody _body;
         private Quaternion _facing = Quaternion.identity;
         private float _deathTime = -1f;
+        private float _lastY;
+        private bool _grounded = true;
+        private float _nextGroundCheck;
 
         public int Id { get; private set; }
         public EntityKind Kind { get; private set; }
@@ -33,6 +36,8 @@ namespace Rth.Client
         public string TypeId { get; private set; } = "";
         public string DisplayName { get; private set; }
         public TileCoord Tile { get; private set; }
+        /// <summary>The floor it stands on: 0 is the ground, 1 the floor above (see MapLevel).</summary>
+        public int Plane { get; private set; }
         /// <summary>Top of the model, for labels and health bars.</summary>
         public float Height => _body != null ? _body.Height : 1.8f;
         public int HealthPercent { get; set; } = 100;
@@ -53,6 +58,7 @@ namespace Rth.Client
             view.HealthPercent = added.HealthPercent;
             view._tickSeconds = tickSeconds;
             view.BuildBody(added, color);
+            view.Plane = added.Plane;
             view.Teleport(added.Position);
             return view;
         }
@@ -79,7 +85,9 @@ namespace Rth.Client
             _pending.Clear();
             _moving = false;
             Tile = tile;
-            transform.position = TileMath.Center(tile);
+            _grounded = GroundHeight.TryCentre(tile, Plane, out Vector3 centre);
+            transform.position = centre;
+            _lastY = centre.y;
             transform.rotation = _facing;
         }
 
@@ -88,7 +96,11 @@ namespace Rth.Client
             _stepsPerTick = running ? 2 : 1;
             foreach (TileCoord step in steps)
             {
-                _pending.Enqueue(TileMath.Center(step));
+                // Each step stands on the ground just under the last one, so hills and stairs are
+                // followed and a roof or the floor above is never mistaken for the ground.
+                Vector3 centre = GroundHeight.Centre(step, Plane, _lastY);
+                _lastY = centre.y;
+                _pending.Enqueue(centre);
                 Tile = step;
             }
         }
@@ -125,6 +137,18 @@ namespace Rth.Client
             {
                 _body.Animate(0f, false, Time.deltaTime);
                 return;
+            }
+
+            // Placed before its region's ground had streamed in: settle onto it once it has.
+            if (!_grounded && !_moving && _pending.Count == 0 && Time.time >= _nextGroundCheck)
+            {
+                _nextGroundCheck = Time.time + 0.5f;
+                if (GroundHeight.TryCentre(Tile, Plane, out Vector3 found))
+                {
+                    _grounded = true;
+                    transform.position = found;
+                    _lastY = found.y;
+                }
             }
 
             Vector3 before = transform.position;

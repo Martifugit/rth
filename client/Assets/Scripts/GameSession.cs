@@ -476,6 +476,8 @@ namespace Rth.Client
             GroundItemView item = null;
             Rth.MapTools.MapObject mapObject = null;
             Vector3? ground = null;
+            // Only what is on the player's own floor can be clicked: the room below or the roof above is not there.
+            int floor = world.Local != null ? world.Local.Plane : 0;
             foreach (RaycastHit h in hits)
             {
                 EntityView e = h.collider.GetComponentInParent<EntityView>();
@@ -490,6 +492,7 @@ namespace Rth.Client
                     if (item == null) item = g;
                     continue;
                 }
+                if (Rth.MapTools.MapLevel.Of(h.collider) != floor) continue;
                 Rth.MapTools.MapObject o = h.collider.GetComponentInParent<Rth.MapTools.MapObject>();
                 if (o != null)
                 {
@@ -523,9 +526,9 @@ namespace Rth.Client
                 foreach (ActionDef action in objectDef.Actions)
                 {
                     string actionId = action.Id;
-                    options.Add((action.Label + " " + objectDef.Name, () => ObjectAction(type, tile, actionId)));
+                    options.Add((action.Label + " " + objectDef.Name, () => ObjectAction(type, tile, actionId, floor)));
                 }
-                options.Add(("Examine " + objectDef.Name, () => ObjectAction(type, tile, "examine")));
+                options.Add(("Examine " + objectDef.Name, () => ObjectAction(type, tile, "examine", floor)));
             }
             TileCoord? itemTile = item != null ? item.Tile : ground.HasValue ? TileMath.FromWorld(ground.Value) : (TileCoord?)null;
             if (itemTile.HasValue)
@@ -647,10 +650,10 @@ namespace Rth.Client
         }
 
         /// <summary>Uses an action on a world object (walk beside it, then e.g. butcher).</summary>
-        public void ObjectAction(string objectType, TileCoord tile, string actionId)
+        public void ObjectAction(string objectType, TileCoord tile, string actionId, int plane = 0)
         {
             if (_state != State.InGame) return;
-            _client.Send(new ObjectActionMessage { ObjectType = objectType, Plane = 0, X = tile.X, Y = tile.Y, ActionId = actionId });
+            _client.Send(new ObjectActionMessage { ObjectType = objectType, Plane = plane, X = tile.X, Y = tile.Y, ActionId = actionId });
             if (actionId != "examine") ShowClickMarker(tile, new Color(0.9f, 0.15f, 0.1f));
         }
 
@@ -770,7 +773,7 @@ namespace Rth.Client
             var block = new MaterialPropertyBlock();
             block.SetColor(BaseColor, color);
             _clickMarker.GetComponent<Renderer>().SetPropertyBlock(block);
-            _clickMarker.position = TileMath.Center(tile) + Vector3.up * 0.03f;
+            _clickMarker.position = GroundHeight.Centre(tile, world.Local != null ? world.Local.Plane : 0) + Vector3.up * 0.03f;
             _clickMarker.gameObject.SetActive(true);
             _clickMarkerHideTime = Time.unscaledTime + 0.6f;
         }

@@ -13,6 +13,7 @@ namespace Rth.MapTools.Editor
     public static class CollisionPreview
     {
         private const string PrefKey = "Rth.CollisionPreview";
+        private const string LevelKey = "Rth.CollisionPreviewLevel";
         // One per region (keyed by origin), so a whole world opened side by side previews in full.
         private static readonly System.Collections.Generic.Dictionary<(int, int), (MapData Map, int Plane)> _maps =
             new System.Collections.Generic.Dictionary<(int, int), (MapData, int)>();
@@ -42,6 +43,21 @@ namespace Rth.MapTools.Editor
             return true;
         }
 
+        /// <summary>The floor the preview draws (cycle it with the menu); a region with fewer floors shows its top one.</summary>
+        private static int Level
+        {
+            get => EditorPrefs.GetInt(LevelKey, 0);
+            set => EditorPrefs.SetInt(LevelKey, value);
+        }
+
+        [MenuItem("R'th/Show Next Collision Level", priority = 3)]
+        private static void NextLevel()
+        {
+            Level = (Level + 1) % (MapLevel.MaxLevel + 1);
+            Debug.Log("[R'th] Collision preview shows level " + Level + ".");
+            SceneView.RepaintAll();
+        }
+
         public static void Show(MapData map, int plane)
         {
             _maps[(map.OriginX, map.OriginY)] = (map, plane);
@@ -51,7 +67,8 @@ namespace Rth.MapTools.Editor
         private static void Draw(SceneView view)
         {
             if (!Enabled || Event.current.type != EventType.Repaint) return;
-            foreach ((MapData map, int plane) in _maps.Values) Draw(map, plane);
+            // The chosen level, or the region's own plane when that is the higher one.
+            foreach ((MapData map, int plane) in _maps.Values) Draw(map, Mathf.Min(Mathf.Max(plane, Level), map.Planes - 1));
         }
 
         private static void Draw(MapData map, int plane)

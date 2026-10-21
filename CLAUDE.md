@@ -87,6 +87,7 @@ Correct for drift so ticks stay on a 600 ms grid. Allow a faster tick rate in te
 
 - Tile grid, click-to-move, server-side pathfinding. Walking is 1 tile per tick, running 2.
 - Each client only receives entities within a view radius ("interest management").
+- **Height and floors (decided):** the server is flat; the client draws height by casting down onto the ground colliders of the entity's floor. A floor above the ground is a plane (`MapLevel`, up to 4), with its own collision, and stairs and ladders move you between planes (`ClimbSystem`). `Assets/Scenes/LevelTest.unity` (`::tele leveltest`, **R'th > Dev > Rebuild Level Test Scene**) is the worked example.
 - **Map pipeline:** the map is designed in Unity scenes. A `/tools` exporter writes tile data
   (walkability, wall edges, object footprints, plane/level) to a file the server loads. The
   client renders the scene and the server reads the export. Keep them in sync through this one
@@ -379,7 +380,7 @@ node system with tools, ranged, an art pass on Tolling, more quests and achievem
 and saving. Everything else is a `GameSystem` listed in `World.StandardSystems` (order matters:
 systems run in that order within each phase, and a system may use those before it while
 attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `DeathSystem`,
-`NpcSystem`, `GroundItemSystem`, `LootSystem`, `ObjectSystem`, `ReligionSystem`, `RecipeSystem`, `GatheringSystem`, `InterfaceSystem`,
+`NpcSystem`, `GroundItemSystem`, `LootSystem`, `ObjectSystem`, `ClimbSystem`, `ReligionSystem`, `RecipeSystem`, `GatheringSystem`, `InterfaceSystem`,
 `DialogueSystem`, `BankSystem`, `ShopSystem`, `PointsSystem`, `TaskSystem`, `QuestSystem`.
 
 | To add... | Use |
@@ -418,6 +419,9 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | An ability cost | `reagents` on the ability (items), checked by the shared requirement rule and consumed on use. Occult abilities use none: phlegm and bile only. |
 | A status (buff or debuff icon) | An entry in statuses.json (name, icon, `{value}` text, `debuff`); a system implementing `IStatusSource` lists who has it each tick. Timed ability effects show as the status named after their `EffectType`. |
 | A new kind of map placement | A marker component in tools/unity-map-tools, an export file in `MapExporter`, a field on `MapPlacements` (merged across regions by `WorldLoader`). |
+| Ground that is not flat (a hill, a stair, a terrace) | Ground colliders at the real height: the client snaps characters, items and markers to them (`GroundHeight`); the server stays flat. The exporter ignores height, so every cliff edge needs a `MapWall` (or the tiles beyond a `MapBlocker`); a ramp climbs at most 1 m in 3 tiles, anything steeper is a stair. See `LevelTestBuilder`. |
+| A floor above the ground (upper storey, gallery, footbridge, tower room) | A `MapLevel` (1-3) on a group holding that floor's slab (ground collider), walls (`MapWall`), blockers, objects and spawns: the exporter writes one plane per level. `hiddenFromBelow` (default) switches the group off while the player is on a lower floor; turn it off for what must always show from outside (outer walls, an open-air deck). Planes are separate collision, and people only see people on their own plane. There is no plane below the ground: cellars, caves and dungeons are separate small regions (instanced, 1024 tiles north of the surface place) entered by a `climb` object whose landing is in that region (`trapdoor_down`/`trapdoor_up`, `cave_mouth`/`cave_exit`, or the stairs and ladders). |
+| Stairs, ladders, trapdoors | An object with a `climb` action (`stairs_up`/`stairs_down`/`ladder_up`/`ladder_down` exist) placed with `MapObject` + a collider, and its `climbTo` set to an empty object on the landing tile under the target floor's `MapLevel`. One object per end. The exporter warns about a blocked landing; `ClimbSystem` moves the player. |
 | A new region of the world | A scene with a `MapArea` at its absolute, zone-aligned rectangle (a builder using `WorldKit.BeginRegion`/`SaveRegion`); export it. No server code. |
 | A city or town blockout | A builder using `WorldKit.City.cs` (buildings with roofs, walk-in halls with doors, city walls, towers, gatehouse arches, bridges, statues, braziers, banners, stalls, boats, domes, colonnades, shade sails, windcatchers, water wheels, armillaries, rails, the Quaere's silhouette; `CutGround` for a pit); see `CruorBuilder`, `TitheBuilder`, `CisternBuilder`, `MeridianBuilder` and `docs/regions/`. |
 | A stand-in for an asset still to be made | `WorldKit.Asset(go, "region/id", note)` adds a `BlockoutAsset`; saving the region writes `docs/regions/<region>-assets.md` (count, size, notes). |
