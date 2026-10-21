@@ -129,7 +129,7 @@ obsolete, because the old one is still the best place for something.
 | 6 | 50 | glare-silver | tamarisk | mullet | saltwort | silkweed |
 | 7 | 60 | frostiron | pale pine | ice char | frostcap | pale wool |
 | 8 | 70 | verdigris (moon-touched) | moonbark | lightfin | moonmoss | pale wool |
-| 9 | 80 | deepglass | mistwood | hushfin | deepbloom | threadmoss |
+| 9 | 80 | deepglass | mistwood | hushfin | hellebore | threadmoss |
 | 10 | 90 | old-blood alloy | (old-blood) | (old-blood) | (old-blood) | (old-blood) |
 
 - Tier 10 isn't gathered. Its recipes take **old-blood** (Butchering's top yield, section 5) on
@@ -633,11 +633,40 @@ fish can be caught, which makes the shore a place people gather.
 - **Trained by** fishing.
 
 ### Foraging
-- Herb patches, fibre beds (reed, flax, silkweed), fungi rings and fruit bushes along roads,
-  in fens and in woods, so the sparse regions between places have something to stop for.
-- A patch gives several picks, then regrows. Tool: a sickle (Smithing), which only speeds it up.
-- Gives herbs (Medicine), fibre (Tailoring), fruit (Cooking: small heals, pies), fen honey, and
-  the saltfig trees of Sere.
+**Decided (2026-10-21).** Herbs for Medicine, fibres for Tailoring, food for Cooking. Foraging is
+what fills the roadsides and the sparse land between places, so it is **the most widespread
+resource in the game**: every herb is common in two kinds of place and turns up sparsely in more.
+
+- **Patches** give several picks, then regrow. They are shared nodes (2.3). A sickle (Smithing)
+  only speeds picking up. Herbs come out **grimy**; Medicine cleans them.
+- **Rare extras:** seeds, kept for Farming if it ever comes.
+
+**Herbs** (Medicine):
+
+| Tier | Herb | Common in | Sparse in |
+|---|---|---|---|
+| 1 | **Yarrow** | Venaria, Sere | almost everywhere |
+| 2 | **Rue** | Venaria, Calcinia | most lowland regions |
+| 3 | **Feverfew** | Venaria, Slough's edges | Sere |
+| 4 | **Bog myrtle** | Slough, Wennow's shores | wet ground anywhere |
+| 5 | **Sere sage** | Sere, Candora's foothills | Calcinia |
+| 6 | **Saltwort** | Calcinia, Slough's coast | any salt shore |
+| 7 | **Frostcap** (a fungus) | Candora, Nivil's edge | the Veilwood |
+| 8 | **Moonmoss** | the Veilwood's edges, old moonfall scars | Candora's high valleys |
+| 9 | **Hellebore** | Slough's deep fens, Scalth's margins | the Veilwood's bogs |
+
+Hellebore is the real plant humoral medicine used to purge black bile. Its one quirk: it doesn't
+grow in patches, but as **single plants scattered through dangerous ground**, each picked once and
+then regrowing somewhere else nearby. The top herb means roaming, not standing at one patch.
+
+**Fibres** (Tailoring), two homes each: **reed** (Venaria, Slough; low), **flax** (Venaria, Sere;
+low to mid), **silkweed** (Sere, Calcinia; mid), **threadmoss** (Slough, the Veilwood; top). The
+tier 7–8 fibre, **pale wool**, comes from Butchering (mountain goats), not Foraging.
+
+**Food and other:** berries, mushrooms and saltfigs (Sere) for Cooking, and fen honey from wild
+hives (a smoker lets you take it).
+
+**Trained by** picking.
 
 ### Dreaming
 The skill closest to the story: it pulls fragments out of memory orbs in the Veilwood, the
