@@ -96,11 +96,22 @@ namespace Rth.Client
             _usingFade = fade;
         }
 
+        /// <summary>
+        /// The cache outlives a Play session (domain reload on Play is off) but its copies don't:
+        /// Unity destroys them on leaving Play mode, and a destroyed material draws pink.
+        /// </summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            FadeCopies.Clear();
+            All.Clear();
+        }
+
         /// <summary>A transparent twin of a URP Lit material, made once and shared.</summary>
         private static Material FadeCopyOf(Material source)
         {
             if (source == null) return null;
-            if (FadeCopies.TryGetValue(source, out Material copy)) return copy;
+            if (FadeCopies.TryGetValue(source, out Material copy) && copy != null) return copy; // != null: not destroyed
             copy = new Material(source) { name = source.name + " (fade)" };
             copy.SetFloat("_Surface", 1f);
             copy.SetFloat("_Blend", 0f);

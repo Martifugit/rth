@@ -68,17 +68,20 @@ namespace Rth.Client.Editor
             WorldKit.Patch("Floor", nave, NaveX, NaveY, NaveX + NaveW, NaveY + NaveL, floor);
             // A flagstone aisle up the middle, the way Believer's projectiles come.
             WorldKit.Patch("Aisle", nave, NaveX + 7, NaveY, NaveX + 11, NaveY + DaisFrom, flag, 0.006f);
-            WorldKit.Wall(nave, "Wall W", NaveX, NaveY, NaveX, NaveY + NaveL, wall, 3f, 0.4f);
-            WorldKit.Wall(nave, "Wall E", NaveX + NaveW, NaveY, NaveX + NaveW, NaveY + NaveL, wall, 3f, 0.4f);
-            WorldKit.Wall(nave, "Wall N", NaveX, NaveY + NaveL, NaveX + NaveW, NaveY + NaveL, wall, 3f, 0.4f);
-            WorldKit.Wall(nave, "Wall S", NaveX, NaveY, NaveX + NaveW, NaveY, wall, 3f, 0.4f, NaveX + 8, NaveX + 9); // the stair
-            WorldKit.Fades(nave, 0.3f);
+            // Each wall fades on its own when it's between the camera and you; the floor never does.
+            Transform west = WorldKit.Group(nave, "Wall W"), east = WorldKit.Group(nave, "Wall E");
+            Transform north = WorldKit.Group(nave, "Wall N"), south = WorldKit.Group(nave, "Wall S");
+            WorldKit.Wall(west, "Wall W", NaveX, NaveY, NaveX, NaveY + NaveL, wall, 3f, 0.4f);
+            WorldKit.Wall(east, "Wall E", NaveX + NaveW, NaveY, NaveX + NaveW, NaveY + NaveL, wall, 3f, 0.4f);
+            WorldKit.Wall(north, "Wall N", NaveX, NaveY + NaveL, NaveX + NaveW, NaveY + NaveL, wall, 3f, 0.4f);
+            WorldKit.Wall(south, "Wall S", NaveX, NaveY, NaveX + NaveW, NaveY, wall, 3f, 0.4f, NaveX + 8, NaveX + 9); // the stair
             // Half-columns along the side walls, every four tiles: no collision, just rhythm.
             for (int y = 2; y < NaveL; y += 4)
             {
-                WorldKit.Box("Column", nave, new Vector3(NaveX + 0.15f, 1.5f, NaveY + y), new Vector3(0.5f, 3f, 0.5f), wall, collider: false);
-                WorldKit.Box("Column", nave, new Vector3(NaveX + NaveW - 0.15f, 1.5f, NaveY + y), new Vector3(0.5f, 3f, 0.5f), wall, collider: false);
+                WorldKit.Box("Column", west, new Vector3(NaveX + 0.15f, 1.5f, NaveY + y), new Vector3(0.5f, 3f, 0.5f), wall, collider: false);
+                WorldKit.Box("Column", east, new Vector3(NaveX + NaveW - 0.15f, 1.5f, NaveY + y), new Vector3(0.5f, 3f, 0.5f), wall, collider: false);
             }
+            foreach (Transform w in new[] { west, east, north, south }) WorldKit.Fades(w, 0.3f);
 
             // ---------------------------------------------------------- the stair out
             Transform stairGroup = WorldKit.Group(map, "Stair");
