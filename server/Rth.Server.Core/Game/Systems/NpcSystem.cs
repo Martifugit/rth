@@ -179,7 +179,7 @@ namespace Rth.Server.Game
         {
             World.AddAction(new ActionEvent { SourceId = npc.Id, TargetId = target.Id, AbilityId = "npc:" + npc.Def.Id, Pole = 0 });
             if (World.Random.NextDouble() < npc.Def.Accuracy)
-                Combat.Damage(target, World.Random.Next(0, npc.Def.MaxHit + 1), npc, HitKind.Normal, npc.Def.Style);
+                Combat.Damage(target, World.Random.Next(npc.Def.LeastHit, npc.Def.MaxHit + 1), npc, HitKind.Normal, npc.Def.Style);
             else
                 Combat.Damage(target, 0, npc, HitKind.Miss, npc.Def.Style);
         }

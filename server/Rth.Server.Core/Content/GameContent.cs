@@ -26,6 +26,10 @@ namespace Rth.Server.Content
         public int AttackRange = 1;
         public int AttackTicks = 4;
         public int MaxHit = 10;
+        /// <summary>The least a hit that lands can do; below 0 means a quarter of <see cref="MaxHit"/>, so blows aren't specks.</summary>
+        public int MinHit = -1;
+
+        public int LeastHit => MinHit >= 0 ? Math.Min(MinHit, MaxHit) : MaxHit / 4;
         /// <summary>Chance its attacks land.</summary>
         public double Accuracy = 0.7;
         /// <summary>Taken off the attacker's accuracy.</summary>
