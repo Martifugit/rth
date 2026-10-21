@@ -367,7 +367,9 @@ Not yet: weapon models in the hand, one- and two-handed kinds, shields and dual 
 raising monuments and reliquaries, tools for gathering (with Mining), final ability names.
 
 **World building (in progress):** the capitals blocked out as regions, one builder each, with an
-asset list for the art pass. All four capitals are done: Cruor, Tithe, Cistern and Meridian (`docs/regions/`).
+asset list for the art pass. All four capitals are done: Cruor, Tithe, Cistern and Meridian (`docs/regions/`). Meridian is being
+rebuilt to `docs/regions/meridian-redesign.md`: phase 1 (terraces and routes) and phase 2 (every building
+enterable, upper floors included) are built; interiors and objects, then people and data, are next.
 
 **Next: not chosen yet.** Candidates: the first gathering skills (mining, woodcutting) on the
 node system with tools, ranged, an art pass on Tolling, more quests and achievements.
@@ -425,6 +427,7 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | Stairs, ladders, trapdoors | An object with a `climb` action (`stairs_up`/`stairs_down`/`ladder_up`/`ladder_down` exist) placed with `MapObject` + a collider, and its `climbTo` set to an empty object on the landing tile under the target floor's `MapLevel`. One object per end. The exporter warns about a blocked landing; `ClimbSystem` moves the player. |
 | A new region of the world | A scene with a `MapArea` at its absolute, zone-aligned rectangle (a builder using `WorldKit.BeginRegion`/`SaveRegion`); export it. No server code. |
 | A city or town blockout | A builder using `WorldKit.City.cs` (buildings with roofs, walk-in halls with doors, city walls, towers, gatehouse arches, bridges, statues, braziers, banners, stalls, boats, domes, colonnades, shade sails, windcatchers, water wheels, armillaries, rails, the Quaere's silhouette; `CutGround` for a pit); see `CruorBuilder`, `TitheBuilder`, `CisternBuilder`, `MeridianBuilder` and `docs/regions/`. |
+| A building you walk into (on any terrace, with upper floors) | `WorldKit.Enterable` (`WorldKit.Interiors.cs`) returns a `Shell`: doors, a `MapLevel` per upper floor (outer walls always drawn, slab only from above, or a railed gallery), a roof that hides inside. `Shell.Stairs`/`Ladder` join floors with their landings set; `Table`, `Counter`, `Shelves`, `Hearth`, `Bed`, `Thing`, `Object` furnish any floor. `Pavilion` for open halls on posts (optionally a deck), `RowHouse` for a house repeated down a street, `CheckBuildings` for the three-tile gap and 25% rules. See `MeridianBuilder.Buildings.cs`. |
 | A stand-in for an asset still to be made | `WorldKit.Asset(go, "region/id", note)` adds a `BlockoutAsset`; saving the region writes `docs/regions/<region>-assets.md` (count, size, notes). |
 | A region's own light (sun colour and strength, ambient, fog) | `ownAtmosphere` and its fields on the `MapArea`; exported to `.region.json`, blended in by `RegionAtmosphereView`. |
 | Something per region (music, rules, title) | A field on `WorldRegion`, written to `<name>.region.json` by `MapExporter`; it reaches clients in `RegionsMessage` as JSON. |

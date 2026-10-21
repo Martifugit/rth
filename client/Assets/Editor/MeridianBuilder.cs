@@ -14,13 +14,14 @@ namespace Rth.Client.Editor
     /// with the Forum Terrace (+14) on the north-east promontory and the Pass Road going east. The
     /// brass meridian runs straight up the middle of all of it towards the Orrery.
     ///
-    /// This is phase 1 of the redesign: the ground and the routes, no buildings yet. Every tier
-    /// has two ways up or more, and every route is a loop: the Harbour Stair, Line Street's stair,
-    /// the Arcade Stair, the Span Head stair and the Crag stair; the East Ramp, the pine slope and
-    /// the Ore Road's three switchbacks; the low bridge, the Span and the harbour bridge over the
-    /// Cut. The ground is a <see cref="Terraces"/> map, which puts a MapWall on every drop.
+    /// Phase 1 of the redesign is the ground and the routes (this file). Every tier has two ways up
+    /// or more, and every route is a loop: the Harbour Stair, Line Street's stair, the Arcade
+    /// Stair, the Span Head stair and the Crag stair; the East Ramp, the pine slope and the Ore
+    /// Road's three switchbacks; the low bridge, the Span and the harbour bridge over the Cut. The
+    /// ground is a <see cref="Terraces"/> map, which puts a MapWall on every drop. Phase 2 is every
+    /// building as a shell you can enter (MeridianBuilder.Buildings.cs).
     /// </summary>
-    public static class MeridianBuilder
+    public static partial class MeridianBuilder
     {
         public const string ScenePath = "Assets/Scenes/Meridian.unity";
 
@@ -67,7 +68,8 @@ namespace Rth.Client.Editor
         private sealed class Mats
         {
             public Material Quay, Paving, Cobble, Grass, Granite, Ashlar, Brass, Rock, Snow, Pine, PineFloor, Sea, DwarfYard, Iron,
-                Timber, Bark, Foam, Mist, Verdigris, Shadow;
+                Timber, Bark, Foam, Mist, Verdigris, Shadow, Slate, Glass, LitGlass, BlueTrim, DwarfStone, Bronze, Planks, Canvas, Straw,
+                Fire, Lamp, Forge, MoonGlow;
         }
 
         public static void Build()
@@ -94,6 +96,19 @@ namespace Rth.Client.Editor
                 Foam = kit.Mat("ConcordFoam", new Color(0.86f, 0.92f, 0.95f)),
                 Verdigris = kit.Mat("ConcordVerdigris", new Color(0.32f, 0.62f, 0.54f)),
                 Shadow = kit.Mat("ConcordShadow", new Color(0.08f, 0.09f, 0.11f)),
+                Slate = kit.Mat("ConcordSlate", new Color(0.3f, 0.33f, 0.38f)),
+                Glass = kit.Mat("ConcordGlass", new Color(0.18f, 0.24f, 0.3f)),
+                LitGlass = FxKit.Glow("ConcordWindowLit", new Color(1f, 0.86f, 0.62f), 0.5f),
+                BlueTrim = kit.Mat("ConcordBlueTrim", new Color(0.38f, 0.46f, 0.56f)),
+                DwarfStone = kit.Mat("DwarfStone", new Color(0.26f, 0.25f, 0.27f)),
+                Bronze = kit.Mat("Bronze", new Color(0.6f, 0.45f, 0.2f)), // shared
+                Planks = kit.Mat("Planks", new Color(0.62f, 0.45f, 0.28f)), // shared
+                Canvas = kit.Mat("ConcordCanvas", new Color(0.85f, 0.82f, 0.74f)),
+                Straw = kit.Mat("ConcordStraw", new Color(0.82f, 0.7f, 0.42f)),
+                Fire = FxKit.Glow("ConcordHearthFire", new Color(1f, 0.5f, 0.15f), 1.5f),
+                Lamp = FxKit.Glow("ConcordLamp", new Color(1f, 0.9f, 0.62f), 1.2f),
+                Forge = FxKit.Glow("DwarfForgeGlow", new Color(1f, 0.42f, 0.12f), 1.1f),
+                MoonGlow = FxKit.Glow("MoonGlow", new Color(0.5f, 1f, 0.62f), 1.4f),
                 Mist = FxKit.ParticleMat("ConcordSeaMist", new Color(0.86f, 0.9f, 0.96f, 0.08f), additive: false),
             };
 
@@ -125,6 +140,7 @@ namespace Rth.Client.Editor
             BuildOreRoad(map);
             BuildPineSlope(kit, map);
             BuildFunicularAndOrrery(map);
+            BuildBuildings(map);
 
             Transform fx = WorldKit.Group(map, "Atmosphere");
             FxKit.Mist(fx, P(96f, 0.3f, 6f), new Vector2(200f, 16f), M.Mist, Color.white);
@@ -279,7 +295,7 @@ namespace Rth.Client.Editor
             // The Parallel, east-west across the city, and the meridian's street up the middle.
             Ground.Patch("The Parallel", g, X(GorgeX1), Z(ParS), X(150), Z(ParN), M.Cobble);
             Ground.Patch("Line Street", g, X(LineX0), Z(48), X(LineX1), Z(92), M.Cobble);
-            Ground.Patch("Meridian Square", g, X(77), Z(72), X(117), Z(92), M.Paving);
+            Ground.Patch("Meridian Square", g, X(77), Z(48), X(117), Z(ParS), M.Paving);
             Tag(g, "street_paving", "Granite setts laid in straight courses on the spines (the meridian, the Parallel); the other streets follow the terraces.");
 
             // The meridian itself: a brass line let into the ground the whole way up, on every step.
@@ -293,10 +309,11 @@ namespace Rth.Client.Editor
             }
             Tag(line, "meridian_line", "The meridian: a brass strip 18 cm wide set in the paving, with a cross-mark every 8 m, dead straight from the quay to the Orrery Gate, up every stair. Modular strip.");
 
-            // Clipped trees in stone tubs along the Parallel.
-            for (int x = GorgeX1 + 4; x < 150; x += 8)
+            // Clipped trees in stone tubs along the Parallel: at the Rows' garden gaps, then every 8 m out along the Pass Road.
+            var tubs = new List<int> { 69, 80, 111, 122 };
+            for (int x = 154; x < 182; x += 8) tubs.Add(x);
+            foreach (int x in tubs)
             {
-                if (x > LineX0 - 3 && x < LineX1 + 2) continue;
                 foreach (int z in new[] { ParS - 1, ParN })
                 {
                     Transform t = WorldKit.Group(g, "Tub tree");

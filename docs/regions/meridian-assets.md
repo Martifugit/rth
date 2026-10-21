@@ -6,54 +6,61 @@ in metres (1 tile = 1 m), width x depth x height. Don't edit by hand; change the
 
 | Asset | Count | Size (m) | Notes |
 |---|---|---|---|
-| `meridian/academy_gate` | 1 | 1.2 x 8.5 x 10.1 | The Academy gate: a plain round arch through the east range, 8 m wide, the clock above it. |
-| `meridian/academy_range` | 5 | 4.7 x 32.6 x 11.2 | Academy range: two storeys of ashlar over a granite ground floor, slate roof, tall windows in strict rows, a brass clock in the gable of the east range. |
-| `meridian/almanac_board` | 1 | 2.8 x 0.2 x 2.4 | The almanac board: a slate board with the season's moonfall forecast pinned up as a chart (sky sectors, dates, likelihoods), updated by semaphore. |
-| `meridian/almanac_office` | 1 | 14.7 x 16.6 x 20.6 | The Almanac Office: ashlar, 9 m, slate roof; a semaphore mast on the ridge to signal forecasts to the Orrery and the beacon towers. |
-| `meridian/beacon_tower` | 1 | 3.4 x 3.5 x 18.5 | Concordian beacon tower: slim ashlar, 14 m, a glazed lamp under a copper cap; one every few miles up every pass, lit all night. |
-| `meridian/bollard` | 5 | 0.3 x 0.4 x 0.7 | Iron bollard. |
-| `meridian/bore_nine` | 1 | 9.1 x 10.3 x 16.1 | Bore Nine: a 15 m timber-and-iron derrick over an iron bore casing, a winding wheel on top, a heap of spoil that glows faint green; fenced, with a survey sign. |
-| `meridian/cart_rails` | 1 | 1.8 x 19 x 0.2 | Dwarven cart-line: narrow-gauge iron rails on stone sleepers. |
-| `meridian/concord_benches` | 1 | 21.5 x 9.8 x 1.9 | Assembly benches in three rising arcs with three aisles: plain dark wood with numbered brass seat plates. Modular arc segments. |
-| `meridian/concord_dome` | 1 | 14.4 x 14.4 x 8.4 | The Concord's dome: copper gone verdigris, 14 m across, a glazed eye at the top. The houses are slate; only the instruments of the city get copper. |
-| `meridian/concord_hall` | 1 | 26.6 x 19.7 x 14.9 | Hero building. The Concord: a 26 x 19 tile ashlar hall, 10 m, brass cornice, tall clear windows; inside, benches in arcs facing a rostrum under a dome. |
-| `meridian/concord_portico` | 1 | 22 x 2.2 x 8.6 | The Concord's portico: eight plain ashlar columns, 8 m, a flat entablature with CONCORD in brass letters. No pediment, no ornament. |
-| `meridian/dwarf_trading_hall` | 1 | 6.1 x 12.1 x 7.6 | The dwarves' trading hall: low, massive dark granite, bronze-bound door and shutters, a battlemented roof; built to keep out more than weather. |
-| `meridian/exchequer_counter` | 1 | 7 x 0.8 x 1.1 | The Exchequer's counter: plain timber, brass scales and an abacus for each clerk. |
-| `meridian/firing_line` | 1 | 3 x 25 x 3.2 | Firing line: a long open shelter on timber posts with a slate roof, a rail with numbered lane plates. |
-| `meridian/fishing_boat` | 2 | 6.6 x 3.2 x 6 | Small fishing boat, single mast. |
-| `meridian/funicular_car` | 1 | 2.2 x 4.7 x 4.5 | Funicular car: a stepped blue-grey timber cabin with brass rails and big windows, built level on a sloping chassis. |
-| `meridian/funicular_rails` | 1 | 2.4 x 76.1 x 62.1 | Funicular track: two iron rails on timber sleepers on a stone bed, straight up the crag at about 35 degrees. Modular. |
-| `meridian/funicular_station` | 1 | 14.6 x 11.1 x 10.7 | Funicular lower station: an ashlar shed, 14 x 10 tiles, 8 m, a glazed gable facing the slope where the cars come in, a big brass winding wheel visible through it. |
-| `meridian/gnomon` | 1 | 23.3 x 13.2 x 13.9 | Hero piece. The gnomon: a 13 m ashlar obelisk with a brass tip on a granite plinth, the brass meridian under it, hour lines fanning across the square to granite hour-stones. |
-| `meridian/hall_of_measures` | 1 | 14.7 x 16.6 x 11.9 | The Hall of Measures: ashlar, 14 x 16 tiles, 8 m, a brass cornice; inside, the standards on the walls and the Exchequer's counter. |
-| `meridian/harbour_beacon` | 1 | 3.4 x 3.5 x 20.5 | Harbour beacon: a slim ashlar tower, 16 m, blue-grey bands, a glazed lantern with a copper cap; the same lamp as the pass beacons. |
-| `meridian/little_orrery` | 1 | 4.5 x 4.4 x 8.7 | The Little Orrery: a 6 m brass armillary sphere on a granite plinth, the world at its heart and two moons on arms, the smaller one green and cracked. |
-| `meridian/meridian_line` | 1 | 0.7 x 98 x 0 | The meridian: a brass strip 18 cm wide set in the paving, with a cross-mark every 8 m, running dead straight from the harbour to the mountain. Modular strip. |
-| `meridian/moon_fragment` | 1 | 4.1 x 3.5 x 2 | Hero prop. A fragment of the cracked moon: a dark, glassy boulder the size of a cart with a seam of green light through it, on a granite bed behind a brass rail. Glows, hums. |
-| `meridian/mountain_pine` | 24 | 2.4 x 2.4 x 6.6 | Dark mountain pine, 6-9 m, tiered; scenery on the slopes (not reachable). |
-| `meridian/mountain_slope` | 1 | 266.7 x 118.3 x 69 | Candora's slope behind the city: grey rock steps rising into snow. Backdrop modules, never walked on. |
-| `meridian/notice_board` | 1 | 0.9 x 0.1 x 1.4 | A timber notice board with one fresh paper on it. |
-| `meridian/ore_cart` | 2 | 1.3 x 1.8 x 1 | Dwarven ore cart: an iron tub on four small wheels, heaped with ore. |
-| `meridian/quay` | 1 | 132 x 34.6 x 21 | Granite quay: big squared blocks, iron rings, numbered berths painted on the edge. |
-| `meridian/quay_crane` | 1 | 1.2 x 5.6 x 6.3 | Iron-banded timber crane, a geared winch with a brass dial. |
-| `meridian/range_target` | 6 | 0.4 x 1.2 x 2 | Round straw target on a timber frame, painted in concentric blue-grey rings with numbered scoring bands. |
-| `meridian/rostrum` | 1 | 1.6 x 1 x 1.8 | The rostrum: a granite block with a brass lectern and a sand-glass. Speakers get one glass. |
-| `meridian/row_house_ashlar` | 21 | 10.6 x 8.7 x 11.7 | Terraced row house: three storeys of pale ashlar, slate roof, blue-grey door and window frames, identical to its neighbours. Modular. |
-| `meridian/row_house_granite` | 12 | 10.6 x 8.7 x 11.2 | Terraced row house: three storeys of grey granite, slate roof, blue-grey door and window frames, identical to its neighbours. Modular. |
-| `meridian/row_house_observatory` | 6 | 7.6 x 6.7 x 14.8 | Row house with a little rooftop observatory: a copper dome on a drum, gone verdigris. |
-| `meridian/sea_cliff` | 1 | 41.1 x 197.6 x 31 | Grey granite sea cliffs where the range drops into the sea: stepped, fractured faces 15-30 m, gulls' ledges. Modular. |
-| `meridian/square_fountain` | 1 | 4 x 4 x 1.9 | Square granite basin with a single plain jet: water used as a level. |
-| `meridian/standards_case` | 1 | 0.8 x 0.9 x 2.4 | The standards: a glazed case with the standard ell (a brass bar), a nest of brass weights, a balance; the reference every measure in Concordia is checked against. |
-| `meridian/stone_bench` | 8 | 1.9 x 0.5 x 0.1 | Plain granite bench, 2 m. |
-| `meridian/street_lamp` | 15 | 0.5 x 0.2 x 2.8 | Slim iron lamp standard, a glass globe with a cold white flame (Concordian lamp oil). |
-| `meridian/street_paving` | 1 | 132 x 124 x 3.1 | Granite setts laid in straight courses; kerbs of dressed ashlar. Every street is straight. |
-| `meridian/survey_office` | 1 | 9.7 x 10.6 x 10.6 | The survey office: a granite house with a slate roof, maps in the windows, crates of core samples stacked outside. |
-| `meridian/the_orrery_far` | 1 | 47.3 x 38.4 x 88.6 | Hero silhouette. The Orrery on its crag above the city: a great drum and a 22 m verdigris dome with an open slit and a huge brass telescope, two lesser domes. Seen from everywhere in Meridian. |
-| `meridian/toll_board` | 1 | 0.9 x 0.1 x 1.6 | A slate board on posts with the crossing tolls in white paint, by weight and by head. |
-| `meridian/toll_house` | 1 | 8.6 x 8.7 x 9.2 | Concordian toll-house: small granite house with a blue-grey door and a window onto the road with a brass bell. |
-| `meridian/trader` | 2 | 14.6 x 6.1 x 6 | Coastal trader: a neat two-masted ship, furled pale sails, blue-grey trim. |
-| `meridian/tripod_telescope` | 4 | 1 x 1 x 2 | Brass telescope on a timber tripod. |
-| `meridian/tub_tree` | 22 | 1.8 x 1.8 x 3.1 | A clipped evergreen ball on a straight stem, in a square granite tub. Lines the Parallel at 8 m intervals. |
-| `meridian/undergate` | 1 | 10 x 2.2 x 9.1 | The Undergate: a squat, massive dwarven portal cut into the mountain, dark granite piers, a bronze rune-band over a 6 m opening; rails run into the dark. |
-| `meridian/warehouse` | 5 | 12.6 x 10.7 x 9.9 | Granite warehouse with a slate roof, numbered doors, a painted tally board. |
+| `meridian/academy_hall` | 1 | 18.6 x 14.7 x 16 | Hero piece. The Academy Hall: the great lecture hall under a clock and a verdigris cupola, benches facing a lectern, a gallery round three sides. |
+| `meridian/academy_library` | 1 | 16.6 x 14.7 x 13.4 | The Library: walk-in shelves to the roof, a mezzanine gallery on all sides, reading tables under lamps; one shelf upstairs is roped off. |
+| `meridian/almanac_office` | 1 | 16.6 x 14.7 x 24 | The Almanac Office: three storeys on the Crag's shoulder, the forecast desk, the semaphore room under a mast with two black arms; the almanac board outside. |
+| `meridian/beacon_tower` | 3 | 8.3 x 8.3 x 19.2 | A square granite lamp tower, 16 m to its battlements, a glass lantern with a verdigris cap on top; inside a stair per floor to the lamp room. The harbour, the knoll and the pass each have one. |
+| `meridian/bore_nine` | 1 | 12.1 x 12.7 x 12 | Bore Nine: a timber derrick over a capped shaft, inside an iron fence; heaps of spoil that glow green at night. Suspended. |
+| `meridian/butts_firing_line` | 1 | 25.6 x 4.7 x 5.3 | The Butts' firing line: a long slate roof on posts over six numbered stands. |
+| `meridian/butts_targets` | 1 | 25.8 x 4.8 x 2.5 | The Butts' targets: straw bosses on easels with painted rings, against a turf bank; numbered lane posts. |
+| `meridian/cabinet` | 1 | 14.6 x 12.7 x 12.7 | The Cabinet of Natural Philosophy: a museum hall, the green moon fragment behind a brass rail, cases of specimens, a stuffed crag-goat; the moon-glass case upstairs. |
+| `meridian/cart_office` | 1 | 10.3 x 8.3 x 4.6 | The Cart-master's Office: a squat dwarven office, the cart-line timetable chalked on slate, a desk with a bronze bell. |
+| `meridian/cart_rails` | 3 | 1.7 x 40 x 5 | Dwarven cart-line: narrow-gauge iron rails on stone sleepers, down the Ore Road to the quay. |
+| `meridian/cartwrights_yard` | 1 | 14.6 x 12.7 x 9 | The Cartwrights' Yard: a timber-trimmed shed, wheels and axles stacked, a cart on blocks. |
+| `meridian/chandlery` | 1 | 10.6 x 10.7 x 11.7 | The Chandlery: rope, lamp oil, tar and tools on every wall; a narrow stair to a back room someone is living in. |
+| `meridian/clockmaker` | 1 | 10.6 x 8.7 x 6.6 | The Clockmaker: a narrow shop full of ticking, a counter of movements under glass, and a tall chiming clock that talks. |
+| `meridian/dispensary` | 1 | 7.7 x 8.6 x 6.9 | The Dispensary: jars on every shelf, a physician's bench with a balance. |
+| `meridian/dwarf_trading_hall` | 1 | 16.3 x 14.3 x 8.6 | The Dwarven Trading Hall: dark stone banded in bronze, battlemented, built to keep out more than weather; a long counter, a counting room upstairs. |
+| `meridian/fish_market` | 1 | 16.6 x 12.7 x 8.4 | The Fish Market: a slate roof on timber posts over granite flags, scrubbed stalls with ice and baskets, a cooking range at the back. |
+| `meridian/funicular_lower` | 1 | 14.6 x 12.7 x 7.7 | The funicular's lower station: a glazed shed on the meridian, the ticket window, the car waiting on its rails. |
+| `meridian/funicular_rails` | 1 | 2.4 x 12.1 x 10.1 | Funicular track: two iron rails on timber sleepers on a stone bed, straight up the Crag at about 40 degrees. Modular. |
+| `meridian/funicular_upper` | 1 | 14.6 x 10.7 x 7.2 | The funicular's upper station: the car arrives through the floor; the great brass winding wheel turns behind a glass wall. |
+| `meridian/gnomon` | 1 | 17.5 x 8.2 x 13.8 | Hero piece. The gnomon: a 13 m granite obelisk on the meridian with a brass tip, hour-lines in brass fanning across the paving to nine hour-stones. |
+| `meridian/hall_of_measures` | 1 | 16.6 x 12.7 x 11.7 | The Hall of Measures: pale ashlar, a pediment over the square, the standards case and the Exchequer's counter inside; the gallery and the vault door upstairs. |
+| `meridian/harbour_bridge` | 1 | 12.4 x 6 x 1.3 | The harbour bridge: two low granite arches over the mouth of the Cut, joining the quay to the west quay and the Ore Road. |
+| `meridian/harbourmaster_office` | 1 | 10.6 x 10.7 x 11.7 | The Harbourmaster's Office: a square granite office, the shipping board by the door, a chart room upstairs with a map table and the log. |
+| `meridian/instrument_maker` | 1 | 12.6 x 12.7 x 7.7 | The Instrument Maker: crossbows, sights and bolts on racks, a bench of half-made locks, a counter by the door. |
+| `meridian/judges_stand` | 1 | 6.6 x 6.7 x 8.4 | The judges' stand: a timber platform on posts above the lanes under a shade roof, a bench for three. |
+| `meridian/little_orrery` | 1 | 2.9 x 2.8 x 4.8 | The Little Orrery: a brass armillary on a granite drum, the moons on their rings, one of them green and cracked. |
+| `meridian/low_bridge` | 1 | 13.4 x 6.6 x 5.4 | The low bridge: one granite arch carrying the Parallel over the Cut at the Square's level, iron lamp standards at each end. |
+| `meridian/marksmens_lodge` | 1 | 12.6 x 10.7 x 11.2 | The Marksmen's Lodge: ammunition by the crate, racks of crossbows, the range office and a balcony over the lanes. |
+| `meridian/meridian_line` | 1 | 0.7 x 164 x 24 | The meridian: a brass strip 18 cm wide set in the paving, with a cross-mark every 8 m, dead straight from the quay to the Orrery Gate, up every stair. Modular strip. |
+| `meridian/mountain_pine` | 35 | 2.4 x 2.4 x 6.6 | Pale mountain pine, 6-9 m, tiered, on the slope above the Forum Terrace (woodcutting later). |
+| `meridian/mountain_rock` | 1 | 324.7 x 288.2 x 104 | Candora's grey granite: fractured cliff modules for the sea cliffs, the road cliff and the mountain behind, snow above 60 m. Scenery, never walked on. |
+| `meridian/net_loft` | 1 | 14.6 x 12.7 x 8.4 | The Net Loft and Boatyard: a long granite shed with net racks and a loom; outside on the slip a keel on stocks with its first ribs. |
+| `meridian/observatory_tower` | 3 | 6.3 x 6.3 x 11.8 | A little observatory tower: two storeys of ashlar under a verdigris dome with a shutter slit, a brass telescope in the dome room. |
+| `meridian/ore_road` | 1 | 31.3 x 53.6 x 19.9 | The Ore Road: a switchback cart road cut into the cliff, dark dwarven setts, a lamp-post at each bend, ore carts. |
+| `meridian/orrery_gate` | 1 | 5.8 x 1.8 x 4 | The Orrery Gate: two granite piers and brass-bound iron gates across the meridian at the mountain's foot, a plaque: ASCENTS BY APPOINTMENT. |
+| `meridian/orrery_gate_lodge` | 1 | 10.6 x 10.7 x 11.2 | The Orrery Gate lodge: the appointment office, a bench for those who wait, a window on the Orrery. |
+| `meridian/physic_garden` | 1 | 9.8 x 5.8 x 0.4 | The Physic Garden: raised stone herb beds in a grid, alpine herbs labelled in brass. |
+| `meridian/plumb_line_inn` | 1 | 16.6 x 14.7 x 13 | The Plumb Line: a granite harbour inn with a painted plumb-bob sign, a long bar, a hearth (the only unmeasured fire in the city) and a barometer by the door; rooms upstairs. |
+| `meridian/quay_edge` | 1 | 592 x 214 x 1.7 | Granite quay: big squared blocks, iron rings, numbered berths painted on the edge, steps down to the water. |
+| `meridian/row_gardens` | 1 | 56 x 19 x 0.5 | The Rows' gardens: three-tile strips of lawn between the houses with a bench each, every one mown to the same height. |
+| `meridian/row_house` | 12 | 8.6 x 8.7 x 19.3 | The Concordian row house: 8 x 8, two storeys of ashlar, slate roof, blue-grey door and sills, brass number plate. One interior used twelve times. |
+| `meridian/sailors_shrine` | 1 | 5.6 x 5.7 x 5.7 | The Sailors' Shrine: a tiny whitewashed chapel tucked between the warehouses, a plain altar under the one Synod lamp the city tolerates, votive ship models on the walls. |
+| `meridian/scholars_lodging` | 2 | 10.6 x 8.7 x 11.2 | Scholars' Lodgings: a small ashlar house with lit windows and books stacked on the sills; a study upstairs. |
+| `meridian/smeltery` | 1 | 16.6 x 14.7 x 14 | The Smeltery: a dwarven forge-hall, a furnace with a tall stack, anvils, ore carts rolling in on the rails. |
+| `meridian/square_fountain` | 1 | 2.8 x 2.8 x 0.6 | A plain square granite basin with a single jet: Concordian, so it is exactly one metre high. |
+| `meridian/stevedores_hall` | 1 | 14.6 x 12.7 x 12.3 | The Stevedores' Hall: two open warehouse bays under one roof, hoists over the doors, cargo stacked by number; the cold cellar's hatch; a loft up a ladder. |
+| `meridian/street_paving` | 1 | 119.4 x 44 x 3.1 | Granite setts laid in straight courses on the spines (the meridian, the Parallel); the other streets follow the terraces. |
+| `meridian/survey_office` | 1 | 12.6 x 10.7 x 11.2 | The Survey Office: the surveyors' plain granite office, crates of glowing cores, a map table upstairs; tents behind it. |
+| `meridian/surveyors_guild` | 1 | 12.6 x 10.7 x 11.2 | The Surveyors' Guild: the world map on a great table under a skylight, drawers of charts, the achievement diary desk upstairs. |
+| `meridian/the_concord` | 1 | 26.3 x 20.3 x 17.4 | Hero piece. The Concord: the assembly's auditorium, a columned portico, a verdigris dome over three arcs of benches facing the rostrum, a gallery all round. |
+| `meridian/the_cut` | 1 | 6.5 x 188 x 33.2 | The Cut: a fast, cold mountain stream in a granite gorge, three falls with spray and foam pools; freshwater fishing in the lowest pool. |
+| `meridian/the_exchange` | 1 | 14.3 x 12.3 x 4.6 | The Exchange: a flat-roofed ashlar hall, a long counter, weights and scales, and the notice board of tasks and errands. |
+| `meridian/the_orrery_far` | 1 | 51.5 x 40.8 x 106.6 | Hero silhouette. The Orrery on its peak at the head of the meridian: a great drum and a 22 m verdigris dome with an open slit and a huge brass telescope, two lesser domes. Seen from everywhere in Meridian. |
+| `meridian/the_span` | 1 | 13.4 x 6.6 x 17 | Hero piece. The Span: a tall two-arched ashlar viaduct 17 m over the Cut's lower pool, a parapet each side, a brass plaque at each end. The best view in the city. |
+| `meridian/the_undergate` | 1 | 14.3 x 12.8 x 14 | Hero piece. The Undergate: the dwarves' portal hall against the mountain, a bronze-bound door into the rock, the cart-line running in under it. |
+| `meridian/toll_house` | 1 | 10.6 x 8.7 x 11.2 | The toll-house: a granite lodge by the road with a raised barber-striped bar, a bell loft up a ladder. |
+| `meridian/tub_tree` | 16 | 1.8 x 1.8 x 3.1 | A clipped evergreen ball on a straight stem, in a square granite tub. Lines the Parallel at 8 m intervals. |
+| `meridian/wayhouse` | 1 | 16.6 x 14.7 x 13 | The Wayhouse and Stables: a long travellers' inn under the Forum's cliff, a hearth, horse stalls at one end, rooms upstairs. |

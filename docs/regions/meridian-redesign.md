@@ -475,7 +475,7 @@ of the Pass; a loose paving stone on the meridian where the brass line has a sea
 |---|---|---|
 | **0. Height and levels** (done) | The feature in 3.2: ground snap, `MapLevel`, the `climb` action, level display. | A test scene with a slope and a two-storey hut: you walk up the slope, climb the ladder, see the upper floor, and clicks, camera and the collision preview work on both levels. |
 | **1. Terrain and routes** (built, see 9.4) | The five tiers, retaining walls, stairs, ramps, the Cut and its bridges, the Span, the Ore Road. **No buildings.** | You can walk every loop and see the next tier from each; nothing exports as walkable that should not (check the collision preview). |
-| **2. Landmarks and building shells** | Every building in 6 as an enterable shell with its door, floors, stairs and roof (hideable); the Rows from one template. | Every building can be entered; the building count and 25% rule hold. |
+| **2. Landmarks and building shells** (built, see 9.5) | Every building in 6 as an enterable shell with its door, floors, stairs and roof (hideable); the Rows from one template. | Every building can be entered; the building count and 25% rule hold. |
 | **3. Interiors and objects** | Stations, shops' counters, benches, readables, view points, nodes, gates. | The "every 15 tiles" rule holds on every route. |
 | **4. Placement and data** | NPCs, their dialogue, shops, stations and nodes in the content files, region data. | Every building has what 7.2 says. |
 
@@ -496,7 +496,9 @@ stations and nodes, then dialogue and quests.
 | `Backdrop(...)` | Distant buildings across the gorge: silhouettes with no ground, never walkable. |
 
 Built in phase 1: `Terrace`, `Retain`, `Stair` and `Ramp` became one `Terraces` map (it places the
-retaining walls itself), plus `Viaduct` and `Stream`. The rest come with phase 2.
+retaining walls itself), plus `Viaduct` and `Stream`. Built in phase 2 (`WorldKit.Interiors.cs`):
+`Enterable` (the shell every building is), `Pavilion`, `RowHouse` (the `House(template)`) and the
+`Interior` helpers as methods on the shell. `Backdrop` is still to do.
 
 **The funicular.** Build both stations, the rails and the car. The ride itself (the car moves,
 the player is carried to the other station) needs an object action and the client's long-jump
@@ -511,8 +513,7 @@ track. The Orrery stays scenery.
 ### 9.4 Phase 1 as built
 
 `MeridianBuilder` now builds the ground and the routes only (the first blockout's buildings are
-gone until phase 2; its code is in git history, and `meridian-assets.md` keeps the old list until
-the scene is rebuilt). The ground is a `Terraces` map (`WorldKit.Terraces.cs`): terraces, stairs,
+gone until phase 2; its code is in git history). The ground is a `Terraces` map (`WorldKit.Terraces.cs`): terraces, stairs,
 ramps and bridge decks described tile by tile, built as solid blocks, with a `MapWall` drawn as a
 kerb or parapet on every drop of more than 0.5 m and wherever high ground falls into nothing. It
 warns about a step over 0.5 m or a ramp steeper than 1 in 3. A headless check of the builder
@@ -551,6 +552,106 @@ climb the Crag's face on it. The Orrery stands on its own peak behind the city.
 ![From over the harbour](img/meridian-p1-view-harbour.png)
 
 ![The Cut, the Span and the Ore Road](img/meridian-p1-view-gorge.png)
+
+### 9.5 Phase 2 as built
+
+Every building in section 6 now stands on the phase 1 ground as a shell you can walk into:
+**52 buildings** (the 40 that section 6 names, counting each lodging, observatory and beacon,
+plus the 12 Rows), **38 of them with upper floors** (45 floors above the ground in all, up to
+the beacons' lamp rooms on level 3). They cover **24.7%** of the walkable ground, under the 25%
+rule but only just, so phase 3 should furnish rooms rather than add buildings. No two buildings
+on the same tier are closer than three tiles. A headless check walks every floor through its
+stairs and ladders: every tile on every level is reachable from the quay (24,591 on the ground,
+3,566 on level 1, 383 on level 2, 168 on level 3), every stair and ladder lands on open floor,
+and there is still no drop without a wall.
+
+The code is in `MeridianBuilder.Buildings.cs`, built from four new kit pieces in
+`WorldKit.Interiors.cs`:
+
+| Piece | What it makes |
+|---|---|
+| `Enterable(rect, ground, floors, facade, floor, roof, gallery, doors)` | A shell at any terrace height: a floor and walls with door gaps, lintels, a plinth, a cornice per storey and windows; for each storey above, a `MapLevel` with its outer walls (always drawn) and its slab (only drawn once you are up there), or a railed gallery round the walls; a roof (gable, flat, battlements, spire or dome) that hides while you are inside. Storeys are 4 m. Returns a `Shell`. |
+| `Shell.Stairs` / `Shell.Ladder` | A flight of ten steps over three tiles from one floor to the next (the stair down stands at its head, its well railed off), or a ladder against a wall with a hatch above; both with their `climbTo` landings set. |
+| `Shell.Thing`, `Table`, `Counter`, `Bench`, `Bed`, `Shelves`, `Hearth`, `Crates`, `Object` | Furniture on any floor, blocking its tiles; `Object` places an interactive object (a `MapObject` with a stand-in). |
+| `Pavilion(rect, ground, height, ..., deck)` | An open hall on posts (the Fish Market, the firing line); with a deck, a railed platform as level 1 (the judges' stand). |
+| `RowHouse(x, z, ground, facesSouth, number, ...)` | The one identical house, 8 x 8: a hearth, a table and a dresser downstairs, a stair up the east wall to a bedroom with a bed, a chest and a wardrobe; the brass number plate; optionally the copper rooftop observatory. |
+| `CheckBuildings(shells, walkable, groundAt)` | Warns when two buildings on a tier are under three tiles apart, when one stands off level ground, and when they cover more than a quarter of the walkable ground; logs the count and share. |
+
+![Phase 2 plan](img/meridian-p2-plan.png)
+
+Where everything went (local tiles, x then z, end exclusive; "L1" is the first floor up):
+
+| District | Building | Tiles | Floors, way up | Inside |
+|---|---|---|---|---|
+| Strand (0 m) | Harbour beacon | 126-133, 0-7 (the mole's end) | 4, a stair each floor | crates and oil; table and bunk; store; the lamp and a telescope |
+| | Fish Market (pavilion) | 122-137, 18-29 | open | three stalls, a cooking range |
+| | The Plumb Line | 101-116, 31-44 | 2, stair | bar, hearth, two tables; three beds and a table |
+| | Harbourmaster's Office | 120-129, 33-42 | 2, stair | counter, shipping board; map table, log shelves |
+| | Chandlery | 133-142, 33-42 | 2, stair | counter, shelves, crates; the hidden room's bed, table, chest |
+| | Net Loft and Boatyard | 62-75, 31-42 | 1 | workbench, loom, net racks; the keel on its slip outside |
+| | Stevedores' Hall | 146-159, 31-42 | 2, ladder to the loft | crates, bales, ledger desk, the cellar hatch; crates and the hoard chest |
+| | Sailors' Shrine | 163-167, 38-42 | 1 | the altar and the Synod lamp |
+| Square (+5) | The Exchange | 60-73, 51-62 | 1 (flat roof) | counter, notice board, tables |
+| | The Clockmaker | 105-114, 51-58 | 1 | counter, shelves of clocks, the chiming clock |
+| | Hall of Measures | 118-133, 51-62 | 2, stair | the counter, the strongbox (bank), the standards case; desks and the vault door |
+| | The Instrument Maker | 137-148, 51-62 | 1 | workbench, racks, counter |
+| | The Rows, Nos. 1-12 | west x 60, 71, 82 and east x 102, 113, 124; front line z 71-78, back line z 82-89 | 2 each, stair | the template; Nos. 3 and 10 have the copper observatory |
+| Academy (+14) | Scholars' Lodgings (two) | 60-69 and 73-82, 96-103 | 2, stair | table, shelves; bed, desk, books |
+| | The Academy Hall | 60-77, 122-135 | 2, stair to a gallery | lecture benches, lectern; gallery bench, the study door; clock and cupola |
+| | The Library | 101-116, 96-109 | 2, stair to a gallery | shelves, reading tables, the bestiary desk; gallery shelves, reading desk, the forbidden shelf |
+| | Cabinet of Natural Philosophy | 120-133, 96-107 | 2, stair | the moon fragment (`moon_fragment`), cases, the crag-goat; specimen cases, the moon-glass case |
+| | Physic Garden and Dispensary | beds 102-111, 114-119; dispensary 107-113, 124-131 | 1 | four herb beds; physic bench and shelves |
+| | Observatory Row (three) | 123-128; 111-116, 120-125, 130-135 | 2, ladder to the dome room | a desk; the telescope and star charts |
+| | Funicular lower station | 90-103, 124-135 | 1 | ticket counter, the car, the gate (`orrery_lift`) |
+| Forum (+14) | The Concord | 137-162, 98-117 | 2, side stairs to a gallery | three rows of benches, the dais and rostrum (`concord_rostrum`); gallery benches; portico of columns |
+| | Marksmen's Lodge | 166-177, 90-99 | 2, stair | counter, crossbow racks; range office |
+| | The Butts | firing line 166-190, 104-107; targets z 123; bank z 126-127 | open | six lanes, six targets |
+| | Judges' stand (pavilion) | 182-187, 93-98 | deck at 3.5 m, ladder | the judges' bench |
+| Crag (+24, +30) | Funicular upper station | 90-103, 136-145 | 1 | the car, the winding wheel |
+| | Almanac Office | 64-79, 140-153 | 3, stair then ladder | forecast desk, shelves; desk; the semaphore levers and a telescope under the mast; the almanac board (`moonfall_almanac`) outside |
+| | Orrery Gate lodge | 84-93, 164-173 | 2, stair | desk, bench; the appointment office. The gate itself (two piers and iron gates) crosses the meridian at z 175-176. |
+| | Knoll beacon | 130-137, 166-173 (+30) | 4, a stair each floor | as the harbour beacon |
+| Heights (+20) | Survey Office | 26-37, 81-90 | 2, stair | map table, glowing cores; core store; the notice outside |
+| | Bore Nine | fence 9-20, 80-91 | open | the derrick, glowing spoil, the sign |
+| | Cart-master's Office | 8-17, 97-104 | 1 | timetable, desk |
+| | Dwarven Trading Hall | 8-23, 109-122 | 2, stair | the long counter, shelves; counting table, strongbox |
+| | Smeltery | 27-42, 97-110 | 1 | furnace and stack, anvil, ore cart |
+| | The Undergate | 20-33, 128-139 | 1 | the sealed portal, the stockroom chest, an ore cart; the mountain door and the rails behind |
+| Pass Road (+5) | Cartwrights' Yard | 152-165, 50-61 | 1 | wheels, axle rack, a cart |
+| | Pass beacon | 170-177, 52-59 | 4, a stair each floor | as the harbour beacon |
+| | Toll-house | 181-190, 54-61 | 2, ladder to the bell loft | desk, toll box; the bell. The toll board and the bar are on the road. |
+| | Wayhouse and Stables | 151-166, 74-87 | 2, stair | hearth, table, bar, a stall; three beds and a table |
+| | Surveyors' Guild | 170-181, 74-83 | 2, stair | the world-map table, chart shelves; map table, the diary desk |
+
+Where it differs from section 6, and why:
+
+- **Meridian Square moved south of the Parallel** (x 77-116, z 48-69, the Parallel running
+  through its north side) so the Harbour Stair comes up into it and the gnomon stands at the
+  head of the stair. The Rows took the ground north of the Parallel either side of Line Street:
+  twelve 8 x 8 houses in four lines of three, three-tile gardens between them, the Parallel in
+  front and a back lane under the Academy. That is the only place both Rows fit with their gaps.
+- **The Surveyors' Guild is on the Pass Road ground**, not the Square: the Square has room for
+  four shops round the plaza and no more.
+- **Some sizes are trimmed** to keep the gaps and the 25% rule: the Hall of Measures is 16 x 12,
+  the funicular stations 14 x 12 and 14 x 10, the dispensary 7 x 8 beside its beds, the Butts'
+  lanes 26 x 18.
+- **The Crag has no Observers' Walk yet**: it is a path with view points, so it comes with the
+  phase 3 objects, as do the stations, shops, nodes, the shrine's altar action and the
+  Butts' dummies.
+- **Not yet**: balconies (the Plumb Line's, the Lodge's), No. 7's difference, the cellar and
+  vault doors (they need their underground areas), and the funicular ride (9.2).
+
+![The Strand and the Square from the harbour](img/meridian-p2-view-harbour.png)
+
+![The Rows, the Academy, the Forum Terrace and the Crag](img/meridian-p2-view-academy.png)
+
+![Roofs off: the Rows and the Square](img/meridian-p2-cut-rows0.png)
+
+![Roofs off, upstairs](img/meridian-p2-cut-rows1.png)
+
+![Roofs off: the Academy and the Forum, upstairs](img/meridian-p2-cut-academy1.png)
+
+![Undergate Heights](img/meridian-p2-view-heights.png)
 
 ## 10. Decisions I made, and what I need
 
