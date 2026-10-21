@@ -215,7 +215,13 @@ namespace Rth.Client.Ui
         }
 
         /// <summary>Whether a text field has focus, so keys are typing rather than hotkeys.</summary>
-        public static bool IsTyping
+        public static bool IsTyping => InTextField || Time.frameCount - _typedFrame <= 1;
+
+        // The frame a text field last had focus: the key that ends typing (Enter, Escape) must not
+        // also work as a hotkey in the frame the field lets go.
+        private static int _typedFrame = -10;
+
+        private static bool InTextField
         {
             get
             {
@@ -224,6 +230,11 @@ namespace Rth.Client.Ui
                     if (e is TextField) return true;
                 return false;
             }
+        }
+
+        private void LateUpdate()
+        {
+            if (InTextField) _typedFrame = Time.frameCount;
         }
 
         public static bool IsModalOpen => Instance != null && Instance._openModal != null;

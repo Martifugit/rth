@@ -30,6 +30,8 @@ namespace Rth.Client.Ui.Panels
         private ScrollView _scroll;
         private TextField _input;
         private Label _name;
+        private Label _hint;
+        private int _focusedFrame = -10;
         private readonly List<GameSession.LogLine> _lines = new List<GameSession.LogLine>();
         private readonly List<(Filter Filter, Label Button)> _filterButtons = new List<(Filter, Label)>();
         private Filter _filter = Filter.All;
@@ -54,6 +56,8 @@ namespace Rth.Client.Ui.Panels
             _input = new TextField { maxLength = ChatMessage.MaxLength };
             _input.AddToClassList("chat-input");
             inputRow.Add(_input);
+            _hint = UiKit.Text(_input, "Enter to chat", "muted", "chat-hint");
+            _hint.pickingMode = PickingMode.Ignore;
             _input.RegisterCallback<KeyDownEvent>(OnKey, TrickleDown.TrickleDown);
             SetFilter(Filter.All);
         }
@@ -62,6 +66,12 @@ namespace Rth.Client.Ui.Panels
         {
             if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter)
             {
+                // The Enter that opened the chat arrives here too; it isn't a send.
+                if (Time.frameCount - _focusedFrame <= 1)
+                {
+                    e.StopImmediatePropagation();
+                    return;
+                }
                 string text = _input.value;
                 _input.value = "";
                 if (!string.IsNullOrWhiteSpace(text)) Session.Say(text);
@@ -80,6 +90,7 @@ namespace Rth.Client.Ui.Panels
         {
             if (Window == null) Ui.Open(this);
             Window?.Activate(this);
+            _focusedFrame = Time.frameCount;
             _input.Focus();
         }
 
@@ -113,6 +124,7 @@ namespace Rth.Client.Ui.Panels
         public override void Refresh()
         {
             _name.text = Session.PlayerName + ":";
+            _hint.style.display = string.IsNullOrEmpty(_input.value) && !UiRoot.IsTyping ? DisplayStyle.Flex : DisplayStyle.None;
             _input.Q(className: "unity-text-field__input")?.SetEnabled(true);
         }
 
