@@ -1,0 +1,62 @@
+[
+  {
+    "id": "infused",
+    "name": "Infused",
+    "icon": "status_infused",
+    "color": "#ffd25c",
+    "description": "Yellow bile runs hot in you. You deal {value}% more damage."
+  },
+  {
+    "id": "choleric",
+    "name": "Choleric",
+    "icon": "status_choleric",
+    "color": "#ff8a4c",
+    "debuff": true,
+    "description": "Your temper leaves you open. You take {value}% more damage."
+  },
+  {
+    "id": "warding",
+    "name": "Warding",
+    "icon": "status_warding",
+    "color": "#c39bff",
+    "description": "Black bile settles cold around you. You take {value}% less damage."
+  },
+  {
+    "id": "melancholic",
+    "name": "Melancholic",
+    "icon": "status_melancholic",
+    "color": "#9d86d8",
+    "debuff": true,
+    "description": "The cold dulls your hand. You deal {value}% less damage."
+  },
+  {
+    "id": "fever",
+    "name": "Fever",
+    "icon": "status_fever",
+    "color": "#ff5a3c",
+    "debuff": true,
+    "description": "Your bile is too hot to hold. Your blood burns away each tick, though fever never kills."
+  },
+  {
+    "id": "torpor",
+    "name": "Torpor",
+    "icon": "status_torpor",
+    "color": "#8fb4ff",
+    "debuff": true,
+    "description": "Your bile is too cold to stir. Builders gain half as much phlegm."
+  },
+  {
+    "id": "ward",
+    "name": "Ward",
+    "icon": "status_ward",
+    "color": "#b9a2ff",
+    "description": "Wrapped in black bile. You take {value}% less damage."
+  },
+  {
+    "id": "fervour",
+    "name": "Fervour",
+    "icon": "status_fervour",
+    "color": "#ffb04c",
+    "description": "Burning with purpose. You deal {value}% more damage."
+  }
+]

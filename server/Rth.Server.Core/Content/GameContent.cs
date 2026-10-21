@@ -65,6 +65,8 @@ namespace Rth.Server.Content
         public List<string> Melancholic = new List<string>();
         public List<string> Balanced = new List<string>();
         public List<string> Frequent = new List<string>();
+        /// <summary>How far bile must lean at death for the choleric or melancholic lines rather than the balanced ones.</summary>
+        public int LeanThreshold = 30;
     }
 
     /// <summary>Where a creature lives, exported with the map (<c>&lt;map&gt;.spawns.json</c>).</summary>
@@ -164,6 +166,7 @@ namespace Rth.Server.Content
         public TasksFile Tasks = new TasksFile();
         public List<QuestDef> Quests = new List<QuestDef>();
         public List<Rth.Shared.Progress.AchievementDef> Achievements = new List<Rth.Shared.Progress.AchievementDef>();
+        public List<StatusDef> Statuses = new List<StatusDef>();
     }
 
     /// <summary>
@@ -199,6 +202,7 @@ namespace Rth.Server.Content
         public IReadOnlyDictionary<string, TaskGiverDef> TaskGivers { get; private set; } = new Dictionary<string, TaskGiverDef>();
         public IReadOnlyDictionary<string, QuestDef> Quests { get; private set; } = new Dictionary<string, QuestDef>();
         public IReadOnlyDictionary<string, Rth.Shared.Progress.AchievementDef> Achievements { get; private set; } = new Dictionary<string, Rth.Shared.Progress.AchievementDef>();
+        public IReadOnlyDictionary<string, StatusDef> Statuses { get; private set; } = new Dictionary<string, StatusDef>();
 
         public ItemDef? Item(string? id) => id != null && Items.TryGetValue(id, out ItemDef? def) ? def : null;
 
@@ -226,6 +230,7 @@ namespace Rth.Server.Content
                 Tasks = ReadJson<TasksFile>(directory, "tasks.json"),
                 Quests = ReadJson<List<QuestDef>>(directory, "quests.json"),
                 Achievements = ReadJson<List<Rth.Shared.Progress.AchievementDef>>(directory, "achievements.json"),
+                Statuses = ReadJson<List<StatusDef>>(directory, "statuses.json"),
             });
         }
 
@@ -414,8 +419,16 @@ namespace Rth.Server.Content
             }
 
             CombatRules rules = parts.Rules;
-            if (rules.BilePassiveThreshold <= 0 || rules.BileExtreme <= rules.BilePassiveThreshold || rules.BileLimit < rules.BileExtreme)
-                problems.Add("Rules: need 0 < bilePassiveThreshold < bileExtreme <= bileLimit.");
+            if (rules.BileExtreme <= 0 || rules.BileLimit < rules.BileExtreme)
+                problems.Add("Rules: need 0 < bileExtreme <= bileLimit.");
+
+            Dictionary<string, StatusDef> statuses = Index(parts.Statuses, st => st.Id, "status", problems);
+            foreach (StatusDef st in parts.Statuses)
+                if (string.IsNullOrWhiteSpace(st.Name)) problems.Add("Status '" + st.Id + "': needs a name.");
+            IEnumerable<string> givenOut = StatusIds.BuiltIn.Concat(Enum.GetValues(typeof(EffectType)).Cast<EffectType>()
+                .Where(t => t != EffectType.None).Select(StatusIds.ForEffect));
+            foreach (string id in givenOut)
+                if (!statuses.ContainsKey(id)) problems.Add("Statuses: '" + id + "' is given out by the server but not defined.");
 
             if (problems.Count > 0) throw new ContentException(string.Join(Environment.NewLine, problems));
 
@@ -443,6 +456,7 @@ namespace Rth.Server.Content
                 TaskGivers = givers,
                 Quests = quests,
                 Achievements = achievements,
+                Statuses = statuses,
             };
         }
 
@@ -608,8 +622,8 @@ namespace Rth.Server.Content
                 Inputs = r.Inputs.Select(i => new ItemCost { Item = i.Item, Count = i.Count }).ToList(),
             }).ToList(),
             Achievements = Achievements.Values.ToList(),
+            Statuses = Statuses.Values.ToList(),
             BileLimit = Rules.BileLimit,
-            BilePassiveThreshold = Rules.BilePassiveThreshold,
             BileExtreme = Rules.BileExtreme,
             MaxPhlegm = Rules.MaxPhlegm,
             GlobalCooldownTicks = Rules.GlobalCooldownTicks,

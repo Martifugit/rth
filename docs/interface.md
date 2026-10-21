@@ -36,7 +36,8 @@ every piece and how they are organised.
 | **Secondary action bars** ✓ | Two more bars of 14 slots (from the window menu). Abilities and items are dragged onto any bar; layouts are kept on the server. |
 | **Minimap** ✓ | Square; compass and clock in its corners; beneath it the run toggle and buttons for the world map, journal, guide, settings and a menu of every window. No blood orb: blood is on the action bar. |
 | **Chat** ✓ | Filters (all, game, public) and the line you type on (Enter). Fixed size. Private and group chat to come. |
-| **Target** ✓ | What you are fighting, and its health. |
+| **Target** ✓ | What you are fighting, and its health. Kept while you walk away in combat. |
+| **Buffs / debuffs** ✓ | Two fixed rows of status icons above the action bar (bile's statuses, fever, torpor, wards), each with its % or time left; hover for what it does. |
 | **Side window** | Tabs for the panels below. |
 
 ## Side window tabs

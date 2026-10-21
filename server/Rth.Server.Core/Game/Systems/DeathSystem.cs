@@ -35,12 +35,11 @@ namespace Rth.Server.Game
         private string AssayerRemark(Player player)
         {
             AssayerLines lines = World.Content.Assayer;
-            CombatRules rules = World.Rules;
             List<string> pool =
                 player.Deaths == 1 ? lines.First :
                 player.Deaths >= 10 && lines.Frequent.Count > 0 && World.Random.Next(3) == 0 ? lines.Frequent :
-                rules.IsCholeric(player.Bile) ? lines.Choleric :
-                rules.IsMelancholic(player.Bile) ? lines.Melancholic :
+                player.Bile >= lines.LeanThreshold ? lines.Choleric :
+                player.Bile <= -lines.LeanThreshold ? lines.Melancholic :
                 lines.Balanced;
             if (pool.Count == 0) pool = lines.Balanced;
             string line = pool.Count > 0 ? pool[World.Random.Next(pool.Count)] : "The Assayer weighs you, and says nothing.";

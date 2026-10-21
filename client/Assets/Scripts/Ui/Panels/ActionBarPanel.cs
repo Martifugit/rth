@@ -42,7 +42,6 @@ namespace Rth.Client.Ui.Panels
 
             _bile = new BileAxis(frame);
             _bile.Root.style.marginTop = 5f;
-            UiKit.Tooltip(_bile.Root, () => BileTooltip());
 
             VisualElement slots = UiKit.El(frame);
             slots.style.marginTop = 5f;
@@ -63,28 +62,10 @@ namespace Rth.Client.Ui.Panels
             _slots.Refresh();
         }
 
-        private string BileTooltip()
-        {
-            PlayerStateMessage state = Session.PlayerState;
-            ClientContent content = Session.Content;
-            string text = UiKit.Title("Bile") +
-                "\n" + UiKit.Colour("Black bile", UiKit.BlackBile) + " to the left: melancholic, warding." +
-                "\n" + UiKit.Colour("Yellow bile", UiKit.YellowBile) + " to the right: choleric, harder hitting." +
-                "\n" + UiKit.Colour("Pale marks: passives begin. Red marks: fever and torpor.", UiKit.Muted);
-            if (state == null || content == null) return text;
-            var rules = new CombatRules { BileLimit = content.BileLimit, BilePassiveThreshold = content.BilePassiveThreshold, BileExtreme = content.BileExtreme };
-            string now = rules.IsCholeric(state.Bile) ? "Choleric: +" + rules.CholericBonusPercent(state.Bile) + "% damage"
-                : rules.IsMelancholic(state.Bile) ? "Melancholic: " + rules.MelancholicWardPercent(state.Bile) + "% less damage taken"
-                : "Balanced";
-            if (rules.IsFevered(state.Bile)) now += ". Fever: your blood is burning";
-            if (rules.IsTorpid(state.Bile)) now += ". Torpor: phlegm builds slowly";
-            return text + "\n\n" + UiKit.Colour(now + ".", UiKit.Value);
-        }
-
         /// <summary>
         /// The bile axis between its poles' icons: two half-bars filling outward from a black
-        /// stretch of the bar at its centre that holds the value (up to "+100"), coloured by pole. Marks show where the
-        /// passives begin (pale) and where fever and torpor set in (red).
+        /// stretch of the bar at its centre that holds the value (up to "+100"), coloured by pole. Red marks show
+        /// where fever and torpor set in. What bile does right now is in the buff and debuff bars.
         /// </summary>
         private sealed class BileAxis
         {
@@ -97,6 +78,7 @@ namespace Rth.Client.Ui.Panels
             private readonly VisualElement _yellowFill;
             private readonly Label _value;
             private int _marksFor = int.MinValue;
+            private readonly System.Collections.Generic.List<VisualElement> _marks = new System.Collections.Generic.List<VisualElement>();
 
             public BileAxis(VisualElement parent)
             {
@@ -140,15 +122,16 @@ namespace Rth.Client.Ui.Panels
                 _value.text = (bile > 0 ? "+" : "") + bile;
                 _value.style.color = bile > 0 ? UiKit.YellowBile : bile < 0 ? new Color(0.75f, 0.6f, 1f) : UiKit.TextColour;
 
-                int key = content.BilePassiveThreshold * 1000 + content.BileExtreme;
-                if (key == _marksFor) return;
-                _marksFor = key;
-                foreach (int mark in new[] { content.BilePassiveThreshold, content.BileExtreme })
-                {
-                    Color colour = mark == content.BileExtreme ? new Color(1f, 0.35f, 0.25f, 0.9f) : new Color(1f, 1f, 1f, 0.35f);
-                    Mark(_black, colour).style.right = Length.Percent(mark / limit * 100f);
-                    Mark(_yellow, colour).style.left = Length.Percent(mark / limit * 100f);
-                }
+                if (content.BileExtreme == _marksFor) return;
+                _marksFor = content.BileExtreme;
+                foreach (VisualElement old in _marks) old.RemoveFromHierarchy();
+                _marks.Clear();
+                var colour = new Color(1f, 0.35f, 0.25f, 0.9f);
+                float at = content.BileExtreme / limit * 100f;
+                _marks.Add(Mark(_black, colour));
+                _marks[0].style.right = Length.Percent(at);
+                _marks.Add(Mark(_yellow, colour));
+                _marks[1].style.left = Length.Percent(at);
             }
 
             private static VisualElement Mark(VisualElement track, Color colour)

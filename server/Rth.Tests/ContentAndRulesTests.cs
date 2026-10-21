@@ -84,18 +84,20 @@ public class ContentAndRulesTests
     }
 
     [Theory]
-    [InlineData(0, 0, 0)]
-    [InlineData(29, 0, 0)]
-    [InlineData(30, 5, 0)]
-    [InlineData(100, 20, 0)]
-    [InlineData(-30, 0, 5)]
-    [InlineData(-100, 0, 15)]
-    [InlineData(-29, 0, 0)]
-    public void BilePassivesStartAtTheThresholdAndScaleToTheLimit(int bile, int bonus, int ward)
+    [InlineData(0, 0, 0, 0, 0)]
+    [InlineData(1, 1, 1, 0, 0)]
+    [InlineData(50, 10, 5, 0, 0)]
+    [InlineData(100, 20, 10, 0, 0)]
+    [InlineData(-1, 0, 0, 1, 1)]
+    [InlineData(-50, 0, 0, 10, 5)]
+    [InlineData(-100, 0, 0, 20, 10)]
+    public void AnyLeanOfBileBringsBothOfItsPoleStatusesScalingToTheLimit(int bile, int infused, int choleric, int warding, int melancholic)
     {
         var rules = new CombatRules();
-        Assert.Equal(bonus, rules.CholericBonusPercent(bile));
-        Assert.Equal(ward, rules.MelancholicWardPercent(bile));
+        Assert.Equal(infused, rules.InfusedPercent(bile));
+        Assert.Equal(choleric, rules.CholericPercent(bile));
+        Assert.Equal(warding, rules.WardingPercent(bile));
+        Assert.Equal(melancholic, rules.MelancholicPercent(bile));
     }
 
     [Fact]
@@ -185,7 +187,7 @@ public class ContentAndRulesTests
                 Tick = 5, Blood = 900, MaxBlood = 1000, Phlegm = 55, Bile = -42, Breath = 10, MaxBreath = 300,
                 Deflect = CombatStyle.Melee, InCombat = true, TargetId = 3, GlobalCooldownReadyTick = 8, QueuedAbility = "q", StalledAbility = "s",
                 Cooldowns = { new CooldownState { AbilityId = "a", ReadyTick = 20 } },
-                Effects = { new EffectState { Effect = EffectType.Ward, Magnitude = 30, EndTick = 15 } },
+                Statuses = { new StatusState { Id = "ward", Magnitude = 30, EndTick = 15 }, new StatusState { Id = "infused", Magnitude = 4 } },
             },
             TestContent.Create().ToMessage(),
             new GameTextMessage { Kind = TextKind.Assayer, Text = "hello" },

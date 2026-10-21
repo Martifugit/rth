@@ -65,7 +65,8 @@ public class AbilityFlowTests
         Assert.Equal("draught", alice.QueuedAbility);
 
         fx.Ticks(2); // arrives
-        Assert.Equal(dummy.MaxBlood - 200, dummy.Blood); // both on one tick
+        // Both on one tick: spark, then draught with spark's +10 bile infusing it.
+        Assert.Equal(dummy.MaxBlood - 100 - (100 + fx.World.Rules.InfusedPercent(10)), dummy.Blood);
         Assert.Equal(20, alice.Phlegm);
         Assert.Equal(0, alice.Bile); // +10 then -10
         Assert.Null(alice.StalledAbility);
@@ -73,42 +74,70 @@ public class AbilityFlowTests
     }
 
     [Fact]
-    public void WalkingAwayDropsTheStallButNotItsCooldown()
+    public void WalkingAwayKeepsTheTargetAndStallUntilDroppingOutOfCombat()
     {
         var fx = Arena(At("dummy", 20, 5));
         FakeConnection client = fx.Login("Alice");
         Player alice = fx.Player("Alice");
-        client.FromClient(new AttackMessage { TargetId = fx.Npc("dummy").Id });
+        Npc dummy = fx.Npc("dummy");
+        client.FromClient(new AttackMessage { TargetId = dummy.Id });
         client.FromClient(new UseAbilityMessage { AbilityId = "spark" });
         fx.Ticks(1);
         Assert.Equal("spark", alice.StalledAbility);
 
         client.FromClient(new WalkToMessage { X = 5, Y = 5 });
         fx.Ticks(1);
-        Assert.Null(alice.StalledAbility);
-        Assert.True(alice.Cooldowns["spark"] > fx.World.CurrentTick);
-        Assert.Equal(0, alice.TargetId);
-    }
-
-    [Fact]
-    public void AStallLastsWhileInCombatAndIsLostOnDroppingOut()
-    {
-        var fx = Arena(At("dummy", 20, 5));
-        FakeConnection client = fx.Login("Alice");
-        Player alice = fx.Player("Alice");
-        client.FromClient(new AttackMessage { TargetId = fx.Npc("dummy").Id });
-        client.FromClient(new UseAbilityMessage { AbilityId = "spark" });
-        fx.Ticks(1);
-        alice.LastCombatTick = fx.World.CurrentTick; // as if just hit: still in combat after walking off
-
-        client.FromClient(new WalkToMessage { X = 5, Y = 5 });
-        fx.Ticks(1);
-        Assert.Equal(0, alice.TargetId);
+        Assert.Null(alice.Interaction); // no longer chasing...
+        Assert.Equal(dummy.Id, alice.TargetId); // ...but still fighting it
         Assert.Equal("spark", alice.StalledAbility);
 
         fx.Ticks(fx.World.Rules.CombatTimeoutTicks);
+        Assert.Equal(0, alice.TargetId);
         Assert.Null(alice.StalledAbility);
+        Assert.True(alice.Cooldowns["spark"] > 0); // its cooldown was spent all the same
         Assert.Contains(client.Texts, t => t.Contains("Spark fades unused"));
+    }
+
+    [Fact]
+    public void AnAbilityAfterWalkingAwayTakesTheFightBackUp()
+    {
+        var fx = Arena(At("dummy", 8, 5));
+        FakeConnection client = fx.Login("Alice");
+        Player alice = fx.Player("Alice");
+        Npc dummy = fx.Npc("dummy");
+        client.FromClient(new AttackMessage { TargetId = dummy.Id });
+        client.FromClient(new UseAbilityMessage { AbilityId = "spark" });
+        fx.Ticks(1);
+        int afterSpark = dummy.Blood;
+        Assert.True(afterSpark < dummy.MaxBlood);
+
+        // Walk well out of range, keeping the target.
+        client.FromClient(new WalkToMessage { X = 2, Y = 30, Run = true });
+        fx.Ticks(6); // inside the combat timeout, and still in sight
+        Assert.Equal(dummy.Id, alice.TargetId);
+        Assert.False(fx.World.Get<CombatSystem>().InRange(alice, dummy, 8));
+
+        // No new click on the dummy: the ability alone stalls, runs back and fires on arrival.
+        client.FromClient(new UseAbilityMessage { AbilityId = "draught" });
+        fx.Ticks(1);
+        Assert.IsType<AttackInteraction>(alice.Interaction);
+        Assert.Equal("draught", alice.StalledAbility);
+        for (int i = 0; i < 30 && alice.StalledAbility != null; i++) fx.Ticks(1);
+        Assert.Null(alice.StalledAbility);
+        Assert.True(dummy.Blood < afterSpark);
+    }
+
+    [Fact]
+    public void AttackingSomethingElseSwitchesTheTarget()
+    {
+        var fx = Arena(At("dummy", 8, 5), At("rat", 8, 8));
+        FakeConnection client = fx.Login("Alice");
+        Player alice = fx.Player("Alice");
+        client.FromClient(new AttackMessage { TargetId = fx.Npc("dummy").Id });
+        fx.Ticks(1);
+        client.FromClient(new AttackMessage { TargetId = fx.Npc("rat").Id });
+        fx.Ticks(1);
+        Assert.Equal(fx.Npc("rat").Id, alice.TargetId);
     }
 
     /// <summary>Test content plus "brace": a self-ward that keeps a stall.</summary>

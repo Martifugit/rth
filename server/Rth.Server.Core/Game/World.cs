@@ -264,6 +264,15 @@ namespace Rth.Server.Game
             player.StatsChanged = true;
         }
 
+        /// <summary>Every status the player is under now, from each <see cref="IStatusSource"/>.</summary>
+        public List<StatusState> StatusesOf(Player player)
+        {
+            var statuses = new List<StatusState>();
+            foreach (GameSystem system in _systems)
+                if (system is IStatusSource source) source.AddStatuses(player, statuses);
+            return statuses;
+        }
+
         /// <summary>Starts an interaction, ending whatever the player was doing before.</summary>
         public void StartInteraction(Player player, Interaction interaction)
         {

@@ -71,7 +71,7 @@ public class CombatTests
         fx.Ticks(2);
         Assert.Equal(afterFirst, dummy.Blood); // still on the global cooldown
         fx.Ticks(1);
-        Assert.Equal(afterFirst - 100, dummy.Blood);
+        Assert.Equal(afterFirst - (100 + fx.World.Rules.InfusedPercent(10)), dummy.Blood); // spark left bile at +10
     }
 
     [Fact]
@@ -120,8 +120,8 @@ public class CombatTests
         fx.Ticks(4);
         Assert.Equal(45, alice.Phlegm);
         Assert.Equal(55, alice.Bile);
-        // 200% of 100 ability damage, plus the choleric bonus for bile 40.
-        int bonus = fx.World.Rules.CholericBonusPercent(40);
+        // 200% of 100 ability damage, plus infused for bile 40.
+        int bonus = fx.World.Rules.InfusedPercent(40);
         Assert.True(before - dummy.Blood >= 200 * (100 + bonus) / 100);
     }
 
@@ -160,7 +160,7 @@ public class CombatTests
     }
 
     [Fact]
-    public void CholericBileIncreasesDamageDealt()
+    public void InfusedBileIncreasesDamageDealt()
     {
         var fx = Arena(At("dummy", 8, 5));
         FakeConnection client = fx.Login("Alice");
@@ -171,7 +171,7 @@ public class CombatTests
         client.FromClient(new UseAbilityMessage { AbilityId = "spark" });
         fx.Ticks(1);
 
-        int expected = (int)Math.Round(100 * (1 + fx.World.Rules.CholericBonusPercent(90) / 100.0));
+        int expected = (int)Math.Round(100 * (1 + fx.World.Rules.InfusedPercent(90) / 100.0));
         Assert.Equal(dummy.MaxBlood - expected, dummy.Blood);
     }
 
@@ -190,7 +190,7 @@ public class CombatTests
     }
 
     [Fact]
-    public void WardsDeflectionAndMelancholyReduceDamageTaken()
+    public void WardsDeflectionAndBileChangeDamageTaken()
     {
         var fx = Arena(At("rat", 30, 30));
         fx.Login("Alice");
@@ -212,8 +212,11 @@ public class CombatTests
         Assert.Equal(100, Take(100));
         alice.Deflect = CombatStyle.None;
 
-        alice.Bile = -100;
-        Assert.Equal(100 - rules.MelancholicMaxWardPercent, Take(100));
+        alice.Bile = -100; // warding
+        Assert.Equal(100 - rules.WardingMaxPercent, Take(100));
+        alice.Bile = 100; // choleric
+        Assert.Equal(100 + rules.CholericMaxPercent, Take(100));
+        alice.Bile = 0;
 
         int Take(int amount)
         {
@@ -458,7 +461,7 @@ public class CombatTests
     }
 
     [Fact]
-    public void WalkingAwayDropsTheTarget()
+    public void WalkingAwayKeepsTheTargetUntilOutOfCombat()
     {
         var fx = Arena(At("dummy", 8, 5));
         FakeConnection client = fx.Login("Alice");
@@ -466,7 +469,35 @@ public class CombatTests
         fx.Ticks(1);
         client.FromClient(new WalkToMessage { X = 2, Y = 2 });
         fx.Ticks(1);
+        Assert.Equal(fx.Npc("dummy").Id, fx.Player("Alice").TargetId);
+        fx.Ticks(fx.World.Rules.CombatTimeoutTicks);
         Assert.Equal(0, fx.Player("Alice").TargetId);
+    }
+
+    [Fact]
+    public void BileStatusesAreSentWithTheirStrength()
+    {
+        var fx = Arena();
+        FakeConnection client = fx.Login("Alice");
+        Player alice = fx.Player("Alice");
+        CombatRules rules = fx.World.Rules;
+
+        alice.Bile = 0;
+        Assert.Empty(fx.World.StatusesOf(alice));
+
+        alice.Bile = 50;
+        var hot = fx.World.StatusesOf(alice);
+        Assert.Equal(new[] { StatusIds.Infused, StatusIds.Choleric }, hot.Select(s => s.Id));
+        Assert.Equal(rules.InfusedPercent(50), hot[0].Magnitude);
+
+        alice.Bile = -rules.BileExtreme;
+        Assert.Equal(new[] { StatusIds.Warding, StatusIds.Melancholic, StatusIds.Torpor }, fx.World.StatusesOf(alice).Select(s => s.Id));
+
+        fx.World.Get<CombatSystem>().ApplyEffect(alice, EffectType.Ward, 30, 10);
+        fx.Ticks(1);
+        StatusState ward = client.Sent.OfType<PlayerStateMessage>().Last().Statuses.Single(s => s.Id == "ward");
+        Assert.Equal(30, ward.Magnitude);
+        Assert.True(ward.EndTick > fx.World.CurrentTick);
     }
 
     [Fact]

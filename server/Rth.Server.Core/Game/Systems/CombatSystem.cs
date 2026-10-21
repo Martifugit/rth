@@ -16,7 +16,12 @@ namespace Rth.Server.Game
     /// <see cref="EntityDied"/>; what happens next (respawns, loot, the Assayer) belongs to whoever
     /// listens.
     /// </summary>
-    public sealed class CombatSystem : GameSystem, IStatContributor
+    /// <remarks>
+    /// A player keeps their target while they stay in combat, even after walking away: using an
+    /// ability then takes the fight back up (chasing, or stalling if out of range). The target is
+    /// lost only by attacking something else, by it dying or leaving, or by dropping out of combat.
+    /// </remarks>
+    public sealed class CombatSystem : GameSystem, IStatContributor, IStatusSource
     {
         private CombatRules Rules => World.Rules;
 
@@ -125,7 +130,26 @@ namespace Rth.Server.Game
                 return;
             }
             if (!IsReady(player, ability, World.CurrentTick) && !Options(player).Queueing) return;
+            if (!ability.KeepsStall && !ResumeAttack(player)) return;
             player.QueuedAbility = abilityId;
+        }
+
+        /// <summary>
+        /// Takes the fight back up with the kept target if the player walked away from it (or did
+        /// something else). Returns false, dropping the target, if it can no longer be fought.
+        /// </summary>
+        private bool ResumeAttack(Player player)
+        {
+            if (player.Interaction is AttackInteraction current && current.TargetId == player.TargetId) return true;
+            Entity? target = World.FindEntity(player.TargetId);
+            if (target == null || target.IsDead || !World.CanSee(player, target))
+            {
+                player.ClearCombat();
+                World.Tell(player, TextKind.Warning, "You need a target first.");
+                return false;
+            }
+            StartAttack(player, target);
+            return true;
         }
 
         /// <summary>Whether an ability could fire this tick: global cooldown, its own cooldown, and no other action (eating).</summary>
@@ -262,7 +286,11 @@ namespace Rth.Server.Game
         internal bool TickAttack(Player player, int targetId)
         {
             Entity? target = World.FindEntity(targetId);
-            if (target == null || target.IsDead || !World.CanSee(player, target)) return false;
+            if (target == null || target.IsDead || !World.CanSee(player, target))
+            {
+                if (player.TargetId == targetId) player.ClearCombat();
+                return false;
+            }
 
             uint now = World.CurrentTick;
             FireSelfAbility(player, now);
@@ -399,7 +427,7 @@ namespace Rth.Server.Game
                 {
                     int percent = World.Random.Next(ability.DamageMin, ability.DamageMax + 1);
                     double damage = player.Stats.Get(StatIds.AbilityDamage) * percent / 100.0;
-                    damage *= 1 + (Rules.CholericBonusPercent(player.Bile) + player.Stats.Get(StatIds.DamageBonus)) / 100.0;
+                    damage *= Math.Max(0, 1 + (Rules.BileDamageDealtPercent(player.Bile) + player.Stats.Get(StatIds.DamageBonus)) / 100.0);
                     dealt = Damage(target, (int)Math.Round(damage), player, HitKind.Normal, ability.Style);
                 }
                 else
@@ -466,7 +494,8 @@ namespace Rth.Server.Game
 
             if (target is Player defender && kind != HitKind.Fever && amount > 0)
             {
-                double ward = Rules.MelancholicWardPercent(defender.Bile) + defender.Stats.Get(StatIds.Ward);
+                // Warding and wards lower it; choleric raises it (a negative ward).
+                double ward = defender.Stats.Get(StatIds.Ward) - Rules.BileDamageTakenPercent(defender.Bile);
                 double scaled = amount * Math.Max(0, 1 - Math.Min(90, ward) / 100.0);
                 if (style != CombatStyle.None && defender.Deflect == style && defender.Breath > 0)
                 {
@@ -493,13 +522,12 @@ namespace Rth.Server.Game
             return amount;
         }
 
-        /// <summary>Being hit makes NPCs fight back, and idle players auto-retaliate.</summary>
+        /// <summary>Being hit makes NPCs fight back, and idle players auto-retaliate (even with a kept target).</summary>
         private void Retaliate(Entity target, Entity source)
         {
-            if (target.TargetId != 0) return;
             if (target is Npc npc)
             {
-                if (!npc.Def.Attacks || npc.Returning) return;
+                if (npc.TargetId != 0 || !npc.Def.Attacks || npc.Returning) return;
                 npc.TargetId = source.Id;
                 npc.ChaseGoal = null;
             }
@@ -541,9 +569,23 @@ namespace Rth.Server.Game
         {
             if (player.IsDead) return;
             if (!(player.Interaction is AttackInteraction)) FireSelfAbility(player, World.CurrentTick); // in combat with no target
+            DropKeptTarget(player);
             DropStallOutOfCombat(player);
             TickResources(player);
             if (player.Effects.RemoveAll(e => World.CurrentTick >= e.EndTick) > 0) World.RecalculateStats(player);
+        }
+
+        /// <summary>
+        /// A target kept after walking away lasts until the player drops out of combat (no hits
+        /// either way for <see cref="CombatRules.CombatTimeoutTicks"/>), or until it dies or leaves.
+        /// </summary>
+        private void DropKeptTarget(Player player)
+        {
+            if (player.TargetId == 0) return;
+            if (player.Interaction is AttackInteraction attack && attack.TargetId == player.TargetId) return;
+            Entity? target = World.FindEntity(player.TargetId);
+            bool gone = target == null || target.IsDead || !World.CanSee(player, target);
+            if (gone || !player.InCombat(World.CurrentTick, Rules.CombatTimeoutTicks)) player.ClearCombat();
         }
 
         /// <summary>
@@ -625,9 +667,29 @@ namespace Rth.Server.Game
             };
             foreach (KeyValuePair<string, uint> cd in p.Cooldowns)
                 if (cd.Value > now) state.Cooldowns.Add(new CooldownState { AbilityId = cd.Key, ReadyTick = cd.Value });
-            foreach (ActiveEffect e in p.Effects)
-                state.Effects.Add(new EffectState { Effect = e.Type, Magnitude = e.Magnitude, EndTick = e.EndTick });
+            state.Statuses.AddRange(World.StatusesOf(p));
             p.Connection.Send(state);
+        }
+
+        /// <summary>The bile statuses (any lean brings a pole's buff and debuff), fever, torpor, and timed ability effects.</summary>
+        public void AddStatuses(Player player, List<StatusState> statuses)
+        {
+            if (player.IsDead) return;
+            int bile = player.Bile;
+            if (Rules.IsCholeric(bile))
+            {
+                statuses.Add(new StatusState { Id = StatusIds.Infused, Magnitude = Rules.InfusedPercent(bile) });
+                statuses.Add(new StatusState { Id = StatusIds.Choleric, Magnitude = Rules.CholericPercent(bile) });
+            }
+            if (Rules.IsMelancholic(bile))
+            {
+                statuses.Add(new StatusState { Id = StatusIds.Warding, Magnitude = Rules.WardingPercent(bile) });
+                statuses.Add(new StatusState { Id = StatusIds.Melancholic, Magnitude = Rules.MelancholicPercent(bile) });
+            }
+            if (Rules.IsFevered(bile)) statuses.Add(new StatusState { Id = StatusIds.Fever });
+            if (Rules.IsTorpid(bile)) statuses.Add(new StatusState { Id = StatusIds.Torpor });
+            foreach (ActiveEffect e in player.Effects)
+                statuses.Add(new StatusState { Id = StatusIds.ForEffect(e.Type), Magnitude = e.Magnitude, EndTick = e.EndTick });
         }
 
         private static int Clamp(int value, int min, int max) => Math.Max(min, Math.Min(max, value));
@@ -645,9 +707,13 @@ namespace Rth.Server.Game
 
         public override bool Tick(World world, Player player) => world.Get<CombatSystem>().TickAttack(player, TargetId);
 
+        /// <summary>
+        /// Walking away (or doing something else) stops attacking but keeps the target, so an
+        /// ability can take the fight up again; engaging counts as combat up to this tick.
+        /// </summary>
         public override void End(World world, Player player)
         {
-            if (player.TargetId == TargetId) player.ClearCombat();
+            if (player.TargetId == TargetId) player.LastCombatTick = world.CurrentTick;
             player.QueuedAbility = null;
         }
     }

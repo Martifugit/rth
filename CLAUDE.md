@@ -178,7 +178,9 @@ phlegm and breath came with it. The prototype numbers are in `docs/systems.md`.
       with phlegm and bile requirements, a 3-tick global cooldown and an ability queue.
 - [x] Later: stalling (use out of range, fires on arrival; `keepsStall` abilities hold it),
       optional queueing and Revolution (Settings > Combat; see `docs/systems.md`).
-- [x] Bile passives at ±30, fever/torpor at ±80, settling out of combat.
+- [x] Bile statuses (any lean: infused + choleric, or warding + melancholic, scaling with bile),
+      fever/torpor at ±80, settling out of combat. Buff and debuff bars on the client.
+- [x] The target is kept while walking away in combat; an ability takes the fight back up.
 - [x] Breath deflection against one style.
 - [x] NPCs placed in the scene (`MapNpcSpawn`), with chase, melee/ranged rules, line of sight,
       aggression, retaliation, leashing, death and respawn.
@@ -230,7 +232,8 @@ stockpile carcasses, and old-blood.
 - [x] Bank (400 slots, everything stacks), from a strongbox, a banker or dialogue.
 - [x] Shops with shared, restocking stock, priced in items or points, optional buy-back.
 - [x] Points pools and task-givers: tasks tracked by events, streak bonuses, cancel costs.
-- [x] Distillation at Corvin's (secret) still; spenders and ultimates burn reagents.
+- [x] Distillation at Corvin's (secret) still. (Abilities no longer burn its reagents: they cost
+      only phlegm and bile.)
 - [x] Townsfolk: Clerk Ambrose (Synod bank), Corvin Sallow (apothecary, back room, Scald tasks),
       Wenna Thole (skinning yard tasks and token shop).
 - [x] Client: dialogue box (number keys / space), bank and shop windows, pack clicks deposit or
@@ -336,7 +339,8 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | A window the server opens | A value in `InterfaceKind`; `InterfaceSystem.Open/IsOpen/Close`; draw it in the client's `TownWindows`. |
 | A currency | `ShopSystem.RegisterCurrency(prefix, ICurrency)`; shops then price in "prefix:id". |
 | A kind of task | Subscribe to the event that proves it and advance `TaskSystem` progress for a new `kind`. |
-| An ability cost | `reagents` on the ability (items), checked by the shared requirement rule and consumed on use. |
+| An ability cost | `reagents` on the ability (items), checked by the shared requirement rule and consumed on use. Occult abilities use none: phlegm and bile only. |
+| A status (buff or debuff icon) | An entry in statuses.json (name, icon, `{value}` text, `debuff`); a system implementing `IStatusSource` lists who has it each tick. Timed ability effects show as the status named after their `EffectType`. |
 | A new kind of map placement | A marker component in tools/unity-map-tools, an export file in `MapExporter`, a field on `MapPlacements` (merged across regions by `WorldLoader`). |
 | A new region of the world | A scene with a `MapArea` at its absolute, zone-aligned rectangle (a builder using `WorldKit.BeginRegion`/`SaveRegion`); export it. No server code. |
 | Something per region (music, rules, title) | A field on `WorldRegion`, written to `<name>.region.json` by `MapExporter`; it reaches clients in `RegionsMessage` as JSON. |

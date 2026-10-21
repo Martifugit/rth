@@ -11,7 +11,7 @@ namespace Rth.Shared.Net
     public static class Protocol
     {
         /// <summary>Bump whenever a message layout changes, so mismatched builds are refused at login.</summary>
-        public const int Version = 10;
+        public const int Version = 11;
         public const int DefaultPort = 43600;
         /// <summary>Sanity limits on a single frame's length, in bytes.</summary>
         public const int MaxClientFrame = 4 * 1024;
@@ -394,10 +394,13 @@ namespace Rth.Shared.Net
         public uint ReadyTick;
     }
 
-    public struct EffectState
+    /// <summary>A status the player is under (a <see cref="StatusDef"/> id), for the buff and debuff bars.</summary>
+    public struct StatusState
     {
-        public EffectType Effect;
+        public string Id;
+        /// <summary>Its strength now (e.g. the % for infused); 0 when it has none.</summary>
         public int Magnitude;
+        /// <summary>The tick it wears off; 0 while it lasts as long as its cause (bile, for one).</summary>
         public uint EndTick;
     }
 
@@ -420,7 +423,7 @@ namespace Rth.Shared.Net
         /// <summary>An ability used out of range, waiting to fire on reaching the target (its cooldown already runs).</summary>
         public string StalledAbility = "";
         public List<CooldownState> Cooldowns = new List<CooldownState>();
-        public List<EffectState> Effects = new List<EffectState>();
+        public List<StatusState> Statuses = new List<StatusState>();
 
         public override MessageType Type => MessageType.PlayerState;
 
@@ -445,12 +448,12 @@ namespace Rth.Shared.Net
                 w.Write(c.AbilityId);
                 w.Write(c.ReadyTick);
             }
-            w.Write((byte)Effects.Count);
-            foreach (EffectState e in Effects)
+            w.Write((byte)Statuses.Count);
+            foreach (StatusState s in Statuses)
             {
-                w.Write((byte)e.Effect);
-                w.Write(e.Magnitude);
-                w.Write(e.EndTick);
+                w.Write(s.Id);
+                w.Write(s.Magnitude);
+                w.Write(s.EndTick);
             }
         }
 
@@ -475,7 +478,7 @@ namespace Rth.Shared.Net
             int count = r.ReadByte();
             for (int i = 0; i < count; i++) m.Cooldowns.Add(new CooldownState { AbilityId = r.ReadString(), ReadyTick = r.ReadUInt32() });
             count = r.ReadByte();
-            for (int i = 0; i < count; i++) m.Effects.Add(new EffectState { Effect = (EffectType)r.ReadByte(), Magnitude = r.ReadInt32(), EndTick = r.ReadUInt32() });
+            for (int i = 0; i < count; i++) m.Statuses.Add(new StatusState { Id = r.ReadString(), Magnitude = r.ReadInt32(), EndTick = r.ReadUInt32() });
             return m;
         }
     }
@@ -495,12 +498,12 @@ namespace Rth.Shared.Net
         public List<ObjectDef> Objects = new List<ObjectDef>();
         public List<NpcInfo> Npcs = new List<NpcInfo>();
         public int BileLimit;
-        public int BilePassiveThreshold;
         public int BileExtreme;
         public int MaxPhlegm;
         public int GlobalCooldownTicks = 3;
         public List<RecipeInfo> Recipes = new List<RecipeInfo>();
         public List<Rth.Shared.Progress.AchievementDef> Achievements = new List<Rth.Shared.Progress.AchievementDef>();
+        public List<StatusDef> Statuses = new List<StatusDef>();
     }
 
     /// <summary>

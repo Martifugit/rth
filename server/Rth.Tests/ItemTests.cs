@@ -231,6 +231,7 @@ public class ItemTests
 
         Player alice = fx.Player("Alice");
         alice.Blood = alice.MaxBlood;
+        alice.Bile = 0; // spark's lean would make her choleric
         Assert.Equal(90, fx.World.Get<CombatSystem>().Damage(alice, 100, fx.Npc("rat"), HitKind.Normal)); // hat: 10% ward
     }
 

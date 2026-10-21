@@ -29,10 +29,15 @@ marked **Proposal** are suggestions that the designer has not yet confirmed.
 
 **Prototype (Milestone 2).** The poles above are playable, with placeholder numbers. All of them
 live in `server/data/content/` and hot-reload, so they're meant to be tuned by playing:
-- **Passives** from ±30: choleric deals 5% more damage at +30, rising to 20% at +100;
-  melancholic takes 5% less damage at −30, rising to 15% at −100.
-- **Extremes** from ±80: choleric **fever** burns 0.5% of max blood per tick (it never kills);
-  melancholic **torpor** halves phlegm gained from builders.
+- **Statuses:** any lean away from 0 gives that pole's buff and debuff, shown in the buff and
+  debuff bars, scaling in proportion to bile up to these at ±100 (`combat.json`):
+  - yellow bile: **infused** (buff), 20% more damage dealt; **choleric** (debuff), 10% more
+    damage taken.
+  - black bile: **warding** (buff), 20% less damage taken; **melancholic** (debuff), 10% less
+    damage dealt.
+  Status names, icons and text are in `statuses.json`; the server decides who has which.
+- **Extremes** from ±80 (debuffs too): yellow **fever** burns 0.5% of max blood per tick (it
+  never kills); black **torpor** halves phlegm gained from builders.
 - **Settling:** after 10 ticks out of combat, bile drifts back 1 per tick, phlegm fades 2 per
   tick, and blood and breath regenerate.
 - **Phlegm:** builders build 6–8; spenders need 50 and spend 15; ultimates need and spend 100.
@@ -40,11 +45,15 @@ live in `server/data/content/` and hot-reload, so they're meant to be tuned by p
 - **Using abilities (RS3-style):**
   - **In combat** means engaged with a target (even while still running to it) or hit or
     hitting within the last 10 ticks.
+  - **Keeping the target:** walking away stops attacking but keeps the target for as long as
+    you stay in combat. Using an ability then takes the fight back up: in range it fires, out of
+    range it stalls and you run back. The target is lost only by attacking something else, by
+    its death or leaving, or by dropping out of combat.
   - **Stalling:** an ability used while in combat but out of range goes on cooldown (and starts
     the global cooldown) at once, but fires only when the player reaches the target. If the
     global cooldown has passed by then, the next ability fires on the same tick: two at once.
-    One stall at a time. It carries over to a new target, and is lost on dropping out of combat
-    (its cooldown stays spent). Abilities marked `keepsStall` are used on yourself, need no
+    One stall at a time. It carries over to a new target and survives walking away, and is lost
+    on dropping out of combat (its cooldown stays spent). Abilities marked `keepsStall` are used on yourself, need no
     target, deal no damage, don't release the stall and keep you in combat.
   - **Queueing** (on by default, a setting): an ability pressed during the global cooldown fires
     when it ends. Off: the press is ignored unless the ability is ready.
@@ -59,7 +68,9 @@ live in `server/data/content/` and hot-reload, so they're meant to be tuned by p
 - **Abilities:** Gall Spark (+10), Black Draught (−10, heals 25% of damage), Still the Humours
   (25 towards zero), Bitter Salt (needs +20), Choleric Flare (spender, needs +30), Melancholy
   Shroud (spender, needs −30, 30% ward), Vitriol Rain (ultimate, needs +60), Black Sun
-  (ultimate, needs −60, heals 20% and wards). Reagent costs wait for items and Distillation.
+  (ultimate, needs −60, heals 20% and wards). **Abilities cost no items:** spenders and
+  ultimates need phlegm, and some need bile at a level. (The `reagents` field on an ability
+  still works, for a future style that wants ammunition-like costs.)
 
 ## Combat styles
 
@@ -67,8 +78,8 @@ live in `server/data/content/` and hot-reload, so they're meant to be tuned by p
 - **Ranged: the Rationalists (phlegm).** Calibration resource. Ammo comes from an ammo-crafting
   skill (a reflavoured fletching or engineering), with moon-touched materials at higher tiers,
   following RS ammo progression.
-- **Occultism: the occult houses (bile).** Moves the bile axis. Casting also needs a rune-like
-  reagent (see Distillation).
+- **Occultism: the occult houses (bile).** Moves the bile axis. Casting costs phlegm and bile,
+  not items.
 
 ## Skills
 
@@ -125,7 +136,9 @@ The utility skill behind **breath**. It is to breath what Agility is to run ener
 Makes Rationalist ammunition; moon-touched materials at higher tiers.
 
 ### Distillation (runecrafting analogue)
-Makes Occultism's casting reagents. Butchering byproducts and Dreaming fragments feed it.
+Makes salts and tinctures from butchering byproducts and Dreaming fragments. **Decided:** occult
+abilities do not consume them, so what they are for (potions that push bile, Medicine inputs,
+ritual offerings) is open.
 
 **Proposal: how Distillation works.**
 - **Two reagent families:** *choleric salts* for + pole spells and *melancholic tinctures* for
@@ -147,7 +160,7 @@ screen and comments on how the player's humour balance is changing.
 ## Open questions
 
 - Distillation: confirm or revise the proposal above.
-- The exact rune-like reagent requirements per occult spell tier.
+- What Distillation's salts and tinctures are used for, now that abilities don't burn them.
 - Calibration: how exactly it builds and decays.
 - Religion: the ritual mechanic itself, and how many verses melee can hold.
 - Final names for skills, resources and places.

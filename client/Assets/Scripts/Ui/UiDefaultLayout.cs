@@ -33,6 +33,8 @@ namespace Rth.Client.Ui
         public const string ActionBar2 = "actionbar2";
         public const string ActionBar3 = "actionbar3";
         public const string Target = "target";
+        public const string Buffs = "buffs";
+        public const string Debuffs = "debuffs";
         public const string Dialogue = "dialogue";
         public const string Town = "town";
 
@@ -42,8 +44,10 @@ namespace Rth.Client.Ui
             [Side] = new Placement(1f, 1f, 0f, 0f, 312f, 400f),
             [Chat] = new Placement(0f, 1f, 0f, 0f, 480f, 230f),
             [ActionBar] = new Placement(0.5f, 1f, 0f, 0f, 636f, 110f),
-            [ActionBar2] = new Placement(0.5f, 1f, 0f, -126f, 636f, 62f),
-            [ActionBar3] = new Placement(0.5f, 1f, 0f, -190f, 636f, 62f),
+            [Buffs] = new Placement(0.5f, 1f, -160f, -114f, 316f, 40f),
+            [Debuffs] = new Placement(0.5f, 1f, 160f, -114f, 316f, 40f),
+            [ActionBar2] = new Placement(0.5f, 1f, 0f, -158f, 636f, 62f),
+            [ActionBar3] = new Placement(0.5f, 1f, 0f, -222f, 636f, 62f),
             [Target] = new Placement(0.5f, 0f, 0f, 8f, 260f, 64f),
             [Dialogue] = new Placement(0.5f, 1f, 0f, -130f, 600f, 230f),
             [Town] = new Placement(0.5f, 0.5f, -60f, -30f, 780f, 480f),
