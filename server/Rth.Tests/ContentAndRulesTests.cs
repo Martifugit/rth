@@ -183,7 +183,7 @@ public class ContentAndRulesTests
             new PlayerStateMessage
             {
                 Tick = 5, Blood = 900, MaxBlood = 1000, Phlegm = 55, Bile = -42, Breath = 10, MaxBreath = 300,
-                Deflect = CombatStyle.Melee, InCombat = true, TargetId = 3, GlobalCooldownReadyTick = 8, QueuedAbility = "q",
+                Deflect = CombatStyle.Melee, InCombat = true, TargetId = 3, GlobalCooldownReadyTick = 8, QueuedAbility = "q", StalledAbility = "s",
                 Cooldowns = { new CooldownState { AbilityId = "a", ReadyTick = 20 } },
                 Effects = { new EffectState { Effect = EffectType.Ward, Magnitude = 30, EndTick = 15 } },
             },

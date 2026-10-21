@@ -75,6 +75,7 @@ namespace Rth.Client.Ui
             if (a.BileTowardZero > 0) lines.Add("Bile " + a.BileTowardZero + " towards balance");
             if (a.BileMin > -100) lines.Add("Needs bile of at least " + (a.BileMin > 0 ? "+" : "") + a.BileMin);
             if (a.BileMax < 100) lines.Add("Needs bile of at most " + a.BileMax);
+            if (a.KeepsStall) lines.Add(UiKit.Colour("Used on yourself; keeps you in combat without breaking a stalled ability", UiKit.Good));
             foreach (Rth.Shared.Skills.SkillRequirement r in a.Requirements) lines.Add("Needs " + r.Skill + " level " + r.Level);
             if (problem != null) lines.Add("\n" + UiKit.Colour(problem, UiKit.Bad));
             return string.Join("\n", lines);

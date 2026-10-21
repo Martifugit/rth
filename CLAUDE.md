@@ -174,8 +174,10 @@ One style, **Occultism**, because its bile axis is the riskiest and most unusual
 phlegm and breath came with it. The prototype numbers are in `docs/systems.md`.
 
 - [x] Blood, phlegm (0-100), bile (-100..+100) and breath on every player, saved with them.
-- [x] Occult auto-attack plus 8 abilities (basics, thresholds, ultimates) across both poles,
+- [x] Occult auto-attack plus 8 abilities (builders, spenders, ultimates) across both poles,
       with phlegm and bile requirements, a 3-tick global cooldown and an ability queue.
+- [x] Later: stalling (use out of range, fires on arrival; `keepsStall` abilities hold it),
+      optional queueing and Revolution (Settings > Combat; see `docs/systems.md`).
 - [x] Bile passives at ±30, fever/torpor at ±80, settling out of combat.
 - [x] Breath deflection against one style.
 - [x] NPCs placed in the scene (`MapNpcSpawn`), with chase, melee/ranged rules, line of sight,
@@ -205,7 +207,7 @@ Items are kept on death for now. Items have placeholder icons (tinted squares) u
 
 - [x] Skills with XP and levels (skills.json): one data-defined XP curve, level-up event and
       message, stats per level, XP from damage by combat style.
-- [x] "Needs level N" requirements on abilities (thresholds occultism 5, ultimates 10),
+- [x] "Needs level N" requirements on abilities (spenders occultism 5, ultimates 10),
       equipment and recipes.
 - [x] Interactive world objects placed in the scene (`MapObject`), exported to
       `<map>.objects.json`; right-click/left-click them in the client.
@@ -227,7 +229,7 @@ stockpile carcasses, and old-blood.
 - [x] Bank (400 slots, everything stacks), from a strongbox, a banker or dialogue.
 - [x] Shops with shared, restocking stock, priced in items or points, optional buy-back.
 - [x] Points pools and task-givers: tasks tracked by events, streak bonuses, cancel costs.
-- [x] Distillation at Corvin's (secret) still; thresholds and ultimates burn reagents.
+- [x] Distillation at Corvin's (secret) still; spenders and ultimates burn reagents.
 - [x] Townsfolk: Clerk Ambrose (Synod bank), Corvin Sallow (apothecary, back room, Scald tasks),
       Wenna Thole (skinning yard tasks and token shop).
 - [x] Client: dialogue box (number keys / space), bank and shop windows, pack clicks deposit or

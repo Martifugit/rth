@@ -18,9 +18,9 @@ namespace Rth.Shared.Combat
         /// <summary>The free attack made whenever nothing else is used.</summary>
         Auto = 0,
         /// <summary>Builds phlegm.</summary>
-        Basic = 1,
+        Builder = 1,
         /// <summary>Needs some phlegm (usually 50%) and spends part of it.</summary>
-        Threshold = 2,
+        Spender = 2,
         /// <summary>Needs full phlegm and spends it all.</summary>
         Ultimate = 3,
     }
@@ -70,11 +70,17 @@ namespace Rth.Shared.Combat
         public int HealPercentOfDamage;
         public int HealPercentOfMaxBlood;
 
+        /// <summary>
+        /// Used on yourself where you stand (no target or range needed, no damage), and it doesn't
+        /// release or break a stalled ability: using it keeps you in combat, so the stall holds.
+        /// </summary>
+        public bool KeepsStall;
+
         public EffectType Effect;
         public int EffectMagnitude;
         public int EffectTicks;
 
-        /// <summary>Skill levels needed to use it at all (e.g. occultism 5 for a threshold).</summary>
+        /// <summary>Skill levels needed to use it at all (e.g. occultism 5 for a spender).</summary>
         public List<SkillRequirement> Requirements = new List<SkillRequirement>();
 
         /// <summary>Items used up each time it's cast (Distillation's salts and tinctures).</summary>

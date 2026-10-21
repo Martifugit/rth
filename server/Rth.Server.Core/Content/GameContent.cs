@@ -241,7 +241,8 @@ namespace Rth.Server.Content
                 if (a.Range < 1) problems.Add("Ability '" + a.Id + "': range must be at least 1.");
                 if (a.CooldownTicks < 0) problems.Add("Ability '" + a.Id + "': negative cooldown.");
                 if (a.BileMin > a.BileMax) problems.Add("Ability '" + a.Id + "': bileMin is above bileMax.");
-                if (a.PhlegmCost > a.PhlegmRequired && a.Type != AbilityType.Basic) problems.Add("Ability '" + a.Id + "': costs more phlegm than it requires.");
+                if (a.PhlegmCost > a.PhlegmRequired && a.Type != AbilityType.Builder) problems.Add("Ability '" + a.Id + "': costs more phlegm than it requires.");
+                if (a.KeepsStall && a.DamageMax > 0) problems.Add("Ability '" + a.Id + "': keepsStall abilities are used on yourself and can't deal damage.");
             }
 
             if (!abilities.TryGetValue(parts.AutoAttack ?? "", out AbilityDef? auto)) problems.Add("autoAttack '" + parts.AutoAttack + "' is not an ability.");

@@ -62,13 +62,17 @@ pressing Play in a region scene loads the Game scene beside it.
     him about the humours once you're a decent butcher.
   - **Wenna Thole** at the skinning rack hands out butchering tasks for **yard tokens**,
     spent in her shop. Your current task and points are in the **Task** tab.
-- Occult thresholds and ultimates burn **reagents** (choleric salts, melancholic tincture,
+- Use an ability while running to your target and it **stalls**: it goes on cooldown now and
+  fires when you arrive, so the next one can follow on the same tick. **Settings > Combat**
+  turns ability queueing on or off and sets **Revolution** (the main bar fires builders, or
+  everything, by itself).
+- Occult spenders and ultimates burn **reagents** (choleric salts, melancholic tincture,
   vitriol salts). You start with some; Corvin sells them; **Distillation** makes them from the
   galls and glands butchering yields.
 - **Quests**: someone is talking in her sleep by the pond. The **Quests** tab lists them; click
   one for the journal, which tells the story so far. The journal also holds the **achievement
   diary** and the **bestiary** (kill counts and drop logs).
-- The **Skills** tab shows your levels. Occultism (from fighting) unlocks thresholds at 5 and
+- The **Skills** tab shows your levels. Occultism (from fighting) unlocks spenders at 5 and
   ultimates at 10, and adds ability damage per level.
 - Arrow keys or middle-drag rotate the camera; the scroll wheel zooms.
 

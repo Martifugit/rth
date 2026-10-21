@@ -37,7 +37,7 @@ namespace Rth.Client.Ui.Panels
             _breath = new UiKit.Gauge(gauges, "breath", UiKit.BreathColour);
             _breath.Root.style.marginRight = 0f;
             UiKit.Tooltip(_blood.Root, () => UiKit.Title("Blood") + "\nYour life. Food restores it.");
-            UiKit.Tooltip(_phlegm.Root, () => UiKit.Title("Phlegm") + "\nBuilt by basic abilities, spent by thresholds and ultimates. Fades out of combat.");
+            UiKit.Tooltip(_phlegm.Root, () => UiKit.Title("Phlegm") + "\nBuilt by builder abilities, spent by spenders and ultimates. Fades out of combat.");
             UiKit.Tooltip(_breath.Root, () => UiKit.Title("Breath") + "\nHeld focuses spend it, such as deflection (F). Recovers out of combat.");
 
             _bile = new BileAxis(frame);

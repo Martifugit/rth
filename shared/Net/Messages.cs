@@ -11,7 +11,7 @@ namespace Rth.Shared.Net
     public static class Protocol
     {
         /// <summary>Bump whenever a message layout changes, so mismatched builds are refused at login.</summary>
-        public const int Version = 9;
+        public const int Version = 10;
         public const int DefaultPort = 43600;
         /// <summary>Sanity limits on a single frame's length, in bytes.</summary>
         public const int MaxClientFrame = 4 * 1024;
@@ -417,6 +417,8 @@ namespace Rth.Shared.Net
         public int TargetId;
         public uint GlobalCooldownReadyTick;
         public string QueuedAbility = "";
+        /// <summary>An ability used out of range, waiting to fire on reaching the target (its cooldown already runs).</summary>
+        public string StalledAbility = "";
         public List<CooldownState> Cooldowns = new List<CooldownState>();
         public List<EffectState> Effects = new List<EffectState>();
 
@@ -436,6 +438,7 @@ namespace Rth.Shared.Net
             w.Write(TargetId);
             w.Write(GlobalCooldownReadyTick);
             w.Write(QueuedAbility);
+            w.Write(StalledAbility);
             w.Write((byte)Cooldowns.Count);
             foreach (CooldownState c in Cooldowns)
             {
@@ -467,6 +470,7 @@ namespace Rth.Shared.Net
                 TargetId = r.ReadInt32(),
                 GlobalCooldownReadyTick = r.ReadUInt32(),
                 QueuedAbility = r.ReadString(),
+                StalledAbility = r.ReadString(),
             };
             int count = r.ReadByte();
             for (int i = 0; i < count; i++) m.Cooldowns.Add(new CooldownState { AbilityId = r.ReadString(), ReadyTick = r.ReadUInt32() });

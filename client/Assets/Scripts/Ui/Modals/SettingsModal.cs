@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Rth.Shared.Combat;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -23,6 +24,8 @@ namespace Rth.Client.Ui.Modals
 
         private UiKit.Check _roofs;
         private UiKit.Check _lock;
+        private UiKit.Check _queueing;
+        private readonly Dictionary<RevolutionMode, UiKit.Check> _revolution = new Dictionary<RevolutionMode, UiKit.Check>();
         private Label _scale;
         private Label _who;
 
@@ -53,6 +56,22 @@ namespace Rth.Client.Ui.Modals
             UiKit.El(resetRow, "spacer");
             UiKit.Button(resetRow, "Reset layout", () => Ui.ResetLayout());
 
+            // Combat options live in client state, so they follow the player; the server applies them.
+            UiKit.Heading(scroll, "Combat").style.marginTop = 12f;
+            VisualElement combat = UiKit.El(scroll, "card");
+            _queueing = new UiKit.Check(combat, "Ability queueing", () =>
+                Session.SetClientState(CombatOptions.QueueingKey, CombatOptions.QueueingValue(!Options().Queueing)));
+            UiKit.Text(combat, "An ability pressed during the global cooldown waits and fires when it ends. Off: it is ignored.", "muted", "small");
+            UiKit.Text(combat, "Revolution: abilities that fire on their own", "value").style.marginTop = 6f;
+            foreach ((RevolutionMode mode, string label) in new[]
+            {
+                (RevolutionMode.Manual, "Off: every ability by hand"),
+                (RevolutionMode.Builders, "Builders"),
+                (RevolutionMode.All, "Builders, spenders and ultimates"),
+            })
+                _revolution[mode] = new UiKit.Check(combat, label, () => Session.SetClientState(CombatOptions.RevolutionKey, CombatOptions.RevolutionValue(mode)));
+            UiKit.Text(combat, "When nothing is pressed, the leftmost ready ability on the main bar fires after each global cooldown.", "muted", "small");
+
             UiKit.Heading(scroll, "Account").style.marginTop = 12f;
             VisualElement account = UiKit.El(scroll, "card", "row");
             _who = UiKit.Text(account, "");
@@ -68,10 +87,19 @@ namespace Rth.Client.Ui.Modals
         {
             _roofs.Set(RoofHider.ShowRoofs);
             _lock.Set(Ui.Locked);
+            CombatOptions options = Options();
+            _queueing.Set(options.Queueing);
+            foreach (KeyValuePair<RevolutionMode, UiKit.Check> r in _revolution) r.Value.Set(options.Revolution == r.Key);
             _scale.text = Mathf.RoundToInt(Ui.Scale * 100f) + "%";
             EntityView local = Ui.world.Local;
             _who.text = "Logged in as " + UiKit.Colour(Session.PlayerName, UiKit.Value) + (local != null ? UiKit.Colour("   at " + local.Tile, UiKit.Muted) : "");
         }
+
+        private CombatOptions Options() => new CombatOptions
+        {
+            Queueing = CombatOptions.QueueingFrom(Session.ClientState.TryGetValue(CombatOptions.QueueingKey, out string q) ? q : null),
+            Revolution = CombatOptions.RevolutionFrom(Session.ClientState.TryGetValue(CombatOptions.RevolutionKey, out string r) ? r : null),
+        };
     }
 
     /// <summary>Every key and click, in one place.</summary>

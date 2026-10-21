@@ -106,14 +106,14 @@ internal static class TestContent
     public static List<AbilityDef> Abilities() => new()
     {
         new AbilityDef { Id = "zap", Name = "Zap", Type = AbilityType.Auto, CooldownTicks = 4, Range = 8, DamageMin = 50, DamageMax = 50 },
-        new AbilityDef { Id = "spark", Name = "Spark", Type = AbilityType.Basic, CooldownTicks = 5, Range = 8, DamageMin = 100, DamageMax = 100, PhlegmGain = 10, BileShift = 10 },
-        new AbilityDef { Id = "draught", Name = "Draught", Type = AbilityType.Basic, CooldownTicks = 5, Range = 8, DamageMin = 100, DamageMax = 100, PhlegmGain = 10, BileShift = -10, HealPercentOfDamage = 50 },
-        new AbilityDef { Id = "still", Name = "Still", Type = AbilityType.Basic, CooldownTicks = 5, Range = 8, DamageMin = 10, DamageMax = 10, PhlegmGain = 5, BileTowardZero = 25 },
-        new AbilityDef { Id = "flare", Name = "Flare", Type = AbilityType.Threshold, CooldownTicks = 10, Range = 8, DamageMin = 200, DamageMax = 200, PhlegmRequired = 50, PhlegmCost = 15, BileShift = 15, BileMin = 30 },
-        new AbilityDef { Id = "shroud", Name = "Shroud", Type = AbilityType.Threshold, CooldownTicks = 10, Range = 8, DamageMin = 100, DamageMax = 100, PhlegmRequired = 50, PhlegmCost = 15, BileShift = -15, BileMax = -30, Effect = EffectType.Ward, EffectMagnitude = 30, EffectTicks = 10 },
+        new AbilityDef { Id = "spark", Name = "Spark", Type = AbilityType.Builder, CooldownTicks = 5, Range = 8, DamageMin = 100, DamageMax = 100, PhlegmGain = 10, BileShift = 10 },
+        new AbilityDef { Id = "draught", Name = "Draught", Type = AbilityType.Builder, CooldownTicks = 5, Range = 8, DamageMin = 100, DamageMax = 100, PhlegmGain = 10, BileShift = -10, HealPercentOfDamage = 50 },
+        new AbilityDef { Id = "still", Name = "Still", Type = AbilityType.Builder, CooldownTicks = 5, Range = 8, DamageMin = 10, DamageMax = 10, PhlegmGain = 5, BileTowardZero = 25 },
+        new AbilityDef { Id = "flare", Name = "Flare", Type = AbilityType.Spender, CooldownTicks = 10, Range = 8, DamageMin = 200, DamageMax = 200, PhlegmRequired = 50, PhlegmCost = 15, BileShift = 15, BileMin = 30 },
+        new AbilityDef { Id = "shroud", Name = "Shroud", Type = AbilityType.Spender, CooldownTicks = 10, Range = 8, DamageMin = 100, DamageMax = 100, PhlegmRequired = 50, PhlegmCost = 15, BileShift = -15, BileMax = -30, Effect = EffectType.Ward, EffectMagnitude = 30, EffectTicks = 10 },
         new AbilityDef { Id = "ult", Name = "Ult", Type = AbilityType.Ultimate, CooldownTicks = 30, Range = 8, DamageMin = 400, DamageMax = 400, PhlegmRequired = 100, PhlegmCost = 100 },
-        new AbilityDef { Id = "poke", Name = "Poke", Type = AbilityType.Basic, CooldownTicks = 3, Range = 1, DamageMin = 10, DamageMax = 10, PhlegmGain = 1 },
-        new AbilityDef { Id = "secret", Name = "Secret", Type = AbilityType.Basic, CooldownTicks = 3, Range = 8, DamageMin = 10, DamageMax = 10, Style = CombatStyle.Occult, Requirements = { new SkillRequirement { Skill = "occultism", Level = 3 } } },
+        new AbilityDef { Id = "poke", Name = "Poke", Type = AbilityType.Builder, CooldownTicks = 3, Range = 1, DamageMin = 10, DamageMax = 10, PhlegmGain = 1 },
+        new AbilityDef { Id = "secret", Name = "Secret", Type = AbilityType.Builder, CooldownTicks = 3, Range = 8, DamageMin = 10, DamageMax = 10, Style = CombatStyle.Occult, Requirements = { new SkillRequirement { Skill = "occultism", Level = 3 } } },
     };
 
     public static List<NpcDef> Npcs() => new()

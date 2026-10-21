@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using Rth.Server.Persistence;
 using Rth.Shared.Combat;
 using Rth.Shared.Items;
@@ -95,11 +96,24 @@ namespace Rth.Server.Game
             player.ChaseGoal = null;
         }
 
+        /// <summary>
+        /// A pressed ability. One that's ready now is always taken (it fires this tick, or stalls if
+        /// the target is out of range); one pressed during the global cooldown or its own cooldown
+        /// waits in the queue only if the player has queueing on, and is ignored otherwise.
+        /// </summary>
         private void HandleUseAbility(Player player, string abilityId)
         {
             if (player.IsDead) return;
             if (!World.Content.Abilities.TryGetValue(abilityId, out AbilityDef? ability) || !World.Content.ActionBar.Contains(abilityId)) return;
-            if (player.TargetId == 0)
+            if (ability.KeepsStall)
+            {
+                if (!InCombat(player))
+                {
+                    World.Tell(player, TextKind.Warning, ability.Name + " can only be used in combat.");
+                    return;
+                }
+            }
+            else if (player.TargetId == 0)
             {
                 World.Tell(player, TextKind.Warning, "You need a target first.");
                 return;
@@ -110,7 +124,66 @@ namespace Rth.Server.Game
                 World.Tell(player, TextKind.Warning, problem);
                 return;
             }
+            if (!IsReady(player, ability, World.CurrentTick) && !Options(player).Queueing) return;
             player.QueuedAbility = abilityId;
+        }
+
+        /// <summary>Whether an ability could fire this tick: global cooldown, its own cooldown, and no other action (eating).</summary>
+        private bool IsReady(Player player, AbilityDef ability, uint now) =>
+            now >= player.GlobalCooldownReadyTick && now >= player.ActionDelayUntilTick &&
+            !(player.Cooldowns.TryGetValue(ability.Id, out uint ready) && now < ready);
+
+        /// <summary>
+        /// Whether the player is in combat: engaged with a target (even while still running to it),
+        /// or hit or hitting within the last <see cref="CombatRules.CombatTimeoutTicks"/>.
+        /// </summary>
+        public bool InCombat(Player player) =>
+            player.TargetId != 0 || player.InCombat(World.CurrentTick, Rules.CombatTimeoutTicks);
+
+        /// <summary>The player's combat options (queueing, Revolution), kept in their client state.</summary>
+        public CombatOptions Options(Player player)
+        {
+            ClientStateSystem? state = World.Find<ClientStateSystem>();
+            return new CombatOptions
+            {
+                Queueing = CombatOptions.QueueingFrom(state?.Get(player, CombatOptions.QueueingKey)),
+                Revolution = CombatOptions.RevolutionFrom(state?.Get(player, CombatOptions.RevolutionKey)),
+            };
+        }
+
+        /// <summary>The ability ids on the player's main action bar, left to right (what Revolution fires from).</summary>
+        public IReadOnlyList<string> MainBarAbilities(Player player)
+        {
+            string? json = World.Find<ClientStateSystem>()?.Get(player, CombatOptions.BarsKey);
+            MainBarCache cache = player.Component<MainBarCache>();
+            if (cache.Loaded && ReferenceEquals(json, cache.Json)) return cache.Abilities;
+            cache.Loaded = true;
+            cache.Json = json;
+            cache.Abilities = new List<string>();
+            if (json == null) cache.Abilities.AddRange(World.Content.ActionBar); // a new character's bar is the default
+            else
+            {
+                try
+                {
+                    string?[]?[]? bars = JsonConvert.DeserializeObject<string?[]?[]>(json);
+                    if (bars != null && bars.Length > 0 && bars[0] != null)
+                        foreach (string? slot in bars[0]!)
+                            if (slot != null && slot.StartsWith(CombatOptions.AbilityPrefix, StringComparison.Ordinal))
+                                cache.Abilities.Add(slot.Substring(CombatOptions.AbilityPrefix.Length));
+                }
+                catch (JsonException)
+                {
+                    // An unreadable layout fires nothing.
+                }
+            }
+            return cache.Abilities;
+        }
+
+        private sealed class MainBarCache
+        {
+            public bool Loaded;
+            public string? Json;
+            public List<string> Abilities = new List<string>();
         }
 
         /// <summary>Why the player can't use an ability right now (levels, phlegm, bile), or null.</summary>
@@ -191,26 +264,63 @@ namespace Rth.Server.Game
             Entity? target = World.FindEntity(targetId);
             if (target == null || target.IsDead || !World.CanSee(player, target)) return false;
 
-            AbilityDef? queued = player.QueuedAbility != null && World.Content.Abilities.TryGetValue(player.QueuedAbility, out AbilityDef? q) ? q : null;
-            int range = queued?.Range ?? World.Content.AutoAttack.Range;
-            if (!Engage(player, target, range)) return true;
             uint now = World.CurrentTick;
-            if (now < player.GlobalCooldownReadyTick || now < player.ActionDelayUntilTick) return true;
+            FireSelfAbility(player, now);
+            AbilityDef? queued = AbilityOrNull(player.QueuedAbility);
+            if (queued != null && queued.KeepsStall) queued = null; // used where you stand, once ready: see FireSelfAbility
+            AbilityDef? stalled = AbilityOrNull(player.StalledAbility);
+            if (player.StalledAbility != null && stalled == null) player.StalledAbility = null; // removed by a content reload
+            int range = World.Content.AutoAttack.Range;
+            if (stalled != null && queued != null) range = Math.Min(stalled.Range, queued.Range);
+            else if (stalled != null) range = stalled.Range;
+            else if (queued != null) range = queued.Range;
+
+            if (!Engage(player, target, range))
+            {
+                // Stalling: an ability used out of range goes on cooldown now and fires on arrival.
+                if (stalled == null && queued != null && IsReady(player, queued, now))
+                {
+                    player.QueuedAbility = null;
+                    if (CanStillUse(player, queued))
+                    {
+                        player.StalledAbility = queued.Id;
+                        StartCooldowns(player, queued, now);
+                    }
+                }
+                return true;
+            }
+
+            bool released = false;
+            if (stalled != null)
+            {
+                // Its cooldowns ran while the player closed in, so the next ability may follow at once.
+                player.StalledAbility = null;
+                if (InRange(player, target, stalled.Range) && CanStillUse(player, stalled))
+                {
+                    UseAbility(player, target, stalled);
+                    player.NextAttackTick = Math.Max(player.NextAttackTick, now + (uint)Rules.GlobalCooldownTicks);
+                    released = true;
+                }
+            }
 
             if (queued != null)
             {
-                if (player.Cooldowns.TryGetValue(queued.Id, out uint ready) && now < ready) return true; // waits in the queue
+                if (!IsReady(player, queued, now)) return true; // waits in the queue
+                if (!InRange(player, target, queued.Range)) return true; // the stall's range was longer: close in next tick
                 player.QueuedAbility = null;
-                string? problem = Requirements(player, queued);
-                if (problem != null)
-                {
-                    World.Tell(player, TextKind.Warning, problem);
-                    return true;
-                }
+                if (!CanStillUse(player, queued)) return true;
                 UseAbility(player, target, queued);
-                player.GlobalCooldownReadyTick = now + (uint)Rules.GlobalCooldownTicks;
-                player.Cooldowns[queued.Id] = now + (uint)Math.Max(queued.CooldownTicks, Rules.GlobalCooldownTicks);
-                player.NextAttackTick = Math.Max(player.NextAttackTick, player.GlobalCooldownReadyTick);
+                StartCooldowns(player, queued, now);
+                return true;
+            }
+            if (released) return true;
+            if (now < player.GlobalCooldownReadyTick || now < player.ActionDelayUntilTick) return true;
+
+            AbilityDef? revolution = NextRevolutionAbility(player, target, now);
+            if (revolution != null)
+            {
+                UseAbility(player, target, revolution);
+                StartCooldowns(player, revolution, now);
                 return true;
             }
 
@@ -220,6 +330,57 @@ namespace Rth.Server.Game
                 player.NextAttackTick = now + (uint)Math.Max(1, World.Content.AutoAttack.CooldownTicks);
             }
             return true;
+        }
+
+        /// <summary>
+        /// Fires a queued <see cref="AbilityDef.KeepsStall"/> ability once it's ready: on the player,
+        /// wherever they stand, leaving any stall in place and keeping them in combat.
+        /// </summary>
+        private void FireSelfAbility(Player player, uint now)
+        {
+            AbilityDef? ability = AbilityOrNull(player.QueuedAbility);
+            if (ability == null || !ability.KeepsStall || !IsReady(player, ability, now)) return;
+            player.QueuedAbility = null;
+            if (!CanStillUse(player, ability)) return;
+            UseAbility(player, player, ability);
+            StartCooldowns(player, ability, now);
+            player.LastCombatTick = now;
+        }
+
+        private AbilityDef? AbilityOrNull(string? id) =>
+            id != null && World.Content.Abilities.TryGetValue(id, out AbilityDef? ability) ? ability : null;
+
+        /// <summary>Checks requirements again at the moment of use (phlegm or bile may have moved); tells the player if not.</summary>
+        private bool CanStillUse(Player player, AbilityDef ability)
+        {
+            string? problem = Requirements(player, ability);
+            if (problem == null) return true;
+            World.Tell(player, TextKind.Warning, problem);
+            return false;
+        }
+
+        private void StartCooldowns(Player player, AbilityDef ability, uint now)
+        {
+            player.GlobalCooldownReadyTick = now + (uint)Rules.GlobalCooldownTicks;
+            player.Cooldowns[ability.Id] = now + (uint)Math.Max(ability.CooldownTicks, Rules.GlobalCooldownTicks);
+            player.NextAttackTick = Math.Max(player.NextAttackTick, player.GlobalCooldownReadyTick);
+        }
+
+        /// <summary>
+        /// Revolution: the leftmost ability on the main bar that the player's mode fires by itself and
+        /// that is ready, usable and in range; null if none (or the mode is manual).
+        /// </summary>
+        private AbilityDef? NextRevolutionAbility(Player player, Entity target, uint now)
+        {
+            CombatOptions options = Options(player);
+            if (options.Revolution == RevolutionMode.Manual) return null;
+            foreach (string id in MainBarAbilities(player))
+            {
+                AbilityDef? ability = AbilityOrNull(id);
+                if (ability == null || !options.AutoCasts(ability.Type) || !World.Content.ActionBar.Contains(id)) continue;
+                if (IsReady(player, ability, now) && Requirements(player, ability) == null && InRange(player, target, ability.Range)) return ability;
+            }
+            return null;
         }
 
         /// <summary>Fires an ability (or the auto-attack) from a player at a target: damage, resources, effects.</summary>
@@ -250,10 +411,10 @@ namespace Rth.Server.Game
             // Resources move whether or not it landed: the humours were spent either way.
             switch (ability.Type)
             {
-                case AbilityType.Basic:
+                case AbilityType.Builder:
                     AddPhlegm(player, Rules.PhlegmGainFor(ability.PhlegmGain, player.Bile));
                     break;
-                case AbilityType.Threshold:
+                case AbilityType.Spender:
                 case AbilityType.Ultimate:
                     AddPhlegm(player, -ability.PhlegmCost);
                     break;
@@ -379,8 +540,22 @@ namespace Rth.Server.Game
         public override void AfterPlayer(Player player)
         {
             if (player.IsDead) return;
+            if (!(player.Interaction is AttackInteraction)) FireSelfAbility(player, World.CurrentTick); // in combat with no target
+            DropStallOutOfCombat(player);
             TickResources(player);
             if (player.Effects.RemoveAll(e => World.CurrentTick >= e.EndTick) > 0) World.RecalculateStats(player);
+        }
+
+        /// <summary>
+        /// A stalled ability lasts while the player stays in combat (it carries over to a new target);
+        /// dropping out of combat loses it, with its cooldown still spent.
+        /// </summary>
+        private void DropStallOutOfCombat(Player player)
+        {
+            if (player.StalledAbility == null || InCombat(player)) return;
+            string name = AbilityOrNull(player.StalledAbility)?.Name ?? "stalled ability";
+            player.StalledAbility = null;
+            World.Tell(player, TextKind.Info, "Out of combat, your " + name + " fades unused.");
         }
 
         public override void OnNpcs()
@@ -391,7 +566,7 @@ namespace Rth.Server.Game
         private void TickResources(Player player)
         {
             CombatRules rules = Rules;
-            bool inCombat = player.InCombat(World.CurrentTick, rules.CombatTimeoutTicks);
+            bool inCombat = InCombat(player);
 
             if (rules.IsFevered(player.Bile) && player.Blood > 1)
             {
@@ -442,10 +617,11 @@ namespace Rth.Server.Game
                 Breath = p.Breath,
                 MaxBreath = p.MaxBreath,
                 Deflect = p.Deflect,
-                InCombat = p.InCombat(now, Rules.CombatTimeoutTicks),
+                InCombat = InCombat(p),
                 TargetId = p.TargetId,
                 GlobalCooldownReadyTick = Math.Max(p.GlobalCooldownReadyTick, p.ActionDelayUntilTick),
                 QueuedAbility = p.QueuedAbility ?? "",
+                StalledAbility = p.StalledAbility ?? "",
             };
             foreach (KeyValuePair<string, uint> cd in p.Cooldowns)
                 if (cd.Value > now) state.Cooldowns.Add(new CooldownState { AbilityId = cd.Key, ReadyTick = cd.Value });

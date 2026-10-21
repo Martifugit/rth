@@ -38,7 +38,7 @@ public class CombatTests
     }
 
     [Fact]
-    public void BasicAbilitiesBuildPhlegmAndShiftBile()
+    public void BuildersBuildPhlegmAndShiftBile()
     {
         var fx = Arena(At("dummy", 8, 5));
         FakeConnection client = fx.Login("Alice");
@@ -95,7 +95,7 @@ public class CombatTests
     }
 
     [Fact]
-    public void ThresholdsNeedPhlegmAndBileAndSpendPhlegm()
+    public void SpendersNeedPhlegmAndBileAndSpendPhlegm()
     {
         var fx = Arena(At("dummy", 8, 5));
         FakeConnection client = fx.Login("Alice");

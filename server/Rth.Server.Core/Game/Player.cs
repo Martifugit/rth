@@ -35,6 +35,11 @@ namespace Rth.Server.Game
 
         /// <summary>Ability id to fire as soon as the global cooldown allows, or null.</summary>
         public string? QueuedAbility { get; set; }
+        /// <summary>
+        /// An ability used out of range ("stalled"): its cooldowns already started, and it fires
+        /// the moment the player reaches the target. Null if none.
+        /// </summary>
+        public string? StalledAbility { get; set; }
         public uint GlobalCooldownReadyTick { get; set; }
         /// <summary>Busy with something else (eating, say) until this tick: no attacks before it.</summary>
         public uint ActionDelayUntilTick { get; set; }

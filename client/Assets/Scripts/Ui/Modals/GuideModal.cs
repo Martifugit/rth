@@ -254,13 +254,13 @@ namespace Rth.Client.Ui.Modals
         {
             VisualElement d = _view.Detail;
             UiKit.Text(d, (styleName == CombatStyle.Occult.ToString() ? "Occultism" : styleName).ToUpperInvariant(), "title-large");
-            UiKit.Text(d, "Basics build phlegm; thresholds and ultimates spend it. Many push bile one way or the other.", "muted", "prose");
+            UiKit.Text(d, "Builders build phlegm; spenders and ultimates spend it. Many push bile one way or the other.", "muted", "prose");
             UiKit.Divider(d);
-            foreach (AbilityType type in new[] { AbilityType.Basic, AbilityType.Threshold, AbilityType.Ultimate })
+            foreach (AbilityType type in new[] { AbilityType.Builder, AbilityType.Spender, AbilityType.Ultimate })
             {
                 List<AbilityDef> list = Session.Content.Abilities.Where(a => a.Style.ToString() == styleName && a.Type == type).ToList();
                 if (list.Count == 0) continue;
-                UiKit.Heading(d, type + (type == AbilityType.Basic ? "s" : "s")).style.marginTop = 8f;
+                UiKit.Heading(d, type + "s").style.marginTop = 8f;
                 foreach (AbilityDef a in list)
                 {
                     VisualElement card = UiKit.El(d, "card", "row");

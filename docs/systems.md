@@ -17,7 +17,7 @@ marked **Proposal** are suggestions that the designer has not yet confirmed.
 | Resource | Role | Notes |
 | --- | --- | --- |
 | **Blood** | Health pool | Restored by food; Medicine may add a mild tick-heal brew. |
-| **Phlegm** | Adrenaline (RS3-style) | Universal across all styles. Basic abilities build it, thresholds and ultimates spend it. Nothing else uses it. |
+| **Phlegm** | Adrenaline (RS3-style) | Universal across all styles. Builder abilities build it, spenders and ultimates spend it. Nothing else uses it. |
 | **Bile** | Occultism's live axis, from −100 to +100 | Every player has it. Occult abilities push it either way. Some abilities also need a bile level, on top of phlegm. Holding a position (e.g. +30) gives a passive bonus. |
 | **Breath** | Deflection (overhead-prayer analogue) | Available to every style. Must not use phlegm. Ties to the Pneuma ascetics. Bar clutter was considered and accepted. |
 | **Verses** | Religion's output, spent by melee | Spent on top of normal abilities. |
@@ -32,17 +32,33 @@ live in `server/data/content/` and hot-reload, so they're meant to be tuned by p
 - **Passives** from ±30: choleric deals 5% more damage at +30, rising to 20% at +100;
   melancholic takes 5% less damage at −30, rising to 15% at −100.
 - **Extremes** from ±80: choleric **fever** burns 0.5% of max blood per tick (it never kills);
-  melancholic **torpor** halves phlegm gained from basics.
+  melancholic **torpor** halves phlegm gained from builders.
 - **Settling:** after 10 ticks out of combat, bile drifts back 1 per tick, phlegm fades 2 per
   tick, and blood and breath regenerate.
-- **Phlegm:** basics build 6–8; thresholds need 50 and spend 15; ultimates need and spend 100.
-  3-tick global cooldown; one ability can be queued.
+- **Phlegm:** builders build 6–8; spenders need 50 and spend 15; ultimates need and spend 100.
+  3-tick global cooldown.
+- **Using abilities (RS3-style):**
+  - **In combat** means engaged with a target (even while still running to it) or hit or
+    hitting within the last 10 ticks.
+  - **Stalling:** an ability used while in combat but out of range goes on cooldown (and starts
+    the global cooldown) at once, but fires only when the player reaches the target. If the
+    global cooldown has passed by then, the next ability fires on the same tick: two at once.
+    One stall at a time. It carries over to a new target, and is lost on dropping out of combat
+    (its cooldown stays spent). Abilities marked `keepsStall` are used on yourself, need no
+    target, deal no damage, don't release the stall and keep you in combat.
+  - **Queueing** (on by default, a setting): an ability pressed during the global cooldown fires
+    when it ends. Off: the press is ignored unless the ability is ready.
+  - **Revolution** (a setting: off, builders, or builders + spenders + ultimates): when nothing
+    is pressed, the leftmost ready, usable, in-range ability of those types on the main bar
+    fires after each global cooldown. Items and focuses on the bar are skipped.
+  - The options are client state (`combat.queue`, `combat.revolution`); the server reads them,
+    and the main bar from `bars`.
 - **Breath:** 300 max; deflecting one style drains 1 per tick and halves that style's damage.
 - **Death:** the Assayer resets bile to 0 on respawn. That is the cost of dying in the
   prototype; there is nothing to lose until items exist.
 - **Abilities:** Gall Spark (+10), Black Draught (−10, heals 25% of damage), Still the Humours
-  (25 towards zero), Bitter Salt (needs +20), Choleric Flare (threshold, needs +30), Melancholy
-  Shroud (threshold, needs −30, 30% ward), Vitriol Rain (ultimate, needs +60), Black Sun
+  (25 towards zero), Bitter Salt (needs +20), Choleric Flare (spender, needs +30), Melancholy
+  Shroud (spender, needs −30, 30% ward), Vitriol Rain (ultimate, needs +60), Black Sun
   (ultimate, needs −60, heals 20% and wards). Reagent costs wait for items and Distillation.
 
 ## Combat styles

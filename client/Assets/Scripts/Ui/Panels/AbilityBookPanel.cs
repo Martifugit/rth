@@ -9,7 +9,7 @@ using UnityEngine.UIElements;
 namespace Rth.Client.Ui.Panels
 {
     /// <summary>
-    /// A combat style's abilities as a book of icons: basics, thresholds and ultimates. Locked
+    /// A combat style's abilities as a book of icons: builders, spenders and ultimates. Locked
     /// ones are dimmed with the level they need. Click to use, drag onto an action bar to place
     /// it, hover for the full card. Occultism is the only style so far; each style gets a book.
     /// </summary>
@@ -72,7 +72,7 @@ namespace Rth.Client.Ui.Panels
             _builtFor = Session.Content.Abilities.Count;
             _list.Clear();
             _slots.Clear();
-            foreach ((AbilityType type, string title) in new[] { (AbilityType.Basic, "Basics"), (AbilityType.Threshold, "Thresholds"), (AbilityType.Ultimate, "Ultimates") })
+            foreach ((AbilityType type, string title) in new[] { (AbilityType.Builder, "Builders"), (AbilityType.Spender, "Spenders"), (AbilityType.Ultimate, "Ultimates") })
             {
                 UiKit.Heading(_list, title);
                 VisualElement grid = UiKit.El(_list, "slot-grid");

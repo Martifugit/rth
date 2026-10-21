@@ -66,7 +66,7 @@ namespace Rth.Shared.Combat
             return (int)Math.Round(atThreshold + (atLimit - atThreshold) * t);
         }
 
-        /// <summary>Phlegm actually gained from a basic, after torpor.</summary>
+        /// <summary>Phlegm actually gained from a builder, after torpor.</summary>
         public int PhlegmGainFor(int baseGain, int bile) =>
             IsTorpid(bile) ? (int)Math.Floor(baseGain * TorporPhlegmMultiplier) : baseGain;
     }
