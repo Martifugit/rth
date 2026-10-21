@@ -130,7 +130,7 @@ obsolete, because the old one is still the best place for something.
 | 7 | 60 | frostiron | pale pine | ice char | frostcap | pale wool |
 | 8 | 70 | verdigris (moon-touched) | moonbark | lightfin | moonmoss | pale wool |
 | 9 | 80 | deepglass | mistwood | hushfin | hellebore | threadmoss |
-| 10 | 90 | orichalc | gloamwood | sturgeon | mandrake | gossamer |
+| 10 | 90 | bindiron | gloamwood | sturgeon | mandrake | gossamer |
 
 - **Special equipment sits outside the ladder.** The best gear isn't a tier with one shared
   resource. Each special piece is designed on its own: typically a special drop from a
@@ -138,8 +138,11 @@ obsolete, because the old one is still the best place for something.
   (the great forge at Frostpeak Forge is one, for whatever kind of equipment needs the best
   forge there is). No single resource or place feeds all of it.
 - **Nothing special happens at the top.** Tier 10 is an ordinary tier, only harder: its nodes
-  are rare, slow and in the most dangerous parts of each skill's top region. Progress simply gets
+  are few, slow and in the most dangerous parts of each skill's top region. Progress simply gets
   more demanding: rare boss drops, long grinds to make things, or both.
+- **Resources aren't rare; drops are.** A resource can be scarce (few nodes, short windows,
+  slow to gather), so there's less of it than of other materials, but the resource itself is
+  never a lucky roll. Rarity belongs to drops and to a node's extras (gems, nests, seeds).
 - Gear stats grow by tier from one formula (a tier-N item gets the tier's base value times the
   slot's share), so a new item needs only a tier and a slot in data. The formula is a combat
   tuning task, not a per-item one.
@@ -572,7 +575,7 @@ fixed region (2.2).
 | 7 | **Frostiron** | Candora, dwarven halls | none |
 | 8 | **Verdigris** | moonfall craters, which can open anywhere | **appears only after a moonfall** (a world event), then fades |
 | 9 | **Deepglass** | Undermost | **brittle**: a rock can shatter before it's worked out, unless your pickaxe has conservation |
-| 10 | **Orichalc** | Undermost's deepest workings | none; rare and slow |
+| 10 | **Bindiron** | Undermost's deepest workings | none; few rocks, and slow |
 
 **Gems** are a rare extra from any rock, and the one place Mining touches the humours: each gem
 carries one, and jewellery set with it leans towards that humour's style (Smithing).
@@ -611,7 +614,7 @@ fall by chance (2.3) and regrow.
 | 7 | **Pale pine** | Candora's high forests | none (resin is a common extra) |
 | 8 | **Moonbark** | the Veilwood's edges, old moonfall scars | none |
 | 9 | **Mistwood** | the deep Veilwood | chopping **draws the attention** of things in the mist, and they come now and then |
-| 10 | **Gloamwood** | the Veilwood's heart | none; rare and slow |
+| 10 | **Gloamwood** | the Veilwood's heart | none; few trees, and slow |
 
 - **Extras:** resin (Medicine), bird nests (feathers now; seeds if Farming ever comes).
 - **Charcoal:** burn logs at a kiln. Better logs give more charcoal per log. Steel and the higher
@@ -636,12 +639,12 @@ instead of depleting. Quirks are kept to a few tiers, so most fishing is plain.
 | 7 | **Ice char** | Candora's tarns, Nivil's edge | **cut your own hole**: you make the spot, and it freezes over after a while |
 | 8 | **Lightfin** | crater lakes, moonlit pools | **follows light**: a lantern in your off-hand draws the school to you |
 | 9 | **Hushfin** | the Cradle's shores | **only during the Cradle's event** (below) |
-| 10 | **Sturgeon** | the Cradle's shores | none beyond hushfin's: also only during the event, and much rarer |
+| 10 | **Sturgeon** | the Cradle's shores | none beyond hushfin's: also only during the event, in smaller numbers |
 
 **The Cradle's event.** Every few hours (about every 3, to tune) the bay draws in its breath. The
 game announces it to everyone a few minutes ahead, and for about 15 minutes hushfin spots appear
 along the Cradle's shores. It is a world event, like a moonfall, and it's the only time tier-9
-fish (and the rarer sturgeon) can be caught, which makes the shore a place people gather.
+fish (and fewer sturgeon) can be caught, which makes the shore a place people gather.
 
 - **Brine** comes from any salt-water spot, for rites.
 - **Extras:** shells, eel slime, scales and lamprey teeth (Medicine).
@@ -672,7 +675,7 @@ resource in the game**: every herb is common in two kinds of place and turns up 
 | 10 | **Mandrake** | Slough's deepest fens | nowhere else |
 
 Hellebore is the real plant humoral medicine used to purge black bile. Mandrake, the top herb,
-is just rarer. Hellebore's one quirk: it doesn't
+grows in fewer places. Hellebore's one quirk: it doesn't
 grow in patches, but as **single plants scattered through dangerous ground**, each picked once and
 then regrowing somewhere else nearby. The top herb means roaming, not standing at one patch.
 
