@@ -17,15 +17,15 @@ confirmed. Every skill (what it does, how it trains, what it feeds) is in `docs/
 
 | Resource | Role | Notes |
 | --- | --- | --- |
-| **Blood** | Health pool | Max from Defence. Restored by food; Medicine has one mild tick-heal. Also what Tithe's debt can be paid with. |
+| **Blood** | Health pool | Max from Defence. Restored by food; Medicine has one mild tick-heal. |
 | **Phlegm** | Adrenaline (RS3-style) | Universal across all styles. Builder abilities build it, spenders and ultimates spend it. Nothing else uses it. |
 | **Bile** | Occultism's live axis, from −100 to +100 | Every player has it. Occult abilities push it either way. Some abilities also need a bile level, on top of phlegm. Holding a position (e.g. +30) gives a passive bonus. |
-| **Martyrdom** | Melee's live meter, 0–100 | **Decided in outline (2026-10-21):** Religion is to melee what bile is to occultism. Rises with blood lost; shaped by the Cruor vow you hold. |
+| **Melee's power** | From Religion (Cruor) | **Decided (2026-10-21):** Religion is to melee what bile is to occultism. Its shape is under discussion. |
 | **Calibration** | Ranged's live meter, 0–100 | Builds while you keep shooting one target without moving. |
-| **Debt** | Religion's petitions (prayer analogue), any style | **Decided in outline:** Tithe's petitions are taken on credit and paid off later. Replaces breath and focuses. |
+| **Prayers** | Religion (Tithe), any style | **Decided:** focuses fold into Religion's prayers (protection, boosts, utility). How they're paid for is under discussion. |
 
 **Removed (2026-10-21):** **breath** (the deflection resource, and the skill and faction behind
-it) and **verses**. Deflection and the other stances are Religion's petitions now.
+it) and **verses**. Deflection and the other stances move to Religion's prayers.
 
 **Proposal: bile poles.** Humoral theory has two biles, and they map onto the axis.
 - **+ pole: yellow bile (choleric).** Hot, angry, offensive.
@@ -66,7 +66,7 @@ live in `server/data/content/` and hot-reload, so they're meant to be tuned by p
   - The options are client state (`combat.queue`, `combat.revolution`); the server reads them,
     and the main bar from `bars`.
 - **Breath (to be removed):** 300 max; deflecting one style drains 1 per tick and halves that
-  style's damage. It becomes the three deflection petitions (`skills.md`, 4.2).
+  style's damage. It moves to Religion's prayers.
 - **Death:** the Assayer resets bile to 0 on respawn. That is the cost of dying in the
   prototype; there is nothing to lose until items exist.
 - **Abilities:** Gall Spark (+10), Black Draught (−10, heals 25% of damage), Still the Humours
@@ -76,21 +76,10 @@ live in `server/data/content/` and hot-reload, so they're meant to be tuned by p
   ultimates need phlegm, and some need bile at a level. (The `reagents` field on an ability
   still works, for a future style that wants ammunition-like costs.)
 
-## Martyrdom, calibration and debt (Proposal)
+## Calibration (Proposal)
 
-The three meters the other styles and Religion add, written in the same shape as bile. Starting
-numbers, to tune in play.
-
-**Martyrdom (melee).**
-- 0–100 on every player; only melee abilities and Cruor's vows use it.
-- **Rises** by 1 for every 1% of max blood you lose, whether to a hit, to tithing blood, or to
-  Tithe calling in your debt.
-- **Settles** 2 per tick after 10 ticks out of combat (unless the Vow of the Red Fast).
-- **Used by** melee spenders and ultimates, which may need a level of it (as occult ones need
-  bile) or spend it for more effect.
-- **Passive:** the vow you hold decides it. The default (Vow of the Keeper) gives up to +20%
-  melee damage at 100, scaling, shown as a buff (**sanctified**).
-- So melee wants to be hit, and food is what lets it keep going: a guard's style.
+Ranged's meter, in the same shape as bile. Starting numbers, to tune in play. (Melee's power
+and Religion's prayers are under discussion; see `skills.md`, section 4.)
 
 **Calibration (ranged).**
 - 0–100. **+10** for each hit on the same target from the same tile. A miss costs 20, a step
@@ -100,22 +89,13 @@ numbers, to tune in play.
   proportion).
 - So ranged wants to plant its feet and keep a line of sight: patient and precise.
 
-**Debt (Religion's petitions, any style).**
-- Petitions add their rate to debt each tick. **Credit** (`100 + 10 x Religion`) is the most you
-  can carry. Debt never fades; it is saved, and survives death.
-- At credit, the debt is **called in**: petitions end, 20% of max blood is taken (never below
-  1), 10 ticks **indebted** (no petitions), debt halves.
-- Paid off by **offerings** at shrines (Religion XP), **writs of indulgence** (consumables) or
-  **tithing blood** (10% of max blood clears 10% of credit, and raises martyrdom).
-- Full detail in `skills.md`, section 4.
-
 ## Combat styles
 
 **Decided (2026-10-21):** four combat skills. **Melee** (attack and strength in one),
 **Ranged**, **Occultism**, and **Defence**, which any style trains (see `skills.md`, 3.2).
 
-- **Melee: Blood / the Sanguine Synod.** Plate, close quarters. Its meter is martyrdom, shaped
-  by Cruor's vows (Religion). It burns no consumable: its cost is blood, and so food.
+- **Melee: Blood / the Sanguine Synod.** Plate, close quarters. Its power comes from Religion's
+  Cruor half (under discussion).
 - **Ranged: the Rationalists (phlegm).** Its meter is calibration. Bolts come from **Artifice**,
   with moon-touched materials at higher tiers.
 - **Occultism: the occult houses (bile).** Moves the bile axis. Abilities cost phlegm and bile,
@@ -146,8 +126,8 @@ Works like magic in RuneScape 3: the ability bar and the spellbook are separate 
 
 ## Skills
 
-Moved to `docs/skills.md`: the v1 roster, the rules every skill follows, Religion (petitions and
-vows), Butchering, Medicine, the gathering and making skills, and Distillation as Occultism's
+Moved to `docs/skills.md`: the v1 roster, the rules every skill follows, Religion (under discussion),
+Butchering, Medicine, the gathering and making skills, and Distillation as Occultism's
 rites.
 
 ## Death
@@ -157,7 +137,8 @@ screen and comments on how the player's humour balance is changing.
 
 ## Open questions
 
-- Martyrdom and calibration: numbers, once melee and ranged are playable.
+- Religion: its two halves (`skills.md`, section 4).
+- Calibration: numbers, once ranged is playable.
 - Spellbooks: the first spellbook's spells and reagent costs (outline in `skills.md`, 3.5).
 - Final names for skills, resources and places.
 - The rest are listed at the end of `docs/skills.md`.

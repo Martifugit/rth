@@ -305,8 +305,8 @@ dark-fantasy style; see `docs/interface.md` (its "Window kinds" table says which
 Not yet: run energy, friends/group/private chat, announcements, player examine, waystones on
 the world map, item art, world labels and the login box (still IMGUI).
 
-**Next: the skills rework** (`docs/skills.md`, section 9): breath removed, focuses become
-Religion's petitions, the v1 skill roster. Other candidates: an art
+**Next: the skills rework** (`docs/skills.md`, section 9): breath removed, focuses move
+into Religion, the v1 skill roster (Religion still under discussion). Other candidates: an art
 pass on Tolling, more quests and achievements, a second combat style.
 
 ---

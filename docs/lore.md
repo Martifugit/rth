@@ -116,15 +116,6 @@ The faith split over a single question: **what the covenant asks of the faithful
 The two sees have fought three wars over the difference and made peace four times. Today they are
 allies, for now. Each keeps spies in the other's cathedral.
 
-The difference shows in how each see prays. **Tithe's faithful petition**: they ask for the
-covenant's protection now, on credit, and every petition is entered against their name, to be
-settled with salt, blood or coin at a Tithe chapel. Tithe's priests are its bookkeepers, and a
-pardon is a receipt. **Cruor's faithful swear vows**: they bind themselves to a keeping (never to
-retreat, never to eat on watch, never to leave another's side) and offer their own blood in
-keeping it. Cruor's blood-knights are its martyrs, and a scar is a sacrament. Every believer
-uses both. Which one they trust says which see they belong to. (Religion in `docs/skills.md`
-is built on this.)
-
 ### The Apostasy and the Scalding
 The occult arts were once practised openly in the fens. As the occultists grew stronger and
 stranger, both sees, for once united, declared crusade. Driven back against the northern mountains,

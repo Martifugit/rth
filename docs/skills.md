@@ -20,7 +20,7 @@ provisional.
 | Combat | **Ranged** | Rationalist crossbows and slings; calibration. | Ranged damage |
 | Combat | **Occultism** | Bile abilities, house spellbooks, and the rites that make reagents. | Occult damage, reagents |
 | Combat | **Defence** | Armour, max blood, shared defensive abilities. Trained by any style. | Survival |
-| Faith | **Religion** | Tithe's petitions (prayers on credit) and Cruor's vows (melee's power). | Petitions, vows, martyrdom |
+| Faith | **Religion** | Tithe's prayers (any style) and Cruor's power for melee. Under discussion (section 4). | Prayers, melee's power |
 | Hub | **Butchering** | Carcasses into everything else: meat, hide, gall, bone, old-blood. | Nearly every skill |
 | Gathering | **Mining** | Ore, stone, salt, gems. | Smithing, Religion, Occultism, Medicine |
 | Gathering | **Woodcutting** | Logs, charcoal, resin, galls. | Artifice, Smithing, Cooking, Medicine |
@@ -50,8 +50,8 @@ its stranger cousin), Archaeology, Invention, Slayer (Butchering).
 | Potions (phlegm, bile, boosts) | Medicine | Foraging (herbs), Butchering, Fishing, Mining |
 | Reagents (occult spells) | Occultism's rites | Butchering (extracts), Mining (salts), Woodcutting (ash), Dreaming |
 | Ammunition (ranged) | Artifice | Smithing (heads), Woodcutting (shafts), Butchering (fletching) |
-| Melee's power | Religion (vows) and blood lost | Food, which keeps you standing |
-| Petitions (any style) | Religion (debt, paid off) | Butchering and Mining (offerings), Tailoring (vellum) |
+| Melee's power | Religion (Cruor) | To be decided (section 4) |
+| Prayers (any style) | Religion (Tithe) | To be decided (section 4) |
 | Weapons and armour | Smithing, Artifice, Tailoring | Mining, Woodcutting, Butchering, Foraging |
 | Tools | Smithing (+ Artifice for the fine ones) | Mining |
 
@@ -88,45 +88,66 @@ and the carcass is where combat and skilling meet.
 
 ### 2.2 The tier ladder
 Every making and gathering skill climbs **the same ten tiers**, one per ten levels, so a tier-5
-pickaxe, tier-5 ore, tier-5 bar and tier-5 sword all ask for level 40. Each tier's materials are
-found first in one part of the world, and the world map's build phases follow the same order.
+pickaxe, tier-5 ore, tier-5 bar and tier-5 sword all ask for level 40.
 
-| Tier | Level | First found | Metal | Wood | Fish | Herb | Fibre |
-|---|---|---|---|---|---|---|---|
-| 1 | 1 | Tolling and the river | copper | alder | perch | yarrow | reed |
-| 2 | 10 | The Pilgrim Road, the Keeping's hills | iron | ash | eel | rue | reed |
-| 3 | 20 | The heartland, Cruor, the bay shore | steel (iron + charcoal) | elm | pike | feverfew | flax |
-| 4 | 30 | The Wrack's fens | bog iron | black poplar | lamprey | bog myrtle | flax |
-| 5 | 40 | Sere and the Lantern Pass | cinnabar | sere cedar | cistern carp | sere sage | silkweed |
-| 6 | 50 | The Saltmarch | glare-silver | tamarisk | glarefish | saltwort | silkweed |
-| 7 | 60 | The Pale and Holdfast | frostiron | pale pine | ice char | frostcap | pale wool |
-| 8 | 70 | Moonfall craters, the Scald's heart | verdigris (moon-touched) | moonbark | lightfin | moonmoss | pale wool |
-| 9 | 80 | The Undermost | deepglass | stalkwood | blind cavefish | deepbloom | threadmoss |
-| 10 | 90 | Convergence: no one place | old-blood alloy | (old-blood) | (old-blood) | (old-blood) | (old-blood) |
+**Tiers are not tied to regions.** Each region holds its own mix of tiers across skills: a
+region may have tier-1 trees beside tier-7 ore, and a tier-3 fishing spot in the same place as
+a tier-9 herb patch. That keeps every region worth visiting at every point in a player's
+progress, instead of each new region making the last one obsolete. What a region holds comes
+from its character (rock country has ore, the fens have herbs and fish), not from where it
+sits in the build order. A material's name can say where it's from (sere cedar, Saltmarch
+brine) without that being the only place it grows.
+
+| Tier | Level | Metal | Wood | Fish | Herb | Fibre |
+|---|---|---|---|---|---|---|
+| 1 | 1 | copper | alder | perch | yarrow | reed |
+| 2 | 10 | iron | ash | eel | rue | reed |
+| 3 | 20 | steel (iron + charcoal) | elm | pike | feverfew | flax |
+| 4 | 30 | bog iron | black poplar | lamprey | bog myrtle | flax |
+| 5 | 40 | cinnabar | sere cedar | cistern carp | sere sage | silkweed |
+| 6 | 50 | glare-silver | tamarisk | glarefish | saltwort | silkweed |
+| 7 | 60 | frostiron | pale pine | ice char | frostcap | pale wool |
+| 8 | 70 | verdigris (moon-touched) | moonbark | lightfin | moonmoss | pale wool |
+| 9 | 80 | deepglass | stalkwood | blind cavefish | deepbloom | threadmoss |
+| 10 | 90 | old-blood alloy | (old-blood) | (old-blood) | (old-blood) | (old-blood) |
 
 - Tier 10 isn't gathered. Its recipes take **old-blood** (Butchering's top yield, section 5) on
   top of tier-9 materials, so every style's best gear goes through the same resource.
 - Gear stats grow by tier from one formula (a tier-N item gets the tier's base value times the
   slot's share), so a new item needs only a tier and a slot in data. The formula is a combat
   tuning task, not a per-item one.
-- The rarest nodes of a tier sit in that tier's dangerous places (the Scald, crater edges, the
-  Undermost, the bay), as `systems.md` already says.
+- Danger and rarity go together, not tier and region: the best spot for a tier tends to be in
+  a dangerous place (the Scald, crater edges, the Undermost, the bay), and a safer spot for the
+  same tier exists somewhere else.
+- When a region is designed, its nodes are checked against the ladder so that, across the
+  regions built so far, every tier of every gathering skill exists somewhere.
 
 ### 2.3 Gathering nodes
 One mechanism for ore, trees, fishing spots, herb patches and dream orbs (data on the object):
 
 - **Every attempt** (every `ticks`, usually 4 ticks, 2.4 s) succeeds with chance
-  `clamp(base + perLevel x (level − nodeLevel) + toolBonus, min, max)`. Better tools add
-  `toolBonus` and can shorten `ticks`; they never replace the level requirement.
+  `clamp(base + perLevel x (level − nodeLevel) + the tool's success bonus, min, max)`.
 - **Depletion:** each success depletes the node with `depleteChance` (ore 1/1, trees 1/8,
   fishing spots move instead, herb patches after `yields` picks). It comes back after
   `respawnTicks`. Nodes are **shared**: with at most ~200 players, competing for a rock is part
   of the world, and dense spots stop it being a problem.
 - **Rare extras** roll on each success from a drop table on the node (gems from ore, galls from
   trees, shells from fish), with the existing nested drop tables.
-- **Tools** go on a **tool belt** once added (right-click a tool: "Add to belt"). They no longer
-  take pack slots, and the best one you can use is picked automatically. Tools on the belt can't
-  be lost. The belt holds one of each tool kind.
+- **Tools** are carried in the pack or worn (a pickaxe or hatchet can be wielded), and the best
+  one you can use is picked automatically. No tool belt for now. A tool has a kind (pickaxe,
+  hatchet, rod...) and a tier, and then **any of these effects**, each optional, so two tools of
+  the same tier can feel different:
+
+| Effect | What it does | Example |
+|---|---|---|
+| **Success** | adds to the chance of each attempt | a keener pickaxe |
+| **Conservation** | a chance that a success doesn't deplete the node | a careful hatchet that leaves the tree standing |
+| **Transformation** | a chance to change what's gathered as it comes, with that work's XP if it belongs to another skill | a hatchet that chars the log to charcoal, a brazier-net that cooks the fish |
+| **Extra** | adds to or replaces the node's rare extras | a pick that turns up more gems |
+
+  Effects are data on the tool (an item component, like other item capabilities), so a new tool
+  is a content change. A transformation only happens if you meet the level the other skill would
+  need for it (2.5).
 - XP per success is set on the node; a test checks it against the pace table.
 
 ### 2.4 Processing
@@ -138,12 +159,20 @@ outputs, an output table, extra rolls per levels, XP). Rules on top of it:
 - **Stations** are objects with a `process` action: furnace, anvil, range, campfire, tannery
   vat, loom, spinning wheel, workbench, apothecary bench, lectern. Each tier doesn't need a new
   station; tiers 7+ may ask for a better one (the Frostpeak Forge's anvils, for example).
-- **Failure** only where it reads naturally: Cooking burns, Medicine can spoil above-tier mixes.
-  Everything else always succeeds.
-- **Masterwork chance:** each recipe may name a rare better output (an extra roll of the output
-  table, which already exists). It is a small reward for training a little above the tier.
+- **Failure** only where it reads naturally, within what you're allowed to make: Cooking can
+  burn food you have the level to cook, less as you level. Everything else always succeeds.
+- **Better outputs:** a recipe may name better or different outputs, not necessarily rare, each
+  behind a condition: made **at a particular station** (a potion brewed at a house's bench, a
+  blade forged at the Frostpeak Forge), with an **unlock** (a quest, house favour, a learned
+  technique), with a particular **tool**, or a set number of levels above the recipe. The
+  existing output table does the rolling; the condition decides which table applies.
 
 ### 2.5 Requirements
+**Requirements are hard limits.** Without the level you can't do it at all: you can't mine the
+rock, make the potion or wield the sword. A level never becomes a chance of failure. The only
+way past a requirement is a **boost** that raises your level for a while (a potion, a food, a
+prayer), and requirements check the boosted level.
+
 - **Weapons** need their style skill (a tier-5 sword needs Melee 40).
 - **Armour** needs Defence (a tier-5 plate body needs Defence 40), whichever style it is for.
 - **Tools** need the gathering skill they're for (a tier-5 pickaxe needs Mining 40).
@@ -163,7 +192,7 @@ Wearing another style's armour works but costs that style's accuracy (a light co
 done through stats, with no special code).
 
 ### 2.7 Every unlock is data
-Every level-gated thing (node, recipe, ability, petition, vow, item, shortcut) keeps its level in
+Every level-gated thing (node, recipe, ability, prayer, item, shortcut) keeps its level in
 content, so the Guide's skill pages fill themselves (that already works) and nothing is listed by
 hand.
 
@@ -208,8 +237,8 @@ its power comes from blood lost.
   spears and greatswords. Ten tiers from Smithing.
 - **Abilities:** builders, spenders and ultimates, as with Occultism. About eight at v1, more
   later. Spenders need Melee 5, ultimates Melee 10, the same steps as Occultism.
-- **Its live meter is martyrdom** (`systems.md`), raised by blood lost, and shaped by the
-  **vow** you hold from Religion (4.3). Melee works without a vow, more plainly.
+- **Its power source is Religion's Cruor half** (section 4, under discussion), as bile is
+  Occultism's.
 - **Trained by** melee damage.
 
 ### 3.4 Ranged
@@ -285,100 +314,18 @@ your ammunition).
 
 ## 4. Religion
 
-The faith of Blood is one church with two sees, and they read the same covenant two ways
-(`docs/lore.md`): **Cruor** says it is a *keeping* and the faithful are its guards; **Tithe**
-says it is a *debt* that will be called in. Religion is both readings, and each one plays like
-its doctrine.
+**Under discussion.** A first full design (prayers on credit with a debt; vows and martyrdom)
+was written and rejected on 2026-10-21. It is in git history (commit cf92a62) if any piece of
+it turns out useful. Decided so far:
 
-| Half | See | What it is | Who it serves |
-|---|---|---|---|
-| **Petitions** | Tithe | Prayers taken **on credit**. You run up a debt and pay it off. | Every style |
-| **Vows** | Cruor | Oaths that turn **blood spent** into melee power (martyrdom). | Melee |
-
-The two halves feed each other through blood: what you pay to Tithe's debt counts as sacrifice
-to Cruor's keeping.
-
-### 4.1 Debt and credit (Tithe)
-Petitions don't drain a pool that refills. They **add to your debt**, and debt stays until you
-pay it.
-
-- **Debt** starts at 0 and rises each tick by the sum of your active petitions' rates.
-- **Credit** is how much debt you can carry: `100 + 10 x Religion` (110 at level 1, 1,100 at
-  100). Some gear raises it (a Tithe signet, the Synod's vestments).
-- **Debt never fades on its own,** in combat or out, and it survives logout and death. (The
-  Assayer has things to say about debts that outlive their debtor.)
-- **Called in:** when debt reaches credit, Tithe collects. Every petition ends, you lose 20% of
-  max blood at once (never below 1), you are **Indebted** for 10 ticks (no petitions), and debt
-  drops to half your credit. It hurts, but it is a choice: a player can overdraw on purpose
-  (and a melee player gains martyrdom from it).
-- **Paying off debt:**
-
-| How | Where | Religion XP? |
-|---|---|---|
-| **Offering** (salt, hearts, tallow, relics, coin: each item has a *worth*) | Any shrine; a Tithe chapel counts 1.5x | Yes, from the worth, debt or not. **The main way to train.** |
-| **Writ of indulgence** (a consumable you write) | Anywhere, even mid-fight; shares a cooldown with potions | XP when written, not when used |
-| **Tithe blood** (an action for the action bar) | Anywhere: pay 10% of max blood to clear 10% of credit | None, but it raises martyrdom |
-
-  An offering first pays off debt and then counts as devotion. Its XP is the same either way,
-  so training never asks you to run up debt on purpose.
-
-### 4.2 Petitions
-Toggled like focuses are now (click, or from an action bar), any number at once, each adding its
-rate to the debt. The three deflections are mutually exclusive, and so are the boosts for the
-same style. Names are Tithe's language of law and money.
-
-| Level | Petition | Effect | Debt/tick |
-|---|---|---|---|
-| 1 | **Surety** | 4% damage reduction | 0.5 |
-| 5 | **Steady Hand** | +4% accuracy, all styles | 0.5 |
-| 10 | **Levy of Arms / of Aim / of Gall** | +4% damage for melee / ranged / occult | 1 |
-| 15 | **Forbearance** | out of combat, blood regenerates twice as fast | 0.3 |
-| 20 | **Pardon of Goods** | keep one more item on death (once item loss exists) | 0.5 |
-| 25 | **Greater Surety** | 8% damage reduction | 1 |
-| 30 | **Levy of the Field** | +5% gathering yield (a skilling petition) | 0.5 |
-| 35 | **Writ against Steel** | deflect melee (−50%; PvE) | 2 |
-| 38 | **Writ against Distance** | deflect ranged | 2 |
-| 41 | **Writ against Bile** | deflect occult | 2 |
-| 45 | **Greater Levy** (each style) | +8% damage, +4% accuracy for that style | 2 |
-| 50 | **Lien** | 5% of damage you deal returns as blood | 2 |
-| 60 | **Audit** | the target's weaknesses and drop odds are shown; +5% accuracy against it | 1 |
-| 70 | **Grand Levy** (each style) | +12% damage, +8% accuracy for that style | 3 |
-| 80 | **Distraint** | each of your hits drains 1% of the target's defence (to −15%) | 3 |
-| 90 | **Foreclosure** | the first time in a fight you'd die, you live at 10% blood; debt jumps by half your credit | 1 |
-
-### 4.3 Martyrdom and vows (Cruor)
-**Martyrdom** is melee's live meter (0–100; its rules are in `systems.md`): it rises as you
-lose blood, from hits or from tithing it, and melee spenders and ultimates can need it or spend
-it. **Vows** are how Religion shapes it. You hold **one vow at a time**, sworn at any altar of
-Blood. A vow is a promise: it gives something and **forbids** something, and the game enforces
-the ban (you simply can't do the forbidden thing while you hold the vow).
-
-| Level | Vow | Gives | Forbids |
-|---|---|---|---|
-| 1 | **Vow of the Keeper** | martyrdom from blood lost; at 100, +20% melee damage (scaling) | nothing |
-| 20 | **Vow of the Wall** | 1.5x martyrdom from hits taken; it gives damage reduction instead of damage | running |
-| 35 | **Vow of the Open Vein** | melee hits bleed the target; bleeding you inflict also raises martyrdom | food heals 25% less |
-| 50 | **Vow of the Red Fast** | martyrdom never settles out of combat | eating in combat |
-| 65 | **Vow of the Last Rite** | melee damage grows as your blood falls (+1% per 2% missing) | Tithe petitions that reduce damage |
-| 80 | **Vow of the Covenant** | spending martyrdom also wards allies within 3 tiles | holding more than one petition |
-| 95 | **Vow of the Unbroken Line** | at 100 martyrdom your next ultimate costs no phlegm | changing vow for 30 minutes after swearing |
-
-### 4.4 Training Religion
-- **Offerings** at shrines (main; about 60% of a player's Religion XP). Butchering gives hearts
-  and tallow, Mining gives salt (Tithe's old offering), quests give relics.
-- **Writing writs** at a lectern: vellum (Tailoring) + iron-gall ink (oak galls from
-  Woodcutting + iron from Mining, mixed at the lectern) → Writs of Indulgence (3 tiers: clears
-  50 / 150 / 400 debt).
-- **Pilgrimage:** each shrine in the world gives a one-off XP reward when first visited, and a
-  small daily devotion bonus (first offering of the day there counts double).
-- **Use in combat:** 0.1 XP per point of debt you take on, and per point of martyrdom you spend.
-  Small, so the faith grows as you use it, but no one trains by praying.
-
-**Why it doesn't play like RuneScape's Prayer:** nothing refills a bar. You choose when to
-settle, the penalty for overdrawing is a decision, the money is real (offerings come from
-Butchering and Mining), and blood ties it to melee and to food. **Why it doesn't play like
-Distillation:** there are no rites to sit through. Religion is spent in fights and paid off at
-shrines; Distillation is a session at a site.
+- Religion replaces the breath skill. **Focuses fold into it**, so part of Religion plays much
+  like Prayer in RuneScape: prayers unlock as you level, for utility (overhead
+  protection/deflection) and for boosts (the damage-boosting kind).
+- Religion is also **melee's power source**, as bile is Occultism's.
+- The **prayer** half belongs to **Tithe**; the **melee-boosting** half to **Cruor**.
+- It needs its own identity, playing differently from RuneScape's Prayer and from
+  Distillation's rites.
+- It counts towards combat level (3.1).
 
 ---
 
@@ -433,8 +380,6 @@ The herblore. Not for healing (food does that), apart from one mild tick-heal.
 | 70 | **Choler** / **Melancholia** (the overloads) | sunfire salt / night ink | holds bile at ±60 for 5 minutes and boosts that pole's abilities |
 | 90 | **Panacea** | old-blood | all super draughts in one, 5 minutes |
 
-- **Spoiling:** a mix above your level (where allowed) can spoil. At level or above, it never
-  does.
 - **Trained by** making potions (main) and cleaning herbs (light).
 
 ## 7. Gathering
@@ -529,16 +474,15 @@ The Rationalist craft: precision work in wood, metal, horn and glass.
 The code rework that follows this document, in short:
 
 - **Remove Breath:** `playerMaxBreath`, breath regen and drain, the breath gauge, the
-  `maxBreath` stat on two items. Deflection becomes three Tithe petitions.
-- **Focuses become petitions:** the Focuses panel becomes **Petitions** (Religion), the "f:"
-  slot type stays the same idea. Add debt, credit, being called in, offerings at shrines, writs.
-- **Add martyrdom and vows** for melee, and calibration for ranged, when those styles are built.
+  `maxBreath` stat on two items. Deflection moves to Religion's prayers.
+- **Focuses move into Religion** once its design is settled.
+- **Add calibration** for ranged, and melee's power from Religion, when those styles are built.
 - **skills.json:** add melee, ranged, defence, religion, mining, woodcutting, fishing, foraging,
   dreaming, smithing, artifice, tailoring, cooking, medicine. Remove **distillation**: its XP in
   saves is **added to Occultism** on login, its recipes become Sallow rites, and the two
   requirements on it (gloves, recipes) become Occultism.
 - **Max blood** comes from Defence (3.6) instead of the fixed 1,000.
-- **Verses** are dropped (melee's power is martyrdom now).
+- **Verses** are dropped.
 - **Combat level** and the **Train defence** setting.
 
 ## 10. Still open
