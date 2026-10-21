@@ -345,6 +345,38 @@ namespace Rth.Client.Editor
             return ps;
         }
 
+        /// <summary>Fire bursting up from everywhere in a floor area, emitted on demand (a judgement).</summary>
+        public static ParticleSystem Eruptions(Transform parent, Vector3 center, Vector3 area, Material flame)
+        {
+            ParticleSystem ps = System("Eruptions", parent, center, flame, 1500);
+            var main = ps.main;
+            main.loop = false;
+            main.playOnAwake = false;
+            main.prewarm = false;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.35f, 0.7f);
+            main.startSpeed = 0f; // a box throws along its z; they rise by velocity instead
+            main.startSize = new ParticleSystem.MinMaxCurve(0.4f, 0.9f);
+            main.startColor = new ParticleSystem.MinMaxGradient(new Color(1f, 0.35f, 0.15f), new Color(0.9f, 0.08f, 0.06f));
+            var emission = ps.emission;
+            emission.rateOverTime = 0f;
+            var shape = ps.shape;
+            shape.shapeType = ParticleSystemShapeType.Box;
+            shape.scale = area;
+            var velocity = ps.velocityOverLifetime;
+            velocity.enabled = true;
+            velocity.space = ParticleSystemSimulationSpace.World;
+            velocity.x = new ParticleSystem.MinMaxCurve(0f, 0f);
+            velocity.y = new ParticleSystem.MinMaxCurve(2f, 4f);
+            velocity.z = new ParticleSystem.MinMaxCurve(0f, 0f);
+            var size = ps.sizeOverLifetime;
+            size.enabled = true;
+            size.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 1f, 1f, 0.2f));
+            var col = ps.colorOverLifetime;
+            col.enabled = true;
+            col.color = FadeInOut(Color.white);
+            return ps;
+        }
+
         /// <summary>A burst thrown upward, emitted on demand (a cleanse, a scorch).</summary>
         public static ParticleSystem Upburst(Transform parent, Vector3 at, Material spark, float radius, float speed)
         {

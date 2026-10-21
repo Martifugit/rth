@@ -70,7 +70,12 @@ namespace Rth.Client
         /// A marker over someone's head for a while (owed blood): a red badge with a label and a
         /// bar running down as the time runs out.
         /// </summary>
-        public void ShowMarker(int entityId, string label, float seconds) => _markers[entityId] = (label, Time.time, Mathf.Max(0.1f, seconds));
+        public void ShowMarker(int entityId, string label, float seconds)
+        {
+            _markers[entityId] = (label, Time.time, Mathf.Max(0.1f, seconds));
+            EntityView view = Find(entityId);
+            if (view != null) BloodMark.Attach(view, seconds);
+        }
 
         private const float XpDropSeconds = 1.6f;
         private readonly List<(string Text, float Time)> _xpDrops = new List<(string, float)>();
@@ -388,17 +393,18 @@ namespace Rth.Client
                     _markers.Remove(m.Key);
                     continue;
                 }
-                Vector3 top = cam.WorldToScreenPoint(view.transform.position + Vector3.up * (view.Height + 0.35f));
-                if (top.z <= 0f) continue;
-                float pulse = 1f + 0.08f * Mathf.Sin(Time.time * 8f);
-                var badge = new Rect(top.x - 22f * pulse, Screen.height - top.y - 96f, 44f * pulse, 30f * pulse);
-                DrawRect(new Rect(badge.x - 2f, badge.y - 2f, badge.width + 4f, badge.height + 4f), new Color(0f, 0f, 0f, 0.8f));
-                DrawRect(badge, new Color(0.62f, 0.04f, 0.07f, 0.95f));
-                _splatStyle.fontSize = 17;
-                _splatStyle.normal.textColor = Color.white;
-                GUI.Label(badge, m.Value.Label, _splatStyle);
-                DrawRect(new Rect(badge.x, badge.yMax + 3f, badge.width, 4f), new Color(0f, 0f, 0f, 0.7f));
-                DrawRect(new Rect(badge.x, badge.yMax + 3f, badge.width * left, 4f), new Color(0.95f, 0.3f, 0.25f));
+                // The count, in the middle of the blood mark's seal.
+                if (string.IsNullOrEmpty(m.Value.Label)) continue;
+                Vector3 seal = cam.WorldToScreenPoint(view.transform.position + Vector3.up * (view.Height + BloodMark.Lift));
+                if (seal.z <= 0f) continue;
+                var centre = new Rect(seal.x - 35f, Screen.height - seal.y - 15f, 70f, 30f);
+                _splatStyle.fontSize = 24;
+                _splatStyle.normal.textColor = new Color(0.12f, 0f, 0f, 0.95f);
+                for (int dx = -1; dx <= 1; dx++)
+                for (int dy = -1; dy <= 1; dy++)
+                    if (dx != 0 || dy != 0) GUI.Label(new Rect(centre.x + dx * 2f, centre.y + dy * 2f, centre.width, centre.height), m.Value.Label, _splatStyle);
+                _splatStyle.normal.textColor = new Color(1f, 0.93f, 0.88f);
+                GUI.Label(centre, m.Value.Label, _splatStyle);
             }
 
             // XP drops rise from beside the local player's head.

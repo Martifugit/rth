@@ -522,6 +522,20 @@ namespace Rth.Client.Editor
             mood.eyeLight = eyeLight;
             mood.eyes = upper.GetComponentsInChildren<Renderer>().Where(r => r.name == "Eye").ToArray();
 
+            // His judgement (Pay what you owe): the whole nave floor erupts in blood-red fire.
+            var judgement = _saint.gameObject.AddComponent<CryptJudgement>();
+            GameObject floorFlash = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            floorFlash.name = "Judgement";
+            Object.DestroyImmediate(floorFlash.GetComponent<Collider>());
+            floorFlash.transform.SetParent(colossus, false);
+            floorFlash.transform.position = new Vector3(Mid, 0.04f, NaveY + DaisFrom / 2f);
+            floorFlash.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            floorFlash.transform.localScale = new Vector3(NaveW, DaisFrom, 1f);
+            floorFlash.GetComponent<Renderer>().sharedMaterial = FxKit.ParticleMat("FxJudgement", new Color(1f, 0.15f, 0.1f, 0.5f), additive: true);
+            judgement.floorFlash = floorFlash.GetComponent<Renderer>();
+            judgement.eruptions = FxKit.Eruptions(colossus, new Vector3(Mid, 0.1f, NaveY + DaisFrom / 2f), new Vector3(NaveW, 0.1f, DaisFrom), FxKit.ParticleMat("FxFlame", new Color(1f, 0.55f, 0.22f, 0.6f), additive: true));
+            judgement.flashLight = FxKit.PointLight(colossus, "Judgement light", new Vector3(Mid, 6f, NaveY + DaisFrom / 2f), new Color(1f, 0.16f, 0.1f), 0f, 30f);
+
             // Arms forward from the shoulders in wide sleeves, the hands meeting on a chalice tipped
             // towards the nave, held just north of the bier so that it pours onto the body.
             var chalice = new Vector3(Mid, 9.5f, NaveY + Bier.y + 1.4f);
@@ -640,6 +654,9 @@ namespace Rth.Client.Editor
             cleanse.bowl = altarStation.Find("Requiem").GetComponent<Renderer>();
             cleanse.dust = dust;
             cleanse.burst = FxKit.Upburst(centre, a + new Vector3(0f, 1.3f, 0f), FxKit.ParticleMat("FxSpark", Color.white, additive: true), 0.4f, 9f);
+            GameObject engulf = WorldKit.Cylinder("Cleansing light", centre, a + new Vector3(0f, 7f, 0f), new Vector3(1.6f, 7f, 1.6f), RingLightMat(), collider: false);
+            cleanse.pillar = engulf.GetComponent<Renderer>();
+            cleanse.flash = FxKit.PointLight(centre, "Cleansing flash", a + new Vector3(0f, 2.5f, -0.5f), new Color(1f, 0.92f, 0.75f), 0f, 14f);
         }
 
         private static Transform _saint;

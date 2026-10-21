@@ -92,6 +92,7 @@ namespace Rth.Server.Game
             new AchievementSystem(),
             new BestiarySystem(),
             new BossSystem(),
+            new Encounters.UnquietSaintSystem(),
         };
 
         public ServerConfig Config => _config;

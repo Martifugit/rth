@@ -41,6 +41,7 @@ namespace Rth.Server.Game
     {
         public BossDef? Boss;
         public uint StartTick;
+        public List<EncounterBar> Bars = new List<EncounterBar>();
         public bool Dirty = true;
     }
 
@@ -75,9 +76,26 @@ namespace Rth.Server.Game
             PlayerBossRun run = Of(player);
             run.Boss = boss;
             run.StartTick = World.CurrentTick;
+            run.Bars = new List<EncounterBar>();
             run.Dirty = true;
             World.Events.Publish(new BossRunStarted(player, boss));
             return true;
+        }
+
+        /// <summary>Sets one of the run's bars (adding it the first time); the client is told when it changes.</summary>
+        public void SetBar(Player player, string id, string label, float value, string colour, bool danger = false)
+        {
+            PlayerBossRun run = Of(player);
+            if (run.Boss == null) return;
+            value = Math.Max(0f, Math.Min(1f, value));
+            EncounterBar? bar = run.Bars.Find(b => b.Id == id);
+            if (bar == null) run.Bars.Add(bar = new EncounterBar { Id = id });
+            if (bar.Label == label && Math.Abs(bar.Value - value) < 0.002f && bar.Colour == colour && bar.Danger == danger) return;
+            bar.Label = label;
+            bar.Value = value;
+            bar.Colour = colour;
+            bar.Danger = danger;
+            run.Dirty = true;
         }
 
         /// <summary>Ends the run in progress: a win pays its rewards and counts as a completion.</summary>
@@ -146,6 +164,7 @@ namespace Rth.Server.Game
                 state.Boss = run.Boss.Id;
                 state.StartTick = run.StartTick;
                 state.BestTicks = World.Find<BestiarySystem>()?.Boss(player, run.Boss.Id).BestTicks ?? 0;
+                state.Bars = run.Bars;
             }
             player.Connection.Send(JsonStateMessage.Of(StateKey, state));
         }

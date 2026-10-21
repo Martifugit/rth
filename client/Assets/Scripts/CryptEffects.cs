@@ -236,6 +236,68 @@ namespace Rth.Client
         }
     }
 
+    /// <summary>
+    /// The Saint's "judgement" (Pay what you owe, when the delay runs out): the whole floor of the
+    /// nave erupts in <c>pulses</c> blasts of blood-red fire, <c>interval</c> apart, after
+    /// <c>delay</c>. Only the lit sigils were safe; their pillars stand through it.
+    /// </summary>
+    public sealed class CryptJudgement : MonoBehaviour, IObjectEffect
+    {
+        public Renderer floorFlash;
+        public ParticleSystem eruptions;
+        public Light flashLight;
+        public Color colour = new Color(1f, 0.16f, 0.1f);
+
+        private readonly List<float> _pulses = new List<float>();
+
+        private void Awake()
+        {
+            if (floorFlash != null) floorFlash.enabled = false;
+            if (flashLight != null) flashLight.enabled = false;
+        }
+
+        public void Play(string effect, IReadOnlyDictionary<string, string> args)
+        {
+            if (effect != "judgement") return;
+            float delay = ObjectEffects.Float(args, "delay", 4f);
+            int pulses = Mathf.Max(1, (int)ObjectEffects.Float(args, "pulses", 5f));
+            float interval = ObjectEffects.Float(args, "interval", 0.45f);
+            for (int i = 0; i < pulses; i++) _pulses.Add(Time.time + delay + i * interval);
+        }
+
+        private void Update()
+        {
+            // How bright the floor is now: each blast flares and fades in a third of a second.
+            float strength = 0f;
+            for (int i = _pulses.Count - 1; i >= 0; i--)
+            {
+                float t = Time.time - _pulses[i];
+                if (t < 0f) continue;
+                if (t < Time.deltaTime && eruptions != null) eruptions.Emit(260);
+                if (t > 0.35f)
+                {
+                    _pulses.RemoveAt(i);
+                    continue;
+                }
+                strength = Mathf.Max(strength, 1f - t / 0.35f);
+            }
+            bool on = strength > 0f;
+            if (floorFlash != null)
+            {
+                floorFlash.enabled = on;
+                Color c = colour;
+                c.a = 0.55f * strength;
+                Fx.Tint(floorFlash, c);
+            }
+            if (flashLight != null)
+            {
+                flashLight.enabled = on;
+                flashLight.color = colour;
+                flashLight.intensity = 30f * strength;
+            }
+        }
+    }
+
     /// <summary>The altar's "cleanse": the shaft of light swells for <c>seconds</c>, the bowl blazes, then a burst rises.</summary>
     public sealed class AltarCleanse : MonoBehaviour, IObjectEffect
     {
@@ -244,6 +306,9 @@ namespace Rth.Client
         public Renderer bowl;
         public ParticleSystem dust;
         public ParticleSystem burst;
+        /// <summary>A column of light that engulfs the altar while the channel lasts.</summary>
+        public Renderer pillar;
+        public Light flash;
         public Color bowlRest = new Color(0.35f, 0.02f, 0.04f) * 0.6f;
 
         private float _start = -1f, _seconds = 3f, _shaftBase, _dustBase;
@@ -254,6 +319,8 @@ namespace Rth.Client
             _shaftBase = shaft != null ? shaft.intensity : 0f;
             _dustBase = dust != null ? dust.emission.rateOverTimeMultiplier : 0f;
             _beamBase = beam != null && beam.sharedMaterial != null ? beam.sharedMaterial.GetColor("_BaseColor") : Color.white;
+            if (pillar != null) pillar.enabled = false;
+            if (flash != null) flash.enabled = false;
         }
 
         public void Play(string effect, IReadOnlyDictionary<string, string> args)
@@ -261,6 +328,8 @@ namespace Rth.Client
             if (effect != "cleanse") return;
             _seconds = Mathf.Max(0.5f, ObjectEffects.Float(args, "seconds", 3f));
             _start = Time.time;
+            if (pillar != null) pillar.enabled = true;
+            if (flash != null) flash.enabled = true;
         }
 
         private void Update()
@@ -275,7 +344,22 @@ namespace Rth.Client
             Fx.Tint(beam, c);
             Fx.Glow(bowl, Color.Lerp(bowlRest, new Color(1f, 0.85f, 0.6f) * 6f, k));
             Fx.Rate(dust, _dustBase * (1f + 6f * k));
-            if (t > _seconds + 1.2f) _start = -1f;
+            // The column engulfing the altar grows brighter through the channel, and goes white at the end.
+            bool end = t >= _seconds && t < _seconds + 0.4f;
+            if (pillar != null)
+            {
+                Color p = end ? Color.white : new Color(1f, 0.9f, 0.7f);
+                p.a = end ? 0.9f * (1f - (t - _seconds) / 0.4f) : 0.45f * k;
+                Fx.Tint(pillar, p);
+                pillar.transform.localScale = new Vector3(Mathf.Lerp(1.6f, 2.6f, k), pillar.transform.localScale.y, Mathf.Lerp(1.6f, 2.6f, k));
+            }
+            if (flash != null) flash.intensity = end ? 60f * (1f - (t - _seconds) / 0.4f) : 8f * k;
+            if (t > _seconds + 1.2f)
+            {
+                _start = -1f;
+                if (pillar != null) pillar.enabled = false;
+                if (flash != null) flash.enabled = false;
+            }
         }
     }
 

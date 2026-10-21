@@ -1,4 +1,6 @@
 using Rth.Server;
+using Rth.Server.Content;
+using Rth.Server.Game;
 using Rth.Shared.Net;
 using Rth.Shared.World;
 
@@ -93,20 +95,59 @@ public class WorldTests
         Assert.Equal("colour=#ff0000;delay=0.7", effects[1].Arg);
     }
 
-    [Fact]
-    public void SaintPreviewsPlayTheirMechanicsOnTheCryptsObjects()
+    private static WorldFixture Crypt()
     {
         var placed = new List<PlacedObject> { new() { Type = "unquiet_saint", X = 20, Y = 30 }, new() { Type = "crypt_altar", X = 20, Y = 18 } };
         for (int i = 0; i < 8; i++) placed.Add(new PlacedObject { Type = "crypt_fount", X = 10 + i, Y = 10 });
-        var fx = new WorldFixture(Maps.Open(40, 40, Spawn), new ServerConfig { DevCommands = true }, null, null, placed);
-        FakeConnection client = fx.Login("Alice");
-        foreach (string c in new[] { "::saint light", "::saint wake 40", "::saint cleanse" })
-            client.FromClient(new ChatMessage { Channel = ChatChannel.Public, Text = c });
+        ContentParts parts = TestContent.Parts();
+        parts.Bosses.Add(new Rth.Shared.Progress.BossDef { Id = "unquiet_saint", Name = "The Unquiet Saint" });
+        return new WorldFixture(Maps.Open(40, 40, Spawn), new ServerConfig { DevCommands = true }, GameContent.Create(parts), null, placed);
+    }
+
+    private static void Say(WorldFixture fx, FakeConnection client, params string[] commands)
+    {
+        foreach (string c in commands) client.FromClient(new ChatMessage { Channel = ChatChannel.Public, Text = c });
         fx.Ticks(1);
+    }
+
+    [Fact]
+    public void SaintPreviewsPlayTheirMechanicsOnTheCryptsObjects()
+    {
+        var fx = Crypt();
+        FakeConnection client = fx.Login("Alice");
+        Say(fx, client, "::saint light", "::saint wake", "::saint cleanse");
         var effects = client.Updates.SelectMany(u => u.ObjectEffects).ToList();
         Assert.Equal(3, effects.Count(e => e.Effect == "light" && e.ObjectType == "crypt_fount"));
-        Assert.Contains(effects, e => e.Effect == "wake" && e.Arg == "level=0.4");
+        Assert.Contains(effects, e => e.Effect == "wake" && e.Arg == "level=0.25");
         Assert.Contains(effects, e => e.Effect == "cleanse" && e.ObjectType == "crypt_altar");
+    }
+
+    [Fact]
+    public void ScorchedFountsRestUntilTheyFillAgain()
+    {
+        var fx = Crypt();
+        FakeConnection client = fx.Login("Alice");
+        Say(fx, client, "::saint light", "::saint light", "::saint light");
+        var lit = client.Updates.SelectMany(u => u.ObjectEffects).Where(e => e.Effect == "light").Select(e => e.X).ToList();
+        Assert.Equal(8, lit.Count); // 3, 3, then the only 2 not dry
+        Assert.Equal(8, lit.Distinct().Count());
+        Assert.Contains(client.Texts, t => t.Contains("(2 founts)"));
+    }
+
+    [Fact]
+    public void TheSaintsDemoRunFillsItsBarsAndEnds()
+    {
+        var fx = Crypt();
+        FakeConnection client = fx.Login("Alice");
+        Say(fx, client, "::saint start");
+        fx.Ticks(20);
+        var state = client.Sent.OfType<JsonStateMessage>().Last(m => m.Key == BossSystem.StateKey).Parse<Rth.Shared.Progress.BossRunState>();
+        Assert.Equal("unquiet_saint", state.Boss);
+        Assert.Equal(new[] { "requiem", "wake" }, state.Bars.Select(b => b.Id));
+        Assert.True(state.Bars[1].Danger && state.Bars[1].Value > 0f);
+        fx.Ticks(400);
+        Assert.Contains(client.Texts, t => t.Contains("laid back to rest"));
+        Assert.Equal(1, fx.World.Get<BestiarySystem>().Boss(fx.Player("Alice"), "unquiet_saint").Completions);
     }
 
     [Fact]

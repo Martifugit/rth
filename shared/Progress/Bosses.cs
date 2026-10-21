@@ -37,5 +37,20 @@ namespace Rth.Shared.Progress
         public string Boss = "";
         public uint StartTick;
         public int BestTicks;
+        /// <summary>The encounter's big bars (progress, and how close it is to failing), left to right; empty for none.</summary>
+        public List<EncounterBar> Bars = new List<EncounterBar>();
+    }
+
+    /// <summary>One of an encounter's bars across the top of the screen (the Saint's Requiem and Wake).</summary>
+    public sealed class EncounterBar
+    {
+        public string Id = "";
+        public string Label = "";
+        /// <summary>0 to 1.</summary>
+        public float Value;
+        /// <summary>#RRGGBB.</summary>
+        public string Colour = "#c0a060";
+        /// <summary>A bar that fails the run when full: drawn as a threat.</summary>
+        public bool Danger;
     }
 }

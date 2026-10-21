@@ -23,6 +23,9 @@ namespace Rth.Client
         public float restGlow = 0.7f;
         public float flareGlow = 6f;
 
+        /// <summary>How long a strike flies (the server's UnquietSaintFx.HolyStrikeFlight).</summary>
+        private const float StrikeFlight = 0.55f;
+
         private MaterialPropertyBlock _block;
         private float _phase;
         private Vector3 _haloScale;
@@ -43,8 +46,17 @@ namespace Rth.Client
             if (halo != null) _haloScale = halo.transform.localScale;
         }
 
+        private readonly List<(float Time, Color Colour, int Target)> _strikes = new List<(float, Color, int)>();
+
         public void Play(string effect, IReadOnlyDictionary<string, string> args)
         {
+            if (effect == "strike")
+            {
+                // A strike thrown from the symbol at a player, after its delay (Believer's onslaught).
+                int target = args.TryGetValue("player", out string id) && int.TryParse(id, out int n) ? n : 0;
+                _strikes.Add((Time.time + ObjectEffects.Float(args, "delay", 0f), ObjectEffects.Colour(args, "colour", neutral), target));
+                return;
+            }
             if (effect != "flare") return;
             _flares.Add(new Flare
             {
@@ -56,6 +68,19 @@ namespace Rth.Client
 
         private void Update()
         {
+            for (int i = _strikes.Count - 1; i >= 0; i--)
+            {
+                if (Time.time < _strikes[i].Time) continue;
+                (float _, Color thrown, int target) = _strikes[i];
+                _strikes.RemoveAt(i);
+                WorldView world = FindAnyObjectByType<WorldView>();
+                EntityView victim = world != null ? world.Find(target) : null;
+                if (victim == null) continue;
+                Vector3 from = halo != null ? halo.transform.position + Vector3.back * 0.4f : transform.position + Vector3.up * 5f;
+                Projectile.Launch(from, victim, thrown * 1.6f, StrikeFlight, 0.55f, 6f);
+                _flares.Add(new Flare { Start = Time.time, Hold = 0.15f, Colour = thrown }); // the symbol kicks as it throws
+            }
+
             // How strongly a flare is on now (0 at rest, 1 at its height) and in what colour.
             float strength = 0f;
             Color colour = neutral;

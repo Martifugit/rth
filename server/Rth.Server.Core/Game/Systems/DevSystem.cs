@@ -24,14 +24,9 @@ namespace Rth.Server.Game
         private readonly Dictionary<string, (string About, Func<Player, string[], string> Run)> _previews =
             new Dictionary<string, (string, Func<Player, string[], string>)>();
 
-        /// <summary>A boss's effect previews under one word (<c>::saint ...</c>); the handler returns what to tell the player.</summary>
+        /// <summary>A boss's effect previews under one word (<c>::saint ...</c>); the handler returns what to tell the player (or null, having told it).</summary>
         public void RegisterPreview(string word, string about, Func<Player, string[], string> run) => _previews[word] = (about, run);
 
-        protected override void OnAttach()
-        {
-            var saint = new Encounters.UnquietSaintFx(World);
-            RegisterPreview("saint", "the Unquiet Saint's mechanics", saint.Preview);
-        }
 
         public void Run(Player player, string command)
         {
@@ -72,9 +67,11 @@ namespace Rth.Server.Game
                     Say(player, preview.Run(player, args.Skip(1).ToArray()));
                     break;
                 default:
-                    Say(player, "Commands: ::tele x y | ::tele region | ::level skill n | ::give item [count] | ::devotion | ::boss <id>|win|fail | ::fx <object type> <effect> [key=value ...]");
+                    // One command a line, so the list reads in the chat box.
+                    Say(player, "Dev commands:");
+                    foreach (string line in Help) Say(player, line);
                     foreach (KeyValuePair<string, (string About, Func<Player, string[], string> Run)> p in _previews)
-                        Say(player, "::" + p.Key + ": " + p.Value.About + " (::" + p.Key + " for the list)");
+                        Say(player, "::" + p.Key + "  -  " + p.Value.About);
                     break;
             }
         }
@@ -109,6 +106,17 @@ namespace Rth.Server.Game
             Say(player, "Teleported to " + tile + ".");
         }
 
+        private static readonly string[] Help =
+        {
+            "::tele <region>  -  go to a region (e.g. ::tele saints_crypt)",
+            "::tele <x> <y>  -  go to a tile",
+            "::level <skill> <level>  -  set a skill's level",
+            "::give <item> <count>  -  items in your pack",
+            "::devotion  -  refill devotion",
+            "::boss <id>  -  start a boss run; ::boss win, ::boss fail end it",
+            "::fx <object type> <effect>  -  play one object effect on every one near you (tuning)",
+        };
+
         /// <summary>Plays an effect on every object of a type near the player (building and tuning effects).</summary>
         private void Fx(Player player, string type, string effect, string arg)
         {
@@ -132,6 +140,9 @@ namespace Rth.Server.Game
             return null;
         }
 
-        private void Say(Player player, string text) => World.Tell(player, TextKind.Info, text);
+        private void Say(Player player, string text)
+        {
+            if (!string.IsNullOrEmpty(text)) World.Tell(player, TextKind.Info, text);
+        }
     }
 }
