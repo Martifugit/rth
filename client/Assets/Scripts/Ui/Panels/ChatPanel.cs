@@ -52,7 +52,7 @@ namespace Rth.Client.Ui.Panels
             _scroll.style.flexShrink = 1;
 
             VisualElement inputRow = UiKit.El(root, "chat-input-row");
-            _name = UiKit.Text(inputRow, "", "bold");
+            _name = UiKit.Text(inputRow, "", "bold", "chat-name");
             _input = new TextField { maxLength = ChatMessage.MaxLength };
             _input.AddToClassList("chat-input");
             inputRow.Add(_input);
