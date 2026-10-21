@@ -93,9 +93,6 @@ namespace Rth.Server.Game
             {
                 world.Face(player, npc.Position);
                 world.Face(npc, player.Position);
-                // Townsfolk stop wandering off while someone deals with them.
-                npc.Waypoints.Clear();
-                npc.NextWanderTick = world.CurrentTick + 25;
                 _then(player, npc);
             }
             return false;
