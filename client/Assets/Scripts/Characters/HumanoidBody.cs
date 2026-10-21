@@ -106,7 +106,8 @@ namespace Rth.Client.Characters
 
         public void Build(HumanoidLook look, float scale)
         {
-            _meshes ??= new Meshes();
+            // Statics outlive Play sessions (no domain reload) but the meshes don't; rebuild them.
+            if (_meshes == null || _meshes.Pelvis == null) _meshes = new Meshes();
             _scale = scale;
             _idleOffset = Random.value * 10f;
 
