@@ -333,26 +333,37 @@ Plain prayers, deliberately: nothing fancier than RuneScape's.
 - **Their themes are Tithe's faith, not its treasury:** being found worthy (steadfastness,
   zeal, judgement, revelation, penance), with a little of the salt coast's harsh light. Names are
   short and iconic, like RuneScape's best prayers.
-- Devotion's size and drain rates, and how devotion is restored, are still to be set (section 10).
+**Devotion** works like RuneScape's prayer points:
+- **Size:** `10 x Religion level` (10 at level 1, 1,000 at 100), plus gear.
+- **Drain:** each hymn drains its rate every tick it is sung; rates add up. A **devotion bonus**
+  on gear (Tithe's vestments, holy symbols) slows all drain by 1% per point.
+- **No natural regeneration.** It comes back by praying at an **altar** (any altar of Blood:
+  Tithe's chapels, wayside chapels, the Synod's churches; it refills completely), by
+  **devotion draughts** from Medicine (`70 + 25%` of max per dose), by a slow **renewal
+  draught** (1% of max per tick for 50 ticks), and in full on respawn.
+- With an overhead and a Turmoil-type hymn up (1.6 per tick), a level-100 player's 1,000
+  devotion lasts about 6 minutes without bonuses or draughts: the same feel as RuneScape.
 
-**The hymns.** Names decided (2026-10-21); levels and numbers are placeholders, and effects follow
-the RuneScape prayer each one is based on.
+**The hymns.** Names decided (2026-10-21). Numbers are starting values to balance in play;
+effects follow the RuneScape prayer each one is based on.
 
-| Level | Hymn | Based on | Effect |
-|---|---|---|---|
-| 1 / 25 / 50 | **Steadfast**, **Unbowed**, **Unbroken** | Thick Skin and its tiers | + defence |
-| 5 / 30 / 70 | **Zeal**, **Fervour**, **Judgement** | the melee boosts, up to Piety | + melee |
-| 8 / 33 / 70 | **Clarity**, **Vigil**, **Revelation** | the ranged boosts, up to Rigour | + ranged |
-| 11 / 36 / 70 | **Insight**, **Discernment**, **Anathema** | the magic boosts, up to Augury | + occult |
-| 35 | **Bulwark** | Protect from Melee | deflect melee |
-| 38 | **Glare** | Protect from Missiles | deflect ranged |
-| 41 | **Salt Ward** | Protect from Magic | deflect occult |
-| 80 | **Penance** / **Contrition** / **Atonement** | Turmoil / Anguish / Torment | melee / ranged / occult: your hits weaken the target and strengthen you |
-| 90 | **Sacrament** | Soul Split | a share of the damage you deal returns as blood |
+| Level | Hymn | Based on | Effect | Drain/tick |
+|---|---|---|---|---|
+| 1 / 25 / 50 | **Steadfast**, **Unbowed**, **Unbroken** | Thick Skin and its tiers | +5% / +10% / +15% armour | 0.1 / 0.2 / 0.3 |
+| 5 / 30 / 70 | **Zeal**, **Fervour**, **Judgement** | the melee boosts, up to Piety | melee accuracy and damage +3% / +5% / +8%; Judgement also +4% armour | 0.1 / 0.2 / 0.5 |
+| 8 / 33 / 70 | **Clarity**, **Vigil**, **Revelation** | the ranged boosts, up to Rigour | the same for ranged | 0.1 / 0.2 / 0.5 |
+| 11 / 36 / 70 | **Insight**, **Discernment**, **Anathema** | the magic boosts, up to Augury | the same for occult | 0.1 / 0.2 / 0.5 |
+| 35 | **Bulwark** | Protect from Melee | 50% less damage from melee (NPCs) | 0.5 |
+| 38 | **Glare** | Protect from Missiles | the same for ranged | 0.5 |
+| 41 | **Salt Ward** | Protect from Magic | the same for occult | 0.5 |
+| 80 | **Penance** / **Contrition** / **Atonement** | Turmoil / Anguish / Torment | melee / ranged / occult accuracy and damage +10%, armour +4%; each of your hits lowers the target's armour by 1% (to −10%) | 0.8 |
+| 90 | **Sacrament** | Soul Split | 7.5% of the damage you deal returns as blood | 0.8 |
 
 **Only one overhead at a time:** Bulwark, Glare, Salt Ward and Sacrament. Everything else can be
-sung together. A higher tier of the same line simply replaces the lower one (Fervour replaces
-Zeal).
+sung together. Each style's hymns form one line, and a higher one replaces the lower: Fervour
+replaces Zeal, and Penance is the top of the melee line (it replaces Judgement). The defence
+tiers form a line too, so the most anyone sings is one defence hymn, one hymn per style and one
+overhead.
 
 ### 4.2 Verses (Cruor)
 Verses take melee beyond the rotation its abilities settle into: they raise its skill ceiling
@@ -372,18 +383,18 @@ and its power. They **complement** melee abilities and never compete with them.
   playstyle: Stigmata wants you under 30%, Death's Dance and Redemption keep you there, Siphon
   keeps you alive, and healing back above the line costs you Stigmata's bonus.
 
-**The first verses.** Levels and numbers are placeholders; `x` marks a number still to set.
-Durations are given in ticks (0.6 s).
+**The first verses.** Numbers are starting values to balance in play. Durations and cooldowns
+are in ticks (0.6 s). A verse can't be read if its blood cost would take your last blood.
 
-| Level | Verse | Cost | Effect |
-|---|---|---|---|
-| 1 | **Siphon** | 2% current blood | Gain x% life steal for x ticks. |
-| 15 (+ Melee 15) | **Abjuration** | blood, scripture | Heavy damage, but **only against occult-made creatures**; nothing against anything else. |
-| 40 | **Death's Dance** | blood, scripture | For x ticks, damage from every hit you take is reduced by 20% up front, and the damage it stopped is applied to you as a bleed over time instead. |
-| 55 | **Hemospike** | each ability cast costs 2% blood | A bloody frenzy for 12 ticks: basic abilities generate 2 more phlegm, and every ability cast costs 2% blood. |
-| 70 | **Redemption** | 70% of current blood | Shields you: the next incoming attack within 10 ticks is blocked completely, and the damage it would have done becomes phlegm (at most 50). |
-| 85 | **Martyrdom** | 20% max blood | For 50 ticks, gain a stack of **Scar** each time you take damage. At 10 stacks, your next ultimate costs no phlegm and consumes the stacks. |
-| 90 | **Stigmata** | needs and consumes 80% max blood | For 20 ticks, while you're below 30% blood, you deal x% more damage. |
+| Level | Verse | Blood | Scripture | Cooldown | Effect |
+|---|---|---|---|---|---|
+| 1 | **Siphon** | 2% current | I | 75 (45 s) | 20% life steal on your melee damage for 10 ticks. |
+| 15 (+ Melee 15) | **Abjuration** | 5% max | I | 50 (30 s) | 400% ability damage, but **only against occult-made creatures**; nothing against anything else. |
+| 40 | **Death's Dance** | 5% max | II | 100 (60 s) | For 20 ticks, every hit you take is reduced by 20% up front; the damage it stopped is applied to you as a bleed over the next 10 ticks. |
+| 55 | **Hemospike** | 2% max per ability cast | III | 100 (60 s) | A bloody frenzy for 12 ticks: basic abilities generate 2 more phlegm, and every ability cast costs 2% blood. |
+| 70 | **Redemption** | 70% current | III | 200 (2 min) | The next incoming attack within 10 ticks is blocked completely; 1 phlegm for each 2% of max blood it would have dealt (at most 50). |
+| 85 | **Martyrdom** | 20% max | IV | 200 (2 min) | For 50 ticks, a stack of **Scar** each time you take damage. At 10 stacks, your next ultimate costs no phlegm and consumes the stacks. |
+| 90 | **Stigmata** | needs and consumes 80% max | IV | 300 (3 min) | For 20 ticks, while you're below 30% blood, you deal 30% more damage. |
 
 ### 4.3 Pledges and scriptures
 - **Pledges** are what Religion gathers. Empowering a monument (4.4) has a chance on each
@@ -393,8 +404,19 @@ Durations are given in ticks (0.6 s).
   the blood of hundreds of thousands of the faithful, which only Cruor can concentrate. They are
   **bought from Cruorian characters with pledges**. That is Cruor's bargain: power for the people
   who carry its faith across the world.
-- **Scriptures are tiered:** higher verses need higher-tier scriptures, which cost more pledges.
-  Higher monuments give more pledges.
+- **Scriptures are tiered:** each read uses one scripture of the verse's tier.
+
+| Scripture | Price (pledges) | Read by |
+|---|---|---|
+| I | 2 | Siphon, Abjuration |
+| II | 5 | Death's Dance |
+| III | 10 | Hemospike, Redemption |
+| IV | 25 | Martyrdom, Stigmata |
+
+- **Pledge rates:** each successful attempt at a fount has a 10% chance to give pledges equal to
+  the monument's tier (1–10). AFK at a tier-5 monument that is about 350 pledges an hour; a
+  ten-minute boss fight reading verses on cooldown spends roughly 150. Those two numbers are the
+  balance to keep: an hour of empowering should pay for a few long fights.
 
 ### 4.4 Monuments
 Cruor keeps trying to expand, and its monuments are how that shows in the world.
@@ -402,22 +424,28 @@ Cruor keeps trying to expand, and its monuments are how that shows in the world.
 - **All over the world,** in every region, each with a Religion level requirement. Many also
   need something else from Cruor's expansion: a quest, a region opened, standing earned. Where a
   monument stands and what it took to raise it tells the story of Cruor pushing outward.
+- **Tiers:** monuments come in the same ten tiers as everything else (2.2), one per ten
+  levels, and like other nodes they are scattered: a region can hold a tier-2 and a tier-8
+  monument side by side.
 - **Raising:** each monument is raised once, when you first meet its requirements, for a one-off
-  XP reward. Some cost **remains from bosses or other important creatures**, some of them quest
+  XP reward (about ten minutes of AFK empowering there). Some cost **remains from bosses or other important creatures**, some of them quest
   rewards.
 - **Empowering (the main method, AFK):** the monuments are strongest with fresh blood. A monument
   has several **founts**, which work like gathering nodes (`skills.md` 2.3): your character
   pushes an arm into one, the game says the fount cuts you open, your character says "Ouch!", and
   you take a symbolic 5 damage (regenerated well before the fount changes). Then it runs like
-  woodcutting or Divination: attempts succeed by level, give Religion XP and sometimes pledges,
-  and now and then the fount is sated and another one wakes, so you move.
-- **Hungry founts (active):** sometimes a fount wakes hungry: short-lived and worth much more.
-  Moving to it is the reward for paying attention.
+  woodcutting or Divination: an attempt every 4 ticks, succeeding by level, gives Religion XP and
+  sometimes pledges, and after 20–40 successes the fount is sated and another one wakes, so you
+  move. XP per success is set so AFK empowering earns half the pace table (2.1).
+- **Hungry founts (active):** about every 150 ticks (90 s) a fount wakes hungry somewhere on the
+  monument for 15 ticks: 4x XP and 4x the pledge chance. Moving to each one brings an attentive
+  player up to the pace table's full rate.
 - **Reliquaries (the costly, fast method):** remains sealed in a **casing** made from other
   skills' materials (metal from Smithing, wood from Woodcutting, more at higher tiers), assembled
-  as an ordinary recipe at a workbench or chapel. Placed in a monument, a reliquary boosts the
-  XP **and pledges** of **everyone** empowering it, for a while. Most of the XP comes from using
-  it, a little from making it. Better remains (from stronger creatures, through Butchering) make
+  as an ordinary recipe at a workbench or chapel. Placed in a monument, a reliquary gives
+  **everyone** empowering it +50% XP and +50% pledges for 500 ticks (5 minutes); one reliquary
+  per monument at a time. Most of the XP comes from using it; assembling one gives a tenth of
+  the bonus XP it is expected to earn. Better remains (from stronger creatures, through Butchering) make
   stronger reliquaries, which need higher Religion. This is the game's main use of bones and
   remains, and a reason to train together.
 
@@ -425,7 +453,8 @@ Cruor keeps trying to expand, and its monuments are how that shows in the world.
 - **Empowering monuments** (AFK, low XP, free) and **hungry founts** (active, more).
 - **Reliquaries** (fastest, costs remains and casings).
 - **Raising monuments** (one-off rewards).
-- **A trickle from fighting:** a little XP from singing hymns and reading verses.
+- **A trickle from fighting:** 1 XP per 10 devotion drained in combat, and 5 XP per scripture
+  tier for each verse read.
 
 **Why it doesn't play like Distillation:** no rites. Empowering is gathering at a fixed place,
 reliquaries are an ordinary recipe, and what it produces (pledges) is spent at a shop, not burned
@@ -477,8 +506,10 @@ The herblore. Not for healing (food does that), apart from one mild tick-heal.
 | 10 | Melee / ranged / occult draught | herb-specific | +3 + 5% to that style |
 | 20 | Defence draught | eel slime | +3 + 5% defence |
 | 25 | **Yellow draught** / **black draught** | spark salt / lampblack | sets bile to +30 / −30 and holds it there for 30 ticks |
+| 20 | Devotion draught | salt | restores 70 + 25% of max devotion |
 | 30 | Tisane of mending | fen honey | heals 1% blood per tick for 20 ticks (the tick-heal) |
 | 35 | Vitriol ward | lye | resist the Scald's corrosion (area hazard) |
+| 60 | Renewal draught | glarefish oil | restores 1% of max devotion per tick for 50 ticks |
 | 50 | Strong tonic | lamprey tooth | start with 25 phlegm |
 | 50–80 | Super draughts (every style, defence) | tier herbs | +5 + 10% |
 | 70 | **Choler** / **Melancholia** (the overloads) | sunfire salt / night ink | holds bile at ±60 for 5 minutes and boosts that pole's abilities |
@@ -591,8 +622,8 @@ The code rework that follows this document, in short:
 ## 10. Still open
 Smaller decisions that can wait until the content that needs them:
 
-- Hymns: devotion's size and drain, how devotion is restored, and each hymn's numbers (4.1).
-- Verses: the `x` numbers, cooldowns, scripture tiers and prices; which verses come from quests or boss codices; more verses later.
+- Religion's numbers: all starting values; balance them in play (4.1–4.4).
+- Verses: which ones come from quests or boss codices; more verses later.
 - What the monuments are (their look, and Cruor's reason for each).
 - Exact gear stat formula per tier and slot (2.2).
 - The names of the melee and ranged abilities, and the Defence ability list's numbers.
