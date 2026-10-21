@@ -802,6 +802,9 @@ Smaller decisions that can wait until the content that needs them:
 
 - Religion's numbers: all starting values; balance them in play (4.1–4.4).
 - Verses: which ones come from quests or boss codices; more verses later.
+- **A sink for gear** (decided that one is needed, 2026-10-21): gear doesn't wear out and is kept
+  on death, so Smithing and Tailoring have little lasting demand. Something like RuneScape's
+  alchemy, or the much bigger sink of Invention. To design later.
 - An ammunition slot: ranged needs somewhere to hold ammunition, and the 10 equipment slots have
   none (a quiver slot, as in RuneScape, or the pack).
 - Tipped ammunition: the tips, their effects and trigger chances, and whether calibration stays
