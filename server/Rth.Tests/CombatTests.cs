@@ -242,21 +242,19 @@ public class CombatTests
     }
 
     [Fact]
-    public void FeverBurnsBloodButNeverKills()
+    public void YellowBileAtTheLimitCostsNoBlood()
     {
         var fx = Arena();
         fx.Login("Alice");
         Player alice = fx.Player("Alice");
         alice.Bile = 100;
         alice.Blood = 30;
-        alice.LastCombatTick = 1; // keep it from decaying: pretend we're fighting
         for (int i = 0; i < 20; i++)
         {
-            alice.LastCombatTick = fx.World.CurrentTick;
+            alice.LastCombatTick = fx.World.CurrentTick; // in combat: no regeneration either
             fx.Ticks(1);
         }
-        Assert.Equal(1, alice.Blood);
-        Assert.False(alice.IsDead);
+        Assert.Equal(30, alice.Blood);
     }
 
     [Fact]
@@ -490,8 +488,8 @@ public class CombatTests
         Assert.Equal(new[] { StatusIds.Infused, StatusIds.Choleric }, hot.Select(s => s.Id));
         Assert.Equal(rules.InfusedPercent(50), hot[0].Magnitude);
 
-        alice.Bile = -rules.BileExtreme;
-        Assert.Equal(new[] { StatusIds.Warding, StatusIds.Melancholic, StatusIds.Torpor }, fx.World.StatusesOf(alice).Select(s => s.Id));
+        alice.Bile = -100; // only a pole's two statuses, even at the limit
+        Assert.Equal(new[] { StatusIds.Warding, StatusIds.Melancholic }, fx.World.StatusesOf(alice).Select(s => s.Id));
 
         fx.World.Get<CombatSystem>().ApplyEffect(alice, EffectType.Ward, 30, 10);
         fx.Ticks(1);

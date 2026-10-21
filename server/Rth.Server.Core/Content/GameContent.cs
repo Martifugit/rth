@@ -419,8 +419,7 @@ namespace Rth.Server.Content
             }
 
             CombatRules rules = parts.Rules;
-            if (rules.BileExtreme <= 0 || rules.BileLimit < rules.BileExtreme)
-                problems.Add("Rules: need 0 < bileExtreme <= bileLimit.");
+            if (rules.BileLimit <= 0) problems.Add("Rules: bileLimit must be positive.");
 
             Dictionary<string, StatusDef> statuses = Index(parts.Statuses, st => st.Id, "status", problems);
             foreach (StatusDef st in parts.Statuses)
@@ -624,7 +623,6 @@ namespace Rth.Server.Content
             Achievements = Achievements.Values.ToList(),
             Statuses = Statuses.Values.ToList(),
             BileLimit = Rules.BileLimit,
-            BileExtreme = Rules.BileExtreme,
             MaxPhlegm = Rules.MaxPhlegm,
             GlobalCooldownTicks = Rules.GlobalCooldownTicks,
         });

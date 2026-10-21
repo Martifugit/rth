@@ -7,7 +7,7 @@ using UnityEngine.UIElements;
 namespace Rth.Client.Ui.Panels
 {
     /// <summary>
-    /// A row of status icons: the buffs or the debuffs the player is under (bile's statuses, fever,
+    /// A row of status icons: the buffs or the debuffs the player is under (bile's statuses,
     /// wards from abilities). Each shows its strength or time left; hover for what it does. The
     /// server decides the statuses (<see cref="PlayerStateMessage.Statuses"/>); content describes them.
     /// </summary>

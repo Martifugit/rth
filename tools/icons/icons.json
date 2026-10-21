@@ -70,8 +70,6 @@
   "status_choleric": "lorc/broken-heart",
   "status_warding": "lorc/checked-shield",
   "status_melancholic": "lorc/tear-tracks",
-  "status_fever": "lorc/heat-haze",
-  "status_torpor": "lorc/snowflake-1",
   "status_ward": "lorc/magic-shield",
   "status_fervour": "lorc/burning-passion"
 }

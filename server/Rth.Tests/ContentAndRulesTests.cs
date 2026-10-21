@@ -101,17 +101,6 @@ public class ContentAndRulesTests
     }
 
     [Fact]
-    public void ExtremesBringFeverAndTorpor()
-    {
-        var rules = new CombatRules();
-        Assert.True(rules.IsFevered(80));
-        Assert.False(rules.IsFevered(79));
-        Assert.True(rules.IsTorpid(-80));
-        Assert.Equal(8, rules.PhlegmGainFor(8, 0));
-        Assert.Equal(4, rules.PhlegmGainFor(8, -90));
-    }
-
-    [Fact]
     public void AbilityRequirementsExplainThemselves()
     {
         var flare = new AbilityDef { Name = "Flare", PhlegmRequired = 50, BileMin = 30 };

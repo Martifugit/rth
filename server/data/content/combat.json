@@ -8,13 +8,10 @@
     "maxPhlegm": 100,
 
     "bileLimit": 100,
-    "bileExtreme": 80,
     "infusedMaxPercent": 20,
     "cholericMaxPercent": 10,
     "wardingMaxPercent": 20,
     "melancholicMaxPercent": 10,
-    "feverBloodPercentPerTick": 0.5,
-    "torporPhlegmMultiplier": 0.5,
 
     "combatTimeoutTicks": 10,
     "bileDecayPerTick": 1,

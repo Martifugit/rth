@@ -179,7 +179,7 @@ phlegm and breath came with it. The prototype numbers are in `docs/systems.md`.
 - [x] Later: stalling (use out of range, fires on arrival; `keepsStall` abilities hold it),
       optional queueing and Revolution (Settings > Combat; see `docs/systems.md`).
 - [x] Bile statuses (any lean: infused + choleric, or warding + melancholic, scaling with bile),
-      fever/torpor at ±80, settling out of combat. Buff and debuff bars on the client.
+      settling out of combat. Buff and debuff bars on the client.
 - [x] The target is kept while walking away in combat; an ability takes the fight back up.
 - [x] Breath deflection against one style.
 - [x] NPCs placed in the scene (`MapNpcSpawn`), with chase, melee/ranged rules, line of sight,

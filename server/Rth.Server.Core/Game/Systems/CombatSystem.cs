@@ -440,7 +440,7 @@ namespace Rth.Server.Game
             switch (ability.Type)
             {
                 case AbilityType.Builder:
-                    AddPhlegm(player, Rules.PhlegmGainFor(ability.PhlegmGain, player.Bile));
+                    AddPhlegm(player, ability.PhlegmGain);
                     break;
                 case AbilityType.Spender:
                 case AbilityType.Ultimate:
@@ -492,7 +492,7 @@ namespace Rth.Server.Game
         {
             if (target.IsDead) return 0;
 
-            if (target is Player defender && kind != HitKind.Fever && amount > 0)
+            if (target is Player defender && amount > 0)
             {
                 // Warding and wards lower it; choleric raises it (a negative ward).
                 double ward = defender.Stats.Get(StatIds.Ward) - Rules.BileDamageTakenPercent(defender.Bile);
@@ -511,7 +511,7 @@ namespace Rth.Server.Game
             World.AddHit(new HitEvent { TargetId = target.Id, SourceId = source?.Id ?? 0, Amount = amount, Kind = kind });
             if (amount > 0) World.Events.Publish(new DamageDealt(target, source, amount, style));
 
-            if (source != null && kind != HitKind.Fever)
+            if (source != null)
             {
                 target.LastCombatTick = World.CurrentTick;
                 source.LastCombatTick = World.CurrentTick;
@@ -610,15 +610,6 @@ namespace Rth.Server.Game
             CombatRules rules = Rules;
             bool inCombat = InCombat(player);
 
-            if (rules.IsFevered(player.Bile) && player.Blood > 1)
-            {
-                int burn = Math.Max(1, (int)Math.Ceiling(player.MaxBlood * rules.FeverBloodPercentPerTick / 100.0));
-                burn = Math.Min(burn, player.Blood - 1); // fever weakens but never kills
-                player.Blood -= burn;
-                player.HealthChanged = true;
-                World.AddHit(new HitEvent { TargetId = player.Id, SourceId = player.Id, Amount = burn, Kind = HitKind.Fever });
-            }
-
             if (player.Deflect != CombatStyle.None)
             {
                 player.Breath = Math.Max(0, player.Breath - rules.BreathDrainPerTick);
@@ -638,7 +629,7 @@ namespace Rth.Server.Game
             // Out of combat the body settles: bile drifts back, phlegm fades, blood returns.
             SettleBile(player, rules.BileDecayPerTick);
             AddPhlegm(player, -rules.PhlegmDecayPerTick);
-            if (player.Blood < player.MaxBlood && !rules.IsFevered(player.Bile))
+            if (player.Blood < player.MaxBlood)
             {
                 int regen = Math.Max(1, (int)Math.Round(player.MaxBlood * rules.BloodRegenPercentPerTick / 100.0));
                 player.Blood = Math.Min(player.MaxBlood, player.Blood + regen);
@@ -671,7 +662,7 @@ namespace Rth.Server.Game
             p.Connection.Send(state);
         }
 
-        /// <summary>The bile statuses (any lean brings a pole's buff and debuff), fever, torpor, and timed ability effects.</summary>
+        /// <summary>The bile statuses (any lean brings a pole's buff and debuff) and timed ability effects.</summary>
         public void AddStatuses(Player player, List<StatusState> statuses)
         {
             if (player.IsDead) return;
@@ -686,8 +677,6 @@ namespace Rth.Server.Game
                 statuses.Add(new StatusState { Id = StatusIds.Warding, Magnitude = Rules.WardingPercent(bile) });
                 statuses.Add(new StatusState { Id = StatusIds.Melancholic, Magnitude = Rules.MelancholicPercent(bile) });
             }
-            if (Rules.IsFevered(bile)) statuses.Add(new StatusState { Id = StatusIds.Fever });
-            if (Rules.IsTorpid(bile)) statuses.Add(new StatusState { Id = StatusIds.Torpor });
             foreach (ActiveEffect e in player.Effects)
                 statuses.Add(new StatusState { Id = StatusIds.ForEffect(e.Type), Magnitude = e.Magnitude, EndTick = e.EndTick });
         }

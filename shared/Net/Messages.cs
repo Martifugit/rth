@@ -219,8 +219,6 @@ namespace Rth.Shared.Net
         /// <summary>Reduced by deflection.</summary>
         Deflected = 2,
         Heal = 3,
-        /// <summary>Damage from the user's own humours (choleric fever).</summary>
-        Fever = 4,
     }
 
     public struct HitEvent
@@ -498,7 +496,6 @@ namespace Rth.Shared.Net
         public List<ObjectDef> Objects = new List<ObjectDef>();
         public List<NpcInfo> Npcs = new List<NpcInfo>();
         public int BileLimit;
-        public int BileExtreme;
         public int MaxPhlegm;
         public int GlobalCooldownTicks = 3;
         public List<RecipeInfo> Recipes = new List<RecipeInfo>();

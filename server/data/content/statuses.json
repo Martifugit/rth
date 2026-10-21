@@ -30,22 +30,6 @@
     "description": "The cold dulls your hand. You deal {value}% less damage."
   },
   {
-    "id": "fever",
-    "name": "Fever",
-    "icon": "status_fever",
-    "color": "#ff5a3c",
-    "debuff": true,
-    "description": "Your bile is too hot to hold. Your blood burns away each tick, though fever never kills."
-  },
-  {
-    "id": "torpor",
-    "name": "Torpor",
-    "icon": "status_torpor",
-    "color": "#8fb4ff",
-    "debuff": true,
-    "description": "Your bile is too cold to stir. Builders gain half as much phlegm."
-  },
-  {
     "id": "ward",
     "name": "Ward",
     "icon": "status_ward",

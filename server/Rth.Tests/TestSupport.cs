@@ -288,7 +288,7 @@ internal static class TestContent
     /// <summary>Every status the server gives out, with plain names.</summary>
     public static List<StatusDef> Statuses() =>
         StatusIds.BuiltIn.Concat(new[] { "ward", "fervour" })
-            .Select(id => new StatusDef { Id = id, Name = id, Debuff = id == "choleric" || id == "melancholic" || id == "fever" || id == "torpor" })
+            .Select(id => new StatusDef { Id = id, Name = id, Debuff = id == "choleric" || id == "melancholic" })
             .ToList();
 
     public static GameContent Create(CombatRules? rules = null, List<AbilityDef>? abilities = null) =>

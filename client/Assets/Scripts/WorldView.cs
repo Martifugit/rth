@@ -154,10 +154,6 @@ namespace Rth.Client
                     text = hit.Amount.ToString();
                     color = new Color(0.75f, 0.85f, 1f);
                     break;
-                case HitKind.Fever:
-                    text = hit.Amount.ToString();
-                    color = new Color(1f, 0.6f, 0.15f);
-                    break;
                 default:
                     text = hit.Amount.ToString();
                     color = new Color(1f, 0.25f, 0.2f);

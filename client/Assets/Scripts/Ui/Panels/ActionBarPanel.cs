@@ -64,8 +64,8 @@ namespace Rth.Client.Ui.Panels
 
         /// <summary>
         /// The bile axis between its poles' icons: two half-bars filling outward from a black
-        /// stretch of the bar at its centre that holds the value (up to "+100"), coloured by pole. Red marks show
-        /// where fever and torpor set in. What bile does right now is in the buff and debuff bars.
+        /// stretch of the bar at its centre that holds the value (up to "+100"), coloured by pole. What bile does
+        /// right now is in the buff and debuff bars.
         /// </summary>
         private sealed class BileAxis
         {
@@ -77,8 +77,6 @@ namespace Rth.Client.Ui.Panels
             private readonly VisualElement _blackFill;
             private readonly VisualElement _yellowFill;
             private readonly Label _value;
-            private int _marksFor = int.MinValue;
-            private readonly System.Collections.Generic.List<VisualElement> _marks = new System.Collections.Generic.List<VisualElement>();
 
             public BileAxis(VisualElement parent)
             {
@@ -121,29 +119,6 @@ namespace Rth.Client.Ui.Panels
                 _yellowFill.style.backgroundColor = UiKit.YellowBile;
                 _value.text = (bile > 0 ? "+" : "") + bile;
                 _value.style.color = bile > 0 ? UiKit.YellowBile : bile < 0 ? new Color(0.75f, 0.6f, 1f) : UiKit.TextColour;
-
-                if (content.BileExtreme == _marksFor) return;
-                _marksFor = content.BileExtreme;
-                foreach (VisualElement old in _marks) old.RemoveFromHierarchy();
-                _marks.Clear();
-                var colour = new Color(1f, 0.35f, 0.25f, 0.9f);
-                float at = content.BileExtreme / limit * 100f;
-                _marks.Add(Mark(_black, colour));
-                _marks[0].style.right = Length.Percent(at);
-                _marks.Add(Mark(_yellow, colour));
-                _marks[1].style.left = Length.Percent(at);
-            }
-
-            private static VisualElement Mark(VisualElement track, Color colour)
-            {
-                var m = new VisualElement { pickingMode = PickingMode.Ignore };
-                m.style.position = Position.Absolute;
-                m.style.width = 1f;
-                m.style.top = 0f;
-                m.style.bottom = 0f;
-                m.style.backgroundColor = colour;
-                track.Insert(1, m);
-                return m;
             }
         }
     }

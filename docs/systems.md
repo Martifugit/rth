@@ -36,8 +36,7 @@ live in `server/data/content/` and hot-reload, so they're meant to be tuned by p
   - black bile: **warding** (buff), 20% less damage taken; **melancholic** (debuff), 10% less
     damage dealt.
   Status names, icons and text are in `statuses.json`; the server decides who has which.
-- **Extremes** from ±80 (debuffs too): yellow **fever** burns 0.5% of max blood per tick (it
-  never kills); black **torpor** halves phlegm gained from builders.
+- **Only these four.** Bile has no other effects: no extremes (fever and torpor were removed).
 - **Settling:** after 10 ticks out of combat, bile drifts back 1 per tick, phlegm fades 2 per
   tick, and blood and breath regenerate.
 - **Phlegm:** builders build 6–8; spenders need 50 and spend 15; ultimates need and spend 100.
