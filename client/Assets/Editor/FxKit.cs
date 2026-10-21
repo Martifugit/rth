@@ -198,7 +198,7 @@ namespace Rth.Client.Editor
         }
 
         /// <summary>Motes hanging in a shaft of light, drifting very slowly.</summary>
-        public static void Dust(Transform parent, Vector3 center, Vector3 box, Material mote)
+        public static ParticleSystem Dust(Transform parent, Vector3 center, Vector3 box, Material mote)
         {
             ParticleSystem ps = System("Dust", parent, center, mote, 120);
             var main = ps.main;
@@ -218,6 +218,7 @@ namespace Rth.Client.Editor
             var col = ps.colorOverLifetime;
             col.enabled = true;
             col.color = FadeInOut(Color.white);
+            return ps;
         }
 
         /// <summary>A thin stream of blood falling from a point (a tipped chalice) and splashing below.</summary>
@@ -257,7 +258,7 @@ namespace Rth.Client.Editor
         }
 
         /// <summary>Now and then a drop falls back into a fount's bowl.</summary>
-        public static void Drips(Transform parent, Vector3 at, Material blood)
+        public static ParticleSystem Drips(Transform parent, Vector3 at, Material blood)
         {
             ParticleSystem ps = System("Drips", parent, at, blood, 10);
             var main = ps.main;
@@ -272,6 +273,7 @@ namespace Rth.Client.Editor
             shape.shapeType = ParticleSystemShapeType.Circle;
             shape.radius = 0.3f;
             shape.rotation = new Vector3(-90f, 0f, 0f);
+            return ps;
         }
 
         /// <summary>A soft glow behind something (a symbol's halo): a quad facing south, drawn additively.</summary>
@@ -308,6 +310,60 @@ namespace Rth.Client.Editor
             shape.shapeType = ParticleSystemShapeType.Circle;
             shape.radius = 0.8f;
             shape.radiusThickness = 0f;
+            var col = ps.colorOverLifetime;
+            col.enabled = true;
+            col.color = FadeInOut(Color.white);
+            return ps;
+        }
+
+        /// <summary>Sparks streaming up from a ring on the floor; it starts at rest (rate 0) and the effect raises its rate.</summary>
+        public static ParticleSystem RingSparks(Transform parent, Vector3 at, float radius, Material spark)
+        {
+            ParticleSystem ps = System("Ring sparks", parent, at, spark, 300);
+            var main = ps.main;
+            main.prewarm = false;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.8f, 1.6f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(1f, 2.5f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.04f, 0.1f);
+            main.startColor = new Color(1f, 0.9f, 0.65f);
+            var emission = ps.emission;
+            emission.rateOverTime = 0f;
+            var shape = ps.shape;
+            shape.shapeType = ParticleSystemShapeType.Circle;
+            shape.radius = radius;
+            shape.radiusThickness = 0f;
+            shape.rotation = new Vector3(-90f, 0f, 0f);
+            var velocity = ps.velocityOverLifetime;
+            velocity.enabled = true;
+            velocity.space = ParticleSystemSimulationSpace.World;
+            velocity.x = new ParticleSystem.MinMaxCurve(0f, 0f);
+            velocity.y = new ParticleSystem.MinMaxCurve(1.5f, 2.5f);
+            velocity.z = new ParticleSystem.MinMaxCurve(0f, 0f);
+            var col = ps.colorOverLifetime;
+            col.enabled = true;
+            col.color = FadeInOut(Color.white);
+            return ps;
+        }
+
+        /// <summary>A burst thrown upward, emitted on demand (a cleanse, a scorch).</summary>
+        public static ParticleSystem Upburst(Transform parent, Vector3 at, Material spark, float radius, float speed)
+        {
+            ParticleSystem ps = System("Upburst", parent, at, spark, 250);
+            var main = ps.main;
+            main.loop = false;
+            main.playOnAwake = false;
+            main.prewarm = false;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.6f, 1.4f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(speed * 0.5f, speed);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.06f, 0.18f);
+            main.gravityModifier = -0.05f;
+            var emission = ps.emission;
+            emission.rateOverTime = 0f;
+            var shape = ps.shape;
+            shape.shapeType = ParticleSystemShapeType.Cone;
+            shape.angle = 20f;
+            shape.radius = radius;
+            shape.rotation = new Vector3(-90f, 0f, 0f);
             var col = ps.colorOverLifetime;
             col.enabled = true;
             col.color = FadeInOut(Color.white);
@@ -352,7 +408,7 @@ namespace Rth.Client.Editor
         }
 
         /// <summary>A shaft of light from high above: a spot light, and a faint column you can see in the dark.</summary>
-        public static void Shaft(Transform parent, Vector3 floor, float height, float radius, Color color, Material beam)
+        public static (Light Light, Renderer Beam) Shaft(Transform parent, Vector3 floor, float height, float radius, Color color, Material beam)
         {
             var go = new GameObject("Light shaft");
             go.transform.SetParent(parent, false);
@@ -376,6 +432,7 @@ namespace Rth.Client.Editor
             var r = column.GetComponent<Renderer>();
             r.sharedMaterial = beam;
             r.shadowCastingMode = ShadowCastingMode.Off;
+            return (light, r);
         }
 
         /// <summary>Post-processing that applies only while the camera is inside the box (bloom so glows glow, a vignette, colour).</summary>

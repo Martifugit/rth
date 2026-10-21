@@ -1,3 +1,4 @@
+using System.Linq;
 using Rth.MapTools;
 using UnityEditor;
 using UnityEngine;
@@ -157,13 +158,22 @@ namespace Rth.Client.Editor
                 WorldKit.Cylinder("Engraving", go.transform, c + new Vector3(0f, 0.01f, 0f), new Vector3(0.94f, 0.004f, 0.94f), darkStone, collider: false);
                 Ring(go.transform, c + new Vector3(0f, 0.016f, 0f), 0.43f, 16, new Vector3(0.12f, 0.012f, 0.05f), bronze);
                 // The rune: a drop (a rotated square and its tip) inside a cross of four short strokes.
-                WorldKit.Box("Inlay", go.transform, c + new Vector3(0f, 0.02f, -0.04f), new Vector3(0.2f, 0.006f, 0.2f), sigilInlay, collider: false, yaw: 45f);
-                WorldKit.Box("Inlay", go.transform, c + new Vector3(0f, 0.02f, 0.12f), new Vector3(0.1f, 0.006f, 0.1f), sigilInlay, collider: false, yaw: 45f);
+                var rune = new System.Collections.Generic.List<Renderer>
+                {
+                    WorldKit.Box("Inlay", go.transform, c + new Vector3(0f, 0.02f, -0.04f), new Vector3(0.2f, 0.006f, 0.2f), sigilInlay, collider: false, yaw: 45f).GetComponent<Renderer>(),
+                    WorldKit.Box("Inlay", go.transform, c + new Vector3(0f, 0.02f, 0.12f), new Vector3(0.1f, 0.006f, 0.1f), sigilInlay, collider: false, yaw: 45f).GetComponent<Renderer>(),
+                };
                 for (int i = 0; i < 4; i++)
                 {
                     float a = i * Mathf.PI / 2f;
-                    WorldKit.Box("Inlay", go.transform, c + new Vector3(Mathf.Cos(a) * 0.3f, 0.02f, Mathf.Sin(a) * 0.3f), new Vector3(0.05f, 0.006f, 0.14f), sigilInlay, collider: false, yaw: -i * 90f + 90f);
+                    rune.Add(WorldKit.Box("Inlay", go.transform, c + new Vector3(Mathf.Cos(a) * 0.3f, 0.02f, Mathf.Sin(a) * 0.3f), new Vector3(0.05f, 0.006f, 0.14f), sigilInlay, collider: false, yaw: -i * 90f + 90f).GetComponent<Renderer>());
                 }
+                // Pay what you owe lights it: a pillar of light and a lamp, hidden until then.
+                GameObject pillar = WorldKit.Cylinder("Safe light", go.transform, c + new Vector3(0f, 1.6f, 0f), new Vector3(0.9f, 1.6f, 0.9f), RingLightMat(), collider: false);
+                var safe = go.AddComponent<SafeSigil>();
+                safe.inlay = rune.ToArray();
+                safe.pillar = pillar.GetComponent<Renderer>();
+                safe.lightSource = FxKit.PointLight(go.transform, "Safe lamp", c + new Vector3(0f, 1.2f, 0f), new Color(1f, 0.88f, 0.55f), 0f, 4f);
             }
             // Where Let there be light rises around each fount: a circle of bronze studs set in the floor.
             foreach (Vector2Int f in NearFounts) LightRing(nave, Center(f), ring, darkStone);
@@ -346,6 +356,7 @@ namespace Rth.Client.Editor
             // The martyr on his bier. Praying here is how the encounter will begin.
             Vector2Int bier = At(Bier);
             Transform saint = WorldKit.Station(group, "The martyr", "unquiet_saint", bier.x, bier.y);
+            _saint = saint; // the colossus's eyes, built later, are his mood's
             var c = new Vector3(Mid, 0f, bier.y + 0.5f);
             WorldKit.Box("Bier", saint, c + new Vector3(0f, 0.55f, 0f), new Vector3(1.9f, 0.9f, 1.2f), stone);
             WorldKit.Box("Pall", saint, c + new Vector3(0f, 1.02f, 0f), new Vector3(2.1f, 0.06f, 1.35f), synodRed, collider: false);
@@ -505,7 +516,11 @@ namespace Rth.Client.Editor
             WorldKit.Box("Mitre stripe", upper, new Vector3(Mid, 21.7f, baseY - 2.72f), new Vector3(0.3f, 2.6f, 0.06f), bronze, collider: false);
             WorldKit.Box("Mitre stripe", upper, new Vector3(Mid, 21.6f, baseY - 2.73f), new Vector3(1.8f, 0.25f, 0.06f), bronze, collider: false);
             upper.RotateAround(new Vector3(Mid, 14f, baseY), Vector3.right, 22f); // bowing forward over the dais
-            FxKit.PointLight(colossus, "Eyes", new Vector3(Mid, 18.4f, baseY - 6f), new Color(1f, 0.15f, 0.1f), 2.5f, 7f, flicker: 0.1f);
+            Light eyeLight = FxKit.PointLight(colossus, "Eyes", new Vector3(Mid, 18.4f, baseY - 6f), new Color(1f, 0.15f, 0.1f), 2.5f, 7f);
+            // His mood (the Wake bar, Hold your tongue) lives on the martyr's bier; his eyes are its face.
+            var mood = _saint.gameObject.AddComponent<CryptMood>();
+            mood.eyeLight = eyeLight;
+            mood.eyes = upper.GetComponentsInChildren<Renderer>().Where(r => r.name == "Eye").ToArray();
 
             // Arms forward from the shoulders in wide sleeves, the hands meeting on a chalice tipped
             // towards the nave, held just north of the bier so that it pours onto the body.
@@ -605,6 +620,10 @@ namespace Rth.Client.Editor
             Transform basin = WorldKit.Station(centre, "Offertory", "crypt_offertory", offertory.x, offertory.y);
             WorldKit.Cylinder("Stand", basin, basin.position + new Vector3(0f, 0.4f, 0f), new Vector3(0.4f, 0.4f, 0.4f), dais);
             WorldKit.Cylinder("Basin", basin, basin.position + new Vector3(0f, 0.84f, 0f), new Vector3(0.85f, 0.06f, 0.85f), bronze, collider: false);
+            var owed = basin.gameObject.AddComponent<OffertoryOwed>();
+            owed.surface = WorldKit.Cylinder("Surface", basin, basin.position + new Vector3(0f, 0.91f, 0f), new Vector3(0.7f, 0.01f, 0.7f), channelGlow, collider: false).GetComponent<Renderer>();
+            owed.glow = FxKit.PointLight(basin, "Owed glow", basin.position + new Vector3(0f, 1.4f, 0f), new Color(1f, 0.12f, 0.12f), 0f, 4f);
+            owed.glow.enabled = false;
 
             // The blood from the chalice runs off the dais and down a channel to the altar.
             float from = NaveY + Altar.y + 1f, to = NaveY + DaisFrom + 1.5f;
@@ -612,9 +631,21 @@ namespace Rth.Client.Editor
 
             // One cold shaft of light from somewhere far above, onto the altar, with dust in it.
             var floorAt = new Vector3(altar.x + 0.5f, 0f, altar.y + 0.5f);
-            FxKit.Shaft(centre, floorAt, 26f, 1.6f, new Color(0.65f, 0.75f, 1f), beam);
-            FxKit.Dust(centre, floorAt + new Vector3(0f, 4f, 0f), new Vector3(2.6f, 8f, 2.6f), mote);
+            (Light shaft, Renderer column) = FxKit.Shaft(centre, floorAt, 26f, 1.6f, new Color(0.65f, 0.75f, 1f), beam);
+            ParticleSystem dust = FxKit.Dust(centre, floorAt + new Vector3(0f, 4f, 0f), new Vector3(2.6f, 8f, 2.6f), mote);
+            // A cleanse swells the shaft and the bowl, then throws light up it.
+            var cleanse = altarStation.gameObject.AddComponent<AltarCleanse>();
+            cleanse.shaft = shaft;
+            cleanse.beam = column;
+            cleanse.bowl = altarStation.Find("Requiem").GetComponent<Renderer>();
+            cleanse.dust = dust;
+            cleanse.burst = FxKit.Upburst(centre, a + new Vector3(0f, 1.3f, 0f), FxKit.ParticleMat("FxSpark", Color.white, additive: true), 0.4f, 9f);
         }
+
+        private static Transform _saint;
+
+        /// <summary>The light of Let there be light and of the safe sigils: soft, warm, additive.</summary>
+        private static Material RingLightMat() => FxKit.ParticleMat("FxRingLight", new Color(1f, 0.92f, 0.7f, 0.5f), additive: true);
 
         // ------------------------------------------------------------------ founts
 
@@ -631,9 +662,31 @@ namespace Rth.Client.Editor
                     for (int r = 0; r < 4; r++)
                         WorldKit.Box("Rib", fount, p + new Vector3(0f, 0.4f * size, 0f), new Vector3(0.9f * size, 0.6f * size, 0.14f), stone, collider: false, yaw: r * 45f);
                     WorldKit.Cylinder("Bowl", fount, p + new Vector3(0f, 0.86f * size, 0f), new Vector3(1f * size, 0.1f, 1f * size), bronze, collider: false);
-                    WorldKit.Cylinder("Blood", fount, p + new Vector3(0f, 0.97f * size, 0f), new Vector3(0.8f * size, 0.02f, 0.8f * size), bloodGlow, collider: false);
-                    FxKit.Drips(fount, p + new Vector3(0f, 1.4f * size, 0f), blood);
-                    FxKit.PointLight(fount, "Glow", p + new Vector3(0f, 1.3f * size, 0f), new Color(0.8f, 0.08f, 0.1f), 0.6f, 2.5f, flicker: 0.08f);
+                    GameObject surface = WorldKit.Cylinder("Blood", fount, p + new Vector3(0f, 0.97f * size, 0f), new Vector3(0.8f * size, 0.02f, 0.8f * size), bloodGlow, collider: false);
+                    ParticleSystem drips = FxKit.Drips(fount, p + new Vector3(0f, 1.4f * size, 0f), blood);
+                    Light glow = FxKit.PointLight(fount, "Glow", p + new Vector3(0f, 1.3f * size, 0f), new Color(0.8f, 0.08f, 0.1f), 0.6f, 2.5f, flicker: 0.08f);
+
+                    // Let there be light: a ring of blades of light on the studs round the fount,
+                    // growing from the floor (the ring's scale), with sparks streaming up and a scorch.
+                    var ring = new GameObject("Light of the ring").transform;
+                    ring.SetParent(fount, false);
+                    ring.position = new Vector3(p.x, 0f, p.z);
+                    var blades = new System.Collections.Generic.List<Renderer>();
+                    for (int i = 0; i < 20; i++)
+                    {
+                        float a = i / 20f * Mathf.PI * 2f;
+                        GameObject blade = WorldKit.Box("Blade", ring, ring.position + new Vector3(Mathf.Cos(a) * 1.45f, 0.5f, Mathf.Sin(a) * 1.45f), new Vector3(0.16f, 1f, 0.01f), RingLightMat(), collider: false, yaw: -a * Mathf.Rad2Deg + 90f);
+                        blades.Add(blade.GetComponent<Renderer>());
+                    }
+                    var light = fount.gameObject.AddComponent<FountLight>();
+                    light.ring = ring;
+                    light.blades = blades.ToArray();
+                    light.ringLight = FxKit.PointLight(fount, "Ring light", p + new Vector3(0f, 1.5f, 0f), new Color(1f, 0.9f, 0.65f), 0f, 7f);
+                    light.sparks = FxKit.RingSparks(fount, new Vector3(p.x, 0.1f, p.z), 1.45f, FxKit.ParticleMat("FxSpark", Color.white, additive: true));
+                    light.scorch = FxKit.Upburst(fount, new Vector3(p.x, 0.2f, p.z), FxKit.ParticleMat("FxSpark", Color.white, additive: true), 1.45f, 7f);
+                    light.blood = surface.GetComponent<Renderer>();
+                    light.drips = drips;
+                    light.glow = glow;
                 }
         }
     }

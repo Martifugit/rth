@@ -12,6 +12,8 @@ namespace Rth.Client
     {
         [Range(0f, 1f)] public float strength = 0.3f;
         public float speed = 6f;
+        /// <summary>Scales its brightness (a room's mood dims every fire at once).</summary>
+        [System.NonSerialized] public float multiplier = 1f;
 
         private Light _light;
         private float _base;
@@ -27,7 +29,7 @@ namespace Rth.Client
         private void Update()
         {
             float n = Mathf.PerlinNoise(_seed, Time.time * speed);
-            _light.intensity = _base * (1f - strength + strength * 2f * n);
+            _light.intensity = _base * multiplier * (1f - strength + strength * 2f * n);
         }
     }
 }

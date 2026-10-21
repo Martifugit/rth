@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Rth.Shared.Net;
 using Rth.Shared.World;
@@ -9,13 +10,28 @@ namespace Rth.Server.Game
     /// Building and testing commands, typed in chat after "::" (only when
     /// <see cref="ServerConfig.DevCommands"/> is on, as it is for the Editor's server):
     /// <c>::tele x y</c>, <c>::tele region</c> (a region's middle, instanced ones too),
-    /// <c>::level skill n</c>, <c>::give item [count]</c>, <c>::devotion</c>.
+    /// <c>::level skill n</c>, <c>::give item [count]</c>, <c>::devotion</c>,
+    /// <c>::boss id|win|fail</c>, <c>::fx type effect [key=value...]</c> (any object effect on
+    /// the objects of a type near you), and each boss's previews under its own word
+    /// (<c>::saint light</c>), registered with <see cref="RegisterPreview"/>.
     /// </summary>
     public sealed class DevSystem : GameSystem
     {
         public const string Prefix = "::";
 
         public bool Enabled => World.Config.DevCommands;
+
+        private readonly Dictionary<string, (string About, Func<Player, string[], string> Run)> _previews =
+            new Dictionary<string, (string, Func<Player, string[], string>)>();
+
+        /// <summary>A boss's effect previews under one word (<c>::saint ...</c>); the handler returns what to tell the player.</summary>
+        public void RegisterPreview(string word, string about, Func<Player, string[], string> run) => _previews[word] = (about, run);
+
+        protected override void OnAttach()
+        {
+            var saint = new Encounters.UnquietSaintFx(World);
+            RegisterPreview("saint", "the Unquiet Saint's mechanics", saint.Preview);
+        }
 
         public void Run(Player player, string command)
         {
@@ -41,8 +57,8 @@ namespace Rth.Server.Game
                         Say(player, "Gave " + (count - left) + " " + args[1] + (left > 0 ? " (" + left + " didn't fit)." : "."));
                     }
                     break;
-                case "believer":
-                    Believer(player, args.Length >= 2 && int.TryParse(args[1], out int length) ? length : 4);
+                case "fx" when args.Length >= 3:
+                    Fx(player, args[1], args[2], string.Join(";", args.Skip(3)));
                     break;
                 case "boss" when args.Length >= 2:
                     BossSystem bosses = World.Get<BossSystem>();
@@ -52,8 +68,13 @@ namespace Rth.Server.Game
                 case "devotion":
                     World.Get<ReligionSystem>().Restore(player, player.MaxDevotion);
                     break;
+                case string word when _previews.TryGetValue(word, out var preview):
+                    Say(player, preview.Run(player, args.Skip(1).ToArray()));
+                    break;
                 default:
-                    Say(player, "Commands: ::tele x y | ::tele region | ::level skill n | ::give item [count] | ::devotion | ::believer [length] | ::boss <id>|win|fail");
+                    Say(player, "Commands: ::tele x y | ::tele region | ::level skill n | ::give item [count] | ::devotion | ::boss <id>|win|fail | ::fx <object type> <effect> [key=value ...]");
+                    foreach (KeyValuePair<string, (string About, Func<Player, string[], string> Run)> p in _previews)
+                        Say(player, "::" + p.Key + ": " + p.Value.About + " (::" + p.Key + " for the list)");
                     break;
             }
         }
@@ -88,26 +109,17 @@ namespace Rth.Server.Game
             Say(player, "Teleported to " + tile + ".");
         }
 
-        /// <summary>
-        /// Plays Are you a believer?'s telegraph on the holy symbols in view: each one in turn, left
-        /// to right, flares in a random combat style's colour (a stand-in until the encounter exists).
-        /// </summary>
-        private void Believer(Player player, int length)
+        /// <summary>Plays an effect on every object of a type near the player (building and tuning effects).</summary>
+        private void Fx(Player player, string type, string effect, string arg)
         {
-            var symbols = World.Get<ObjectSystem>().Placed
-                .Where(o => o.Type == "holy_symbol" && o.Plane == player.Plane && o.Tile.ChebyshevDistance(player.Position) <= World.ObjectEffectRadius).OrderBy(o => o.X).ToList();
-            if (symbols.Count == 0)
-            {
-                Say(player, "No holy symbols in view.");
-                return;
-            }
-            var styles = new[] { Rth.Shared.Combat.CombatStyle.Melee, Rth.Shared.Combat.CombatStyle.Ranged, Rth.Shared.Combat.CombatStyle.Occult };
-            for (int i = 0; i < Math.Max(1, length); i++)
-            {
-                var style = styles[World.Random.Next(styles.Length)];
-                PlacedObject symbol = symbols[i % symbols.Count];
-                World.PlayObjectEffect(symbol, "flare", "colour=" + Rth.Shared.Combat.CombatStyles.Colour(style) + ";delay=" + (i * 0.7f).ToString(System.Globalization.CultureInfo.InvariantCulture) + ";hold=0.6");
-            }
+            int n = 0;
+            foreach (PlacedObject o in World.Get<ObjectSystem>().Placed)
+                if (o.Type == type && o.Plane == player.Plane && o.Tile.ChebyshevDistance(player.Position) <= World.ObjectEffectRadius)
+                {
+                    World.PlayObjectEffect(o, effect, arg);
+                    n++;
+                }
+            Say(player, n == 0 ? "No '" + type + "' near you." : "Played '" + effect + "' on " + n + " " + type + ".");
         }
 
         private TileCoord? Nearest(int plane, TileCoord from)

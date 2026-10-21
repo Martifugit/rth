@@ -85,12 +85,28 @@ public class WorldTests
         var symbols = new[] { new PlacedObject { Type = "holy_symbol", X = 5, Y = 30 }, new PlacedObject { Type = "holy_symbol", X = 8, Y = 30 } };
         var fx = new WorldFixture(Maps.Open(40, 40, Spawn), new ServerConfig { DevCommands = true }, null, null, symbols);
         FakeConnection client = fx.Login("Alice");
-        client.FromClient(new ChatMessage { Channel = ChatChannel.Public, Text = "::believer 4" });
+        client.FromClient(new ChatMessage { Channel = ChatChannel.Public, Text = "::fx holy_symbol flare colour=#ff0000 delay=0.7" });
         fx.Ticks(1);
         var effects = client.Updates.SelectMany(u => u.ObjectEffects).ToList();
-        Assert.Equal(4, effects.Count); // 25 tiles away: beyond sight, within the effect radius
+        Assert.Equal(2, effects.Count); // 25 tiles away: beyond sight, within the effect radius
         Assert.All(effects, e => Assert.Equal("flare", e.Effect));
-        Assert.Contains("delay=0.7", effects[1].Arg);
+        Assert.Equal("colour=#ff0000;delay=0.7", effects[1].Arg);
+    }
+
+    [Fact]
+    public void SaintPreviewsPlayTheirMechanicsOnTheCryptsObjects()
+    {
+        var placed = new List<PlacedObject> { new() { Type = "unquiet_saint", X = 20, Y = 30 }, new() { Type = "crypt_altar", X = 20, Y = 18 } };
+        for (int i = 0; i < 8; i++) placed.Add(new PlacedObject { Type = "crypt_fount", X = 10 + i, Y = 10 });
+        var fx = new WorldFixture(Maps.Open(40, 40, Spawn), new ServerConfig { DevCommands = true }, null, null, placed);
+        FakeConnection client = fx.Login("Alice");
+        foreach (string c in new[] { "::saint light", "::saint wake 40", "::saint cleanse" })
+            client.FromClient(new ChatMessage { Channel = ChatChannel.Public, Text = c });
+        fx.Ticks(1);
+        var effects = client.Updates.SelectMany(u => u.ObjectEffects).ToList();
+        Assert.Equal(3, effects.Count(e => e.Effect == "light" && e.ObjectType == "crypt_fount"));
+        Assert.Contains(effects, e => e.Effect == "wake" && e.Arg == "level=0.4");
+        Assert.Contains(effects, e => e.Effect == "cleanse" && e.ObjectType == "crypt_altar");
     }
 
     [Fact]

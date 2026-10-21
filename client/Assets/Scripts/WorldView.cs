@@ -64,6 +64,14 @@ namespace Rth.Client
         private const float OverheadSeconds = 4f;
         private readonly Dictionary<int, (string Text, float Time)> _overhead = new Dictionary<int, (string, float)>();
 
+        private readonly Dictionary<int, (string Label, float Start, float Seconds)> _markers = new Dictionary<int, (string, float, float)>();
+
+        /// <summary>
+        /// A marker over someone's head for a while (owed blood): a red badge with a label and a
+        /// bar running down as the time runs out.
+        /// </summary>
+        public void ShowMarker(int entityId, string label, float seconds) => _markers[entityId] = (label, Time.time, Mathf.Max(0.1f, seconds));
+
         private const float XpDropSeconds = 1.6f;
         private readonly List<(string Text, float Time)> _xpDrops = new List<(string, float)>();
 
@@ -286,6 +294,7 @@ namespace Rth.Client
             _overhead.Clear();
             _later.Clear();
             _xpDrops.Clear();
+            _markers.Clear();
             LocalId = -1;
             TargetId = 0;
         }
@@ -367,6 +376,29 @@ namespace Rth.Client
                     _labelStyle.normal.textColor = new Color(1f, 1f, 0f);
                     GUI.Label(new Rect(x - 160f, sayY, 320f, 18f), said.Text, _labelStyle);
                 }
+            }
+
+            // Markers over heads, above everything else there.
+            foreach (KeyValuePair<int, (string Label, float Start, float Seconds)> m in new List<KeyValuePair<int, (string, float, float)>>(_markers))
+            {
+                float left = 1f - (Time.time - m.Value.Start) / m.Value.Seconds;
+                EntityView view = Find(m.Key);
+                if (left <= 0f || view == null)
+                {
+                    _markers.Remove(m.Key);
+                    continue;
+                }
+                Vector3 top = cam.WorldToScreenPoint(view.transform.position + Vector3.up * (view.Height + 0.35f));
+                if (top.z <= 0f) continue;
+                float pulse = 1f + 0.08f * Mathf.Sin(Time.time * 8f);
+                var badge = new Rect(top.x - 22f * pulse, Screen.height - top.y - 96f, 44f * pulse, 30f * pulse);
+                DrawRect(new Rect(badge.x - 2f, badge.y - 2f, badge.width + 4f, badge.height + 4f), new Color(0f, 0f, 0f, 0.8f));
+                DrawRect(badge, new Color(0.62f, 0.04f, 0.07f, 0.95f));
+                _splatStyle.fontSize = 17;
+                _splatStyle.normal.textColor = Color.white;
+                GUI.Label(badge, m.Value.Label, _splatStyle);
+                DrawRect(new Rect(badge.x, badge.yMax + 3f, badge.width, 4f), new Color(0f, 0f, 0f, 0.7f));
+                DrawRect(new Rect(badge.x, badge.yMax + 3f, badge.width * left, 4f), new Color(0.95f, 0.3f, 0.25f));
             }
 
             // XP drops rise from beside the local player's head.
