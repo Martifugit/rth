@@ -55,5 +55,51 @@
         "lockedMessage": "Barred from the far side. A notice under the seal reads: THE ROAD TO CRUOR IS CLOSED UNTIL THE CAUSEWAY IS MENDED. BY ORDER OF THE WARDENS."
       }
     ]
+  },
+  {
+    "id": "cruorian_monument",
+    "name": "Cruorian monument",
+    "examine": "A red stone needle on a stepped plinth, raised by Cruor where the road leaves Tolling. Its founts are cut into the steps.",
+    "actions": [
+      {
+        "id": "read",
+        "label": "Read",
+        "message": "THE BLOOD OF THE MANY IS THE KEEPING OF THE BAY. GIVE, AND BE KEPT. Below, in smaller letters: Raised in the forty-first year of the Keeping, by the faithful of Palmerway."
+      }
+    ]
+  },
+  {
+    "id": "monument_fount",
+    "name": "Fount",
+    "examine": "A bowl cut into the monument's step, ringed with little bronze teeth. It is never quite dry.",
+    "actions": [ { "id": "gather", "label": "Empower" } ],
+    "node": {
+      "skill": "religion",
+      "level": 1,
+      "verb": "empower",
+      "ticks": 4,
+      "baseChance": 0.5,
+      "perLevel": 0.01,
+      "maxChance": 0.9,
+      "xp": 3,
+      "points": "pledges",
+      "pointsAmount": 1,
+      "pointsChance": 0.1,
+      "yieldsMin": 20,
+      "yieldsMax": 40,
+      "respawnTicks": 50,
+      "startMessage": "You push your arm into the fount. The teeth close, and it drinks.",
+      "startSay": "Ouch!",
+      "startDamage": 5,
+      "depletedMessage": "The fount is sated. Another will wake.",
+      "surge": {
+        "everyTicks": 150,
+        "ticks": 15,
+        "groupRadius": 6,
+        "xpMultiplier": 4,
+        "pointsMultiplier": 4,
+        "message": "One of the monument's founts wakes hungry."
+      }
+    }
   }
 ]

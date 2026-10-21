@@ -77,6 +77,7 @@ namespace Rth.Server.Game
             new ObjectSystem(placements.Objects),
             new ReligionSystem(),
             new RecipeSystem(),
+            new GatheringSystem(),
             new InterfaceSystem(),
             new DialogueSystem(),
             new BankSystem(),

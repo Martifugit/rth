@@ -19,6 +19,12 @@ namespace Rth.Server.Game
             if (text.Length == 0) return;
             if (message.Channel != ChatChannel.Public) return;
 
+            Say(player, text);
+        }
+
+        /// <summary>The player says something out loud: public chat to everyone who can see them, and over their head.</summary>
+        public void Say(Player player, string text)
+        {
             var line = new ChatLineMessage { Channel = ChatChannel.Public, EntityId = player.Id, From = player.Name, Text = text };
             foreach (Player listener in World.Players.ToList())
                 if (World.CanSee(listener, player)) listener.Connection.Send(line);

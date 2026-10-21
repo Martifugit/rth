@@ -14,6 +14,86 @@ namespace Rth.Shared.World
         public string Name = "";
         public string Examine = "";
         public List<ActionDef> Actions = new List<ActionDef>();
+        /// <summary>Makes it a gathering node (a rock, a tree, a monument's fount), worked with the "gather" action.</summary>
+        public NodeDef? Node;
+    }
+
+    /// <summary>
+    /// A gathering node (docs/skills.md 2.3): every <see cref="Ticks"/> an attempt succeeds by
+    /// level, giving XP and whatever the node gives (items, points, a roll on an extras table),
+    /// until it depletes for a while. Nodes are shared by everyone. One mechanism for ore, trees,
+    /// fishing spots, herbs and Cruor's founts.
+    /// </summary>
+    public sealed class NodeDef
+    {
+        public string Skill = "";
+        /// <summary>The level needed to work it; also where the success chance starts climbing.</summary>
+        public int Level = 1;
+        /// <summary>Anything else needed to work it (all checked with boosts).</summary>
+        public List<Rth.Shared.Skills.SkillRequirement> Requirements = new List<Rth.Shared.Skills.SkillRequirement>();
+        /// <summary>The verb for messages ("empower", "mine").</summary>
+        public string Verb = "gather";
+        /// <summary>Ticks between attempts.</summary>
+        public int Ticks = 4;
+        /// <summary>Success chance: clamp(BaseChance + PerLevel x (level - Level), MinChance, MaxChance).</summary>
+        public double BaseChance = 0.4;
+        public double PerLevel = 0.01;
+        public double MinChance = 0.05;
+        public double MaxChance = 0.95;
+        public double Xp;
+        /// <summary>Items given on every success.</summary>
+        public List<Rth.Shared.Items.ItemCost> Items = new List<Rth.Shared.Items.ItemCost>();
+        /// <summary>A drop table rolled on every success (gems from ore), or null.</summary>
+        public string? Extras;
+        /// <summary>A points pool (pledges) paid with <see cref="PointsChance"/> on a success, or null.</summary>
+        public string? Points;
+        public int PointsAmount = 1;
+        public double PointsChance = 1;
+        /// <summary>
+        /// Successes before it depletes, rolled between these each time it (re)fills. 1 and 1 for a
+        /// rock that gives one ore; 20 to 40 for a fount.
+        /// </summary>
+        public int YieldsMin = 1;
+        public int YieldsMax = 1;
+        /// <summary>How long it stays depleted.</summary>
+        public int RespawnTicks = 10;
+        /// <summary>Said when you start working it, or null.</summary>
+        public string? StartMessage;
+        /// <summary>What your character says out loud as they start, or null.</summary>
+        public string? StartSay;
+        /// <summary>Blood it takes as you start (a fount cutting you open); never the last point.</summary>
+        public int StartDamage;
+        /// <summary>Said when it depletes under you.</summary>
+        public string DepletedMessage = "There's nothing more to get here for now.";
+        /// <summary>Now and then one node of a group wakes for a while and gives more (a hungry fount), or null.</summary>
+        public NodeSurgeDef? Surge;
+    }
+
+    /// <summary>
+    /// A surge: about every <see cref="EveryTicks"/>, one working node in each group (nodes of
+    /// one type within <see cref="GroupRadius"/> of each other) surges for <see cref="Ticks"/>,
+    /// multiplying the XP and the chance of points.
+    /// </summary>
+    public sealed class NodeSurgeDef
+    {
+        public int EveryTicks = 150;
+        public int Ticks = 15;
+        public int GroupRadius = 8;
+        public double XpMultiplier = 4;
+        public double PointsMultiplier = 4;
+        /// <summary>Said to players nearby when one wakes, or null.</summary>
+        public string? Message;
+    }
+
+    /// <summary>A node that isn't in its ordinary state, as clients are told ("nodes" in the player's server state).</summary>
+    public sealed class NodeState
+    {
+        public string Type = "";
+        public int Plane;
+        public int X;
+        public int Y;
+        public bool Depleted;
+        public bool Surging;
     }
 
     public sealed class ActionDef

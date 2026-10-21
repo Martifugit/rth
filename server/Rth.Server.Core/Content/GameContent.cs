@@ -413,6 +413,24 @@ namespace Rth.Server.Content
                 if (s.SellPercent < 0 || s.SellPercent > 100) problems.Add(where + "sellPercent must be 0-100.");
             }
 
+            foreach (ObjectDef o in parts.Objects)
+            {
+                NodeDef? node = o.Node;
+                if (node == null) continue;
+                string where = "Object '" + o.Id + "' (node): ";
+                if (!skills.ContainsKey(node.Skill)) problems.Add(where + "skill '" + node.Skill + "' doesn't exist.");
+                CheckRequirements(node.Requirements, where.TrimEnd(' ', ':'));
+                if (node.Ticks < 1 || node.RespawnTicks < 1) problems.Add(where + "ticks and respawnTicks must be at least 1.");
+                if (node.YieldsMin < 1 || node.YieldsMax < node.YieldsMin) problems.Add(where + "yieldsMin must be at least 1 and yieldsMax at least yieldsMin.");
+                if (node.MinChance > node.MaxChance) problems.Add(where + "minChance is above maxChance.");
+                foreach (ItemCost i in node.Items)
+                    if (!items.ContainsKey(i.Item) || i.Count < 1) problems.Add(where + "bad item '" + i.Item + "' x" + i.Count + ".");
+                if (node.Extras != null && !tables.ContainsKey(node.Extras)) problems.Add(where + "extras table '" + node.Extras + "' doesn't exist.");
+                if (node.Points != null && !pools.ContainsKey(node.Points)) problems.Add(where + "points pool '" + node.Points + "' doesn't exist.");
+                if (!o.Actions.Any(a => a.Id == "gather")) problems.Add(where + "needs a 'gather' action to be worked.");
+                if (node.Surge != null && (node.Surge.EveryTicks < 1 || node.Surge.Ticks < 1)) problems.Add(where + "surge everyTicks and ticks must be at least 1.");
+            }
+
             Dictionary<string, TaskGiverDef> givers = Index(parts.Tasks.Givers, g => g.Id, "task giver", problems);
             foreach (TaskGiverDef g in parts.Tasks.Givers)
             {

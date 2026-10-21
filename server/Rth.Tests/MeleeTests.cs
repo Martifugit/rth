@@ -347,6 +347,34 @@ public class MeleeTests
     }
 
     [Fact]
+    public void TheShippedMeleeKitFightsForAThousandTicks()
+    {
+        GameContent content = GameContent.Load(Repo.ContentDirectory);
+        var fx = new WorldFixture(Maps.Open(40, 40, Spawn), new ServerConfig(), content, new[] { At("straw_penitent", 6, 5) });
+        FakeConnection client = fx.Login("Alice");
+        Player alice = fx.Player("Alice");
+        ItemSystem items = fx.World.Get<ItemSystem>();
+        items.Of(alice).Equipment.Set((int)EquipSlot.Weapon, "watchmans_sword", 1);
+        fx.World.RecalculateStats(alice);
+        items.Give(alice, "scripture_i", 50);
+        Assert.Equal("strike", fx.World.Get<CombatSystem>().AutoAttack(alice).Id);
+
+        string[] rotation = { "hew", "let_blood", "scourge", "flagellate", "sundering_blow", "exsanguinate", "red_harvest", "crimson_vow", "siphon" };
+        client.FromClient(new AttackMessage { TargetId = fx.Npc("straw_penitent").Id });
+        for (int i = 0; i < 1000; i++)
+        {
+            if (i % 3 == 0) client.FromClient(new UseAbilityMessage { AbilityId = rotation[i / 3 % rotation.Length] });
+            fx.Ticks(1);
+        }
+
+        SkillSystem skills = fx.World.Get<SkillSystem>();
+        Assert.True(skills.Level(alice, "melee") >= 5, "melee level " + skills.Level(alice, "melee"));
+        Assert.True(skills.Xp(alice, "religion") > 0);
+        Assert.True(items.CountOf(alice, "scripture_i") < 50);
+        Assert.False(alice.IsDead);
+    }
+
+    [Fact]
     public void VersesCantDealDamageAndBuffsNeedAKnownStatus()
     {
         ContentParts parts = Parts();

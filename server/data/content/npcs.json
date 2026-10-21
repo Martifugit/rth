@@ -109,5 +109,20 @@
     "shape": "Cylinder",
     "color": "#d8c47c",
     "scale": 1.0
+  },
+  {
+    "id": "brother_hollis",
+    "name": "Brother Hollis",
+    "examine": "A cantor of Cruor, keeper of the Palmerway monument. His forearms are a ladder of neat white scars.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 1,
+    "actions": [ { "id": "talk", "label": "Talk-to" }, { "id": "trade", "label": "Trade" } ],
+    "dialogue": "hollis",
+    "shop": "cruor_scriptures",
+    "shape": "Capsule",
+    "color": "#7a1a22",
+    "scale": 1.0
   }
 ]

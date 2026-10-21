@@ -354,5 +354,56 @@
         "next": "greet"
       }
     }
+  },
+
+  {
+    "id": "hollis",
+    "start": "start",
+    "nodes": {
+      "start": {
+        "branches": [ { "conditions": [ { "type": "flag", "key": "met_hollis", "not": true } ], "next": "intro" } ],
+        "next": "greet"
+      },
+      "intro": {
+        "text": "Blood keep you, pilgrim. Or are you the sleeper from Tolling? Either way. You've come to the right stone.",
+        "actions": [ { "type": "setFlag", "key": "met_hollis" } ],
+        "next": "intro2"
+      },
+      "intro2": {
+        "text": "Cruor raises these wherever the faith walks. Put your arm in a fount and give. A little, often. The monument keeps it, Cruor keeps the bay, and the bay keeps us all.",
+        "next": "intro3"
+      },
+      "intro3": {
+        "speaker": "player",
+        "text": "And what do I get for bleeding into a stone bowl?",
+        "next": "intro4"
+      },
+      "intro4": {
+        "text": "Pledges. Every so often the fount remembers your name. Bring me pledges and I'll give you scripture: the blood of thousands, concentrated in Cruor. Read the verses over it and fight as the martyrs fought.",
+        "next": "greet"
+      },
+      "greet": {
+        "text": "You have {points:pledges} pledges to your name. What do you need?",
+        "options": [
+          { "text": "Scripture, for my pledges.", "actions": [ { "type": "openShop", "id": "cruor_scriptures" } ] },
+          { "text": "Do you have arms for the road?", "actions": [ { "type": "openShop", "id": "pilgrim_arms" } ] },
+          { "text": "Tell me about the verses.", "next": "verses" },
+          { "text": "Why does a fount wake hungry?", "next": "hungry" },
+          { "text": "Nothing, Brother." }
+        ]
+      },
+      "verses": {
+        "text": "A verse is a prayer you pay for in your own blood, read over scripture, in the thick of it, with a weapon in your hand. Siphon first: it gives you back what you take. The rest you'll learn as your faith deepens.",
+        "next": "verses2"
+      },
+      "verses2": {
+        "text": "Most of them ask you to fight with less blood than is comfortable. That's the point. The martyrs were never comfortable.",
+        "next": "greet"
+      },
+      "hungry": {
+        "text": "The founts take turns. One wakes, drinks deep, and remembers more generously. If you see one stir, move to it. The faithful who keep up are rewarded.",
+        "next": "greet"
+      }
+    }
   }
 ]

@@ -39,5 +39,26 @@
       { "item": "sewn_hide_boots", "price": 20 },
       { "item": "yard_apron", "price": 70 }
     ]
+  },
+  {
+    "id": "cruor_scriptures",
+    "name": "Scriptures of Cruor",
+    "currency": "points:pledges",
+    "stock": [
+      { "item": "scripture_i", "price": 2 },
+      { "item": "scripture_ii", "price": 5 },
+      { "item": "scripture_iii", "price": 10 },
+      { "item": "scripture_iv", "price": 25 }
+    ]
+  },
+  {
+    "id": "pilgrim_arms",
+    "name": "Arms for the Road",
+    "currency": "marks",
+    "sellPercent": 40,
+    "stock": [
+      { "item": "watchmans_sword", "price": 50, "quantity": 5, "restockTicks": 300 },
+      { "item": "penitents_mace", "price": 350, "quantity": 2, "restockTicks": 600 }
+    ]
   }
 ]
