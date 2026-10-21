@@ -34,7 +34,7 @@
           { "text": "Got any work for me?", "next": "work" },
           { "text": "What do your tokens buy?", "actions": [ { "type": "openShop", "id": "skinning_yard" } ] },
           { "text": "Tell me about the yard.", "next": "about" },
-          { "text": "Where does the Scald stuff go?", "next": "scald" },
+          { "text": "Where does the Scalth stuff go?", "next": "scalth" },
           { "text": "Nothing. Just looking." }
         ]
       },
@@ -72,8 +72,8 @@
         "text": "Basin wildlife comes in whole and goes out in pieces. The rack's by the path. Keep your knife sharp, work quick, and the better you get the more you'll pull out of each carcass.",
         "next": "greet"
       },
-      "scald": {
-        "text": "Not on my racks. Mites from the Scald eat through iron, never mind hide. There's a lye vat over the river in Sour Hollow, where the mites nest. Somebody dumped a cask of the old war-stuff there after the Scalding and it never stopped leaking. You'll want a glass hook, and you'll want to know what you're doing first.",
+      "scalth": {
+        "text": "Not on my racks. Mites from Scalth eat through iron, never mind hide. There's a lye vat over the river in Sour Hollow, where the mites nest. Somebody dumped a cask of the old war-stuff there after the Scalding and it never stopped leaking. You'll want a glass hook, and you'll want to know what you're doing first.",
         "next": "greet"
       }
     }
@@ -211,7 +211,7 @@
           { "conditions": [ { "type": "hasTask" } ], "next": "busy" },
           { "conditions": [ { "type": "canTakeTask", "id": "corvin" } ], "next": "assign" }
         ],
-        "text": "{whyNoTask:corvin} What I need comes from the Scald, and it bites. Let the skinning yard make a butcher of you first.",
+        "text": "{whyNoTask:corvin} What I need comes from Scalth, and it bites. Let the skinning yard make a butcher of you first.",
         "next": "greet"
       },
       "assign": {

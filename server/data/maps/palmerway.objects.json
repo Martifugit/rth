@@ -1,0 +1,4 @@
+[
+  { "type": "waystone", "plane": 0, "x": 128, "y": 55 },
+  { "type": "palmerway_waygate", "plane": 0, "x": 182, "y": 49 }
+]

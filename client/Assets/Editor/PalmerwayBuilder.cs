@@ -6,19 +6,19 @@ using UnityEngine;
 namespace Rth.Client.Editor
 {
     /// <summary>
-    /// The Pilgrim Road: the region east of Tolling, where the road to Cruor leaves the town's
+    /// Palmerway: the region east of Tolling, where the road to Cruor leaves the town's
     /// outskirts. Mostly open heath, which is what most of the world between places should be:
-    /// a road, the Wash's north shore with its reeds, a few deliberate trees and rocks (future
+    /// a road, Wennow's north shore with its reeds, a few deliberate trees and rocks (future
     /// resources), a waystone, the shell of an old toll-house, and the barred waygate where the
     /// built world currently ends. Once built, the scene is the source of truth.
     /// </summary>
-    public static class PilgrimRoadBuilder
+    public static class PalmerwayBuilder
     {
-        public const string ScenePath = "Assets/Scenes/PilgrimRoad.unity";
+        public const string ScenePath = "Assets/Scenes/Palmerway.unity";
         private static readonly Vector2Int Origin = new Vector2Int(96, 0);
         private static readonly Vector2Int Size = new Vector2Int(96, 96);
 
-        [MenuItem("R'th/Dev/Rebuild Pilgrim Road Scene", priority = 102)]
+        [MenuItem("R'th/Dev/Rebuild Palmerway Scene", priority = 102)]
         private static void BuildMenu()
         {
             if (WorldKit.ConfirmRebuild(ScenePath)) Build();
@@ -43,11 +43,11 @@ namespace Rth.Client.Editor
             Material willowLeaves = kit.Mat("WillowLeaves", new Color(0.38f, 0.52f, 0.25f));
             Material reed = kit.Mat("Reed", new Color(0.55f, 0.6f, 0.3f));
 
-            MapArea area = WorldKit.BeginRegion("pilgrim_road", "The Pilgrim Road", Origin, Size, grass);
+            MapArea area = WorldKit.BeginRegion("palmerway", "Palmerway", Origin, Size, grass);
             Transform map = area.transform;
             var bounds = new RectInt(Origin, Size);
 
-            // ---------------------------------------------------------- the Wash's north shore
+            // ---------------------------------------------------------- Wennow's north shore
             // The same circle Tolling draws, so the water meets across the border.
             var wash = new HashSet<Vector2Int>();
             var shore = new HashSet<Vector2Int>();
@@ -58,7 +58,7 @@ namespace Rth.Client.Editor
                 if (d < 30f) wash.Add(new Vector2Int(x, z));
                 else if (d < 33f) shore.Add(new Vector2Int(x, z));
             }
-            WorldKit.Water(map, "Wash", wash, bay);
+            WorldKit.Water(map, "Wennow", wash, bay);
             Transform shoreGroup = WorldKit.Group(map, "Shore");
             foreach (Vector2Int t in shore)
                 WorldKit.Box("Sand", shoreGroup, new Vector3(t.x + 0.5f, 0.001f, t.y + 0.5f), new Vector3(1f, 0.01f, 1f), sand);
@@ -83,7 +83,7 @@ namespace Rth.Client.Editor
                 new Vector2(158f, 50.5f), new Vector2(172f, 49.5f), new Vector2(182f, 49.5f),
             }, 0.9f, bounds);
             road.ExceptWith(wash);
-            WorldKit.Road(map, "Pilgrim Road", road, dirt);
+            WorldKit.Road(map, "Palmerway", road, dirt);
 
             // ---------------------------------------------------------- the waystone
             Transform waystone = WorldKit.Station(map, "Waystone", "waystone", 128, 55);
@@ -109,7 +109,7 @@ namespace Rth.Client.Editor
             for (int z = 0; z <= 96; z += 2)
                 if (z != 48 && z != 50)
                     WorldKit.Box("Stake", gateGroup, new Vector3(183f, 0.9f, z), new Vector3(0.22f, 1.8f, 0.22f), wood, collider: false);
-            Transform gate = WorldKit.Station(gateGroup, "Waygate", "pilgrim_waygate", 182, 49); // the tile west of the line, so it is used from the road
+            Transform gate = WorldKit.Station(gateGroup, "Waygate", "palmerway_waygate", 182, 49); // the tile west of the line, so it is used from the road
             WorldKit.Box("Gate", gate, gate.position + new Vector3(0.5f, 0.8f, 0f), new Vector3(0.25f, 1.6f, 1f), timber); // on the palisade line
             WorldKit.Box("Seal", gate, gate.position + new Vector3(0.35f, 1f, 0f), new Vector3(0.05f, 0.35f, 0.35f), synodRed, collider: false);
 

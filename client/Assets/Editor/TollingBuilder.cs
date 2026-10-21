@@ -11,9 +11,9 @@ namespace Rth.Client.Editor
     /// <summary>
     /// Lays out Phase 1 of the world (docs/world-map.md): Tolling, the riverside town where the
     /// player wakes. West bank: the town square and bell tower, the Synod treasury, Corvin's
-    /// apothecary, the skinning yard, cottages and fields. North: the Backwards Mill and its
+    /// apothecary, the skinning yard, cottages and fields. North: Widdermill and its
     /// millpond. South: reed beds full of fen rats. East bank: woods and Sour Hollow. South-east:
-    /// the Wash; and the Pilgrim Road leaving east. Once built, the scene is the source of truth;
+    /// Wennow; and Palmerway leaving east. Once built, the scene is the source of truth;
     /// rebuilding replaces edits. A region scene: the Game scene supplies camera, light and HUD.
     /// </summary>
     public static class TollingBuilder
@@ -65,7 +65,7 @@ namespace Rth.Client.Editor
             MapArea area = WorldKit.BeginRegion("tolling", "Tolling", Vector2Int.zero, new Vector2Int(Size, Size), grass);
             Transform map = area.transform;
 
-            // ---------------------------------------------------------- water: the river, the Wash, the millpond
+            // ---------------------------------------------------------- water: the river, Wennow, the millpond
             var riverLine = new List<Vector2>
             {
                 new Vector2(41.5f, 97f), new Vector2(42.5f, 84f), new Vector2(45.5f, 72f), new Vector2(44.5f, 60f),
@@ -123,8 +123,8 @@ namespace Rth.Client.Editor
             void AddRoad(params Vector2[] points) => roads.UnionWith(WorldKit.Along(points, 0.9f, Size));
             AddRoad(new Vector2(40f, 50f), new Vector2(bx0, 50f));                                     // square to bridge
             AddRoad(new Vector2(bx1, 50f), new Vector2(58f, 51f), new Vector2(66f, 58f), new Vector2(71f, 64f)); // east to Sour Hollow
-            AddRoad(new Vector2(58f, 51f), new Vector2(62f, 40f), new Vector2(72f, 28f), new Vector2(81f, 18f));              // down to the Wash
-            AddRoad(new Vector2(62f, 40f), new Vector2(76f, 42f), new Vector2(88f, 45f), new Vector2(96f, 46f));              // east: the Pilgrim Road to Cruor
+            AddRoad(new Vector2(58f, 51f), new Vector2(62f, 40f), new Vector2(72f, 28f), new Vector2(81f, 18f));              // down to Wennow
+            AddRoad(new Vector2(62f, 40f), new Vector2(76f, 42f), new Vector2(88f, 45f), new Vector2(96f, 46f));              // east: Palmerway to Cruor
             AddRoad(new Vector2(35f, 56f), new Vector2(35f, 68f), new Vector2(38.5f, 72.5f));           // north to the mill
             AddRoad(new Vector2(31f, 45f), new Vector2(31f, 38f));                                       // south to the skinning yard
             AddRoad(new Vector2(29f, 50f), new Vector2(18f, 50f), new Vector2(8f, 52f));                // west to the fields
@@ -191,8 +191,8 @@ namespace Rth.Client.Editor
             for (int i = 0; i < 3; i++) // drying frames along the south fence
                 WorldKit.Box("Drying hide", yard, new Vector3(24.5f + i * 2.5f, 0.6f, 29.5f), new Vector3(1f, 0.8f, 0.04f), hide, collider: false);
 
-            // ---------------------------------------------------------- the Backwards Mill
-            Transform mill = WorldKit.Group(map, "Backwards Mill");
+            // ---------------------------------------------------------- Widdermill
+            Transform mill = WorldKit.Group(map, "Widdermill");
             kit.House(mill, "Mill house", 37, 70, 42, 76, WorldKit.Side.West, 72, plaster, planks, thatch);
             WorldKit.Cylinder("Wheel", mill, new Vector3(43f, 1.2f, 73f), new Vector3(2.2f, 0.15f, 2.2f), timber, collider: false).transform.rotation = Quaternion.Euler(0f, 0f, 90f);
 

@@ -27,8 +27,8 @@ public class ContentAndRulesTests
         Assert.Equal(new TileCoord(33, 53), world.Map.Spawn);
         Assert.False(world.Map.IsBlocked(0, world.Map.Spawn.X, world.Map.Spawn.Y));
 
-        // The Pilgrim Road joins Tolling: walk from the town's east road over the border.
-        if (world.Map.FindRegion("pilgrim_road") != null)
+        // Palmerway joins Tolling: walk from the town's east road over the border.
+        if (world.Map.FindRegion("palmerway") != null)
         {
             List<TileCoord> path = Pathfinder.FindPath(world.Map, 0, new TileCoord(88, 45), new TileCoord(104, 47));
             Assert.Equal(new TileCoord(104, 47), path[^1]);

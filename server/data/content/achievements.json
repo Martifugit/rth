@@ -45,7 +45,7 @@
   {
     "id": "tolling_waystone",
     "name": "Eleven Days East",
-    "description": "Read the waystone on the Pilgrim Road.",
+    "description": "Read the waystone on Palmerway.",
     "area": "Tolling",
     "tier": "Easy",
     "objective": { "kind": "object", "target": "waystone:read" }
@@ -62,10 +62,10 @@
   {
     "id": "tolling_waygate",
     "name": "Barred from the Far Side",
-    "description": "Try the wardens' waygate at the end of the Pilgrim Road.",
+    "description": "Try the wardens' waygate at the end of Palmerway.",
     "area": "Tolling",
     "tier": "Medium",
-    "objective": { "kind": "object", "target": "pilgrim_waygate:open" }
+    "objective": { "kind": "object", "target": "palmerway_waygate:open" }
   },
   {
     "id": "tolling_salts",

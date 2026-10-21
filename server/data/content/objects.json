@@ -8,7 +8,7 @@
   {
     "id": "lye_vat",
     "name": "Lye vat",
-    "examine": "A glazed vat of lye. Scald creatures come apart in it without taking your hands with them.",
+    "examine": "A glazed vat of lye. Scalth creatures come apart in it without taking your hands with them.",
     "actions": [ { "id": "process", "label": "Butcher" } ]
   },
   {
@@ -33,7 +33,7 @@
   {
     "id": "waystone",
     "name": "Waystone",
-    "examine": "A mossy marker stone on the Pilgrim Road, cut with the Synod's drop of blood.",
+    "examine": "A mossy marker stone on Palmerway, cut with the Synod's drop of blood.",
     "actions": [
       {
         "id": "read",
@@ -44,14 +44,14 @@
     ]
   },
   {
-    "id": "pilgrim_waygate",
+    "id": "palmerway_waygate",
     "name": "Waygate",
     "examine": "A wardens' gate in the palisade, sealed with Synod wax. The road to Cruor runs on beyond it.",
     "actions": [
       {
         "id": "open",
         "label": "Open",
-        "requiresFlag": "pilgrim_road_open",
+        "requiresFlag": "palmerway_open",
         "lockedMessage": "Barred from the far side. A notice under the seal reads: THE ROAD TO CRUOR IS CLOSED UNTIL THE CAUSEWAY IS MENDED. BY ORDER OF THE WARDENS."
       }
     ]

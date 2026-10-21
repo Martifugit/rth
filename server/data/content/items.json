@@ -25,7 +25,7 @@
     "id": "smoked_eel",
     "name": "Smoked eel",
     "icon": "fish",
-    "examine": "Caught where the river spreads into the Wash. Nobody asks what it was eating.",
+    "examine": "Caught where the river spreads into Wennow. Nobody asks what it was eating.",
     "value": 12,
     "color": "#6e5236",
     "tags": [ "food" ],
@@ -161,7 +161,7 @@
     "examine": "Still fizzing. It wants a lye vat and a glass hook, not your bare hands.",
     "value": 10,
     "color": "#b5a63a",
-    "tags": [ "carcass", "scald" ]
+    "tags": [ "carcass", "scalth" ]
   },
   {
     "id": "skinning_knife",
@@ -176,7 +176,7 @@
     "id": "glass_flensing_hook",
     "name": "Glass flensing hook",
     "icon": "hook",
-    "examine": "Acid won't touch glass. Your fingers are another matter. For Scald creatures.",
+    "examine": "Acid won't touch glass. Your fingers are another matter. For Scalth creatures.",
     "value": 40,
     "color": "#a8d8d0",
     "tags": [ "tool", "butchering" ]
@@ -215,7 +215,7 @@
     "id": "vitriol_salts",
     "name": "Vitriol salts",
     "icon": "salts",
-    "examine": "The salt of the Scald. Use a grain too many and the working takes you with it.",
+    "examine": "The salt of Scalth. Use a grain too many and the working takes you with it.",
     "stackable": true,
     "value": 30,
     "color": "#9bd14a",

@@ -13095,7 +13095,7 @@ GameObject:
   - component: {fileID: 323954190}
   - component: {fileID: 323954189}
   m_Layer: 0
-  m_Name: The Pilgrim Road
+  m_Name: Palmerway
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -13113,8 +13113,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 359294af178506b4987426f1bfa762a9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Rth.MapTools::Rth.MapTools.MapArea
-  exportName: pilgrim_road
-  title: The Pilgrim Road
+  exportName: palmerway
+  title: Palmerway
   origin: {x: 96, y: 0}
   size: {x: 96, y: 96}
   plane: 0
@@ -19315,7 +19315,7 @@ GameObject:
   m_Component:
   - component: {fileID: 482365127}
   m_Layer: 0
-  m_Name: Wash
+  m_Name: Wennow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -38873,7 +38873,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af7785d6f65a67b41ac8b571fd38f04b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Rth.MapTools::Rth.MapTools.MapObject
-  objectType: pilgrim_waygate
+  objectType: palmerway_waygate
 --- !u!1 &953066992
 GameObject:
   m_ObjectHideFlags: 0
@@ -76335,7 +76335,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2022861079}
   m_Layer: 0
-  m_Name: Pilgrim Road
+  m_Name: Palmerway
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

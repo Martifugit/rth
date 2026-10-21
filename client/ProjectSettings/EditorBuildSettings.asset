@@ -12,7 +12,7 @@ EditorBuildSettings:
     path: Assets/Scenes/Tolling.unity
     guid: 20eab0e08553cd84c821c1e0734dee7d
   - enabled: 1
-    path: Assets/Scenes/PilgrimRoad.unity
+    path: Assets/Scenes/Palmerway.unity
     guid: 5c8b0efb57210a34386c85e2f74fc2d1
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
