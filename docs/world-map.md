@@ -14,7 +14,7 @@ should still look like Old School RuneScape.
 - **The north-east** is where the range gives out: eroded, broken, and finally eaten by the
   Scalding. Fen and scar, inlets and sea caves. The occult houses.
 - **The heartland** is the green river country around the bay. Every river runs to the bay.
-- **The west** is Lammas: dry rain-shadow country under the range.
+- **The west** is Sere: dry rain-shadow country under the range.
 - **The south-east** is Tithe's: salt coast, brine pans, bare stone, and the bay's only mouth.
 - **Beyond the range** lies frozen country (the white band on the sketch).
 
@@ -56,7 +56,7 @@ staining things.
 | **Gall** | Yellow bile, fire | The largest and loudest house. Burns first, argues later. |
 | **Umber** | Black bile, shadow | Old, quiet, patient. Keeps the archives and the grudges. |
 | **Mordant** | Both biles, corrosion | Acids, vitriols, the arts that eat. Their workshops gave Sour Hollow its cask. |
-| **Sallow** | Distillation | A minor house fallen on hard times. Corvin Sallow is its last son in the Keeping. |
+| **Sallow** | Neither: refinement, the still | A minor house fallen on hard times. Corvin Sallow is its last son in the Keeping. Its rites are the first a player learns. |
 
 ### the range
 

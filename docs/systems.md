@@ -1,7 +1,8 @@
 # Gameplay systems
 
-Working notes on combat resources and skills. All names and numbers are provisional. Sections
-marked **Proposal** are suggestions that the designer has not yet confirmed.
+Working notes on combat resources and the rules of a fight. All names and numbers are
+provisional. Sections marked **Proposal** are suggestions that the designer has not yet
+confirmed. Every skill (what it does, how it trains, what it feeds) is in `docs/skills.md`.
 
 ## Design principles
 
@@ -16,12 +17,15 @@ marked **Proposal** are suggestions that the designer has not yet confirmed.
 
 | Resource | Role | Notes |
 | --- | --- | --- |
-| **Blood** | Health pool | Restored by food; Medicine may add a mild tick-heal brew. |
+| **Blood** | Health pool | Max from Defence. Restored by food; Medicine has one mild tick-heal. Also what Tithe's debt can be paid with. |
 | **Phlegm** | Adrenaline (RS3-style) | Universal across all styles. Builder abilities build it, spenders and ultimates spend it. Nothing else uses it. |
 | **Bile** | Occultism's live axis, from −100 to +100 | Every player has it. Occult abilities push it either way. Some abilities also need a bile level, on top of phlegm. Holding a position (e.g. +30) gives a passive bonus. |
-| **Breath** | Deflection (overhead-prayer analogue) | Available to every style. Must not use phlegm. Ties to the Pneuma ascetics. Bar clutter was considered and accepted. |
-| **Verses** | Religion's output, spent by melee | Spent on top of normal abilities. |
-| **Calibration** | Ranged's precision resource | Rewards sustained accuracy. |
+| **Martyrdom** | Melee's live meter, 0–100 | **Decided in outline (2026-10-21):** Religion is to melee what bile is to occultism. Rises with blood lost; shaped by the Cruor vow you hold. |
+| **Calibration** | Ranged's live meter, 0–100 | Builds while you keep shooting one target without moving. |
+| **Debt** | Religion's petitions (prayer analogue), any style | **Decided in outline:** Tithe's petitions are taken on credit and paid off later. Replaces breath and focuses. |
+
+**Removed (2026-10-21):** **breath** (the deflection resource, and the skill and faction behind
+it) and **verses**. Deflection and the other stances are Religion's petitions now.
 
 **Proposal: bile poles.** Humoral theory has two biles, and they map onto the axis.
 - **+ pole: yellow bile (choleric).** Hot, angry, offensive.
@@ -38,7 +42,7 @@ live in `server/data/content/` and hot-reload, so they're meant to be tuned by p
   Status names, icons and text are in `statuses.json`; the server decides who has which.
 - **Only these four.** Bile has no other effects: no extremes (fever and torpor were removed).
 - **Settling:** after 10 ticks out of combat, bile drifts back 1 per tick, phlegm fades 2 per
-  tick, and blood and breath regenerate.
+  tick, and blood (and, until it is removed, breath) regenerates.
 - **Phlegm:** builders build 6–8; spenders need 50 and spend 15; ultimates need and spend 100.
   3-tick global cooldown.
 - **Using abilities (RS3-style):**
@@ -61,7 +65,8 @@ live in `server/data/content/` and hot-reload, so they're meant to be tuned by p
     fires after each global cooldown. Items and focuses on the bar are skipped.
   - The options are client state (`combat.queue`, `combat.revolution`); the server reads them,
     and the main bar from `bars`.
-- **Breath:** 300 max; deflecting one style drains 1 per tick and halves that style's damage.
+- **Breath (to be removed):** 300 max; deflecting one style drains 1 per tick and halves that
+  style's damage. It becomes the three deflection petitions (`skills.md`, 4.2).
 - **Death:** the Assayer resets bile to 0 on respawn. That is the cost of dying in the
   prototype; there is nothing to lose until items exist.
 - **Abilities:** Gall Spark (+10), Black Draught (−10, heals 25% of damage), Still the Humours
@@ -71,12 +76,48 @@ live in `server/data/content/` and hot-reload, so they're meant to be tuned by p
   ultimates need phlegm, and some need bile at a level. (The `reagents` field on an ability
   still works, for a future style that wants ammunition-like costs.)
 
+## Martyrdom, calibration and debt (Proposal)
+
+The three meters the other styles and Religion add, written in the same shape as bile. Starting
+numbers, to tune in play.
+
+**Martyrdom (melee).**
+- 0–100 on every player; only melee abilities and Cruor's vows use it.
+- **Rises** by 1 for every 1% of max blood you lose, whether to a hit, to tithing blood, or to
+  Tithe calling in your debt.
+- **Settles** 2 per tick after 10 ticks out of combat (unless the Vow of the Red Fast).
+- **Used by** melee spenders and ultimates, which may need a level of it (as occult ones need
+  bile) or spend it for more effect.
+- **Passive:** the vow you hold decides it. The default (Vow of the Keeper) gives up to +20%
+  melee damage at 100, scaling, shown as a buff (**sanctified**).
+- So melee wants to be hit, and food is what lets it keep going: a guard's style.
+
+**Calibration (ranged).**
+- 0–100. **+10** for each hit on the same target from the same tile. A miss costs 20, a step
+  costs half of it, a new target clears it.
+- **Passive:** up to +15% accuracy and +10% critical chance at 100 (**sighted** buff).
+- **Spent** by some ranged spenders (a called shot that spends it all for damage in
+  proportion).
+- So ranged wants to plant its feet and keep a line of sight: patient and precise.
+
+**Debt (Religion's petitions, any style).**
+- Petitions add their rate to debt each tick. **Credit** (`100 + 10 x Religion`) is the most you
+  can carry. Debt never fades; it is saved, and survives death.
+- At credit, the debt is **called in**: petitions end, 20% of max blood is taken (never below
+  1), 10 ticks **indebted** (no petitions), debt halves.
+- Paid off by **offerings** at shrines (Religion XP), **writs of indulgence** (consumables) or
+  **tithing blood** (10% of max blood clears 10% of credit, and raises martyrdom).
+- Full detail in `skills.md`, section 4.
+
 ## Combat styles
 
-- **Melee: Blood / the Sanguine Synod.** Plate, close quarters. Spends verses from Religion.
-- **Ranged: the Rationalists (phlegm).** Calibration resource. Ammo comes from an ammo-crafting
-  skill (a reflavoured fletching or engineering), with moon-touched materials at higher tiers,
-  following RS ammo progression.
+**Decided (2026-10-21):** four combat skills. **Melee** (attack and strength in one),
+**Ranged**, **Occultism**, and **Defence**, which any style trains (see `skills.md`, 3.2).
+
+- **Melee: Blood / the Sanguine Synod.** Plate, close quarters. Its meter is martyrdom, shaped
+  by Cruor's vows (Religion). It burns no consumable: its cost is blood, and so food.
+- **Ranged: the Rationalists (phlegm).** Its meter is calibration. Bolts come from **Artifice**,
+  with moon-touched materials at higher tiers.
 - **Occultism: the occult houses (bile).** Moves the bile axis. Abilities cost phlegm and bile,
   not items. On top of the abilities sit **spellbooks** (below), whose spells do burn reagents.
 
@@ -105,95 +146,9 @@ Works like magic in RuneScape 3: the ability bar and the spellbook are separate 
 
 ## Skills
 
-### Religion (prep skill)
-Like RS3 Necromancy's ritual layer, but with no combat of its own. You perform rituals to create
-verses, which melee spends. **Cruor** and **Tithe** each have their own verse lists,
-and styles can cross-pollinate.
-
-### Carcass butchering (Slayer analogue)
-
-**Prototype (Milestone 4):** the core loop below is playable for two tiers. Fen rats (basin
-wildlife: skinning rack + skinning knife) and vitriol mites (Scald: lye vat + glass flensing
-hook, level 10) drop carcasses; their old loot tables are now the butchering yield. Each
-completion rolls the yield table once, plus once more per 15 levels above the requirement.
-Task-givers, points, the other tiers and old-blood are still to come.
-
-- You kill a creature and it drops a carcass. Its loot table is gated behind processing the
-  carcass at a workstation.
-- Processing is semi-AFK, like RS Masterwork. Carcasses can be stockpiled.
-- Combat level gates what you can kill; the skill gates your yield. Tools may help with slaying,
-  but fights use normal gear.
-- Six creature tiers, each with its own tool and workstation (from a skinning rack up to the
-  **Frostpeak Forge**): basin wildlife, moonborn, occult, Scald, war-beasts, the deep.
-- The top yield is **old-blood**, a convergence resource everyone wants.
-- Task-giver NPCs hand out tasks per tier (e.g. Brannoch, Corvin, a Synod figure). They pay
-  points spent on tools and gear.
-
-### Gathering (mining, woodcutting, fishing)
-Tiers are scattered across the whole basin, with several regions per tier. The rarest nodes sit
-in dangerous places: the Scald, the deep, crater edges, the bay.
-
-### Medicine (herblore analogue)
-Not for healing (food does that), except perhaps a mild tick-heal brew. Makes adrenaline-style
-potions, and overload-style potions that push your bile toward a pole before a fight.
-
-### Dreaming (new skill)
-Navigate memory orbs in the Veilwood and extract fragments.
-- Supplies rare reagents for Medicine and Occultism.
-- Gives utility against the nightmare boss.
-- Unlocks lore vignettes as rewards.
-
-### The breath skill (agility analogue; name to be decided)
-The utility skill behind **breath**. It is to breath what Agility is to run energy, and more:
-- **Shortcuts** around the world, gated by level, like agility shortcuts.
-- **Focuses** (the prayer analogue): deflection and similar stances that spend breath. Higher
-  levels unlock more focuses. Not called prayers.
-- **Run energy:** higher levels raise run energy and how fast it recovers.
-- **Obstacle courses that are designed on purpose:** fewer, more deliberate courses with
-  completion times, personal bests and leaderboards, so friends can compete on the fastest runs.
-  This is the part that should play better than traditional Agility.
-- Ties to the Pneuma ascetics in the lore.
-
-### Ammo crafting (fletching or engineering analogue)
-Makes Rationalist ammunition; moon-touched materials at higher tiers.
-
-### Distillation: house rites (part of the Occultism skill)
-**Decided:** Distillation is a ritual-style activity inside **Occultism**, like rituals inside
-RuneScape 3's Necromancy, not a skill of its own. You perform rites that produce the
-**reagents** your spellbook spells consume (abilities never consume them). It is built around the
-**occult houses**: the house you perform a rite for decides which reagents it makes, how the rite
-plays out, and where you do it.
-
-**Core loop.**
-- **Collect the materials** a house's rite calls for. They come from other skills: Butchering
-  (glands, gall, rendered fat), Gathering, and Dreaming. (These replace the earlier single "gall"
-  input.)
-- **Perform the rite at one of that house's sites.** It runs semi-AFK in the Necromancy style,
-  ticking along while you check in on it.
-- **Collect the reagents.** The house's identity shapes them: a burning house yields
-  yellow-leaning reagents, a dissolving house black-leaning ones. Reagents are compact and stack.
-
-**Progression.**
-- Levels unlock more advanced rites; some may also need **favour** with the house.
-- Each house keeps **rite sites all over the world**, each there for its own reason (a seep it
-  guards, a cellar under a sympathiser's shop, a sea cave it was driven into, the edge of the
-  Scald), so there are several places to train and travel matters.
-- Higher-tier rites demand better materials and take longer, and give more XP and output.
-- **Learning a house's rites and learning its spellbook come from the same relationship**, so
-  they feel like one thing: the house that teaches you its spells teaches you to make what they
-  burn.
-
-**The houses** (from `docs/lore.md`; which pole each leans to is a suggestion, not decided):
-Gall (burning, yellow), Umber (dissolving, black), Mordant (corrosive, straddling the axis), and
-the fallen house of Sallow (Corvin's, the first one a player meets).
-
-**Links to other skills.** Butchering, Gathering and Dreaming supply the materials. Medicine stays
-separate: its potions shift your bile before a fight; reagents fuel spells.
-
-**Today's prototype differs:** Distillation exists as its own skill in `skills.json`, trained by
-recipes at Corvin's still, and is referenced by three recipes, the Dreamless quest reward, an
-achievement reward and a pair of gloves' level requirement. Folding it into Occultism is a
-content change (those references, plus what happens to Distillation XP already in saves).
+Moved to `docs/skills.md`: the v1 roster, the rules every skill follows, Religion (petitions and
+vows), Butchering, Medicine, the gathering and making skills, and Distillation as Occultism's
+rites.
 
 ## Death
 
@@ -202,11 +157,7 @@ screen and comments on how the player's humour balance is changing.
 
 ## Open questions
 
-- Distillation: the rite mechanic itself (setup, duration, what you do while it runs).
-- Religion: needs its own identity and loop now that rites belong to Distillation (under
-  discussion), and how many verses melee can hold.
-- Distillation: when to fold today's separate Distillation skill into Occultism, and whether
-  existing Distillation XP carries over.
-- Spellbooks: the first spellbook's spells, levels and reagent costs.
-- Calibration: how exactly it builds and decays.
+- Martyrdom and calibration: numbers, once melee and ranged are playable.
+- Spellbooks: the first spellbook's spells and reagent costs (outline in `skills.md`, 3.5).
 - Final names for skills, resources and places.
+- The rest are listed at the end of `docs/skills.md`.

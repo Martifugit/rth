@@ -18,7 +18,8 @@ See `README.md` for how to build, run and test.
 
 Design docs:
 - `docs/lore.md`: the world, history, factions and characters. Place names are listed in `docs/world-map.md`.
-- `docs/systems.md`: combat resources, skills, and open design questions.
+- `docs/systems.md`: combat resources and the rules of a fight.
+- `docs/skills.md`: the v1 skill roster, the rules every skill follows, and each skill in full.
 
 ---
 
@@ -304,7 +305,8 @@ dark-fantasy style; see `docs/interface.md` (its "Window kinds" table says which
 Not yet: run energy, friends/group/private chat, announcements, player examine, waystones on
 the world map, item art, world labels and the login box (still IMGUI).
 
-**Next: not chosen yet.** Candidates: the breath skill (run energy, focuses, courses), an art
+**Next: the skills rework** (`docs/skills.md`, section 9): breath removed, focuses become
+Religion's petitions, the v1 skill roster. Other candidates: an art
 pass on Tolling, more quests and achievements, a second combat style.
 
 ---

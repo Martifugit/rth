@@ -81,9 +81,6 @@ two biles, yellow and black. What they disagree about is which of them is *true*
   black, is the solvent and the fire of transformation. Their arts burn, dissolve and explode, and
   they make their practitioners terribly strong and slowly strange. The faith calls them
   apostates. They call themselves the only honest people in the basin.
-- **The Pneuma ascetics (Breath).** The fourth way, which is not really one of the four. Breath is
-  what moves through the humours. The ascetics live far outside the basin, refuse to fight, and
-  are the only people everyone else trusts a little.
 
 ## III. A short history
 
@@ -119,6 +116,15 @@ The faith split over a single question: **what the covenant asks of the faithful
 The two sees have fought three wars over the difference and made peace four times. Today they are
 allies, for now. Each keeps spies in the other's cathedral.
 
+The difference shows in how each see prays. **Tithe's faithful petition**: they ask for the
+covenant's protection now, on credit, and every petition is entered against their name, to be
+settled with salt, blood or coin at a Tithe chapel. Tithe's priests are its bookkeepers, and a
+pardon is a receipt. **Cruor's faithful swear vows**: they bind themselves to a keeping (never to
+retreat, never to eat on watch, never to leave another's side) and offer their own blood in
+keeping it. Cruor's blood-knights are its martyrs, and a scar is a sacrament. Every believer
+uses both. Which one they trust says which see they belong to. (Religion in `docs/skills.md`
+is built on this.)
+
 ### The Apostasy and the Scalding
 The occult arts were once practised openly in the fens. As the occultists grew stronger and
 stranger, both sees, for once united, declared crusade. Driven back against the northern mountains,
@@ -147,7 +153,7 @@ That is why everyone is interested in them:
 - **The Dreamweaver** chose them, because whatever passed through them left a trail.
 
 The player begins **unaligned**, and the game never forces a single loyalty. They can serve a see,
-learn from a house, study under the scholars or walk with the ascetics. Most players will do
+learn from a house or study under the scholars. Most players will do
 something with all of them. The story is built so that each faction's quests show the others from
 inside: the Synod's crusade looks different once you have had tea with an apothecary.
 
@@ -277,7 +283,6 @@ which of them understood the covenant, or whether either did.
 | **Magister Ilse Varrow** | Chief astronomer of Meridian, forecaster of moonfalls, brilliant and cold. | Carries the secret of the coming great fall, and later the guilt of the deep bores. She turns from the player's most useful patron into the person they must decide whether to expose. |
 | **Brannoch** | Master of the cart lines: a dwarf who talks to the player like weather talks to a field. | Slowly opens up about the seals. Late in the deep story he reveals that his family has kept one of them for thirty generations, and that it is failing. |
 | **Queen Saffiya of Sere** | A pragmatic young monarch with a thirsty kingdom. | Plays every power against every other with real skill. She becomes either the player's best ally or the most dangerous opponent in the lowlands, depending on what the player gives her. |
-| **The Breathless Pilgrim** | A Pneuma ascetic walking the basin, gentle and serene, who seems to know things. | Never changes, which turns out to be the point. Their calm is a fixed mark the player can steer by when everything else shifts. |
 | **The Physician** | A pleasant, helpful stranger met briefly, early, and soon forgotten. | Section VI. |
 
 ## IX. Where the bosses come from
