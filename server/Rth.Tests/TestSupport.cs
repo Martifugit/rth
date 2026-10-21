@@ -138,7 +138,7 @@ internal static class TestContent
     {
         new ItemDef { Id = "coins", Name = "Coins", Stackable = true },
         new ItemDef { Id = "bread", Name = "Bread", Examine = "Bready.", Consumable = new ConsumableDef { Verb = "Eat", CooldownTicks = 2, AttackDelayTicks = 2, Effects = { new EffectOp { Op = EffectOp.HealBlood, Amount = 100 } } } },
-        new ItemDef { Id = "tonic", Name = "Tonic", Consumable = new ConsumableDef { Verb = "Drink", CooldownGroup = "potion", CooldownTicks = 10, AttackDelayTicks = 1, Leaves = "vial", Effects = { new EffectOp { Op = EffectOp.AddPhlegm, Amount = 30 }, new EffectOp { Op = EffectOp.ShiftBile, Amount = -20 } } } },
+        new ItemDef { Id = "tonic", Name = "Tonic", Consumable = new ConsumableDef { Verb = "Drink", CooldownGroup = "potion", CooldownTicks = 10, AttackDelayTicks = 1, Leaves = "vial", Animation = "drink", Effects = { new EffectOp { Op = EffectOp.AddPhlegm, Amount = 30 }, new EffectOp { Op = EffectOp.ShiftBile, Amount = -20 } } } },
         new ItemDef { Id = "vial", Name = "Vial" },
         new ItemDef { Id = "sword", Name = "Sword", Equipment = new EquipmentDef { Slot = EquipSlot.Weapon, Stats = { [StatIds.AbilityDamage] = 50 } } },
         new ItemDef { Id = "club", Name = "Club", Equipment = new EquipmentDef { Slot = EquipSlot.Weapon, Stats = { [StatIds.AbilityDamage] = 20 } } },

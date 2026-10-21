@@ -93,6 +93,11 @@
   "sheathe_2h": { "source": "Mixamo: Sheath A Great Sword 1", "use": "Putting a two-handed weapon away on the back." },
 
   // ---- Skilling and everyday ----
+  "drink": { "source": "Mixamo: Drinking", "use": "A long, leisurely drink (8.9 s); 'consume' uses the swig in the middle." },
+  "consume": {
+    "clip": "drink", "start": 3.6, "end": 5.6, "speed": 1.6, "legs": 0.3,
+    "use": "Role: eating or drinking anything (items name their own with 'animation'; this is the default). The swig from 'drink', about 1.25 s."
+  },
   "dig": { "source": "Mixamo: Digging", "loop": true, "use": "Digging with a spade." },
   "sit": { "source": "Mixamo: Sitting", "loop": true, "use": "Sitting on a chair or bench." },
   "rest": {

@@ -176,6 +176,7 @@ namespace Rth.Server.Game
             else if (c.Leaves != null) Give(player, c.Leaves, 1);
 
             World.Tell(player, TextKind.Info, "You " + c.Verb.ToLowerInvariant() + " the " + use.Def.Name.ToLowerInvariant() + ".");
+            World.Animate(player, c.Animation);
             ApplyEffects(player, c.Effects);
             player.Cooldowns[key] = now + (uint)Math.Max(1, c.CooldownTicks);
             player.ActionDelayUntilTick = Math.Max(player.ActionDelayUntilTick, now + (uint)c.AttackDelayTicks);

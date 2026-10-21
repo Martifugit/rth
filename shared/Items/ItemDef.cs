@@ -83,6 +83,8 @@ namespace Rth.Shared.Items
         public List<EffectOp> Effects = new List<EffectOp>();
         /// <summary>Item left behind in the same slot (an empty vial), or null.</summary>
         public string? Leaves;
+        /// <summary>The character animation others see (a clip or role in the client's animations.json).</summary>
+        public string Animation = "consume";
     }
 
     /// <summary>

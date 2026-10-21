@@ -142,6 +142,27 @@ public class ItemTests
     }
 
     [Fact]
+    public void EatingAndDrinkingAreShownWithTheItemsAnimation()
+    {
+        var fx = Arena();
+        FakeConnection alice = fx.Login("Alice");
+        FakeConnection bob = fx.Login("Bob");
+        fx.Ticks(1);
+        Give(fx, "Alice", "bread");
+        Give(fx, "Alice", "tonic");
+
+        Use(alice, ContainerKind.Inventory, SlotOf(Items(fx, "Alice").Inventory, "bread"), ItemActions.Consume);
+        Use(alice, ContainerKind.Inventory, SlotOf(Items(fx, "Alice").Inventory, "tonic"), ItemActions.Consume);
+        fx.Ticks(1);
+
+        // Bob, standing nearby, sees both: the default for food, the tonic's own for the tonic.
+        int aliceId = fx.Player("Alice").Id;
+        var shown = bob.Updates.SelectMany(u => u.Actions).Where(a => a.SourceId == aliceId).Select(a => a.AbilityId).ToList();
+        Assert.Contains(ActionEvent.AnimationPrefix + "consume", shown);
+        Assert.Contains(ActionEvent.AnimationPrefix + "drink", shown);
+    }
+
+    [Fact]
     public void PotionsApplyEveryEffectAndLeaveTheirVialInTheSameSlot()
     {
         var fx = Arena();
