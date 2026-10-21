@@ -394,6 +394,10 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | A timed buff on any ability | `buff` on the ability, and its status in statuses.json. Conditional stats are read at the moment of the hit (`CombatSystem.Stat`), the rest go into the stat block. |
 | A weapon of a style | `equipment.style` (and optionally `autoAttack`) on a Weapon item; the style's auto-attack is in combat.json `autoAttacks`. |
 | A bleed | `bleedPercent`/`bleedTicks` on an ability, or `CombatSystem.AddBleed`. |
+| A character animation for skilling or an action | `World.Animate(entity, name, face)` sends "anim:<name>" (a clip or role in animations.json), optionally turning to face a tile; `World.Face` only turns. Recipes and nodes have an `animation` field. |
+| A weapon's default bar | combat.json `actionBars` per style. Each style's main bar is client state `bars.main.<Style>`, swapped in with the weapon (client and Revolution both read it). |
+| Something an entity visibly holds or wears | `Entity.SetHeld` (players: the weapon slot; NPCs: `held` in npcs.json) reaches clients in `EntityAdded.Held` and appearance events; the client's body draws it (`HeldItemArt` until items have models). |
+| Fight pacing | Tune creatures in npcs.json; `PacingTests` simulates the starter kit against each and prints the numbers. |
 | A gathering node (rock, tree, fount) | `node` on an object type in objects.json (skill, level, chance, XP, items, extras, points, yields, respawn, an optional surge) and a `gather` action; place it with `MapObject` + `MapBlocker`. No code. |
 | Something that restores devotion | An object action `pray` in objects.json (an altar), or the `restoreDevotion` / `restoreDevotionPercent` effect ops on a consumable. |
 | A skill that replaced another | `retired` in skills.json (old id: new id); saves move the XP on login. |
