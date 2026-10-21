@@ -57,13 +57,13 @@ namespace Rth.Client.Characters
         private static Meshes _meshes;
 
         private const float CastSeconds = 0.7f;
-        private const float HitSeconds = 0.35f;
+        private const float HitSeconds = 0.3f;
         private const float DeathSeconds = 0.9f;
 
         private Transform _pivot, _hips, _spine, _neck, _head;
         private Limb _armL, _armR, _legL, _legR;
         private float _scale = 1f;
-        private float _move, _run, _phase;
+        private float _move, _run, _phase, _combat;
         private float _idleOffset;
         private float _actionTime = -10f, _hitTime = -10f, _deathTime = -1f;
         private bool _castRight = true;
@@ -200,7 +200,9 @@ namespace Rth.Client.Characters
             float stride = Mathf.Lerp(1.5f, 2.3f, _run) * _scale;
             _phase = Mathf.Repeat(_phase + speed * deltaTime / stride, 1f);
 
-            Pose pose = Pose.Lerp(Idle(), Pose.Lerp(Walk(), Run(), _run), _move);
+            _combat = Mathf.MoveTowards(_combat, InCombat ? 1f : 0f, deltaTime * 3f);
+            Pose stand = Pose.Lerp(Idle(), CombatIdle(), _combat);
+            Pose pose = Pose.Lerp(stand, Pose.Lerp(Walk(), Run(), _run), _move);
             pose = Cast(pose, Time.time - _actionTime);
             pose = Flinch(pose, Time.time - _hitTime);
             Apply(pose);
@@ -219,6 +221,23 @@ namespace Rth.Client.Characters
                 ArmOutL = 5f + breath, ArmOutR = 5f + breath,
                 ElbowL = 10f, ElbowR = 10f,
                 KneeL = 2f, KneeR = 2f,
+            };
+        }
+
+        /// <summary>Ready to fight: weight down, feet apart, hands up in front.</summary>
+        private Pose CombatIdle()
+        {
+            float breath = Mathf.Sin((Time.time + _idleOffset) * Mathf.PI * 2f * 0.4f);
+            return new Pose
+            {
+                Bob = -0.025f + breath * 0.004f,
+                Lean = 6f + breath,
+                HeadPitch = -4f,
+                ArmFwdL = 28f, ArmFwdR = 22f,
+                ArmOutL = 9f, ArmOutR = 9f,
+                ElbowL = 70f, ElbowR = 62f,
+                LegFwdL = 9f, LegFwdR = -7f,
+                KneeL = 14f, KneeR = 10f,
             };
         }
 
@@ -291,14 +310,14 @@ namespace Rth.Client.Characters
         private static Pose Flinch(Pose pose, float since)
         {
             if (since < 0f || since > HitSeconds) return pose;
-            float e = Mathf.Sin(since / HitSeconds * Mathf.PI);
-            pose.Lean -= 11f * e;
-            pose.HeadPitch -= 10f * e;
-            pose.ArmOutL += 12f * e;
-            pose.ArmOutR += 12f * e;
-            pose.KneeL += 10f * e;
-            pose.KneeR += 10f * e;
-            pose.Bob -= 0.03f * e;
+            // A small stagger, quick back and slower return.
+            float t = since / HitSeconds;
+            float e = Smooth(t < 0.25f ? t / 0.25f : 1f - (t - 0.25f) / 0.75f);
+            pose.Lean -= 6f * e;
+            pose.HeadPitch -= 4f * e;
+            pose.KneeL += 4f * e;
+            pose.KneeR += 4f * e;
+            pose.Bob -= 0.01f * e;
             return pose;
         }
 

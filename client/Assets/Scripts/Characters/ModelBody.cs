@@ -1,0 +1,76 @@
+using UnityEngine;
+
+namespace Rth.Client.Characters
+{
+    /// <summary>
+    /// A body made from character art (<see cref="CharacterModel"/>) and animated with clips
+    /// (<see cref="ClipAnimator"/>). Falls back to nothing: <see cref="Build"/> returns false when
+    /// the art or the basic clips are missing, and the caller uses another body.
+    ///
+    /// Being hit is a small stagger, as in Old School: unless there is a "hit" clip, the chest and
+    /// head rock back a few degrees on top of whatever is playing.
+    /// </summary>
+    public sealed class ModelBody : EntityBody
+    {
+        private const float StaggerSeconds = 0.3f;
+        private const float StaggerDegrees = 7f;
+
+        private CharacterModel _model;
+        private ClipAnimator _animator;
+        private Transform _chest, _head;
+        private float _scale = 1f;
+        private float _hitTime = -10f;
+
+        public CharacterModel Model => _model;
+        public override float Height => _model.Height * _scale;
+        public override float Radius => 0.3f * _scale;
+
+        public bool Build(string bodyType, HumanoidLook look, float scale)
+        {
+            if (!ClipAnimator.HasLocomotion) return false;
+            _model = CharacterModel.Load(bodyType, transform);
+            if (_model == null || _model.Animator == null || _model.Animator.avatar == null) return false;
+
+            _scale = scale;
+            _model.transform.localScale = Vector3.one * scale;
+            _model.SetColor("skin", look.Skin);
+            _model.SetColor("hair", look.Hair);
+            _model.SetColor("primary", look.Top);
+            _model.SetColor("secondary", look.Legs);
+            _model.SetColor("leather", look.Boots);
+            _model.SetHair("short");
+            _animator = new ClipAnimator(_model.Animator, name);
+            _chest = _model.Animator.GetBoneTransform(HumanBodyBones.Chest) ?? _model.Animator.GetBoneTransform(HumanBodyBones.Spine);
+            _head = _model.Animator.GetBoneTransform(HumanBodyBones.Head);
+            return true;
+        }
+
+        public override void Animate(float speed, bool running, float deltaTime) =>
+            _animator?.Update(speed, running, InCombat, deltaTime);
+
+        public override void PlayAction() => _animator?.Play("cast");
+
+        public override void PlayHit()
+        {
+            if (_animator == null || !_animator.Play("hit")) _hitTime = Time.time;
+        }
+
+        public override void PlayDeath() => _animator?.Play("death", hold: true);
+
+        // After the Animator has posed the bones this frame.
+        private void LateUpdate()
+        {
+            float since = Time.time - _hitTime;
+            if (since < 0f || since > StaggerSeconds || _chest == null) return;
+            // Quick back, slower return.
+            float t = since / StaggerSeconds;
+            float k = t < 0.25f ? t / 0.25f : 1f - (t - 0.25f) / 0.75f;
+            k = k * k * (3f - 2f * k);
+            Vector3 right = transform.right;
+            _chest.rotation = Quaternion.AngleAxis(-StaggerDegrees * k, right) * _chest.rotation;
+            if (_head != null) _head.rotation = Quaternion.AngleAxis(-StaggerDegrees * 0.6f * k, right) * _head.rotation;
+        }
+
+        private void OnDestroy() => _animator?.Destroy();
+    }
+}

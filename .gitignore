@@ -27,3 +27,7 @@ obj/
 
 /client/.vscode/
 
+
+# Built by tools/character-models/build_humanoid.py (regenerate rather than commit)
+tools/character-models/HumanMale.blend
+*.blend1

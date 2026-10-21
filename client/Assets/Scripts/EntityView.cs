@@ -13,6 +13,9 @@ namespace Rth.Client
     /// </summary>
     public sealed class EntityView : MonoBehaviour
     {
+        /// <summary>How long after its last attack or hit an entity keeps its combat stance.</summary>
+        private const float CombatStanceSeconds = 8f;
+
         private readonly Queue<Vector3> _pending = new Queue<Vector3>();
         private float _tickSeconds = 0.6f;
         private int _stepsPerTick = 1;
@@ -154,6 +157,7 @@ namespace Rth.Client
             Vector3 moved = transform.position - before;
             moved.y = 0f;
             float speed = Time.deltaTime > 0f ? moved.magnitude / Time.deltaTime : 0f;
+            _body.InCombat = Time.time - LastHitTime < CombatStanceSeconds;
             _body.Animate(speed, _stepsPerTick == 2, Time.deltaTime);
         }
 

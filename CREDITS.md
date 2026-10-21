@@ -17,3 +17,11 @@ ids to their icons is in `tools/icons/icons.json`; `tools/icons/fetch_icons.py` 
   (`client/Assets/Resources/UI/Fonts/OFL-Cinzel.txt`).
 - **Alegreya Sans** by Juan Pablo del Peral (Huerta Tipográfica), SIL Open Font License 1.1
   (`client/Assets/Resources/UI/Fonts/OFL-AlegreyaSans.txt`).
+
+## Characters
+
+The player body is built from **Base Human Models (Low Poly)** by Clint Bellanger
+([OpenGameArt](https://opengameart.org/content/base-human-models-low-poly)), licensed under
+[CC BY 3.0](https://creativecommons.org/licenses/by/3.0/). We re-rigged it, enlarged the head, split
+it into parts, recoloured it and added hair (`tools/character-models/build_humanoid.py`); the
+original is in `tools/character-models/source/human.blend`.

@@ -16,6 +16,9 @@ namespace Rth.Client.Characters
         /// <summary>Rough horizontal radius, for the click hitbox.</summary>
         public abstract float Radius { get; }
 
+        /// <summary>Whether it is fighting (or was just now); bodies that have one show a combat stance.</summary>
+        public bool InCombat { get; set; }
+
         /// <summary>Called every frame. <paramref name="speed"/> is in tiles per second.</summary>
         public abstract void Animate(float speed, bool running, float deltaTime);
         /// <summary>It attacked or used an ability.</summary>
@@ -31,6 +34,12 @@ namespace Rth.Client.Characters
             go.transform.SetParent(parent, false);
             if (added.Kind == EntityKind.Player)
             {
+                // The animated character art when it (and its clips) exist, else the built-in one.
+                var model = go.AddComponent<ModelBody>();
+                if (model.Build("HumanMale", HumanoidLook.For(added.Id, color), added.Scale / 10f)) return model;
+                DestroyImmediate(model);
+                foreach (Transform child in go.transform) Destroy(child.gameObject);
+
                 var humanoid = go.AddComponent<HumanoidBody>();
                 humanoid.Build(HumanoidLook.For(added.Id, color), added.Scale / 10f);
                 return humanoid;
@@ -43,7 +52,7 @@ namespace Rth.Client.Characters
         private static Material _matte;
 
         /// <summary>One shared matte lit material; each part's colour comes from a property block.</summary>
-        protected static Material Matte
+        internal static Material Matte
         {
             get
             {
