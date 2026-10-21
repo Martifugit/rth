@@ -36,21 +36,20 @@ namespace Rth.Client.Editor
 
         private const string Catalog = Root + "animations.json";
 
-        // Idle, walk and run always loop; anything else loops if the catalog says so.
-        private bool IsLooping(string name)
+        // The catalog's entry for a clip file (an empty one if it has none).
+        private ClipAnimator.ClipTuning Entry(string name)
         {
-            if (name.StartsWith("idle") || name.StartsWith("walk") || name.StartsWith("run")) return true;
             context.DependsOnSourceAsset(Catalog);
             try
             {
                 var catalog = JsonConvert.DeserializeObject<Dictionary<string, ClipAnimator.ClipTuning>>(File.ReadAllText(Catalog));
-                return catalog != null && catalog.TryGetValue(name, out ClipAnimator.ClipTuning entry) && entry.Loop;
+                if (catalog != null && catalog.TryGetValue(name, out ClipAnimator.ClipTuning entry)) return entry;
             }
             catch (System.Exception e) when (e is IOException || e is JsonException)
             {
                 Debug.LogWarning("[R'th] Can't read " + Catalog + ": " + e.Message);
-                return false;
             }
+            return new ClipAnimator.ClipTuning();
         }
 
         private void OnPreprocessModel()
@@ -130,8 +129,12 @@ namespace Rth.Client.Editor
             if (!assetPath.StartsWith(Animations)) return;
             var importer = (ModelImporter)assetImporter;
             string name = System.IO.Path.GetFileNameWithoutExtension(assetPath).ToLowerInvariant();
-            bool loop = IsLooping(name);
-            bool locomotion = name.StartsWith("walk") || name.StartsWith("run");
+            ClipAnimator.ClipTuning entry = Entry(name);
+            // Idle, walk and run always loop; anything else loops if the catalog says so.
+            bool loop = entry.Loop || name.StartsWith("idle") || name.StartsWith("walk") || name.StartsWith("run");
+            // Walk and run keep their travel as root motion (the game reads its speed); so do clips
+            // marked inPlace, which the game then plays on the spot (it never applies root motion).
+            bool travelOut = name.StartsWith("walk") || name.StartsWith("run") || entry.InPlace;
 
             ModelImporterClipAnimation[] clips = importer.clipAnimations.Length > 0
                 ? importer.clipAnimations
@@ -141,14 +144,13 @@ namespace Rth.Client.Editor
                 clip.name = name;
                 clip.loopTime = loop;
                 clip.loopPose = loop;
-                // Turning and bobbing stay in the pose; only locomotion keeps forward travel,
-                // which the game reads (averageSpeed) to match stride to speed.
+                // Turning and bobbing stay in the pose; travel stays in it too unless taken out.
                 clip.lockRootRotation = true;
                 clip.keepOriginalOrientation = true;
                 clip.lockRootHeightY = true;
                 clip.keepOriginalPositionY = true;
                 clip.heightFromFeet = false;
-                clip.lockRootPositionXZ = !locomotion;
+                clip.lockRootPositionXZ = !travelOut;
                 clip.keepOriginalPositionXZ = true;
             }
             importer.clipAnimations = clips;

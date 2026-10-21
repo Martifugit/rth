@@ -47,11 +47,18 @@ namespace Rth.Client.Characters
             public float Start, End;
             /// <summary>Only the spine, arms and head move; the legs keep doing what they were.</summary>
             public bool UpperBody;
+            /// <summary>Only the hips and legs move; the arms keep their stance (a kick with any weapon).</summary>
+            public bool LowerBody;
+            /// <summary>
+            /// The clip's travel across the ground is taken out, so it plays on the spot (read by
+            /// the importer). Big steps may make the feet slide a little.
+            /// </summary>
+            public bool InPlace;
         }
 
         private static readonly Dictionary<string, AnimationClip> Clips = new Dictionary<string, AnimationClip>();
         private static Dictionary<string, ClipTuning> _tuning;
-        private static AvatarMask _upperBody, _fullBody;
+        private static AvatarMask _upperBody, _lowerBody, _fullBody;
 
         private PlayableGraph _graph;
         private AnimationLayerMixerPlayable _layers;
@@ -103,6 +110,22 @@ namespace Rth.Client.Characters
 
         private static AvatarMask FullBodyMask => _fullBody != null ? _fullBody : _fullBody = new AvatarMask();
 
+        private static bool IsLower(AvatarMaskBodyPart part) =>
+            part == AvatarMaskBodyPart.Root || part == AvatarMaskBodyPart.LeftLeg || part == AvatarMaskBodyPart.RightLeg ||
+            part == AvatarMaskBodyPart.LeftFootIK || part == AvatarMaskBodyPart.RightFootIK;
+
+        private static AvatarMask LowerBodyMask
+        {
+            get
+            {
+                if (_lowerBody != null) return _lowerBody;
+                _lowerBody = new AvatarMask();
+                for (var part = AvatarMaskBodyPart.Root; part < AvatarMaskBodyPart.LastBodyPart; part++)
+                    _lowerBody.SetHumanoidBodyPartActive(part, IsLower(part));
+                return _lowerBody;
+            }
+        }
+
         private static AvatarMask UpperBodyMask
         {
             get
@@ -110,9 +133,7 @@ namespace Rth.Client.Characters
                 if (_upperBody != null) return _upperBody;
                 _upperBody = new AvatarMask();
                 for (var part = AvatarMaskBodyPart.Root; part < AvatarMaskBodyPart.LastBodyPart; part++)
-                    _upperBody.SetHumanoidBodyPartActive(part, part != AvatarMaskBodyPart.Root &&
-                        part != AvatarMaskBodyPart.LeftLeg && part != AvatarMaskBodyPart.RightLeg &&
-                        part != AvatarMaskBodyPart.LeftFootIK && part != AvatarMaskBodyPart.RightFootIK);
+                    _upperBody.SetHumanoidBodyPartActive(part, !IsLower(part));
                 return _upperBody;
             }
         }
@@ -252,7 +273,7 @@ namespace Rth.Client.Characters
             _oneShot.SetSpeed(tuning.Speed);
             _hold = hold;
             _graph.Connect(_oneShot, 0, _layers, 1);
-            _layers.SetLayerMaskFromAvatarMask(1, tuning.UpperBody ? UpperBodyMask : FullBodyMask);
+            _layers.SetLayerMaskFromAvatarMask(1, tuning.UpperBody ? UpperBodyMask : tuning.LowerBody ? LowerBodyMask : FullBodyMask);
             _layers.SetInputWeight(1, 0f);
             return true;
         }

@@ -1,25 +1,79 @@
+// Every character animation: one entry per clip file (Animations/<name>.fbx) and per role the game
+// asks for. "source" and "use" are for people; "loop" and "inPlace" are read by the importer; the
+// rest tune playback: weight (0-1), speed (negative = backwards), start/end (trim, seconds),
+// upperBody / lowerBody (only those parts move), clip (play another file), pose (hold one frame).
+// Mixamo files may be used in the game but not shared on their own: keep this repository private.
 {
+  // ---- Moving about ----
   "idle": { "source": "Mixamo: Unarmed Idle 01", "use": "Standing, out of combat." },
   "walk": { "source": "Mixamo: Standard Walk", "use": "Walking (1 tile per tick)." },
   "run": { "source": "Mixamo: Slow Run", "use": "Running (2 tiles per tick)." },
 
+  // ---- Combat roles (the game asks for these) ----
+  "idle_combat": {
+    "clip": "slash_sword_shield", "pose": 0, "weight": 0.85,
+    "use": "Role: standing within 8 s of attacking or being hit. Held on the slash's first frame."
+  },
+  "walk_combat": {
+    "use": "Role: walking within 8 s of attacking or being hit. No clip yet (suggested: Mixamo Sword And Shield Walk); the relaxed walk is used."
+  },
+  "cast": {
+    "weight": 0.75, "upperBody": true, "speed": 1.2,
+    "use": "Role: attacks and abilities (Occultism). No clip yet."
+  },
+  "hit": {
+    "weight": 0.35, "upperBody": true, "end": 0.5,
+    "use": "Role: being hit. No clip on purpose: a small code-driven stagger suits Old School."
+  },
+  "death": {
+    "source": "Mixamo: Standing React Death Backward",
+    "use": "Dying, whatever is equipped (holds its last frame). The default death."
+  },
+
+  // ---- Deaths kept for later (per weapon style or for variety) ----
+  "death_right": { "source": "Mixamo: Standing React Death Right", "use": "Dying, falling to the right." },
+  "death_sword_shield": {
+    "source": "Mixamo: Sword And Shield Death",
+    "use": "Dying with sword and shield; could suit dual wield and other styles."
+  },
+
+  // ---- Weapons: one hand (sword, sword and shield) ----
   "slash_sword_shield": {
     "source": "Mixamo: Sword And Shield Slash",
-    "use": "One-handed melee attack, for when there is melee. Its first frame is the combat stance."
+    "use": "One-handed melee attack. Its first frame is the current combat stance."
   },
+  "power_up_sword_shield": { "source": "Mixamo: Sword And Shield Power Up", "use": "A melee ability that boosts power." },
+  "draw_1h": { "source": "Mixamo: Draw Sword 1", "use": "Drawing a one-handed weapon." },
+  "sheathe_1h": { "clip": "draw_1h", "speed": -1, "use": "Role: putting a one-handed weapon away (the draw backwards)." },
+
+  // ---- Weapons: two hands ----
   "stance_2h": {
     "source": "Mixamo: 2hand Idle", "loop": true,
     "use": "Combat stance while wielding a two-handed weapon (once weapons pick their own stance)."
   },
   "slash_2h": {
-    "source": "Mixamo: Great Sword Slash",
-    "use": "Two-handed melee attack."
+    "source": "Mixamo: Great Sword Slash", "inPlace": true,
+    "use": "Two-handed melee attack; could be a channelled two-handed ability. Played on the spot."
   },
-  "draw_2h": {
-    "source": "Mixamo: Draw A Great Sword 2",
-    "use": "Drawing a two-handed weapon from the back; played backwards it is sheathe_2h."
+  "spin_attack_2h": {
+    "source": "Mixamo: Great Sword High Spin Attack", "inPlace": true, "end": 1.2,
+    "use": "A big two-handed melee ability. Played on the spot; ends after the spin (the run-out after it travelled 2.4 m)."
   },
-  "dig": { "source": "Mixamo: Digging", "loop": true, "use": "Digging with a spade (a skilling action)." },
+  "pommel_strike_2h": { "source": "Mixamo: Great Sword Attack", "use": "Two-handed pummel: a bash with the pommel." },
+  "cast_2h": { "source": "Mixamo: Great Sword Casting", "use": "A two-handed ability, not necessarily with a sword." },
+  "kick_2h": {
+    "source": "Mixamo: Great Sword Kick",
+    "use": "A kicking melee ability with a two-handed weapon. Use the 'kick' role for other weapons."
+  },
+  "kick": {
+    "clip": "kick_2h", "lowerBody": true,
+    "use": "Role: a kick with any weapon: only the legs kick, the arms keep their stance."
+  },
+  "draw_2h": { "source": "Mixamo: Draw A Great Sword 2", "use": "Drawing a two-handed weapon from the back." },
+  "sheathe_2h": { "source": "Mixamo: Sheath A Great Sword 1", "use": "Putting a two-handed weapon away on the back." },
+
+  // ---- Skilling and everyday ----
+  "dig": { "source": "Mixamo: Digging", "loop": true, "use": "Digging with a spade." },
   "sit": { "source": "Mixamo: Sitting", "loop": true, "use": "Sitting on a chair or bench." },
   "rest": {
     "source": "Mixamo: Sitting Idle", "loop": true,
@@ -31,21 +85,21 @@
   },
   "talk": { "source": "Mixamo: Talking", "loop": true, "use": "Talking to someone in a conversation." },
 
-  "idle_combat": {
-    "clip": "slash_sword_shield", "pose": 0, "weight": 0.85,
-    "use": "Role: standing within 8 s of attacking or being hit. Held on the slash's first frame."
+  // ---- NPCs ----
+  "idle_wealthy": {
+    "source": "Mixamo: Dwarf Idle",
+    "use": "NPC idle for traders and the wealthy: admiring their rings."
   },
-  "walk_combat": {
-    "use": "Role: walking within 8 s of attacking or being hit. No clip yet (suggested: Mixamo Sword And Shield Walk); the relaxed walk is used."
-  },
-  "sheathe_2h": { "clip": "draw_2h", "speed": -1, "use": "Role: putting a two-handed weapon away." },
-  "cast": {
-    "weight": 0.75, "upperBody": true, "speed": 1.2,
-    "use": "Role: attacks and abilities (Occultism). No clip yet."
-  },
-  "hit": {
-    "weight": 0.35, "upperBody": true, "end": 0.5,
-    "use": "Role: being hit. No clip: a small code-driven stagger is used, which suits Old School."
-  },
-  "death": { "use": "Role: dying (holds its last frame). No clip yet: the body topples backwards." }
+
+  // ---- Cut scenes and quests only: the game has no crouching ----
+  "sneak_idle": { "source": "Mixamo: Crouch Idle 02 Looking Around", "loop": true, "use": "Cut scenes: crouched, looking around." },
+  "sneak_forward": { "source": "Mixamo: Crouch Walk Forward", "loop": true, "inPlace": true, "use": "Cut scenes: sneaking forward." },
+  "sneak_back": { "source": "Mixamo: Crouch Walk Back", "loop": true, "inPlace": true, "use": "Cut scenes: sneaking backward." },
+  "sneak_left": { "source": "Mixamo: Crouch Walk Left", "loop": true, "inPlace": true, "use": "Cut scenes: sneaking sideways, left." },
+  "sneak_right": { "source": "Mixamo: Crouch Walk Right", "loop": true, "inPlace": true, "use": "Cut scenes: sneaking sideways, right." },
+  "sneak_torch_forward": { "source": "Mixamo: Crouch Torch Walk Forward", "loop": true, "inPlace": true, "use": "Cut scenes: sneaking forward holding a torch." },
+  "sneak_torch_back": { "source": "Mixamo: Crouch Torch Walk Back", "loop": true, "inPlace": true, "use": "Cut scenes: sneaking backward holding a torch." },
+  "sneak_torch_left": { "source": "Mixamo: Crouch Torch Walk Left", "loop": true, "inPlace": true, "use": "Cut scenes: sneaking left holding a torch." },
+  "sneak_torch_right": { "source": "Mixamo: Crouch Torch Walk Right", "loop": true, "inPlace": true, "use": "Cut scenes: sneaking right holding a torch." },
+  "sneak_stand_up": { "source": "Mixamo: Crouch To Standing", "use": "Cut scenes: standing up out of a crouch." }
 }
