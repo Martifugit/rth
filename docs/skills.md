@@ -112,10 +112,10 @@ obsolete, because the old one is still the best place for something.
 | **Venaria** (Tolling, Cruor, the heartland) | green river country | Woodcutting low to mid (alder, ash, elm), Foraging (herbs, flax) | Fishing low to mid, Mining low |
 | **Slough** | fens, broken coast, sea caves | **Foraging top** (deep fen herbs), Fishing mid (lamprey) | bog iron, black poplar |
 | **Sere** | dry hills, wells | Mining mid (cinnabar), Fishing mid (cistern carp) | sere cedar, sere salt |
-| **Calcinia** | salt coast and flats | salt, Mining (glare-silver), Fishing (glarefish) | tamarisk |
+| **Calcinia** | salt coast and flats | salt, Mining (glare-silver), Fishing (mullet) | tamarisk |
 | **Candora** (the range's surface) | mountains, high forests | **Mining high** (frostiron), Woodcutting high (pale pine) | ice char |
 | **The Veilwood** | the mist forest | **Woodcutting top**, Dreaming | moonbark |
-| **The Cradle's shores** | the bay | **Fishing top** | |
+| **The Cradle's shores** | the bay | **Fishing top** (hushfin, during the Cradle's event) | |
 | **Undermost** | the depths | **Mining top** (deepglass) | |
 | **Craters** (anywhere, as events) | moonfall | verdigris, lightfin (both temporary) | |
 
@@ -126,10 +126,10 @@ obsolete, because the old one is still the best place for something.
 | 3 | 20 | steel (hematite + charcoal) | elm | pike | feverfew | flax |
 | 4 | 30 | bog iron | black poplar | lamprey | bog myrtle | flax |
 | 5 | 40 | cinnabar | sere cedar | cistern carp | sere sage | silkweed |
-| 6 | 50 | glare-silver | tamarisk | glarefish | saltwort | silkweed |
+| 6 | 50 | glare-silver | tamarisk | mullet | saltwort | silkweed |
 | 7 | 60 | frostiron | pale pine | ice char | frostcap | pale wool |
 | 8 | 70 | verdigris (moon-touched) | moonbark | lightfin | moonmoss | pale wool |
-| 9 | 80 | deepglass | mistwood | (a fish of the Cradle) | deepbloom | threadmoss |
+| 9 | 80 | deepglass | mistwood | hushfin | deepbloom | threadmoss |
 | 10 | 90 | old-blood alloy | (old-blood) | (old-blood) | (old-blood) | (old-blood) |
 
 - Tier 10 isn't gathered. Its recipes take **old-blood** (Butchering's top yield, section 5) on
@@ -529,7 +529,7 @@ The herblore. Not for healing (food does that), apart from one mild tick-heal.
 | 20 | Devotion draught | salt | restores 70 + 25% of max devotion |
 | 30 | Tisane of mending | fen honey | heals 1% blood per tick for 20 ticks (the tick-heal) |
 | 35 | Vitriol ward | lye | resist Scalth's corrosion (area hazard) |
-| 60 | Renewal draught | glarefish oil | restores 1% of max devotion per tick for 50 ticks |
+| 60 | Renewal draught | mullet oil | restores 1% of max devotion per tick for 50 ticks |
 | 50 | Strong tonic | lamprey tooth | start with 25 phlegm |
 | 50–80 | Super draughts (every style, defence) | tier herbs | +5 + 10% |
 | 70 | **Choler** / **Melancholia** (the overloads) | sunfire salt / night ink | holds bile at ±60 for 5 minutes and boosts that pole's abilities |
@@ -606,10 +606,30 @@ fall by chance (2.3) and regrow.
 - **Trained by** cutting.
 
 ### Fishing
-- Fish by tier, and **brine** (salt-water spots) for rites. Extras: shells, eel slime
-  and scales (Medicine).
-- Tools: rod, net, trap (Artifice: they're fine work). A spot offers one or two methods.
-- Spots move instead of depleting.
+**Decided (2026-10-21).** Fish for Cooking, brine for rites, and extras for Medicine. Tools: rod,
+net, trap and lantern (Artifice: they're fine work); a spot offers one or two methods. Spots move
+instead of depleting. Quirks are kept to a few tiers, so most fishing is plain.
+
+| Tier | Fish | Where it's most at home | Quirk |
+|---|---|---|---|
+| 1 | **Perch** | Venaria's rivers | none |
+| 2 | **Eel** | rivers, Wennow | **traps**: set one, leave, and come back to collect |
+| 3 | **Pike** | Venaria's lakes and slow rivers | none |
+| 4 | **Lamprey** | Slough's fens and river mouths | none (its teeth are an extra, for Medicine) |
+| 5 | **Cistern carp** | Sere's wells and cisterns | none |
+| 6 | **Mullet** | Calcinia's salt lagoons | none |
+| 7 | **Ice char** | Candora's tarns, Nivil's edge | **cut your own hole**: you make the spot, and it freezes over after a while |
+| 8 | **Lightfin** | crater lakes, moonlit pools | **follows light**: a lantern in your off-hand draws the school to you |
+| 9 | **Hushfin** | the Cradle's shores | **only during the Cradle's event** (below) |
+
+**The Cradle's event.** Every few hours (about every 3, to tune) the bay draws in its breath. The
+game announces it to everyone a few minutes ahead, and for about 15 minutes hushfin spots appear
+along the Cradle's shores. It is a world event, like a moonfall, and it's the only time tier-9
+fish can be caught, which makes the shore a place people gather.
+
+- **Brine** comes from any salt-water spot, for rites.
+- **Extras:** shells, eel slime, scales and lamprey teeth (Medicine).
+- **Trained by** fishing.
 
 ### Foraging
 - Herb patches, fibre beds (reed, flax, silkweed), fungi rings and fruit bushes along roads,
