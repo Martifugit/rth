@@ -3,7 +3,9 @@
     "rootNamespace": "Rth.Client",
     "references": [
         "Unity.InputSystem",
-        "Rth.MapTools"
+        "Rth.MapTools",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -105,7 +105,8 @@
   {
     "id": "unquiet_saint",
     "name": "The Unquiet Saint",
-    "examine": "A martyr of Cruor on his bier, under a red pall. He should be dust by now. He is not quite."
+    "examine": "A martyr of Cruor on his bier, under a red pall. He should be dust by now. He is not quite.",
+    "actions": [ { "id": "requiem", "label": "Pray", "message": "You kneel at the bier and begin to pray. High above, the stone face seems to bow a little lower. (The Requiem itself is not built yet.)" } ]
   },
   {
     "id": "holy_symbol",

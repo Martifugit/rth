@@ -4,7 +4,9 @@
     "references": [
         "Rth.Client",
         "Rth.MapTools",
-        "Rth.MapTools.Editor"
+        "Rth.MapTools.Editor",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime"
     ],
     "includePlatforms": [
         "Editor"

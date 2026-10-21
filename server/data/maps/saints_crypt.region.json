@@ -2,5 +2,6 @@
   "scene": "SaintsCrypt",
   "title": "The Saint's Crypt",
   "hasSpawn": false,
-  "instanced": true
+  "instanced": true,
+  "atmosphere": { "sunIntensity": 0.04, "ambientSky": "#211C26", "ambientEquator": "#1A1414", "ambientGround": "#0A0808", "fog": "#050405", "fogStart": 20, "fogEnd": 58 }
 }

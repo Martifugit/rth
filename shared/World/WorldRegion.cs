@@ -5,6 +5,20 @@ namespace Rth.Shared.World
     /// exported as one map. The server sends the list to clients, which stream the scenes in and
     /// out as the player walks.
     /// </summary>
+    /// <summary>How a region is lit: the client eases into it on entering, and back out on leaving.</summary>
+    public sealed class RegionAtmosphere
+    {
+        public float SunIntensity = 1.1f;
+        /// <summary>#RRGGBB: ambient light from above, around and below.</summary>
+        public string AmbientSky = "#9eadc7";
+        public string AmbientEquator = "#808580";
+        public string AmbientGround = "#4d473d";
+        /// <summary>#RRGGBB: fog and the camera's background.</summary>
+        public string Fog = "#a9c4d9";
+        public float FogStart = 45f;
+        public float FogEnd = 85f;
+    }
+
     public sealed class WorldRegion
     {
         /// <summary>Export name, unique: "tolling".</summary>
@@ -29,6 +43,9 @@ namespace Rth.Shared.World
         /// a door, not walked into, so it isn't drawn on the world map.
         /// </summary>
         public bool Instanced;
+
+        /// <summary>Light, sky and fog of its own (a crypt, a cave), or null for the open world's.</summary>
+        public RegionAtmosphere? Atmosphere;
 
         public bool Contains(int x, int y) => x >= X && x < X + Width && y >= Y && y < Y + Height;
 

@@ -181,6 +181,9 @@ namespace Rth.Client
             if (regions == null) regions = GetComponent<RegionStreamer>();
             if (regions == null) regions = gameObject.AddComponent<RegionStreamer>();
             regions.world = world;
+            RegionAtmosphereView atmosphere = GetComponent<RegionAtmosphereView>();
+            if (atmosphere == null) atmosphere = gameObject.AddComponent<RegionAtmosphereView>();
+            atmosphere.regions = regions;
             NodeViews nodes = GetComponent<NodeViews>();
             if (nodes == null) nodes = gameObject.AddComponent<NodeViews>();
             nodes.session = this;

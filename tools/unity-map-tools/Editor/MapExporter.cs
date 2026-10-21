@@ -70,6 +70,16 @@ namespace Rth.MapTools.Editor
         /// Writes what the server and clients need to know about the region besides collision:
         /// which scene draws it, its title, and whether it has a spawn point.
         /// </summary>
+        private static string Atmosphere(MapArea area)
+        {
+            string Hex(Color c) => "\"#" + ColorUtility.ToHtmlStringRGB(c) + "\"";
+            string F(float f) => f.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            return "  \"atmosphere\": { \"sunIntensity\": " + F(area.sunIntensity) +
+                   ", \"ambientSky\": " + Hex(area.ambientSky) + ", \"ambientEquator\": " + Hex(area.ambientEquator) +
+                   ", \"ambientGround\": " + Hex(area.ambientGround) + ", \"fog\": " + Hex(area.fog) +
+                   ", \"fogStart\": " + F(area.fogStart) + ", \"fogEnd\": " + F(area.fogEnd) + " }";
+        }
+
         private static void ExportRegionInfo(MapArea area, string path)
         {
             string Quote(string s) => "\"" + (s ?? "").Replace("\\", "").Replace("\"", "'") + "\"";
@@ -80,7 +90,7 @@ namespace Rth.MapTools.Editor
                 "  \"scene\": " + Quote(area.gameObject.scene.name) + ",\n" +
                 "  \"title\": " + Quote(title) + ",\n" +
                 "  \"hasSpawn\": " + (hasSpawn ? "true" : "false") + ",\n" +
-                "  \"instanced\": " + (area.instanced ? "true" : "false") + "\n" +
+                "  \"instanced\": " + (area.instanced ? "true" : "false") + (area.ownAtmosphere ? ",\n" + Atmosphere(area) : "") + "\n" +
                 "}\n");
         }
 
