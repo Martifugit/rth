@@ -121,6 +121,10 @@ brine) without that being the only place it grows.
   same tier exists somewhere else.
 - When a region is designed, its nodes are checked against the ladder so that, across the
   regions built so far, every tier of every gathering skill exists somewhere.
+- **No region is the endgame region.** High-level content is spread, not stacked: each
+  resource of tier 7 and above should exist in at least three regions of different kinds, and
+  no region should hold the top tier of more than two skills. The Undermost, the craters and the
+  Pale have their own high-level things, but none of them holds all of it.
 
 ### 2.3 Gathering nodes
 One mechanism for ore, trees, fishing spots, herb patches and dream orbs (data on the object):
@@ -535,9 +539,9 @@ be" is the kind of place, not a fixed region (2.2).
 | 4 | **Bog iron** | fens, marsh pits | not in rock: **dredged from wet pits**, a node that refills over time instead of depleting |
 | 5 | **Cinnabar** | dry red country | **toxic**: mining it slowly poisons you unless you wear gloves for it or drink a ward |
 | 6 | **Glare-silver** | salt flats, white stone | **only there in daylight** (the game clock) |
-| 7 | **Frostiron** | high cold places, dwarven halls | some veins need the dwarves' leave (a quest flag) |
-| 8 | **Verdigris** | moonfall craters | **appears only after a moonfall** (a world event), then fades |
-| 9 | **Deepglass** | the Undermost | **brittle**: a rock can shatter before it's worked out, unless your pickaxe has conservation |
+| 7 | **Frostiron** | high cold places, dwarven halls, frozen northern coasts | some veins need the dwarves' leave (a quest flag) |
+| 8 | **Verdigris** | moonfall craters, which can open anywhere | **appears only after a moonfall** (a world event), then fades |
+| 9 | **Deepglass** | burnt ground (the Scald), deep caves, sinkholes | **brittle**: a rock can shatter before it's worked out, unless your pickaxe has conservation |
 | 10 | (none) | | tier 10 is old-blood alloy (2.2) |
 
 **Gems** are a rare extra from any rock, and the one place Mining touches the humours: each gem
@@ -560,11 +564,30 @@ and the higher rites ask for the purer salts.
 **Trained by** mining ore (main), salt and gems (extras).
 
 ### Woodcutting
-- Logs by tier: crossbow stocks and bolt shafts (Artifice), fuel for campfires (Cooking),
-  **charcoal** (burned at a kiln) for steel and higher smelts.
-- Extras: resin (Medicine), bird nests (seeds for later, feathers
-  now).
-- Tool: hatchet (Smithing).
+**Decided (2026-10-21).** Logs for Artifice (crossbow stocks, bolt shafts), Cooking (campfires)
+and Religion (reliquary casings), and charcoal for Smithing. Tool: hatchet (Smithing). Trees
+fall by chance (2.3) and regrow.
+
+**Trees.** One quirk each, as with Mining's ores.
+
+| Tier | Tree | Where it tends to be | Its quirk |
+|---|---|---|---|
+| 1 | **Alder** | riverbanks | none |
+| 2 | **Ash** | hedgerows, woods | none: the staple (bolt shafts) |
+| 3 | **Elm** | old fields, roadsides | **a big shared tree**: many players chop one, and it falls when their total is reached |
+| 4 | **Black poplar** | fens, wet ground | **seeds itself**: when felled it regrows somewhere else nearby, so the node moves |
+| 5 | **Sere cedar** | dry hills | **the AFK tree**: slow attempts, but it almost never falls |
+| 6 | **Tamarisk** | salt coasts | **salt-crusted**: its logs sometimes come with salt |
+| 7 | **Pale pine** | high slopes, cold northern woods | **two actions**: chop it for logs, or tap it for resin |
+| 8 | **Moonbark** | crater edges, old moonfall scars, places the moon's light lingers | **only wakes at night** (the mirror of glare-silver) |
+| 9 | **Stalkwood** | deep caves, sinkholes, sea caves | giant fungus stalks; chopping **draws attention**, and creatures come now and then |
+
+- **Extras:** resin (Medicine), bird nests (feathers now; seeds if Farming ever comes).
+- **Charcoal:** burn logs at a kiln. Better logs give more charcoal per log. Steel and the higher
+  smelts need it.
+- **Tools:** the agreed tool effects (2.3); a charring hatchet, for example, sometimes turns a
+  log to charcoal as it's cut.
+- **Trained by** cutting.
 
 ### Fishing
 - Fish by tier, and **brine** (Saltmarch spots) for rites. Extras: shells, eel slime
