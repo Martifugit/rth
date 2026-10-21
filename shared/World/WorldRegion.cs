@@ -24,6 +24,12 @@ namespace Rth.Shared.World
         /// <summary>Whether the region has a spawn point for new players.</summary>
         public bool HasSpawn;
 
+        /// <summary>
+        /// An instanced place (a boss's arena): built far from the rest of the map and entered by
+        /// a door, not walked into, so it isn't drawn on the world map.
+        /// </summary>
+        public bool Instanced;
+
         public bool Contains(int x, int y) => x >= X && x < X + Width && y >= Y && y < Y + Height;
 
         public bool Overlaps(WorldRegion other) =>

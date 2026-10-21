@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Rth.Shared.World;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -57,7 +58,7 @@ namespace Rth.Client.Ui.Modals
 
         public override void Refresh()
         {
-            IReadOnlyList<WorldRegion> regions = Ui.regions != null ? Ui.regions.Regions : null;
+            IReadOnlyList<WorldRegion> regions = Ui.regions?.Regions?.Where(r => !r.Instanced).ToList(); // arenas live far off: not on the map
             if (regions == null || regions.Count == 0) return;
             if (regions.Count != _builtFor) Rebuild(regions);
 

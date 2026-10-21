@@ -17,6 +17,11 @@ namespace Rth.Server.Game
         {
             string text = Clean(message.Text);
             if (text.Length == 0) return;
+            if (text.StartsWith(DevSystem.Prefix, System.StringComparison.Ordinal) && World.Find<DevSystem>() is DevSystem dev && dev.Enabled)
+            {
+                dev.Run(player, text.Substring(DevSystem.Prefix.Length));
+                return;
+            }
             if (message.Channel != ChatChannel.Public) return;
 
             Say(player, text);

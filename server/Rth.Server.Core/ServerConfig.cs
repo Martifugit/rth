@@ -38,6 +38,9 @@ namespace Rth.Server
         /// <summary>Reload content files when they change (development).</summary>
         public bool HotReloadContent = true;
 
+        /// <summary>Chat commands starting with "::" for building and testing (teleport, set levels). The Editor's server turns them on.</summary>
+        public bool DevCommands;
+
         /// <summary>Where log lines go. Defaults to nowhere.</summary>
         public Action<string> Log = _ => { };
     }

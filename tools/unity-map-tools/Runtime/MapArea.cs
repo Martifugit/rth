@@ -25,6 +25,9 @@ namespace Rth.MapTools
         [Tooltip("Floor level. Only plane 0 is used until there are buildings with upstairs.")]
         public int plane;
 
+        [Tooltip("An instanced place (a boss arena): built far off, entered by a door, left off the world map.")]
+        public bool instanced;
+
         private void OnDrawGizmos()
         {
             Gizmos.color = new Color(1f, 0.85f, 0.2f, 0.9f);

@@ -72,6 +72,7 @@ namespace Rth.Client.Editor
                 MapDirectory = Path.Combine(serverDir, "data", "maps"),
                 SaveDirectory = Path.Combine(serverDir, "saves"),
                 ContentDirectory = Path.Combine(serverDir, "data", "content"),
+                DevCommands = true,
                 Log = line => Debug.Log("[Server] " + line),
             };
             if (!Directory.Exists(config.MapDirectory) || Directory.GetFiles(config.MapDirectory, "*.rthmap").Length == 0)

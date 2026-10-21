@@ -79,7 +79,8 @@ namespace Rth.MapTools.Editor
                 "{\n" +
                 "  \"scene\": " + Quote(area.gameObject.scene.name) + ",\n" +
                 "  \"title\": " + Quote(title) + ",\n" +
-                "  \"hasSpawn\": " + (hasSpawn ? "true" : "false") + "\n" +
+                "  \"hasSpawn\": " + (hasSpawn ? "true" : "false") + ",\n" +
+                "  \"instanced\": " + (area.instanced ? "true" : "false") + "\n" +
                 "}\n");
         }
 

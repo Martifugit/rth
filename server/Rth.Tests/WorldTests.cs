@@ -63,6 +63,23 @@ public class WorldTests
     }
 
     [Fact]
+    public void DevCommandsTeleportOnlyWhenTheyAreOn()
+    {
+        var off = OpenWorld();
+        FakeConnection a = off.Login("Alice");
+        a.FromClient(new ChatMessage { Channel = ChatChannel.Public, Text = "::tele 30 30" });
+        off.Ticks(1);
+        Assert.Equal(Spawn, off.Player("Alice").Position);
+
+        var on = OpenWorld(new ServerConfig { DevCommands = true });
+        FakeConnection b = on.Login("Alice");
+        b.FromClient(new ChatMessage { Channel = ChatChannel.Public, Text = "::tele 30 30" });
+        on.Ticks(1);
+        Assert.Equal(new TileCoord(30, 30), on.Player("Alice").Position);
+        Assert.Empty(b.Sent.OfType<ChatLineMessage>()); // not said out loud
+    }
+
+    [Fact]
     public void WalkingMovesOneTilePerTick()
     {
         var fx = OpenWorld();

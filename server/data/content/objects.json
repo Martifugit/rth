@@ -101,5 +101,36 @@
         "message": "One of the monument's founts wakes hungry."
       }
     }
+  },
+  {
+    "id": "unquiet_saint",
+    "name": "The Unquiet Saint",
+    "examine": "A martyr of Cruor on his bier, under a red pall. He should be dust by now. He is not quite."
+  },
+  {
+    "id": "holy_symbol",
+    "name": "Holy symbol",
+    "examine": "A bronze symbol set high on a pillar. It catches light that isn't there."
+  },
+  {
+    "id": "crypt_altar",
+    "name": "Altar",
+    "examine": "Where the faithful pour what they've given. The Requiem is sung here."
+  },
+  {
+    "id": "crypt_offertory",
+    "name": "Offertory",
+    "examine": "A bronze basin for what the Saint says is owed."
+  },
+  {
+    "id": "crypt_fount",
+    "name": "Fount",
+    "examine": "A bowl ringed with little bronze teeth, like the monuments' above. Older."
+  },
+  {
+    "id": "crypt_stair",
+    "name": "Stair",
+    "examine": "The way back up to the monument.",
+    "actions": [ { "id": "climb", "label": "Climb", "message": "The stair leads up to a sealed door. (Blockout: the way out comes with instancing.)" } ]
   }
 ]

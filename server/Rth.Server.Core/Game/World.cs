@@ -86,6 +86,7 @@ namespace Rth.Server.Game
             new TaskSystem(),
             new QuestSystem(),
             new ChatSystem(),
+            new DevSystem(),
             new RegionSystem(),
             new ClientStateSystem(),
             new AchievementSystem(),
