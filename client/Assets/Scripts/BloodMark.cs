@@ -12,12 +12,12 @@ namespace Rth.Client
     {
         private static readonly Color Blood = new Color(0.85f, 0.04f, 0.07f);
         private static readonly Color Bright = new Color(1f, 0.12f, 0.1f);
-        private const float Size = 1.5f;
+        private const float Size = 0.9f;
         private const int Thorns = 8;
         private const float Beat = 1.1f;
 
         /// <summary>How far above the head the seal floats (WorldView puts the count there).</summary>
-        public const float Lift = 1.45f;
+        public const float Lift = 1.05f;
 
         private static Material _dots, _lines;
 

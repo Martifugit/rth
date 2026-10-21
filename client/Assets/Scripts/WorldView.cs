@@ -367,18 +367,18 @@ namespace Rth.Client
                 if (showName)
                 {
                     Color nameColor = view.Id == TargetId ? new Color(1f, 0.55f, 0.3f) : view.Kind == EntityKind.Npc ? new Color(1f, 1f, 0.4f) : Color.white;
-                    _labelStyle.normal.textColor = new Color(0f, 0f, 0f, 0.75f);
+                    Ink(_labelStyle, new Color(0f, 0f, 0f, 0.75f));
                     GUI.Label(new Rect(x - 69f, y - 17f, 140f, 18f), view.DisplayName, _labelStyle);
-                    _labelStyle.normal.textColor = nameColor;
+                    Ink(_labelStyle, nameColor);
                     GUI.Label(new Rect(x - 70f, y - 18f, 140f, 18f), view.DisplayName, _labelStyle);
                 }
 
                 if (_overhead.TryGetValue(view.Id, out (string Text, float Time) said) && Time.time - said.Time < OverheadSeconds)
                 {
                     float sayY = y - 38f - (string.IsNullOrEmpty(view.Overhead) ? 0f : 34f); // above the overhead icon
-                    _labelStyle.normal.textColor = new Color(0f, 0f, 0f, 0.8f);
+                    Ink(_labelStyle, new Color(0f, 0f, 0f, 0.8f));
                     GUI.Label(new Rect(x - 159f, sayY + 1f, 320f, 18f), said.Text, _labelStyle);
-                    _labelStyle.normal.textColor = new Color(1f, 1f, 0f);
+                    Ink(_labelStyle, new Color(1f, 1f, 0f));
                     GUI.Label(new Rect(x - 160f, sayY, 320f, 18f), said.Text, _labelStyle);
                 }
             }
@@ -397,13 +397,13 @@ namespace Rth.Client
                 if (string.IsNullOrEmpty(m.Value.Label)) continue;
                 Vector3 seal = cam.WorldToScreenPoint(view.transform.position + Vector3.up * (view.Height + BloodMark.Lift));
                 if (seal.z <= 0f) continue;
-                var centre = new Rect(seal.x - 35f, Screen.height - seal.y - 15f, 70f, 30f);
-                _splatStyle.fontSize = 24;
-                _splatStyle.normal.textColor = new Color(0.12f, 0f, 0f, 0.95f);
+                var centre = new Rect(seal.x - 30f, Screen.height - seal.y - 12f, 60f, 24f);
+                _splatStyle.fontSize = 17;
+                Ink(_splatStyle, new Color(0.12f, 0f, 0f, 0.95f));
                 for (int dx = -1; dx <= 1; dx++)
                 for (int dy = -1; dy <= 1; dy++)
                     if (dx != 0 || dy != 0) GUI.Label(new Rect(centre.x + dx * 2f, centre.y + dy * 2f, centre.width, centre.height), m.Value.Label, _splatStyle);
-                _splatStyle.normal.textColor = new Color(1f, 0.93f, 0.88f);
+                Ink(_splatStyle, new Color(1f, 0.93f, 0.88f));
                 GUI.Label(centre, m.Value.Label, _splatStyle);
             }
 
@@ -419,9 +419,9 @@ namespace Rth.Client
                         float age = (Time.time - _xpDrops[i].Time) / XpDropSeconds;
                         float alpha = age < 0.7f ? 1f : 1f - (age - 0.7f) / 0.3f;
                         var rect = new Rect(head.x + 34f, Screen.height - head.y - age * 50f - (_xpDrops.Count - 1 - i) * 16f, 160f, 18f);
-                        _xpStyle.normal.textColor = new Color(0f, 0f, 0f, 0.8f * alpha);
+                        Ink(_xpStyle, new Color(0f, 0f, 0f, 0.8f * alpha));
                         GUI.Label(new Rect(rect.x + 1f, rect.y + 1f, rect.width, rect.height), _xpDrops[i].Text, _xpStyle);
-                        _xpStyle.normal.textColor = new Color(1f, 0.85f, 0.35f, alpha);
+                        Ink(_xpStyle, new Color(1f, 0.85f, 0.35f, alpha));
                         GUI.Label(rect, _xpDrops[i].Text, _xpStyle);
                     }
             }
@@ -448,7 +448,7 @@ namespace Rth.Client
                 back.a = 0.92f * fade;
                 DrawRect(badge, back);
                 _splatStyle.fontSize = Mathf.RoundToInt(16f * pop);
-                _splatStyle.normal.textColor = new Color(1f, 1f, 1f, fade);
+                Ink(_splatStyle, new Color(1f, 1f, 1f, fade));
                 GUI.Label(badge, h.Text, _splatStyle);
             }
         }
@@ -461,6 +461,9 @@ namespace Rth.Client
             _xpStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleLeft, fontStyle = FontStyle.Bold, fontSize = 13 };
             _white = Texture2D.whiteTexture;
         }
+
+        /// <summary>Sets a world label's colour, for hovering too: a label under the pointer must not change.</summary>
+        private static void Ink(GUIStyle style, Color color) => style.normal.textColor = style.hover.textColor = color;
 
         private void DrawRect(Rect rect, Color color)
         {
