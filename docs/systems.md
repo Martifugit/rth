@@ -42,7 +42,7 @@ live in `server/data/content/` and hot-reload, so they're meant to be tuned by p
   Status names, icons and text are in `statuses.json`; the server decides who has which.
 - **Only these four.** Bile has no other effects: no extremes (fever and torpor were removed).
 - **Settling:** after 10 ticks out of combat, bile drifts back 1 per tick, phlegm fades 2 per
-  tick, and blood (and, until it is removed, breath) regenerates.
+  tick, and blood regenerates. Devotion never regenerates by itself.
 - **Phlegm:** builders build 6–8; spenders need 50 and spend 15; ultimates need and spend 100.
   3-tick global cooldown.
 - **Using abilities (RS3-style):**
@@ -65,8 +65,8 @@ live in `server/data/content/` and hot-reload, so they're meant to be tuned by p
     fires after each global cooldown. Items and focuses on the bar are skipped.
   - The options are client state (`combat.queue`, `combat.revolution`); the server reads them,
     and the main bar from `bars`.
-- **Breath (to be removed):** 300 max; deflecting one style drains 1 per tick and halves that
-  style's damage. It becomes a hymn, on devotion.
+- **Hymns (Milestone 9):** deflection is three overhead hymns (Bulwark, Glare, Salt Ward), each
+  halving one style's damage while sung; breath is gone.
 - **Death:** the Assayer resets bile to 0 on respawn. That is the cost of dying in the
   prototype; there is nothing to lose until items exist.
 - **Abilities:** Gall Spark (+10), Black Draught (−10, heals 25% of damage), Still the Humours

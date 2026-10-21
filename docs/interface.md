@@ -32,7 +32,7 @@ every piece and how they are organised.
 
 | Piece | Contents |
 |---|---|
-| **Main action bar** ✓ | Blood, phlegm and breath as three equal gauges; the bile axis (two halves filling outward from a black centre that holds the value); 14 slots on keys 1 to 0, - and =. Fixed size. **To change:** breath's gauge becomes **devotion**, and the style meter shown may follow the weapon you hold. |
+| **Main action bar** ✓ | Blood, phlegm and breath as three equal gauges; the bile axis (two halves filling outward from a black centre that holds the value); 14 slots on keys 1 to 0, - and =. Fixed size. Devotion (hymns) replaced breath. **To change:** the style meter shown may follow the weapon you hold. |
 | **Secondary action bars** ✓ | Two more bars of 14 slots (from the window menu). Abilities and items are dragged onto any bar; layouts are kept on the server. |
 | **Minimap** ✓ | Square; compass and clock in its corners; beneath it the run toggle and buttons for the world map, journal, guide, settings and a menu of every window. No blood orb: blood is on the action bar. |
 | **Chat** ✓ | Filters (all, game, public) and the line you type on (Enter). Fixed size. Private and group chat to come. |
@@ -46,10 +46,10 @@ every piece and how they are organised.
 - **Worn equipment** (the figure only). ✓
 - **Character:** total level and every combat stat. ✓
 - **Ability books:** one per combat style (Occultism first); drag onto a bar. ✓
-- **Focuses:** breath's stances (the prayer analogue). Click to hold or let go, or drag onto
-  an action bar and use them like abilities; no keys of their own. ✓ **To become Hymns**
-  (Religion), drained from devotion.
-- **Skills:** tiles, the total level on a footer row; click for the guide, right-click to
+- **Religion** (F): devotion at the top, then the **hymns** (Tithe's prayers) as a book of icons
+  in level order: click to sing or stop, drag onto an action bar; a sung one glows, a locked one
+  shows its level. Below them, **verses** (Cruor's, for melee) when melee exists. ✓
+- **Skills:** tiles, the combat and total levels on a footer row; click for the guide, right-click to
   "Set level target" or "Set exp target" (each asks for a number). Targets follow the player. ✓
 - **Quests:** the list; click for the journal. ✓
 - **Task** and **XP tracker**. ✓

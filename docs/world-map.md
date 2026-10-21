@@ -104,9 +104,8 @@ The open sea beyond Tithe's mouth has no name: it's just the sea.
 | Sodden, **Knellmere** (was "the Drowned Belfry"), **Causeholm** (was "the Old Causey"), Mereling | Places in Slough's fens. |
 | **Salinas** (was "the Brine Pans"), Saltglare, **Ascia** (was "the Shadowless Stones") | Places in Calcinia. *Ascia* is Greek for "shadowless": at noon there, nothing casts a shadow. |
 
-**In the game, not renamed yet:** the Pilgrim Road (scene `PilgrimRoad.unity`, flag
-`pilgrim_road_open`), the Backwards Mill, the Wash and "Scald" in content ids and text keep their
-old names until the skills rework renames them (`docs/skills.md`, section 9).
+The game uses these names too (renamed in Milestone 9): Palmerway's scene is
+`Palmerway.unity` and its waygate flag `palmerway_open`.
 
 ### Where Tolling sits
 
@@ -126,16 +125,16 @@ and rocks, one landmark. Unbuilt land is impassable and fades into the fog.
 | Region | Tiles (x, y) | Scene |
 |---|---|---|
 | Tolling | 0-95, 0-95 | `Tolling.unity` |
-| Palmerway (in game: the Pilgrim Road) | 96-191, 0-95 | `PilgrimRoad.unity` |
+| Palmerway | 96-191, 0-95 | `Palmerway.unity` |
 
 1. **Tolling and the river** (built: `client/Assets/Scenes/Tolling.unity`). One riverside town
    on the western outskirts of Venaria: the river and its bridge, Widdermill and its millpond,
    fields, reed beds with fen rats, a lightly wooded east bank with Sour Hollow (vitriol mites
    around a cask that leaked after the Scalding), Wennow at the south-east corner, and the
    sleepers' graves south of town. The townsfolk live here. 96 x 96 tiles.
-   **Palmerway** (built: `PilgrimRoad.unity`) runs east from Tolling along Wennow's north
+   **Palmerway** (built: `Palmerway.unity`) runs east from Tolling along Wennow's north
    shore: open heath, a waystone, the old toll-house, and the wardens' palisade with the barred
-   waygate (flag `pilgrim_road_open`), the current edge of the world.
+   waygate (flag `palmerway_open`), the current edge of the world.
 2. **Cruor and the bay shore.** The first capital, days east along Palmerway. The region engine
    is built; what's left is the land between (mostly sparse road regions) and the city itself
    (about 30 buildings at RuneScape scale).

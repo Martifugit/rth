@@ -378,15 +378,15 @@ effects follow the RuneScape prayer each one is based on.
 
 | Level | Hymn | Based on | Effect | Drain/tick |
 |---|---|---|---|---|
-| 1 / 25 / 50 | **Steadfast**, **Unbowed**, **Unbroken** | Thick Skin and its tiers | +5% / +10% / +15% armour | 0.1 / 0.2 / 0.3 |
-| 5 / 30 / 70 | **Zeal**, **Fervour**, **Judgement** | the melee boosts, up to Piety | melee accuracy and damage +3% / +5% / +8%; Judgement also +4% armour | 0.1 / 0.2 / 0.5 |
+| 1 / 25 / 50 | **Steadfast**, **Unbowed**, **Unbroken** | Thick Skin and its tiers | 5% / 10% / 15% less damage taken | 0.1 / 0.2 / 0.3 |
+| 5 / 30 / 70 | **Zeal**, **Fervour**, **Judgement** | the melee boosts, up to Piety | melee accuracy and damage +3% / +5% / +8%; Judgement also 4% less damage taken | 0.1 / 0.2 / 0.5 |
 | 8 / 33 / 70 | **Clarity**, **Vigil**, **Revelation** | the ranged boosts, up to Rigour | the same for ranged | 0.1 / 0.2 / 0.5 |
 | 11 / 36 / 70 | **Insight**, **Discernment**, **Anathema** | the magic boosts, up to Augury | the same for occult | 0.1 / 0.2 / 0.5 |
 | 35 | **Bulwark** | Protect from Melee | 50% less damage from melee (NPCs) | 0.5 |
 | 38 | **Glare** | Protect from Missiles | the same for ranged | 0.5 |
 | 41 | **Salt Ward** | Protect from Magic | the same for occult | 0.5 |
-| 80 | **Penance** / **Contrition** / **Atonement** | Turmoil / Anguish / Torment | melee / ranged / occult accuracy and damage +10%, armour +4%; each of your hits lowers the target's armour by 1% (to −10%) | 0.8 |
-| 90 | **Sacrament** | Soul Split | 7.5% of the damage you deal returns as blood | 0.8 |
+| 80 | **Penance** / **Contrition** / **Atonement** | Turmoil / Anguish / Torment | melee / ranged / occult accuracy and damage +10%, 4% less damage taken; each of your hits lowers the target's armour by 1% (to −10%; not built yet) | 0.8 |
+| 90 | **Sacrament** | Soul Split | 7% of the damage you deal returns as blood | 0.8 |
 
 **Only one overhead at a time:** Bulwark, Glare, Salt Ward and Sacrament. Everything else can be
 sung together. Each style's hymns form one line, and a higher one replaces the lower: Fervour
@@ -781,12 +781,13 @@ content.
 ---
 
 ## 9. Moving from today's prototype
-The code rework that follows this document, in short:
+**Done in Milestone 9 (2026-10-21)**, except where marked. The code rework that followed this
+document:
 
 - **Remove Breath:** `playerMaxBreath`, breath regen and drain, the breath gauge, the
   `maxBreath` stat on two items. The bar's place goes to **devotion**.
 - **Focuses become hymns** (Religion), drained from devotion; deflection is three of them.
-- **Add verses, scriptures, pledges and monuments** with melee, and calibration with ranged.
+- **Not yet:** verses, scriptures, pledges and monuments (with melee), and calibration (with ranged).
 - **skills.json:** add melee, ranged, defence, religion, mining, woodcutting, fishing, foraging,
   dreaming, smithing, artifice, tailoring, cooking, medicine. Remove **distillation**: its XP in
   saves is **added to Occultism** on login, its recipes become Sallow rites, and the two
