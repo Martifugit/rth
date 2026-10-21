@@ -54,6 +54,9 @@ namespace Rth.Server.Game
         /// <summary>Write this system's part of the player into the save (logout, autosave, shutdown).</summary>
         public virtual void OnSave(Player player, PlayerSave save) { }
 
+        /// <summary>A player is about to leave the world (logout, dropped connection, shutdown), before their final save: settle anything that must be saved.</summary>
+        public virtual void OnLeaving(Player player) { }
+
         /// <summary>A player is leaving the world (after their final save).</summary>
         public virtual void OnLogout(Player player) { }
 

@@ -3,5 +3,6 @@
   "title": "The Saint's Crypt",
   "hasSpawn": false,
   "instanced": true,
+  "music": "saints_crypt",
   "atmosphere": { "sunIntensity": 0.04, "ambientSky": "#383040", "ambientEquator": "#2B2121", "ambientGround": "#0A0808", "fog": "#050405", "fogStart": 20, "fogEnd": 75 }
 }

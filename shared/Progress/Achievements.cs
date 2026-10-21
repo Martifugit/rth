@@ -56,6 +56,8 @@ namespace Rth.Shared.Progress
     public sealed class BestiaryState
     {
         public Dictionary<string, BestiaryEntry> Creatures = new Dictionary<string, BestiaryEntry>();
+        /// <summary>Boss id to the player's completions, times and drop log.</summary>
+        public Dictionary<string, BossRecord> Bosses = new Dictionary<string, BossRecord>();
     }
 
     public sealed class BestiaryEntry

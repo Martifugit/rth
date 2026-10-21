@@ -37,6 +37,7 @@ namespace Rth.Client.Ui
         public const string Debuffs = "debuffs";
         public const string Dialogue = "dialogue";
         public const string Town = "town";
+        public const string Boss = "boss";
 
         public static readonly Dictionary<string, Placement> Windows = new Dictionary<string, Placement>
         {
@@ -51,6 +52,7 @@ namespace Rth.Client.Ui
             [Target] = new Placement(0.5f, 0f, 0f, 8f, 260f, 64f),
             [Dialogue] = new Placement(0.5f, 1f, 0f, -130f, 600f, 230f),
             [Town] = new Placement(0.5f, 0.5f, -60f, -30f, 780f, 480f),
+            [Boss] = new Placement(0.5f, 0f, 0f, 78f, 250f, 76f),
         };
 
         /// <summary>A window for a panel with no default home: centred, at the panel's own size.</summary>

@@ -592,6 +592,7 @@ namespace Rth.Shared.Net
         public List<Rth.Shared.Progress.AchievementDef> Achievements = new List<Rth.Shared.Progress.AchievementDef>();
         public List<StatusDef> Statuses = new List<StatusDef>();
         public List<Rth.Shared.Religion.HymnDef> Hymns = new List<Rth.Shared.Religion.HymnDef>();
+        public List<Rth.Shared.Progress.BossDef> Bosses = new List<Rth.Shared.Progress.BossDef>();
         public CombatLevelDef CombatLevel = new CombatLevelDef();
     }
 

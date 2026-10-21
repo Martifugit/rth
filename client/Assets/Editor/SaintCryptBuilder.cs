@@ -96,6 +96,7 @@ namespace Rth.Client.Editor
 
             MapArea area = WorldKit.BeginRegion("saints_crypt", "The Saint's Crypt", Origin, Size, earth);
             area.instanced = true;
+            area.music = "saints_crypt"; // Resources/Music/saints_crypt(_2, _3...): the choir layers
             area.ownAtmosphere = true;
             area.sunIntensity = 0.04f;
             area.ambientSky = new Color(0.22f, 0.19f, 0.25f);
@@ -112,7 +113,7 @@ namespace Rth.Client.Editor
             BuildArcades(map, stone, darkStone, banner, iron, coals, flame, ember);
             BuildEntrance(map, darkStone, dais, iron, coals, flame, ember);
             BuildDais(map, dais, stone, darkStone, synodRed, bronze, bone, wax, holyInlay, halo, spark, mote, channelGlow);
-            BuildColossus(map, darkStone, stone, robe, bone, bronze, eyes, blood, bloodShine, iron, coals, flame, ember);
+            BuildColossus(map, darkStone, stone, robe, synodRed, bone, bronze, eyes, blood, bloodShine, channelGlow, iron, coals, flame, ember);
             BuildCentre(map, dais, darkStone, synodRed, bronze, wax, channelGlow, beam, mote);
             BuildFounts(map, stone, bronze, bloodGlow, blood);
 
@@ -213,7 +214,9 @@ namespace Rth.Client.Editor
                         WorldKit.Box("Voussoir", arch, new Vector3(x, PierHeight + 0.6f + step * 0.7f, y + 2f), new Vector3(1.1f, 0.7f, 4f - step * 0.9f), stone, collider: false);
                     WorldKit.Fades(arch, 0.05f).guardRadius = Guard;
                     // Between each pair: a long red banner high on the wall, and a sconce's fire below it.
-                    WorldKit.Box("Banner", arcades, new Vector3(wall - side * 0.06f, PierHeight - 5f, y + 2f), new Vector3(0.05f, 7f, 1.5f), banner, collider: false);
+                    Transform hanging = WorldKit.Group(arcades, "Banner");
+                    WorldKit.Box("Banner", hanging, new Vector3(wall - side * 0.06f, PierHeight - 5f, y + 2f), new Vector3(0.05f, 7f, 1.5f), banner, collider: false);
+                    WorldKit.Fades(hanging, 0.05f).guardRadius = Guard;
                     Sconce(arcades, new Vector3(wall - side * 0.35f, 2.6f, y + 2f), side, iron, coals, flame, ember);
                 }
                 // The wall itself, taller still, and blind, running back along the stair hall too.
@@ -453,8 +456,8 @@ namespace Rth.Client.Editor
 
         // ------------------------------------------------------------------ the colossus
 
-        private static void BuildColossus(Transform map, Material darkStone, Material stone, Material robe, Material bone, Material bronze, Material eyes, Material blood,
-            Material bloodShine, Material iron, Material coals, Material flame, Material ember)
+        private static void BuildColossus(Transform map, Material darkStone, Material stone, Material robe, Material synodRed, Material bone, Material bronze, Material eyes,
+            Material blood, Material bloodShine, Material bloodPool, Material iron, Material coals, Material flame, Material ember)
         {
             // The martyr as Cruor remembers him, twenty metres of him, behind the dais and bowed over
             // it, a chalice tipped in his hands so that blood falls onto his own body on the bier.
@@ -462,40 +465,82 @@ namespace Rth.Client.Editor
             float baseY = NaveY + NaveL + 4.5f; // behind the dais, out of reach
             WorldKit.Box("Plinth", colossus, new Vector3(Mid, 1.5f, baseY), new Vector3(9f, 3f, 7f), darkStone, collider: false);
             WorldKit.Box("Plinth step", colossus, new Vector3(Mid, 0.5f, baseY - 3f), new Vector3(12f, 1f, 3f), darkStone, collider: false);
-            // The robe falls in tiers, widest at the hem.
+            // The vestments fall in tiers, widest at the hem, each edged in bronze, with the stole's
+            // two bands hanging down the front of every tier.
             float[] widths = { 6.5f, 5.8f, 5.2f, 4.6f };
             for (int i = 0; i < widths.Length; i++)
-                WorldKit.Box("Robe", colossus, new Vector3(Mid, 4.5f + i * 3f, baseY), new Vector3(widths[i], 3f, widths[i] * 0.6f), robe, collider: false);
+            {
+                float y = 4.5f + i * 3f, front = baseY - widths[i] * 0.3f;
+                WorldKit.Box("Robe", colossus, new Vector3(Mid, y, baseY), new Vector3(widths[i], 3f, widths[i] * 0.6f), robe, collider: false);
+                WorldKit.Box("Hem", colossus, new Vector3(Mid, y - 1.38f, baseY), new Vector3(widths[i] + 0.12f, 0.24f, widths[i] * 0.6f + 0.12f), bronze, collider: false);
+                for (int side = -1; side <= 1; side += 2)
+                    WorldKit.Box("Stole", colossus, new Vector3(Mid + side * 0.75f, y, front - 0.05f), new Vector3(0.55f, 3f, 0.1f), synodRed, collider: false);
+            }
+            for (int side = -1; side <= 1; side += 2) // the stole's fringed ends
+                WorldKit.Box("Stole end", colossus, new Vector3(Mid + side * 0.75f, 3.3f, baseY - 1.95f - 0.07f), new Vector3(0.75f, 0.6f, 0.1f), bronze, collider: false);
+
             Transform upper = WorldKit.Group(colossus, "Upper body");
             WorldKit.Box("Chest", upper, new Vector3(Mid, 16f, baseY - 0.4f), new Vector3(4.4f, 3.6f, 2.6f), robe, collider: false);
+            WorldKit.Box("Cincture", upper, new Vector3(Mid, 14.5f, baseY - 0.4f), new Vector3(4.6f, 0.5f, 2.8f), bronze, collider: false);
+            for (int side = -1; side <= 1; side += 2)
+                WorldKit.Box("Stole", upper, new Vector3(Mid + side * 0.75f, 16.1f, baseY - 1.75f), new Vector3(0.55f, 3.4f, 0.1f), synodRed, collider: false);
+            // A cope over the shoulders, red, bronze-edged, clasped at the throat.
             WorldKit.Box("Shoulders", upper, new Vector3(Mid, 17.6f, baseY - 0.6f), new Vector3(5.6f, 1.2f, 2.4f), robe, collider: false);
-            // The head bowed over the nave, hooded, with eyes that will open as the Wake bar fills.
-            WorldKit.Box("Hood", upper, new Vector3(Mid, 19.3f, baseY - 1.9f), new Vector3(2.6f, 2.8f, 2.6f), robe, collider: false);
-            WorldKit.Box("Face", upper, new Vector3(Mid, 19f, baseY - 3.05f), new Vector3(1.6f, 2f, 0.4f), stone, collider: false);
-            WorldKit.Box("Eye", upper, new Vector3(Mid - 0.38f, 19.4f, baseY - 3.28f), new Vector3(0.3f, 0.12f, 0.06f), eyes, collider: false);
-            WorldKit.Box("Eye", upper, new Vector3(Mid + 0.38f, 19.4f, baseY - 3.28f), new Vector3(0.3f, 0.12f, 0.06f), eyes, collider: false);
+            WorldKit.Box("Cope", upper, new Vector3(Mid, 17.3f, baseY - 0.5f), new Vector3(6.2f, 1.7f, 3f), synodRed, collider: false);
+            WorldKit.Box("Cope edge", upper, new Vector3(Mid, 16.4f, baseY - 0.5f), new Vector3(6.3f, 0.22f, 3.1f), bronze, collider: false);
+            WorldKit.Box("Clasp", upper, new Vector3(Mid, 17.5f, baseY - 2.05f), new Vector3(0.6f, 0.6f, 0.15f), bronze, collider: false).transform.rotation = Quaternion.Euler(0f, 0f, 45f);
+            // The head bowed over the nave under a tall mitre: a heavy brow, a long beard, and eyes
+            // that will open as the Wake bar fills.
+            WorldKit.Box("Head", upper, new Vector3(Mid, 19.1f, baseY - 2f), new Vector3(1.9f, 2.3f, 2.2f), stone, collider: false);
+            WorldKit.Box("Brow", upper, new Vector3(Mid, 19.65f, baseY - 3.15f), new Vector3(1.8f, 0.3f, 0.3f), stone, collider: false);
+            WorldKit.Box("Nose", upper, new Vector3(Mid, 19.15f, baseY - 3.2f), new Vector3(0.3f, 0.7f, 0.3f), stone, collider: false);
+            WorldKit.Box("Eye", upper, new Vector3(Mid - 0.42f, 19.38f, baseY - 3.12f), new Vector3(0.36f, 0.12f, 0.06f), eyes, collider: false);
+            WorldKit.Box("Eye", upper, new Vector3(Mid + 0.42f, 19.38f, baseY - 3.12f), new Vector3(0.36f, 0.12f, 0.06f), eyes, collider: false);
+            WorldKit.Box("Beard", upper, new Vector3(Mid, 18.1f, baseY - 2.75f), new Vector3(1.8f, 1.2f, 0.9f), stone, collider: false);
+            WorldKit.Box("Beard", upper, new Vector3(Mid, 17.1f, baseY - 2.6f), new Vector3(1.2f, 1f, 0.7f), stone, collider: false);
+            WorldKit.Box("Beard tip", upper, new Vector3(Mid, 16.4f, baseY - 2.45f), new Vector3(0.6f, 0.6f, 0.5f), stone, collider: false);
+            WorldKit.Box("Mitre band", upper, new Vector3(Mid, 20.4f, baseY - 2f), new Vector3(2.05f, 0.4f, 2.05f), bronze, collider: false);
+            WorldKit.Box("Mitre", upper, new Vector3(Mid, 21.5f, baseY - 2f), new Vector3(1.8f, 1.9f, 1.4f), bone, collider: false);
+            WorldKit.Box("Mitre peak", upper, new Vector3(Mid, 22.45f, baseY - 2f), new Vector3(1.27f, 1.27f, 1.4f), bone, collider: false).transform.rotation = Quaternion.Euler(0f, 0f, 45f);
+            WorldKit.Box("Mitre stripe", upper, new Vector3(Mid, 21.7f, baseY - 2.72f), new Vector3(0.3f, 2.6f, 0.06f), bronze, collider: false);
+            WorldKit.Box("Mitre stripe", upper, new Vector3(Mid, 21.6f, baseY - 2.73f), new Vector3(1.8f, 0.25f, 0.06f), bronze, collider: false);
             upper.RotateAround(new Vector3(Mid, 14f, baseY), Vector3.right, 22f); // bowing forward over the dais
             FxKit.PointLight(colossus, "Eyes", new Vector3(Mid, 18.4f, baseY - 6f), new Color(1f, 0.15f, 0.1f), 2.5f, 7f, flicker: 0.1f);
 
-            // Arms forward from the shoulders, the hands meeting on a chalice tipped over the bier.
-            var chalice = new Vector3(Mid, 9.5f, NaveY + Bier.y + 0.5f);
+            // Arms forward from the shoulders in wide sleeves, the hands meeting on a chalice tipped
+            // towards the nave, held just north of the bier so that it pours onto the body.
+            var chalice = new Vector3(Mid, 9.5f, NaveY + Bier.y + 1.4f);
             for (int side = -1; side <= 1; side += 2)
             {
                 var shoulder = new Vector3(Mid + side * 2.4f, 16.6f, baseY - 2.4f);
-                Vector3 hand = chalice + new Vector3(side * 0.7f, 0.6f, 0f);
-                GameObject arm = WorldKit.Box("Arm", colossus, (shoulder + hand) / 2f, new Vector3(1.1f, 1.1f, Vector3.Distance(shoulder, hand)), robe, collider: false);
-                arm.transform.rotation = Quaternion.LookRotation(hand - shoulder);
-                WorldKit.Box("Hand", colossus, hand, new Vector3(0.9f, 0.9f, 0.9f), bone, collider: false);
+                Vector3 hand = chalice + new Vector3(side * 0.75f, 0.2f, 0.1f);
+                Quaternion along = Quaternion.LookRotation(hand - shoulder);
+                float reach = Vector3.Distance(shoulder, hand);
+                GameObject arm = WorldKit.Box("Arm", colossus, (shoulder + hand) / 2f, new Vector3(1.1f, 1.1f, reach), robe, collider: false);
+                arm.transform.rotation = along;
+                GameObject sleeve = WorldKit.Box("Sleeve", colossus, Vector3.Lerp(shoulder, hand, 0.68f), new Vector3(1.8f, 1.8f, reach * 0.36f), robe, collider: false);
+                sleeve.transform.rotation = along;
+                GameObject cuff = WorldKit.Box("Cuff", colossus, Vector3.Lerp(shoulder, hand, 0.86f), new Vector3(1.9f, 1.9f, 0.25f), bronze, collider: false);
+                cuff.transform.rotation = along;
+                GameObject palm = WorldKit.Box("Hand", colossus, hand, new Vector3(0.5f, 1.1f, 0.9f), bone, collider: false);
+                palm.transform.rotation = Quaternion.Euler(0f, 0f, side * -20f);
             }
+            // Bowl, knop, stem and foot, with blood brimming in the bowl.
             Transform cup = WorldKit.Group(colossus, "Chalice");
-            WorldKit.Cylinder("Cup", cup, chalice + new Vector3(0f, 0.4f, 0f), new Vector3(1.2f, 0.5f, 1.2f), bronze, collider: false);
-            WorldKit.Cylinder("Stem", cup, chalice + new Vector3(0f, -0.4f, 0f), new Vector3(0.3f, 0.4f, 0.3f), bronze, collider: false);
-            cup.RotateAround(chalice, Vector3.right, 35f); // tipped towards the bier
-            // The blood fountain: the stream, a brighter sheen running down it, and lights that pick
-            // it out of the dark from either side and glow where it lands.
-            Vector3 lip = chalice + new Vector3(0f, -0.1f, -0.7f);
-            FxKit.BloodStream(colossus, lip, 8.2f, blood);
-            FxKit.BloodStream(colossus, lip, 8.2f, bloodShine);
+            WorldKit.Cylinder("Bowl", cup, chalice + new Vector3(0f, 0.45f, 0f), new Vector3(1.3f, 0.4f, 1.3f), bronze, collider: false);
+            WorldKit.Cylinder("Bowl base", cup, chalice + new Vector3(0f, 0.02f, 0f), new Vector3(0.8f, 0.1f, 0.8f), bronze, collider: false);
+            WorldKit.Cylinder("Brim", cup, chalice + new Vector3(0f, 0.86f, 0f), new Vector3(1.2f, 0.01f, 1.2f), bloodPool, collider: false);
+            WorldKit.Cylinder("Stem", cup, chalice + new Vector3(0f, -0.5f, 0f), new Vector3(0.28f, 0.45f, 0.28f), bronze, collider: false);
+            WorldKit.Box("Knop", cup, chalice + new Vector3(0f, -0.4f, 0f), new Vector3(0.5f, 0.5f, 0.5f), bronze, collider: false).transform.rotation = Quaternion.Euler(45f, 45f, 0f);
+            WorldKit.Cylinder("Foot", cup, chalice + new Vector3(0f, -0.95f, 0f), new Vector3(0.95f, 0.08f, 0.95f), bronze, collider: false);
+            cup.RotateAround(chalice, Vector3.right, -35f); // tipped towards the nave, over the bier
+            // The blood fountain: the stream from the bowl's low lip down to the pool on the pall, a
+            // brighter sheen running down it, and lights that pick it out of the dark from either
+            // side and glow where it lands.
+            Vector3 lip = chalice + Quaternion.Euler(-35f, 0f, 0f) * new Vector3(0f, 0.85f, -0.65f);
+            float fall = lip.y - 1.1f;
+            FxKit.BloodStream(colossus, lip, fall, blood);
+            FxKit.BloodStream(colossus, lip, fall, bloodShine);
             for (int side = -1; side <= 1; side += 2)
             {
                 var rim = new GameObject("Stream light");
@@ -510,8 +555,8 @@ namespace Rth.Client.Editor
                 l.spotAngle = 30f;
                 l.shadows = LightShadows.None;
             }
-            FxKit.PointLight(colossus, "Stream glow", lip + new Vector3(0f, -4f, -0.3f), new Color(1f, 0.1f, 0.12f), 3f, 4f, flicker: 0.15f);
-            FxKit.PointLight(colossus, "Pool glow", lip + new Vector3(0f, -7.6f, -0.4f), new Color(1f, 0.12f, 0.12f), 4f, 4.5f, flicker: 0.2f);
+            FxKit.PointLight(colossus, "Stream glow", lip + new Vector3(0f, -fall / 2f, -0.3f), new Color(1f, 0.1f, 0.12f), 3f, 4f, flicker: 0.15f);
+            FxKit.PointLight(colossus, "Pool glow", lip + new Vector3(0f, -fall + 0.6f, -0.4f), new Color(1f, 0.12f, 0.12f), 4f, 4.5f, flicker: 0.2f);
             // Fires at his feet throw their light up the robe, and two spots from the dais find his face.
             for (int side = -1; side <= 1; side += 2)
             {

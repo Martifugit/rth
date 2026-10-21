@@ -44,6 +44,8 @@ namespace Rth.Client.Ui.Modals
             public string Icon;
             public Color? IconTint;
             public Color? Colour;
+            /// <summary>A heading drawn above this entry when it differs from the one before (sections in one list).</summary>
+            public string Section;
         }
 
         /// <summary>Replaces the list. Keeps the selection if it is still there, else selects the first.</summary>
@@ -52,8 +54,11 @@ namespace Rth.Client.Ui.Modals
             _list.Clear();
             _rows.Clear();
             if (headingText != null) UiKit.Heading(_list, headingText);
+            string section = null;
             foreach (Entry entry in entries)
             {
+                if (entry.Section != null && entry.Section != section) UiKit.Heading(_list, entry.Section).style.marginTop = section == null ? 0f : 10f;
+                section = entry.Section ?? section;
                 string id = entry.Id;
                 VisualElement row = UiKit.El(_list, "master-row");
                 if (entry.Icon != null)

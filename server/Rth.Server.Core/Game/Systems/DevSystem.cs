@@ -44,11 +44,16 @@ namespace Rth.Server.Game
                 case "believer":
                     Believer(player, args.Length >= 2 && int.TryParse(args[1], out int length) ? length : 4);
                     break;
+                case "boss" when args.Length >= 2:
+                    BossSystem bosses = World.Get<BossSystem>();
+                    if (args[1] == "win" || args[1] == "fail") bosses.EndRun(player, args[1] == "win");
+                    else if (!bosses.StartRun(player, args[1])) Say(player, "No boss '" + args[1] + "'.");
+                    break;
                 case "devotion":
                     World.Get<ReligionSystem>().Restore(player, player.MaxDevotion);
                     break;
                 default:
-                    Say(player, "Commands: ::tele x y | ::tele region | ::level skill n | ::give item [count] | ::devotion | ::believer [length]");
+                    Say(player, "Commands: ::tele x y | ::tele region | ::level skill n | ::give item [count] | ::devotion | ::believer [length] | ::boss <id>|win|fail");
                     break;
             }
         }

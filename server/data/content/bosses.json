@@ -1,0 +1,10 @@
+[
+  {
+    "id": "unquiet_saint",
+    "name": "The Unquiet Saint",
+    "icon": "religion",
+    "description": "A martyr of Cruor who will not stay at rest, in a crypt beneath one of the see's monuments. Give blood at his founts and sing his Requiem before he wakes.",
+    "region": "saints_crypt",
+    "rewards": "unquiet_saint_offering"
+  }
+]

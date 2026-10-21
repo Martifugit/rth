@@ -28,6 +28,9 @@ namespace Rth.MapTools
         [Tooltip("An instanced place (a boss arena): built far off, entered by a door, left off the world map.")]
         public bool instanced;
 
+        [Tooltip("Music for the region: a track in the client's Resources/Music (name, name_2... for layers). Empty for none.")]
+        public string music = "";
+
         [Tooltip("Give the region its own light and fog (a crypt, a cave) instead of the open world's.")]
         public bool ownAtmosphere;
         public float sunIntensity = 1.1f;

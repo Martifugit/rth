@@ -16,7 +16,8 @@ namespace Rth.Server.Game
     /// <summary>
     /// The bestiary: how many of each creature a player has killed, and everything each creature
     /// has given them (a drop log). A creature gives twice: its drops, and the yield of butchering
-    /// its carcass, which is credited back to it. Sent as "bestiary" state.
+    /// its carcass, which is credited back to it. Bosses are here too: completions, attempts,
+    /// best and last times, and what their rewards gave. Sent as "bestiary" state.
     /// </summary>
     public sealed class BestiarySystem : GameSystem
     {
@@ -39,8 +40,28 @@ namespace Rth.Server.Game
                     Of(p).Dirty = true;
                 }
             });
+            World.Events.Subscribe<BossRunEnded>(e =>
+            {
+                BossRecord record = Boss(e.Player, e.Boss.Id);
+                record.Attempts++;
+                if (e.Won)
+                {
+                    record.Completions++;
+                    record.LastTicks = e.Ticks;
+                    if (record.BestTicks == 0 || e.Ticks < record.BestTicks) record.BestTicks = e.Ticks;
+                }
+                Of(e.Player).Dirty = true;
+            });
             World.Events.Subscribe<ItemsObtained>(e =>
             {
+                if (e.Source.StartsWith("boss:"))
+                {
+                    BossRecord record = Boss(e.Player, e.Source.Substring(5));
+                    foreach (Drop d in e.Items)
+                        record.Obtained[d.ItemId] = (record.Obtained.TryGetValue(d.ItemId, out long had) ? had : 0) + d.Count;
+                    Of(e.Player).Dirty = true;
+                    return;
+                }
                 string? creature = e.Source.StartsWith("npc:") ? e.Source.Substring(4)
                     : e.Source.StartsWith("recipe:") && _recipeCreature.TryGetValue(e.Source.Substring(7), out string? c) ? c
                     : null;
@@ -50,6 +71,14 @@ namespace Rth.Server.Game
                     entry.Obtained[d.ItemId] = (entry.Obtained.TryGetValue(d.ItemId, out long n) ? n : 0) + d.Count;
                 Of(e.Player).Dirty = true;
             });
+        }
+
+        /// <summary>The player's record with a boss (made on first use).</summary>
+        public BossRecord Boss(Player player, string bossId)
+        {
+            Dictionary<string, BossRecord> bosses = Of(player).State.Bosses;
+            if (!bosses.TryGetValue(bossId, out BossRecord? record)) bosses[bossId] = record = new BossRecord();
+            return record;
         }
 
         private BestiaryEntry Entry(Player player, string npcId)

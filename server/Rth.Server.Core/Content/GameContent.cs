@@ -191,6 +191,7 @@ namespace Rth.Server.Content
         public List<Rth.Shared.Progress.AchievementDef> Achievements = new List<Rth.Shared.Progress.AchievementDef>();
         public List<StatusDef> Statuses = new List<StatusDef>();
         public HymnsFile Hymns = new HymnsFile();
+        public List<Rth.Shared.Progress.BossDef> Bosses = new List<Rth.Shared.Progress.BossDef>();
     }
 
     /// <summary>
@@ -238,6 +239,7 @@ namespace Rth.Server.Content
         public IReadOnlyDictionary<string, Rth.Shared.Progress.AchievementDef> Achievements { get; private set; } = new Dictionary<string, Rth.Shared.Progress.AchievementDef>();
         public IReadOnlyDictionary<string, StatusDef> Statuses { get; private set; } = new Dictionary<string, StatusDef>();
         public IReadOnlyDictionary<string, HymnDef> Hymns { get; private set; } = new Dictionary<string, HymnDef>();
+        public IReadOnlyDictionary<string, Rth.Shared.Progress.BossDef> Bosses { get; private set; } = new Dictionary<string, Rth.Shared.Progress.BossDef>();
         /// <summary>The skill hymns need and train, and how much singing trains it.</summary>
         public HymnsFile HymnSettings { get; private set; } = new HymnsFile();
         public string? DefenceSkill { get; private set; }
@@ -282,6 +284,7 @@ namespace Rth.Server.Content
                 Achievements = ReadJson<List<Rth.Shared.Progress.AchievementDef>>(directory, "achievements.json"),
                 Statuses = ReadJson<List<StatusDef>>(directory, "statuses.json"),
                 Hymns = ReadJson<HymnsFile>(directory, "hymns.json"),
+                Bosses = ReadJson<List<Rth.Shared.Progress.BossDef>>(directory, "bosses.json"),
             });
         }
 
@@ -552,6 +555,13 @@ namespace Rth.Server.Content
                 CheckRequirements(h.Requirements, where);
             }
 
+            Dictionary<string, Rth.Shared.Progress.BossDef> bosses = Index(parts.Bosses ?? new List<Rth.Shared.Progress.BossDef>(), b => b.Id, "boss", problems);
+            foreach (Rth.Shared.Progress.BossDef b in bosses.Values)
+            {
+                if (string.IsNullOrWhiteSpace(b.Name)) problems.Add("Boss '" + b.Id + "': needs a name.");
+                if (b.Rewards != null && !tables.ContainsKey(b.Rewards)) problems.Add("Boss '" + b.Id + "': rewards table '" + b.Rewards + "' doesn't exist.");
+            }
+
             if (problems.Count > 0) throw new ContentException(string.Join(Environment.NewLine, problems));
 
             AddBankNotes(items);
@@ -583,6 +593,7 @@ namespace Rth.Server.Content
                 Statuses = statuses,
                 Hymns = hymns,
                 HymnSettings = hymnFile,
+                Bosses = bosses,
                 DefenceSkill = parts.Skills.DefenceSkill,
                 RetiredSkills = parts.Skills.Retired,
                 CombatLevel = parts.Skills.CombatLevel,
@@ -755,6 +766,7 @@ namespace Rth.Server.Content
             Achievements = Achievements.Values.ToList(),
             Statuses = Statuses.Values.ToList(),
             Hymns = Hymns.Values.ToList(),
+            Bosses = Bosses.Values.ToList(),
             CombatLevel = CombatLevel,
             BileLimit = Rules.BileLimit,
             MaxPhlegm = Rules.MaxPhlegm,

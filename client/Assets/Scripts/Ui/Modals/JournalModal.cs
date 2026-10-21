@@ -183,7 +183,10 @@ namespace Rth.Client.Ui.Modals
         private string SkillName(string id) => Session.SkillName(id);
     }
 
-    /// <summary>The bestiary: every creature, how dangerous it is, how many you've killed, and what it has given you.</summary>
+    /// <summary>
+    /// The bestiary: every boss (completions, best time, drop log), then every creature, how
+    /// dangerous it is, how many you've killed, and what it has given you.
+    /// </summary>
     public sealed class BestiaryTab : ModalTab
     {
         public override string Id => "bestiary";
@@ -207,19 +210,74 @@ namespace Rth.Client.Ui.Modals
             if (Session.Content == null || _version == Session.StateVersion) return;
             _version = Session.StateVersion;
             BestiaryState state = Session.ServerState<BestiaryState>("bestiary");
-            var creatures = Session.Content.Npcs.Where(n => n.Attackable).OrderBy(n => n.Name).Select(n => new MasterDetail.Entry
+            var entries = Session.Content.Bosses.OrderBy(b => b.Name).Select(b => new MasterDetail.Entry
+            {
+                Id = BossPrefix + b.Id,
+                Text = b.Name,
+                Icon = string.IsNullOrEmpty(b.Icon) ? "bestiary" : b.Icon,
+                IconTint = state.Bosses.TryGetValue(b.Id, out BossRecord r) && r.Completions > 0 ? new Color(0.95f, 0.72f, 0.4f) : UiKit.Muted,
+                Note = r != null ? r.Completions.ToString("N0") : "",
+                Section = "Bosses",
+            }).ToList();
+            entries.AddRange(Session.Content.Npcs.Where(n => n.Attackable).OrderBy(n => n.Name).Select(n => new MasterDetail.Entry
             {
                 Id = n.Id,
                 Text = n.Name,
                 Icon = "bestiary",
                 IconTint = state.Creatures.ContainsKey(n.Id) ? UiKit.IconTint : UiKit.Muted,
                 Note = state.Creatures.TryGetValue(n.Id, out BestiaryEntry e) ? e.Kills.ToString("N0") : "",
-            }).ToList();
-            _view.SetEntries(creatures, "Creatures");
+                Section = "Creatures",
+            }));
+            _view.SetEntries(entries);
+        }
+
+        private const string BossPrefix = "boss:";
+
+        private void DrawBoss(string id)
+        {
+            BossDef boss = Session.Content.Bosses.Find(b => b.Id == id);
+            if (boss == null) return;
+            BestiaryState state = Session.ServerState<BestiaryState>("bestiary");
+            state.Bosses.TryGetValue(id, out BossRecord record);
+            VisualElement d = _view.Detail;
+            UiKit.Text(d, boss.Name.ToUpperInvariant(), "title-large");
+            UiKit.Text(d, boss.Description, "prose", "muted");
+            UiKit.Divider(d);
+            VisualElement stats = UiKit.El(d, "row");
+            stats.style.flexWrap = Wrap.Wrap;
+            Stat(stats, "Completions", record != null ? record.Completions.ToString("N0") : "0");
+            Stat(stats, "Attempts", record != null ? record.Attempts.ToString("N0") : "0");
+            Stat(stats, "Personal best", record != null && record.BestTicks > 0 ? Panels.BossTimerPanel.Duration(record.BestTicks) : "-");
+            Stat(stats, "Last run", record != null && record.LastTicks > 0 ? Panels.BossTimerPanel.Duration(record.LastTicks) : "-");
+            DropLog(d, record?.Obtained, "Nothing yet. What its rewards give you is recorded here.");
+        }
+
+        private void DropLog(VisualElement d, Dictionary<string, long> obtained, string empty)
+        {
+            UiKit.Heading(d, "Drop log").style.marginTop = 10f;
+            if (obtained == null || obtained.Count == 0)
+            {
+                UiKit.Text(d, empty, "muted", "prose");
+                return;
+            }
+            VisualElement grid = UiKit.El(d, "slot-grid");
+            foreach (KeyValuePair<string, long> item in obtained.OrderByDescending(kv => kv.Value))
+            {
+                ItemDef def = Session.Item(item.Key);
+                var view = new ItemSlotView(grid);
+                view.Show(new ItemSlot { ItemId = item.Key, Count = (int)Mathf.Min(item.Value, int.MaxValue) }, def);
+                long count = item.Value;
+                UiKit.Tooltip(view.Root, () => (def != null ? UiKit.Title(def.Name) : item.Key) + "\nObtained: " + UiKit.Colour(count.ToString("N0"), UiKit.Value));
+            }
         }
 
         private void Draw(string id)
         {
+            if (id != null && id.StartsWith(BossPrefix))
+            {
+                DrawBoss(id.Substring(BossPrefix.Length));
+                return;
+            }
             NpcInfo npc = Session.Npc(id);
             if (npc == null) return;
             BestiaryState state = Session.ServerState<BestiaryState>("bestiary");
@@ -238,21 +296,7 @@ namespace Rth.Client.Ui.Modals
             Stat(stats, "Temper", npc.Aggressive ? "Attacks on sight" : "Defends itself");
             Stat(stats, "Killed", entry != null ? entry.Kills.ToString("N0") : "0");
 
-            UiKit.Heading(d, "Drop log").style.marginTop = 10f;
-            if (entry == null || entry.Obtained.Count == 0)
-            {
-                UiKit.Text(d, "Nothing yet. Its drops, and what its carcass yields, are recorded here.", "muted", "prose");
-                return;
-            }
-            VisualElement grid = UiKit.El(d, "slot-grid");
-            foreach (KeyValuePair<string, long> item in entry.Obtained.OrderByDescending(kv => kv.Value))
-            {
-                ItemDef def = Session.Item(item.Key);
-                var view = new ItemSlotView(grid);
-                view.Show(new ItemSlot { ItemId = item.Key, Count = (int)Mathf.Min(item.Value, int.MaxValue) }, def);
-                long count = item.Value;
-                UiKit.Tooltip(view.Root, () => (def != null ? UiKit.Title(def.Name) : item.Key) + "\nObtained: " + UiKit.Colour(count.ToString("N0"), UiKit.Value));
-            }
+            DropLog(d, entry?.Obtained, "Nothing yet. Its drops, and what its carcass yields, are recorded here.");
         }
 
         private static void Stat(VisualElement parent, string label, string value)

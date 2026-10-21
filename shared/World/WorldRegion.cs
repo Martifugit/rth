@@ -44,6 +44,9 @@ namespace Rth.Shared.World
         /// </summary>
         public bool Instanced;
 
+        /// <summary>Its music: a track in the client's Resources/Music (with optional layers), or empty for silence.</summary>
+        public string Music = "";
+
         /// <summary>Light, sky and fog of its own (a crypt, a cave), or null for the open world's.</summary>
         public RegionAtmosphere? Atmosphere;
 

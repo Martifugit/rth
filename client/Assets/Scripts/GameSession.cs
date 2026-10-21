@@ -181,6 +181,9 @@ namespace Rth.Client
             if (regions == null) regions = GetComponent<RegionStreamer>();
             if (regions == null) regions = gameObject.AddComponent<RegionStreamer>();
             regions.world = world;
+            MusicPlayer music = GetComponent<MusicPlayer>();
+            if (music == null) music = gameObject.AddComponent<MusicPlayer>();
+            music.regions = regions;
             RegionAtmosphereView atmosphere = GetComponent<RegionAtmosphereView>();
             if (atmosphere == null) atmosphere = gameObject.AddComponent<RegionAtmosphereView>();
             atmosphere.regions = regions;

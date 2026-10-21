@@ -90,7 +90,8 @@ namespace Rth.MapTools.Editor
                 "  \"scene\": " + Quote(area.gameObject.scene.name) + ",\n" +
                 "  \"title\": " + Quote(title) + ",\n" +
                 "  \"hasSpawn\": " + (hasSpawn ? "true" : "false") + ",\n" +
-                "  \"instanced\": " + (area.instanced ? "true" : "false") + (area.ownAtmosphere ? ",\n" + Atmosphere(area) : "") + "\n" +
+                "  \"instanced\": " + (area.instanced ? "true" : "false") + ",\n" +
+                "  \"music\": " + Quote(area.music) + (area.ownAtmosphere ? ",\n" + Atmosphere(area) : "") + "\n" +
                 "}\n");
         }
 

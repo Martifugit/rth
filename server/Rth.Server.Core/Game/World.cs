@@ -91,6 +91,7 @@ namespace Rth.Server.Game
             new ClientStateSystem(),
             new AchievementSystem(),
             new BestiarySystem(),
+            new BossSystem(),
         };
 
         public ServerConfig Config => _config;
@@ -516,6 +517,7 @@ namespace Rth.Server.Game
         private void RemovePlayer(Player player)
         {
             StopInteraction(player);
+            foreach (GameSystem system in _systems) system.OnLeaving(player);
             Save(player);
             _players.Remove(player.Id);
             foreach (GameSystem system in _systems) system.OnLogout(player);

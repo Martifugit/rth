@@ -43,5 +43,16 @@
       { "item": "cracked_moonstone_ring", "weight": 1 },
       { "item": "gallstone_amulet", "weight": 1 }
     ]
+  },
+  {
+    "id": "unquiet_saint_offering",
+    "always": [ { "item": "scripture_ii", "min": 2, "max": 4 } ],
+    "rolls": 2,
+    "entries": [
+      { "item": "scripture_i", "min": 3, "max": 8, "weight": 6 },
+      { "item": "scripture_iii", "min": 1, "max": 2, "weight": 3 },
+      { "item": "smoked_eel", "min": 2, "max": 5, "weight": 4 },
+      { "item": "scripture_iv", "weight": 1 }
+    ]
   }
 ]

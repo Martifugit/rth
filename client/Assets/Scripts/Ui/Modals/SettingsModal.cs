@@ -29,6 +29,7 @@ namespace Rth.Client.Ui.Modals
         private readonly Dictionary<RevolutionMode, UiKit.Check> _revolution = new Dictionary<RevolutionMode, UiKit.Check>();
         private readonly Dictionary<TrainDefence, UiKit.Check> _trainDefence = new Dictionary<TrainDefence, UiKit.Check>();
         private Label _scale;
+        private Label _music;
         private Label _who;
 
         protected override void Build(VisualElement root)
@@ -39,6 +40,17 @@ namespace Rth.Client.Ui.Modals
             VisualElement display = UiKit.El(scroll, "card");
             _roofs = new UiKit.Check(display, "Show roofs", () => RoofHider.ShowRoofs = !RoofHider.ShowRoofs);
             UiKit.Text(display, "Roofs always hide while you're indoors.", "muted", "small");
+
+            UiKit.Heading(scroll, "Audio").style.marginTop = 12f;
+            VisualElement audio = UiKit.El(scroll, "card");
+            VisualElement musicRow = UiKit.El(audio, "row");
+            UiKit.Text(musicRow, "Music volume");
+            UiKit.El(musicRow, "spacer");
+            UiKit.Button(musicRow, "-", () => MusicPlayer.Volume -= 0.1f);
+            _music = UiKit.Text(musicRow, "", "value", "bold");
+            _music.style.width = 56f;
+            _music.style.unityTextAlign = TextAnchor.MiddleCenter;
+            UiKit.Button(musicRow, "+", () => MusicPlayer.Volume += 0.1f);
 
             UiKit.Heading(scroll, "Interface").style.marginTop = 12f;
             VisualElement ui = UiKit.El(scroll, "card");
@@ -107,6 +119,7 @@ namespace Rth.Client.Ui.Modals
             foreach (KeyValuePair<RevolutionMode, UiKit.Check> r in _revolution) r.Value.Set(options.Revolution == r.Key);
             foreach (KeyValuePair<TrainDefence, UiKit.Check> t in _trainDefence) t.Value.Set(options.TrainDefence == t.Key);
             _scale.text = Mathf.RoundToInt(Ui.Scale * 100f) + "%";
+            _music.text = Mathf.RoundToInt(MusicPlayer.Volume * 100f) + "%";
             EntityView local = Ui.world.Local;
             _who.text = "Logged in as " + UiKit.Colour(Session.PlayerName, UiKit.Value) + (local != null ? UiKit.Colour("   at " + local.Tile, UiKit.Muted) : "");
         }
