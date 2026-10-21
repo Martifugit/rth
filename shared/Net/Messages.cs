@@ -505,6 +505,8 @@ namespace Rth.Shared.Net
         public List<AbilityDef> Abilities = new List<AbilityDef>();
         /// <summary>Ids of the abilities on the player's action bar, in slot order.</summary>
         public List<string> ActionBar = new List<string>();
+        /// <summary>A new character's main bar per weapon style (else <see cref="ActionBar"/>).</summary>
+        public Dictionary<Rth.Shared.Combat.CombatStyle, List<string>> ActionBars = new Dictionary<Rth.Shared.Combat.CombatStyle, List<string>>();
         /// <summary>The auto-attack with empty hands; its style is the unarmed style.</summary>
         public string AutoAttack = "";
         public List<ItemDef> Items = new List<ItemDef>();

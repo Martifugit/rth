@@ -168,6 +168,8 @@ namespace Rth.Server.Content
         /// <summary>Each weapon style's auto-attack; a style missing here uses <see cref="AutoAttack"/>.</summary>
         public Dictionary<CombatStyle, string> AutoAttacks = new Dictionary<CombatStyle, string>();
         public List<string> ActionBar = new List<string>();
+        /// <summary>A new character's main bar for each weapon style; a style missing here uses <see cref="ActionBar"/>.</summary>
+        public Dictionary<CombatStyle, List<string>> ActionBars = new Dictionary<CombatStyle, List<string>>();
         public List<NpcDef> Npcs = new List<NpcDef>();
         public AssayerLines Assayer = new AssayerLines();
         public List<ItemDef> Items = new List<ItemDef>();
@@ -197,6 +199,7 @@ namespace Rth.Server.Content
             public string AutoAttack = "";
             public Dictionary<CombatStyle, string> AutoAttacks = new Dictionary<CombatStyle, string>();
             public List<string> ActionBar = new List<string>();
+            public Dictionary<CombatStyle, List<string>> ActionBars = new Dictionary<CombatStyle, List<string>>();
         }
 
         public CombatRules Rules { get; private set; } = new CombatRules();
@@ -207,6 +210,10 @@ namespace Rth.Server.Content
         /// <summary>The style of empty hands: the unarmed auto-attack's.</summary>
         public CombatStyle UnarmedStyle => AutoAttack.Style;
         public IReadOnlyList<string> ActionBar { get; private set; } = new List<string>();
+        public IReadOnlyDictionary<CombatStyle, List<string>> ActionBars { get; private set; } = new Dictionary<CombatStyle, List<string>>();
+
+        /// <summary>A new character's main bar for a weapon style.</summary>
+        public IReadOnlyList<string> DefaultBarFor(CombatStyle style) => ActionBars.TryGetValue(style, out List<string>? bar) ? bar : ActionBar;
         public IReadOnlyDictionary<string, NpcDef> Npcs { get; private set; } = new Dictionary<string, NpcDef>();
         public AssayerLines Assayer { get; private set; } = new AssayerLines();
         public IReadOnlyDictionary<string, ItemDef> Items { get; private set; } = new Dictionary<string, ItemDef>();
@@ -251,6 +258,7 @@ namespace Rth.Server.Content
                 Rules = combat.Rules,
                 AutoAttack = combat.AutoAttack,
                 AutoAttacks = combat.AutoAttacks,
+                ActionBars = combat.ActionBars,
                 ActionBar = combat.ActionBar,
                 Abilities = ReadJson<List<AbilityDef>>(directory, "abilities.json"),
                 Npcs = ReadJson<List<NpcDef>>(directory, "npcs.json"),
@@ -308,7 +316,7 @@ namespace Rth.Server.Content
             if (!abilities.TryGetValue(parts.AutoAttack ?? "", out AbilityDef? auto)) problems.Add("autoAttack '" + parts.AutoAttack + "' is not an ability.");
             else if (auto.Type != AbilityType.Auto) problems.Add("autoAttack '" + parts.AutoAttack + "' must have type Auto.");
 
-            foreach (string id in parts.ActionBar)
+            foreach (string id in parts.ActionBar.Concat((parts.ActionBars ?? new Dictionary<CombatStyle, List<string>>()).Values.SelectMany(b => b)))
             {
                 if (!abilities.TryGetValue(id, out AbilityDef? a)) problems.Add("Action bar ability '" + id + "' doesn't exist.");
                 else if (a.Type == AbilityType.Auto) problems.Add("Action bar ability '" + id + "' is an auto-attack.");
@@ -549,6 +557,7 @@ namespace Rth.Server.Content
                 AutoAttack = auto!,
                 AutoAttacks = autoAttacks,
                 ActionBar = parts.ActionBar.ToList(),
+                ActionBars = parts.ActionBars ?? new Dictionary<CombatStyle, List<string>>(),
                 Npcs = npcs,
                 Assayer = parts.Assayer ?? new AssayerLines(),
                 Items = items,
@@ -721,6 +730,7 @@ namespace Rth.Server.Content
         {
             Abilities = Abilities.Values.ToList(),
             ActionBar = ActionBar.ToList(),
+            ActionBars = ActionBars.ToDictionary(p => p.Key, p => p.Value.ToList()),
             AutoAttack = AutoAttack.Id,
             Items = Items.Values.ToList(),
             Skills = Skills.Values.ToList(),

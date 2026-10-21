@@ -46,6 +46,7 @@ public class MeleeTests
         });
         ContentParts parts = TestContent.Parts(abilities: abilities);
         parts.AutoAttacks[CombatStyle.Melee] = "chop";
+        parts.ActionBars[CombatStyle.Melee] = new List<string> { "let_blood", "hew" };
         parts.Items.Add(new ItemDef { Id = "blade", Name = "Blade", Equipment = new EquipmentDef { Slot = EquipSlot.Weapon, Style = CombatStyle.Melee } });
         parts.Items.Add(new ItemDef { Id = "scripture", Name = "Scripture", Stackable = true });
         parts.Skills.Skills.Add(new SkillDef { Id = "melee", Name = "Melee", StatsPerLevel = { [StatIds.MeleePower] = 10 } });
@@ -117,6 +118,23 @@ public class MeleeTests
         int dealt = before - dummy.Blood;
         Assert.True(dealt >= 40 && dealt % 40 == 0, "chops of 40, not zaps of 50: " + dealt);
         Assert.Equal(CombatStyle.Melee, arena.Combat.WeaponStyle(arena.Alice));
+    }
+
+    [Fact]
+    public void EachStyleHasItsOwnMainBarForRevolution()
+    {
+        var arena = new Arena(At("dummy", 6, 5));
+        CombatSystem combat = arena.Combat;
+        Assert.Equal(arena.Fx.World.Content.ActionBar, combat.MainBarAbilities(arena.Alice));
+        arena.Wield();
+        Assert.Equal(new[] { "let_blood", "hew" }, combat.MainBarAbilities(arena.Alice)); // the melee default
+
+        arena.Client.FromClient(new SetClientStateMessage { Key = CombatOptions.MainBarKey(CombatStyle.Melee), Json = "[\"a:hew\", null]" });
+        arena.Client.FromClient(new SetClientStateMessage { Key = CombatOptions.RevolutionKey, Json = "builders" });
+        arena.Attack("dummy");
+        arena.Fx.Ticks(4);
+        Assert.Equal(new[] { "hew" }, combat.MainBarAbilities(arena.Alice));
+        Assert.True(arena.Alice.Cooldowns.ContainsKey("hew"));
     }
 
     [Fact]
@@ -368,7 +386,7 @@ public class MeleeTests
         }
 
         SkillSystem skills = fx.World.Get<SkillSystem>();
-        Assert.True(skills.Level(alice, "melee") >= 5, "melee level " + skills.Level(alice, "melee"));
+        Assert.True(skills.Level(alice, "melee") >= 3, "melee level " + skills.Level(alice, "melee"));
         Assert.True(skills.Xp(alice, "religion") > 0);
         Assert.True(items.CountOf(alice, "scripture_i") < 50);
         Assert.False(alice.IsDead);

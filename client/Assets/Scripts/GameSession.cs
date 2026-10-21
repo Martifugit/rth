@@ -605,6 +605,8 @@ namespace Rth.Client
         {
             get
             {
+                // A new weapon style swaps in that style's main bar.
+                if (_bars != null && _bars.Style != WeaponStyle) _bars = null;
                 if (_bars == null && Content != null && _states.ContainsKey("client")) _bars = Ui.ActionBars.Load(this);
                 return _bars;
             }

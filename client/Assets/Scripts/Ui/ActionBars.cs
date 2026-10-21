@@ -11,8 +11,10 @@ namespace Rth.Client.Ui
     /// The player's action bars: a main bar and secondary bars of 14 slots each. A slot holds an
     /// ability ("a:gall_spark"), a hymn ("h:bulwark") or an item ("i:riverbread", used from
     /// the pack). Arranged by dragging from the ability book, the religion tab or the pack; kept on
-    /// the server as client state, so a layout follows the player. A new character's main bar
-    /// starts as the content's default. Locked bars can't be rearranged and show no tooltips.
+    /// the server as client state, so a layout follows the player. Each weapon style has its own
+    /// main bar, which swaps in with the weapon (RuneScape 3's bar per style); one never arranged
+    /// starts as the content's default for that style. Locked bars can't be rearranged and show
+    /// no tooltips.
     /// </summary>
     public sealed class ActionBars
     {
@@ -44,41 +46,68 @@ namespace Rth.Client.Ui
         /// <summary>Counts changes, so bar views know when to redraw.</summary>
         public int Version { get; private set; }
 
-        private ActionBars(GameSession session, string[][] bars)
+        /// <summary>The weapon style whose main bar is bar 0.</summary>
+        public CombatStyle Style { get; }
+
+        private ActionBars(GameSession session, string[][] bars, CombatStyle style)
         {
             _session = session;
             _bars = bars;
+            Style = style;
         }
 
         public static ActionBars Load(GameSession session)
         {
-            string[][] bars = null;
-            if (session.ClientState.TryGetValue(StateKey, out string json))
+            CombatStyle style = session.WeaponStyle;
+            string[][] bars = Read<string[][]>(session, StateKey) ?? new string[BarCount][];
+            string[] main = Read<string[]>(session, CombatOptions.MainBarKey(style));
+            bool unarmed = style == (session.Ability(session.Content.AutoAttack)?.Style ?? CombatStyle.Occult);
+            if (main == null && !(unarmed && bars.Length > 0 && bars[0] != null))
             {
-                try
-                {
-                    bars = JsonConvert.DeserializeObject<string[][]>(json);
-                }
-                catch (JsonException)
-                {
-                    bars = null;
-                }
-            }
-            if (bars == null)
-            {
-                bars = new string[BarCount][];
-                bars[0] = new string[SlotCount];
-                for (int i = 0; i < SlotCount && i < session.Content.ActionBar.Count; i++) bars[0][i] = "a:" + session.Content.ActionBar[i];
+                // Never arranged for this style: the content's default.
+                List<string> fallback = session.Content.ActionBars.TryGetValue(style, out List<string> defaults) ? defaults : session.Content.ActionBar;
+                main = new string[SlotCount];
+                for (int i = 0; i < SlotCount && i < fallback.Count; i++) main[i] = "a:" + fallback[i];
             }
             var normalised = new string[BarCount][];
             for (int b = 0; b < BarCount; b++)
             {
+                string[] source = b == 0 && main != null ? main : b < bars.Length ? bars[b] : null;
                 normalised[b] = new string[SlotCount];
-                if (b < bars.Length && bars[b] != null)
-                    for (int s = 0; s < SlotCount && s < bars[b].Length; s++)
-                        normalised[b][s] = bars[b][s] != null && Renamed.TryGetValue(bars[b][s], out string now) ? now : bars[b][s];
+                if (source != null)
+                    for (int s = 0; s < SlotCount && s < source.Length; s++)
+                        normalised[b][s] = source[s] != null && Renamed.TryGetValue(source[s], out string now) ? now : source[s];
             }
-            return new ActionBars(session, normalised);
+            return new ActionBars(session, normalised, style);
+        }
+
+        private static T Read<T>(GameSession session, string key) where T : class
+        {
+            if (!session.ClientState.TryGetValue(key, out string json)) return null;
+            try
+            {
+                return JsonConvert.DeserializeObject<T>(json);
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>Stores the bars a change touched: the style's own main bar, or the secondary bars.</summary>
+        private void Save(int barA, int barB = -1)
+        {
+            Version++;
+            if (barA == 0 || barB == 0) _session.SetClientState(CombatOptions.MainBarKey(Style), JsonConvert.SerializeObject(_bars[0]));
+            if (barA > 0 || barB > 0)
+            {
+                // Bar 0 of the shared layout is kept as it was (an older occult main bar), so it isn't lost.
+                string[][] shared = Read<string[][]>(_session, StateKey) ?? new string[BarCount][];
+                var copy = new string[BarCount][];
+                copy[0] = shared.Length > 0 ? shared[0] : null;
+                for (int b = 1; b < BarCount; b++) copy[b] = _bars[b];
+                _session.SetClientState(StateKey, JsonConvert.SerializeObject(copy));
+            }
         }
 
         public string Get(int bar, int slot) => _bars[bar][slot];
@@ -97,8 +126,7 @@ namespace Rth.Client.Ui
         public void Set(int bar, int slot, string value)
         {
             _bars[bar][slot] = string.IsNullOrEmpty(value) ? null : value;
-            Version++;
-            _session.SetClientState(StateKey, JsonConvert.SerializeObject(_bars));
+            Save(bar);
         }
 
         /// <summary>Swaps two slots (dragging one slot onto another), across bars too.</summary>
@@ -107,8 +135,7 @@ namespace Rth.Client.Ui
             string a = _bars[barA][slotA];
             _bars[barA][slotA] = _bars[barB][slotB];
             _bars[barB][slotB] = a;
-            Version++;
-            _session.SetClientState(StateKey, JsonConvert.SerializeObject(_bars));
+            Save(barA, barB);
         }
 
         public static string Ability(string id) => "a:" + id;

@@ -32,6 +32,12 @@ namespace Rth.Shared.Combat
         public const string BarsKey = "bars";
         public const string AbilityPrefix = "a:";
 
+        /// <summary>
+        /// Each weapon style has its own main bar, which swaps in with the weapon ("bars.main.Melee",
+        /// a string[] of slots). Bar 0 of <see cref="BarsKey"/> is the occult main bar from before.
+        /// </summary>
+        public static string MainBarKey(CombatStyle style) => "bars.main." + style;
+
         /// <summary>Whether an ability pressed during the global cooldown waits and fires when it ends.</summary>
         public bool Queueing = true;
         public RevolutionMode Revolution = RevolutionMode.Manual;

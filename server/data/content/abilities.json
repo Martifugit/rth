@@ -20,8 +20,8 @@
     "type": "Builder",
     "cooldownTicks": 5,
     "range": 8,
-    "damageMin": 60,
-    "damageMax": 110,
+    "damageMin": 70,
+    "damageMax": 120,
     "phlegmGain": 8,
     "bileShift": 10
   },
@@ -34,8 +34,8 @@
     "type": "Builder",
     "cooldownTicks": 8,
     "range": 8,
-    "damageMin": 50,
-    "damageMax": 90,
+    "damageMin": 60,
+    "damageMax": 100,
     "phlegmGain": 8,
     "bileShift": -10,
     "healPercentOfDamage": 25
@@ -48,8 +48,8 @@
     "type": "Builder",
     "cooldownTicks": 15,
     "range": 8,
-    "damageMin": 40,
-    "damageMax": 70,
+    "damageMin": 50,
+    "damageMax": 80,
     "phlegmGain": 6,
     "bileTowardZero": 25
   },

@@ -15,13 +15,16 @@
 
     "combatTimeoutTicks": 10,
     "bileDecayPerTick": 1,
-    "phlegmDecayPerTick": 2,
+    "phlegmDecayPerTick": 1,
     "bloodRegenPercentPerTick": 0.5,
 
     "respawnDelayTicks": 4
   },
   "autoAttack": "bile_lash",
   "autoAttacks": { "Melee": "strike", "Occult": "bile_lash" },
+  "actionBars": {
+    "Melee": [ "hew", "let_blood", "scourge", "flagellate", "sundering_blow", "exsanguinate", "red_harvest", "crimson_vow" ]
+  },
   "actionBar": [
     "gall_spark",
     "black_draught",

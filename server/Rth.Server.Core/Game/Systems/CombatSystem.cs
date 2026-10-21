@@ -178,30 +178,43 @@ namespace Rth.Server.Game
             };
         }
 
-        /// <summary>The ability ids on the player's main action bar, left to right (what Revolution fires from).</summary>
+        /// <summary>
+        /// The ability ids on the main action bar of the style the player holds, left to right (what
+        /// Revolution fires from). Each style keeps its own main bar; one never arranged is the
+        /// content's default for that style (the occult one may still be bar 0 of the older layout).
+        /// </summary>
         public IReadOnlyList<string> MainBarAbilities(Player player)
         {
-            string? json = World.Find<ClientStateSystem>()?.Get(player, CombatOptions.BarsKey);
+            ClientStateSystem? state = World.Find<ClientStateSystem>();
+            CombatStyle style = WeaponStyle(player);
+            string? json = state?.Get(player, CombatOptions.MainBarKey(style));
+            bool legacy = false;
+            if (json == null && style == World.Content.UnarmedStyle)
+            {
+                json = state?.Get(player, CombatOptions.BarsKey);
+                legacy = json != null;
+            }
             MainBarCache cache = player.Component<MainBarCache>();
-            if (cache.Loaded && ReferenceEquals(json, cache.Json)) return cache.Abilities;
+            if (cache.Loaded && cache.Style == style && ReferenceEquals(json, cache.Json)) return cache.Abilities;
             cache.Loaded = true;
+            cache.Style = style;
             cache.Json = json;
             cache.Abilities = new List<string>();
-            if (json == null) cache.Abilities.AddRange(World.Content.ActionBar); // a new character's bar is the default
-            else
+            if (json == null)
             {
-                try
-                {
-                    string?[]?[]? bars = JsonConvert.DeserializeObject<string?[]?[]>(json);
-                    if (bars != null && bars.Length > 0 && bars[0] != null)
-                        foreach (string? slot in bars[0]!)
-                            if (slot != null && slot.StartsWith(CombatOptions.AbilityPrefix, StringComparison.Ordinal))
-                                cache.Abilities.Add(slot.Substring(CombatOptions.AbilityPrefix.Length));
-                }
-                catch (JsonException)
-                {
-                    // An unreadable layout fires nothing.
-                }
+                cache.Abilities.AddRange(World.Content.DefaultBarFor(style)); // never arranged: the default
+                return cache.Abilities;
+            }
+            try
+            {
+                string?[]? slots = legacy ? JsonConvert.DeserializeObject<string?[]?[]>(json)?.FirstOrDefault() : JsonConvert.DeserializeObject<string?[]>(json);
+                foreach (string? slot in slots ?? new string?[0])
+                    if (slot != null && slot.StartsWith(CombatOptions.AbilityPrefix, StringComparison.Ordinal))
+                        cache.Abilities.Add(slot.Substring(CombatOptions.AbilityPrefix.Length));
+            }
+            catch (JsonException)
+            {
+                // An unreadable layout fires nothing.
             }
             return cache.Abilities;
         }
@@ -209,6 +222,7 @@ namespace Rth.Server.Game
         private sealed class MainBarCache
         {
             public bool Loaded;
+            public CombatStyle Style;
             public string? Json;
             public List<string> Abilities = new List<string>();
         }
@@ -419,7 +433,7 @@ namespace Rth.Server.Game
             foreach (string id in MainBarAbilities(player))
             {
                 AbilityDef? ability = AbilityOrNull(id);
-                if (ability == null || !options.AutoCasts(ability.Type) || !World.Content.ActionBar.Contains(id)) continue;
+                if (ability == null || !options.AutoCasts(ability.Type)) continue;
                 if (IsReady(player, ability, now) && Requirements(player, ability) == null && InRange(player, target, ability.Range)) return ability;
             }
             return null;

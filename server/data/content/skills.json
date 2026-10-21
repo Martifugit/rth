@@ -103,9 +103,9 @@
     }
   ],
   "damageXp": [
-    { "style": "Melee", "skill": "melee", "xpPerDamage": 0.25 },
-    { "style": "Ranged", "skill": "ranged", "xpPerDamage": 0.25 },
-    { "style": "Occult", "skill": "occultism", "xpPerDamage": 0.25 }
+    { "style": "Melee", "skill": "melee", "xpPerDamage": 0.12 },
+    { "style": "Ranged", "skill": "ranged", "xpPerDamage": 0.12 },
+    { "style": "Occult", "skill": "occultism", "xpPerDamage": 0.12 }
   ],
   "defenceSkill": "defence",
   "combatLevel": {
