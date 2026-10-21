@@ -28,11 +28,17 @@ namespace Rth.Server.Game
 
         public void RegisterAction(string actionId, Action<Player, PlacedObject, ObjectDef> handler) => _actions[actionId] = handler;
 
-        /// <summary>Whether a flag-gated action is available to this player; tells them why not if it isn't.</summary>
+        /// <summary>Whether a flag- or level-gated action is available to this player; tells them why not if it isn't.</summary>
         public static bool Unlocked(World world, Player player, ActionDef action)
         {
-            if (action.RequiresFlag == null || world.Find<FlagSystem>()?.IsSet(player, action.RequiresFlag) == true) return true;
-            world.Tell(player, TextKind.Warning, action.LockedMessage ?? "You can't do that yet.");
+            if (action.RequiresFlag != null && world.Find<FlagSystem>()?.IsSet(player, action.RequiresFlag) != true)
+            {
+                world.Tell(player, TextKind.Warning, action.LockedMessage ?? "You can't do that yet.");
+                return false;
+            }
+            string? problem = world.Find<SkillSystem>()?.Check(player, action.Requirements, action.Label.ToLowerInvariant() + " that");
+            if (problem == null) return true;
+            world.Tell(player, TextKind.Warning, problem);
             return false;
         }
 

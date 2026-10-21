@@ -141,6 +141,8 @@ namespace Rth.Client.Editor
             BuildPineSlope(kit, map);
             BuildFunicularAndOrrery(map);
             BuildBuildings(map);
+            BuildOutdoors(map);
+            CheckInterest(map);
 
             Transform fx = WorldKit.Group(map, "Atmosphere");
             FxKit.Mist(fx, P(96f, 0.3f, 6f), new Vector2(200f, 16f), M.Mist, Color.white);
@@ -352,10 +354,12 @@ namespace Rth.Client.Editor
                 Transform pine = WorldKit.Group(g, "Pine");
                 float h = kit.Range(5f, 8f);
                 Vector3 foot = On(x, z);
-                WorldKit.Prop("Trunk", pine, foot + Vector3.up * 0.8f, new Vector3(0.3f, 1.6f, 0.3f), M.Bark);
+                pine.position = foot;
+                pine.gameObject.AddComponent<MapObject>().objectType = "pale_pine";
+                WorldKit.Box("Trunk", pine, foot + Vector3.up * 0.8f, new Vector3(0.3f, 1.6f, 0.3f), M.Bark).AddComponent<MapBlocker>();
                 for (int k = 0; k < 3; k++)
                     WorldKit.Prop("Tier", pine, foot + Vector3.up * (1.5f + k * h / 4f), new Vector3(2.4f - k * 0.7f, h / 3.5f, 2.4f - k * 0.7f), M.Pine, k * 30f);
-                Tag(pine, "mountain_pine", "Pale mountain pine, 6-9 m, tiered, on the slope above the Forum Terrace (woodcutting later).");
+                Tag(pine, "mountain_pine", "Pale mountain pine, 6-9 m, tiered, on the slope above the Forum Terrace; a woodcutting node once Woodcutting exists.");
             }
         }
 

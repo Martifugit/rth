@@ -434,6 +434,8 @@ namespace Rth.Server.Content
 
             foreach (ObjectDef o in parts.Objects)
             {
+                foreach (ActionDef a in o.Actions)
+                    CheckRequirements(a.Requirements, "Object '" + o.Id + "' action '" + a.Id + "'");
                 NodeDef? node = o.Node;
                 if (node == null) continue;
                 string where = "Object '" + o.Id + "' (node): ";

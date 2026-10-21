@@ -108,6 +108,8 @@ namespace Rth.Shared.World
         public string? RequiresFlag;
         /// <summary>Said when the flag is missing.</summary>
         public string? LockedMessage;
+        /// <summary>Skill levels it needs: a rubble pile cleared with Mining, a ford waded with Fishing.</summary>
+        public List<Rth.Shared.Skills.SkillRequirement> Requirements = new List<Rth.Shared.Skills.SkillRequirement>();
         /// <summary>Said when the action is used (signposts, notices). Needs no handler.</summary>
         public string? Message;
         /// <summary>

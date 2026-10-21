@@ -90,6 +90,16 @@ namespace Rth.Client.Editor
         private static Transform Obj(WorldKit.Shell s, int level, string name, string type, int x, int z, Material look, float h = 1f) =>
             s.Object(level, name, type, X(x), Z(z), look, h);
 
+        /// <summary>
+        /// Makes a piece of furniture interactive: an object of <paramref name="type"/> on the tile
+        /// under its middle, so keep it one or two tiles deep for there to be somewhere to stand.
+        /// </summary>
+        private static GameObject Use(GameObject thing, string type)
+        {
+            thing.AddComponent<MapObject>().objectType = type;
+            return thing;
+        }
+
         /// <summary>Something standing on the open ground over local tiles [x0,x1) x [z0,z1), blocking them.</summary>
         private static GameObject Block(Transform parent, string name, int x0, int z0, int x1, int z1, float h, Material m)
         {
@@ -113,7 +123,7 @@ namespace Rth.Client.Editor
         /// to the lamp room at the top with the lamp and a telescope; battlements and a glass lantern
         /// on the roof.
         /// </summary>
-        private static WorldKit.Shell Beacon(Transform parent, string name, int x0, int z0, float ground, Side door)
+        private static WorldKit.Shell Beacon(Transform parent, string name, int x0, int z0, float ground, Side door, string telescope)
         {
             int at = door == Side.South || door == Side.North ? x0 + 3 : z0 + 3;
             WorldKit.Shell s = Building(parent, name, x0, z0, x0 + 8, z0 + 8, ground, 4, Tower, RoofKind.Battlements, 0, Door(door, at, at + 1));
@@ -127,8 +137,8 @@ namespace Rth.Client.Editor
             Bed(s, 1, x0 + 3, z0 + 6, true);
             Crate(s, 2, x0 + 3, z0 + 1);
             Shelves(s, 2, Side.East, z0 + 1, z0 + 2, 1.8f);
-            Thing(s, 3, "Lamp", x0 + 3, z0 + 3, x0 + 5, z0 + 5, 1.6f, M.Lamp);
-            Thing(s, 3, "Telescope", x0 + 6, z0 + 1, x0 + 7, z0 + 2, 1.3f, M.Brass);
+            Use(Thing(s, 3, "Lamp", x0 + 3, z0 + 3, x0 + 5, z0 + 5, 1.6f, M.Lamp), "beacon_lamp");
+            Use(Thing(s, 3, "Telescope", x0 + 6, z0 + 1, x0 + 7, z0 + 2, 1.3f, M.Brass), telescope);
             Transform lantern = WorldKit.Group(s.Root, "Lantern");
             Vector3 top = P(x0 + 4f, ground + 4 * WorldKit.FloorHeight, z0 + 4f);
             WorldKit.Prop("Lantern", lantern, top + Vector3.up * 1.4f, new Vector3(2.2f, 2.4f, 2.2f), M.Lamp);
@@ -142,53 +152,55 @@ namespace Rth.Client.Editor
 
         private static void BuildStrand(Transform g)
         {
-            Beacon(g, "Harbour beacon", 126, 0, Strand, Side.North);
+            Beacon(g, "Harbour beacon", 126, 0, Strand, Side.North, "harbour_telescope");
 
             // The Fish Market: an open hall on posts at the head of the mole, its stalls and a cooking range.
             WorldKit.Shell market = Pavilion(g, "Fish Market", 122, 18, 138, 30, Strand, 5f, M.Quay, 5);
-            Thing(market, 0, "Stall", 125, 21, 129, 22, 1f, M.Timber);
-            Thing(market, 0, "Stall", 131, 21, 135, 22, 1f, M.Timber);
-            Thing(market, 0, "Stall", 125, 25, 129, 26, 1f, M.Timber);
-            Thing(market, 0, "Cooking range", 132, 25, 135, 27, 1.1f, M.Iron);
+            Use(Thing(market, 0, "Stall", 125, 21, 129, 22, 1f, M.Timber), "fish_stall");
+            Use(Thing(market, 0, "Stall", 131, 21, 135, 22, 1f, M.Timber), "fish_stall");
+            Use(Thing(market, 0, "Stall", 125, 25, 129, 26, 1f, M.Timber), "fish_stall");
+            Use(Thing(market, 0, "Cooking range", 132, 25, 135, 27, 1.1f, M.Iron), "meridian_range");
             Tag(market.Root, "fish_market", "The Fish Market: a slate roof on timber posts over granite flags, scrubbed stalls with ice and baskets, a cooking range at the back.");
 
             // The Plumb Line: the inn on the corner of Line Street, rooms to let upstairs.
             WorldKit.Shell inn = Building(g, "The Plumb Line", 101, 31, 117, 45, Strand, 2, Inn, RoofKind.Gable, 0,
                 Door(Side.South, 108, 109), Door(Side.West, 32, 33));
             Counter(inn, 0, 104, 40, 111, 41);
-            Hearth(inn, 0, Side.North, 113);
+            Use(inn.Hearth(0, Side.North, X(113), M.Granite, M.Fire), "plumb_hearth");
             Table(inn, 0, 104, 34, 2, 2);
             Table(inn, 0, 109, 34, 2, 2);
+            Use(Thing(inn, 0, "Cooking range", 111, 43, 113, 44, 1.1f, M.Iron), "meridian_range");
+            Obj(inn, 0, "Barometer", "plumb_barometer", 106, 32, M.Brass, 1.6f);
             Up(inn, 0, 115, 33, Side.North);
-            Bed(inn, 1, 102, 41, true);
-            Bed(inn, 1, 106, 41, true);
-            Bed(inn, 1, 102, 32, true);
+            Use(inn.Bed(1, X(102), Z(41), true, M.Timber), "inn_bed");
+            Use(inn.Bed(1, X(106), Z(41), true, M.Timber), "inn_bed");
+            Use(inn.Bed(1, X(102), Z(32), true, M.Timber), "inn_bed");
             Table(inn, 1, 108, 36, 2, 2);
             Tag(inn.Root, "plumb_line_inn", "The Plumb Line: a granite harbour inn with a painted plumb-bob sign, a long bar, a hearth (the only unmeasured fire in the city) and a barometer by the door; rooms upstairs.");
 
             WorldKit.Shell office = Building(g, "Harbourmaster's Office", 120, 33, 130, 43, Strand, 2, Harbour, RoofKind.Gable, 0, Door(Side.South, 124, 125));
             Counter(office, 0, 122, 39, 128, 40);
-            Shelves(office, 0, Side.West, 35, 37, 2f);
+            Use(office.Shelves(0, Side.West, Z(35), Z(37), M.Timber, 2f), "shipping_board");
             Up(office, 0, 129, 34, Side.North);
-            Table(office, 1, 123, 37, 3, 2);
+            Use(office.Table(1, X(123), Z(37), 3, 2, M.Timber), "harbour_log");
             Shelves(office, 1, Side.North, 121, 124);
             Tag(office.Root, "harbourmaster_office", "The Harbourmaster's Office: a square granite office, the shipping board by the door, a chart room upstairs with a map table and the log.");
 
             WorldKit.Shell chandlery = Building(g, "Chandlery", 133, 33, 143, 43, Strand, 2, Harbour, RoofKind.Gable, 0, Door(Side.South, 137, 138));
             Counter(chandlery, 0, 135, 38, 141, 39);
-            Shelves(chandlery, 0, Side.North, 134, 141);
+            Use(chandlery.Shelves(0, Side.North, X(134), X(141), M.Timber), "chandlery_shelves");
             Crate(chandlery, 0, 134, 34);
             Up(chandlery, 0, 142, 34, Side.North);
             Bed(chandlery, 1, 134, 40, false);
-            Table(chandlery, 1, 137, 40, 2, 1);
+            Use(chandlery.Table(1, X(137), Z(40), 2, 1, M.Timber), "lodger_table");
             Thing(chandlery, 1, "Chest", 134, 34, 135, 35, 0.6f, M.Timber);
             Tag(chandlery.Root, "chandlery", "The Chandlery: rope, lamp oil, tar and tools on every wall; a narrow stair to a back room someone is living in.");
 
             WorldKit.Shell loft = Building(g, "Net Loft and Boatyard", 62, 31, 76, 43, Strand, 1, Harbour, RoofKind.Gable, 0, Door(Side.South, 67, 70));
-            Thing(loft, 0, "Workbench", 64, 40, 68, 41, 0.9f, M.Timber);
-            Thing(loft, 0, "Loom", 71, 38, 74, 40, 1.6f, M.Timber);
+            Use(Thing(loft, 0, "Workbench", 64, 40, 68, 41, 0.9f, M.Timber), "net_bench");
+            Use(Thing(loft, 0, "Loom", 71, 38, 74, 40, 1.6f, M.Timber), "sail_loom");
             Shelves(loft, 0, Side.West, 33, 37, 2f);
-            Block(g, "Keel on stocks", 65, 22, 74, 25, 1.6f, M.Timber);
+            Use(Block(g, "Keel on stocks", 65, 23, 74, 25, 1.6f, M.Timber), "boatyard_keel");
             WorldKit.Prop("Ribs", g.transform, On(69.5f, 23.5f, 2.2f), new Vector3(8f, 1.4f, 2.6f), M.Bark);
             Tag(loft.Root, "net_loft", "The Net Loft and Boatyard: a long granite shed with net racks and a loom; outside on the slip a keel on stocks with its first ribs.");
 
@@ -198,17 +210,18 @@ namespace Rth.Client.Editor
             Crate(stevedores, 0, 148, 40);
             Crate(stevedores, 0, 147, 41);
             Thing(stevedores, 0, "Bales", 151, 39, 154, 41, 1.4f, M.Canvas);
-            Thing(stevedores, 0, "Ledger desk", 157, 40, 159, 41, 1f, M.Timber);
-            Thing(stevedores, 0, "Cellar hatch", 152, 33, 154, 35, 0.1f, M.Iron);
+            Use(Thing(stevedores, 0, "Ledger desk", 157, 40, 159, 41, 1f, M.Timber), "stevedore_ledger");
+            Use(Thing(stevedores, 0, "Cellar hatch", 152, 33, 154, 35, 0.1f, M.Iron), "cold_cellar");
             Ladder(stevedores, 0, 159, 36, Side.East);
             Crate(stevedores, 1, 147, 41);
             Crate(stevedores, 1, 149, 41);
-            Thing(stevedores, 1, "Hoard chest", 152, 41, 153, 42, 0.7f, M.Iron);
+            Use(Thing(stevedores, 1, "Hoard chest", 152, 41, 153, 42, 0.7f, M.Iron), "loft_hoard");
             Tag(stevedores.Root, "stevedores_hall", "The Stevedores' Hall: two open warehouse bays under one roof, hoists over the doors, cargo stacked by number; the cold cellar's hatch; a loft up a ladder.");
 
             WorldKit.Shell shrine = Building(g, "Sailors' Shrine", 163, 38, 168, 43, Strand, 1, Civic, RoofKind.Gable, 0, Door(Side.South, 165, 165));
-            Thing(shrine, 0, "Altar", 164, 41, 167, 42, 1f, M.Ashlar);
+            Use(Thing(shrine, 0, "Altar", 164, 41, 167, 42, 1f, M.Ashlar), "sailors_altar");
             Thing(shrine, 0, "Synod lamp", 165, 42, 166, 43, 1.8f, M.Lamp);
+            Use(shrine.Shelves(0, Side.West, Z(39), Z(40), M.Timber, 1.4f), "votive_ships");
             Tag(shrine.Root, "sailors_shrine", "The Sailors' Shrine: a tiny whitewashed chapel tucked between the warehouses, a plain altar under the one Synod lamp the city tolerates, votive ship models on the walls.");
         }
 
@@ -217,8 +230,8 @@ namespace Rth.Client.Editor
         private static void BuildSquare(Transform g)
         {
             WorldKit.Shell exchange = Building(g, "The Exchange", 60, 51, 74, 63, Square, 1, Civic, RoofKind.Flat, 0, Door(Side.East, 56, 57));
-            Counter(exchange, 0, 66, 54, 67, 60);
-            Shelves(exchange, 0, Side.North, 61, 64, 2f);
+            Use(exchange.Counter(0, X(66), Z(54), X(67), Z(60), M.Timber), "exchange_scales");
+            Use(exchange.Shelves(0, Side.North, X(61), X(64), M.Timber, 2f), "exchange_notices");
             Table(exchange, 0, 69, 52, 2, 2);
             Table(exchange, 0, 69, 59, 2, 2);
             Tag(exchange.Root, "the_exchange", "The Exchange: a flat-roofed ashlar hall, a long counter, weights and scales, and the notice board of tasks and errands.");
@@ -226,22 +239,22 @@ namespace Rth.Client.Editor
             WorldKit.Shell clocks = Building(g, "The Clockmaker", 105, 51, 115, 59, Square, 1, Civic, RoofKind.Gable, 0, Door(Side.North, 109, 110));
             Counter(clocks, 0, 107, 54, 113, 55);
             Shelves(clocks, 0, Side.South, 106, 113, 2f);
-            Thing(clocks, 0, "Chiming clock", 106, 57, 107, 58, 2.4f, M.Timber);
+            Use(Thing(clocks, 0, "Chiming clock", 106, 57, 107, 58, 2.4f, M.Timber), "chiming_clock");
             Tag(clocks.Root, "clockmaker", "The Clockmaker: a narrow shop full of ticking, a counter of movements under glass, and a tall chiming clock that talks.");
 
             WorldKit.Shell measures = Building(g, "Hall of Measures", 118, 51, 134, 63, Square, 2, Civic, RoofKind.Gable, 0,
                 Door(Side.West, 56, 57), Door(Side.South, 125, 126));
             Counter(measures, 0, 121, 59, 129, 60);
-            Obj(measures, 0, "Strongbox", "synod_strongbox", 122, 61, M.Iron, 0.9f);
+            Obj(measures, 0, "Strongbox", "exchequer_strongbox", 122, 61, M.Iron, 0.9f);
             Obj(measures, 0, "Standards case", "standard_measures", 126, 54, M.Glass, 1.3f);
             Up(measures, 0, 132, 52, Side.North);
             Table(measures, 1, 121, 55, 2, 2);
             Table(measures, 1, 125, 55, 2, 2);
-            Thing(measures, 1, "Vault door", 125, 62, 127, 63, 2.4f, M.Iron);
+            Use(Thing(measures, 1, "Vault door", 125, 62, 127, 63, 2.4f, M.Iron), "exchequer_vault");
             Tag(measures.Root, "hall_of_measures", "The Hall of Measures: pale ashlar, a pediment over the square, the standards case and the Exchequer's counter inside; the gallery and the vault door upstairs.");
 
             WorldKit.Shell instruments = Building(g, "The Instrument Maker", 137, 51, 149, 63, Square, 1, Civic, RoofKind.Gable, 0, Door(Side.North, 142, 143));
-            Thing(instruments, 0, "Workbench", 139, 53, 143, 54, 0.9f, M.Timber);
+            Use(Thing(instruments, 0, "Workbench", 139, 53, 143, 54, 0.9f, M.Timber), "instrument_bench");
             Shelves(instruments, 0, Side.East, 53, 60);
             Counter(instruments, 0, 139, 58, 144, 59);
             Tag(instruments.Root, "instrument_maker", "The Instrument Maker: crossbows, sights and bolts on racks, a bench of half-made locks, a counter by the door.");
@@ -257,15 +270,17 @@ namespace Rth.Client.Editor
             {
                 float a = Mathf.Lerp(-70f, 70f, h / 8f) * Mathf.Deg2Rad;
                 Vector3 p = On(Line + Mathf.Sin(a) * 9f, 57f - Mathf.Cos(a) * 7f);
-                WorldKit.Prop("Hour-stone", gnomon, p + Vector3.up * 0.3f, new Vector3(0.6f, 0.6f, 0.4f), M.Granite, -a * Mathf.Rad2Deg);
+                GameObject stone = WorldKit.Box("Hour-stone", gnomon, p + Vector3.up * 0.3f, new Vector3(0.6f, 0.6f, 0.4f), M.Granite, yaw: -a * Mathf.Rad2Deg);
+                stone.AddComponent<MapBlocker>();
+                Use(stone, "hour_stone");
             }
             Tag(gnomon, "gnomon", "Hero piece. The gnomon: a 13 m granite obelisk on the meridian with a brass tip, hour-lines in brass fanning across the paving to nine hour-stones.");
             Transform orrery = WorldKit.Armillary(g, On(84.5f, 58.5f), 1.4f, M.Brass, M.Granite, M.Brass, M.MoonGlow);
-            Block(orrery, "Little Orrery base", 84, 58, 85, 59, 0.5f, M.Granite);
+            Use(Block(orrery, "Little Orrery base", 84, 58, 85, 59, 0.5f, M.Granite), "little_orrery");
             Tag(orrery, "little_orrery", "The Little Orrery: a brass armillary on a granite drum, the moons on their rings, one of them green and cracked.");
             Transform fountain = WorldKit.Group(g, "Fountain");
-            Block(fountain, "Basin", 81, 50, 84, 53, 0.6f, M.Granite);
-            WorldKit.Prop("Water", fountain, On(82.5f, 51.5f, 0.55f), new Vector3(2.6f, 0.05f, 2.6f), M.Sea);
+            Use(Block(fountain, "Basin", 81, 51, 84, 53, 0.6f, M.Granite), "square_fountain");
+            WorldKit.Prop("Water", fountain, On(82.5f, 52f, 0.55f), new Vector3(2.6f, 0.05f, 2.6f), M.Sea);
             Tag(fountain, "square_fountain", "A plain square granite basin with a single jet: Concordian, so it is exactly one metre high.");
         }
 
@@ -299,7 +314,11 @@ namespace Rth.Client.Editor
             {
                 Ground.Patch("Garden", gardens, X(x), Z(71), X(x + 3), Z(90), M.Grass);
                 foreach (int z in new[] { 74, 85 })
-                    WorldKit.Prop("Bench", gardens, On(x + 0.4f, z + 1f, 0.25f), new Vector3(0.5f, 0.5f, 1.8f), M.Timber);
+                {
+                    GameObject bench = WorldKit.Box("Bench", gardens, On(x + 0.5f, z + 0.5f, 0.25f), new Vector3(0.5f, 0.5f, 0.9f), M.Timber);
+                    bench.AddComponent<MapBlocker>();
+                    Use(bench, "garden_bench");
+                }
             }
             Tag(gardens, "row_gardens", "The Rows' gardens: three-tile strips of lawn between the houses with a bench each, every one mown to the same height.");
         }
@@ -308,25 +327,25 @@ namespace Rth.Client.Editor
 
         private static void BuildAcademy(Transform g)
         {
-            foreach ((string name, int x) in new[] { ("Scholars' Lodgings (west)", 60), ("Scholars' Lodgings (east)", 73) })
+            foreach ((string name, int x, string papers) in new[] { ("Scholars' Lodgings (west)", 60, "lodging_books"), ("Scholars' Lodgings (east)", 73, "lodging_letters") })
             {
                 WorldKit.Shell s = Building(g, name, x, 96, x + 10, 104, Academy, 2, Scholar, RoofKind.Gable, 0, Door(Side.North, x + 4, x + 5));
                 Up(s, 0, x + 8, 97, Side.North);
                 Table(s, 0, x + 2, 99, 2, 2);
                 Shelves(s, 0, Side.West, 97, 100);
                 Bed(s, 1, x + 1, 101, false);
-                Table(s, 1, x + 4, 97, 2, 1);
-                Shelves(s, 1, Side.South, x + 1, x + 4);
+                Use(s.Table(1, X(x + 4), Z(97), 2, 1, M.Timber), papers);
+                Use(s.Shelves(1, Side.South, X(x + 1), X(x + 4), M.Timber), "library_shelves");
                 Tag(s.Root, "scholars_lodging", "Scholars' Lodgings: a small ashlar house with lit windows and books stacked on the sills; a study upstairs.");
             }
 
             WorldKit.Shell hall = Building(g, "The Academy Hall", 60, 122, 78, 136, Academy, 2, Scholar, RoofKind.Gable, 3, Door(Side.South, 68, 69));
-            Bench(hall, 0, 64, 127, 75, 128);
+            Use(hall.Bench(0, X(64), Z(127), X(75), Z(128), M.Timber), "concord_bench");
             Bench(hall, 0, 64, 129, 75, 130);
-            Thing(hall, 0, "Lectern", 68, 132, 70, 133, 1.2f, M.Timber);
+            Use(Thing(hall, 0, "Lectern", 68, 132, 70, 133, 1.2f, M.Timber), "academy_lectern");
             Up(hall, 0, 61, 123, Side.North);
             Bench(hall, 1, 64, 134, 75, 135);
-            Thing(hall, 1, "Study door", 76, 129, 78, 131, 2.4f, M.BlueTrim);
+            Use(Thing(hall, 1, "Study door", 76, 129, 78, 131, 2.4f, M.BlueTrim), "professors_study");
             Transform clock = WorldKit.Group(hall.Root, "Clock");
             WorldKit.Prop("Clock face", clock, P(69f, Academy + 6.4f, 121.85f), new Vector3(2.2f, 2.2f, 0.12f), M.Ashlar);
             WorldKit.Prop("Hands", clock, P(69f, Academy + 6.6f, 121.75f), new Vector3(0.12f, 1f, 0.05f), M.Brass);
@@ -336,35 +355,35 @@ namespace Rth.Client.Editor
             WorldKit.Shell library = Building(g, "The Library", 101, 96, 117, 110, Academy, 2, Scholar, RoofKind.Gable, 3,
                 Door(Side.North, 108, 109), Door(Side.East, 102, 103));
             Up(library, 0, 102, 100, Side.North);
-            Shelves(library, 0, Side.South, 104, 114);
-            Shelves(library, 0, Side.West, 104, 108);
+            Use(library.Shelves(0, Side.South, X(104), X(114), M.Timber), "library_shelves");
+            Use(library.Shelves(0, Side.West, Z(104), Z(108), M.Timber), "library_shelves");
             Table(library, 0, 106, 101, 2, 2);
             Table(library, 0, 110, 101, 2, 2);
-            Thing(library, 0, "Bestiary desk", 112, 105, 114, 106, 0.9f, M.Timber);
-            Shelves(library, 1, Side.North, 102, 115);
+            Use(Thing(library, 0, "Bestiary desk", 112, 105, 114, 106, 0.9f, M.Timber), "bestiary_desk");
+            Use(library.Shelves(1, Side.North, X(102), X(115), M.Timber), "library_shelves");
             Thing(library, 1, "Reading desk", 115, 100, 116, 102, 0.9f, M.Timber);
-            Shelves(library, 1, Side.East, 104, 106);
+            Use(library.Shelves(1, Side.East, Z(104), Z(106), M.Timber), "forbidden_shelf");
             Tag(library.Root, "academy_library", "The Library: walk-in shelves to the roof, a mezzanine gallery on all sides, reading tables under lamps; one shelf upstairs is roped off.");
 
             WorldKit.Shell cabinet = Building(g, "The Cabinet of Natural Philosophy", 120, 96, 134, 108, Academy, 2, Scholar, RoofKind.Gable, 0,
                 Door(Side.North, 126, 127), Door(Side.West, 101, 102));
             Obj(cabinet, 0, "Moon fragment", "moon_fragment", 127, 101, M.MoonGlow, 1.1f);
             Thing(cabinet, 0, "Moon glow", 126, 102, 129, 103, 0.3f, M.MoonGlow);
-            Thing(cabinet, 0, "Specimen case", 122, 98, 124, 99, 1.2f, M.Glass);
-            Thing(cabinet, 0, "Crag-goat", 131, 98, 132, 100, 1.4f, M.Bark);
+            Use(Thing(cabinet, 0, "Specimen case", 122, 98, 124, 99, 1.2f, M.Glass), "specimen_case");
+            Use(Thing(cabinet, 0, "Crag-goat", 131, 98, 132, 100, 1.4f, M.Bark), "crag_goat");
             Up(cabinet, 0, 133, 97, Side.North);
-            Thing(cabinet, 1, "Specimen cases", 122, 104, 126, 105, 1.2f, M.Glass);
-            Thing(cabinet, 1, "Moon-glass case", 128, 104, 131, 105, 1.4f, M.MoonGlow);
+            Use(Thing(cabinet, 1, "Specimen cases", 122, 104, 126, 105, 1.2f, M.Glass), "specimen_case");
+            Use(Thing(cabinet, 1, "Moon-glass case", 128, 104, 131, 105, 1.4f, M.MoonGlow), "moon_glass_case");
             Table(cabinet, 1, 124, 99, 2, 2);
             Tag(cabinet.Root, "cabinet", "The Cabinet of Natural Philosophy: a museum hall, the green moon fragment behind a brass rail, cases of specimens, a stuffed crag-goat; the moon-glass case upstairs.");
 
             // The Physic Garden: herb beds round paths, and its dispensary against the Crag stair.
             Transform garden = WorldKit.Group(g, "Physic Garden");
             foreach ((int x, int z) in new[] { (102, 114), (108, 114), (102, 118), (108, 118) })
-                Block(garden, "Herb bed", x, z, x + 4, z + 2, 0.4f, M.Pine);
+                Use(Block(garden, "Herb bed", x, z, x + 4, z + 2, 0.4f, M.Pine), "alpine_herb_bed");
             Tag(garden, "physic_garden", "The Physic Garden: raised stone herb beds in a grid, alpine herbs labelled in brass.");
             WorldKit.Shell dispensary = Building(g, "Dispensary", 107, 124, 114, 132, Academy, 1, Scholar, RoofKind.Gable, 0, Door(Side.South, 110, 111));
-            Thing(dispensary, 0, "Physic bench", 108, 129, 111, 130, 0.9f, M.Timber);
+            Use(Thing(dispensary, 0, "Physic bench", 108, 129, 111, 130, 0.9f, M.Timber), "physic_bench");
             Shelves(dispensary, 0, Side.North, 108, 112);
             Tag(dispensary.Root, "dispensary", "The Dispensary: jars on every shelf, a physician's bench with a balance.");
 
@@ -374,8 +393,8 @@ namespace Rth.Client.Editor
                 WorldKit.Shell o = Building(g, "Observatory " + (z == 111 ? "I" : z == 120 ? "II" : "III"), 123, z, 129, z + 6, Academy, 2, Observatory, RoofKind.Dome, 0, Door(Side.West, z + 2, z + 2));
                 Ladder(o, 0, 128, z + 2, Side.East);
                 Table(o, 0, 124, z + 4, 2, 1);
-                Thing(o, 1, "Telescope", 125, z + 3, 126, z + 4, 1.4f, M.Brass);
-                Thing(o, 1, "Star charts", 124, z + 5, 126, z + 6, 0.9f, M.Timber);
+                Use(Thing(o, 1, "Telescope", 125, z + 3, 126, z + 4, 1.4f, M.Brass), z == 130 ? "aligned_telescope" : "observatory_telescope");
+                Use(Thing(o, 1, "Star charts", 124, z + 5, 126, z + 6, 0.9f, M.Timber), "star_charts");
                 Tag(o.Root, "observatory_tower", "A little observatory tower: two storeys of ashlar under a verdigris dome with a shutter slit, a brass telescope in the dome room.");
             }
 
@@ -391,14 +410,14 @@ namespace Rth.Client.Editor
         private static void BuildForum(Transform g)
         {
             WorldKit.Shell concord = Building(g, "The Concord", 137, 98, 163, 118, Academy, 2, Copper, RoofKind.Dome, 3, Door(Side.South, 147, 152));
-            Bench(concord, 0, 143, 104, 157, 105);
-            Bench(concord, 0, 142, 107, 158, 108);
-            Bench(concord, 0, 141, 110, 159, 111);
+            Use(concord.Bench(0, X(143), Z(104), X(157), Z(105), M.Timber), "concord_bench");
+            Use(concord.Bench(0, X(142), Z(107), X(158), Z(108), M.Timber), "concord_bench");
+            Use(concord.Bench(0, X(141), Z(110), X(159), Z(111), M.Timber), "concord_bench");
             Thing(concord, 0, "Dais", 146, 114, 154, 115, 0.6f, M.Granite);
             Obj(concord, 0, "Rostrum", "concord_rostrum", 150, 113, M.Timber, 1.2f);
             Up(concord, 0, 138, 101, Side.North);
             Up(concord, 0, 162, 101, Side.North);
-            Bench(concord, 1, 141, 116, 159, 117);
+            Use(concord.Bench(1, X(141), Z(116), X(159), Z(117), M.Timber), "concord_bench");
             Bench(concord, 1, 137, 106, 138, 114);
             Bench(concord, 1, 162, 106, 163, 114);
             Transform portico = WorldKit.Colonnade(g, "Portico", new Vector2Int(X(140), Z(96)), new Vector2Int(X(160), Z(96)), 7f, M.Ashlar, M.Granite, 4, 2f);
@@ -407,9 +426,9 @@ namespace Rth.Client.Editor
 
             WorldKit.Shell lodge = Building(g, "Marksmen's Lodge", 166, 90, 178, 100, Academy, 2, Civic, RoofKind.Gable, 0, Door(Side.North, 171, 172));
             Counter(lodge, 0, 168, 93, 174, 94);
-            Shelves(lodge, 0, Side.West, 92, 97);
+            Use(lodge.Shelves(0, Side.West, Z(92), Z(97), M.Timber), "crossbow_rack");
             Up(lodge, 0, 177, 91, Side.North);
-            Table(lodge, 1, 168, 96, 2, 2);
+            Use(lodge.Table(1, X(168), Z(96), 2, 2, M.Timber), "range_ledger");
             Shelves(lodge, 1, Side.South, 167, 172);
             Tag(lodge.Root, "marksmens_lodge", "The Marksmen's Lodge: ammunition by the crate, racks of crossbows, the range office and a balcony over the lanes.");
 
@@ -418,12 +437,12 @@ namespace Rth.Client.Editor
             Tag(line.Root, "butts_firing_line", "The Butts' firing line: a long slate roof on posts over six numbered stands.");
             Transform butts = WorldKit.Group(g, "The Butts");
             for (int i = 0; i < 6; i++)
-                Block(butts, "Target", 168 + i * 4, 123, 169 + i * 4, 124, 1.6f, M.Straw);
+                Use(Block(butts, "Target", 168 + i * 4, 123, 169 + i * 4, 124, 1.6f, M.Straw), "butts_target");
             Block(butts, "Earth bank", 166, 126, 192, 128, 2.5f, M.PineFloor);
             Tag(butts, "butts_targets", "The Butts' targets: straw bosses on easels with painted rings, against a turf bank; numbered lane posts.");
             WorldKit.Shell stand = Pavilion(g, "Judges' stand", 182, 93, 188, 99, Academy, 6.5f, M.Planks, 5, 3.5f);
             Ladder(stand, 0, 184, 94, Side.South);
-            Thing(stand, 1, "Judges' bench", 183, 97, 187, 98, 0.5f, M.Timber);
+            Use(Thing(stand, 1, "Judges' bench", 183, 97, 187, 98, 0.5f, M.Timber), "judges_bench");
             Tag(stand.Root, "judges_stand", "The judges' stand: a timber platform on posts above the lanes under a shade roof, a bench for three.");
         }
 
@@ -433,18 +452,19 @@ namespace Rth.Client.Editor
         {
             WorldKit.Shell station = Building(g, "Funicular upper station", 90, 136, 104, 146, Crag, 1, Civic, RoofKind.Gable, 0, Door(Side.North, 95, 98));
             Thing(station, 0, "Funicular car", 95, 137, 99, 141, 2.6f, M.BlueTrim);
-            Thing(station, 0, "Winding wheel", 100, 142, 103, 145, 3f, M.Brass);
+            Obj(station, 0, "Funicular gate", "orrery_lift", 97, 142, M.Brass, 1.2f);
+            Use(Thing(station, 0, "Winding wheel", 100, 143, 103, 145, 3f, M.Brass), "winding_wheel");
             Tag(station.Root, "funicular_upper", "The funicular's upper station: the car arrives through the floor; the great brass winding wheel turns behind a glass wall.");
 
             WorldKit.Shell almanac = Building(g, "Almanac Office", 64, 140, 80, 154, Crag, 3, Civic, RoofKind.Gable, 0, Door(Side.South, 71, 72));
-            Counter(almanac, 0, 66, 148, 76, 149);
+            Use(almanac.Counter(0, X(66), Z(148), X(76), Z(149), M.Timber), "forecast_desk");
             Shelves(almanac, 0, Side.North, 65, 78);
             Up(almanac, 0, 79, 141, Side.North);
-            Table(almanac, 1, 67, 144, 3, 2);
+            Use(almanac.Table(1, X(67), Z(144), 3, 2, M.Timber), "forecast_desk");
             Shelves(almanac, 1, Side.North, 66, 72);
             Ladder(almanac, 1, 65, 151, Side.West);
-            Thing(almanac, 2, "Semaphore levers", 70, 147, 74, 148, 1.2f, M.Brass);
-            Thing(almanac, 2, "Telescope", 76, 150, 77, 151, 1.3f, M.Brass);
+            Use(Thing(almanac, 2, "Semaphore levers", 70, 147, 74, 148, 1.2f, M.Brass), "semaphore_levers");
+            Use(Thing(almanac, 2, "Telescope", 76, 150, 77, 151, 1.3f, M.Brass), "almanac_telescope");
             Transform mast = WorldKit.Group(almanac.Root, "Semaphore mast");
             Vector3 mastFoot = P(72f, Crag + 3 * WorldKit.FloorHeight, 147f);
             WorldKit.Prop("Mast", mast, mastFoot + Vector3.up * 6f, new Vector3(0.3f, 12f, 0.3f), M.Timber);
@@ -454,19 +474,19 @@ namespace Rth.Client.Editor
             Tag(almanac.Root, "almanac_office", "The Almanac Office: three storeys on the Crag's shoulder, the forecast desk, the semaphore room under a mast with two black arms; the almanac board outside.");
 
             WorldKit.Shell gate = Building(g, "Orrery Gate lodge", 84, 164, 94, 174, Crag, 2, Civic, RoofKind.Gable, 0, Door(Side.East, 168, 169));
-            Table(gate, 0, 86, 170, 3, 1);
+            Use(gate.Table(0, X(86), Z(170), 3, 1, M.Timber), "appointment_book");
             Bench(gate, 0, 86, 165, 89, 166);
             Up(gate, 0, 85, 165, Side.North);
-            Table(gate, 1, 88, 169, 2, 2);
+            Use(gate.Table(1, X(88), Z(169), 2, 2, M.Timber), "appointment_book");
             Shelves(gate, 1, Side.North, 90, 93);
             Transform orreryGate = WorldKit.Group(g, "The Orrery Gate");
             Block(orreryGate, "Gate pier", 94, 175, 95, 177, 4f, M.Granite);
             Block(orreryGate, "Gate pier", 99, 175, 100, 177, 4f, M.Granite);
-            Block(orreryGate, "Gates", 95, 176, 99, 177, 3.2f, M.Iron);
+            Use(Block(orreryGate, "Gates", 95, 176, 99, 177, 3.2f, M.Iron), "orrery_gate");
             Tag(orreryGate, "orrery_gate", "The Orrery Gate: two granite piers and brass-bound iron gates across the meridian at the mountain's foot, a plaque: ASCENTS BY APPOINTMENT.");
             Tag(gate.Root, "orrery_gate_lodge", "The Orrery Gate lodge: the appointment office, a bench for those who wait, a window on the Orrery.");
 
-            Beacon(g, "Knoll beacon", 130, 166, Knoll, Side.West);
+            Beacon(g, "Knoll beacon", 130, 166, Knoll, Side.West, "knoll_telescope");
         }
 
         // ------------------------------------------------------------------ Undergate Heights (+20 m)
@@ -474,10 +494,10 @@ namespace Rth.Client.Editor
         private static void BuildHeights(Transform g)
         {
             WorldKit.Shell survey = Building(g, "Survey Office", 26, 81, 38, 91, Heights, 2, Civic, RoofKind.Gable, 0, Door(Side.West, 85, 86));
-            Table(survey, 0, 29, 85, 3, 2);
-            Thing(survey, 0, "Glowing cores", 34, 88, 36, 90, 0.9f, M.MoonGlow);
+            Use(survey.Table(0, X(29), Z(85), 3, 2, M.Timber), "survey_map_table");
+            Use(Thing(survey, 0, "Glowing cores", 34, 88, 36, 90, 0.9f, M.MoonGlow), "glowing_cores");
             Up(survey, 0, 37, 82, Side.North);
-            Table(survey, 1, 29, 85, 3, 2);
+            Use(survey.Table(1, X(29), Z(85), 3, 2, M.Timber), "survey_map_table");
             Thing(survey, 1, "Core store", 27, 88, 30, 90, 1.2f, M.Timber);
             Place(g, "Survey notice", "survey_notice", 24, 82, M.Timber);
             Tag(survey.Root, "survey_office", "The Survey Office: the surveyors' plain granite office, crates of glowing cores, a map table upstairs; tents behind it.");
@@ -491,17 +511,18 @@ namespace Rth.Client.Editor
             foreach (Transform t in bore) t.position += Vector3.up * Heights;
             Block(bore, "Derrick", 13, 84, 17, 88, 1f, M.Iron);
             WorldKit.Prop("Derrick tower", bore, On(15f, 86f, 6f), new Vector3(2.4f, 12f, 2.4f), M.Timber);
-            Block(bore, "Spoil", 10, 89, 13, 91, 1.2f, M.MoonGlow);
+            Use(Block(bore, "Spoil", 10, 89, 13, 91, 1.2f, M.MoonGlow), "glowing_spoil");
+            Place(bore, "Shaft cover", "bore_nine_shaft", 15, 83, M.Iron, 0.4f);
             Place(bore, "Bore Nine sign", "bore_nine", 16, 79, M.Timber);
             Tag(bore, "bore_nine", "Bore Nine: a timber derrick over a capped shaft, inside an iron fence; heaps of spoil that glow green at night. Suspended.");
 
             WorldKit.Shell carts = Building(g, "Cart-master's Office", 8, 97, 18, 105, Heights, 1, Dwarf, RoofKind.Battlements, 0, Door(Side.East, 100, 101));
-            Shelves(carts, 0, Side.North, 9, 14, 2f);
+            Use(carts.Shelves(0, Side.North, X(9), X(14), M.Timber, 2f), "cart_timetable");
             Table(carts, 0, 11, 99, 2, 2);
             Tag(carts.Root, "cart_office", "The Cart-master's Office: a squat dwarven office, the cart-line timetable chalked on slate, a desk with a bronze bell.");
 
             WorldKit.Shell trading = Building(g, "Dwarven Trading Hall", 8, 109, 24, 123, Heights, 2, Dwarf, RoofKind.Battlements, 0, Door(Side.East, 115, 116));
-            Counter(trading, 0, 13, 111, 14, 120);
+            Use(trading.Counter(0, X(13), Z(111), X(14), Z(120), M.Timber), "dwarf_counter");
             Shelves(trading, 0, Side.West, 110, 121);
             Up(trading, 0, 22, 110, Side.North);
             Table(trading, 1, 12, 114, 3, 2);
@@ -509,17 +530,18 @@ namespace Rth.Client.Editor
             Tag(trading.Root, "dwarf_trading_hall", "The Dwarven Trading Hall: dark stone banded in bronze, battlemented, built to keep out more than weather; a long counter, a counting room upstairs.");
 
             WorldKit.Shell smeltery = Building(g, "Smeltery", 27, 97, 43, 111, Heights, 1, Dwarf, RoofKind.Gable, 0, Door(Side.South, 33, 36), Door(Side.North, 33, 34));
-            Thing(smeltery, 0, "Furnace", 29, 106, 32, 110, 3f, M.Forge);
-            Thing(smeltery, 0, "Anvil", 36, 103, 37, 104, 0.8f, M.Iron);
-            Thing(smeltery, 0, "Ore cart", 39, 99, 41, 100, 1f, M.Iron);
+            Thing(smeltery, 0, "Furnace", 29, 108, 32, 110, 3f, M.Forge);
+            Use(Thing(smeltery, 0, "Furnace mouth", 29, 107, 32, 108, 1.2f, M.Forge), "smeltery_furnace");
+            Use(Thing(smeltery, 0, "Anvil", 36, 103, 37, 104, 0.8f, M.Iron), "smeltery_anvil");
+            Use(Thing(smeltery, 0, "Ore cart", 39, 99, 41, 100, 1f, M.Iron), "ore_cart");
             Transform stack = WorldKit.Group(smeltery.Root, "Chimney");
             WorldKit.Prop("Stack", stack, P(30.5f, Heights + 9f, 108f), new Vector3(1.6f, 10f, 1.6f), M.DwarfStone);
             Tag(smeltery.Root, "smeltery", "The Smeltery: a dwarven forge-hall, a furnace with a tall stack, anvils, ore carts rolling in on the rails.");
 
             WorldKit.Shell undergate = Building(g, "The Undergate", 20, 128, 34, 140, Heights, 1, Dwarf, RoofKind.Battlements, 0, Door(Side.South, 25, 28));
-            Thing(undergate, 0, "Sealed portal", 24, 138, 30, 139, 3.5f, M.Bronze);
-            Thing(undergate, 0, "Stockroom chest", 21, 130, 22, 131, 0.9f, M.Bronze);
-            Thing(undergate, 0, "Ore cart", 31, 132, 32, 134, 1f, M.Iron);
+            Use(Thing(undergate, 0, "Sealed portal", 24, 138, 30, 139, 3.5f, M.Bronze), "undergate_door");
+            Use(Thing(undergate, 0, "Stockroom chest", 21, 130, 22, 131, 0.9f, M.Bronze), "dwarf_stockroom");
+            Use(Thing(undergate, 0, "Ore cart", 31, 132, 32, 134, 1f, M.Iron), "ore_cart");
             Transform portal = WorldKit.Group(undergate.Root, "Mountain door");
             WorldKit.Prop("Door face", portal, P(27f, Heights + 7f, 140.3f), new Vector3(12f, 14f, 0.6f), M.DwarfStone);
             WorldKit.Prop("Doors", portal, P(27f, Heights + 4.5f, 139.9f), new Vector3(5f, 9f, 0.3f), M.Bronze);
@@ -534,18 +556,18 @@ namespace Rth.Client.Editor
         private static void BuildPassGate(Transform g)
         {
             WorldKit.Shell yard = Building(g, "Cartwrights' Yard", 152, 50, 166, 62, Square, 1, Road, RoofKind.Gable, 0, Door(Side.North, 157, 160));
-            Thing(yard, 0, "Wheels", 154, 52, 156, 53, 1.4f, M.Timber);
+            Use(Thing(yard, 0, "Wheels", 154, 52, 156, 53, 1.4f, M.Timber), "cart_wheels");
             Thing(yard, 0, "Axle rack", 159, 52, 164, 53, 1.2f, M.Timber);
             Thing(yard, 0, "Cart", 156, 56, 160, 58, 1.2f, M.Bark);
             Tag(yard.Root, "cartwrights_yard", "The Cartwrights' Yard: a timber-trimmed shed, wheels and axles stacked, a cart on blocks.");
 
-            Beacon(g, "Pass beacon", 170, 52, Square, Side.North);
+            Beacon(g, "Pass beacon", 170, 52, Square, Side.North, "pass_telescope");
 
             WorldKit.Shell toll = Building(g, "Toll-house", 181, 54, 191, 62, Square, 2, Road, RoofKind.Gable, 0, Door(Side.North, 185, 186));
             Table(toll, 0, 183, 56, 2, 1);
             Thing(toll, 0, "Toll box", 188, 59, 189, 60, 1f, M.Iron);
             Ladder(toll, 0, 190, 56, Side.East);
-            Thing(toll, 1, "Bell", 184, 58, 186, 60, 1.5f, M.Bronze);
+            Use(Thing(toll, 1, "Bell", 184, 58, 186, 60, 1.5f, M.Bronze), "toll_bell");
             Bench(toll, 1, 182, 55, 185, 56);
             Place(g, "Toll board", "concord_toll_board", 183, 63, M.Timber);
             WorldKit.Beam("Toll bar", g, P(186.5f, Square + 1.1f, 63.5f), P(186.5f, Square + 5f, 69f), 0.25f, 0.25f, M.BlueTrim);
@@ -555,7 +577,8 @@ namespace Rth.Client.Editor
                 Door(Side.South, 158, 159), Door(Side.West, 79, 80));
             Hearth(wayhouse, 0, Side.North, 153);
             Table(wayhouse, 0, 154, 77, 2, 2);
-            Counter(wayhouse, 0, 158, 83, 162, 84);
+            Use(wayhouse.Counter(0, X(158), Z(83), X(162), Z(84), M.Timber), "wayhouse_register");
+            Obj(wayhouse, 0, "Carters' chest", "wayhouse_chest", 152, 76, M.Iron, 0.8f);
             Thing(wayhouse, 0, "Stall", 162, 76, 164, 79, 1.4f, M.Timber);
             Up(wayhouse, 0, 165, 75, Side.North);
             Bed(wayhouse, 1, 152, 85, true);
@@ -565,11 +588,11 @@ namespace Rth.Client.Editor
             Tag(wayhouse.Root, "wayhouse", "The Wayhouse and Stables: a long travellers' inn under the Forum's cliff, a hearth, horse stalls at one end, rooms upstairs.");
 
             WorldKit.Shell guild = Building(g, "Surveyors' Guild", 170, 74, 182, 84, Square, 2, Civic, RoofKind.Gable, 0, Door(Side.South, 175, 176));
-            Table(guild, 0, 173, 78, 4, 3);
+            Use(guild.Table(0, X(173), Z(78), 4, 2, M.Timber), "guild_world_map");
             Shelves(guild, 0, Side.North, 171, 178);
             Up(guild, 0, 181, 75, Side.North);
             Table(guild, 1, 173, 79, 3, 2);
-            Thing(guild, 1, "Diary desk", 171, 82, 173, 83, 0.9f, M.Timber);
+            Use(Thing(guild, 1, "Diary desk", 171, 82, 173, 83, 0.9f, M.Timber), "diary_desk");
             Tag(guild.Root, "surveyors_guild", "The Surveyors' Guild: the world map on a great table under a skylight, drawers of charts, the achievement diary desk upstairs.");
         }
     }

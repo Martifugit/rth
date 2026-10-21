@@ -261,6 +261,23 @@ public class SkillTests
     }
 
     [Fact]
+    public void LevelGatedActionsSayWhatTheyNeed()
+    {
+        var rubble = new PlacedObject { Type = "rubble", X = 6, Y = 6 };
+        var fx = new WorldFixture(Maps.Open(40, 40, Spawn), objects: new[] { rubble });
+        FakeConnection client = fx.Login("Alice");
+
+        Act(client, rubble, "clear");
+        fx.Ticks(1);
+        Assert.Equal("You need butchering level 5 to clear that.", client.Texts.Last());
+
+        fx.World.Get<SkillSystem>().AddXp(fx.Player("Alice"), "butchering", 1000);
+        Act(client, rubble, "clear");
+        fx.Ticks(1);
+        Assert.Equal("You clear the rubble.", client.Texts.Last());
+    }
+
+    [Fact]
     public void WalkingAwayStopsWork()
     {
         var fx = World();
