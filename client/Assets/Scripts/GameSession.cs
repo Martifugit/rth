@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Rth.Shared.Combat;
@@ -155,6 +155,7 @@ namespace Rth.Client
             ui.cameraRig = cameraRig;
             ui.regions = regions;
             world.ItemLookup = Item;
+            world.AbilityLookup = Ability;
             _name = PlayerPrefs.GetString(NamePref, "");
             _host = PlayerPrefs.GetString(HostPref, "127.0.0.1");
             _clickMarker = CreateClickMarker();

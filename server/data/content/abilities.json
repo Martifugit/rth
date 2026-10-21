@@ -1,6 +1,7 @@
 [
   {
     "id": "bile_lash",
+    "animation": "magic_attack_1h",
     "name": "Bile Lash",
     "icon": "lash",
     "description": "The occultist's idle strike: a flick of humour at whatever you're facing.",
@@ -12,6 +13,7 @@
   },
   {
     "id": "gall_spark",
+    "animation": "magic_attack_1h",
     "name": "Gall Spark",
     "icon": "spark",
     "description": "A spit of yellow bile, set alight. Pushes your bile towards the hot pole.",
@@ -25,6 +27,7 @@
   },
   {
     "id": "black_draught",
+    "animation": "magic_attack_1h",
     "name": "Black Draught",
     "icon": "draught",
     "description": "Draw black bile out of the wound and into yourself, healing a little of what you deal.",
@@ -52,6 +55,7 @@
   },
   {
     "id": "bitter_salt",
+    "animation": "magic_attack_1h",
     "name": "Bitter Salt",
     "icon": "salts",
     "description": "A bitter cut that only bites if your bile already runs yellow.",
@@ -67,6 +71,7 @@
   },
   {
     "id": "choleric_flare",
+    "animation": "magic_attack_2h",
     "name": "Choleric Flare",
     "icon": "flare",
     "description": "Let the heat out all at once. Needs a choleric temper.",
@@ -83,6 +88,7 @@
   },
   {
     "id": "melancholy_shroud",
+    "animation": "magic_attack_2h",
     "name": "Melancholy Shroud",
     "icon": "shroud",
     "description": "Wrap yourself in black bile: a cold strike, then 30% less damage taken for six seconds.",
@@ -102,6 +108,7 @@
   },
   {
     "id": "vitriol_rain",
+    "animation": "magic_attack_2h",
     "name": "Vitriol Rain",
     "icon": "rain",
     "description": "The old war-craft of the fen houses, in miniature. Needs your bile at +60 or hotter.",
@@ -118,6 +125,7 @@
   },
   {
     "id": "black_sun",
+    "animation": "magic_attack_2h",
     "name": "Black Sun",
     "icon": "blacksun",
     "description": "Melancholy made total. Strikes, restores a fifth of your blood, and wards you. Needs bile at -60 or colder.",

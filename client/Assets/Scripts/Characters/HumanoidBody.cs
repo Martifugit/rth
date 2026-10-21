@@ -179,7 +179,7 @@ namespace Rth.Client.Characters
 
         // ---- animating ----
 
-        public override void PlayAction()
+        public override void PlayAction(string animation)
         {
             _actionTime = Time.time;
             _castRight = Random.value < 0.75f;   // mostly the right hand

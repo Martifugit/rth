@@ -21,8 +21,8 @@ namespace Rth.Client.Characters
 
         /// <summary>Called every frame. <paramref name="speed"/> is in tiles per second.</summary>
         public abstract void Animate(float speed, bool running, float deltaTime);
-        /// <summary>It attacked or used an ability.</summary>
-        public abstract void PlayAction();
+        /// <summary>It attacked or used an ability; <paramref name="animation"/> names the clip or role.</summary>
+        public abstract void PlayAction(string animation);
         /// <summary>It was hit.</summary>
         public abstract void PlayHit();
         /// <summary>It died; the server removes or respawns it shortly after.</summary>

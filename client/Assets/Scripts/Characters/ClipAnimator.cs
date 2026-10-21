@@ -73,6 +73,15 @@ namespace Rth.Client.Characters
         private float _move, _runBlend, _combat;
         private float _combatWeight;
 
+        // Domain reload is off in the Editor, so statics outlive Play sessions: start each one fresh,
+        // so edits to animations.json and new clip files show the next time Play is pressed.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetCaches()
+        {
+            Clips.Clear();
+            _tuning = null;
+        }
+
         /// <summary>The clip for this name (following its tuning's "clip"), or null if there isn't one.</summary>
         public static AnimationClip Clip(string name)
         {

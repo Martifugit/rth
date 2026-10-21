@@ -87,10 +87,10 @@ namespace Rth.Client
 
         public void FaceTowards(Vector3 point) => Face(point - transform.position);
 
-        /// <summary>It attacked or used an ability.</summary>
-        public void PlayAction()
+        /// <summary>It attacked or used an ability; <paramref name="animation"/> is the clip or role to play.</summary>
+        public void PlayAction(string animation)
         {
-            if (_body != null) _body.PlayAction();
+            if (_body != null) _body.PlayAction(animation);
         }
 
         /// <summary>It took a hit.</summary>

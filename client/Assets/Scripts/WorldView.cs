@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Rth.Shared.Combat;
 using Rth.Shared.Items;
 using Rth.Shared.Net;
 using UnityEngine;
@@ -28,6 +29,7 @@ namespace Rth.Client
 
         /// <summary>Looks up item definitions (set by the session from the server's content).</summary>
         public System.Func<string, ItemDef> ItemLookup { get; set; } = _ => null;
+        public System.Func<string, AbilityDef> AbilityLookup { get; set; } = _ => null;
 
         public GroundItemView FindGroundItem(int id) => _groundItems.TryGetValue(id, out GroundItemView v) ? v : null;
 
@@ -121,7 +123,9 @@ namespace Rth.Client
             if (source == null || target == null) return;
             source.FaceTowards(target.transform.position);
             source.LastHitTime = Time.time;
-            source.PlayAction();
+            // The ability says how it looks (NPC attacks and unknown ones use the default).
+            string animation = AbilityLookup(action.AbilityId)?.Animation;
+            source.PlayAction(string.IsNullOrEmpty(animation) ? "cast" : animation);
 
             // Melee needs no projectile; anything thrown from further off gets one.
             if (Vector3.Distance(source.transform.position, target.transform.position) < 1.6f) return;

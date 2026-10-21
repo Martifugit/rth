@@ -46,6 +46,11 @@ namespace Rth.Shared.Combat
         public string Description = "";
         /// <summary>Icon id (the client's icon library); empty means one picked by the bile pole.</summary>
         public string Icon = "";
+        /// <summary>
+        /// The character animation played when it's used: a clip or role in the client's
+        /// Resources/Characters/animations.json. Empty means the "cast" role.
+        /// </summary>
+        public string Animation = "";
         public AbilityType Type;
         public CombatStyle Style = CombatStyle.Occult;
 

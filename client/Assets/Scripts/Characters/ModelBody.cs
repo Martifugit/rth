@@ -49,7 +49,10 @@ namespace Rth.Client.Characters
         public override void Animate(float speed, bool running, float deltaTime) =>
             _animator?.Update(speed, running, InCombat, deltaTime);
 
-        public override void PlayAction() => _animator?.Play("cast");
+        public override void PlayAction(string animation)
+        {
+            if (_animator != null && !_animator.Play(animation)) _animator.Play("cast");
+        }
 
         public override void PlayHit()
         {

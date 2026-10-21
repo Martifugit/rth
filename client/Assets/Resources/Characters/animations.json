@@ -18,8 +18,8 @@
     "use": "Role: walking within 8 s of attacking or being hit. No clip yet (suggested: Mixamo Sword And Shield Walk); the relaxed walk is used."
   },
   "cast": {
-    "weight": 0.75, "upperBody": true, "speed": 1.2,
-    "use": "Role: attacks and abilities (Occultism). No clip yet."
+    "clip": "magic_attack_1h", "upperBody": true, "speed": 1.3,
+    "use": "Role: the default for an ability or attack that names no animation of its own."
   },
   "hit": {
     "weight": 0.35, "upperBody": true, "end": 0.5,
@@ -28,6 +28,16 @@
   "death": {
     "source": "Mixamo: Standing React Death Backward",
     "use": "Dying, whatever is equipped (holds its last frame). The default death."
+  },
+
+  // ---- Occultism: abilities and spells name these in their "animation" ----
+  "magic_attack_1h": {
+    "source": "Mixamo: Standing 1H Magic Attack 01", "upperBody": true, "speed": 1.3,
+    "use": "Low-tier casts: the auto-attack (until spellbooks give each spell its own) and builders."
+  },
+  "magic_attack_2h": {
+    "source": "Mixamo: Standing 2H Magic Attack 03", "upperBody": true, "speed": 2.0,
+    "use": "High-tier casts: spenders and ultimates; later, higher-level spells."
   },
 
   // ---- Deaths kept for later (per weapon style or for variety) ----

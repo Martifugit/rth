@@ -77,8 +77,35 @@ live in `server/data/content/` and hot-reload, so they're meant to be tuned by p
 - **Ranged: the Rationalists (phlegm).** Calibration resource. Ammo comes from an ammo-crafting
   skill (a reflavoured fletching or engineering), with moon-touched materials at higher tiers,
   following RS ammo progression.
-- **Occultism: the occult houses (bile).** Moves the bile axis. Casting costs phlegm and bile,
-  not items.
+- **Occultism: the occult houses (bile).** Moves the bile axis. Abilities cost phlegm and bile,
+  not items. On top of the abilities sit **spellbooks** (below), whose spells do burn reagents.
+
+### Spellbooks (Occultism)
+
+Works like magic in RuneScape 3: the ability bar and the spellbook are separate layers.
+
+- **An active spell is required.** An occultist chooses one spell from a spellbook as their
+  active spell, and their auto-attacks cast it. Without one, occultism has nothing to attack with.
+- **Spells burn reagents.** Each cast of the active spell uses reagents (the rune equivalent),
+  made with Distillation. Abilities never do.
+- **Tier matches the spell.** Low-level spells use reagents from early Distillation sites;
+  higher-level spells need reagents from sites like the Scald, the craters or the deep, so
+  occultists have a reason to travel.
+- **Polarity follows geography.** A yellow-leaning spell uses a yellow-leaning reagent (from
+  fire-and-ash sites like the Scald); a black-leaning one uses a black-leaning reagent (flooded
+  fens and caves). Casting across both poles means reagents from both kinds of place; sticking
+  to one pole means training at fewer places.
+- **One spellbook per house.** Each occult house in the fens could own a spellbook built on its
+  own philosophy of finishing the flesh: one favouring explosive yellow spells, one corrosive
+  black, one hybrids that straddle the axis.
+- **Sandbox freedom.** No house locks you out: learn from any spellbook, swap between them, mix
+  with other combat styles. Corvin Sallow teaches the first spells; the rest come from finding
+  house contacts.
+- **How spells look.** Each spell (like each ability) names its character animation; for now
+  the auto-attack uses a one-handed cast and spenders and ultimates a two-handed one (see
+  `client/Assets/Resources/Characters/animations.json`).
+- **Not built yet.** Today the auto-attack is the fixed `bile_lash` ability. The first spellbook
+  replaces it: active spell selection, reagent costs per cast, and the spell's animation.
 
 ## Skills
 
@@ -134,22 +161,51 @@ The utility skill behind **breath**. It is to breath what Agility is to run ener
 ### Ammo crafting (fletching or engineering analogue)
 Makes Rationalist ammunition; moon-touched materials at higher tiers.
 
-### Distillation (runecrafting analogue)
-Makes salts and tinctures from butchering byproducts and Dreaming fragments. **Decided:** occult
-abilities do not consume them, so what they are for (potions that push bile, Medicine inputs,
-ritual offerings) is open.
+### Distillation: reagent rituals (part of the Occultism skill, not a skill of its own)
+Distillation is how occultists make the **reagents** that spellbook spells burn (see Spellbooks
+above). It is not a separate skill: like rituals in RuneScape 3's Necromancy, it is part of the
+**Occultism** skill and trains it. Occult abilities never consume reagents. There is no player
+economy to buy from, so every occultist makes their own.
 
-**Proposal: how Distillation works.**
-- **Two reagent families:** *choleric salts* for + pole spells and *melancholic tinctures* for
-  − pole spells. Some spells need both; those are the hardest and most expensive casts.
-- **Inputs:** butchering byproducts (gall, glands, rendered fat) as the base, like rune essence.
-  Dreaming fragments as the rare catalyst for high tiers. **Vitriol** from springs in the Scald
-  for the top tiers. (Oil of vitriol is a real historical alchemy term, and it ties the skill to
-  the occultists' own war crime.)
-- **Places (the runecrafting trip):** hidden stills. Low tiers sit under the counters of city
-  apothecaries (Corvin's shop could be the first), mid tiers in fen houses and sea caves the
-  Synod can't hold, and the top tier at the edge of the Scald. Gaining access to each still
-  could be a small quest.
+It plays like **Necromancy rituals** rather than runecrafting: you set a ritual up at a place,
+it runs on its own while you tend it, and it turns raw input into reagents. Names below are
+placeholders.
+
+**Today's prototype differs:** Distillation exists as its own skill in `skills.json`, trained by
+recipes at Corvin's still (semi-AFK processing), and is referenced by three recipes, the
+Dreamless quest reward, an achievement reward and a pair of gloves' level requirement. Folding it
+into Occultism is a content change (those references, plus what happens to Distillation XP
+already in saves).
+
+- **Gather gall.** Gall is the raw input: a residue of bile found in fen pools, carcasses and
+  certain plants. It doesn't stack, so every piece takes an inventory slot; filling up takes
+  real time, which sets the natural limit per trip.
+- **Ritual sites.** Places where bile wells up from the ground are the sites. You prepare the
+  ritual there and it renders your gall into reagents over its duration, the way a Necromancy
+  ritual turns its inputs into its outputs.
+- **Carry the reagents.** The output is compact and stackable, so you hold many casts' worth.
+- **Two reagent families** remain an option: *choleric salts* for + pole spells and
+  *melancholic tinctures* for − pole spells, with the hardest spells needing both. Dreaming
+  fragments as a rare catalyst and Scald **vitriol** for the top tiers also still fit.
+
+**Progression is geography.** Each site gives a different reagent. Your level decides which
+sites you can use and how many reagents each gall yields, and higher tiers are farther away and
+more dangerous. Roughly six tiers, several sites per tier across the whole basin so players
+choose where to train (no skill is locked to one place):
+
+1. Fen seeps in the occult north-east (starter)
+2. Cellar sumps under city apothecaries (Corvin's shop could be the first)
+3. Sea cave pools
+4. The Scald, where the old vitriol still burns
+5. Crater basins at moonfall sites
+6. The deep
+
+Houses could guard certain sites, so a high-tier site can be a quest and not just a level check.
+
+**Links to other skills.**
+- *Butchering:* occult-tier and Scald carcasses can yield several gall at once.
+- *Dreaming:* could unlock hidden sites reached through memory orbs, or make a batch worth more.
+- *Medicine:* stays separate. Its potions shift your bile before a fight; reagents fuel spells.
 
 ## Death
 
@@ -158,8 +214,13 @@ screen and comments on how the player's humour balance is changing.
 
 ## Open questions
 
-- Distillation: confirm or revise the proposal above.
-- What Distillation's salts and tinctures are used for, now that abilities don't burn them.
+- Distillation: the ritual mechanic itself (setup, duration, what you do while it runs), and
+  how it differs from Religion, which is also described as Necromancy-ritual-like.
+- Distillation: when to fold today's separate Distillation skill into Occultism, and whether
+  existing Distillation XP carries over.
+- Distillation: is gall one flat item at every tier, or does the raw input vary by site tier
+  (like RuneScape's rune essence versus pure essence)?
+- Spellbooks: the first spellbook's spells, levels and reagent costs.
 - Calibration: how exactly it builds and decays.
 - Religion: the ritual mechanic itself, and how many verses melee can hold.
 - Final names for skills, resources and places.

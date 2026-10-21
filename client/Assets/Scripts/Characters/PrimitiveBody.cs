@@ -69,7 +69,7 @@ namespace Rth.Client.Characters
             face.transform.SetParent(_shape, true);
         }
 
-        public override void PlayAction() => _actionTime = Time.time;
+        public override void PlayAction(string animation) => _actionTime = Time.time;
         public override void PlayHit() => _hitTime = Time.time;
         public override void PlayDeath() => _deathTime = Time.time;
 
