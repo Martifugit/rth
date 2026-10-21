@@ -35,7 +35,11 @@ namespace Rth.Server.Game
                 case "give" when args.Length >= 2:
                     int count = args.Length >= 3 && int.TryParse(args[2], out int n) ? n : 1;
                     if (World.Content.Item(args[1]) == null) Say(player, "No item '" + args[1] + "'.");
-                    else Say(player, "Gave " + World.Get<ItemSystem>().Give(player, args[1], count) + " " + args[1] + ".");
+                    else
+                    {
+                        int left = World.Get<ItemSystem>().Give(player, args[1], count); // what didn't fit
+                        Say(player, "Gave " + (count - left) + " " + args[1] + (left > 0 ? " (" + left + " didn't fit)." : "."));
+                    }
                     break;
                 case "devotion":
                     World.Get<ReligionSystem>().Restore(player, player.MaxDevotion);
