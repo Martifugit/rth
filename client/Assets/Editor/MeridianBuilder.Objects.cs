@@ -39,6 +39,12 @@ namespace Rth.Client.Editor
                 Spot(g, "Shoal", "meridian_sea_spot", x, z);
             Spot(g, "Pool", "cut_pool", 47, 14);
             Tag(g, "fishing_spot", "A fishing spot: a ripple on the water at the quay's edge, a few gulls. Becomes a gathering node with Fishing.");
+
+            // Berth posts along the quay's edge, the west quay's too, and a milestone where the road east begins.
+            foreach (int x in new[] { 14, 28, 66, 80, 94, 108, 120, 142, 156 })
+                Place(g, "Berth post", "berth_post", x, Sea, M.Granite, 0.9f);
+            Place(g, "Milestone", "pass_milestone", 180, 30, M.Granite, 1.1f);
+            Tag(g, "berth_post", "A squat granite berth post with an iron mooring ring and a painted number.");
         }
 
         /// <summary>A fishing spot on the quay's edge: a low, pale ripple marker standing on the tile.</summary>
@@ -65,6 +71,9 @@ namespace Rth.Client.Editor
             Transform twin = WorldKit.Armillary(g, On(137.5f, 139.5f), 0.6f, M.Brass, M.Granite, M.Brass, M.MoonGlow);
             Use(Block(twin, "Post", 137, 139, 138, 140, 1f, M.Granite), "orrery_twin");
             Place(g, "Perch", "pass_perch", 149, 152, M.Rock, 0.5f);
+            Place(g, "View point", "walk_view_gorge", 60, 166, M.Brass, 1.1f);
+            Place(g, "Waymark", "crag_waymark", 113, 148, M.Granite, 1.4f);
+            Place(g, "Cairn", "knoll_cairn", 112, 174, M.Granite, 1.2f);
             Tag(g, "observers_walk", "The Observers' Walk: a paved belvedere on the Crag's lip, brass view plates engraved with the skyline, a granite bench, a pocket orrery on a post.");
         }
 
@@ -92,6 +101,11 @@ namespace Rth.Client.Editor
         /// </summary>
         private static void BuildShortcuts(Transform g)
         {
+            // The Span's brass plaques, one at each end, and the Butts' scoreboard: things to read on the way.
+            Place(g, "Span plaque", "span_plaque", 60, 107, M.Brass, 1.1f);
+            Place(g, "Span plaque", "span_plaque", 47, 107, M.Brass, 1.1f);
+            Place(g, "Scoreboard", "butts_scoreboard", 184, 101, M.Slate, 2f);
+
             // Rubble from the Ore Road's first bend (+5) up past the last leg to the Heights (+20).
             Transform rubble = WorldKit.Group(g, "Ore Road rubble");
             Shortcut(rubble, "Rubble", "ore_rubble", (46, 71), (46, 80), (46, 79), (46, 70), M.Rock);

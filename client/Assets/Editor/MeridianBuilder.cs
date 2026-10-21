@@ -312,7 +312,7 @@ namespace Rth.Client.Editor
             Tag(line, "meridian_line", "The meridian: a brass strip 18 cm wide set in the paving, with a cross-mark every 8 m, dead straight from the quay to the Orrery Gate, up every stair. Modular strip.");
 
             // Clipped trees in stone tubs along the Parallel: at the Rows' garden gaps, then every 8 m out along the Pass Road.
-            var tubs = new List<int> { 69, 80, 111, 122 };
+            var tubs = new List<int> { 69, 80, 111, 122, 130, 138, 146 };
             for (int x = 154; x < 182; x += 8) tubs.Add(x);
             foreach (int x in tubs)
             {
@@ -320,7 +320,9 @@ namespace Rth.Client.Editor
                 {
                     Transform t = WorldKit.Group(g, "Tub tree");
                     Vector3 foot = On(x + 0.5f, z + 0.5f);
-                    WorldKit.Box("Tub", t, foot + Vector3.up * 0.35f, new Vector3(0.9f, 0.7f, 0.9f), M.Granite).AddComponent<MapBlocker>();
+                    GameObject tub = WorldKit.Box("Tub", t, foot + Vector3.up * 0.35f, new Vector3(0.9f, 0.7f, 0.9f), M.Granite);
+                    tub.AddComponent<MapBlocker>();
+                    tub.AddComponent<MapObject>().objectType = "tub_tree";
                     WorldKit.Prop("Stem", t, foot + Vector3.up * 1.3f, new Vector3(0.12f, 1.4f, 0.12f), M.Bark);
                     WorldKit.Prop("Clipped crown", t, foot + Vector3.up * 2.4f, new Vector3(1.3f, 1.3f, 1.3f), M.Pine, 45f);
                     Tag(t, "tub_tree", "A clipped evergreen ball on a straight stem, in a square granite tub. Lines the Parallel at 8 m intervals.");

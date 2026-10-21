@@ -133,6 +133,7 @@ namespace Rth.Client.Editor
             Crate(s, 0, x0 + 5, z0 + 1);
             Crate(s, 0, x0 + 6, z0 + 1);
             Thing(s, 0, "Oil casks", x0 + 5, z0 + 5, x0 + 7, z0 + 6, 1f, M.Timber);
+            Use(s.Shelves(0, Side.East, Z(z0 + 3), Z(z0 + 4), M.Timber, 1.8f), "beacon_log");
             Table(s, 1, x0 + 3, z0 + 3, 2, 2);
             Bed(s, 1, x0 + 3, z0 + 6, true);
             Crate(s, 2, x0 + 3, z0 + 1);
@@ -332,7 +333,7 @@ namespace Rth.Client.Editor
                 WorldKit.Shell s = Building(g, name, x, 96, x + 10, 104, Academy, 2, Scholar, RoofKind.Gable, 0, Door(Side.North, x + 4, x + 5));
                 Up(s, 0, x + 8, 97, Side.North);
                 Table(s, 0, x + 2, 99, 2, 2);
-                Shelves(s, 0, Side.West, 97, 100);
+                Use(s.Shelves(0, Side.West, Z(97), Z(100), M.Timber), "library_shelves");
                 Bed(s, 1, x + 1, 101, false);
                 Use(s.Table(1, X(x + 4), Z(97), 2, 1, M.Timber), papers);
                 Use(s.Shelves(1, Side.South, X(x + 1), X(x + 4), M.Timber), "library_shelves");
@@ -392,7 +393,7 @@ namespace Rth.Client.Editor
             {
                 WorldKit.Shell o = Building(g, "Observatory " + (z == 111 ? "I" : z == 120 ? "II" : "III"), 123, z, 129, z + 6, Academy, 2, Observatory, RoofKind.Dome, 0, Door(Side.West, z + 2, z + 2));
                 Ladder(o, 0, 128, z + 2, Side.East);
-                Table(o, 0, 124, z + 4, 2, 1);
+                Use(o.Table(0, X(124), Z(z + 4), 2, 1, M.Timber), "star_charts");
                 Use(Thing(o, 1, "Telescope", 125, z + 3, 126, z + 4, 1.4f, M.Brass), z == 130 ? "aligned_telescope" : "observatory_telescope");
                 Use(Thing(o, 1, "Star charts", 124, z + 5, 126, z + 6, 0.9f, M.Timber), "star_charts");
                 Tag(o.Root, "observatory_tower", "A little observatory tower: two storeys of ashlar under a verdigris dome with a shutter slit, a brass telescope in the dome room.");

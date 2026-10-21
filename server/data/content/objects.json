@@ -1134,5 +1134,77 @@
     "actions": [
       {"id": "chop", "label": "Chop", "message": "Good straight timber. You'll want an axe, and the know-how to use it."}
     ]
+  },
+  {
+    "id": "berth_post",
+    "name": "Berth post",
+    "examine": "A granite post with an iron ring and a painted berth number.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "The number is repainted every spring, the plate under it says, in the same white, to the same height above the tide. The tide has been ignoring it."}
+    ]
+  },
+  {
+    "id": "pass_milestone",
+    "name": "Milestone",
+    "examine": "A granite milestone at the foot of the road east.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "LUCERN PASS, 40 MILES. TITHE BY SEA, 3 DAYS. MERIDIAN, 0. Someone has chalked a fourth line: THE MOON, NEARER."}
+    ]
+  },
+  {
+    "id": "tub_tree",
+    "name": "Clipped tree",
+    "examine": "An evergreen clipped into a ball on a straight stem, in a granite tub.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "Clipped to a perfect sphere. A brass tag on the tub gives the date of the last clipping, and of the next."}
+    ]
+  },
+  {
+    "id": "span_plaque",
+    "name": "Span plaque",
+    "examine": "A brass plaque set into the parapet at the end of the Span.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "THE SPAN. 17 METRES ABOVE THE CUT, 12 ACROSS, LEVEL TO A HAIR. RAISED UNDER THE UNDER-TREATY, BY BOTH PARTIES. The dwarven half of the text is a good deal longer."}
+    ]
+  },
+  {
+    "id": "beacon_log",
+    "name": "Keeper's log",
+    "examine": "The lamp-keeper's log, on a shelf by the door.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "Oil in, oil burned, wick trimmed, glass cleaned; and in the last month, three nights marked 'lamp lit, but the light looked green.'"}
+    ]
+  },
+  {
+    "id": "crag_waymark",
+    "name": "Waymark",
+    "examine": "A granite waymark at the head of the Crag stair, arrows cut in its faces.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "UP: THE ORRERY GATE, THE BEACON. WEST: THE ALMANAC OFFICE. EAST: THE OBSERVERS' WALK. DOWN: THE ACADEMY, AND EVERYTHING ELSE."}
+    ]
+  },
+  {
+    "id": "walk_view_gorge",
+    "name": "View point",
+    "examine": "A brass plate on the parapet, engraved with everything you can see from here.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "Across the Gorge: the Span, the Undergate's bronze door in the mountain, Bore Nine's derrick, and the Cut falling white between them."}
+    ]
+  },
+  {
+    "id": "knoll_cairn",
+    "name": "Cairn",
+    "examine": "A cairn of squared stones at the foot of the knoll, every stone the same size.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "Each stone is cut with a name and a year: the surveyors who measured the knoll. The newest stone has a name and no year."}
+    ]
+  },
+  {
+    "id": "butts_scoreboard",
+    "name": "Scoreboard",
+    "examine": "A slate scoreboard on posts beside the firing line.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "Today's best, lane by lane. Lane four: struck through, and beside it in the range master's hand: TARGET RE-SURVEYED. GROUND MOVED 2 CM."}
+    ]
   }
 ]
