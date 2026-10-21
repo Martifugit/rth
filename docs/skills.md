@@ -328,11 +328,30 @@ Plain prayers, deliberately: nothing fancier than RuneScape's.
   **devotion**. Several can be sung at once, except where they exclude each other (one
   deflection at a time, one boost per stat).
 - **Devotion** is the bar that replaces breath on the main action bar.
-- **What hymns cover:** protection (deflecting melee, ranged or occult attacks), boosts
-  (damage, accuracy, defence), and utility. They work for every combat style, and unlock with
-  Religion level.
-- The hymn list, devotion's size and drain rates, and how devotion is restored are still to be
-  written (section 10).
+- **What hymns cover:** protection (deflecting melee, ranged or occult attacks) and boosts
+  (damage, accuracy, defence). They work for every combat style, and unlock with Religion level.
+- **Their themes are Tithe's faith, not its treasury:** being found worthy (steadfastness,
+  zeal, judgement, revelation, penance), with a little of the salt coast's harsh light. Names are
+  short and iconic, like RuneScape's best prayers.
+- Devotion's size and drain rates, and how devotion is restored, are still to be set (section 10).
+
+**The hymns.** Names decided (2026-10-21); levels and numbers are placeholders, and effects follow
+the RuneScape prayer each one is based on.
+
+| Level | Hymn | Based on | Effect |
+|---|---|---|---|
+| 1 / 25 / 50 | **Steadfast**, **Unbowed**, **Unbroken** | Thick Skin and its tiers | + defence |
+| 5 / 30 / 70 | **Zeal**, **Fervour**, **Judgement** | the melee boosts, up to Piety | + melee |
+| 8 / 33 / 70 | **Clarity**, **Vigil**, **Revelation** | the ranged boosts, up to Rigour | + ranged |
+| 11 / 36 / 70 | **Insight**, **Discernment**, **Anathema** | the magic boosts, up to Augury | + occult |
+| 35 | **Bulwark** | Protect from Melee | deflect melee |
+| 38 | **Glare** | Protect from Missiles | deflect ranged |
+| 41 | **Salt Ward** | Protect from Magic | deflect occult |
+| 80 | **Penance** / **Contrition** / **Atonement** | Turmoil / Anguish / Torment | melee / ranged / occult: your hits weaken the target and strengthen you |
+| 90 | **Sacrament** | Soul Split | a share of the damage you deal returns as blood |
+
+Exclusions as in RuneScape: one protection at a time, one boost per style (each style's tiers
+and its Turmoil-type hymn exclude each other), and one defence tier.
 
 ### 4.2 Verses (Cruor)
 Verses take melee beyond the rotation its abilities settle into: they raise its skill ceiling
@@ -571,7 +590,7 @@ The code rework that follows this document, in short:
 ## 10. Still open
 Smaller decisions that can wait until the content that needs them:
 
-- Hymns: the list, devotion's size and drain, and how devotion is restored (4.1).
+- Hymns: devotion's size and drain, how devotion is restored, and each hymn's numbers (4.1).
 - Verses: the `x` numbers, cooldowns, scripture tiers and prices; which verses come from quests or boss codices; more verses later.
 - What the monuments are (their look, and Cruor's reason for each).
 - Exact gear stat formula per tier and slot (2.2).
