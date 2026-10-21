@@ -41,7 +41,7 @@ namespace Rth.Client.Ui
             [Minimap] = new Placement(1f, 0f, 0f, 0f, 236f, 282f),
             [Side] = new Placement(1f, 1f, 0f, 0f, 312f, 400f),
             [Chat] = new Placement(0f, 1f, 0f, 0f, 480f, 230f),
-            [ActionBar] = new Placement(0.5f, 1f, 0f, 0f, 636f, 124f),
+            [ActionBar] = new Placement(0.5f, 1f, 0f, 0f, 636f, 110f),
             [ActionBar2] = new Placement(0.5f, 1f, 0f, -126f, 636f, 62f),
             [ActionBar3] = new Placement(0.5f, 1f, 0f, -190f, 636f, 62f),
             [Target] = new Placement(0.5f, 0f, 0f, 8f, 260f, 64f),

@@ -17,7 +17,7 @@ namespace Rth.Client.Ui.Panels
         public override string Icon => "book";
         public override string DefaultWindow => UiDefaultLayout.ActionBar;
         public override bool Bare => true;
-        public override Vector2? FixedSize => new Vector2(636f, 124f);
+        public override Vector2? FixedSize => new Vector2(636f, 110f);
 
         private UiKit.Gauge _blood;
         private UiKit.Gauge _phlegm;
@@ -41,7 +41,7 @@ namespace Rth.Client.Ui.Panels
             UiKit.Tooltip(_breath.Root, () => UiKit.Title("Breath") + "\nHeld focuses spend it, such as deflection (F). Recovers out of combat.");
 
             _bile = new BileAxis(frame);
-            _bile.Root.style.marginTop = 3f;
+            _bile.Root.style.marginTop = 5f;
             UiKit.Tooltip(_bile.Root, () => BileTooltip());
 
             VisualElement slots = UiKit.El(frame);
@@ -81,56 +81,62 @@ namespace Rth.Client.Ui.Panels
             return text + "\n\n" + UiKit.Colour(now + ".", UiKit.Value);
         }
 
-        /// <summary>The bile axis between its poles' icons; its value sits centred above it, coloured by pole.</summary>
+        /// <summary>
+        /// The bile axis between its poles' icons: two half-bars filling outward from a black
+        /// centre that holds the value (up to "+100"), coloured by pole. Marks show where the
+        /// passives begin (pale) and where fever and torpor set in (red).
+        /// </summary>
         private sealed class BileAxis
         {
+            private const float CentreWidth = 38f;
+
             public readonly VisualElement Root;
-            private readonly VisualElement _track;
-            private readonly VisualElement _fill;
-            private readonly VisualElement _needle;
+            private readonly VisualElement _black;
+            private readonly VisualElement _yellow;
+            private readonly VisualElement _blackFill;
+            private readonly VisualElement _yellowFill;
             private readonly Label _value;
             private int _marksFor = int.MinValue;
 
             public BileAxis(VisualElement parent)
             {
-                Root = UiKit.El(parent);
-                _value = UiKit.Text(Root, "0", "bile-value");
-                VisualElement row = UiKit.El(Root, "row");
-                VisualElement black = UiKit.Icon(row, IconLibrary.Get("bile"), 22f);
-                black.style.unityBackgroundImageTintColor = UiKit.BlackBile;
-                black.style.marginRight = 6f;
-                _track = UiKit.El(row, "bar");
-                _track.style.height = 10f;
-                _fill = UiKit.El(_track, "bar__fill");
-                UiKit.El(_track, "bar__gloss");
-                VisualElement centre = UiKit.El(_track);
-                centre.style.position = Position.Absolute;
-                centre.style.left = Length.Percent(50f);
-                centre.style.width = 2f;
-                centre.style.marginLeft = -1f;
-                centre.style.top = 0f;
-                centre.style.bottom = 0f;
-                centre.style.backgroundColor = new Color(1f, 1f, 1f, 0.6f);
-                _needle = UiKit.El(_track);
-                _needle.style.position = Position.Absolute;
-                _needle.style.width = 3f;
-                _needle.style.marginLeft = -1.5f;
-                _needle.style.top = 0f;
-                _needle.style.bottom = 0f;
-                _needle.style.backgroundColor = Color.white;
-                VisualElement yellow = UiKit.Icon(row, IconLibrary.Get("bile"), 22f);
-                yellow.style.unityBackgroundImageTintColor = UiKit.YellowBile;
-                yellow.style.marginLeft = 6f;
+                Root = UiKit.El(parent, "row");
+                VisualElement blackIcon = UiKit.Icon(Root, IconLibrary.Get("bile"), 22f);
+                blackIcon.style.unityBackgroundImageTintColor = UiKit.BlackBile;
+                blackIcon.style.marginRight = 6f;
+                _black = Half(Root, out _blackFill, true);
+                VisualElement centre = UiKit.El(Root, "bile-centre");
+                centre.style.width = CentreWidth;
+                _value = UiKit.Text(centre, "0", "bile-value");
+                _yellow = Half(Root, out _yellowFill, false);
+                VisualElement yellowIcon = UiKit.Icon(Root, IconLibrary.Get("bile"), 22f);
+                yellowIcon.style.unityBackgroundImageTintColor = UiKit.YellowBile;
+                yellowIcon.style.marginLeft = 6f;
+            }
+
+            /// <summary>One side of the axis; its fill grows away from the centre.</summary>
+            private static VisualElement Half(VisualElement parent, out VisualElement fill, bool left)
+            {
+                VisualElement track = UiKit.El(parent, "bar", left ? "bile-half--left" : "bile-half--right");
+                track.style.height = 10f;
+                fill = UiKit.El(track, "bar__fill");
+                if (left)
+                {
+                    fill.style.left = StyleKeyword.Auto;
+                    fill.style.right = 0f;
+                }
+                UiKit.El(track, "bar__gloss");
+                return track;
             }
 
             public void Set(int bile, ClientContent content)
             {
                 float limit = Mathf.Max(1, content.BileLimit);
-                float half = Mathf.Abs(bile) / limit * 50f;
-                _fill.style.left = Length.Percent(bile >= 0 ? 50f : 50f - half);
-                _fill.style.width = Length.Percent(half);
-                _fill.style.backgroundColor = bile > 0 ? UiKit.YellowBile : UiKit.BlackBile;
-                _needle.style.left = Length.Percent(50f + bile / limit * 50f);
+                float share = Mathf.Clamp01(Mathf.Abs(bile) / limit) * 100f;
+                _blackFill.style.width = Length.Percent(bile < 0 ? share : 0f);
+                _yellowFill.style.width = Length.Percent(bile > 0 ? share : 0f);
+                _blackFill.style.backgroundColor = UiKit.BlackBile;
+                _yellowFill.style.backgroundColor = UiKit.YellowBile;
                 _value.text = (bile > 0 ? "+" : "") + bile;
                 _value.style.color = bile > 0 ? UiKit.YellowBile : bile < 0 ? new Color(0.75f, 0.6f, 1f) : UiKit.TextColour;
 
@@ -139,18 +145,22 @@ namespace Rth.Client.Ui.Panels
                 _marksFor = key;
                 foreach (int mark in new[] { content.BilePassiveThreshold, content.BileExtreme })
                 {
-                    foreach (int sign in new[] { -1, 1 })
-                    {
-                        var m = new VisualElement { pickingMode = PickingMode.Ignore };
-                        m.style.position = Position.Absolute;
-                        m.style.left = Length.Percent(50f + sign * mark / limit * 50f);
-                        m.style.width = 1f;
-                        m.style.top = 0f;
-                        m.style.bottom = 0f;
-                        m.style.backgroundColor = mark == content.BileExtreme ? new Color(1f, 0.35f, 0.25f, 0.9f) : new Color(1f, 1f, 1f, 0.35f);
-                        _track.Insert(2, m);
-                    }
+                    Color colour = mark == content.BileExtreme ? new Color(1f, 0.35f, 0.25f, 0.9f) : new Color(1f, 1f, 1f, 0.35f);
+                    Mark(_black, colour).style.right = Length.Percent(mark / limit * 100f);
+                    Mark(_yellow, colour).style.left = Length.Percent(mark / limit * 100f);
                 }
+            }
+
+            private static VisualElement Mark(VisualElement track, Color colour)
+            {
+                var m = new VisualElement { pickingMode = PickingMode.Ignore };
+                m.style.position = Position.Absolute;
+                m.style.width = 1f;
+                m.style.top = 0f;
+                m.style.bottom = 0f;
+                m.style.backgroundColor = colour;
+                track.Insert(1, m);
+                return m;
             }
         }
     }

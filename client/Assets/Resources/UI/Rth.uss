@@ -750,7 +750,30 @@
     -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
     font-size: 13px;
     -unity-text-align: middle-center;
-    margin-bottom: 1px;
+    margin: 0;
+    padding: 0;
+}
+
+/* The bile axis's centre: black, wide enough for "+100", the value on it. */
+.bile-centre {
+    height: 16px;
+    justify-content: center;
+    background-color: rgb(0, 0, 0);
+    border-width: 1px;
+    border-color: rgb(58, 51, 42);
+    border-radius: 3px;
+}
+
+.bile-half--left {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right-width: 0;
+}
+
+.bile-half--right {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-left-width: 0;
 }
 
 /* ---------------------------------------------------------------- chat */
