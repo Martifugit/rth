@@ -126,6 +126,7 @@ and rocks, one landmark. Unbuilt land is impassable and fades into the fog.
 |---|---|---|
 | Tolling | 0-95, 0-95 | `Tolling.unity` |
 | Palmerway | 96-191, 0-95 | `Palmerway.unity` |
+| Cruor (blockout, not yet joined by road) | 384-527, 40-175 | `Cruor.unity` |
 
 1. **Tolling and the river** (built: `client/Assets/Scenes/Tolling.unity`). One riverside town
    on the western outskirts of Venaria: the river and its bridge, Widdermill and its millpond,
@@ -135,9 +136,9 @@ and rocks, one landmark. Unbuilt land is impassable and fades into the fog.
    **Palmerway** (built: `Palmerway.unity`) runs east from Tolling along Wennow's north
    shore: open heath, a waystone, the old toll-house, and the wardens' palisade with the barred
    waygate (flag `palmerway_open`), the current edge of the world.
-2. **Cruor and the bay shore.** The first capital, days east along Palmerway. The region engine
-   is built; what's left is the land between (mostly sparse road regions) and the city itself
-   (about 30 buildings at RuneScape scale).
+2. **Cruor and the bay shore.** The first capital, days east along Palmerway. The city is
+   blocked out (`docs/regions/cruor.md`); what's left is the land between (mostly sparse road
+   regions), art for the assets the blockout lists, and the townsfolk's roles.
 3. Slough's fens and the occult north-east.
 4. Sere and the western passes (Lucern Pass).
 5. Tithe and Calcinia's coast.

@@ -138,5 +138,47 @@
     "name": "Stair",
     "examine": "The way back up to the monument.",
     "actions": [ { "id": "climb", "label": "Climb", "message": "The stair leads up to a sealed door. (Blockout: the way out comes with instancing.)" } ]
+  },
+  {
+    "id": "cruor_first_monument",
+    "name": "The First Monument",
+    "examine": "The needle every other Cruorian monument is copied from. The founts around it never quite empty.",
+    "actions": [ { "id": "read", "label": "Read", "message": "HERE THE MANY GAVE, AND THE BAY WAS KEPT. EVERY MONUMENT IN THE WORLD IS A DRAWING OF THIS ONE. Below, cut deep and recut many times: KEEP." } ]
+  },
+  {
+    "id": "vigil_altar",
+    "name": "High altar",
+    "examine": "The high altar of the Vigil. The cloth on it is changed every hour, and never washed.",
+    "actions": [ { "id": "pray", "label": "Pray", "animation": "kneel" } ]
+  },
+  {
+    "id": "cruor_proclamation",
+    "name": "Proclamation",
+    "examine": "A Synod proclamation, nailed up over older ones.",
+    "actions": [ { "id": "read", "label": "Read", "message": "BY ORDER OF THE PONTIFF OF CRUOR: the Letting House is open from first bell to last. Pilgrims are bled in the order they arrive. Those who sleep and do not wake are to be reported to the Vigil, not buried." } ]
+  },
+  {
+    "id": "letting_chair",
+    "name": "Letting chair",
+    "examine": "A leather chair with a strap for the arm and a copper bowl beneath. The bowl drains into a channel in the floor.",
+    "actions": [ { "id": "give", "label": "Give-blood", "message": "A Sister of the Letting takes your wrist, looks at the vein for a long moment, and lets it go. 'Not you. Not yet. Something has already had its share of you.'" } ]
+  },
+  {
+    "id": "watch_rail",
+    "name": "The Watch",
+    "examine": "A long stone rail over the bay, worn smooth where people lean on it to look at the Quaere.",
+    "actions": [ { "id": "watch", "label": "Keep-vigil", "animation": "kneel", "message": "You watch the Quaere across the Cradle for a while. The water breathes in, and out. Nothing else moves. That is the point of the Watch." } ]
+  },
+  {
+    "id": "cruor_shuttered_shop",
+    "name": "Shuttered shop",
+    "examine": "An apothecary's sign, painted over. The shutters are new, and the lock is newer.",
+    "actions": [ { "id": "knock", "label": "Knock", "message": "Nobody answers. Behind the shutters something stops bubbling, as if it had been listening." } ]
+  },
+  {
+    "id": "concord_skyglass",
+    "name": "Sky-glass",
+    "examine": "A brass telescope on a tripod outside the Concordian consulate. A small sign: FORECASTS WITHIN.",
+    "actions": [ { "id": "look", "label": "Look-through", "message": "The glass is aimed at the Quaere, not the sky. Someone has scratched tally marks along the brass, hundreds of them." } ]
   }
 ]

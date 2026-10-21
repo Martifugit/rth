@@ -34,6 +34,7 @@ namespace Rth.MapTools
         [Tooltip("Give the region its own light and fog (a crypt, a cave) instead of the open world's.")]
         public bool ownAtmosphere;
         public float sunIntensity = 1.1f;
+        public Color sunColor = new Color(1f, 0.96f, 0.88f);
         public Color ambientSky = new Color(0.62f, 0.68f, 0.78f);
         public Color ambientEquator = new Color(0.5f, 0.52f, 0.5f);
         public Color ambientGround = new Color(0.3f, 0.28f, 0.24f);

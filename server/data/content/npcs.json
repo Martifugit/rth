@@ -124,5 +124,66 @@
     "shape": "Capsule",
     "color": "#7a1a22",
     "scale": 1.0
+  },
+  {
+    "id": "blood_knight",
+    "name": "Blood-knight",
+    "examine": "A knight of Cruor in red-lacquered plate. Her scars are in neat rows, like a ledger.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 3,
+    "held": "watchmans_sword",
+    "shape": "Capsule",
+    "color": "#9a1c22",
+    "scale": 1.0
+  },
+  {
+    "id": "cruor_pilgrim",
+    "name": "Pilgrim",
+    "examine": "Come a long way to give a little blood. The bandage on the arm is a badge.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 6,
+    "shape": "Capsule",
+    "color": "#8c7a5c",
+    "scale": 1.0
+  },
+  {
+    "id": "synod_cantor",
+    "name": "Cantor",
+    "examine": "A singer of the Synod, humming under the breath, always slightly ahead of the bells.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 3,
+    "shape": "Capsule",
+    "color": "#6e1820",
+    "scale": 1.0
+  },
+  {
+    "id": "letting_sister",
+    "name": "Sister of the Letting",
+    "examine": "She has drawn more blood than most armies. Her hands are perfectly steady.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 1,
+    "shape": "Capsule",
+    "color": "#d8cfc0",
+    "scale": 1.0
+  },
+  {
+    "id": "cruor_dockhand",
+    "name": "Dockhand",
+    "examine": "Hauls the city's grain off the barges. Doesn't look at the bay if he can help it.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 4,
+    "shape": "Capsule",
+    "color": "#5c4a36",
+    "scale": 1.0
   }
 ]

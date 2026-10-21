@@ -74,7 +74,7 @@ namespace Rth.MapTools.Editor
         {
             string Hex(Color c) => "\"#" + ColorUtility.ToHtmlStringRGB(c) + "\"";
             string F(float f) => f.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            return "  \"atmosphere\": { \"sunIntensity\": " + F(area.sunIntensity) +
+            return "  \"atmosphere\": { \"sunIntensity\": " + F(area.sunIntensity) + ", \"sun\": " + Hex(area.sunColor) +
                    ", \"ambientSky\": " + Hex(area.ambientSky) + ", \"ambientEquator\": " + Hex(area.ambientEquator) +
                    ", \"ambientGround\": " + Hex(area.ambientGround) + ", \"fog\": " + Hex(area.fog) +
                    ", \"fogStart\": " + F(area.fogStart) + ", \"fogEnd\": " + F(area.fogEnd) + " }";
