@@ -271,14 +271,18 @@ namespace Rth.Client.Ui
             menu.style.left = at.x;
             menu.style.top = at.y;
             menu.BringToFront();
-            // Once laid out, nudge it back on screen and centre it under the pointer like the classic menu.
-            menu.RegisterCallback<GeometryChangedEvent>(_ =>
+            // Once laid out, nudge it back on screen and centre it under the pointer like the classic
+            // menu. Only once: moving it changes its geometry, and answering every change loops.
+            EventCallback<GeometryChangedEvent> place = null;
+            place = _ =>
             {
+                menu.UnregisterCallback(place);
                 Vector2 screen = ScreenSize;
                 Vector2 size = menu.layout.size;
                 menu.style.left = Mathf.Clamp(at.x - size.x / 2f, 0f, Mathf.Max(0f, screen.x - size.x));
                 menu.style.top = Mathf.Clamp(at.y - 4f, 0f, Mathf.Max(0f, screen.y - size.y));
-            });
+            };
+            menu.RegisterCallback(place);
         }
 
         // ------------------------------------------------------------------ tooltip
