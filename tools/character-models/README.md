@@ -48,6 +48,15 @@ so the game can match stride to speed.
 `clip` (use another file, so one download serves several roles) and `pose` (hold the clip still
 at that many seconds: the combat stance is the first frame of `slash_sword_shield`).
 
-Current clips (Mixamo): `idle` = Unarmed Idle 01, `walk` = Standard Walk, `run` = Slow Run,
-`slash_sword_shield` = Sword And Shield Slash. Mixamo files may be used in the game but not
-shared on their own, so keep this repository private.
+**`client/Assets/Resources/Characters/animations.json` is the catalog:** every clip file and role
+is listed there with its `source` (e.g. which Mixamo animation), its intended `use`, and whether
+it `loop`s (the importer reads that). Add an entry whenever you add a clip. Mixamo files may be
+used in the game but not shared on their own, so keep this repository private.
+
+## Hands and held things
+
+The hands are closed into a grip in the model itself (the old finger bones are posed and baked
+in; our skeleton has no finger bones, so animations never open them). `grip.L` and `grip.R` sit
+in the middle of each fist. Held art (weapons, tools) is modelled as if held by the T-posed body:
+origin at the grip, handle along +Z (forward). `CharacterModel.Attach(art, socket: "grip.R")`
+holds it there.

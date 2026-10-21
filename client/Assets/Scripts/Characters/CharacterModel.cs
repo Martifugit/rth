@@ -19,6 +19,8 @@ namespace Rth.Client.Characters
         private const string ResourceFolder = "Characters/";
 
         private readonly Dictionary<string, Transform> _bones = new Dictionary<string, Transform>();
+        // Each bone's rotation relative to the model in the rest (T) pose.
+        private readonly Dictionary<string, Quaternion> _rest = new Dictionary<string, Quaternion>();
         private readonly Dictionary<string, Renderer> _kit = new Dictionary<string, Renderer>();
         private readonly Dictionary<Renderer, string[]> _slots = new Dictionary<Renderer, string[]>();
         private readonly Dictionary<string, Color> _colors = new Dictionary<string, Color>();
@@ -49,7 +51,11 @@ namespace Rth.Client.Characters
         {
             Animator = GetComponent<Animator>();
             foreach (Transform t in GetComponentsInChildren<Transform>(true))
-                if (!_bones.ContainsKey(t.name)) _bones[t.name] = t;
+            {
+                if (_bones.ContainsKey(t.name)) continue;
+                _bones[t.name] = t;
+                _rest[t.name] = Quaternion.Inverse(transform.rotation) * t.rotation;
+            }
 
             float top = 0f;
             foreach (SkinnedMeshRenderer smr in GetComponentsInChildren<SkinnedMeshRenderer>(true))
@@ -135,13 +141,21 @@ namespace Rth.Client.Characters
 
         /// <summary>
         /// Puts on a piece of equipment art: each skinned mesh in it is bound to this skeleton by
-        /// bone name; anything else is held at <paramref name="socket"/> (a bone name, e.g.
-        /// "hand.R"). The kit parts in <paramref name="hides"/> disappear until it comes off.
+        /// bone name; anything else is held at <paramref name="socket"/> (a bone name, usually
+        /// "grip.R" or "grip.L", the middle of each closed fist). Held art is modelled as if held
+        /// by the body in its rest T-pose: origin at the grip, the handle running along +Z
+        /// (forward), in the body's own axes. The kit parts in <paramref name="hides"/> disappear
+        /// until it comes off.
         /// </summary>
         public GameObject Attach(GameObject prefab, string[] hides = null, string socket = null)
         {
             var holder = new GameObject(prefab.name);
-            holder.transform.SetParent(socket != null && _bones.TryGetValue(socket, out Transform s) ? s : transform, false);
+            if (socket != null && _bones.TryGetValue(socket, out Transform bone))
+            {
+                holder.transform.SetParent(bone, false);
+                holder.transform.localRotation = Quaternion.Inverse(_rest[socket]);
+            }
+            else holder.transform.SetParent(transform, false);
             GameObject art = Instantiate(prefab, holder.transform, false);
 
             foreach (SkinnedMeshRenderer source in art.GetComponentsInChildren<SkinnedMeshRenderer>(true))

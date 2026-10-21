@@ -1,5 +1,8 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
+using Rth.Client.Characters;
 using UnityEditor;
 using UnityEngine;
 
@@ -11,8 +14,8 @@ namespace Rth.Client.Editor
     /// <item>Body models (built by tools/character-models) import as Humanoid with our bone names
     /// mapped explicitly, so any humanoid animation retargets onto them.</item>
     /// <item>Files in Characters/Animations (e.g. Mixamo downloads, one clip per file, named by
-    /// what they are: idle, walk, run, cast, hit, death) import as Humanoid clips. Idle, walk and run
-    /// loop. Walk and run keep their forward motion so the game can read how fast they step; the
+    /// what they are) import as Humanoid clips. Idle, walk and run loop, and so does anything marked
+    /// "loop" in Characters/animations.json. Walk and run keep their forward motion so the game can read how fast they step; the
     /// game never applies root motion, the server moves entities.</item>
     /// </list>
     /// </summary>
@@ -31,8 +34,24 @@ namespace Rth.Client.Editor
             ("thigh.R", "RightUpperLeg"), ("shin.R", "RightLowerLeg"), ("foot.R", "RightFoot"), ("toe.R", "RightToes"),
         };
 
-        private static bool IsLooping(string name) =>
-            name.StartsWith("idle") || name.StartsWith("walk") || name.StartsWith("run");
+        private const string Catalog = Root + "animations.json";
+
+        // Idle, walk and run always loop; anything else loops if the catalog says so.
+        private bool IsLooping(string name)
+        {
+            if (name.StartsWith("idle") || name.StartsWith("walk") || name.StartsWith("run")) return true;
+            context.DependsOnSourceAsset(Catalog);
+            try
+            {
+                var catalog = JsonConvert.DeserializeObject<Dictionary<string, ClipAnimator.ClipTuning>>(File.ReadAllText(Catalog));
+                return catalog != null && catalog.TryGetValue(name, out ClipAnimator.ClipTuning entry) && entry.Loop;
+            }
+            catch (System.Exception e) when (e is IOException || e is JsonException)
+            {
+                Debug.LogWarning("[R'th] Can't read " + Catalog + ": " + e.Message);
+                return false;
+            }
+        }
 
         private void OnPreprocessModel()
         {

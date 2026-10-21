@@ -8,7 +8,7 @@ namespace Rth.Client.Characters
 {
     /// <summary>
     /// Plays humanoid animation clips on a character without an Animator Controller: a
-    /// locomotion blend underneath (idle or combat idle, walk, run) and one-shot clips (cast,
+    /// locomotion blend underneath (idle or combat idle, walk or combat walk, run) and one-shot clips (cast,
     /// death, or any clip by name) blended over the top. Clips are files in
     /// Resources/Characters/Animations named after what they are, so content can ask for an
     /// animation by name; Resources/Characters/animations.json tunes each one (see
@@ -23,16 +23,25 @@ namespace Rth.Client.Characters
         // Used when a clip has no forward travel to measure (an "in place" download).
         private const float DefaultWalkSpeed = 1.5f, DefaultRunSpeed = 3.5f;
 
-        /// <summary>How one clip is played; every field is optional in animations.json.</summary>
+        /// <summary>
+        /// One entry in animations.json, which lists every clip (file) and role: where it came
+        /// from, what it is for, and how it is played. Every field is optional.
+        /// </summary>
         public sealed class ClipTuning
         {
+            /// <summary>Where the file came from (e.g. "Mixamo: Digging"). For people, not code.</summary>
+            public string Source;
+            /// <summary>What it is meant for. For people, not code.</summary>
+            public string Use;
+            /// <summary>The file loops (read by the importer).</summary>
+            public bool Loop;
             /// <summary>Play this clip file instead (one download can serve several roles).</summary>
             public string Clip;
             /// <summary>Hold the clip still at this many seconds in (a stance taken from one frame).</summary>
             public float? Pose;
             /// <summary>0-1: how much of the clip shows over what's beneath it. Below 1 tones it down.</summary>
             public float Weight = 1f;
-            /// <summary>Playback speed.</summary>
+            /// <summary>Playback speed; negative plays it backwards (sheathing from a draw).</summary>
             public float Speed = 1f;
             /// <summary>Seconds into the clip to start from, and to stop at (0 = its end).</summary>
             public float Start, End;
@@ -46,12 +55,13 @@ namespace Rth.Client.Characters
 
         private PlayableGraph _graph;
         private AnimationLayerMixerPlayable _layers;
-        private AnimationMixerPlayable _locomotion, _stand;
-        private AnimationClipPlayable _walk, _run;
-        private float _walkSpeed, _runSpeed;
+        private AnimationMixerPlayable _locomotion, _stand, _walking;
+        private AnimationClipPlayable _walk, _walkCombat, _run;
+        private float _walkSpeed, _walkCombatSpeed, _runSpeed;
+        private float _walkCombatWeight;
         private AnimationClipPlayable _oneShot;
         private ClipTuning _oneShotTuning;
-        private float _oneShotEnd;
+        private float _oneShotStart, _oneShotEnd;
         private bool _hold;
         private float _move, _runBlend, _combat;
         private float _combatWeight;
@@ -126,11 +136,20 @@ namespace Rth.Client.Characters
             Connect(Looping(combatIdle, "idle_combat", true), _stand, 1);
             _combatWeight = Tuning("idle_combat").Weight;
 
-            _locomotion = AnimationMixerPlayable.Create(_graph, 3);
+            // Walking: relaxed and combat walks, blended the same way.
+            AnimationClip combatWalk = Clip("walk_combat") ?? walk;
+            _walking = AnimationMixerPlayable.Create(_graph, 2);
             _walk = Looping(walk, "walk", false);
+            _walkCombat = Looping(combatWalk, "walk_combat", false);
+            Connect(_walk, _walking, 0);
+            Connect(_walkCombat, _walking, 1);
+            _walkCombatWeight = Tuning("walk_combat").Weight;
+            _walkCombatSpeed = TravelSpeed(combatWalk, DefaultWalkSpeed);
+
+            _locomotion = AnimationMixerPlayable.Create(_graph, 3);
             _run = Looping(run, "run", false);
             Connect(_stand, _locomotion, 0);
-            Connect(_walk, _locomotion, 1);
+            Connect(_walking, _locomotion, 1);
             Connect(_run, _locomotion, 2);
             _walkSpeed = TravelSpeed(walk, DefaultWalkSpeed);
             _runSpeed = TravelSpeed(run, DefaultRunSpeed);
@@ -185,6 +204,8 @@ namespace Rth.Client.Characters
             _combat = Mathf.MoveTowards(_combat, inCombat ? 1f : 0f, deltaTime * 3f);
             _stand.SetInputWeight(0, 1f - _combat * _combatWeight);
             _stand.SetInputWeight(1, _combat * _combatWeight);
+            _walking.SetInputWeight(0, 1f - _combat * _walkCombatWeight);
+            _walking.SetInputWeight(1, _combat * _walkCombatWeight);
             _locomotion.SetInputWeight(0, 1f - _move);
             _locomotion.SetInputWeight(1, _move * (1f - _runBlend));
             _locomotion.SetInputWeight(2, _move * _runBlend);
@@ -193,18 +214,21 @@ namespace Rth.Client.Characters
             if (moving)
             {
                 _walk.SetSpeed(Mathf.Clamp(speed / _walkSpeed, 0.5f, 2f) * Tuning("walk").Speed);
+                _walkCombat.SetSpeed(Mathf.Clamp(speed / _walkCombatSpeed, 0.5f, 2f) * Tuning("walk_combat").Speed);
                 _run.SetSpeed(Mathf.Clamp(speed / _runSpeed, 0.5f, 2f) * Tuning("run").Speed);
             }
 
             if (_oneShot.IsValid())
             {
                 float t = (float)_oneShot.GetTime();
-                float start = _oneShotTuning.Start;
-                float weight = Mathf.Clamp01((t - start) / FadeIn);
-                if (!_hold) weight = Mathf.Min(weight, Mathf.Clamp01((_oneShotEnd - t) / FadeOut));
-                else if (t >= _oneShotEnd) _oneShot.SetSpeed(0);   // lie still at the end
+                bool reverse = _oneShotTuning.Speed < 0f;
+                float elapsed = reverse ? _oneShotEnd - t : t - _oneShotStart;
+                float remaining = reverse ? t - _oneShotStart : _oneShotEnd - t;
+                float weight = Mathf.Clamp01(elapsed / FadeIn);
+                if (!_hold) weight = Mathf.Min(weight, Mathf.Clamp01(remaining / FadeOut));
+                else if (remaining <= 0f) _oneShot.SetSpeed(0);   // stay at the end (death)
                 _layers.SetInputWeight(1, weight * _oneShotTuning.Weight);
-                if (!_hold && t >= _oneShotEnd) StopOneShot();
+                if (!_hold && remaining <= 0f) StopOneShot();
             }
         }
 
@@ -221,10 +245,11 @@ namespace Rth.Client.Characters
             ClipTuning tuning = Tuning(name);
             _oneShot = AnimationClipPlayable.Create(_graph, clip);
             _oneShot.SetApplyFootIK(true);
-            _oneShot.SetTime(tuning.Start);
-            _oneShot.SetSpeed(tuning.Speed);
             _oneShotTuning = tuning;
+            _oneShotStart = Mathf.Clamp(tuning.Start, 0f, clip.length);
             _oneShotEnd = tuning.End > tuning.Start ? Mathf.Min(tuning.End, clip.length) : clip.length;
+            _oneShot.SetTime(tuning.Speed < 0f ? _oneShotEnd : _oneShotStart);
+            _oneShot.SetSpeed(tuning.Speed);
             _hold = hold;
             _graph.Connect(_oneShot, 0, _layers, 1);
             _layers.SetLayerMaskFromAvatarMask(1, tuning.UpperBody ? UpperBodyMask : FullBodyMask);

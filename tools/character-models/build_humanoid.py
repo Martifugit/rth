@@ -20,7 +20,8 @@ What it does, for the male base (the female follows once there is an appearance 
 
 Naming contract with the client (client/Assets/Scripts/Characters/):
   - bones: hips, spine, chest, neck, head, upper_arm.L/R, forearm.L/R, hand.L/R,
-           thigh.L/R, shin.L/R, foot.L/R, toe.L/R
+           thigh.L/R, shin.L/R, foot.L/R, toe.L/R, and grip.L/R (no weights: the centre of each
+           closed fist, where held things attach)
   - meshes: "body_<part>" for body kit (head, torso, arms, hands, legs, feet) and "hair_<style>"
             (a mesh may not share a name with a bone, or Unity can't map the Humanoid)
   - materials: the colour channel name
@@ -76,6 +77,48 @@ def smoothstep(a, b, x):
     return t * t * (3 - 2 * t)
 
 
+# The grip point, from the knuckles: this far towards the fingertips and this far below (palm side).
+GRIP_ALONG = -0.015
+GRIP_BELOW = 0.025
+
+# How far each old finger bone curls to close the hand round a grip, for the right hand in the
+# source's orientation (facing -Y, right hand along -X, palm down): (world axis, degrees). The left
+# hand mirrors. OSRS-style hands never move their fingers, so this is baked into the mesh.
+GRIP = {
+    "Fingers1": ("Y", -80),
+    "Fingers2": ("Y", -95),
+    "Thumb1": ("X", 40),
+    "Thumb2": ("Z", -55),
+}
+
+
+def close_hands(body, rig):
+    """Poses the old finger bones into a grip and bakes that into the mesh, then rests the rig."""
+    to_rig = rig.matrix_world.to_3x3().normalized()
+    for side, mirror in (("Right", 1), ("Left", -1)):
+        for bone, (axis, degrees) in GRIP.items():
+            pb = rig.pose.bones[f"{bone}.{side}"]
+            pb.rotation_mode = "QUATERNION"
+            # Mirroring across x flips rotations about y and z, not about x.
+            angle = math.radians(degrees * (mirror if axis != "X" else 1))
+            world = Matrix.Rotation(angle, 3, axis)
+            in_rig = to_rig.inverted() @ world @ to_rig
+            rest = pb.bone.matrix_local.to_3x3()
+            pb.rotation_quaternion = (rest.inverted() @ in_rig @ rest).to_quaternion()
+    for md in list(body.modifiers):
+        if md.type != "ARMATURE":
+            body.modifiers.remove(md)
+    bpy.context.view_layer.update()
+    evaluated = body.evaluated_get(bpy.context.evaluated_depsgraph_get())
+    posed = evaluated.to_mesh()
+    for v, p in zip(body.data.vertices, posed.vertices):
+        v.co = p.co.copy()
+    evaluated.to_mesh_clear()
+    for pb in rig.pose.bones:
+        pb.rotation_quaternion = (1, 0, 0, 0)
+    bpy.context.view_layer.update()
+
+
 def material(name):
     mat = bpy.data.materials.get(name) or bpy.data.materials.new(name)
     preview = {
@@ -103,6 +146,7 @@ def build():
         pb.location = (0, 0, 0)
         pb.scale = (1, 1, 1)
     bpy.context.view_layer.update()
+    close_hands(body, old_rig)
     old = {b.name: (old_rig.matrix_world @ b.head_local, old_rig.matrix_world @ b.tail_local) for b in old_rig.data.bones}
     shift = Vector((-old["Back"][0].x, 0, 0))
     old = {k: (h + shift, t + shift) for k, (h, t) in old.items()}
@@ -144,6 +188,11 @@ def build():
         bones[f"shin.{s}"] = (old[f"Shin.{side}"][0], old[f"Shin.{side}"][1], f"thigh.{s}")
         bones[f"foot.{s}"] = (old[f"Foot.{side}"][0], old[f"Foot.{side}"][1], f"shin.{s}")
         bones[f"toe.{s}"] = (old[f"Toes.{side}"][0], old[f"Toes.{side}"][1], f"foot.{s}")
+        # Where held things go: the middle of the closed fist, pointing forward along the
+        # channel the fingers make (a weapon's handle runs through here).
+        along = (old[f"Fingers2.{side}"][1] - old[f"Hand.{side}"][0]).normalized()
+        grip = old[f"Fingers1.{side}"][0] + along * GRIP_ALONG + Vector((0, 0, -GRIP_BELOW))
+        bones[f"grip.{s}"] = (grip, grip + Vector((0, 0.08, 0)), f"hand.{s}")
 
     arm_data = bpy.data.armatures.new("Rig")
     rig = bpy.data.objects.new("Rig", arm_data)

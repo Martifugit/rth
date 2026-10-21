@@ -1,6 +1,51 @@
 {
-  "idle_combat": { "clip": "slash_sword_shield", "pose": 0, "weight": 0.85 },
-  "cast": { "weight": 0.75, "upperBody": true, "speed": 1.2 },
-  "hit": { "weight": 0.35, "upperBody": true, "end": 0.5 },
-  "death": { "weight": 1.0 }
+  "idle": { "source": "Mixamo: Unarmed Idle 01", "use": "Standing, out of combat." },
+  "walk": { "source": "Mixamo: Standard Walk", "use": "Walking (1 tile per tick)." },
+  "run": { "source": "Mixamo: Slow Run", "use": "Running (2 tiles per tick)." },
+
+  "slash_sword_shield": {
+    "source": "Mixamo: Sword And Shield Slash",
+    "use": "One-handed melee attack, for when there is melee. Its first frame is the combat stance."
+  },
+  "stance_2h": {
+    "source": "Mixamo: 2hand Idle", "loop": true,
+    "use": "Combat stance while wielding a two-handed weapon (once weapons pick their own stance)."
+  },
+  "slash_2h": {
+    "source": "Mixamo: Great Sword Slash",
+    "use": "Two-handed melee attack."
+  },
+  "draw_2h": {
+    "source": "Mixamo: Draw A Great Sword 2",
+    "use": "Drawing a two-handed weapon from the back; played backwards it is sheathe_2h."
+  },
+  "dig": { "source": "Mixamo: Digging", "loop": true, "use": "Digging with a spade (a skilling action)." },
+  "sit": { "source": "Mixamo: Sitting", "loop": true, "use": "Sitting on a chair or bench." },
+  "rest": {
+    "source": "Mixamo: Sitting Idle", "loop": true,
+    "use": "Sitting on the ground to rest and regain run energy."
+  },
+  "climb_into": {
+    "source": "Mixamo: Climbing",
+    "use": "Climbing into something: a pipe, a hole, a low gap (shortcuts)."
+  },
+  "talk": { "source": "Mixamo: Talking", "loop": true, "use": "Talking to someone in a conversation." },
+
+  "idle_combat": {
+    "clip": "slash_sword_shield", "pose": 0, "weight": 0.85,
+    "use": "Role: standing within 8 s of attacking or being hit. Held on the slash's first frame."
+  },
+  "walk_combat": {
+    "use": "Role: walking within 8 s of attacking or being hit. No clip yet (suggested: Mixamo Sword And Shield Walk); the relaxed walk is used."
+  },
+  "sheathe_2h": { "clip": "draw_2h", "speed": -1, "use": "Role: putting a two-handed weapon away." },
+  "cast": {
+    "weight": 0.75, "upperBody": true, "speed": 1.2,
+    "use": "Role: attacks and abilities (Occultism). No clip yet."
+  },
+  "hit": {
+    "weight": 0.35, "upperBody": true, "end": 0.5,
+    "use": "Role: being hit. No clip: a small code-driven stagger is used, which suits Old School."
+  },
+  "death": { "use": "Role: dying (holds its last frame). No clip yet: the body topples backwards." }
 }
