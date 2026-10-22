@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using Rth.Shared.World;
+using Rth.Shared.World.Data;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -54,8 +55,20 @@ namespace Rth.MapTools.Editor
         public static string OutputPathFor(MapArea area) =>
             Path.GetFullPath(Path.Combine(Application.dataPath, "..", "..", "server", "data", "maps", area.exportName + ".rthmap"));
 
+        /// <summary>
+        /// Set by Sync World: exports a region that has world data (world/regions/&lt;id&gt;.json) its
+        /// own way, through the data and the C# compiler, and returns the map path; null for a region
+        /// without data, which this exporter writes straight from the scene.
+        /// </summary>
+        public static System.Func<MapArea, string> DataExport;
+
         public static string Export(MapArea area)
         {
+            if (DataExport != null)
+            {
+                string exported = DataExport(area);
+                if (exported != null) return exported;
+            }
             if (area.origin.x % 8 != 0 || area.origin.y % 8 != 0 || area.size.x % 8 != 0 || area.size.y % 8 != 0)
                 Debug.LogError($"[R'th] Region '{area.exportName}' must start and end on whole zones: origin and size multiples of 8. The server will refuse it.", area);
             MapData map = Build(area);
@@ -101,7 +114,7 @@ namespace Rth.MapTools.Editor
         }
 
         /// <summary>Region scenes are streamed in by name at runtime, so each must be in the build.</summary>
-        private static void AddSceneToBuild(string scenePath)
+        public static void AddSceneToBuild(string scenePath)
         {
             if (string.IsNullOrEmpty(scenePath)) return;
             var scenes = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
@@ -114,9 +127,16 @@ namespace Rth.MapTools.Editor
         /// <summary>Writes the interactive objects as JSON next to the map. Returns how many.</summary>
         private static int ExportObjects(MapArea area, string path)
         {
-            var sb = new System.Text.StringBuilder("[\n");
-            int count = 0;
-            foreach (MapObject obj in area.GetComponentsInChildren<MapObject>())
+            List<ObjectEntry> objects = Objects(area, area.transform);
+            File.WriteAllText(path, RegionCompiler.ObjectsJson(objects));
+            return objects.Count;
+        }
+
+        /// <summary>The interactive objects under <paramref name="scope"/> (the whole region, or one root of it).</summary>
+        public static List<ObjectEntry> Objects(MapArea area, Transform scope)
+        {
+            var list = new List<ObjectEntry>();
+            foreach (MapObject obj in scope.GetComponentsInChildren<MapObject>())
             {
                 if (string.IsNullOrWhiteSpace(obj.objectType))
                 {
@@ -124,68 +144,88 @@ namespace Rth.MapTools.Editor
                     continue;
                 }
                 Vector2Int t = obj.Tile;
-                if (count++ > 0) sb.Append(",\n");
-                sb.Append("  { \"type\": \"").Append(obj.objectType.Trim().Replace("\"", ""))
-                  .Append("\", \"plane\": ").Append(MapLevel.Of(obj, area.plane))
-                  .Append(", \"x\": ").Append(t.x)
-                  .Append(", \"y\": ").Append(t.y);
+                var entry = new ObjectEntry { Type = obj.objectType.Trim(), Plane = MapLevel.Of(obj, area.plane), X = t.x, Y = t.y };
                 if (obj.climbTo != null)
                 {
                     Vector3 to = obj.climbTo.position;
-                    sb.Append(", \"toPlane\": ").Append(MapLevel.Of(obj.climbTo, area.plane))
-                      .Append(", \"toX\": ").Append(Mathf.FloorToInt(to.x))
-                      .Append(", \"toY\": ").Append(Mathf.FloorToInt(to.z));
+                    entry.ToPlane = MapLevel.Of(obj.climbTo, area.plane);
+                    entry.ToX = Mathf.FloorToInt(to.x);
+                    entry.ToY = Mathf.FloorToInt(to.z);
                 }
-                sb.Append(" }");
+                list.Add(entry);
             }
-            sb.Append("\n]\n");
-            File.WriteAllText(path, sb.ToString());
-            return count;
+            return list;
         }
 
         /// <summary>Writes the creature spawns as JSON next to the map. Returns how many.</summary>
         private static int ExportNpcSpawns(MapArea area, MapData map, string path)
         {
-            var sb = new System.Text.StringBuilder("[\n");
-            int count = 0;
-            foreach (MapNpcSpawn spawn in area.GetComponentsInChildren<MapNpcSpawn>())
+            List<NpcEntry> npcs = Npcs(area, area.transform);
+            foreach (NpcEntry n in npcs)
+                if (map.IsBlocked(n.Plane, n.X, n.Y))
+                    Debug.LogWarning($"[R'th] NPC spawn '{n.Npc}' stands on a blocked tile ({n.X}, {n.Y}) on level {n.Plane}.", area);
+            File.WriteAllText(path, RegionCompiler.SpawnsJson(npcs));
+            return npcs.Count;
+        }
+
+        /// <summary>The creature spawns under <paramref name="scope"/>.</summary>
+        public static List<NpcEntry> Npcs(MapArea area, Transform scope)
+        {
+            var list = new List<NpcEntry>();
+            foreach (MapNpcSpawn spawn in scope.GetComponentsInChildren<MapNpcSpawn>())
             {
-                Vector3 p = spawn.transform.position;
-                int x = Mathf.FloorToInt(p.x);
-                int y = Mathf.FloorToInt(p.z);
                 if (string.IsNullOrWhiteSpace(spawn.npcId))
                 {
                     Debug.LogWarning($"[R'th] MapNpcSpawn '{spawn.name}' has no npcId; skipped.", spawn);
                     continue;
                 }
-                int level = MapLevel.Of(spawn, area.plane);
-                if (map.IsBlocked(level, x, y))
-                    Debug.LogWarning($"[R'th] NPC spawn '{spawn.name}' stands on a blocked tile ({x}, {y}) on level {level}.", spawn);
-                if (count++ > 0) sb.Append(",\n");
-                sb.Append("  { \"npc\": \"").Append(spawn.npcId.Trim().Replace("\"", ""))
-                  .Append("\", \"plane\": ").Append(level)
-                  .Append(", \"x\": ").Append(x)
-                  .Append(", \"y\": ").Append(y)
-                  .Append(", \"wander\": ").Append(spawn.wanderRadius)
-                  .Append(" }");
+                Vector3 p = spawn.transform.position;
+                list.Add(new NpcEntry
+                {
+                    Npc = spawn.npcId.Trim(), Plane = MapLevel.Of(spawn, area.plane),
+                    X = Mathf.FloorToInt(p.x), Y = Mathf.FloorToInt(p.z), Wander = spawn.wanderRadius,
+                });
             }
-            sb.Append("\n]\n");
-            File.WriteAllText(path, sb.ToString());
-            return count;
+            return list;
+        }
+
+        /// <summary>The player spawn under <paramref name="scope"/> as [plane, x, y], or null.</summary>
+        public static int[] Spawn(MapArea area, Transform scope)
+        {
+            MapSpawn spawn = scope.GetComponentInChildren<MapSpawn>();
+            if (spawn == null) return null;
+            Vector3 p = spawn.transform.position;
+            return new[] { MapLevel.Of(spawn, area.plane), Mathf.FloorToInt(p.x), Mathf.FloorToInt(p.z) };
         }
 
         public static MapData Build(MapArea area)
         {
+            CollisionLayers layers = BuildLayers(area, area.transform);
+            int[] spawn = Spawn(area, area.transform);
+            MapData map = layers.ToMapData(spawn != null ? spawn[0] : 0, spawn != null ? new TileCoord(spawn[1], spawn[2]) : (TileCoord?)null);
+            if (spawn != null && map.IsBlocked(map.SpawnPlane, map.Spawn.X, map.Spawn.Y))
+                Debug.LogError($"[R'th] The spawn tile {map.Spawn} is blocked.", area);
+            // No MapSpawn is normal: most regions aren't where new players start.
+            return map;
+        }
+
+        /// <summary>
+        /// The collision of everything under <paramref name="scope"/> (the whole region, or one
+        /// root of it, as Sync World does for the hand-made root): ground, blocked tiles and walls,
+        /// kept apart so they can be merged with the region's data.
+        /// </summary>
+        public static CollisionLayers BuildLayers(MapArea area, Transform scope)
+        {
             Physics.SyncTransforms();
             int plane = area.plane;
             int planes = plane + 1;
-            foreach (MapLevel floor in area.GetComponentsInChildren<MapLevel>(true)) planes = Mathf.Max(planes, floor.level + 1);
-            var map = new MapData(area.origin.x, area.origin.y, area.size.x, area.size.y, planes);
+            foreach (MapLevel floor in scope.GetComponentsInChildren<MapLevel>(true)) planes = Mathf.Max(planes, floor.level + 1);
+            var layers = new CollisionLayers(area.origin.x, area.origin.y, area.size.x, area.size.y, planes);
 
-            MarkMissingGround(area, map);
-            MarkCliffs(area, map);
+            MarkGround(area, scope, layers);
+            MarkCliffs(area, scope, layers);
 
-            foreach (MapBlocker blocker in area.GetComponentsInChildren<MapBlocker>())
+            foreach (MapBlocker blocker in scope.GetComponentsInChildren<MapBlocker>())
             {
                 if (!TryGetBounds(blocker, out Bounds b))
                 {
@@ -195,10 +235,10 @@ namespace Rth.MapTools.Editor
                 int level = MapLevel.Of(blocker, plane);
                 foreach (int x in Overlapped(b.min.x, b.max.x))
                     foreach (int y in Overlapped(b.min.z, b.max.z))
-                        map.Block(level, x, y);
+                        layers.Block(level, x, y);
             }
 
-            foreach (MapWall wall in area.GetComponentsInChildren<MapWall>())
+            foreach (MapWall wall in scope.GetComponentsInChildren<MapWall>())
             {
                 if (!TryGetBounds(wall, out Bounds b))
                 {
@@ -210,68 +250,52 @@ namespace Rth.MapTools.Editor
                 {
                     // Runs east-west along the line z = line: blocks the north edge of the row below it.
                     int line = Mathf.RoundToInt(b.center.z);
-                    foreach (int x in Overlapped(b.min.x, b.max.x)) map.AddWall(level, x, line - 1, WallSide.North);
+                    foreach (int x in Overlapped(b.min.x, b.max.x)) layers.AddWall(level, x, line - 1, WallSide.North);
                 }
                 else
                 {
                     int line = Mathf.RoundToInt(b.center.x);
-                    foreach (int y in Overlapped(b.min.z, b.max.z)) map.AddWall(level, line - 1, y, WallSide.East);
+                    foreach (int y in Overlapped(b.min.z, b.max.z)) layers.AddWall(level, line - 1, y, WallSide.East);
                 }
             }
-
-            MapSpawn spawn = area.GetComponentInChildren<MapSpawn>();
-            if (spawn != null)
-            {
-                Vector3 p = spawn.transform.position;
-                map.SpawnPlane = MapLevel.Of(spawn, plane);
-                map.Spawn = new TileCoord(Mathf.FloorToInt(p.x), Mathf.FloorToInt(p.z));
-                if (map.IsBlocked(map.SpawnPlane, map.Spawn.X, map.Spawn.Y))
-                    Debug.LogError($"[R'th] The spawn tile {map.Spawn} is blocked.", area);
-            }
-            // No MapSpawn is normal: most regions aren't where new players start.
-
-            return map;
+            return layers;
         }
 
         /// <summary>
-        /// Blocks every tile with no ground on a plane. Ground is any collider under the tile's
-        /// centre that isn't a wall or blocker, counted on the plane of the <see cref="MapLevel"/>
-        /// it belongs to (the region's own plane if it has none), so a floor above a room is ground
-        /// on its own plane and leaves the room's plane alone.
+        /// Marks the ground on each plane. Ground is any collider under the tile's centre that isn't
+        /// a wall or blocker, counted on the plane of the <see cref="MapLevel"/> it belongs to (the
+        /// region's own plane if it has none), so a floor above a room is ground on its own plane and
+        /// leaves the room's plane alone. Tiles with none are blocked when the layers are flattened.
         /// </summary>
-        private static void MarkMissingGround(MapArea area, MapData map)
+        private static void MarkGround(MapArea area, Transform scope, CollisionLayers layers)
         {
-            var ground = new bool[map.Planes];
             for (int y = area.origin.y; y < area.origin.y + area.size.y; y++)
             {
                 for (int x = area.origin.x; x < area.origin.x + area.size.x; x++)
                 {
-                    System.Array.Clear(ground, 0, ground.Length);
                     var from = new Vector3(x + 0.5f, 500f, y + 0.5f);
                     foreach (RaycastHit hit in Physics.RaycastAll(from, Vector3.down, 1000f, ~0, QueryTriggerInteraction.Ignore))
                     {
                         Transform t = hit.collider.transform;
-                        if (!t.IsChildOf(area.transform)) continue;
+                        if (!t.IsChildOf(scope)) continue;
                         if (t.GetComponentInParent<MapWall>() != null || t.GetComponentInParent<MapBlocker>() != null) continue;
                         int level = MapLevel.Of(hit.collider, area.plane);
-                        if (level >= 0 && level < ground.Length) ground[level] = true;
+                        if (level >= 0 && level < layers.Planes) layers.SetGround(level, x, y);
                     }
-                    for (int plane = 0; plane < ground.Length; plane++)
-                        if (!ground[plane]) map.Block(plane, x, y);
                 }
             }
         }
 
         /// <summary>Blocks cliff faces and impassable tiles of each terrain, on the plane the terrain is on.</summary>
-        private static void MarkCliffs(MapArea area, MapData map)
+        private static void MarkCliffs(MapArea area, Transform scope, CollisionLayers layers)
         {
-            foreach (MapTerrain terrain in area.GetComponentsInChildren<MapTerrain>())
+            foreach (MapTerrain terrain in scope.GetComponentsInChildren<MapTerrain>())
             {
                 Heightfield field = terrain.Field;
                 int plane = MapLevel.Of(terrain, area.plane);
                 for (int y = field.OriginY; y < field.OriginY + field.Depth; y++)
                     for (int x = field.OriginX; x < field.OriginX + field.Width; x++)
-                        if (map.Contains(plane, x, y) && (field.IsSteep(x, y, terrain.cliffStep) || terrain.IsBlocked(x, y))) map.Block(plane, x, y);
+                        if (layers.Contains(plane, x, y) && (field.IsSteep(x, y, terrain.cliffStep) || terrain.IsBlocked(x, y))) layers.Block(plane, x, y);
             }
         }
 
@@ -289,6 +313,17 @@ namespace Rth.MapTools.Editor
                 if (map.IsBlocked(level, x, y))
                     Debug.LogWarning($"[R'th] '{obj.name}' climbs to ({x}, {y}) on level {level}, which is blocked there (no floor, or something stands on it).", obj);
             }
+        }
+
+        /// <summary>The tiles a blocker covers, by the same rule the exporter uses (null if it has no collider).</summary>
+        public static List<Vector2Int> BlockedTiles(Component blocker)
+        {
+            if (!TryGetBounds(blocker, out Bounds b)) return null;
+            var tiles = new List<Vector2Int>();
+            foreach (int x in Overlapped(b.min.x, b.max.x))
+                foreach (int y in Overlapped(b.min.z, b.max.z))
+                    tiles.Add(new Vector2Int(x, y));
+            return tiles;
         }
 
         private static bool TryGetBounds(Component root, out Bounds bounds)
