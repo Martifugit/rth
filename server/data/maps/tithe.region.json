@@ -1,8 +1,0 @@
-{
-  "scene": "Tithe",
-  "title": "Tithe",
-  "hasSpawn": false,
-  "instanced": false,
-  "music": "tithe",
-  "atmosphere": { "sunIntensity": 1.55, "sun": "#FFF7E6", "ambientSky": "#D6E3F2", "ambientEquator": "#C2C7C9", "ambientGround": "#8F8A80", "fog": "#E0E6E3", "fogStart": 50, "fogEnd": 120 }
-}

@@ -1,8 +1,0 @@
-{
-  "scene": "Cruor",
-  "title": "Cruor",
-  "hasSpawn": false,
-  "instanced": false,
-  "music": "cruor",
-  "atmosphere": { "sunIntensity": 1.2, "sun": "#FFD199", "ambientSky": "#CCAD8F", "ambientEquator": "#A3856E", "ambientGround": "#523D33", "fog": "#DEBA8F", "fogStart": 55, "fogEnd": 118 }
-}

@@ -104,6 +104,14 @@ namespace Rth.Shared.World.Data
                     if (npcIds.Count > 0 && !npcIds.Contains(n.Npc)) errors.Add($"{name}: npc '{n.Npc}' at ({n.X}, {n.Y}) isn't in npcs.json.");
                 if (e.Compiled.Errors.Count == 0) errors.AddRange(Stale(e));
             }
+            // Maps without data were exported straight from a scene the old way (or are left over).
+            if (warnings != null && Directory.Exists(MapsDirectory))
+                foreach (string map in Directory.GetFiles(MapsDirectory, "*.rthmap"))
+                {
+                    string id = System.IO.Path.GetFileNameWithoutExtension(map);
+                    if (Find(id) == null)
+                        warnings.Add($"server/data/maps/{id}.rthmap has no world/regions/{id}.json: it comes from a scene, not the data (convert it, or delete it if it's left over).");
+                }
             for (int i = 0; i < Regions.Count; i++)
                 for (int j = i + 1; j < Regions.Count; j++)
                 {

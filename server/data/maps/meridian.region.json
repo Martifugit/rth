@@ -1,8 +1,0 @@
-{
-  "scene": "Meridian",
-  "title": "Meridian",
-  "hasSpawn": false,
-  "instanced": false,
-  "music": "meridian",
-  "atmosphere": { "sunIntensity": 1.25, "sun": "#EBF5FF", "ambientSky": "#B2C7E6", "ambientEquator": "#94A1B2", "ambientGround": "#525761", "fog": "#B8CCE0", "fogStart": 70, "fogEnd": 160 }
-}

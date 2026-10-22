@@ -1,8 +1,0 @@
-{
-  "scene": "Cistern",
-  "title": "Cistern",
-  "hasSpawn": false,
-  "instanced": false,
-  "music": "cistern",
-  "atmosphere": { "sunIntensity": 1.35, "sun": "#FFCC8C", "ambientSky": "#D9B88F", "ambientEquator": "#B28F6B", "ambientGround": "#664C38", "fog": "#D1AD80", "fogStart": 45, "fogEnd": 112 }
-}
