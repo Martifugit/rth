@@ -11,7 +11,8 @@ namespace Rth.Client.Editor
 {
     /// <summary>
     /// The layout step of docs/world-building.md: bakes each open region's ground from the world
-    /// layout (Assets/World/layout.json) plus the region's own <see cref="MapTerrainStamp"/>s,
+    /// layout (world/layout/zones.json, compiled from the continent layout in docs/layout.md; the
+    /// older sketch-made Assets/World/layout.json if that is missing) plus the region's own <see cref="MapTerrainStamp"/>s,
     /// into its <see cref="MapTerrain"/> (made if missing). Everything placed in the region rides
     /// the ground: each piece moves up or down by however much the ground under its middle
     /// changed, so re-baking after the layout changes keeps the hand-made detail where it was.
@@ -44,12 +45,22 @@ namespace Rth.Client.Editor
             }
         }
 
+        /// <summary>
+        /// The zone grid compiled from the continent layout (docs/layout.md), outside Assets:
+        /// world/layout/zones.json, written by `dotnet run --project tools/world -- layout`.
+        /// </summary>
+        public static string ContinentZonesPath =>
+            System.IO.Path.GetFullPath(System.IO.Path.Combine(Application.dataPath, "..", "..", "world", "layout", "zones.json"));
+
         public static WorldLayout Load()
         {
+            string zones = ContinentZonesPath;
+            if (System.IO.File.Exists(zones)) return WorldLayout.Parse(System.IO.File.ReadAllText(zones));
+            // The sketch-made prototype, until a checkout has the continent layout.
             var file = AssetDatabase.LoadAssetAtPath<TextAsset>(LayoutPath);
             if (file == null)
             {
-                Debug.LogError("[R'th] No world layout at " + LayoutPath + " (tools/world-layout/layout_from_sketch.py makes a first one).");
+                Debug.LogError("[R'th] No world layout at " + zones + " or " + LayoutPath + " (run `dotnet run --project tools/world -- layout`).");
                 return null;
             }
             return WorldLayout.Parse(file.text);
