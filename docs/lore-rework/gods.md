@@ -28,6 +28,8 @@ Every god gets these, briefly. Anything undecided is a placeholder or **sealed**
 - **Their presence is uneven**, and part of each god's character: one walks the world in a body,
   one speaks only through omens, one hasn't been heard from in centuries. As the revision stirs,
   quiet gods can start to show themselves again.
+- **Myth-inspired, reimagined.** Gods can grow from myths and stories, but each is reimagined so
+  the game feels its own, while its inspiration stays clear and discoverable to those who know.
 - **No single rivalry runs the world.** Gods have their own lives, enemies and aims; the world
   is moved by many of them at once, not by one feud.
 
