@@ -1,0 +1,8 @@
+{
+  "scene": "RealmOfTheDead",
+  "title": "The Landing",
+  "hasSpawn": false,
+  "instanced": true,
+  "music": "",
+  "atmosphere": { "sunIntensity": 0.02, "sun": "#8C9AB8", "ambientSky": "#262838", "ambientEquator": "#16171E", "ambientGround": "#050506", "fog": "#020203", "fogStart": 18, "fogEnd": 45 }
+}

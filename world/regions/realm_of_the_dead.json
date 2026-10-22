@@ -1,0 +1,91 @@
+{
+  "id": "realm_of_the_dead",
+  "title": "The Landing",
+  "scene": "Assets/Scenes/RealmOfTheDead.unity",
+  "origin": [8192, 8192],
+  "size": [32, 32],
+  "plane": 0,
+  "instanced": true,
+  "music": "",
+  "atmosphere": { "sunIntensity": 0.02, "sun": "#8C9AB8", "ambientSky": "#262838", "ambientEquator": "#16171E", "ambientGround": "#050506", "fog": "#020203", "fogStart": 18, "fogEnd": 45 },
+  "materials": {
+    "DeadAsh": "#2E2C2B",
+    "DeadBoat": "#2B221A",
+    "DeadChest": "#1C1714",
+    "DeadIron": "#1E1E22",
+    "DeadLanternGlow": "#F2C66A",
+    "DeadPlank": "#3B2E22",
+    "DeadWater": "#07090C",
+    "DeadWetWood": "#241B14"
+  },
+  "seed": 1,
+  "pieces": [
+    { "id": "patch-landing", "kind": "patch", "rect": [8200, 8198, 8216, 8212], "material": "DeadAsh" },
+    { "id": "patch-landing-south", "kind": "patch", "rect": [8202, 8196, 8212, 8198], "material": "DeadAsh" },
+    { "id": "patch-landing-west", "kind": "patch", "rect": [8198, 8202, 8200, 8209], "material": "DeadAsh" },
+    { "id": "patch-landing-east", "kind": "patch", "rect": [8216, 8200, 8219, 8206], "material": "DeadAsh" },
+    { "id": "patch-jetty", "kind": "patch", "rect": [8207, 8212, 8209, 8221], "material": "DeadPlank" },
+    { "id": "water-1", "kind": "water", "rect": [8192, 8192, 8224, 8196], "material": "DeadWater" },
+    { "id": "water-2", "kind": "water", "rect": [8192, 8196, 8202, 8198], "material": "DeadWater" },
+    { "id": "water-3", "kind": "water", "rect": [8212, 8196, 8224, 8198], "material": "DeadWater" },
+    { "id": "water-4", "kind": "water", "rect": [8192, 8198, 8200, 8202], "material": "DeadWater" },
+    { "id": "water-5", "kind": "water", "rect": [8216, 8198, 8224, 8200], "material": "DeadWater" },
+    { "id": "water-6", "kind": "water", "rect": [8219, 8200, 8224, 8206], "material": "DeadWater" },
+    { "id": "water-7", "kind": "water", "rect": [8192, 8202, 8198, 8209], "material": "DeadWater" },
+    { "id": "water-8", "kind": "water", "rect": [8216, 8206, 8224, 8212], "material": "DeadWater" },
+    { "id": "water-9", "kind": "water", "rect": [8192, 8209, 8200, 8212], "material": "DeadWater" },
+    { "id": "water-10", "kind": "water", "rect": [8192, 8212, 8207, 8224], "material": "DeadWater" },
+    { "id": "water-11", "kind": "water", "rect": [8209, 8212, 8224, 8224], "material": "DeadWater" },
+    { "id": "water-12", "kind": "water", "rect": [8207, 8221, 8209, 8224], "material": "DeadWater" },
+    { "id": "prop-jetty", "kind": "prop", "at": [8207, 8212], "parts": [
+      { "shape": "box", "name": "Deck", "at": [0.5, -0.03, 4], "size": [2, 0.1, 9], "material": "DeadPlank" },
+      { "shape": "box", "name": "Beam", "at": [0.5, 0.025, 0.5], "size": [2.1, 0.04, 0.18], "material": "DeadWetWood" },
+      { "shape": "box", "name": "Beam", "at": [0.5, 0.025, 3], "size": [2.1, 0.04, 0.18], "material": "DeadWetWood" },
+      { "shape": "box", "name": "Beam", "at": [0.5, 0.025, 5.5], "size": [2.1, 0.04, 0.18], "material": "DeadWetWood" },
+      { "shape": "box", "name": "Beam", "at": [0.5, 0.025, 8], "size": [2.1, 0.04, 0.18], "material": "DeadWetWood" },
+      { "shape": "cylinder", "name": "Post", "at": [-0.45, 0.15, -0.4], "size": [0.2, 0.55, 0.2], "material": "DeadWetWood" },
+      { "shape": "cylinder", "name": "Post", "at": [1.45, 0.15, -0.4], "size": [0.2, 0.55, 0.2], "material": "DeadWetWood" },
+      { "shape": "cylinder", "name": "Post", "at": [-0.45, 0.15, 2.5], "size": [0.2, 0.55, 0.2], "material": "DeadWetWood" },
+      { "shape": "cylinder", "name": "Post", "at": [1.45, 0.15, 2.5], "size": [0.2, 0.55, 0.2], "material": "DeadWetWood" },
+      { "shape": "cylinder", "name": "Post", "at": [-0.45, 0.15, 5.5], "size": [0.2, 0.55, 0.2], "material": "DeadWetWood" },
+      { "shape": "cylinder", "name": "Post", "at": [1.45, 0.15, 5.5], "size": [0.2, 0.55, 0.2], "material": "DeadWetWood" },
+      { "shape": "cylinder", "name": "Post", "at": [-0.45, 0.15, 8.4], "size": [0.2, 0.55, 0.2], "material": "DeadWetWood" },
+      { "shape": "cylinder", "name": "Post", "at": [1.45, 0.15, 8.4], "size": [0.2, 0.55, 0.2], "material": "DeadWetWood" },
+      { "shape": "cylinder", "name": "Lantern pole", "at": [1.45, 0.9, 8.4], "size": [0.1, 0.5, 0.1], "material": "DeadIron" },
+      { "shape": "box", "name": "Lantern", "at": [1.45, 1.55, 8.4], "size": [0.22, 0.28, 0.22], "material": "DeadLanternGlow" },
+      { "shape": "box", "name": "Lantern cap", "at": [1.45, 1.73, 8.4], "size": [0.28, 0.06, 0.28], "material": "DeadIron" }
+    ] },
+    { "id": "prop-shore-lantern", "kind": "prop", "at": [8206, 8211], "footprint": [0, 0, 1, 1], "parts": [
+      { "shape": "box", "name": "Base", "at": [0, 0.08, 0], "size": [0.45, 0.16, 0.45], "material": "DeadAsh" },
+      { "shape": "cylinder", "name": "Post", "at": [0, 1.1, 0], "size": [0.14, 1.05, 0.14], "material": "DeadWetWood" },
+      { "shape": "box", "name": "Arm", "at": [0.22, 2.05, 0], "size": [0.5, 0.06, 0.06], "material": "DeadIron" },
+      { "shape": "box", "name": "Lantern", "at": [0.42, 1.82, 0], "size": [0.24, 0.3, 0.24], "material": "DeadLanternGlow" },
+      { "shape": "box", "name": "Lantern cap", "at": [0.42, 2, 0], "size": [0.3, 0.06, 0.3], "material": "DeadIron" }
+    ] },
+    { "id": "prop-ferry-boat", "kind": "prop", "at": [8209, 8216], "parts": [
+      { "shape": "box", "name": "Hull", "at": [0.15, -0.02, 0.3], "size": [0.9, 0.3, 2.8], "material": "DeadBoat" },
+      { "shape": "box", "name": "Bow", "at": [0.15, 0.02, 1.85], "size": [0.6, 0.3, 0.5], "rot": [0, 45, 0], "material": "DeadBoat" },
+      { "shape": "box", "name": "Hollow", "at": [0.15, 0.12, 0.3], "size": [0.7, 0.04, 2.5], "material": "DeadWater" },
+      { "shape": "box", "name": "Thwart", "at": [0.15, 0.14, 0], "size": [0.85, 0.06, 0.25], "material": "DeadWetWood" },
+      { "shape": "cylinder", "name": "Oar", "at": [0.3, 0.25, 0.6], "size": [0.06, 1.1, 0.06], "rot": [80, 0, 0], "material": "DeadWetWood" },
+      { "shape": "box", "name": "Oar blade", "at": [0.3, 0.06, 1.65], "size": [0.18, 0.03, 0.4], "rot": [10, 0, 0], "material": "DeadWetWood" }
+    ] },
+    { "id": "prop-bench", "kind": "prop", "at": [8211, 8209], "footprint": [0, 0, 2, 1], "parts": [
+      { "shape": "box", "name": "Seat", "at": [0.5, 0.42, 0], "size": [1.8, 0.08, 0.45], "material": "DeadWetWood" },
+      { "shape": "box", "name": "Leg", "at": [-0.25, 0.2, 0], "size": [0.12, 0.4, 0.4], "material": "DeadWetWood" },
+      { "shape": "box", "name": "Leg", "at": [1.25, 0.2, 0], "size": [0.12, 0.4, 0.4], "material": "DeadWetWood" }
+    ] },
+    { "id": "prop-grave-chest", "kind": "prop", "at": [8203, 8205], "rot": 90, "object": "grave_chest", "parts": [
+      { "shape": "box", "name": "Chest", "at": [0, 0.3, 0], "size": [0.95, 0.6, 0.65], "material": "DeadChest" },
+      { "shape": "box", "name": "Lid", "at": [0, 0.66, 0], "size": [1, 0.12, 0.7], "material": "DeadChest" },
+      { "shape": "box", "name": "Band", "at": [-0.3, 0.38, 0], "size": [0.08, 0.66, 0.7], "material": "DeadIron" },
+      { "shape": "box", "name": "Band", "at": [0.3, 0.38, 0], "size": [0.08, 0.66, 0.7], "material": "DeadIron" },
+      { "shape": "box", "name": "Lock", "at": [0, 0.48, -0.34], "size": [0.14, 0.16, 0.04], "material": "DeadLanternGlow" }
+    ] },
+    { "id": "rock-8201-8199", "kind": "rock", "at": [8201, 8199], "scale": 0.8 },
+    { "id": "rock-8217-8204", "kind": "rock", "at": [8217, 8204], "scale": 0.7 },
+    { "id": "rock-8199-8207", "kind": "rock", "at": [8199, 8207], "scale": 0.75 },
+    { "id": "rock-8214-8210", "kind": "rock", "at": [8214, 8210], "scale": 0.6 },
+    { "id": "npc-ferryman", "kind": "npc", "at": [8208, 8214], "npc": "ferryman", "wander": 0 }
+  ]
+}
