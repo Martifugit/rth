@@ -139,10 +139,11 @@ namespace Rth.Client.Ui.Panels
                 UiKit.Text(_scroll, UiKit.Colour(Escape(line.From) + ":", UiKit.HeadingColour) + " " + UiKit.Colour(Escape(line.Text), new Color(0.6f, 0.8f, 1f)), "chat-line");
                 return;
             }
-            string text = line.Kind == TextKind.Ferryman ? "The ferryman: " + line.Text : line.Text;
-            Label label = UiKit.Text(_scroll, Escape(text), "chat-line");
+            // The ferryman's remark on a death is narration with his words quoted ("Dark water, a
+            // jetty... \"First time.\""), so it goes in as written, in its own colour.
+            Label label = UiKit.Text(_scroll, Escape(line.Text), "chat-line");
             if (line.Kind == TextKind.Warning) label.AddToClassList("chat-line--warning");
-            if (line.Kind == TextKind.Ferryman) label.AddToClassList("chat-line--assayer");
+            if (line.Kind == TextKind.Ferryman) label.AddToClassList("chat-line--ferryman");
         }
 
         /// <summary>Stops players' text being read as rich-text tags.</summary>
