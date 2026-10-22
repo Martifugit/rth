@@ -177,7 +177,8 @@ namespace Rth.Server.Game
             else End(player);
         }
 
-        private bool Test(Player player, DialogueCondition condition, Npc? npc)
+        /// <summary>Whether a condition holds, through its registered handler (also used by item uses).</summary>
+        public bool Test(Player player, DialogueCondition condition, Npc? npc)
         {
             if (!_conditions.TryGetValue(condition.Type, out var test))
             {
@@ -187,7 +188,8 @@ namespace Rth.Server.Game
             return test(player, condition, npc) != condition.Not;
         }
 
-        private void Run(Player player, DialogueAction action, Npc? npc)
+        /// <summary>Does an action through its registered handler (also used by item uses).</summary>
+        public void Run(Player player, DialogueAction action, Npc? npc)
         {
             if (_actions.TryGetValue(action.Type, out var run)) run(player, action, npc);
             else World.Log("No handler for dialogue action '" + action.Type + "'.");

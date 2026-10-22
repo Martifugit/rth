@@ -49,6 +49,63 @@ namespace Rth.Shared.Net
         internal static NpcActionMessage Read(BinaryReader r) => new NpcActionMessage { NpcId = r.ReadInt32(), ActionId = r.ReadString() };
     }
 
+    /// <summary>What an item is used on.</summary>
+    public enum UseTarget : byte
+    {
+        Object = 0,
+        Npc = 1,
+        Item = 2,
+    }
+
+    /// <summary>
+    /// "Use" a pack item on something: a placed object (type, plane and tile), an NPC (by entity
+    /// id) or another pack item (by slot). Item ids travel with the slots so the server can tell
+    /// if the pack changed under the click. The server walks the player over and decides.
+    /// </summary>
+    public sealed class UseItemMessage : Message
+    {
+        public int Slot;
+        public string ItemId = "";
+        public UseTarget Target;
+        public string ObjectType = "";
+        public int Plane;
+        public int X;
+        public int Y;
+        public int NpcId;
+        public int TargetSlot;
+        public string TargetItemId = "";
+
+        public override MessageType Type => MessageType.UseItem;
+
+        internal override void WriteBody(BinaryWriter w)
+        {
+            w.Write((byte)Slot);
+            w.Write(ItemId);
+            w.Write((byte)Target);
+            w.Write(ObjectType);
+            w.Write((byte)Plane);
+            w.Write(X);
+            w.Write(Y);
+            w.Write(NpcId);
+            w.Write((byte)TargetSlot);
+            w.Write(TargetItemId);
+        }
+
+        internal static UseItemMessage Read(BinaryReader r) => new UseItemMessage
+        {
+            Slot = r.ReadByte(),
+            ItemId = r.ReadString(),
+            Target = (UseTarget)r.ReadByte(),
+            ObjectType = r.ReadString(),
+            Plane = r.ReadByte(),
+            X = r.ReadInt32(),
+            Y = r.ReadInt32(),
+            NpcId = r.ReadInt32(),
+            TargetSlot = r.ReadByte(),
+            TargetItemId = r.ReadString(),
+        };
+    }
+
     /// <summary>Pick a dialogue option, or -1 to continue past a line with no options.</summary>
     public sealed class DialogueChoiceMessage : Message
     {

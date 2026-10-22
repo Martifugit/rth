@@ -34,6 +34,11 @@ namespace Rth.Shared.Items
         public const string Consume = "consume";
         public const string Equip = "equip";
         public const string Unequip = "unequip";
+        /// <summary>
+        /// Picks the item up for "use on": the client then waits for a click on an object, an NPC
+        /// or another item and sends a UseItemMessage. Never sent as an item action itself.
+        /// </summary>
+        public const string Use = "use";
         public const string Drop = "drop";
         public const string Examine = "examine";
 
@@ -44,6 +49,7 @@ namespace Rth.Shared.Items
                 ? new ItemAction(Equip, def.Equipment.Slot == EquipSlot.Weapon || def.Equipment.Slot == EquipSlot.Offhand ? "Wield" : "Wear")
                 : (ItemAction?)null,
             (def, where) => where == ContainerKind.Equipment ? new ItemAction(Unequip, "Remove") : (ItemAction?)null,
+            (def, where) => where == ContainerKind.Inventory ? new ItemAction(Use, "Use") : (ItemAction?)null,
             (def, where) => where == ContainerKind.Inventory ? new ItemAction(Drop, "Drop") : (ItemAction?)null,
             (def, where) => new ItemAction(Examine, "Examine"),
         };

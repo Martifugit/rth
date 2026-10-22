@@ -12,8 +12,8 @@ multi-region world streamed by the client), 8 (the window-based interface, chat)
 skills rework: Religion's hymns replace breath, the v1 skill roster) and 10 (melee: weapon
 styles, melee abilities, Cruor's verses, gathering nodes and the first monument) are done, and
 death v1 (D1 and D2 in `docs/plan.md`: the ferryman holds what you die with, on a dark landing
-built as region data) and
-workstream E1 (gathering tools, the first Mining and Woodcutting) have landed. The v1 skills are
+built as region data) and workstreams E1 (gathering tools, the first Mining and Woodcutting) and
+E3 (using an item on an object, an NPC or another item) have landed. The v1 skills are
 designed in `docs/skills.md`; most of them exist only as a skill and a level so far.
 
 **Build everything as extensible systems.** New features plug into the mechanisms under
@@ -408,6 +408,26 @@ gathering spots, skill shortcuts) are built; people and data (phase 4) are next.
 Not yet: rocks and trees placed in the scenes (proposed tiles in `docs/plan.md` Handoffs), a
 seller for tools (Smithing makes them later), mining/chopping animations (nodes use "work").
 
+## E3: using an item on something (done)
+
+- [x] "Use" on a pack item, then a click on an object, an NPC or another pack item
+      (`UseItemMessage`, protocol 18). Objects and NPCs are walked up to (an interaction, so
+      walking cancels it); item on item happens at once, either way round.
+- [x] What happens is data: uses.json (`UseDef`, `UseSystem`). An entry names the `item` (or
+      `tag:x`), one of `onObject` / `onNpc` (or `tag:x`) / `onItem` (or `tag:x`), `requirements`,
+      dialogue `conditions` and a `failMessage`, then `consume`, `consumeTarget`, `animation`,
+      `message` ({tokens}), `effects` (effect ops), dialogue `actions`, a `recipe` (repeated where
+      the player stands while the inputs last; a recipe may now have no station) and a `dialogue`.
+      The first entry that matches and passes wins; nothing listed: "Nothing interesting happens."
+- [x] `ItemUsedOn` event; quest objective and achievement kind `use` (target: the use's id).
+- [x] Content: a fen rat carcass on the skinning rack butchers it; the skinning knife on a
+      carcass and a rat gall on Corvin say a line.
+- [x] Client: the Use option, use mode ("Use X -> Y" in hover text and menus); Escape, Cancel, a
+      right-click on nothing or walking put the item down. `UseTests`.
+
+Not yet: a highlight on the picked-up slot (waits on the UI framework, U1), using items on
+players or ground items.
+
 **Death v1, server (D1, done):** `FerrySystem` and death.json. Everything carried and worn goes
 to the ferryman's hold; the player wakes at death.json's `wake` tile and his conversation opens
 (dialogue `ferryman`, no NPC needed).
@@ -441,7 +461,7 @@ and saving. Everything else is a `GameSystem` listed in `World.StandardSystems` 
 systems run in that order within each phase, and a system may use those before it while
 attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `DeathSystem`,
 `NpcSystem`, `GroundItemSystem`, `LootSystem`, `ObjectSystem`, `ClimbSystem`, `ReligionSystem`, `RecipeSystem`, `GatheringSystem`, `InterfaceSystem`,
-`DialogueSystem`, `BankSystem`, `FerrySystem`, `ShopSystem`, `PointsSystem`, `TaskSystem`, `QuestSystem`.
+`DialogueSystem`, `BankSystem`, `FerrySystem`, `ShopSystem`, `PointsSystem`, `TaskSystem`, `QuestSystem`, `UseSystem`.
 
 | To add... | Use |
 |---|---|
@@ -474,6 +494,7 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | Something said or done in dialogue | `DialogueSystem.RegisterCondition` / `RegisterAction` / `RegisterToken`. Conversations themselves are data. |
 | A conversation with no NPC in the world (a voice, the ferryman before his landing) | `DialogueSystem.Start(player, dialogueId, speaker)`; it ends when finished, closed or on death, not by walking away. |
 | What happens at death, the fee, the obol | death.json (`DeathRules`); the ferryman's conversation uses `ferryHolds` / `ferryFree` / `ferryCanPay` / `ferryObol` / `inRealm`, actions `ferryPay` / `ferryLeave`, tokens `{ferryFee}` `{ferryValue}` `{ferryHours}` `{deaths}`. Something else reacting to waking: subscribe to `PlayerRespawned`. |
+| Using an item on something ("Use X -> Y") | An entry in uses.json: the item (or `tag:`), one of `onObject` / `onNpc` / `onItem`, checks (`requirements`, dialogue `conditions`, `failMessage`) and outcomes (`consume`, `message`, `effects`, dialogue `actions`, a `recipe`, a `dialogue`). No code; a new kind of outcome is usually a dialogue action. Counted by quests and achievements as kind `use`. |
 | A quest | An entry in quests.json (stages, objectives, rewards) and dialogue that starts/advances/completes it. New objective kinds: count an event in `QuestSystem`. |
 | Remembering story progress | `FlagSystem` (persistent per-player key/values); gate actions with `requiresFlag`. |
 | A window the server opens | A value in `InterfaceKind`; `InterfaceSystem.Open/IsOpen/Close`; draw it in the client's `TownWindows`. |
@@ -510,7 +531,7 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | An icon | 16 rows of pixel art in `client/Assets/Resources/UI/pixelicons.txt` (or a PNG at `Resources/Icons/<id>.png`); name it with `"icon"` on the item, ability or skill. |
 | A modal (big tabbed window) | A `UiModal` subclass in `client/Assets/Scripts/Ui/Modals/` listing `ModalTab`s; it registers itself. `MasterDetail` gives the list-and-detail layout. |
 | Something draggable, or a place to drop it | `UiRoot.BeginDrag` with a payload from `DragData.cs` (or a new one); `UiRoot.AddDropTarget` on the receiving element. |
-| An achievement | An entry in achievements.json (kind kill, talk, recipe, level, quest, object, region or obtain). A new kind: count the event that proves it in `AchievementSystem`. |
+| An achievement | An entry in achievements.json (kind kill, talk, recipe, level, quest, object, region, obtain or use). A new kind: count the event that proves it in `AchievementSystem`. |
 | Player state the interface shows | Send it as `JsonStateMessage.Of(key, value)` from the system's `SendState`; the client reads `GameSession.ServerState<T>(key)`. |
 | Client settings that follow the player | `GameSession.SetClientState(key, json)`; read `GameSession.ClientState`. |
 | A chat channel (private, group) | A `ChatChannel` value and its routing in `ChatSystem`; the chat panel shows `ChatLineMessage`s. |

@@ -23,7 +23,7 @@ namespace Rth.Shared.Progress
     /// <summary>
     /// Something to count. Kinds: "kill" (NPC type), "recipe" (recipe id), "level" (skill reaching
     /// Count), "quest" (quest completed), "object" ("type:action"), "talk" (NPC type), "region"
-    /// (entering a region), "obtain" (an item received from any source).
+    /// (entering a region), "obtain" (an item received from any source), "use" (a use in uses.json, by id).
     /// </summary>
     public sealed class Objective
     {

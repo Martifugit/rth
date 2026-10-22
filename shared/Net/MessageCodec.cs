@@ -49,6 +49,7 @@ namespace Rth.Shared.Net
                     MessageType.Pickup => PickupMessage.Read(r),
                     MessageType.ObjectAction => ObjectActionMessage.Read(r),
                     MessageType.NpcAction => NpcActionMessage.Read(r),
+                    MessageType.UseItem => UseItemMessage.Read(r),
                     MessageType.DialogueChoice => DialogueChoiceMessage.Read(r),
                     MessageType.CloseInterface => new CloseInterfaceMessage(),
                     MessageType.BankDeposit => BankDepositMessage.Read(r),

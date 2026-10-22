@@ -36,6 +36,7 @@ namespace Rth.Server.Game
                 if (e.Killer is Player p && e.Victim is Npc npc) Count(p, "kill", npc.Def.Id);
             });
             World.Events.Subscribe<RecipeCompleted>(e => Count(e.Player, "recipe", e.Recipe.Id));
+            World.Events.Subscribe<ItemUsedOn>(e => Count(e.Player, "use", e.Use.Id));
             World.Events.Subscribe<LevelUp>(e => CheckLevels(e.Player));
             World.Events.Subscribe<QuestStageChanged>(e =>
             {

@@ -11,7 +11,7 @@ namespace Rth.Shared.Net
     public static class Protocol
     {
         /// <summary>Bump whenever a message layout changes, so mismatched builds are refused at login.</summary>
-        public const int Version = 17;
+        public const int Version = 18;
         public const int DefaultPort = 43600;
         /// <summary>Sanity limits on a single frame's length, in bytes.</summary>
         public const int MaxClientFrame = 4 * 1024;
@@ -40,6 +40,7 @@ namespace Rth.Shared.Net
         ShopSell = 17,
         Chat = 18,
         SetClientState = 19,
+        UseItem = 20,
 
         // Server to client: state.
         LoginOk = 100,

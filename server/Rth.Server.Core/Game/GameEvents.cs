@@ -96,6 +96,26 @@ namespace Rth.Server.Game
         public string ActionId { get; }
     }
 
+    /// <summary>
+    /// A player used an item on something and a use in uses.json took it (its checks passed).
+    /// <see cref="Target"/> is "object:&lt;type&gt;", "npc:&lt;type&gt;" or "item:&lt;id&gt;".
+    /// </summary>
+    public sealed class ItemUsedOn
+    {
+        public ItemUsedOn(Player player, Rth.Shared.Items.ItemDef item, string target, Content.UseDef use)
+        {
+            Player = player;
+            Item = item;
+            Target = target;
+            Use = use;
+        }
+
+        public Player Player { get; }
+        public Rth.Shared.Items.ItemDef Item { get; }
+        public string Target { get; }
+        public Content.UseDef Use { get; }
+    }
+
     /// <summary>A player walked (or logged) into a region of the world.</summary>
     public sealed class RegionEntered
     {
