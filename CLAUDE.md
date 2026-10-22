@@ -262,8 +262,9 @@ stockpile carcasses.
 - [x] Client Quests tab (red / yellow / green, hover for the journal entry).
 - [x] First quest, **Dreamless**: Edda Marsh sleepwalks by the pond; Corvin brews her a
       dreamless draught from rat galls and a saltfig; she says something she shouldn't know.
-      Touches Corvin's curiosity and, written for the old lore, the Assayer and the Dreamweaver;
-      in the canon its thread is the Dreaming and the nightmare (`docs/lore.md` II, V).
+      Touches Corvin's curiosity and, in the canon, the Dreaming and the nightmare's thread
+      (`docs/lore.md` II, V); it was planned against the old Assayer and Dreamweaver threads,
+      which its text never names.
 
 Not yet: item-on-object/item-on-NPC "use", noted items, the other butchering tiers, a larger map.
 
