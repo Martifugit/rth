@@ -31,4 +31,19 @@ Every god gets these, briefly. Anything undecided is a placeholder or **sealed**
 
 ## The gods
 
-None decided yet. The first sheet is the god behind the aggressive empire.
+### p-sworn: the god of Cruor's empire
+
+The god the Cruorian empire worships. Not a god "of war", but war follows it.
+
+| Field | |
+| --- | --- |
+| **Story** | It is made of the oaths its followers swear in blood. Long ago its first followers betrayed it, so now it takes blood as collateral for every oath. |
+| **Wound** (secret) | It was wounded at the dawn of the world, and the wound never closed. It is still bleeding. This is why the Cruorians collect blood all over their empire: the tithes of blood at every monument are, in truth, feeding their god, keeping it from bleeding out. The faithful are told the blood seals their oaths. Very few know what it is really for. |
+| **Hunger** | Oaths and blood. It starves without new oaths, so the empire must keep swearing in new peoples; and it bleeds without new blood, so the empire must keep collecting. Both make it expand. |
+| **Bargain** | Swear in blood and its strength is yours. Break the oath and the blood is called in. |
+| **Sign** | A taste of iron (blood) in your mouth. |
+| **Faces** | To the empire, a keeper of faith. To the peoples it conquers, a debt collector. *(More faces to come as other peoples are designed.)* |
+| **Presence** | *Proposed:* never seen. It is felt, in the taste of iron and in the strength of sworn soldiers. Its priests speak for it. |
+| **Fear** | A world where nobody swears any more; and, secretly, bleeding out. |
+| **Origin** | Sealed. |
+| **In the game** | Melee's pledges are oaths sworn in blood; Cruor's monuments are where the blood is collected. Religion's verses draw on it. |
