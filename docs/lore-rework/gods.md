@@ -102,8 +102,27 @@ The name is a placeholder.
 - **Discoverable inspiration:** a living head, water, and a price paid for what it knows.
 - *Open:* whether it is one of p-scattered's pieces.
 
-### A dream power (open)
+### p-constants: older than the gods (inspired by Sandman's Endless)
 
-Inspired by Sandman (not the TV series), tied to the realm of dreams and the Dreaming skill. Four
-takes were rejected: a Sandman-like lord imprisoned by mortals (too close to the show), a
-shepherd of sleep, a night ferry, a night market. Open until the right idea comes.
+The name is a placeholder.
+
+- **What they are:** three siblings older than the gods. Each **is** part of how existence works;
+  they are not worshipped and want nothing from mortals.
+- **The revisions never touch them.** A god can be taken; a constant can't. The gods are quietly
+  afraid of them.
+- **They rarely meet.** When they do, something in the world shifts.
+- **The three, each keeping a realm:**
+  - **the dreamer**, who keeps the Dreaming (the dream power: this is it);
+  - **the keeper of the dead**, whose realm the dead go to; the ferryman works for them;
+  - **the keeper of p-spoil**, to whom everything rejected goes.
+- **Discoverable inspiration:** a family of beings who are concepts, each with a realm. Not a
+  retelling: no more siblings are needed.
+
+### The Dreaming
+
+- A landscape built from everyone's dreams, always shifting. The waking world's places appear in
+  it **as people remember them**, not as they are.
+- So **moved places still stand in their old locations there**: old maps are true in the
+  Dreaming. For scholars hunting places that don't exist, it is the best evidence, if they can
+  reach it.
+- The Dreaming skill gathers fragments here, and the dreamer notices who takes what.
