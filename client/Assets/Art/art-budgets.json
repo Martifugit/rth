@@ -1,0 +1,19 @@
+{
+  "_comment": "Budgets the art validator (R'th > Art > Validate Art) checks; see docs/assets.md. A model's kind is its ArtKind component, else the first kind whose match appears in its name or asset path. Over target warns, over cap fails.",
+  "kinds": [
+    { "kind": "wall", "target": 60, "cap": 150, "colours": 3, "match": ["Wall", "Fence", "Rail", "Roof", "Slab", "Floor", "Palisade", "Stake"] },
+    { "kind": "tree", "target": 400, "cap": 1000, "colours": 4, "match": ["Tree", "Oak", "Willow", "Yew", "Ash", "Pine"] },
+    { "kind": "character", "target": 1500, "cap": 2500, "colours": 8, "match": ["Characters/", "Human"] },
+    { "kind": "creature", "target": 3000, "cap": 6000, "colours": 8, "match": ["Creatures/", "Boss"] },
+    { "kind": "rock", "target": 250, "cap": 600, "colours": 4, "match": ["Rock", "Boulder", "Counter", "Anvil", "Table", "Bench", "Stump", "Plinth", "Bier", "Statue", "Monument", "Tower"] },
+    { "kind": "prop", "target": 150, "cap": 400, "colours": 4, "match": [] }
+  ],
+  "textures": {
+    "maxSize": 128,
+    "maxCount": 40,
+    "folders": ["Assets/Art", "Assets/Resources/Characters"],
+    "ignore": ["Assets/Art/Fx"]
+  },
+  "palette": "Assets/Resources/Art/palette.json",
+  "paletteTolerance": 0.04
+}

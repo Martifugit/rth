@@ -336,6 +336,7 @@ namespace Rth.Client
                         break;
                     case ContentInfoMessage info:
                         Content = info.Parse();
+                        ObjectRecolors.Apply(Content);
                         _abilities.Clear();
                         foreach (AbilityDef a in Content.Abilities) _abilities[a.Id] = a;
                         _items.Clear();

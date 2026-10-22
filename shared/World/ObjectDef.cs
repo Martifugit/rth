@@ -16,6 +16,11 @@ namespace Rth.Shared.World
         public List<ActionDef> Actions = new List<ActionDef>();
         /// <summary>Makes it a gathering node (a rock, a tree, a monument's fount), worked with the "gather" action.</summary>
         public NodeDef? Node;
+        /// <summary>
+        /// Client only: colours to swap on every placement's model, from a material name to a
+        /// palette colour or #RRGGBB ({"Stone": "CopperOre"}), so one rock serves every ore.
+        /// </summary>
+        public Dictionary<string, string> Recolor = new Dictionary<string, string>();
     }
 
     /// <summary>
