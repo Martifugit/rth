@@ -49,3 +49,19 @@ The god the Cruorian empire worships. Not a god "of war", but war follows it.
 | **Fear** | A world where nobody swears any more; and, secretly, bleeding out. |
 | **Origin** | Sealed. Constraint: it was wounded in something that happened at the dawn of the world, and **whatever wounded it is still out there**. |
 | **In the game** | Melee's pledges are oaths sworn in blood; Cruor's monuments are where the blood is collected. Religion's verses draw on it. |
+
+### p-betrayer: the first oathbreaker
+
+The name is a placeholder.
+
+| Field | |
+| --- | --- |
+| **Story** | Among p-sworn's first followers, the ones who broke their oaths. The betrayal and the wound were one event: they struck the blow, and one of them took some of p-sworn's power and became a god. |
+| **Wound** | *Open.* |
+| **Hunger** | That p-sworn never recovers. |
+| **Bargain** | *Open.* |
+| **Sign** | *Open* (being chosen). |
+| **Faces** | *Open.* |
+| **Presence** | *Open.* |
+| **Fear** | *Open.* |
+| **Origin** | Ascended, through the betrayal. |
