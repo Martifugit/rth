@@ -41,6 +41,9 @@ namespace Rth.Server
         /// <summary>Chat commands starting with "::" for building and testing (teleport, set levels). The Editor's server turns them on.</summary>
         public bool DevCommands;
 
+        /// <summary>Real (wall-clock) time, for things measured in hours rather than ticks. Tests replace it.</summary>
+        public Func<DateTime> UtcNow = () => DateTime.UtcNow;
+
         /// <summary>Where log lines go. Defaults to nowhere.</summary>
         public Action<string> Log = _ => { };
     }

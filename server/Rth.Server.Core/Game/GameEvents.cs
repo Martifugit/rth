@@ -40,6 +40,14 @@ namespace Rth.Server.Game
         public Entity? Killer { get; }
     }
 
+    /// <summary>A dead player has woken (in the realm of the dead): back on their feet, humours restored.</summary>
+    public sealed class PlayerRespawned
+    {
+        public PlayerRespawned(Player player) => Player = player;
+
+        public Player Player { get; }
+    }
+
     /// <summary>
     /// A player received items, and from where: "npc:fen_rat" (its loot), "recipe:butcher_fen_rat"
     /// (a recipe's yield). For drop logs, collection logs and "obtain" objectives.

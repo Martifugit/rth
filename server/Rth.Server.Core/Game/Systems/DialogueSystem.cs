@@ -13,6 +13,8 @@ namespace Rth.Server.Game
         public DialogueDef? Dialogue;
         public string Node = "";
         public int NpcId;
+        /// <summary>Who speaks the "npc" lines of a conversation with no NPC in the world (0 <see cref="NpcId"/>).</summary>
+        public string Speaker = "";
         public List<DialogueOption> Visible = new List<DialogueOption>();
 
         public bool Active => Dialogue != null;
@@ -76,6 +78,23 @@ namespace Rth.Server.Game
             DialogueState state = State(player);
             state.Dialogue = def;
             state.NpcId = npc.Id;
+            state.Speaker = npc.Name;
+            Enter(player, state, def.Start, 0);
+        }
+
+        /// <summary>
+        /// Starts a conversation with someone who isn't an NPC in the world (a voice, a narrator,
+        /// the ferryman before his landing exists). It doesn't end when the player walks away, only
+        /// when it finishes, the player dies or closes it.
+        /// </summary>
+        public void Start(Player player, string dialogueId, string speaker)
+        {
+            if (!World.Content.Dialogues.TryGetValue(dialogueId, out DialogueDef? def)) return;
+            World.Find<InterfaceSystem>()?.Close(player);
+            DialogueState state = State(player);
+            state.Dialogue = def;
+            state.NpcId = 0;
+            state.Speaker = speaker;
             Enter(player, state, def.Start, 0);
         }
 
@@ -127,7 +146,7 @@ namespace Rth.Server.Game
             state.Visible = node.Options.Where(o => o.Conditions.All(c => Test(player, c, npc))).ToList();
             player.Connection.Send(new DialogueMessage
             {
-                Speaker = node.Speaker == "player" ? player.Name : npc?.Name ?? "",
+                Speaker = node.Speaker == "player" ? player.Name : npc?.Name ?? state.Speaker,
                 Text = Format(player, node.Text, npc),
                 Options = state.Visible.Select(o => Format(player, o.Text, npc)).ToList(),
             });
@@ -184,6 +203,11 @@ namespace Rth.Server.Game
         {
             DialogueState state = State(player);
             if (!state.Active) return;
+            if (state.NpcId == 0)
+            {
+                if (player.IsDead) End(player);
+                return;
+            }
             Npc? npc = NpcOf(state);
             // Wandering off (or the NPC vanishing) ends the conversation.
             if (player.IsDead || npc == null || npc.IsDead || npc.Plane != player.Plane || npc.Position.ChebyshevDistance(player.Position) > 2)
