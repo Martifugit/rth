@@ -92,8 +92,10 @@ namespace Rth.Client.Editor
         {
             Transform t = WorldKit.Station(g, name, type, X(x), Z(z));
             t.position = On(x + 0.5f, z + 0.5f);
-            WorldKit.Box("Boulder", t, On(x + 0.5f, z + 0.5f, 0.55f), new Vector3(0.95f, 1.1f, 0.9f), M.Rock, yaw: x * 37f);
-            WorldKit.Prop("Streak", t, On(x + 0.5f, z + 0.5f, 0.7f), new Vector3(0.6f, 0.25f, 0.96f), streak, x * 37f);
+            // The collider stays square to the grid so it blocks only its own tile; the look turns.
+            WorldKit.Box("Boulder", t, On(x + 0.5f, z + 0.5f, 0.55f), new Vector3(0.8f, 1.1f, 0.8f), M.Rock);
+            WorldKit.Prop("Shoulder", t, On(x + 0.5f, z + 0.5f, 0.45f), new Vector3(0.95f, 0.9f, 0.6f), M.Rock, x * 37f);
+            WorldKit.Prop("Streak", t, On(x + 0.5f, z + 0.5f, 0.7f), new Vector3(0.6f, 0.25f, 0.82f), streak, x * 37f);
         }
 
         /// <summary>

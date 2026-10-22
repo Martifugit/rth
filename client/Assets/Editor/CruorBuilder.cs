@@ -461,7 +461,8 @@ namespace Rth.Client.Editor
             Vector3 c = P(Monument.x + 0.5f, 0f, Monument.y + 0.5f);
             WorldKit.Cylinder("Step", g, c + Vector3.up * 0.05f, new Vector3(10.5f, 0.05f, 10.5f), M.DarkStone, collider: false);
             WorldKit.Cylinder("Step", g, c + Vector3.up * 0.14f, new Vector3(8.6f, 0.05f, 8.6f), M.Limestone, collider: false);
-            Transform monument = WorldKit.Station(g, "Monument", "cruor_first_monument", X(Monument.x), Z(Monument.y));
+            // The object stands on the plinth's south edge, so there is a tile beside it to read from.
+            Transform monument = WorldKit.Station(g, "Monument", "cruor_first_monument", X(Monument.x), Z(Monument.y - 1));
             WorldKit.Box("Plinth", monument, c + Vector3.up * 0.9f, new Vector3(2.9f, 1.6f, 2.9f), M.DarkStone); // blocks the middle 3 x 3
             WorldKit.Prop("Plinth cap", monument, c + Vector3.up * 1.8f, new Vector3(3.2f, 0.2f, 3.2f), M.Limestone);
             WorldKit.Prop("Needle", monument, c + Vector3.up * 8.4f, new Vector3(1.3f, 13f, 1.3f), M.Red);
