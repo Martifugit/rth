@@ -249,7 +249,7 @@ readability), not its geography.
 | **Runs** | cloud |
 | **Depends on** | A1 (for wording), can start in parallel |
 | **Owns** | the strings listed in `docs/lore-rework/migration.md` |
-| **Status** | not started |
+| **Status** | **Done** (2026-10-22, `claude/b1-text`): Religion and Dreaming descriptions, Ambrose's covenant line, Hollis's bay line, the monument plaques, Wenna's Scalding, "basin wildlife", the world map's "The Basin" title, the hymn comments and the Religion tab. What is left is listed under B2. |
 
 - Replace: "Tithe's prayers" (Religion's description in `skills.json`, `HymnDef.cs`,
   `ReligionSystem.cs` comments, the client's `Hymns.cs` and `ReligionPanel.cs`); Clerk Ambrose's
@@ -270,6 +270,13 @@ readability), not its geography.
 - The Synod (strongbox, coins, bank notes, the watchman's sword, waystone and waygate, Clerk
   Ambrose, achievements), the Rationalists (Ranged, Artifice), Scalth's mites, lye vat, glass
   hook and salt. Scene-side text (signs, the `SynodRed` material, builders) goes to C4.
+- From B1: Corvin's task line ("What I need comes from Scalth") and Wenna's "Where does the Scalth
+  stuff go?" keep Scalth; the leveltest `concord_surveyor` ("a surveyor of the Concord") waits on
+  the surface people's name.
+- Left on purpose by B1: the old capitals' content (`tithe_*` NPCs and objects, Cruor's bay rail
+  and "Keep-vigil" over the Quaere, the Concord and Orrery objects, the Lucern signposts and
+  Meridian's milestone naming Tithe). None of it is placed in an exported region; it goes when
+  those areas are rebuilt (C, A4), not patched now.
 
 ---
 
