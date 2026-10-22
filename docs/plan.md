@@ -50,6 +50,7 @@ owns, and when it is done. Update the status column as work lands.
 | Track | Workstreams | Runs | Starts |
 | --- | --- | --- | --- |
 | **A. Lore and world design** | A1 canon, A2 names, A3 sheets, A4 area plan | cloud, owner in the loop | now |
+| **L. Continent layout** | L1 rough layout at tile scale, L2 walkable blockout, L3 maps from the layout | cloud, then local | now |
 | **B. Text pass** | B1 now, B2 after names | cloud | now / after A2 |
 | **C. Workflow** | C0 merge art branch, C1 audit, C2 snapshots, C3 world as data, C4 migrate regions | local (Unity MCP) | now |
 | **D. Death v1** | D1 server, D2 region and client, D3 the long way back | cloud, then local | now / after C3 |
@@ -65,7 +66,7 @@ Step 0: merge claude/area-plan into main (owner)
 Wave 1 (now, in parallel)
   A1 canon ──────────────┬──> B1 text pass (old-lore strings that need no new names)
   A2 names ──────────────┼──> B2 text pass (church, spine people, Scalth's replacement)
-  A4 area plan v2 ───────┘
+  L1 rough continent layout ──> A4 area plan v2 (passes 2-7 on top of it)
   C0 art branch ──> C1 audit ──> C2 snapshots ──> C3 world as data ──> C4 migrate regions
   D1 death (server) ─────────────────────────────────────────────┐
   E1 tools, Mining, Woodcutting    E2 ranged    E3 item-on-object│
@@ -73,6 +74,8 @@ Wave 1 (now, in parallel)
 Wave 2                                            D2 death region and client (needs C3, D1)
   A3 sheets, timeline, clocks                     F1 scale and style applied (needs C0)
 Wave 3
+  L2 walkable blockout of the whole continent (needs L1, C3, F1)
+  L3 world map and minimap drawn from the layout (needs L1)
   Regions from A4, built the new way (needs C3, A4)   D3 the long way back   F2 Tolling art pass
 ```
 
@@ -150,16 +153,86 @@ Wave 3
 | | |
 | --- | --- |
 | **Runs** | cloud, owner reviews each pass |
-| **Depends on** | the concept map (done); names help |
+| **Depends on** | L1 (pass 1 is read off the layout); names help |
 | **Owns** | `docs/areas/*`, `tools/areas/*` |
 | **Status** | not started |
 
-- Redo pass 1 (the skeleton) on the concept map: `skeleton.json` from `docs/lore-rework/powers.md`
-  and the map, with `tools/areas/plan.py`'s checks and render. Tolling stays at tile (0, 0) on the
+- Pass 1 (the skeleton) is read off L1's layout: `skeleton.json` from the layout, with
+  `tools/areas/plan.py`'s checks and render. Tolling stays at tile (0, 0) on the
   empire's western edge; Palmerway runs east towards Cruor.
 - Then passes 2-7 as in `docs/areas/rules.md` (reasons to visit, resources, infrastructure,
   activities, quest hooks, build order), one at a time, with the owner's review after each.
 - **Done when** pass 7 gives a build order of regions that track C can build.
+
+---
+
+## Track L: continent layout
+
+The concept map (`docs/lore-rework/concept-map.png`) gives the shape. This track turns it into a
+rough layout **at real tile scale**, then into land you can walk. The earlier "lay out the whole
+continent" prompt was written for the old map; reuse its research numbers (scale, terrain,
+readability), not its geography.
+
+### L1. Rough layout at tile scale
+
+| | |
+| --- | --- |
+| **Runs** | cloud, owner reviews |
+| **Depends on** | the concept map and `docs/lore.md` (done) |
+| **Owns** | `world/layout/*` (new), `tools/layout/*` (new), `docs/layout.md` (new) |
+| **Status** | not started |
+
+- **One layout, as data**, in absolute tiles with **Tolling's south-west corner at (0, 0)**, so the
+  built regions sit inside it unchanged: Tolling on the empire's western edge, Palmerway running
+  east towards Cruor.
+- What it holds, roughly:
+  - the coast, the sea and the islands; the frontier edges;
+  - the spine as a band with its passes (where it can be crossed), running north into the cold;
+  - rivers and lakes (Sere's river, the great river, the lake), and which way they flow;
+  - biomes or ground kinds (farmland, forest, fen, heath, desert, volcanic, snow);
+  - the powers' borders, with the empire's four salients;
+  - settlements and landmarks as points, with a size tier (city, town, village, hamlet): Cruor,
+    Cistern, Meridian, Frostpeak Forge, Gall's seat, the houses' places, p-head, the demigods'
+    sites, Selenfall;
+  - the main roads between them;
+  - the **96-tile region grid** laid over it, with each region's realm and rough role.
+- **Scale:** follow the research (`docs/research/world-density.md`, the art branch's scale doc if
+  merged). The first build's core is about 1.2-1.5 million tiles, with frontiers beyond it.
+  Distances between capitals in the range RuneScape uses (`docs/areas/scale-compare.png`).
+- **Checks** (a script, like `tools/areas/plan.py`): everything reachable from Tolling over land or
+  passes; travel times between capitals; region count; land per power against
+  `docs/lore-rework/powers.md` (a guide); settlement ladder against `docs/areas/targets.json`.
+- **A render** of the layout with the region grid and a scale bar, plus `docs/layout.md` explaining
+  the data and the choices.
+- **Done when** the owner approves the layout. A4's pass 1 (the skeleton) is then read off it,
+  and A4 continues with passes 2-7.
+
+### L2. Walkable blockout
+
+| | |
+| --- | --- |
+| **Runs** | cloud (generator, data), local (sync and check in Unity) |
+| **Depends on** | L1, C3 (the world as data), F1 (scale and style rules) |
+| **Status** | waiting |
+
+- Generate every region of the core from the layout as sparse but real land: ground, water,
+  roads, the spine's rock, a placeholder at each landmark. Tolling, Palmerway and the Saint's crypt
+  keep their hand-built content.
+- **Ground height needs an owner decision first**: the collision map and the ground are flat
+  today. Gentle terrain (as the research describes) touches the exporter, the server map and the
+  client camera.
+- **Done when** the owner can walk from Tolling to Cruor, over a pass of the spine, and into
+  every power's land.
+
+### L3. Maps from the layout
+
+| | |
+| --- | --- |
+| **Runs** | cloud (data), local (client checks) |
+| **Depends on** | L1 |
+
+- The world map modal and the minimap draw from the layout data, so the map in the game always
+  matches the world.
 
 ---
 
@@ -291,6 +364,8 @@ Each owns its own system files and adds content entries; all three touch `items.
 | --- | --- |
 | Names (church, spine people, realm of the dead, ferryman, walker, p-spoil, gods, places), and which "under review" names come back | A2, B2 |
 | Who the player is (the sleeper premise: keep, change or drop) | A3, the first quests |
+| The rough layout | L1 |
+| Ground height (gentle terrain, or stay flat for now) | L2 |
 | The coin fee's rate and free threshold; the obol's price and where it's sold | D1 (defaults in data until then) |
 | The long way back's hazards | D3 |
 | Each power's sheet | A3 |
