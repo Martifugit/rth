@@ -59,7 +59,7 @@ owns, and when it is done. Update the status column as work lands.
 | **D. Death v1** | D1 server, D2 region and client, D3 the long way back | cloud, then local | now / after C3 |
 | **E. Gameplay** | E1 tools, Mining, Woodcutting; E2 ranged; E3 item-on-object use | cloud (client parts checked locally) | now |
 | **F. Art** | F1 scale and style applied, F2 Tolling art pass | local | after C0 |
-| **U. Interface** | U1 a robust UI framework before more UI pieces | local (needs the Editor to see) | now |
+| **U. Interface** | U1 a robust UI framework, then U2 the panels on it | local, then agents | now |
 | **G. Integration** | merges, `CLAUDE.md`, this file | owner | always |
 
 ## Order and dependencies
@@ -368,24 +368,62 @@ Each owns its own system files and adds content entries; all three touch `items.
 | | |
 | --- | --- |
 | **Runs** | local (every fix is checked by eye in the Editor) |
-| **Depends on** | nothing; **blocks E2** and any new interface piece |
-| **Owns** | `client/Assets/Scripts/Ui/*` (`UiRoot`, `UiWindow`, `UiPanel`, `UiKit`, `UiDefaultLayout`, panels), `Resources/UI/Rth.uss`, `docs/interface.md` |
-| **Status** | not started |
+| **Depends on** | nothing; **blocks U2, E2** and any new interface piece |
+| **Owns** | `client/Assets/Scripts/Ui/*` (`UiRoot`, `UiWindow`, `UiPanel`, `UiKit`, `UiDefaultLayout`, `PopupMenu`), `Resources/UI/Rth.uss`, `docs/interface.md` |
+| **Status** | in progress |
 
-The owner's findings (2026-10-22):
-- Content overflows its window in some panels.
-- Too much fluff in places, and some tab options are odd.
-- Windows overlap each other. Only modal or temporary windows (dialogs, the bank, a shop) may
-  overlap; the others must not.
-- Building your own layout is hard: aligning and placing windows where they should go.
-- The pack grid and the worn items don't respond to the window's width and height.
+Audit (2026-10-22, every panel at its minimum, default and large size, 1080p and 720p): docked
+windows overlap (a window that doesn't fit is pushed onto its neighbour; at 720p the default layout
+overlaps itself); bank, shop and dialogue share the HUD's layer; panels overflow at their "minimum"
+size (text over text, the skills footer over its tiles); nothing scrolls or wraps (the stat list
+squashes, Religion cuts lines off); pack, worn and skills grids are fixed and don't grow; moving is
+by the title bar and resizing from one corner, with an 8 px snap and no guides; the hover text
+covers the chat title. The modals hold up.
 
-To do: audit every panel at several window sizes (screenshots), then fix it in the framework, not
-panel by panel: layout rules every panel follows (responsive grids, no overflow), a placement
-model with snapping and alignment that keeps docked windows from overlapping, and a clear split
-between docked windows and floating, modal ones. **Done when** every panel holds up at its
-smallest and largest size, docked windows never overlap, and the owner finds laying out an
-interface easy.
+The framework, decided with the owner:
+1. **Two kinds of window.** Docked (pack, worn, skills, minimap, chat, bars, target) **never
+   overlap**: a move or resize is resolved against the neighbours. Floating (modals, bank, shop,
+   conversation, prompts) sit above, may overlap, open centred.
+2. **Moving and resizing:** the title bar moves a window (with room kept between the tabs and
+   the X); **any corner** resizes it. Snapping to a grid, screen edges and other windows' edges
+   and centres, with guides drawn while dragging, and a preview of **where it will land and
+   whether it will dock** (join another window as a tab) or undock. A cap on tabs per window.
+3. **Lock** (a small toggle at the top right of the main action bar) locks everything: no dragging
+   abilities on bars or out of ability books, no tooltips on bars, no moving, resizing or closing
+   windows (no X while locked).
+4. **A default layout that scales with the screen** (fits 720p to 1440p).
+5. **A contract every panel follows:** content scrolls rather than overflows, text wraps, the
+   minimum size is what the content needs, and one responsive slot grid (columns and slot size
+   from the space) for pack, worn, skills, hymns and abilities.
+6. **The right-click menu closes as soon as the pointer leaves it.**
+7. **The window menu** (open/close windows) is redesigned: it is confusing today.
+8. Less filler text; the hover text moves off the chat.
+
+Placement rules (no overlap, snapping) are plain maths with tests that run without Unity, like
+`CameraRules`. **Done when** every panel holds up at its smallest and largest size, docked windows
+never overlap, and the owner finds laying out an interface easy.
+
+### U2. Panels on the new framework
+
+| | |
+| --- | --- |
+| **Runs** | agents (one panel each), checked locally |
+| **Depends on** | U1 |
+
+The owner's list (2026-10-22):
+- **XP drops:** a piece you can place where XP gains appear as they happen: very nice to look at
+  but subtle, no surface behind it, mostly the numbers coming in.
+- **World map:** redo it (today's is "really, really bad"); draw it from the continent layout
+  (`world/layout/`), so the map always matches the world (this is also L3).
+- **Bestiary:** tabs inside, Bosses, then one per region (butchering's special creatures sit in
+  their region). The **drop log hints** at what a creature can drop (its rare and unique drops),
+  not only what you have had.
+- **Equipment tab:** a row of buttons at its bottom. One opens a modal-like window with your
+  combat stats (today's draggable Character window goes) and your **inspect** view (what others
+  see when they right-click and inspect you).
+- **Minimap:** a fantasy RPG frame; today it looks like an old TV screen.
+- **Guide:** rethink the skill guide's filter tabs (ALL, ABILITIES, EQUIPMENT...).
+- **Achievements:** the progress bar's text isn't centred on the bar and overflows it.
 
 ## Track F: art (local)
 
