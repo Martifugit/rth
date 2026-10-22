@@ -445,22 +445,98 @@ namespace Rth.Client
                     for (int i = 0; i < Ui.ActionBars.MainKeys.Length; i++)
                         if (Ui.ActionBars.MainKeys[i] != Key.None && keyboard[Ui.ActionBars.MainKeys[i]].wasPressedThisFrame) Bars.Use(this, 0, i);
                 }
-                if (keyboard.escapeKey.wasPressedThisFrame && !Ui.UiRoot.IsModalOpen && (Dialogue != null || OpenInterface != InterfaceKind.None)) CloseInterface();
+                if (keyboard.escapeKey.wasPressedThisFrame && IsUsingItem) CancelUse();
+                else if (keyboard.escapeKey.wasPressedThisFrame && !Ui.UiRoot.IsModalOpen && (Dialogue != null || OpenInterface != InterfaceKind.None)) CloseInterface();
             }
+
+            // The item picked up for "use" has left its slot (eaten, dropped, moved): put it down.
+            if (IsUsingItem && (UseSlot >= Inventory.Count || Inventory[UseSlot].ItemId != _useItemId)) CancelUse();
 
             if (mouse == null) return;
             Vector2 pointer = mouse.position.ReadValue();
             bool overHud = CombatHud.IsPointerOverHud(pointer) || PopupMenu.IsOpen || Ui.UiRoot.IsPointerOverUi(pointer);
             string title = "";
             _hoveredEntity = 0;
+            _useTargets = 0;
             List<(string Label, Action Action)> options = overHud ? null : WorldOptionsAt(pointer, out title);
             world.HoveredId = _hoveredEntity;
             HoverText = options != null && options.Count > 0 ? options[0].Label : "";
+            if (IsUsingItem && _useTargets == 0) HoverText = UseLabel + " ->";
             if (options == null || options.Count == 0) return;
 
-            // Left-click does the first option; right-click lists them all.
+            // Left-click does the first option; right-click lists them all. With an item picked
+            // up for "use", right-clicking nothing to use it on puts it down.
             if (mouse.leftButton.wasPressedThisFrame) options[0].Action();
+            else if (mouse.rightButton.wasPressedThisFrame && IsUsingItem && _useTargets == 0) CancelUse();
             else if (mouse.rightButton.wasPressedThisFrame) PopupMenu.Open(new Vector2(pointer.x, Screen.height - pointer.y), title, options);
+        }
+
+        // ------------------------------------------------------------------ "use" an item on something
+
+        /// <summary>The pack slot of the item picked up with "Use", or -1.</summary>
+        public int UseSlot { get; private set; } = -1;
+        private string _useItemId;
+        private int _useTargets;
+
+        public bool IsUsingItem => UseSlot >= 0;
+
+        /// <summary>"Use Rat gall", the start of every option while an item is picked up.</summary>
+        public string UseLabel => "Use " + (Item(_useItemId)?.Name ?? _useItemId);
+
+        /// <summary>Picks a pack item up: the next click on an object, an NPC or another pack item uses it there.</summary>
+        public void BeginUse(int slot)
+        {
+            if (slot < 0 || slot >= Inventory.Count || Inventory[slot].IsEmpty) return;
+            if (OpenInterface == InterfaceKind.Bank || OpenInterface == InterfaceKind.Shop) return;
+            UseSlot = slot;
+            _useItemId = Inventory[slot].ItemId;
+        }
+
+        public void CancelUse()
+        {
+            UseSlot = -1;
+            _useItemId = null;
+        }
+
+        private UseItemMessage UseMessage(UseTarget target) =>
+            new UseItemMessage { Slot = UseSlot, ItemId = _useItemId ?? "", Target = target };
+
+        public void UseOnObject(string objectType, TileCoord tile, int plane)
+        {
+            if (!IsUsingItem) return;
+            UseItemMessage m = UseMessage(UseTarget.Object);
+            m.ObjectType = objectType;
+            m.Plane = plane;
+            m.X = tile.X;
+            m.Y = tile.Y;
+            Send(m);
+            CancelUse();
+            ShowClickMarker(tile, new Color(0.9f, 0.15f, 0.1f));
+        }
+
+        public void UseOnNpc(int npcId)
+        {
+            if (!IsUsingItem) return;
+            UseItemMessage m = UseMessage(UseTarget.Npc);
+            m.NpcId = npcId;
+            Send(m);
+            CancelUse();
+            EntityView view = world.Find(npcId);
+            if (view != null) ShowClickMarker(view.Tile, new Color(0.9f, 0.85f, 0.2f));
+        }
+
+        /// <summary>Uses the picked-up item on another pack item; on itself it just puts it down.</summary>
+        public void UseOnItem(int slot)
+        {
+            if (!IsUsingItem) return;
+            if (slot != UseSlot && slot >= 0 && slot < Inventory.Count && !Inventory[slot].IsEmpty)
+            {
+                UseItemMessage m = UseMessage(UseTarget.Item);
+                m.TargetSlot = slot;
+                m.TargetItemId = Inventory[slot].ItemId;
+                Send(m);
+            }
+            CancelUse();
         }
 
         /// <summary>Everything you could do with what's under the pointer, best first: attack, take, walk.</summary>
@@ -502,6 +578,8 @@ namespace Rth.Client
                 }
                 if (ground == null) ground = h.point + cam.transform.forward * 0.01f;
             }
+
+            if (IsUsingItem) return UseOptions(npc, mapObject, ground, floor, ref title);
 
             if (npc != null)
             {
@@ -548,6 +626,41 @@ namespace Rth.Client
                 TileCoord tile = TileMath.FromWorld(ground.Value);
                 options.Add(("Walk here", () => WalkTo(tile)));
             }
+            return options;
+        }
+
+        /// <summary>
+        /// With an item picked up: use it on the NPC or object under the pointer ("Use Rat gall ->
+        /// Corvin Sallow"), else walk (which puts it down), and always a way to cancel.
+        /// </summary>
+        private List<(string Label, Action Action)> UseOptions(EntityView npc, Rth.MapTools.MapObject mapObject, Vector3? ground, int floor, ref string title)
+        {
+            title = UseLabel;
+            var options = new List<(string Label, Action Action)>();
+            if (npc != null)
+            {
+                int id = npc.Id;
+                _hoveredEntity = id;
+                options.Add((UseLabel + " -> " + npc.DisplayName, () => UseOnNpc(id)));
+            }
+            ObjectDef objectDef = mapObject != null ? ObjectDefFor(mapObject.objectType) : null;
+            if (objectDef != null)
+            {
+                string type = objectDef.Id;
+                TileCoord tile = new TileCoord(mapObject.Tile.x, mapObject.Tile.y);
+                options.Add((UseLabel + " -> " + objectDef.Name, () => UseOnObject(type, tile, floor)));
+            }
+            _useTargets = options.Count;
+            if (ground.HasValue)
+            {
+                TileCoord tile = TileMath.FromWorld(ground.Value);
+                options.Add(("Walk here", () =>
+                {
+                    CancelUse();
+                    WalkTo(tile);
+                }));
+            }
+            options.Add(("Cancel", () => CancelUse()));
             return options;
         }
 
@@ -670,6 +783,11 @@ namespace Rth.Client
         public void UseItem(ContainerKind container, int slot, string actionId)
         {
             if (_state != State.InGame) return;
+            if (actionId == ItemActions.Use)
+            {
+                if (container == ContainerKind.Inventory) BeginUse(slot);
+                return;
+            }
             _client.Send(new ItemActionMessage { Container = container, Slot = slot, ActionId = actionId });
         }
 
@@ -738,6 +856,7 @@ namespace Rth.Client
             Bank.Clear();
             Dialogue = null;
             OpenInterface = InterfaceKind.None;
+            CancelUse();
             Shop = null;
             CurrentTask = null;
             Quests.Clear();

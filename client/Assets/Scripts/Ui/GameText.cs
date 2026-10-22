@@ -130,6 +130,13 @@ namespace Rth.Client.Ui
         public static void DefaultAction(GameSession session, ContainerKind where, int slot, ItemDef def)
         {
             if (def == null) return;
+            // An item picked up with "Use" is used on whatever pack item is clicked next.
+            if (session.IsUsingItem)
+            {
+                if (where == ContainerKind.Inventory) session.UseOnItem(slot);
+                else session.CancelUse();
+                return;
+            }
             if (where == ContainerKind.Inventory && session.OpenInterface == InterfaceKind.Bank)
             {
                 session.BankDeposit(slot, 1);
@@ -148,6 +155,13 @@ namespace Rth.Client.Ui
         public static List<(string Label, System.Action Action)> ItemOptions(GameSession session, ContainerKind where, int slot, ItemDef def)
         {
             var options = new List<(string Label, System.Action Action)>();
+            if (session.IsUsingItem)
+            {
+                if (where == ContainerKind.Inventory && slot != session.UseSlot)
+                    options.Add((session.UseLabel + " -> " + def.Name, () => session.UseOnItem(slot)));
+                options.Add(("Cancel", () => session.CancelUse()));
+                return options;
+            }
             if (where == ContainerKind.Inventory && session.OpenInterface == InterfaceKind.Bank)
             {
                 options.Add(("Deposit 1", () => session.BankDeposit(slot, 1)));
