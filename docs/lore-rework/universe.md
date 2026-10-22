@@ -52,7 +52,7 @@ dangerously, and its contents sometimes leak back.
 
 | Question | Constraints so far |
 | --- | --- |
-| Who or what makes and revises the world? | Not present in the world in any form people recognise. |
+| Who or what makes and revises the world (the maker)? | Unknown, and deliberately left so for a long time. Not present in the world in any form people recognise. |
 | Why does a revision start, and why now? | Something in the present can be connected to it. |
 | How is it decided what is rejected? | |
 | Is anything in the spoil aware, or trying to get back? | |
