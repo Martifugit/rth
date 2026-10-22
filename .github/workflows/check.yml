@@ -1,0 +1,24 @@
+# Every push and pull request: build, test (including the world data check) and the world check
+# on its own, so a stale server/data/maps or a broken region shows up by name. Unity isn't run
+# here (that would need a licence in CI); the agent with Unity syncs and compiles the client.
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Build
+        run: dotnet build Rth.slnx
+      - name: World data
+        run: dotnet run --project tools/world --no-build -- check
+      - name: Test
+        run: dotnet test Rth.slnx --no-build

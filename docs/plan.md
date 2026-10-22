@@ -70,7 +70,7 @@ Wave 1 (now, in parallel)
   A1 canon ──────────────┬──> B1 text pass (old-lore strings that need no new names)
   A2 names ──────────────┼──> B2 text pass (church, spine people, Scalth's replacement)
   L1 rough continent layout ──> A4 area plan v2 (passes 2-7 on top of it)
-  C0 art branch [done] ──> C1 audit ──> C2 snapshots ──> C3 world as data ──> C4 migrate regions
+  C0 art branch [done] ──> C1-C4 world as data [done] (docs/workflow.md)
   D1 death (server) ─────────────────────────────────────────────┐
   E1 tools, Mining, Woodcutting    E2 ranged    E3 item-on-object│
                                                                  v
@@ -281,10 +281,10 @@ agents can build the world together"). Update it before use: the continent layou
 | Id | What | Depends on | Done when |
 | --- | --- | --- | --- |
 | **C0** | Find and merge the world-scale, camera and art-style branch (`claude/world-scale-camera-art`), checking it in the Editor. | nothing | **Done** (2026-10-22): merged to `main`; the owner checked the new camera. |
-| **C1** | Audit: MCP tools, how content flows (builders, `WorldKit`, map markers, exporter), repository hygiene, open branches. Write `docs/workflow-audit.md`. | C0 | the owner has read the audit. |
-| **C2** | Snapshots: `world/snapshots/<region>.json` and `world/screens/<region>/` so cloud agents can see regions without Unity. | C1 | every region has a fresh snapshot and screenshots. |
-| **C3** | World as data: object definitions and region placements as text data, one **Sync World** step that builds scenes and exports maps, and `docs/workflow.md` (who edits what). | C2 | a cloud agent can add an object to a region in data, and one local sync puts it in the game. |
-| **C4** | Migrate Tolling, Palmerway and the Saint's crypt to the new path, and carry the scene-side text from B2. | C3, B2 for names | the three play exactly as before, built from data. |
+| **C1** | Audit of how content flows. | C0 | **Folded into C3** (2026-10-22): the findings shaped `docs/workflow.md`. |
+| **C2** | Snapshots: `world/snapshots/<region>.json` and `world/screens/<region>/` so agents without Unity can see regions. | C1 | **Done** (2026-10-22): Sync World writes them; `tools/world render` also draws any region from its data. |
+| **C3** | World as data: regions as text (`world/regions`), a C# compiler to the server maps (`tools/world`), **Sync World** in Unity, and `docs/workflow.md` (who edits what). | C2 | **Done** (2026-10-22): E1's rocks and trees were placed in data alone, checked and exported without Unity, then synced. |
+| **C4** | Migrate Tolling, Palmerway and the Saint's crypt to the new path, and carry the scene-side text from B2. | C3, B2 for names | **Migrated** (2026-10-22), with LevelTest: byte-identical maps; creatures, objects, trees, rocks and spawns are data, the rest hand-made. Left: B2's scene-side text, and removing the old builders (owner's call). |
 
 ---
 
@@ -383,7 +383,7 @@ Notes from one workstream to another ("A1 needs B1 to also change X"). Newest fi
 | From | To | Note |
 | --- | --- | --- |
 | D1 | D2 | The ferryman is NPC `ferryman` (npcs.json, Talk-to opens dialogue `ferryman`); place him on the landing and set death.json `wake` to it. On waking the server opens his conversation with no NPC (`DialogueSystem.Start(player, id, speaker)`), so today's dialogue box already works. The death remark is `TextKind.Ferryman` (was `Assayer`, same value 2, no protocol bump); `AssayerPanel` still shows it. |
-| E1 | C, L2 | Rocks and trees need placing (`MapObject` + `MapBlocker`, then export), checked open on today's collision. Tolling: `copper_seam` (8,12), (10,12), (9,14); `alder_tree` (38,88), (39,84), (36,91), (50,20), (53,18). Palmerway: `copper_seam` (100,88), (102,88); `ironstone_seam` (150,85), (152,85), (151,87); `ash_tree` (140,70), (144,72), (148,68); `alder_tree` (139,37). Region builders were left alone (regions are becoming data). |
+| E1 | C, L2 | Done in C3: the proposed rocks and trees are pieces in `world/regions/tolling.json` and `palmerway.json`. |
 | A1 | L1, owner | `docs/world-building.md` (decision W2) and `docs/world-scale.md` still place Tolling and the rivers against the old map's bay and the Cradle, which are retired. Restate W2 against the new layout when L1 has one. |
 | A1 | C, A4 | `docs/regions/` (the Cruor, Tithe, Cistern and Meridian blockouts) still describe Tithe, the bay, the Quaere and the Plaza of the Keeping as current. Left as is, since the areas are rebuilt rather than patched; give each a superseded line when that work starts. `docs/areas/decisions.md` also mentions the bay. |
 | G | C, A4 | The capital blockouts on `main` are on the old map. Keep the `WorldKit` kits; rebuild the areas once A4 and C3 allow, not before. |

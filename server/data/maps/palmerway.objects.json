@@ -5,5 +5,14 @@
   { "type": "monument_fount", "plane": 0, "x": 165, "y": 59 },
   { "type": "monument_fount", "plane": 0, "x": 163, "y": 61 },
   { "type": "monument_fount", "plane": 0, "x": 163, "y": 57 },
-  { "type": "waystone", "plane": 0, "x": 128, "y": 55 }
+  { "type": "waystone", "plane": 0, "x": 128, "y": 55 },
+  { "type": "copper_seam", "plane": 0, "x": 100, "y": 88 },
+  { "type": "copper_seam", "plane": 0, "x": 102, "y": 88 },
+  { "type": "ironstone_seam", "plane": 0, "x": 150, "y": 85 },
+  { "type": "ironstone_seam", "plane": 0, "x": 152, "y": 85 },
+  { "type": "ironstone_seam", "plane": 0, "x": 151, "y": 87 },
+  { "type": "ash_tree", "plane": 0, "x": 140, "y": 70 },
+  { "type": "ash_tree", "plane": 0, "x": 144, "y": 72 },
+  { "type": "ash_tree", "plane": 0, "x": 148, "y": 68 },
+  { "type": "alder_tree", "plane": 0, "x": 139, "y": 37 }
 ]

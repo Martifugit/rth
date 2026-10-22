@@ -131,6 +131,15 @@
       { "shape": "box", "name": "Trunk", "at": [0, 0.77, 0], "size": [0.32, 1.54, 0.32], "material": "Bark" },
       { "shape": "box", "name": "Leaves", "at": [0, 1.6363, 0], "size": [1.54, 0.6738, 1.54], "rot": [0, 36.7165, 0], "material": "DarkLeaves" },
       { "shape": "box", "name": "Leaves", "at": [0, 2.1657, 0], "size": [1.1069, 0.6738, 1.1069], "rot": [0, 7.2234, 0], "material": "DarkLeaves" }
-    ] }
+    ] },
+    { "id": "copper-seam-100-88", "kind": "rock", "at": [100, 88], "object": "copper_seam" },
+    { "id": "copper-seam-102-88", "kind": "rock", "at": [102, 88], "object": "copper_seam" },
+    { "id": "ironstone-seam-150-85", "kind": "rock", "at": [150, 85], "object": "ironstone_seam" },
+    { "id": "ironstone-seam-152-85", "kind": "rock", "at": [152, 85], "object": "ironstone_seam" },
+    { "id": "ironstone-seam-151-87", "kind": "rock", "at": [151, 87], "object": "ironstone_seam" },
+    { "id": "ash-tree-140-70", "kind": "tree", "at": [140, 70], "variant": "Ash", "object": "ash_tree" },
+    { "id": "ash-tree-144-72", "kind": "tree", "at": [144, 72], "variant": "Ash", "object": "ash_tree" },
+    { "id": "ash-tree-148-68", "kind": "tree", "at": [148, 68], "variant": "Ash", "object": "ash_tree" },
+    { "id": "alder-tree-139-37", "kind": "tree", "at": [139, 37], "variant": "Alder", "object": "alder_tree" }
   ]
 }

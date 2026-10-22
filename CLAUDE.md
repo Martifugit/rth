@@ -32,6 +32,7 @@ Design docs:
   (`docs/research/`); decisions D1-D4 wait on the owner and the scale test region.
 - `docs/assets.md`: triangle budgets, the palette, textures, leafy trees, recolouring.
 - `docs/world-building.md`: the world layout, region bakes and stamps (a prototype; W1, W2 open).
+- `docs/workflow.md`: how the owner and agents (with and without Unity) build the world together, as data.
 - `docs/areas/`: the area plan for the whole continent, built in passes. Start with `rules.md` (how the research targets are used); the evidence is in `docs/research/`.
 
 ---
@@ -98,10 +99,14 @@ Correct for drift so ticks stay on a 600 ms grid. Allow a faster tick rate in te
 - Tile grid, click-to-move, server-side pathfinding. Walking is 1 tile per tick, running 2.
 - Each client only receives entities within a view radius ("interest management").
 - **Height and floors (decided):** the server is flat; the client draws height by casting down onto the ground colliders of the entity's floor. A floor above the ground is a plane (`MapLevel`, up to 4), with its own collision, and stairs and ladders move you between planes (`ClimbSystem`). `Assets/Scenes/LevelTest.unity` (`::tele leveltest`, **R'th > Dev > Rebuild Level Test Scene**) is the worked example.
-- **Map pipeline:** the map is designed in Unity scenes. A `/tools` exporter writes tile data
-  (walkability, wall edges, object footprints, plane/level) to a file the server loads. The
-  client renders the scene and the server reads the export. Keep them in sync through this one
-  path, never by hand.
+- **Map pipeline (decided, the world as data):** each region is text, `world/regions/<id>.json`
+  (pieces: ground, roads, water, walls, fences, houses, trees, rocks, props, objects, creatures,
+  the spawn), plus what its scene adds by hand, captured into `<id>.handmade.json`. A plain C#
+  compiler (`shared/World/Data`, run by `tools/world`) turns both into the server's
+  `server/data/maps` files, so anyone can change and check the world without Unity. Unity draws
+  the data under each scene's `Data` root (**Sync World**), keeps hand work under `Handmade`, and
+  checks its own export agrees. Never edit `server/data/maps` or the handmade files by hand. See
+  `docs/workflow.md`.
 - **Regions (decided, Milestone 7):** the world is one absolute tile grid (Tolling's south-west
   corner is (0, 0); coordinates may go negative). It is built from **regions**, each one Unity
   scene with one `MapArea`, zone-aligned (origin and size multiples of 8) and not overlapping.
@@ -175,7 +180,8 @@ How it works, briefly:
   `TollingBuilder` / `PalmerwayBuilder` using the reusable `WorldKit` (`BeginRegion` /
   `SaveRegion`, houses with hideable roofs, water from tile sets, roads, fences, trees, stations,
   spawns). Pressing Play in a region scene loads the Game scene beside it (`GameBootstrap`).
-  Once a scene exists it is the source of truth: rebuilding overwrites hand edits.
+  These builders made the first regions; those regions are now world data (their builder output is
+  the `Handmade` root), so **don't rebuild them**: rebuilding would replace the converted scene.
   **R'th > World > Open Whole World** opens every exported region (plus the Game scene's sun and
   fog) side by side for editing across borders; each scene still saves to its own file, and
   Play and Export Map handle every open region. Exporting a
@@ -411,6 +417,11 @@ the pack, then the bank; an `obol` in the pack at death is taken as the fee; unp
 and sends the player to `returnTo` (null: the spawn); leaving sends them back without it. The
 client still shows the remark in `AssayerPanel` (text kind `Ferryman`) until D2.
 
+**The world as data (C1-C4, done):** regions are text (`world/regions`), compiled to the server maps by
+`tools/world` without Unity, drawn and checked in Unity by **R'th > World > Sync World**; Tolling,
+Palmerway, the Saint's crypt and LevelTest were converted with byte-identical maps, and E1's rocks
+and trees were placed as data. How to work: `docs/workflow.md`.
+
 **Next: not chosen yet.** Candidates: ranged, an art pass on Tolling, more quests and
 achievements.
 
@@ -444,7 +455,7 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | A weapon's default bar | combat.json `actionBars` per style. Each style's main bar is client state `bars.main.<Style>`, swapped in with the weapon (client and Revolution both read it). |
 | Something an entity visibly holds or wears | `Entity.SetHeld` (players: the weapon slot; NPCs: `held` in npcs.json) reaches clients in `EntityAdded.Held` and appearance events; the client's body draws it (`HeldItemArt` until items have models). |
 | Fight pacing | Tune creatures in npcs.json; `PacingTests` simulates the starter kit against each and prints the numbers. |
-| A gathering node (rock, tree, fount) | `node` on an object type in objects.json (skill, level, chance, XP, items, extras, points, yields, `depleteChance`, respawn, an optional surge, a `tool` kind and `toolTier`) and a `gather` action; place it with `MapObject` + `MapBlocker`. No code. |
+| A gathering node (rock, tree, fount) | `node` on an object type in objects.json (skill, level, chance, XP, items, extras, points, yields, `depleteChance`, respawn, an optional surge, a `tool` kind and `toolTier`) and a `gather` action; place it as a `rock`, `tree` or `prop` piece with `"object"` in the region's data. No code. |
 | A gathering tool (pickaxe, hatchet, rod) | `tool` on the item in items.json (kind, tier, requirements, `success`, `conservation`, `extras`/`replacesExtras`, `transforms`); add `equipment` (Weapon) to make it wieldable. `GatheringSystem.BestTool` picks it. A new effect is a field on `ToolDef` read in `GatheringSystem.Attempt`. |
 | Something that restores devotion | An object action `pray` in objects.json (an altar), or the `restoreDevotion` / `restoreDevotionPercent` effect ops on a consumable. |
 | A skill that replaced another | `retired` in skills.json (old id: new id); saves move the XP on login. |
@@ -467,7 +478,10 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | A terraced landscape (a city on a hillside, a gorge with bridges) | A `Terraces` map (`WorldKit.Terraces.cs`): `Flat`, `Stair`, `Ramp`, `Deck` and `Void` tile by tile, then `Build`; it walls every drop (kerbs and parapets) and warns about steps over 0.5 m or ramps steeper than 1 in 3. Start the region with `BeginTerrainRegion`; `Viaduct` and `Stream` draw what goes under and through it. See `MeridianBuilder`. |
 | A floor above the ground (upper storey, gallery, footbridge, tower room) | A `MapLevel` (1-3) on a group holding that floor's slab (ground collider), walls (`MapWall`), blockers, objects and spawns: the exporter writes one plane per level. `hiddenFromBelow` (default) switches the group off while the player is on a lower floor; turn it off for what must always show from outside (outer walls, an open-air deck). Planes are separate collision, and people only see people on their own plane. There is no plane below the ground: cellars, caves and dungeons are separate small regions (instanced, 1024 tiles north of the surface place) entered by a `climb` object whose landing is in that region (`trapdoor_down`/`trapdoor_up`, `cave_mouth`/`cave_exit`, or the stairs and ladders). |
 | Stairs, ladders, trapdoors | An object with a `climb` action (`stairs_up`/`stairs_down`/`ladder_up`/`ladder_down` exist) placed with `MapObject` + a collider, and its `climbTo` set to an empty object on the landing tile under the target floor's `MapLevel`. One object per end. The exporter warns about a blocked landing; `ClimbSystem` moves the player. |
-| A new region of the world | A scene with a `MapArea` at its absolute, zone-aligned rectangle (a builder using `WorldKit.BeginRegion`/`SaveRegion`); export it. No server code. |
+| A new region of the world | A file `world/regions/<id>.json` (id, title, scene path, zone-aligned origin and size, ground, materials, pieces); `tools/world export`, then Sync World creates its scene. No server code. |
+| Something in a region (a house, a fence, a rock to mine, a creature) | A piece in `world/regions/<id>.json` (`docs/workflow.md` lists the kinds); `tools/world check`, `export`, `render`. Interactive with `"object"`. |
+| A new kind of piece | A constant in `PieceKind`, its collision in `RegionCompiler.AddPiece`, its look in the client's `PieceBuilder`; Sync World checks the two agree. |
+| Something only worth making by hand | Under the scene's `Handmade` root; saving the scene captures it into `<id>.handmade.json`. |
 | A city or town blockout | A builder using `WorldKit.City.cs` (buildings with roofs, walk-in halls with doors, city walls, towers, gatehouse arches, bridges, statues, braziers, banners, stalls, boats, domes, colonnades, shade sails, windcatchers, water wheels, armillaries, rails, the Quaere's silhouette; `CutGround` for a pit); see `CruorBuilder`, `TitheBuilder`, `CisternBuilder`, `MeridianBuilder` and `docs/regions/`. |
 | A building you walk into (on any terrace, with upper floors) | `WorldKit.Enterable` (`WorldKit.Interiors.cs`) returns a `Shell`: doors, a `MapLevel` per upper floor (outer walls always drawn, slab only from above, or a railed gallery), a roof that hides inside. `Shell.Stairs`/`Ladder` join floors with their landings set; `Table`, `Counter`, `Shelves`, `Hearth`, `Bed`, `Thing`, `Object` furnish any floor. `Pavilion` for open halls on posts (optionally a deck), `RowHouse` for a house repeated down a street, `CheckBuildings` for the three-tile gap and 25% rules. See `MeridianBuilder.Buildings.cs`. |
 | A stand-in for an asset still to be made | `WorldKit.Asset(go, "region/id", note)` adds a `BlockoutAsset`; saving the region writes `docs/regions/<region>-assets.md` (count, size, notes). |
@@ -531,6 +545,11 @@ from its spawn and fails on any object nobody can stand beside.
 
 ## Working conventions
 
+- **The world is built together, as data** (`docs/workflow.md`): agents without Unity change
+  `world/regions/*.json`, content JSON and C#, and run `dotnet run --project tools/world --
+  check` / `export` / `render` and `dotnet test`; they never write `.unity`, `.prefab`, `.asset`,
+  `.mat` or `.meta` files. The agent with Unity runs **R'th > World > Sync World**, compiles
+  client code, and commits what Unity wrote. One region per branch at a time.
 - Commit early and often with clear messages; keep changes reviewable.
 - Write tests for game rules in `/shared` and `/server`. Prefer fast simulation tests
   ("run 1000 ticks, assert XP") over manual Editor checks.

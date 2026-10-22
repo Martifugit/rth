@@ -2,7 +2,7 @@
   "note": "Written by Sync World from Assets/Scenes/Tolling.unity. Read-only: change world/regions/tolling.json, or the scene's Handmade root in Unity.",
   "region": "tolling",
   "origin": [0, 0], "size": [96, 96],
-  "dataPieces": { "npc": 15, "prop": 4, "rock": 5, "spawn": 1, "tree": 28 },
+  "dataPieces": { "npc": 15, "prop": 4, "rock": 8, "spawn": 1, "tree": 33 },
   "handmade": [
     { "path": "Grave path", "tiles": [27, 21, 35, 39], "objects": 26 },
     { "path": "Sleepers' graves", "tiles": [21, 11, 35, 22], "objects": 70, "blockers": 14, "walls": 5 },

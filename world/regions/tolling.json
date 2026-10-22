@@ -225,6 +225,14 @@
       { "shape": "box", "name": "Leaves", "at": [0, 1.9407, 0], "size": [1.8266, 0.7991, 1.8266], "rot": [0, 12.4262, 0], "material": "Leaves" },
       { "shape": "box", "name": "Leaves", "at": [0, 2.5686, 0], "size": [1.3128, 0.7991, 1.3128], "rot": [0, 6.1449, 0], "material": "Leaves" },
       { "shape": "box", "name": "Leaves", "at": [0, 3.1965, 0], "size": [0.7991, 0.7991, 0.7991], "rot": [0, 64.2793, 0], "material": "Leaves" }
-    ] }
+    ] },
+    { "id": "copper-seam-8-12", "kind": "rock", "at": [8, 12], "object": "copper_seam" },
+    { "id": "copper-seam-10-12", "kind": "rock", "at": [10, 12], "object": "copper_seam" },
+    { "id": "copper-seam-9-14", "kind": "rock", "at": [9, 14], "object": "copper_seam" },
+    { "id": "alder-tree-38-88", "kind": "tree", "at": [38, 88], "variant": "Alder", "object": "alder_tree" },
+    { "id": "alder-tree-39-84", "kind": "tree", "at": [39, 84], "variant": "Alder", "object": "alder_tree" },
+    { "id": "alder-tree-36-91", "kind": "tree", "at": [36, 91], "variant": "Alder", "object": "alder_tree" },
+    { "id": "alder-tree-50-20", "kind": "tree", "at": [50, 20], "variant": "Alder", "object": "alder_tree" },
+    { "id": "alder-tree-53-18", "kind": "tree", "at": [53, 18], "variant": "Alder", "object": "alder_tree" }
   ]
 }

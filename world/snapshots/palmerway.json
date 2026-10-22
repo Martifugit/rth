@@ -2,7 +2,7 @@
   "note": "Written by Sync World from Assets/Scenes/Palmerway.unity. Read-only: change world/regions/palmerway.json, or the scene's Handmade root in Unity.",
   "region": "palmerway",
   "origin": [96, 0], "size": [96, 96],
-  "dataPieces": { "npc": 4, "prop": 7, "rock": 5, "tree": 11 },
+  "dataPieces": { "npc": 4, "prop": 7, "rock": 10, "tree": 15 },
   "handmade": [
     { "path": "Waygate", "tiles": [182, -1, 184, 97], "objects": 147, "walls": 2 },
     { "path": "Waygate/Palisade", "tiles": [182, -1, 184, 97], "objects": 99, "walls": 2 },
