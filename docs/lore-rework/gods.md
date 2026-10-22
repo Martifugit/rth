@@ -20,6 +20,15 @@ Every god gets these, briefly. Anything undecided is a placeholder or **sealed**
 | **Fear** | What is it afraid of? (In this universe, every god can be taken in a revision.) |
 | **Origin** | Made with the world, back from p-spoil, or ascended from something lesser. Often sealed. |
 
+## The pantheon (decided)
+
+- **A handful of gods** (about 6-10) everyone has heard of, and many **lesser powers** beneath them:
+  local gods, great spirits, old beasts, beings like the ferryman. More can arrive in later
+  updates (ascended, or back from p-spoil).
+- **Their presence is uneven**, and part of each god's character: one walks the world in a body,
+  one speaks only through omens, one hasn't been heard from in centuries. As the revision stirs,
+  quiet gods can start to show themselves again.
+
 ## The gods
 
 None decided yet. The first sheet is the god behind the aggressive empire.
