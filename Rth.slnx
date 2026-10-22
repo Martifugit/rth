@@ -6,6 +6,7 @@
   </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/client-tests/Rth.Client.Tests.csproj" />
+    <Project Path="tools/world/Rth.WorldTool.csproj" />
   </Folder>
   <Folder Name="/shared/">
     <Project Path="shared/Rth.Shared.csproj" />

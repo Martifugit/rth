@@ -34,3 +34,6 @@ tools/character-models/HumanMale.blend
 
 # Python
 __pycache__/
+
+# World renders (tools/world render): regenerate rather than commit
+/world/renders/
