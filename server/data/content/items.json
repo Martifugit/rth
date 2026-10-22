@@ -365,5 +365,118 @@
     "value": 1000,
     "color": "#a8a59a",
     "tags": [ "obol" ]
+  },
+  {
+    "id": "copper_pickaxe",
+    "name": "Copper pickaxe",
+    "icon": "mining",
+    "examine": "Soft metal on an alder haft. It will see you through the first seams, and bend on the rest.",
+    "value": 20,
+    "color": "#c07a4a",
+    "tags": [ "tool", "mining" ],
+    "tool": { "kind": "pickaxe", "tier": 1 },
+    "equipment": { "slot": "Weapon", "style": "Melee", "stats": { "abilityDamage": 3 } }
+  },
+  {
+    "id": "ironshod_pickaxe",
+    "name": "Ironshod pickaxe",
+    "icon": "mining",
+    "examine": "An iron point on a copper-banded head. It bites where copper only scratched.",
+    "value": 120,
+    "color": "#8a8f96",
+    "tags": [ "tool", "mining" ],
+    "tool": { "kind": "pickaxe", "tier": 2, "success": 0.08, "requirements": [ { "skill": "mining", "level": 10 } ] },
+    "equipment": { "slot": "Weapon", "style": "Melee", "stats": { "abilityDamage": 6 }, "requirements": [ { "skill": "melee", "level": 10 } ] }
+  },
+  {
+    "id": "copper_hatchet",
+    "name": "Copper hatchet",
+    "icon": "woodcutting",
+    "examine": "A soft blade that wants sharpening every other tree. Good enough for alder.",
+    "value": 20,
+    "color": "#c07a4a",
+    "tags": [ "tool", "woodcutting" ],
+    "tool": { "kind": "hatchet", "tier": 1 },
+    "equipment": { "slot": "Weapon", "style": "Melee", "stats": { "abilityDamage": 3 } }
+  },
+  {
+    "id": "ironshod_hatchet",
+    "name": "Ironshod hatchet",
+    "icon": "woodcutting",
+    "examine": "An iron edge welded onto an old copper head. It holds its bite through ash.",
+    "value": 120,
+    "color": "#8a8f96",
+    "tags": [ "tool", "woodcutting" ],
+    "tool": { "kind": "hatchet", "tier": 2, "success": 0.08, "requirements": [ { "skill": "woodcutting", "level": 10 } ] },
+    "equipment": { "slot": "Weapon", "style": "Melee", "stats": { "abilityDamage": 6 }, "requirements": [ { "skill": "melee", "level": 10 } ] }
+  },
+  {
+    "id": "raw_copper",
+    "name": "Raw copper",
+    "examine": "Green-stained rock with a red shine in it. A smith would smelt it.",
+    "value": 4,
+    "color": "#b8703f",
+    "tags": [ "ore", "tier1" ]
+  },
+  {
+    "id": "ironstone",
+    "name": "Ironstone",
+    "examine": "Heavy, rust-brown and cold. The workhorse ore.",
+    "value": 10,
+    "color": "#6e5446",
+    "tags": [ "ore", "tier2" ]
+  },
+  {
+    "id": "alder_log",
+    "name": "Alder log",
+    "examine": "Pale wood that turns orange where it's cut. It burns fast.",
+    "value": 3,
+    "color": "#c79b6a",
+    "tags": [ "log", "tier1" ]
+  },
+  {
+    "id": "ash_log",
+    "name": "Ash log",
+    "examine": "Straight-grained and springy. Fletchers want it for shafts.",
+    "value": 8,
+    "color": "#d8c6a0",
+    "tags": [ "log", "tier2" ]
+  },
+  {
+    "id": "rough_garnet",
+    "name": "Rough garnet",
+    "icon": "bead",
+    "examine": "A dark red stone. Miners say it holds a drop of blood.",
+    "value": 40,
+    "color": "#8e1f2a",
+    "tags": [ "gem", "blood" ]
+  },
+  {
+    "id": "rough_amber",
+    "name": "Rough amber",
+    "icon": "bead",
+    "examine": "Yellow and warm to the touch, as if something in it is still angry.",
+    "value": 40,
+    "color": "#d99a2b",
+    "tags": [ "gem", "yellow-bile" ]
+  },
+  {
+    "id": "rough_jet",
+    "name": "Rough jet",
+    "icon": "bead",
+    "examine": "Black and light, and it takes a polish like still water.",
+    "value": 40,
+    "color": "#1f1d22",
+    "tags": [ "gem", "black-bile" ]
+  },
+  {
+    "id": "tree_resin",
+    "name": "Tree resin",
+    "icon": "bead",
+    "examine": "A sticky knot of sap. Apothecaries use it to bind salves.",
+    "stackable": true,
+    "value": 6,
+    "color": "#b5822c",
+    "tags": [ "resin" ]
   }
 ]

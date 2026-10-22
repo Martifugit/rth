@@ -48,6 +48,17 @@ namespace Rth.Shared.World
         public double MinChance = 0.05;
         public double MaxChance = 0.95;
         public double Xp;
+        /// <summary>The tool kind needed to work it ("pickaxe", "hatchet"), or null for bare hands.</summary>
+        public string? Tool;
+        /// <summary>The lowest tool tier that works it (0: any).</summary>
+        public int ToolTier;
+        /// <summary>Said instead of "You need a pickaxe to mine the copper seam." when the tool is missing, or null.</summary>
+        public string? NoToolMessage;
+        /// <summary>
+        /// The chance that a success uses up one of the node's yields: 1 for ore (every success),
+        /// 1/8 for a tree that falls by chance. A tool's conservation lowers it further.
+        /// </summary>
+        public double DepleteChance = 1;
         /// <summary>Items given on every success.</summary>
         public List<Rth.Shared.Items.ItemCost> Items = new List<Rth.Shared.Items.ItemCost>();
         /// <summary>A drop table rolled on every success (gems from ore), or null.</summary>

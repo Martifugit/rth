@@ -1246,5 +1246,95 @@
     "actions": [
       {"id": "read", "label": "Read", "message": "THE UNDER-TREATY: what is above is Concordia's, what is beneath is the dwarves', and what is found between is shared. The last clause has been re-cut, deeper, by a dwarven hand."}
     ]
+  },
+  {
+    "id": "copper_seam",
+    "name": "Copper seam",
+    "examine": "Green-stained rock with a glint of red in it.",
+    "actions": [ { "id": "gather", "label": "Mine" } ],
+    "node": {
+      "skill": "mining",
+      "level": 1,
+      "verb": "mine",
+      "tool": "pickaxe",
+      "ticks": 4,
+      "baseChance": 0.3,
+      "perLevel": 0.01,
+      "maxChance": 0.9,
+      "xp": 9,
+      "items": [ { "item": "raw_copper" } ],
+      "extras": "low_rock_gems",
+      "respawnTicks": 5,
+      "startMessage": "You swing your pickaxe at the rock.",
+      "depletedMessage": "The seam is worked out for now."
+    }
+  },
+  {
+    "id": "ironstone_seam",
+    "name": "Ironstone seam",
+    "examine": "Rust streaks the rock like old blood.",
+    "actions": [ { "id": "gather", "label": "Mine" } ],
+    "node": {
+      "skill": "mining",
+      "level": 10,
+      "verb": "mine",
+      "tool": "pickaxe",
+      "ticks": 4,
+      "baseChance": 0.22,
+      "perLevel": 0.01,
+      "maxChance": 0.85,
+      "xp": 12,
+      "items": [ { "item": "ironstone" } ],
+      "extras": "low_rock_gems",
+      "respawnTicks": 9,
+      "startMessage": "You swing your pickaxe at the rock.",
+      "depletedMessage": "The seam is worked out for now."
+    }
+  },
+  {
+    "id": "alder_tree",
+    "name": "Alder",
+    "examine": "A riverbank tree with dark, sticky buds.",
+    "actions": [ { "id": "gather", "label": "Chop" } ],
+    "node": {
+      "skill": "woodcutting",
+      "level": 1,
+      "verb": "chop",
+      "tool": "hatchet",
+      "ticks": 4,
+      "baseChance": 0.45,
+      "perLevel": 0.01,
+      "maxChance": 0.95,
+      "xp": 6,
+      "items": [ { "item": "alder_log" } ],
+      "extras": "tree_extras",
+      "depleteChance": 0.125,
+      "respawnTicks": 15,
+      "startMessage": "You swing your hatchet at the tree.",
+      "depletedMessage": "The alder comes down."
+    }
+  },
+  {
+    "id": "ash_tree",
+    "name": "Ash",
+    "examine": "Tall and grey-barked, with black buds like little hooves.",
+    "actions": [ { "id": "gather", "label": "Chop" } ],
+    "node": {
+      "skill": "woodcutting",
+      "level": 10,
+      "verb": "chop",
+      "tool": "hatchet",
+      "ticks": 4,
+      "baseChance": 0.35,
+      "perLevel": 0.01,
+      "maxChance": 0.9,
+      "xp": 8,
+      "items": [ { "item": "ash_log" } ],
+      "extras": "tree_extras",
+      "depleteChance": 0.125,
+      "respawnTicks": 25,
+      "startMessage": "You swing your hatchet at the tree.",
+      "depletedMessage": "The ash comes down."
+    }
   }
 ]

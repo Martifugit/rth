@@ -1,5 +1,7 @@
 # The area plan: pass 1, the skeleton
 
+> **Superseded** (2026-10-22): drawn on the old map; the canon is `docs/lore.md` and `docs/world-map.md`, and pass 1 is redone in A4 (`docs/plan.md`).
+
 Generated from `skeleton.json` by `tools/areas/plan.py`. Edit the JSON, not this file.
 
 **Scale:** 1.75 tiles per sketch pixel; a region is 96 × 96 tiles. Sizes are in regions and rough. Positions are on the sketch; Tolling stays at tile (0, 0).

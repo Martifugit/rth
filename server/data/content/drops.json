@@ -54,5 +54,21 @@
       { "item": "smoked_eel", "min": 2, "max": 5, "weight": 4 },
       { "item": "scripture_iv", "weight": 1 }
     ]
+  },
+  {
+    "id": "low_rock_gems",
+    "rolls": 1,
+    "entries": [
+      { "item": "rough_garnet", "weight": 1 },
+      { "item": "rough_amber", "weight": 1 },
+      { "item": "rough_jet", "weight": 1 }
+    ],
+    "nothingWeight": 297
+  },
+  {
+    "id": "tree_extras",
+    "rolls": 1,
+    "entries": [ { "item": "tree_resin", "weight": 1 } ],
+    "nothingWeight": 49
   }
 ]

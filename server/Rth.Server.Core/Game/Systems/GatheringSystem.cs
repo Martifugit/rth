@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Rth.Server.Content;
+using Rth.Shared.Items;
 using Rth.Shared.Net;
 using Rth.Shared.World;
 
@@ -13,9 +14,10 @@ namespace Rth.Server.Game
     /// and what the node gives (items, points, extras); after its yields the node depletes for a
     /// while, for everyone. A node type can surge: now and then one node of each group wakes and
     /// gives more for a short time (Cruor's hungry founts). Clients get the nodes near them that
-    /// are depleted or surging as the "nodes" server state.
+    /// are depleted or surging as the "nodes" server state. A node can need a tool kind (and a
+    /// lowest tier): the best usable one in the pack or worn is used, and its effects (success,
+    /// conservation, extras, transformations) apply (docs/skills.md 2.3).
     /// </summary>
-    /// <remarks>Tools (a pickaxe's success bonus, conservation, transformation, extras) come with Mining.</remarks>
     public sealed class GatheringSystem : GameSystem
     {
         public const string GatherAction = "gather";
@@ -133,16 +135,73 @@ namespace Rth.Server.Game
             if (node.IsDepleted(World.CurrentTick)) return def.DepletedMessage;
             SkillSystem? skills = World.Find<SkillSystem>();
             if (skills == null) return null;
-            string what = def.Verb + " the " + World.Content.Objects[node.Placed.Type].Name.ToLowerInvariant();
+            string what = What(node, def);
             return skills.Check(player, def.Requirements, what)
-                ?? skills.Check(player, new[] { new Rth.Shared.Skills.SkillRequirement { Skill = def.Skill, Level = def.Level } }, what);
+                ?? skills.Check(player, new[] { new Rth.Shared.Skills.SkillRequirement { Skill = def.Skill, Level = def.Level } }, what)
+                ?? ToolProblem(player, node, def);
         }
 
-        /// <summary>The chance of one attempt succeeding for this player.</summary>
-        public double SuccessChance(Player player, NodeDef def)
+        private string What(Node node, NodeDef def) =>
+            def.Verb + " the " + World.Content.Objects[node.Placed.Type].Name.ToLowerInvariant();
+
+        // ------------------------------------------------------------------ tools
+
+        /// <summary>Every tool of this kind the player wears or carries.</summary>
+        private IEnumerable<ItemDef> ToolsOfKind(Player player, string kind)
+        {
+            ItemSystem? items = World.Find<ItemSystem>();
+            if (items == null) yield break;
+            PlayerItems held = items.Of(player);
+            foreach (var container in new[] { held.Equipment, held.Inventory })
+                for (int i = 0; i < container.Size; i++)
+                {
+                    if (container.IsEmpty(i)) continue;
+                    if (World.Content.Items.TryGetValue(container[i].ItemId, out ItemDef? item) && item.Tool != null && item.Tool.Kind == kind)
+                        yield return item;
+                }
+        }
+
+        private bool CanUse(Player player, ToolDef tool) =>
+            World.Find<SkillSystem>()?.Check(player, tool.Requirements, "use it") == null;
+
+        /// <summary>
+        /// The tool this player would work the node with: the highest tier they can use (then the
+        /// best success bonus), from the pack or worn. Null when the node needs none, or they have none.
+        /// </summary>
+        public ItemDef? BestTool(Player player, NodeDef def)
+        {
+            if (def.Tool == null) return null;
+            return ToolsOfKind(player, def.Tool)
+                .Where(t => t.Tool!.Tier >= def.ToolTier && CanUse(player, t.Tool))
+                .OrderByDescending(t => t.Tool!.Tier).ThenByDescending(t => t.Tool!.Success)
+                .FirstOrDefault();
+        }
+
+        /// <summary>Why the player's tools won't do for this node, or null.</summary>
+        public string? ToolProblem(Player player, Node node, NodeDef def)
+        {
+            if (def.Tool == null || BestTool(player, def) != null) return null;
+            string what = What(node, def);
+            List<ItemDef> owned = ToolsOfKind(player, def.Tool).ToList();
+            ItemDef? goodEnough = owned.Where(t => t.Tool!.Tier >= def.ToolTier).OrderBy(t => t.Tool!.Tier).FirstOrDefault();
+            if (goodEnough != null)
+                return World.Find<SkillSystem>()?.Check(player, goodEnough.Tool!.Requirements, "use your " + goodEnough.Name.ToLowerInvariant())
+                    ?? "You can't use your " + goodEnough.Name.ToLowerInvariant() + ".";
+            if (owned.Count > 0) return "You need a better " + def.Tool + " to " + what + ".";
+            return def.NoToolMessage ?? "You need " + Article(def.Tool) + " " + def.Tool + " to " + what + ".";
+        }
+
+        private static string Article(string word) =>
+            word.Length > 0 && "aeiou".IndexOf(char.ToLowerInvariant(word[0])) >= 0 ? "an" : "a";
+
+        /// <summary>The chance of one attempt succeeding for this player (with their best tool).</summary>
+        public double SuccessChance(Player player, NodeDef def) => SuccessChance(player, def, BestTool(player, def)?.Tool);
+
+        private double SuccessChance(Player player, NodeDef def, ToolDef? tool)
         {
             int level = World.Find<SkillSystem>()?.Level(player, def.Skill) ?? 1;
-            return Math.Max(def.MinChance, Math.Min(def.MaxChance, def.BaseChance + def.PerLevel * (level - def.Level)));
+            double chance = def.BaseChance + def.PerLevel * (level - def.Level) + (tool?.Success ?? 0);
+            return Math.Max(def.MinChance, Math.Min(def.MaxChance, chance));
         }
 
         /// <summary>The player starts working a node: its message, its words, its cut.</summary>
@@ -159,10 +218,18 @@ namespace Rth.Server.Game
         internal bool Attempt(Player player, Node node, NodeDef def)
         {
             uint now = World.CurrentTick;
+            string? toolProblem = ToolProblem(player, node, def);
+            if (toolProblem != null)
+            {
+                World.Tell(player, TextKind.Warning, toolProblem);
+                return false;
+            }
+            ToolDef? tool = BestTool(player, def)?.Tool;
             World.Animate(player, def.Animation, node.Placed.Tile);
-            if (World.Random.NextDouble() >= SuccessChance(player, def)) return true;
+            if (World.Random.NextDouble() >= SuccessChance(player, def, tool)) return true;
 
             ItemSystem? items = World.Find<ItemSystem>();
+            SkillSystem? skills = World.Find<SkillSystem>();
             if (items != null && def.Items.Any(i => !items.CanGive(player, i.Item, i.Count)))
             {
                 World.Tell(player, TextKind.Warning, "You don't have enough inventory space.");
@@ -171,18 +238,21 @@ namespace Rth.Server.Game
 
             bool surging = node.IsSurging(now);
             NodeSurgeDef? surge = def.Surge;
-            World.Find<SkillSystem>()?.AddXp(player, def.Skill, def.Xp * (surging && surge != null ? surge.XpMultiplier : 1));
+            skills?.AddXp(player, def.Skill, def.Xp * (surging && surge != null ? surge.XpMultiplier : 1));
 
             var gained = new List<Drop>();
             if (items != null)
             {
-                foreach (Rth.Shared.Items.ItemCost item in def.Items)
+                foreach (ItemCost item in Transformed(player, def, tool, skills))
                 {
                     items.Give(player, item.Item, item.Count);
                     gained.Add(new Drop(item.Item, item.Count));
                 }
-                if (def.Extras != null)
-                    foreach (Drop extra in DropRoller.Roll(World.Content, def.Extras, World.Random))
+                var tables = new List<string>();
+                if (def.Extras != null && !(tool?.ReplacesExtras ?? false)) tables.Add(def.Extras);
+                if (tool?.Extras != null) tables.Add(tool.Extras);
+                foreach (string table in tables)
+                    foreach (Drop extra in DropRoller.Roll(World.Content, table, World.Random))
                     {
                         items.Give(player, extra.ItemId, extra.Count);
                         gained.Add(extra);
@@ -202,12 +272,36 @@ namespace Rth.Server.Game
             }
 
             if (node.YieldsLeft <= 0) node.YieldsLeft = World.Random.Next(Math.Max(1, def.YieldsMin), Math.Max(def.YieldsMin, def.YieldsMax) + 1);
-            node.YieldsLeft--;
+            bool conserved = tool != null && tool.Conservation > 0 && World.Random.NextDouble() < tool.Conservation;
+            if (!conserved && World.Random.NextDouble() < def.DepleteChance) node.YieldsLeft--;
             if (node.YieldsLeft > 0) return true;
             node.DepletedUntil = now + (uint)Math.Max(1, def.RespawnTicks);
             node.SurgingUntil = 0;
             World.Tell(player, TextKind.Info, def.DepletedMessage);
             return false;
+        }
+
+        /// <summary>
+        /// What one success gives, after the tool's transformations: each item rolls once; a
+        /// transformation needs its skill's level and gives that skill's XP.
+        /// </summary>
+        private List<ItemCost> Transformed(Player player, NodeDef def, ToolDef? tool, SkillSystem? skills)
+        {
+            var result = new List<ItemCost>();
+            foreach (ItemCost item in def.Items)
+            {
+                ToolTransform? change = tool?.Transforms.FirstOrDefault(t => t.From == item.Item
+                    && (t.Skill == null || skills == null || skills.Level(player, t.Skill) >= t.Level)
+                    && World.Random.NextDouble() < t.Chance);
+                if (change == null)
+                {
+                    result.Add(item);
+                    continue;
+                }
+                result.Add(new ItemCost { Item = change.To, Count = item.Count });
+                if (change.Skill != null && change.Xp > 0) skills?.AddXp(player, change.Skill, change.Xp);
+            }
+            return result;
         }
 
         /// <summary>"pledges" for one is "pledge" (pool names are plural).</summary>

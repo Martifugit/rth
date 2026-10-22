@@ -1,7 +1,8 @@
 # R'th
 
 A private multiplayer RPG for a group of friends: RuneScape 3-style play, Old School RuneScape-style
-looks, in an original world. See `CLAUDE.md` for the architecture and `docs/` for the design.
+looks, in an original world. See `CLAUDE.md` for the architecture, `docs/` for the design and
+`docs/lore.md` for the world (the canon; the game still carries some older lore until it catches up).
 
 ## What you need
 
