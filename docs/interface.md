@@ -38,6 +38,7 @@ every piece and how they are organised.
 | **Chat** ✓ | Filters (all, game, public) and the line you type on (Enter). Fixed size. Private and group chat to come. |
 | **Target** ✓ | What you are fighting, and its health. Kept while you walk away in combat. |
 | **Buffs / debuffs** ✓ | Two fixed rows of status icons above the action bar (bile's four statuses, wards from abilities), each with its % or time left; hover for what it does. |
+| **XP drops** ✓ | No surface, only the numbers: each XP gain rises as the skill's icon and "+123" and fades (about 2 s); gains landing together stack, a level-up lingers with "Level N" and a warm glow. Frameless and fixed size (move it by its hover handle, which also outlines its reach); right of centre above the bars by default; close it from the window menu. Catches no clicks. |
 | **Side window** | Tabs for the panels below. |
 
 ## Side window tabs

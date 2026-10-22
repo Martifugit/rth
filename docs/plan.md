@@ -412,7 +412,8 @@ never overlap, and the owner finds laying out an interface easy.
 
 The owner's list (2026-10-22):
 - **XP drops:** a piece you can place where XP gains appear as they happen: very nice to look at
-  but subtle, no surface behind it, mostly the numbers coming in.
+  but subtle, no surface behind it, mostly the numbers coming in. *Built (`XpDropsPanel`, branch
+  `claude/u2-xp-drops`); replaces the old drop beside the player's head. Check in the Editor.*
 - **World map:** redo it (today's is "really, really bad"); draw it from the continent layout
   (`world/layout/`), so the map always matches the world (this is also L3).
 - **Bestiary:** tabs inside, Bosses, then one per region (butchering's special creatures sit in
