@@ -3,6 +3,7 @@
   "regions": [
     { "id": "leveltest", "title": "Level Test", "scene": "Assets/Scenes/LevelTest.unity", "origin": [1080, 1008], "size": [48, 48], "pieces": 6, "objects": 4, "npcs": 2 },
     { "id": "palmerway", "title": "Palmerway", "scene": "Assets/Scenes/Palmerway.unity", "origin": [96, 0], "size": [96, 96], "pieces": 36, "objects": 16, "npcs": 4 },
+    { "id": "realm_of_the_dead", "title": "The Landing", "scene": "Assets/Scenes/RealmOfTheDead.unity", "origin": [8192, 8192], "size": [32, 32], "pieces": 27, "objects": 1, "npcs": 1 },
     { "id": "saints_crypt", "title": "The Saint's Crypt", "scene": "Assets/Scenes/SaintsCrypt.unity", "origin": [1016, 1008], "size": [56, 56], "pieces": 3, "objects": 22, "npcs": 0 },
     { "id": "tolling", "title": "Tolling", "scene": "Assets/Scenes/Tolling.unity", "origin": [0, 0], "size": [96, 96], "pieces": 61, "objects": 12, "npcs": 15 }
   ]
