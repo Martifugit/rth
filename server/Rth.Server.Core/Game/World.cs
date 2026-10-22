@@ -110,6 +110,9 @@ namespace Rth.Server.Game
         /// <summary>Which entities are in which zone; rebuilt every tick in the zone phase.</summary>
         public ZoneIndex Zones { get; } = new ZoneIndex();
         public GameContent Content { get; private set; }
+
+        /// <summary>The world map players are sent with the content (from the continent layout), if any.</summary>
+        public Rth.Shared.World.Layout.WorldChart? Chart { get; set; }
         public CombatRules Rules => Content.Rules;
         public GameEvents Events { get; } = new GameEvents();
         public Random Random { get; }
@@ -351,7 +354,7 @@ namespace Rth.Server.Game
             {
                 Content = reloaded;
                 foreach (GameSystem system in _systems) system.OnContentChanged();
-                ContentInfoMessage info = Content.ToMessage();
+                ContentInfoMessage info = Content.ToMessage(Chart);
                 foreach (Player player in _players.Values) player.Connection.Send(info);
             }
 
@@ -513,7 +516,7 @@ namespace Rth.Server.Game
 
             _players.Add(player.Id, player);
             connection.Send(new LoginOkMessage { PlayerId = player.Id, TickMillis = _config.TickMillis });
-            connection.Send(Content.ToMessage());
+            connection.Send(Content.ToMessage(Chart));
             connection.Send(new RegionsMessage { Regions = Regions.ToList() });
             foreach (GameSystem system in _systems) system.OnLogin(player, save);
             _log(player.Name + " logged in at " + player.Position + (save == null ? " (new player)." : "."));

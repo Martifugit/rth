@@ -1647,4 +1647,191 @@
 .bestiary-carcass__text {
     flex-grow: 1;
     flex-shrink: 1;
+/* ---------------------------------------------------------------- world map (U2) */
+/* WorldMapModal: the painted continent, the vector ink over it, labels by tier, tools, legend. */
+
+.worldmap__view {
+    flex-grow: 1;
+    overflow: hidden;
+    background-color: rgb(22, 38, 56);
+    border-width: 1px;
+    border-color: rgb(84, 70, 48);
+    border-radius: 3px;
+}
+
+.worldmap__content {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.worldmap__ground,
+.worldmap__layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.worldmap__ground {
+    -unity-background-scale-mode: stretch-to-fill;
+}
+
+.worldmap__status {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 46%;
+    -unity-text-align: middle-center;
+    color: rgb(224, 195, 135);
+    -unity-font-definition: resource("UI/Fonts/Cinzel");
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+}
+
+/* Place names: a city in large Cinzel down to a hamlet in small type. Positioned in code. */
+.worldmap__label {
+    position: absolute;
+    white-space: nowrap;
+    color: rgb(246, 226, 176);
+    -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
+    font-size: 13px;
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: rgba(18, 12, 6, 0.9);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+    padding: 0;
+    margin: 0;
+}
+
+.worldmap__label--city {
+    -unity-font-definition: resource("UI/Fonts/Cinzel");
+    -unity-font-style: bold;
+    font-size: 19px;
+    letter-spacing: 1px;
+    color: rgb(255, 232, 170);
+}
+
+.worldmap__label--town {
+    -unity-font-definition: resource("UI/Fonts/Cinzel");
+    -unity-font-style: bold;
+    font-size: 15px;
+    letter-spacing: 1px;
+}
+
+.worldmap__label--village {
+    font-size: 13px;
+}
+
+.worldmap__label--hamlet {
+    font-size: 12px;
+    color: rgb(232, 218, 186);
+}
+
+.worldmap__label--landmark {
+    font-size: 12px;
+    -unity-font-style: italic;
+    color: rgb(232, 218, 186);
+}
+
+/* A power's name across its land, faint, under the places. */
+.worldmap__realm {
+    position: absolute;
+    white-space: nowrap;
+    -unity-font-definition: resource("UI/Fonts/Cinzel");
+    -unity-font-style: bold;
+    font-size: 20px;
+    letter-spacing: 6px;
+    color: rgba(255, 240, 210, 0.5);
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: rgba(0, 0, 0, 0.25);
+}
+
+/* Named rivers and passes, close in. */
+.worldmap__feature {
+    position: absolute;
+    white-space: nowrap;
+    -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Medium");
+    -unity-font-style: italic;
+    font-size: 12px;
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: rgba(10, 8, 6, 0.7);
+}
+
+.worldmap__feature--river {
+    color: rgb(190, 220, 246);
+}
+
+.worldmap__feature--pass {
+    color: rgb(236, 222, 190);
+}
+
+/* You are here: the arrow (drawn and rotated in code) and a ring that pulses out from it. */
+.worldmap__you {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    margin-left: -14px;
+    margin-top: -14px;
+}
+
+.worldmap__you-pulse {
+    position: absolute;
+    width: 34px;
+    height: 34px;
+    margin-left: -17px;
+    margin-top: -17px;
+    border-radius: 17px;
+    border-width: 2px;
+    border-color: rgb(255, 214, 170);
+}
+
+.worldmap__tools {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+}
+
+.worldmap__tool {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    margin: 0 0 4px 0;
+    font-size: 18px;
+}
+
+.worldmap__legend {
+    position: absolute;
+    left: 8px;
+    bottom: 8px;
+    padding: 6px 12px 8px 12px;
+    background-color: rgba(13, 12, 10, 0.93);
+    border-width: 1px;
+    border-color: rgb(110, 90, 58);
+    border-radius: 4px;
+}
+
+.worldmap__legend-column {
+    margin-right: 16px;
+}
+
+.worldmap__legend-row {
+    flex-direction: row;
+    align-items: center;
+    height: 20px;
+}
+
+.worldmap__swatch {
+    width: 26px;
+    height: 18px;
+    margin-right: 6px;
+    flex-shrink: 0;
+}
+
+.worldmap__footer {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+    margin-top: 6px;
+    height: 20px;
 }

@@ -196,4 +196,7 @@ Edit `continent.json`, run `layout`, look at the renders and the checks.
 - **A4, pass 1 (the skeleton)** is read off this: `regions.txt` and `continent.json`'s places.
 - **L2** generates each core region's sparse ground from `zones.json`, the roads and rivers (as lines,
   in tiles) and a placeholder at each place.
-- **L3** draws the world map and minimap from the same data.
+- **L3** draws the world map and minimap from the same data. The world map is done (`WorldChart`,
+  docs/interface.md): the server compiles `continent.json` at startup and players get it with the
+  content, so editing the layout changes the map at the next server start. `p-` names never reach
+  players; `"hidden": true` on a place keeps it off the map.

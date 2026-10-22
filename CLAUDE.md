@@ -521,6 +521,7 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | A stand-in for an asset still to be made | `WorldKit.Asset(go, "region/id", note)` adds a `BlockoutAsset`; saving the region writes `docs/regions/<region>-assets.md` (count, size, notes). |
 | A region's own light (sun colour and strength, ambient, fog) | `ownAtmosphere` and its fields on the `MapArea`; exported to `.region.json`, blended in by `RegionAtmosphereView`. |
 | Something per region (music, rules, title) | A field on `WorldRegion`, written to `<name>.region.json` by `MapExporter`; it reaches clients in `RegionsMessage` as JSON. |
+| A place, road or river on the world map | `world/layout/continent.json` (docs/layout.md); the server compiles it at startup into a `WorldChart` sent in `ClientContent.Chart`. `p-` names show as unnamed marks; `"hidden": true` keeps a place off the map. No code. |
 | "Who is near this tile" | `World.EntitiesNear(plane, tile, radius)` (zone index), not a scan of every entity. |
 | A sign, notice or flavour action | An object action with a `message` in objects.json (no handler needed). |
 | An action only some players may use | `requiresFlag` + `lockedMessage` (story gates), or `requirements` (skill levels) on the object or NPC action; `ObjectSystem.Unlocked` checks both. |

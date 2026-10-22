@@ -809,8 +809,10 @@ namespace Rth.Server.Content
             }
         }
 
-        public ContentInfoMessage ToMessage() => ContentInfoMessage.From(new ClientContent
+        /// <summary>What clients are told about content, with the world map when the world has one.</summary>
+        public ContentInfoMessage ToMessage(Rth.Shared.World.Layout.WorldChart? chart = null) => ContentInfoMessage.From(new ClientContent
         {
+            Chart = chart,
             Abilities = Abilities.Values.ToList(),
             ActionBar = ActionBar.ToList(),
             ActionBars = ActionBars.ToDictionary(p => p.Key, p => p.Value.ToList()),

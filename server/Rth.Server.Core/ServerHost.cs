@@ -37,7 +37,10 @@ namespace Rth.Server
             WorldLoader.Result loaded = WorldLoader.Load(_config.MapDirectory, _config.SpawnRegion);
             GameContent content = GameContent.Load(_config.ContentDirectory);
             var store = new JsonPlayerStore(_config.SaveDirectory);
-            var world = new World(_config, loaded.Map, store, content, loaded.Placements);
+            var world = new World(_config, loaded.Map, store, content, loaded.Placements)
+            {
+                Chart = ChartLoader.Load(_config.LayoutDirectory, _config.Log),
+            };
 
             var network = new NetworkServer(_config.Port, world.AcceptConnection, _config.Log);
             network.Start();

@@ -82,7 +82,17 @@ every piece and how they are organised.
   between what you have and what comes next, and chips to narrow the list to one kind, shown
   only when the skill has more than one; gathered from the content itself) and **abilities**
   (every ability as a full card).
-- **World map** (M) ✓: the regions to scale and where you are. Waystone travel will be a tab.
+- **World map** (M) ✓: the continent, drawn from the layout the world is built from
+  (`world/layout/`, sent as `ClientContent.Chart`), so it always matches the world. The ground is
+  painted once (each ground in its colour, wandering edges, hill shading, shallows, an inked coast,
+  faint borders between the powers); over it, as vectors that stay crisp at every zoom, rivers,
+  main roads, roads, passes (dashed) and ferries (dotted), the built regions outlined in gold with
+  the rest shaded as unexplored, and the places' marks by tier. Names by tier (cities and towns in
+  Cinzel, villages smaller, hamlets and landmarks only close in), realm names faint across their
+  land, named rivers and passes close in; a place that has no name yet is an unnamed mark. Drag to
+  pan, the wheel or +/- to zoom in fixed steps, "you are here" with your facing, a button to come
+  back to it, a legend with toggles, and the ground, realm and region under the pointer at the
+  bottom. Waystone travel will be a tab.
 - **Settings** ✓: general (roofs, lock, scale, reset layout, log out) and controls.
 - **Character** ✓ (from the worn equipment's buttons): **stats** (every combat stat, grouped:
   offence, defence, devotion, a per-style table of power, accuracy, damage and deflection, and the
@@ -119,7 +129,7 @@ every piece and how they are organised.
 - **Server state for the interface** arrives as `JsonStateMessage`s ("achievements",
   "bestiary", "bestiaryGuide", "client") read with `GameSession.ServerState<T>`. The client keeps its own
   state (action bar layouts) on the server with `SetClientState`; it follows the player.
-- **Window layout** is saved per machine in PlayerPrefs.
+- **Window layout** is saved per machine in PlayerPrefs (the world map's legend and toggles too).
 - **Questions to the server** (things the client doesn't keep, such as another player's inspect
   card) go through `GameSession.Query(kind, arg)`; the answer lands in `GameSession.QueryResults`
   (`QueryResult(kind, arg)`, `QueryVersion` to know when to redraw). Server side, a kind is a
@@ -127,3 +137,8 @@ every piece and how they are organised.
 - **Bars** (`UiKit.Bar`): the label fills the bar with no margins and never wraps, and a bar
   that shows text is at least `Bar.LabelledHeight` (17 px) tall, so the text is centred inside
   it at any requested height.
+- **The world map's data** is the server's `WorldChart` (from `world/layout/continent.json`;
+  `shared/World/Layout/WorldChart.cs`). The client paints it with `ChartPainter` on a worker
+  thread and draws the rest with `Painter2D` (`WorldMapModal`); zoom and pan are plain maths
+  (`WorldMapView`, EditMode tests). `dotnet run --project tools/world -- chart` paints the same
+  ground to `world/renders/chart.png` to look at without Unity.
