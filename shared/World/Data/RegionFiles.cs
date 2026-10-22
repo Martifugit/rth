@@ -100,10 +100,15 @@ namespace Rth.Shared.World.Data
             {
                 JToken? parts = piece["parts"];
                 piece.Remove("parts");
+                JToken? rows = piece["rows"];
+                piece.Remove("rows");
                 string head = "    { " + string.Join(", ", piece.Properties().Select(p => Q(p.Name) + ": " + Compact(p.Value)));
                 if (parts is JArray list && list.Count > 0)
-                    head += ", \"parts\": [\n" + string.Join(",\n", list.Select(part => "      " + Compact(part))) + "\n    ] }";
-                else head += " }";
+                    head += ", \"parts\": [\n" + string.Join(",\n", list.Select(part => "      " + Compact(part))) + "\n    ]";
+                // A tiles piece's rows go one to a line, so its ground reads (and diffs) as a picture.
+                if (rows is JArray rowList)
+                    head += ", \"rows\": [" + (rowList.Count == 0 ? "]" : "\n" + string.Join(",\n", rowList.Select(row => "      " + Compact(row))) + "\n    ]");
+                head += " }";
                 pieces.Add(head);
             }
             lines.Add("  \"pieces\": [" + (pieces.Count == 0 ? "]" : "\n" + string.Join(",\n", pieces) + "\n  ]"));

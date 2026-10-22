@@ -147,6 +147,14 @@ namespace Rth.Shared.World.Data
                         foreach (Part part in piece.Parts) CheckMaterial(region, part.Material, piece.Id, result);
                     foreach ((int x, int y) in FootprintTiles(piece)) layers.Block(plane, x, y);
                     break;
+                case PieceKind.Tiles:
+                    foreach ((int x, int y, TileKind kind) in TilesOf(piece))
+                    {
+                        layers.SetGround(plane, x, y);
+                        if (!kind.Walkable) layers.Block(plane, x, y);
+                    }
+                    foreach (TileKind kind in piece.Legend!.Values) CheckMaterial(region, kind.Material, piece.Id, result);
+                    break;
                 case PieceKind.Npc:
                     NeedPair(piece.At, "at");
                     result.Npcs.Add(new NpcEntry { Npc = Need(piece.Npc, "npc"), Plane = plane, X = piece.X, Y = piece.Y, Wander = piece.Wander ?? -1 });
@@ -160,6 +168,9 @@ namespace Rth.Shared.World.Data
                     throw new PieceException($"unknown kind; use one of {string.Join(", ", PieceKind.All)}.");
             }
 
+            if (piece.Kind == PieceKind.Tiles && piece.Rect != null &&
+                (piece.Rect[0] < region.OriginX || piece.Rect[1] < region.OriginY || piece.Rect[2] > region.OriginX + region.Width || piece.Rect[3] > region.OriginY + region.Height))
+                throw new PieceException("its rect reaches outside the region.");
             if (piece.At != null && !InRegion(region, piece.X, piece.Y)) throw new PieceException($"({piece.X}, {piece.Y}) is outside the region.");
             if (piece.Object != null)
             {
@@ -199,6 +210,40 @@ namespace Rth.Shared.World.Data
                     (int rx, int ry) = Turn(dx, dy, turns);
                     yield return (piece.X + rx, piece.Y + ry);
                 }
+        }
+
+        /// <summary>
+        /// Every tile a tiles piece gives, with what it is (spaces, no ground, are left out). Throws
+        /// a <see cref="PieceException"/> when the rows don't fit the rectangle or use an unknown character.
+        /// </summary>
+        public static IEnumerable<(int x, int y, TileKind kind)> TilesOf(Piece piece)
+        {
+            int[] r = NeedRect(piece);
+            if (piece.Legend == null || piece.Legend.Count == 0) throw new PieceException("needs a legend (what each character is).");
+            var legend = new Dictionary<char, TileKind>();
+            foreach (KeyValuePair<string, TileKind> e in piece.Legend)
+            {
+                if (e.Key.Length != 1 || e.Key[0] == ' ') throw new PieceException($"legend key '{e.Key}' must be one character other than a space.");
+                if (string.IsNullOrWhiteSpace(e.Value.Material)) throw new PieceException($"legend '{e.Key}' needs a material.");
+                legend[e.Key[0]] = e.Value;
+            }
+            int w = r[2] - r[0], h = r[3] - r[1];
+            List<string> rows = piece.Rows ?? throw new PieceException("needs rows.");
+            if (rows.Count != h) throw new PieceException($"has {rows.Count} rows; its rect is {h} tall.");
+            var tiles = new List<(int, int, TileKind)>();
+            for (int i = 0; i < h; i++)
+            {
+                string row = rows[i];
+                if (row.Length > w) throw new PieceException($"row {i} from the north is {row.Length} long; its rect is {w} wide.");
+                int y = r[3] - 1 - i;
+                for (int c = 0; c < row.Length; c++)
+                {
+                    if (row[c] == ' ') continue;
+                    if (!legend.TryGetValue(row[c], out TileKind? kind)) throw new PieceException($"row {i} from the north uses '{row[c]}', which the legend doesn't list.");
+                    tiles.Add((r[0] + c, y, kind));
+                }
+            }
+            return tiles;
         }
 
         /// <summary>A footprint can only turn in quarter turns; anything else is rounded.</summary>

@@ -194,9 +194,55 @@ Edit `continent.json`, run `layout`, look at the renders and the checks.
 ## 7. What comes next
 
 - **A4, pass 1 (the skeleton)** is read off this: `regions.txt` and `continent.json`'s places.
-- **L2** generates each core region's sparse ground from `zones.json`, the roads and rivers (as lines,
-  in tiles) and a placeholder at each place.
+- **L2** generates each core region's sparse ground from the layout, the roads and rivers (as lines,
+  in tiles) and a placeholder at each place: done, see section 8.
 - **L3** draws the world map and minimap from the same data. The world map is done (`WorldChart`,
   docs/interface.md): the server compiles `continent.json` at startup and players get it with the
   content, so editing the layout changes the map at the next server start. `p-` names never reach
   players; `"hidden": true` on a place keeps it off the map.
+
+## 8. The walkable blockout (L2)
+
+Status: **generated and checked without Unity** (2026-10-23); Sync World still has to create the scenes.
+
+![The blockout, as the server sees it](images/blockout.png)
+
+Every 96-tile region with core land, and the ring of sea and frontier around them, is generated
+from the layout as an ordinary region file, `world/regions/land_<rx>_<ry>.json` (`m` for minus:
+`land_m2_3`), and exported to `server/data/maps` like any other region. 256 regions; Tolling and
+Palmerway keep their hand-built content, and the instanced places are far off.
+
+```powershell
+dotnet run --project tools/world -- blockout         # regenerate world/regions/land_*.json from the layout, and export them
+dotnet run --project tools/world -- blockout check   # only check they are up to date (also a test)
+dotnet run --project tools/world -- render           # world/renders/world.png and one picture per region
+```
+
+**What a generated region holds:** one `tiles` piece (`docs/workflow.md`), its ground tile by tile:
+
+| Tiles | From |
+| --- | --- |
+| Ground (farmland, heath, fen, desert...) | The zone grid, read through a gentle warp (5 tiles over 13) so coasts and borders wander instead of stepping by whole zones. Each ground is a material named `Land<Ground>` in its palette colour. |
+| Sea and lakes | The zone grid, warped the same way; water blocks. |
+| Rivers | Their lines in `continent.json`, at their `halfWidth`, over the land. |
+| The crest and glaciers | Blocked rock, drawn as a shelf 1.6 m high. Passes cut through it at their `halfWidth`. |
+| Roads | Their lines: main roads 4-5 tiles wide (cobble), roads 3 (beaten earth); over water they are a bridge or ford. |
+| Places | A plain square where each will be built: city 16, town 12, village 8, hamlet 6, landmark 4 tiles. Nothing else: no trees, rocks, props or buildings. |
+| Frontier land | Drawn (a low dark shelf) but blocked: the edge of the first build. |
+
+Ground is flat (the server always is; height waits on the scale decisions in `world-scale.md`).
+Each region's title is the biggest place in it with a real name, or the power that holds most of
+it ("Cruor's empire", "Sere"); `p-` and hidden names never reach players, and the client announces a
+title only when it changes.
+
+**Generated files belong to the generator.** Each carries `"generated": "blockout"`, and
+`blockout` rewrites or deletes such files whenever the layout changes (and deletes their maps).
+To build a region properly, take it over: delete the `generated` line and edit it like any other
+region; `blockout` then leaves it alone. A new region covering a whole 96-tile cell replaces the
+generated one: run `blockout` and it is deleted. Generated regions don't count as built in the
+layout's checks.
+
+**Checks** (`BlockoutTests`): the generated files are up to date with the layout, and on the exported
+maps you can walk from Tolling's spawn to Cruor, over the middle of every pass, and into every
+power's land; at least 97% of the walkable core land is reachable from Tolling.
+

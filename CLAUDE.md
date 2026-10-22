@@ -454,6 +454,14 @@ and trees were placed as data. How to work: `docs/workflow.md`.
 The draggable Character panel is gone. A general client question, `QueryMessage` /
 `QueryResultMessage` (protocol 19), answered by `QuerySystem`; `InspectSystem` answers "inspect".
 
+**L2, the walkable blockout (on `claude/l2-blockout`):** the whole core of the continent as rough,
+walkable land, generated from the layout by `tools/world blockout` into 256 regions
+`world/regions/land_*.json` (`"generated": "blockout"`; delete that line to take one over): each is
+one `tiles` piece (ground tile by tile, drawn by the client's `TileGround`) with the layout's ground,
+water, rivers, the spine's rock, passes, roads and a plain square per place. Flat, no assets.
+`BlockoutTests` walk from Tolling to Cruor, over every pass and into every power. See
+`docs/layout.md` section 8.
+
 **Next: not chosen yet.** Candidates: ranged, an art pass on Tolling, more quests and
 achievements.
 
@@ -512,7 +520,9 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | A terraced landscape (a city on a hillside, a gorge with bridges) | A `Terraces` map (`WorldKit.Terraces.cs`): `Flat`, `Stair`, `Ramp`, `Deck` and `Void` tile by tile, then `Build`; it walls every drop (kerbs and parapets) and warns about steps over 0.5 m or ramps steeper than 1 in 3. Start the region with `BeginTerrainRegion`; `Viaduct` and `Stream` draw what goes under and through it. See `MeridianBuilder`. |
 | A floor above the ground (upper storey, gallery, footbridge, tower room) | A `MapLevel` (1-3) on a group holding that floor's slab (ground collider), walls (`MapWall`), blockers, objects and spawns: the exporter writes one plane per level. `hiddenFromBelow` (default) switches the group off while the player is on a lower floor; turn it off for what must always show from outside (outer walls, an open-air deck). Planes are separate collision, and people only see people on their own plane. There is no plane below the ground: cellars, caves and dungeons are separate small regions (instanced, 1024 tiles north of the surface place) entered by a `climb` object whose landing is in that region (`trapdoor_down`/`trapdoor_up`, `cave_mouth`/`cave_exit`, or the stairs and ladders). |
 | Stairs, ladders, trapdoors | An object with a `climb` action (`stairs_up`/`stairs_down`/`ladder_up`/`ladder_down` exist) placed with `MapObject` + a collider, and its `climbTo` set to an empty object on the landing tile under the target floor's `MapLevel`. One object per end. The exporter warns about a blocked landing; `ClimbSystem` moves the player. |
-| A new region of the world | A file `world/regions/<id>.json` (id, title, scene path, zone-aligned origin and size, ground, materials, pieces); `tools/world export`, then Sync World creates its scene. No server code. |
+| A new region of the world | A file `world/regions/<id>.json` (id, title, scene path, zone-aligned origin and size, ground, materials, pieces); `tools/world export`, then Sync World creates its scene. No server code. Over the open land, it replaces the generated `land_*` region there at the next `tools/world blockout`. |
+| The open land between places (the blockout) | Change `world/layout/continent.json` and run `tools/world blockout` (`docs/layout.md` section 8); what each layout ground looks like is in `Blockout.Kind`. Never edit a `land_*.json` that still says `"generated"`. |
+| Ground tile by tile (a whole region's land) | A `tiles` piece: `rect`, `rows` from the north, a `legend` of characters (`material`, `blocks`, `water`, `height`). The compiler gives ground or blocks; `TileGround` draws it. |
 | Something in a region (a house, a fence, a rock to mine, a creature) | A piece in `world/regions/<id>.json` (`docs/workflow.md` lists the kinds); `tools/world check`, `export`, `render`. Interactive with `"object"`. |
 | A new kind of piece | A constant in `PieceKind`, its collision in `RegionCompiler.AddPiece`, its look in the client's `PieceBuilder`; Sync World checks the two agree. |
 | Something only worth making by hand | Under the scene's `Handmade` root; saving the scene captures it into `<id>.handmade.json`. |

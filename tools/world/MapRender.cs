@@ -32,6 +32,17 @@ namespace Rth.WorldTool
 
         // ------------------------------------------------------------------ PNG
 
+        /// <summary>The art palette's colours by name (client/Assets/Resources/Art/palette.json), for materials that name one.</summary>
+        public static Dictionary<string, string> Palette { get; } = new(StringComparer.Ordinal);
+
+        public static void LoadPalette(string root)
+        {
+            string path = Path.Combine(root, "client", "Assets", "Resources", "Art", "palette.json");
+            if (!File.Exists(path)) return;
+            foreach (var c in Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(path))["colours"] ?? new Newtonsoft.Json.Linq.JArray())
+                if ((string?)c["name"] is string n && (string?)c["hex"] is string h) Palette[n] = h;
+        }
+
         public static byte[] Region(RegionCompiler.Result r, int px)
         {
             RegionData region = r.Region;
@@ -144,6 +155,10 @@ namespace Rth.WorldTool
                         case PieceKind.Water when p.Rect != null:
                             Set(RegionCompiler.RectTiles(p.Rect), MaterialColor(region, p.Material));
                             break;
+                        case PieceKind.Tiles:
+                            foreach (var group in RegionCompiler.TilesOf(p).GroupBy(t => t.kind))
+                                Set(group.Select(t => (t.x, t.y)), MaterialColor(region, group.Key.Material));
+                            break;
                     }
                 }
                 catch (Exception)
@@ -159,6 +174,12 @@ namespace Rth.WorldTool
             int x = r.Region.OriginX + tx, y = r.Region.OriginY + ty;
             foreach (Piece p in r.Region.Pieces)
             {
+                if (p.Kind == PieceKind.Tiles && p.Rect != null && p.Rows != null && p.Legend != null)
+                {
+                    int row = p.Rect[3] - 1 - y, col = x - p.Rect[0];
+                    if (row >= 0 && row < p.Rows.Count && col >= 0 && col < p.Rows[row].Length &&
+                        p.Legend.TryGetValue(p.Rows[row][col].ToString(), out TileKind? kind) && kind.Water == true) return true;
+                }
                 if (p.Kind != PieceKind.Water) continue;
                 if (p.Rect != null && x >= p.Rect[0] && x < p.Rect[2] && y >= p.Rect[1] && y < p.Rect[3]) return true;
             }
@@ -168,6 +189,7 @@ namespace Rth.WorldTool
         private static Rgb MaterialColor(RegionData region, string? name)
         {
             if (name == null || !region.Materials.TryGetValue(name, out string? value)) return DefaultGround;
+            if (Palette.TryGetValue(value, out string? named)) value = named;
             string hex = value.TrimStart('#');
             if (hex.Length == 6 && int.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int rgb))
                 return new Rgb((byte)(rgb >> 16), (byte)(rgb >> 8), (byte)rgb);

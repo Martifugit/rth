@@ -67,7 +67,10 @@ public class ContentAndRulesTests
             MapData map = MapData.Load(path);
             MapPlacements placements = MapPlacements.Load(path);
             string name = Path.GetFileName(path);
-            Assert.False(map.IsBlocked(map.SpawnPlane, map.Spawn.X, map.Spawn.Y), name + ": the spawn is blocked");
+            // A region without a spawn of its own (most of the world) is only walked into.
+            string info = Path.ChangeExtension(path, null) + ".region.json";
+            bool hasSpawn = !File.Exists(info) || !File.ReadAllText(info).Contains("\"hasSpawn\": false");
+            if (hasSpawn) Assert.False(map.IsBlocked(map.SpawnPlane, map.Spawn.X, map.Spawn.Y), name + ": the spawn is blocked");
             foreach (NpcSpawn spawn in placements.Npcs)
             {
                 Assert.True(content.Npcs.ContainsKey(spawn.Npc), name + ": unknown NPC " + spawn.Npc);
