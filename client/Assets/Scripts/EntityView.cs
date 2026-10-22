@@ -160,6 +160,9 @@ namespace Rth.Client
                 }
             }
 
+            // Stand on the ground, which may have streamed in (or changed) since the step was queued.
+            transform.position = GroundHeight.OnGround(transform.position);
+
             // Turn smoothly rather than snapping to each new heading.
             transform.rotation = Quaternion.RotateTowards(transform.rotation, _facing, 720f * Time.deltaTime);
             Vector3 moved = transform.position - before;

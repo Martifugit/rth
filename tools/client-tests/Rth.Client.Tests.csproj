@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Runs the client's Unity-free code and its EditMode tests with `dotnet test`, so they are
+    checked without the Editor. Every file here is linked from client/Assets: the same source
+    Unity compiles. Only add code with no UnityEngine references.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <Nullable>disable</Nullable>
+    <RootNamespace>Rth.Client.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\client\Assets\Scripts\View\CameraRules.cs" Link="Client\CameraRules.cs" />
+    <Compile Include="..\..\client\Assets\Tests\EditMode\*.cs" Link="Tests\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <!-- NUnit 3, like Unity's test framework (NUnit 4 moved the classic asserts). -->
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+  </ItemGroup>
+
+</Project>

@@ -59,6 +59,28 @@ namespace Rth.Client
             Bounds = b;
         }
 
+        /// <summary>
+        /// Swaps materials (a <see cref="Recolor"/>) on the renderers under <paramref name="within"/>,
+        /// whether or not it is faded right now, so fading back restores the new ones.
+        /// Returns false before Awake, when there is nothing captured to change yet.
+        /// </summary>
+        public bool Remap(Transform within, System.Func<Material, Material> map)
+        {
+            if (_renderers == null) return false;
+            for (int i = 0; i < _renderers.Length; i++)
+            {
+                Renderer r = _renderers[i];
+                if (r == null || !r.transform.IsChildOf(within)) continue;
+                for (int m = 0; m < _opaque[i].Length; m++)
+                {
+                    _opaque[i][m] = map(_opaque[i][m]);
+                    _faded[i][m] = FadeCopyOf(_opaque[i][m]);
+                }
+                r.sharedMaterials = _usingFade ? _faded[i] : _opaque[i];
+            }
+            return true;
+        }
+
         private void OnEnable() => All.Add(this);
         private void OnDisable() => All.Remove(this);
 
