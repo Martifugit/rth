@@ -15,6 +15,15 @@ namespace Rth.Client.Characters
     {
         private static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
 
+        /// <summary>
+        /// How held art sits in the fist: modelled for the T-posed hand (handle along +Z, business
+        /// side up, +Y), it is rolled a quarter turn about its handle, so that with the arm at rest
+        /// the weapon points forward with its blade upright and its business side (an edge, an
+        /// axe's blade, a hammer's face) facing down, not lying flat with its edge to the side.
+        /// Upright holds belong to particular weapons (a scythe, a staff), not to all of them.
+        /// </summary>
+        public static readonly Quaternion Hold = Quaternion.Euler(0f, 0f, -90f);
+
         /// <summary>A new, unparented object for the item, or null if it has nothing to hold.</summary>
         public static GameObject Build(ItemDef item)
         {

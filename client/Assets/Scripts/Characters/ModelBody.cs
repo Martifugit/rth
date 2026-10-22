@@ -66,7 +66,7 @@ namespace Rth.Client.Characters
             _held = null;
             GameObject art = HeldItemArt.Build(item);
             if (art == null) return;
-            _held = _model.Attach(art, socket: "grip.R");
+            _held = _model.Attach(art, socket: "grip.R", hold: HeldItemArt.Hold);
             Destroy(art);
             HeldItemArt.Tint(_held, item, _model);
         }

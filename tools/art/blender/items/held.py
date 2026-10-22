@@ -8,8 +8,9 @@ other tiers are a recolour in items.json ("recolor": { "Copper": "Iron" }).
 
 Held art convention (tools/character-models/README.md): the origin is the middle of the grip and
 the handle runs forward, along Blender -Y (Unity +Z after export), as if held in the T-posed
-right fist. Blades stand in the vertical plane: their width runs up and down (Blender Z), the
-edge of a single-edged blade facing down.
+right fist. Blades stand in the vertical plane: their width runs up and down (Blender Z). The
+business side (a single edge, an axe's blade, a hammer's face, a pick's long point) is on top,
++Z: the client's hold turns that to face forward in the hand (HeldItemArt.Hold).
 
 Each model exports to client/Assets/Resources/Items/<Name>.fbx and is named by "model" in
 items.json."""
@@ -116,14 +117,14 @@ def sword():
 
 def falcata():
     bm = bmesh.new()
-    # Iberian: the single edge (below) waists in near the hilt and swells to a heavy belly, the
-    # spine curving down to the point; the grip hooks back over the hand.
-    path = [(0.06, 0), (0.15, 0), (0.28, 0), (0.40, 0), (0.50, -0.005), (0.58, -0.02)]
-    strip(bm, path, [0.016, 0.013, 0.016, 0.012, 0.004, -0.006], [0.016, 0.012, 0.030, 0.044, 0.034, 0.006],
-          0.007, 0.0015)
+    # Iberian: the single edge (on top, the business side) waists in near the hilt and swells to
+    # a heavy belly, the spine curving up to the point; the grip hooks over the hand.
+    path = [(0.06, 0), (0.15, 0), (0.28, 0), (0.40, 0), (0.50, 0.005), (0.58, 0.02)]
+    strip(bm, path, [0.016, 0.012, 0.030, 0.044, 0.034, 0.006], [0.016, 0.013, 0.016, 0.012, 0.004, -0.006],
+          0.0015, 0.007)
     rod(bm, -0.07, 0.06, 0.016)
-    A.hull(bm, [F(-0.07, 0.012, -0.014), F(-0.07, 0.012, 0.014), F(-0.07, -0.016, -0.014), F(-0.07, -0.016, 0.014),
-                F(-0.11, -0.01, -0.012), F(-0.11, -0.01, 0.012), F(-0.10, -0.05, -0.01), F(-0.10, -0.05, 0.01)], METAL)
+    A.hull(bm, [F(-0.07, -0.012, -0.014), F(-0.07, -0.012, 0.014), F(-0.07, 0.016, -0.014), F(-0.07, 0.016, 0.014),
+                F(-0.11, 0.01, -0.012), F(-0.11, 0.01, 0.012), F(-0.10, 0.05, -0.01), F(-0.10, 0.05, 0.01)], METAL)
     return bm, "Falcata", SMITHED
 
 
