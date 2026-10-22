@@ -11,7 +11,7 @@ namespace Rth.Client.Editor
     /// you are inside), stairs and ladders between its floors, open pavilions on posts, the one
     /// identical row house, and furniture helpers so every room gets something in it without
     /// hand-placing boxes. Every upper floor is a <see cref="MapLevel"/>, following the pattern in
-    /// <c>LevelTestBuilder</c>: its outer walls always show, its slab and furniture only once you
+    /// LevelTest.unity: its outer walls always show, its slab and furniture only once you
     /// are up there.
     /// </summary>
     public sealed partial class WorldKit

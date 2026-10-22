@@ -144,9 +144,8 @@ Region origins and sizes are multiples of 8 and regions must not overlap. Space 
 is blocked (and drawn as plain land in the fog). Region scenes hold only the map; the camera,
 light, fog and HUD are in `Game.unity` (**R'th > Dev > Rebuild Game Scene**).
 
-To add a region, write a builder like `PalmerwayBuilder` using `WorldKit.BeginRegion` /
-`SaveRegion`, or make a scene by hand with a `MapArea` and export it. Exporting also adds the
-scene to the build, which is how the client finds it. Most regions between places should be
+To add a region, write `world/regions/<id>.json` (`docs/workflow.md`) and run Sync World,
+which creates its scene and adds it to the build, which is how the client finds it. Most regions between places should be
 sparse: a road, a few trees and rocks, a landmark.
 
 Mark things with the components from the **R'th Map Tools** package:
