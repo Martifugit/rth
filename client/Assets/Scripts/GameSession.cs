@@ -374,6 +374,10 @@ namespace Rth.Client
                     case JsonStateMessage state:
                         OnState(state);
                         break;
+                    case QueryResultMessage answer:
+                        QueryResults[answer.Kind] = answer;
+                        QueryVersion++;
+                        break;
                     case QuestsMessage quests:
                         Quests.Clear();
                         Quests.AddRange(quests.Quests);
@@ -542,6 +546,7 @@ namespace Rth.Client
             RaycastHit[] hits = Physics.RaycastAll(cam.ScreenPointToRay(pointer), 500f);
             Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
             EntityView npc = null;
+            EntityView otherPlayer = null;
             GroundItemView item = null;
             Rth.MapTools.MapObject mapObject = null;
             Vector3? ground = null;
@@ -553,6 +558,7 @@ namespace Rth.Client
                 if (e != null)
                 {
                     if (npc == null && e.Kind == EntityKind.Npc && !e.IsDying) npc = e;
+                    if (otherPlayer == null && e.Kind == EntityKind.Player && e.Id != world.LocalId) otherPlayer = e;
                     continue;
                 }
                 GroundItemView g = h.collider.GetComponent<GroundItemView>();
@@ -617,6 +623,12 @@ namespace Rth.Client
             {
                 TileCoord tile = TileMath.FromWorld(ground.Value);
                 options.Add(("Walk here", () => WalkTo(tile)));
+            }
+            if (otherPlayer != null)
+            {
+                // After walking, so a left click on a player still walks.
+                int id = otherPlayer.Id;
+                options.Add(("Inspect " + otherPlayer.DisplayName, () => Inspect(id)));
             }
             return options;
         }
@@ -714,6 +726,32 @@ namespace Rth.Client
                 Bars = null; // rebuilt from the saved layout
             }
         }
+
+        /// <summary>The latest answer to each kind of query ("inspect"), by kind.</summary>
+        public Dictionary<string, QueryResultMessage> QueryResults { get; } = new Dictionary<string, QueryResultMessage>();
+
+        /// <summary>Counts query answers (and new questions), so views can tell when to rebuild.</summary>
+        public int QueryVersion { get; private set; }
+
+        /// <summary>Asks the server something it doesn't send by itself; the answer lands in <see cref="QueryResults"/>.</summary>
+        public void Query(string kind, string arg)
+        {
+            if (_state != State.InGame) return;
+            QueryResults.Remove(kind);
+            QueryVersion++;
+            _client.Send(new QueryMessage { Kind = kind, Arg = arg });
+        }
+
+        /// <summary>The answer to a query with this argument, or null while it's on its way.</summary>
+        public QueryResultMessage QueryResult(string kind, string arg) =>
+            QueryResults.TryGetValue(kind, out QueryResultMessage r) && r.Arg == arg ? r : null;
+
+        /// <summary>The local player's entity id (-1 before login).</summary>
+        public int LocalPlayerId => world.LocalId;
+
+        /// <summary>Opens the character window's inspect page on a player (yourself if <paramref name="entityId"/> is yours).</summary>
+        public void Inspect(int entityId) =>
+            Ui.UiRoot.Instance?.OpenModal<Ui.Modals.CharacterModal>(Ui.Modals.InspectTab.TabId, entityId.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
         /// <summary>The client's own state kept on the server (bar layouts, targets): key to JSON.</summary>
         public Dictionary<string, string> ClientState { get; } = new Dictionary<string, string>();

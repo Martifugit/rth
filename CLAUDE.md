@@ -449,6 +449,11 @@ conversation is the dialogue box.
 Palmerway, the Saint's crypt and LevelTest were converted with byte-identical maps, and E1's rocks
 and trees were placed as data. How to work: `docs/workflow.md`.
 
+**U2, the character window (on `claude/u2-character`):** buttons under the worn equipment open a
+`CharacterModal` (stats grouped, and the inspect card); right-click another player to Inspect them.
+The draggable Character panel is gone. A general client question, `QueryMessage` /
+`QueryResultMessage` (protocol 19), answered by `QuerySystem`; `InspectSystem` answers "inspect".
+
 **Next: not chosen yet.** Candidates: ranged, an art pass on Tolling, more quests and
 achievements.
 
@@ -461,7 +466,8 @@ and saving. Everything else is a `GameSystem` listed in `World.StandardSystems` 
 systems run in that order within each phase, and a system may use those before it while
 attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `DeathSystem`,
 `NpcSystem`, `GroundItemSystem`, `LootSystem`, `ObjectSystem`, `ClimbSystem`, `ReligionSystem`, `RecipeSystem`, `GatheringSystem`, `InterfaceSystem`,
-`DialogueSystem`, `BankSystem`, `FerrySystem`, `ShopSystem`, `PointsSystem`, `TaskSystem`, `QuestSystem`, `UseSystem`.
+`DialogueSystem`, `BankSystem`, `FerrySystem`, `ShopSystem`, `PointsSystem`, `TaskSystem`, `QuestSystem`, `UseSystem`,
+`QuerySystem`, `InspectSystem` (and more; the list in `World.StandardSystems` is the truth).
 
 | To add... | Use |
 |---|---|
@@ -535,6 +541,9 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | An achievement | An entry in achievements.json (kind kill, talk, recipe, level, quest, object, region, obtain or use). A new kind: count the event that proves it in `AchievementSystem`. |
 | Player state the interface shows | Send it as `JsonStateMessage.Of(key, value)` from the system's `SendState`; the client reads `GameSession.ServerState<T>(key)`. |
 | Client settings that follow the player | `GameSession.SetClientState(key, json)`; read `GameSession.ClientState`. |
+| A question the client asks the server (inspect, price check) | A kind in `QueryKinds`; register a handler with `QuerySystem.Register(kind, (asker, arg) => QueryAnswer.Of(value) / No(problem))`; the client calls `GameSession.Query` and reads `QueryResult(kind, arg)`. Public information only. |
+| A line on the inspect card | `InspectSystem.AddHighlights(player => lines)` (label, value, icon). |
+| A button under the worn equipment | An entry in `WornPanel.Buttons` (icon, tooltip, click). |
 | A chat channel (private, group) | A `ChatChannel` value and its routing in `ChatSystem`; the chat panel shows `ChatLineMessage`s. |
 | A new kind of content file | A field on `ContentParts`, load it in `GameContent.Load`, validate in `Create`. Client-visible content goes in `ClientContent` (sent as JSON, so no codec changes). |
 | A client message | A message class in `shared/Net/Messages.cs`, a case in `MessageCodec.Decode`, bump `Protocol.Version`. |

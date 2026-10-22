@@ -67,6 +67,7 @@ namespace Rth.Server.Game
         public static IEnumerable<GameSystem> StandardSystems(MapPlacements placements) => new GameSystem[]
         {
             new SkillSystem(),
+            new QuerySystem(),
             new FlagSystem(),
             new ItemSystem(),
             new CombatSystem(),
@@ -94,6 +95,7 @@ namespace Rth.Server.Game
             new ClientStateSystem(),
             new AchievementSystem(),
             new BestiarySystem(),
+            new InspectSystem(),
             new BossSystem(),
             new Encounters.UnquietSaintSystem(),
         };
