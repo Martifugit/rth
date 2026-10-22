@@ -9,7 +9,7 @@ owns, and when it is done. Update the status column as work lands.
 - **The game:** milestones 1-10 are done (see `CLAUDE.md`): the tick server, regions, items,
   skills, the town, quests, the interface, the skills rework and melee. Two regions exist,
   Tolling and Palmerway, plus the Unquiet Saint's crypt (a Religion skilling boss).
-- **The lore is being rebuilt** in `docs/lore-rework/`. Decided so far: an unfinished world revised
+- **The lore has been rebuilt** in `docs/lore-rework/`. Decided so far: an unfinished world revised
   in ages (a thousand-year stillness, now stirring), p-spoil, death through the ferryman, the first
   gods (p-sworn, the betrayers, p-scattered, p-head, the three constants), the powers and a
   concept map. `docs/lore.md` and `docs/world-map.md` are now canon, rewritten from the rework. The
@@ -17,6 +17,9 @@ owns, and when it is done. Update the status column as work lands.
   Tithe and the Assayer until A1 finishes.
 - **The old area plan** (`docs/areas/skeleton.*`) is drawn on the old map and is superseded. Its
   rulebook (`docs/areas/rules.md`, `targets.json`) and research still apply.
+- **This plan, the new canon and the rework live on `claude/area-plan`**, not `main` yet. Merge
+  it into `main` before starting parallel workstreams, so every agent branches from the new canon
+  (step 0 below).
 - **Unmerged work:** the world-scale, camera and art-style session reported its changes on
   `claude/world-scale-camera-art`. That branch was not visible on GitHub when this plan was
   written; find out where it is before starting track F (workstream C0).
@@ -57,6 +60,8 @@ owns, and when it is done. Update the status column as work lands.
 ## Order and dependencies
 
 ```
+Step 0: merge claude/area-plan into main (owner)
+
 Wave 1 (now, in parallel)
   A1 canon ──────────────┬──> B1 text pass (old-lore strings that need no new names)
   A2 names ──────────────┼──> B2 text pass (church, spine people, Scalth's replacement)
@@ -81,21 +86,26 @@ Wave 3
 | --- | --- |
 | **Runs** | cloud |
 | **Depends on** | nothing |
-| **Owns** | `docs/lore.md`, `docs/world-map.md`; lore notes in `docs/skills.md`, `docs/systems.md`, `docs/interface.md`, `CLAUDE.md`, `docs/ideas/*Unquiet Saint*` |
-| **Status** | `lore.md` and `world-map.md` rewritten (2026-10-22); the other docs' lore notes remain |
+| **Owns** | `docs/lore.md`, `docs/world-map.md`; lore notes in `docs/skills.md`, `docs/systems.md`, `docs/interface.md`, `CLAUDE.md`, `README.md`, `docs/ideas/*Unquiet Saint*` |
+| **Status** | **half done.** `lore.md` and `world-map.md` are canon (2026-10-22). The rest remains. |
 
-- Rewrite `docs/lore.md` from `docs/lore-rework/` (`universe.md`, `gods.md`, `death.md`,
-  `powers.md`, `README.md`'s triage, `concept-map.png`). Short, factual, sectioned like the sheets;
-  sealed mysteries stated as sealed.
-- Rewrite `docs/world-map.md` around the concept map: the powers, the spine running north into the
-  cold, the frontiers, the places that keep their names (Tolling, Palmerway, Wennow, Widdermill,
-  Cruor, Sere, Cistern, Meridian, Frostpeak Forge, House Gall), and the build phases.
-- Fix lore in the other docs: hymns are no longer Tithe's, the Assayer is replaced by the
-  ferryman (as design; the code changes in D1), the Dreaming is the dreamer's realm, the Saint is
-  a martyr of p-sworn's church (not "of the Keeping", no bay).
+**Done:**
+- `docs/lore.md` rewritten from `docs/lore-rework/`.
+- `docs/world-map.md` rewritten around the concept map, with every name sorted: kept, to be
+  renamed, under review, retired, placeholders.
+
+**Remaining** (old-lore mentions counted on 2026-10-22):
+- `docs/skills.md` (about 64): Religion's hymns "of Tithe" (4.1), the Dreaming in the Veilwood, the
+  Rationalists, the Synod. Fix the *lore* wording only. The skill tiers placed in old regions
+  (the Veilwood, Candora, Slough...) are not lore fixes: they move in A4's resources pass.
+- `docs/systems.md` (6): the Assayer as current death design; point at `docs/lore.md` III and the
+  coming D1.
+- `CLAUDE.md` (6), `README.md` (2), `docs/interface.md` (2): Tithe's hymns, the Assayer, the
+  Dreamweaver. Describe what the game does today and note the planned change.
+- The Unquiet Saint spec (5): a martyr of p-sworn's church, not "of the Keeping"; no bay.
 - Mark `docs/areas/skeleton.md` superseded (one line at the top).
-- **Done when** no doc describes Tithe as a power, the bay, the Assayer as current design, the
-  Physician or the Dreamweaver, and `docs/lore-rework/` is linked as the source.
+- **Done when** no doc describes Tithe as a power, the bay, the Assayer as the design, the
+  Physician or the Dreamweaver, and the docs link `docs/lore.md` as canon.
 
 ### A2. Names
 
@@ -106,6 +116,7 @@ Wave 3
 | **Owns** | `docs/lore-rework/names.md` (new) |
 | **Status** | not started |
 
+- **Input:** `docs/world-map.md`'s lists (to be renamed, under review, placeholders in use).
 - Propose three or four names each for: p-sworn's church; the spine's surface people; the
   realm of the dead; the ferryman; the walker; p-spoil; the gods (p-sworn, the betrayers,
   p-scattered, p-head, the three constants), so they sound like one family; the lesser occult
@@ -123,6 +134,8 @@ Wave 3
 | **Owns** | `docs/lore-rework/entities/*.md`, `docs/lore-rework/timeline.md` |
 | **Status** | not started |
 
+- **Who the player is** and why they matter: the old premise (the one sleeper who woke) is under
+  review (`docs/lore.md` VI). Decide it early: it shapes the first quests.
 - One sheet per power, using the entity sheet in `docs/lore-rework/README.md`: the empire, House
   Gall, the lesser houses, the spine's surface people, the dwarves, Sere, the Faceless, the
   demigods' keepers, the village on p-head's brow, the frontier peoples.
@@ -276,7 +289,8 @@ Each owns its own system files and adds content entries; all three touch `items.
 
 | Decision | Needed by |
 | --- | --- |
-| Names (church, spine people, realm of the dead, ferryman, walker, p-spoil, gods, places) | A2, B2 |
+| Names (church, spine people, realm of the dead, ferryman, walker, p-spoil, gods, places), and which "under review" names come back | A2, B2 |
+| Who the player is (the sleeper premise: keep, change or drop) | A3, the first quests |
 | The coin fee's rate and free threshold; the obol's price and where it's sold | D1 (defaults in data until then) |
 | The long way back's hazards | D3 |
 | Each power's sheet | A3 |
@@ -289,4 +303,5 @@ Notes from one workstream to another ("A1 needs B1 to also change X"). Newest fi
 
 | From | To | Note |
 | --- | --- | --- |
-| | | |
+| A1 | A4 | `docs/skills.md` places skill tiers in old regions (the Veilwood, Candora, Slough...), and `docs/areas/rules.md` lists the old realms in its definitions. Both move with the new map: the tiers in pass 3 (resources), the realm list in pass 1. |
+| A1 | B2 | `docs/world-map.md` lists the names to be replaced in the game (the Synod, the Rationalists, Scalth). |
