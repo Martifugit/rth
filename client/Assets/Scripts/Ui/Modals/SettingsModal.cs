@@ -23,6 +23,9 @@ namespace Rth.Client.Ui.Modals
         public override string Icon => "settings";
 
         private UiKit.Check _roofs;
+        private UiKit.Check _roofSight;
+        private UiKit.Check _lift;
+        private readonly Dictionary<CameraProfile, UiKit.Check> _camera = new Dictionary<CameraProfile, UiKit.Check>();
         private UiKit.Check _lock;
         private UiKit.Check _barLock;
         private UiKit.Check _queueing;
@@ -40,6 +43,19 @@ namespace Rth.Client.Ui.Modals
             VisualElement display = UiKit.El(scroll, "card");
             _roofs = new UiKit.Check(display, "Show roofs", () => RoofHider.ShowRoofs = !RoofHider.ShowRoofs);
             UiKit.Text(display, "Roofs always hide while you're indoors.", "muted", "small");
+            _roofSight = new UiKit.Check(display, "Hide roofs between the camera and you", () => CameraRig.RoofSight = !CameraRig.RoofSight);
+            UiKit.Text(display, "Below a steep pitch, a roof in the way vanishes instead of fading.", "muted", "small");
+
+            UiKit.Heading(scroll, "Camera").style.marginTop = 12f;
+            VisualElement camera = UiKit.El(scroll, "card");
+            foreach ((CameraProfile profile, string label) in new[]
+            {
+                (CameraProfile.Today, "Today's limits: start 14 tiles out at 45°, zoom 5 to 30, pitch 20° to 80°"),
+                (CameraProfile.Proposed, "Proposed limits: start 12 tiles out at 35°, zoom 6 to 30, pitch 22° to 67°"),
+            })
+                _camera[profile] = new UiKit.Check(camera, label, () => CameraRig.Profile = profile);
+            UiKit.Text(camera, "Being compared: see docs/world-scale.md. Switching resets the zoom and pitch.", "muted", "small");
+            _lift = new UiKit.Check(camera, "Tilt up over high ground", () => CameraRig.TerrainLift = !CameraRig.TerrainLift);
 
             UiKit.Heading(scroll, "Audio").style.marginTop = 12f;
             VisualElement audio = UiKit.El(scroll, "card");
@@ -112,6 +128,9 @@ namespace Rth.Client.Ui.Modals
         public override void Refresh()
         {
             _roofs.Set(RoofHider.ShowRoofs);
+            _roofSight.Set(CameraRig.RoofSight);
+            _lift.Set(CameraRig.TerrainLift);
+            foreach (KeyValuePair<CameraProfile, UiKit.Check> c in _camera) c.Value.Set(CameraRig.Profile == c.Key);
             _lock.Set(Ui.Locked);
             _barLock.Set(Session.Bars != null && Session.Bars.Locked);
             CombatOptions options = Options();
