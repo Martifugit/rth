@@ -73,7 +73,7 @@ new. **Cut**: gone. **New**: didn't exist before.
 | **The occultists** | **Keep, grown and spread**: much land, scattered across the map, **one dominant house**. Their source: *open* (a god for them is a later sheet; the betrayers' Faceless are a separate faith). | Owner. |
 | **The occult houses** (Gall, Umber, Mordant, Sallow) | **Rework**: kept as houses, re-founded in the new history; which one dominates is decided on the board. Sallow (Corvin's house) stays fallen. | Corvin and Dreamless are built. |
 | **The range: the surface people and the dwarves under a treaty** | **Keep**, along a long range (spine or other shape, decided on the map). The treaty's hidden reason: *open*. | Owner. |
-| **Concordia, the Rationalists** | **Rework**: the range's surface people. Their creed (reason over faith) needs grounding in a world where gods are plainly real: perhaps they don't deny gods, they refuse to serve them. Source of ranged. | Gods exist now. |
+| **Concordia, the Rationalists** | **Rework**: the range's surface people. Their creed (reason over faith) needs grounding in a world where gods are plainly real: they don't deny the gods, they **refuse to serve them**. Source of ranged. | Owner. |
 | **The dwarves** | **Keep**, inside the range. | |
 | **Undermost and the older peoples** | **Keep** as the deep. What they guard or flee: *open*. | |
 | **Sere** | **Keep**, rethought on the board: a kingdom pressed by the empire's salients. | |
