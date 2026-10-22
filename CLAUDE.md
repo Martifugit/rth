@@ -10,8 +10,9 @@ classic layout). It is set in its own world, **R'th**, built around the four hum
 5 (townsfolk: dialogue, bank, shops, tasks; Distillation and reagents), 6 (quests), 7 (a
 multi-region world streamed by the client), 8 (the window-based interface, chat), 9 (the
 skills rework: Religion's hymns replace breath, the v1 skill roster) and 10 (melee: weapon
-styles, melee abilities, Cruor's verses, gathering nodes and the first monument) are done. The
-v1 skills are designed in `docs/skills.md`; most of them exist only as a skill and a level so far.
+styles, melee abilities, Cruor's verses, gathering nodes and the first monument) are done, and
+workstream E1 (gathering tools, the first Mining and Woodcutting) has landed. The v1 skills are
+designed in `docs/skills.md`; most of them exist only as a skill and a level so far.
 
 **Build everything as extensible systems.** New features plug into the mechanisms under
 "Extending the server" below (systems, events, interactions, stats, item components, effect ops,
@@ -369,7 +370,7 @@ The second combat style, and the Religion half that powers it (`docs/skills.md` 
       `GatheringTests`.
 
 Not yet: weapon models in the hand, one- and two-handed kinds, shields and dual wield,
-raising monuments and reliquaries, tools for gathering (with Mining), final ability names.
+raising monuments and reliquaries, final ability names.
 
 **World building (in progress):** the capitals blocked out as regions, one builder each, with an
 asset list for the art pass. All four capitals are done: Cruor, Tithe, Cistern and Meridian (`docs/regions/`). Meridian is being
@@ -377,8 +378,24 @@ rebuilt to `docs/regions/meridian-redesign.md`: phase 1 (terraces and routes), p
 enterable, upper floors included) and phase 3 (objects: readables, view points, stations, banks, gates,
 gathering spots, skill shortcuts) are built; people and data (phase 4) are next.
 
-**Next: not chosen yet.** Candidates: the first gathering skills (mining, woodcutting) on the
-node system with tools, ranged, an art pass on Tolling, more quests and achievements.
+## E1: gathering tools, Mining and Woodcutting (done)
+
+- [x] `tool` on items (`ToolDef`): kind, tier, requirements to use, and optional effects
+      (success bonus, conservation, extras added or replacing the node's, transformations
+      with another skill's level and XP). Used from the pack or worn; the best usable one
+      (highest tier, then success) is picked. Nodes name a `tool` kind, an optional `toolTier`
+      and a `depleteChance` (ore 1, trees 1/8). Messages for a missing tool, a too-low tier and
+      a tool's level.
+- [x] Content: copper and ironshod pickaxes and hatchets (tiers 1-2; copper ones in the starter
+      kit), copper and ironstone seams, alder and ash trees, rough garnet/amber/jet and resin as
+      extras. Rates checked against the pace table (`ToolTests`).
+- [x] Client: a tool line in item tooltips; tools and nodes in the Guide's skill unlocks.
+
+Not yet: rocks and trees placed in the scenes (proposed tiles in `docs/plan.md` Handoffs), a
+seller for tools (Smithing makes them later), mining/chopping animations (nodes use "work").
+
+**Next: not chosen yet.** Candidates: ranged, an art pass on Tolling, more quests and
+achievements.
 
 ---
 
@@ -410,7 +427,8 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | A weapon's default bar | combat.json `actionBars` per style. Each style's main bar is client state `bars.main.<Style>`, swapped in with the weapon (client and Revolution both read it). |
 | Something an entity visibly holds or wears | `Entity.SetHeld` (players: the weapon slot; NPCs: `held` in npcs.json) reaches clients in `EntityAdded.Held` and appearance events; the client's body draws it (`HeldItemArt` until items have models). |
 | Fight pacing | Tune creatures in npcs.json; `PacingTests` simulates the starter kit against each and prints the numbers. |
-| A gathering node (rock, tree, fount) | `node` on an object type in objects.json (skill, level, chance, XP, items, extras, points, yields, respawn, an optional surge) and a `gather` action; place it with `MapObject` + `MapBlocker`. No code. |
+| A gathering node (rock, tree, fount) | `node` on an object type in objects.json (skill, level, chance, XP, items, extras, points, yields, `depleteChance`, respawn, an optional surge, a `tool` kind and `toolTier`) and a `gather` action; place it with `MapObject` + `MapBlocker`. No code. |
+| A gathering tool (pickaxe, hatchet, rod) | `tool` on the item in items.json (kind, tier, requirements, `success`, `conservation`, `extras`/`replacesExtras`, `transforms`); add `equipment` (Weapon) to make it wieldable. `GatheringSystem.BestTool` picks it. A new effect is a field on `ToolDef` read in `GatheringSystem.Attempt`. |
 | Something that restores devotion | An object action `pray` in objects.json (an altar), or the `restoreDevotion` / `restoreDevotionPercent` effect ops on a consumable. |
 | A skill that replaced another | `retired` in skills.json (old id: new id); saves move the XP on login. |
 | A skill | An entry in skills.json; award XP with `SkillSystem.AddXp`, check with `Level`/`Check`; react to `LevelUp`. |
