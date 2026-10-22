@@ -19,26 +19,29 @@ often **sealed**: undecided until a quest needs it, with only constraints fixed)
 | **Its creatures barely know.** To the people of R'th, the world is simply the world. The truth is something only a few ever glimpse, and the game reveals it slowly. | Owner. |
 | **Things were made and rejected**, across many ages, and they went somewhere. An analogue to RuneScape's Void, conceived differently. | Owner. |
 | **Timing: a long stillness, now stirring.** Nothing large has changed for a very long time, and now it has started again. The game begins at that turn. | Owner. |
+| **The making happens in revisions**, ages apart: things are added, moved and taken out. Between revisions, nothing large changes for centuries. | Owner. |
+| **The stillness has lasted about a thousand years.** | Owner. |
+| **The game never removes places.** Removal belongs to history: lost places that used to exist, and places that still exist but not where they were recorded. The present revision shows itself in the game by what appears and what moves. | Owner. |
+| **What's taken goes to p-spoil**, a heap of everything rejected, layered by age. | Owner, name a placeholder. |
 
-## Proposed (under discussion)
+## How it reads in the world
 
-**The making happens in revisions.** It never truly stopped; it comes in bursts, ages apart. In
-a revision, things are added to the world and things are taken out of it: a species, a river, a
-village, a mountain, sometimes a people. Between revisions, nothing changes, for centuries.
+**Revisions.** Things are added to the world, moved within it, and taken out of it.
 
 - **How the world's people see it:** catastrophes, extinctions, a lost city, a people that
   "came from nowhere". History records the effects and never the cause.
-- **How scholars see it:** places that are on old maps and aren't on the ground; places on the
-  ground with no history at all; ruins of a style nobody made; records that contradict each
-  other in the same way at the same date. Some keep these lists. Nobody agrees what they mean.
-- **The present:** the last revision ended about a thousand years ago (number to tune). Now the
-  signs of a new one are appearing, and the game starts there. Each future update can be part of
-  this revision: a place added, a place taken.
+- **How scholars see it:** places that are on old maps and aren't on the ground; places that
+  are on the ground, but not where the old records put them; places with no history at all;
+  ruins of a style nobody made; records that contradict each other in the same way at the same
+  date. Some keep these lists. Nobody agrees what they mean.
+- **The present:** the last revision ended about a thousand years ago, and the signs of a new
+  one are appearing. The game starts there, and future updates can belong to it: a place
+  appears, a place turns out to have moved, something comes back out of the spoil.
 
-**What's taken goes to p-spoil.** Not a void of nothing but a heap of everything rejected, piled
-up age after age, like a spoil heap beside a mine: unfinished creatures, removed places, peoples,
-things that only half work. It is layered by age, the deepest layers the oldest. It can be
-reached, rarely and dangerously, and its contents sometimes leak back.
+**p-spoil.** Not a void of nothing but a heap of everything rejected, piled up age after age, like
+a spoil heap beside a mine: unfinished creatures, removed places, peoples, things that only half
+work. It is layered by age, the deepest layers the oldest. It can be reached, rarely and
+dangerously, and its contents sometimes leak back.
 
 - A place to explore that grows with every age (an expansion space that never runs out).
 - Monsters and bosses with a reason to be strange: they were rejected.
