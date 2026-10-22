@@ -121,7 +121,7 @@ Wave 3
 | **Runs** | cloud proposes, owner decides |
 | **Depends on** | nothing |
 | **Owns** | `docs/lore-rework/names.md` (new) |
-| **Status** | not started |
+| **Status** | **proposed, waiting on the owner** (2026-10-22): candidates and recommendations in `docs/lore-rework/names.md`. |
 
 - **Input:** `docs/world-map.md`'s lists (to be renamed, under review, placeholders in use).
 - Propose three or four names each for: p-sworn's church; the spine's surface people; the
