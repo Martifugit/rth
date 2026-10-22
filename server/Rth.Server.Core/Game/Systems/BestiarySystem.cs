@@ -11,17 +11,21 @@ namespace Rth.Server.Game
     {
         public BestiaryState State = new BestiaryState();
         [JsonIgnore] public bool Dirty = true;
+        [JsonIgnore] public bool GuideSent;
     }
 
     /// <summary>
     /// The bestiary: how many of each creature a player has killed, and everything each creature
     /// has given them (a drop log). A creature gives twice: its drops, and the yield of butchering
     /// its carcass, which is credited back to it. Bosses are here too: completions, attempts,
-    /// best and last times, and what their rewards gave. Sent as "bestiary" state.
+    /// best and last times, and what their rewards gave. Sent as "bestiary" state, with the
+    /// <see cref="BestiaryGuide"/> (worked out from content and spawns) as "bestiaryGuide".
     /// </summary>
     public sealed class BestiarySystem : GameSystem
     {
         public const string StateKey = "bestiary";
+        /// <summary>The same for everyone: sent at login and after content changes.</summary>
+        public const string GuideKey = "bestiaryGuide";
         private const string SaveSection = "bestiary";
 
         /// <summary>Recipe id to the creature whose carcass it processes.</summary>
@@ -88,38 +92,29 @@ namespace Rth.Server.Game
             return entry;
         }
 
-        /// <summary>A recipe belongs to a creature if one of its inputs is something that creature drops (its carcass).</summary>
         private void BuildRecipeMap()
         {
-            var map = new Dictionary<string, string>();
-            var drops = new Dictionary<string, HashSet<string>>();
-            foreach (NpcDef npc in World.Content.Npcs.Values)
-                if (npc.DropTable != null) drops[npc.Id] = ItemsIn(npc.DropTable, new HashSet<string>(), 0);
-            foreach (RecipeDef recipe in World.Content.Recipes.Values)
-                foreach (ItemAmount input in recipe.Inputs)
-                    foreach (KeyValuePair<string, HashSet<string>> npc in drops)
-                        if (npc.Value.Contains(input.Item) && !map.ContainsKey(recipe.Id)) map[recipe.Id] = npc.Key;
-            _recipeCreature = map;
+            _recipeCreature = BestiaryGuideBuilder.CarcassRecipes(World.Content);
+            _guide = null;
         }
 
-        private HashSet<string> ItemsIn(string tableId, HashSet<string> items, int depth)
-        {
-            if (depth > 8 || !World.Content.DropTables.TryGetValue(tableId, out DropTableDef? table)) return items;
-            foreach (DropEntry e in table.Always) Add(e);
-            foreach (DropEntry e in table.Entries) Add(e);
-            return items;
+        /// <summary>
+        /// The guide (where creatures live, their carcasses and notable drops), from content and
+        /// the map's spawns. Built when first asked for after a content change.
+        /// </summary>
+        public BestiaryGuide Guide => _guide ??= BestiaryGuideBuilder.Build(
+            World.Content, World.Find<NpcSystem>()?.Spawns ?? (IReadOnlyList<NpcSpawn>)new List<NpcSpawn>(), World.Regions);
 
-            void Add(DropEntry e)
-            {
-                if (e.Item != null) items.Add(e.Item);
-                if (e.Table != null) ItemsIn(e.Table, items, depth + 1);
-            }
-        }
+        private BestiaryGuide? _guide;
 
         public override void OnContentChanged()
         {
             BuildRecipeMap();
-            foreach (Player player in World.Players) Of(player).Dirty = true;
+            foreach (Player player in World.Players)
+            {
+                Of(player).Dirty = true;
+                Of(player).GuideSent = false;
+            }
         }
 
         public override void OnLogin(Player player, PlayerSave? save)
@@ -134,6 +129,11 @@ namespace Rth.Server.Game
         public override void SendState(Player player)
         {
             PlayerBestiary b = Of(player);
+            if (!b.GuideSent)
+            {
+                b.GuideSent = true;
+                player.Connection.Send(JsonStateMessage.Of(GuideKey, Guide));
+            }
             if (!b.Dirty) return;
             b.Dirty = false;
             player.Connection.Send(JsonStateMessage.Of(StateKey, b.State));

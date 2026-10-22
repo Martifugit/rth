@@ -157,27 +157,47 @@ namespace Rth.Client.Ui
 
         // ------------------------------------------------------------------ bars
 
-        /// <summary>A plain bar with an optional centred label.</summary>
+        /// <summary>
+        /// A plain bar with an optional label centred on it. A bar showing text is never shorter
+        /// than <see cref="LabelledHeight"/>, so the label (13 px, the smallest text) fits inside
+        /// it; a thinner bar is fine while it shows none.
+        /// </summary>
         public sealed class Bar
         {
+            /// <summary>The least height that fits the label: its line plus the bar's border.</summary>
+            public const float LabelledHeight = 17f;
+
             public readonly VisualElement Root;
             private readonly VisualElement _fill;
             private readonly Label _label;
+            private readonly float _height;
 
             public Bar(VisualElement parent, Color color, float height = 18f)
             {
+                _height = height;
                 Root = El(parent, "bar");
                 Root.style.height = height;
+                Root.style.flexShrink = 0; // a full column never squashes it below its height
                 _fill = El(Root, "bar__fill");
                 _fill.style.backgroundColor = color;
                 El(Root, "bar__gloss");
                 _label = Text(Root, "", "bar__label");
+                // A Label carries the theme's margins and padding (uneven top and bottom), which
+                // pushed the text right of centre and down out of the bar: the label fills the bar exactly.
+                _label.style.marginLeft = _label.style.marginRight = _label.style.marginTop = _label.style.marginBottom = 0f;
+                _label.style.paddingLeft = _label.style.paddingRight = _label.style.paddingTop = _label.style.paddingBottom = 0f;
+                // Alegreya's digits sit low in their line box: lift them 1 px to centre them (as on the bile axis).
+                _label.style.top = -1f;
+                _label.style.bottom = 1f;
+                _label.style.whiteSpace = WhiteSpace.NoWrap;
+                _label.pickingMode = PickingMode.Ignore;
             }
 
             public void Set(float fraction, string text)
             {
                 _fill.style.width = Length.Percent(Mathf.Clamp01(fraction) * 100f);
                 _label.text = text;
+                Root.style.height = string.IsNullOrEmpty(text) ? _height : Mathf.Max(_height, LabelledHeight);
             }
 
             public Color Color

@@ -418,7 +418,11 @@ The owner's list (2026-10-22):
   (`world/layout/`), so the map always matches the world (this is also L3).
 - **Bestiary:** tabs inside, Bosses, then one per region (butchering's special creatures sit in
   their region). The **drop log hints** at what a creature can drop (its rare and unique drops),
-  not only what you have had.
+  not only what you have had. **Built** on `claude/u2-journal` (to check in the Editor): tabs
+  Bosses + one per region, carcass creatures in a section under their skill, notable drops as
+  silhouettes with a rarity word until had. Notable = at most world.json `rareDropChance` (5%)
+  per kill, or given by no other creature or boss and not guaranteed; worked out on the server
+  (`BestiaryGuideBuilder`, "bestiaryGuide" state). See `docs/interface.md`.
 - **Equipment tab:** a row of buttons at its bottom. One opens a modal-like window with your
   combat stats (today's draggable Character window goes) and your **inspect** view (what others
   see when they right-click and inspect you). **Done** on `claude/u2-character` (2026-10-22),
@@ -433,6 +437,8 @@ The owner's list (2026-10-22):
   `claude/u2-minimap-guide`: one list in level order with a small kind badge per row, chips
   (only the kinds the skill has, with counts) to narrow it, a "Your level" line; no sort button.
 - **Achievements:** the progress bar's text isn't centred on the bar and overflows it.
+  **Fixed** on `claude/u2-journal` in `UiKit.Bar` (every labelled bar): the label lost the
+  theme's Label margins and padding, and a labelled bar is at least 17 px tall.
 
 ## Track F: art (local)
 

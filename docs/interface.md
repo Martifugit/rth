@@ -64,8 +64,19 @@ every piece and how they are organised.
 
 - **Journal** (J) ✓: **quests** (summary, requirements, the story so far, rewards),
   **achievements** (the diary by area and tier, with progress and rewards) and the
-  **bestiary** (every creature: how dangerous, how many you've killed, a drop log that includes
-  what its carcass yields).
+  **bestiary**. The bestiary has tabs of its own: **Bosses**, then one per **region** a creature
+  spawns in (a creature in several regions is in each; the region you stand in opens first;
+  "Elsewhere" holds creatures placed nowhere on the map). In a region, creatures whose carcass
+  feeds a skill (butchering) have a section under that skill's name and icon, and their page
+  says what carcass they leave and where to work it. Each creature: how dangerous it is, where
+  it lives, how many you've killed, and a **drop log that hints**: its notable drops come
+  first, as a silhouette under a "?" with a rarity word (Common, Uncommon, Rare, Very rare)
+  until you have had one, then with the count; the tooltip gives the odds. Everything else it
+  has given you (drops and carcass yields) follows under "Also obtained". **Notable** means
+  rare (at most world.json `rareDropChance`, 5% by default, per kill or completion) or
+  **unique** (no other creature or boss gives it, and it isn't guaranteed); the server works
+  this, and where creatures live, out from content and spawns (`BestiaryGuideBuilder`, the
+  "bestiaryGuide" state). Bosses show completions, attempts, times and the same drop log.
 - **Guide** (G) ✓: **skills** (pick a skill; its unlocks as one list in level order, each with
   a small badge for its kind (builder, equipment, tool, recipe, gathering...), a "Your level" line
   between what you have and what comes next, and chips to narrow the list to one kind, shown
@@ -106,10 +117,13 @@ every piece and how they are organised.
   the slot's cooldown: the global cooldown, or the ability's own when longer. Bars can be
   locked (right-click a slot, or Settings): no dragging, no tooltips.
 - **Server state for the interface** arrives as `JsonStateMessage`s ("achievements",
-  "bestiary", "client") read with `GameSession.ServerState<T>`. The client keeps its own
+  "bestiary", "bestiaryGuide", "client") read with `GameSession.ServerState<T>`. The client keeps its own
   state (action bar layouts) on the server with `SetClientState`; it follows the player.
 - **Window layout** is saved per machine in PlayerPrefs.
 - **Questions to the server** (things the client doesn't keep, such as another player's inspect
   card) go through `GameSession.Query(kind, arg)`; the answer lands in `GameSession.QueryResults`
   (`QueryResult(kind, arg)`, `QueryVersion` to know when to redraw). Server side, a kind is a
   handler registered with `QuerySystem.Register`.
+- **Bars** (`UiKit.Bar`): the label fills the bar with no margins and never wraps, and a bar
+  that shows text is at least `Bar.LabelledHeight` (17 px) tall, so the text is centred inside
+  it at any requested height.

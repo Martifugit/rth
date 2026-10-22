@@ -1583,3 +1583,68 @@
 .inspect-line__icon {
     margin-right: 8px;
 }
+/* ---------------------------------------------------------------- bestiary (U2) */
+
+/* The bestiary's own tabs (Bosses, then regions): filter tabs on a row that wraps, a faint line under it. */
+.bestiary-tabs {
+    flex-direction: row;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+    margin-bottom: 6px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(201, 162, 94, 0.18);
+}
+
+/* A hint at a notable drop: the slot, its rarity word under it. */
+.bestiary-hint {
+    width: 64px;
+    margin: 0 4px 6px 0;
+    align-items: center;
+}
+
+.bestiary-hint--unique > .slot {
+    border-color: rgba(224, 195, 135, 0.8);
+}
+
+/* Not had yet: a silhouette (tinted in code) under a question mark. */
+.bestiary-hint__slot--unknown {
+    background-color: rgba(0, 0, 0, 0.55);
+}
+
+.bestiary-hint__mark {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: 0;
+    padding: 0;
+    -unity-text-align: middle-center;
+    -unity-font-definition: resource("UI/Fonts/Cinzel");
+    -unity-font-style: bold;
+    font-size: 18px;
+    color: rgb(168, 156, 134);
+}
+
+.bestiary-hint__caption {
+    font-size: 13px;
+    margin: 1px 0 0 0;
+    padding: 0;
+    -unity-text-align: upper-center;
+    white-space: nowrap;
+}
+
+.bestiary-carcass {
+    margin-top: 4px;
+    align-items: center;
+}
+
+.bestiary-carcass__slot {
+    margin: 0 10px 0 0;
+    flex-shrink: 0;
+}
+
+.bestiary-carcass__text {
+    flex-grow: 1;
+    flex-shrink: 1;
+}

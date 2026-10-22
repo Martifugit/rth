@@ -96,6 +96,11 @@ namespace Rth.Server.Content
         public int GroundItemDespawnTicks = 300;
         public List<ItemAmount> StarterInventory = new List<ItemAmount>();
         public List<string> StarterEquipment = new List<string>();
+        /// <summary>
+        /// A drop this likely per kill or less is rare: the bestiary hints at it before it is had
+        /// (as it does at drops only one creature gives). 0 to 1.
+        /// </summary>
+        public double RareDropChance = 0.05;
     }
 
     /// <summary>
@@ -346,6 +351,7 @@ namespace Rth.Server.Content
             foreach (string id in parts.World.StarterEquipment)
                 if (!items.TryGetValue(id, out ItemDef? e) || e.Equipment == null) problems.Add("Starter equipment '" + id + "' isn't an equippable item.");
             if (parts.World.InventorySize < 1 || parts.World.InventorySize > 255) problems.Add("World: inventorySize must be 1-255.");
+            if (parts.World.RareDropChance < 0 || parts.World.RareDropChance > 1) problems.Add("World: rareDropChance must be 0-1.");
 
             Dictionary<string, SkillDef> skills = Index(parts.Skills.Skills, s => s.Id, "skill", problems);
             foreach (SkillDef s in parts.Skills.Skills)

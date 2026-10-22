@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Rth.Client.Ui.Panels;
-using Rth.Shared.Combat;
 using Rth.Shared.Items;
 using Rth.Shared.Net;
 using Rth.Shared.Progress;
@@ -162,7 +161,7 @@ namespace Rth.Client.Ui.Modals
                     if (!complete && a.Objective.Count > 1)
                     {
                         progress.Progress.TryGetValue(a.Id, out int n);
-                        var bar = new UiKit.Bar(text, UiKit.Value, 12f);
+                        var bar = new UiKit.Bar(text, UiKit.Value, UiKit.Bar.LabelledHeight);
                         bar.Root.style.marginTop = 3f;
                         bar.Set(n / (float)a.Objective.Count, Mathf.Min(n, a.Objective.Count) + " / " + a.Objective.Count);
                     }
@@ -181,132 +180,5 @@ namespace Rth.Client.Ui.Modals
         }
 
         private string SkillName(string id) => Session.SkillName(id);
-    }
-
-    /// <summary>
-    /// The bestiary: every boss (completions, best time, drop log), then every creature, how
-    /// dangerous it is, how many you've killed, and what it has given you.
-    /// </summary>
-    public sealed class BestiaryTab : ModalTab
-    {
-        public override string Id => "bestiary";
-        public override string Title => "Bestiary";
-        public override string Icon => "bestiary";
-
-        private MasterDetail _view;
-        private int _version = -1;
-
-        protected override void Build(VisualElement root) => _view = new MasterDetail(root, Draw);
-
-        public override void OnShow(string focus)
-        {
-            _version = -1;
-            Refresh();
-            if (focus != null) _view.Select(focus);
-        }
-
-        public override void Refresh()
-        {
-            if (Session.Content == null || _version == Session.StateVersion) return;
-            _version = Session.StateVersion;
-            BestiaryState state = Session.ServerState<BestiaryState>("bestiary");
-            var entries = Session.Content.Bosses.OrderBy(b => b.Name).Select(b => new MasterDetail.Entry
-            {
-                Id = BossPrefix + b.Id,
-                Text = b.Name,
-                Icon = string.IsNullOrEmpty(b.Icon) ? "bestiary" : b.Icon,
-                IconTint = state.Bosses.TryGetValue(b.Id, out BossRecord r) && r.Completions > 0 ? new Color(0.95f, 0.72f, 0.4f) : UiKit.Muted,
-                Note = r != null ? r.Completions.ToString("N0") : "",
-                Section = "Bosses",
-            }).ToList();
-            entries.AddRange(Session.Content.Npcs.Where(n => n.Attackable).OrderBy(n => n.Name).Select(n => new MasterDetail.Entry
-            {
-                Id = n.Id,
-                Text = n.Name,
-                Icon = "bestiary",
-                IconTint = state.Creatures.ContainsKey(n.Id) ? UiKit.IconTint : UiKit.Muted,
-                Note = state.Creatures.TryGetValue(n.Id, out BestiaryEntry e) ? e.Kills.ToString("N0") : "",
-                Section = "Creatures",
-            }));
-            _view.SetEntries(entries);
-        }
-
-        private const string BossPrefix = "boss:";
-
-        private void DrawBoss(string id)
-        {
-            BossDef boss = Session.Content.Bosses.Find(b => b.Id == id);
-            if (boss == null) return;
-            BestiaryState state = Session.ServerState<BestiaryState>("bestiary");
-            state.Bosses.TryGetValue(id, out BossRecord record);
-            VisualElement d = _view.Detail;
-            UiKit.Text(d, boss.Name.ToUpperInvariant(), "title-large");
-            UiKit.Text(d, boss.Description, "prose", "muted");
-            UiKit.Divider(d);
-            VisualElement stats = UiKit.El(d, "row");
-            stats.style.flexWrap = Wrap.Wrap;
-            Stat(stats, "Completions", record != null ? record.Completions.ToString("N0") : "0");
-            Stat(stats, "Attempts", record != null ? record.Attempts.ToString("N0") : "0");
-            Stat(stats, "Personal best", record != null && record.BestTicks > 0 ? Panels.BossTimerPanel.Duration(record.BestTicks) : "-");
-            Stat(stats, "Last run", record != null && record.LastTicks > 0 ? Panels.BossTimerPanel.Duration(record.LastTicks) : "-");
-            DropLog(d, record?.Obtained, "Nothing yet. What its rewards give you is recorded here.");
-        }
-
-        private void DropLog(VisualElement d, Dictionary<string, long> obtained, string empty)
-        {
-            UiKit.Heading(d, "Drop log").style.marginTop = 10f;
-            if (obtained == null || obtained.Count == 0)
-            {
-                UiKit.Text(d, empty, "muted", "prose");
-                return;
-            }
-            VisualElement grid = UiKit.El(d, "slot-grid");
-            foreach (KeyValuePair<string, long> item in obtained.OrderByDescending(kv => kv.Value))
-            {
-                ItemDef def = Session.Item(item.Key);
-                var view = new ItemSlotView(grid);
-                view.Show(new ItemSlot { ItemId = item.Key, Count = (int)Mathf.Min(item.Value, int.MaxValue) }, def);
-                long count = item.Value;
-                UiKit.Tooltip(view.Root, () => (def != null ? UiKit.Title(def.Name) : item.Key) + "\nObtained: " + UiKit.Colour(count.ToString("N0"), UiKit.Value));
-            }
-        }
-
-        private void Draw(string id)
-        {
-            if (id != null && id.StartsWith(BossPrefix))
-            {
-                DrawBoss(id.Substring(BossPrefix.Length));
-                return;
-            }
-            NpcInfo npc = Session.Npc(id);
-            if (npc == null) return;
-            BestiaryState state = Session.ServerState<BestiaryState>("bestiary");
-            state.Creatures.TryGetValue(id, out BestiaryEntry entry);
-            VisualElement d = _view.Detail;
-
-            UiKit.Text(d, npc.Name.ToUpperInvariant(), "title-large");
-            UiKit.Text(d, npc.Examine, "prose", "muted");
-            UiKit.Divider(d);
-
-            VisualElement stats = UiKit.El(d, "row");
-            stats.style.flexWrap = Wrap.Wrap;
-            Stat(stats, "Blood", npc.Blood.ToString("N0"));
-            Stat(stats, "Hits up to", npc.MaxHit.ToString("N0"));
-            Stat(stats, "Fights with", npc.Style == CombatStyle.None ? "-" : npc.Style.ToString());
-            Stat(stats, "Temper", npc.Aggressive ? "Attacks on sight" : "Defends itself");
-            Stat(stats, "Killed", entry != null ? entry.Kills.ToString("N0") : "0");
-
-            DropLog(d, entry?.Obtained, "Nothing yet. Its drops, and what its carcass yields, are recorded here.");
-        }
-
-        private static void Stat(VisualElement parent, string label, string value)
-        {
-            VisualElement card = UiKit.El(parent, "card");
-            card.style.minWidth = 120f;
-            card.style.marginRight = 6f;
-            card.style.marginBottom = 6f;
-            UiKit.Text(card, label.ToUpperInvariant(), "heading").style.fontSize = 11;
-            UiKit.Text(card, value, "value", "bold");
-        }
     }
 }
