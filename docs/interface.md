@@ -25,7 +25,7 @@ every piece and how they are organised.
 |---|---|---|
 | **Panel** (`UiPanel`) | Lives in a movable window; can share it as a tab. Resizable unless it has a fixed size. | Pack, worn, character, abilities, hymns, skills, quests, task, XP tracker |
 | **Fixed panel** (`FixedSize`) | Movable, never resized: the size it has to be. | Action bars, minimap, chat, target, bank, shop, conversation |
-| **Server window** (`ServerOpen`) | Opens and closes when the server says; closing it tells the server. | Bank, shop, conversation, the Assayer |
+| **Server window** (`ServerOpen`) | Opens and closes when the server says; closing it tells the server. | Bank, shop, conversation, the Assayer (today's death screen; the ferryman replaces it in death v1) |
 | **Modal** (`UiModal`) | Centred, fixed size, tabs of related pages, one at a time; Escape or a click outside closes it. | Journal, guide, world map, settings |
 
 ## Always on screen
@@ -46,9 +46,10 @@ every piece and how they are organised.
 - **Worn equipment** (the figure only). ✓
 - **Character:** total level and every combat stat. ✓
 - **Ability books:** one per combat style (Occultism first); drag onto a bar. ✓
-- **Religion** (F): devotion at the top, then the **hymns** (Tithe's prayers) as a book of icons
+- **Religion** (F): devotion at the top, then the **hymns** (prayers; the panel still calls them
+  Tithe's until the text pass, and in the canon they belong to p-sworn's church) as a book of icons
   in level order: click to sing or stop, drag onto an action bar; a sung one glows, a locked one
-  shows its level. Below them, **verses** (Cruor's, for melee) when melee exists. ✓
+  shows its level. Below them, **verses** (the church's, for melee) when melee exists. ✓
 - **Skills:** tiles, the combat and total levels on a footer row; click for the guide, right-click to
   "Set level target" or "Set exp target" (each asks for a number). Targets follow the player. ✓
 - **Quests:** the list; click for the journal. ✓
