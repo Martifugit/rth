@@ -66,18 +66,6 @@ namespace Rth.Server.Content
         public int ColorRgb => int.Parse(Color.TrimStart('#'), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
     }
 
-    /// <summary>Lines the Assayer says when a player dies, by situation. From assayer.json.</summary>
-    public sealed class AssayerLines
-    {
-        public List<string> First = new List<string>();
-        public List<string> Choleric = new List<string>();
-        public List<string> Melancholic = new List<string>();
-        public List<string> Balanced = new List<string>();
-        public List<string> Frequent = new List<string>();
-        /// <summary>How far bile must lean at death for the choleric or melancholic lines rather than the balanced ones.</summary>
-        public int LeanThreshold = 30;
-    }
-
     /// <summary>Where a creature lives, exported with the map (<c>&lt;map&gt;.spawns.json</c>).</summary>
     public sealed class NpcSpawn
     {
@@ -177,7 +165,7 @@ namespace Rth.Server.Content
         /// <summary>A new character's main bar for each weapon style; a style missing here uses <see cref="ActionBar"/>.</summary>
         public Dictionary<CombatStyle, List<string>> ActionBars = new Dictionary<CombatStyle, List<string>>();
         public List<NpcDef> Npcs = new List<NpcDef>();
-        public AssayerLines Assayer = new AssayerLines();
+        public DeathRules Death = new DeathRules();
         public List<ItemDef> Items = new List<ItemDef>();
         public List<DropTableDef> DropTables = new List<DropTableDef>();
         public WorldSettings World = new WorldSettings();
@@ -222,7 +210,7 @@ namespace Rth.Server.Content
         /// <summary>A new character's main bar for a weapon style.</summary>
         public IReadOnlyList<string> DefaultBarFor(CombatStyle style) => ActionBars.TryGetValue(style, out List<string>? bar) ? bar : ActionBar;
         public IReadOnlyDictionary<string, NpcDef> Npcs { get; private set; } = new Dictionary<string, NpcDef>();
-        public AssayerLines Assayer { get; private set; } = new AssayerLines();
+        public DeathRules Death { get; private set; } = new DeathRules();
         public IReadOnlyDictionary<string, ItemDef> Items { get; private set; } = new Dictionary<string, ItemDef>();
         public IReadOnlyDictionary<string, DropTableDef> DropTables { get; private set; } = new Dictionary<string, DropTableDef>();
         public WorldSettings World { get; private set; } = new WorldSettings();
@@ -270,7 +258,7 @@ namespace Rth.Server.Content
                 ActionBar = combat.ActionBar,
                 Abilities = ReadJson<List<AbilityDef>>(directory, "abilities.json"),
                 Npcs = ReadJson<List<NpcDef>>(directory, "npcs.json"),
-                Assayer = ReadJson<AssayerLines>(directory, "assayer.json"),
+                Death = ReadJson<DeathRules>(directory, "death.json"),
                 Items = ReadJson<List<ItemDef>>(directory, "items.json"),
                 DropTables = ReadJson<List<DropTableDef>>(directory, "drops.json"),
                 World = ReadJson<WorldSettings>(directory, "world.json"),
@@ -564,6 +552,12 @@ namespace Rth.Server.Content
                 if (b.Rewards != null && !tables.ContainsKey(b.Rewards)) problems.Add("Boss '" + b.Id + "': rewards table '" + b.Rewards + "' doesn't exist.");
             }
 
+            DeathRules death = parts.Death ?? new DeathRules();
+            if (!items.ContainsKey(death.Currency)) problems.Add("Death: currency '" + death.Currency + "' isn't an item.");
+            if (death.Obol != null && !items.ContainsKey(death.Obol)) problems.Add("Death: obol '" + death.Obol + "' isn't an item.");
+            if (death.Dialogue != null && !dialogues.ContainsKey(death.Dialogue)) problems.Add("Death: dialogue '" + death.Dialogue + "' doesn't exist.");
+            if (death.FeePercent < 0 || death.FreeBelow < 0 || death.HoldHours <= 0) problems.Add("Death: feePercent and freeBelow can't be negative, and holdHours must be positive.");
+
             if (problems.Count > 0) throw new ContentException(string.Join(Environment.NewLine, problems));
 
             AddBankNotes(items);
@@ -577,7 +571,7 @@ namespace Rth.Server.Content
                 ActionBar = parts.ActionBar.ToList(),
                 ActionBars = parts.ActionBars ?? new Dictionary<CombatStyle, List<string>>(),
                 Npcs = npcs,
-                Assayer = parts.Assayer ?? new AssayerLines(),
+                Death = death,
                 Items = items,
                 DropTables = tables,
                 World = parts.World,

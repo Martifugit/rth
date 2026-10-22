@@ -13,7 +13,7 @@ namespace Rth.Server.Game
     /// <summary>
     /// Fighting: attack and ability intents, ranges and chasing, damage and healing, death, and the
     /// per-tick humours (phlegm, bile, regeneration). Deaths are published as
-    /// <see cref="EntityDied"/>; what happens next (respawns, loot, the Assayer) belongs to whoever
+    /// <see cref="EntityDied"/>; what happens next (respawns, loot, the ferryman) belongs to whoever
     /// listens.
     /// </summary>
     /// <remarks>

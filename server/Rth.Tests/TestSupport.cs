@@ -125,18 +125,50 @@ internal static class TestContent
         new NpcDef { Id = "mite", Name = "Mite", Blood = 300, Style = CombatStyle.Occult, AttackRange = 5, AttackTicks = 5, MaxHit = 50, Accuracy = 1.0, Evasion = 0, Aggressive = true, AggroRadius = 4, WanderRadius = 0 },
     };
 
-    public static AssayerLines Assayer() => new()
+    /// <summary>
+    /// The ferryman: 10% of what's held over a value of 100, paid in coins; an obol; 24 hours.
+    /// Waking and going back both use the map's spawn unless a test says otherwise.
+    /// </summary>
+    public static DeathRules Death() => new()
     {
-        First = { "first {name}" },
-        Choleric = { "hot" },
-        Melancholic = { "cold" },
-        Balanced = { "level" },
-        Frequent = { "again {deaths}" },
+        Ferryman = "Ferryman",
+        Dialogue = "ferry",
+        Currency = "coins",
+        FeePercent = 10,
+        FreeBelow = 100,
+        HoldHours = 24,
+        Obol = "obol",
+        Lines = new FerrymanLines
+        {
+            First = { "first {name}" },
+            Obol = { "obol" },
+            Free = { "free" },
+            Again = { "again" },
+        },
+    };
+
+    /// <summary>The ferryman's conversation: pay, or go back without.</summary>
+    public static DialogueDef FerryDialogue() => new()
+    {
+        Id = "ferry",
+        Nodes =
+        {
+            ["start"] = new DialogueNode
+            {
+                Text = "Fee {ferryFee} for {ferryValue}, kept {ferryHours} hours.",
+                Options =
+                {
+                    new DialogueOption { Text = "Pay", Conditions = { new DialogueCondition { Type = "ferryCanPay" } }, Actions = { new DialogueAction { Type = "ferryPay" } } },
+                    new DialogueOption { Text = "Leave", Actions = { new DialogueAction { Type = "ferryLeave" } } },
+                },
+            },
+        },
     };
 
     public static List<ItemDef> Items() => new()
     {
-        new ItemDef { Id = "coins", Name = "Coins", Stackable = true },
+        new ItemDef { Id = "coins", Name = "Coins", Stackable = true, Value = 1 },
+        new ItemDef { Id = "obol", Name = "Obol", Value = 50 },
         new ItemDef { Id = "bread", Name = "Bread", Examine = "Bready.", Consumable = new ConsumableDef { Verb = "Eat", CooldownTicks = 2, AttackDelayTicks = 2, Effects = { new EffectOp { Op = EffectOp.HealBlood, Amount = 100 } } } },
         new ItemDef { Id = "tonic", Name = "Tonic", Consumable = new ConsumableDef { Verb = "Drink", CooldownGroup = "potion", CooldownTicks = 10, AttackDelayTicks = 1, Leaves = "vial", Animation = "drink", Effects = { new EffectOp { Op = EffectOp.AddPhlegm, Amount = 30 }, new EffectOp { Op = EffectOp.ShiftBile, Amount = -20 } } } },
         new ItemDef { Id = "vial", Name = "Vial" },
@@ -274,7 +306,7 @@ internal static class TestContent
 
     public static ContentParts Parts(CombatRules? rules = null, List<AbilityDef>? abilities = null) => new()
     {
-        Dialogues = { MerchantDialogue() },
+        Dialogues = { MerchantDialogue(), FerryDialogue() },
         Shops = Shops(),
         Tasks = Tasks(),
         Skills = Skills(),
@@ -285,7 +317,7 @@ internal static class TestContent
         AutoAttack = "zap",
         ActionBar = new List<string> { "spark", "draught", "still", "flare", "shroud", "ult", "poke", "secret" },
         Npcs = Npcs().Concat(TownNpcs()).ToList(),
-        Assayer = Assayer(),
+        Death = Death(),
         Items = Items(),
         DropTables = DropTables(),
         World = new WorldSettings { InventorySize = 28, GroundItemPrivateTicks = 10, GroundItemDespawnTicks = 30 },

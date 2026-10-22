@@ -16,7 +16,7 @@ public class ContentAndRulesTests
         Assert.Equal(8, content.ActionBar.Count);
         Assert.Equal(AbilityType.Auto, content.AutoAttack.Type);
         Assert.Contains("fen_rat", content.Npcs.Keys);
-        Assert.NotEmpty(content.Assayer.First);
+        Assert.NotEmpty(content.Death.Lines.First);
     }
 
     [Fact]
@@ -26,6 +26,11 @@ public class ContentAndRulesTests
         Assert.Contains(world.Map.Regions, r => r.Name == "tolling" && r.X == 0 && r.Y == 0);
         Assert.Equal(new TileCoord(33, 53), world.Map.Spawn);
         Assert.False(world.Map.IsBlocked(0, world.Map.Spawn.X, world.Map.Spawn.Y));
+
+        // The dead wake on open ground (death.json), not silently at the spawn because the tile is gone.
+        TilePlace? wake = GameContent.Load(Repo.ContentDirectory).Death.Wake;
+        if (wake != null)
+            Assert.True(world.Map.Contains(wake.Plane, wake.X, wake.Y) && !world.Map.IsBlocked(wake.Plane, wake.X, wake.Y), "death.json's wake tile isn't open ground");
 
         // Palmerway joins Tolling: walk from the town's east road over the border.
         if (world.Map.FindRegion("palmerway") != null)
@@ -181,7 +186,7 @@ public class ContentAndRulesTests
                 Statuses = { new StatusState { Id = "ward", Magnitude = 30, EndTick = 15 }, new StatusState { Id = "infused", Magnitude = 4 } },
             },
             TestContent.Create().ToMessage(),
-            new GameTextMessage { Kind = TextKind.Assayer, Text = "hello" },
+            new GameTextMessage { Kind = TextKind.Ferryman, Text = "hello" },
             new ChatMessage { Channel = ChatChannel.Public, Text = "hi" },
             new ChatLineMessage { Channel = ChatChannel.Public, EntityId = 7, From = "Alice", Text = "hi" },
             new ItemActionMessage { Container = ContainerKind.Equipment, Slot = 3, ActionId = "unequip" },

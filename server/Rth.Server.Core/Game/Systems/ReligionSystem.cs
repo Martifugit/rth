@@ -143,7 +143,7 @@ namespace Rth.Server.Game
         {
             if (!(e.Victim is Player player)) return;
             Silence(player);
-            player.Devotion = player.MaxDevotion; // restored when the Assayer puts you back together
+            player.Devotion = player.MaxDevotion; // the dead wake with it restored
         }
 
         public override void OnContentChanged()

@@ -1,0 +1,34 @@
+{
+  "wake": { "plane": 0, "x": 33, "y": 53 },
+  "returnTo": null,
+  "ferryman": "The ferryman",
+  "dialogue": "ferryman",
+  "currency": "marks",
+  "feePercent": 10,
+  "freeBelow": 500,
+  "holdHours": 24,
+  "obol": "obol",
+  "lines": {
+    "first": [
+      "Dark water, a jetty, and a man with an oar. \"First time. Everyone has one. Your things are with me; we'll talk about them when you're on your feet.\"",
+      "The ferryman doesn't look up from the water. \"{name}. New face. Sit. The cold stops in a moment.\""
+    ],
+    "obol": [
+      "The ferryman turns something small over in his fingers. \"You brought an obol. I noticed. I took it.\"",
+      "\"An obol in the pack.\" He pockets it. \"Someone taught you manners. That covers it.\""
+    ],
+    "free": [
+      "The ferryman weighs your pack in one hand and shrugs. \"Not worth the argument. You can have it back.\"",
+      "\"This?\" He holds up what you carried. \"I've fished better out of the river.\""
+    ],
+    "again": [
+      "The ferryman is already waiting. \"{name}. Back so soon.\"",
+      "\"Again.\" He sets your things on the jetty beside him. \"They're safe with me. For a while.\"",
+      "The water is very still. \"You know how this goes,\" says the ferryman."
+    ],
+    "frequent": [
+      "\"{name}. Death number {deaths}.\" The ferryman makes room on the bench. \"I'm starting to keep your seat warm.\"",
+      "The ferryman has your side of the boat cleared before you arrive. \"I took the liberty.\""
+    ]
+  }
+}

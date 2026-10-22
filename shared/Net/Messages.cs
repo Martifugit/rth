@@ -824,8 +824,8 @@ namespace Rth.Shared.Net
         Info = 0,
         /// <summary>Something you tried didn't work.</summary>
         Warning = 1,
-        /// <summary>The Assayer speaks (on death).</summary>
-        Assayer = 2,
+        /// <summary>The ferryman speaks (on death).</summary>
+        Ferryman = 2,
     }
 
     /// <summary>

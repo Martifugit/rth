@@ -396,7 +396,7 @@ namespace Rth.Client
                         break;
                     case GameTextMessage text:
                         AddLog(text.Kind, text.Text);
-                        if (text.Kind == TextKind.Assayer) AssayerText = text.Text;
+                        if (text.Kind == TextKind.Ferryman) AssayerText = text.Text;
                         break;
                 }
             }

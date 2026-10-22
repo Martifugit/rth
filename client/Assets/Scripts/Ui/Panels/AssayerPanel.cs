@@ -3,11 +3,11 @@ using UnityEngine.UIElements;
 
 namespace Rth.Client.Ui.Panels
 {
-    /// <summary>The Assayer's words when you die, until you return. Opened by the death message.</summary>
+    /// <summary>The ferryman's words when you die (until D2 replaces this panel). Opened by the death message.</summary>
     public sealed class AssayerPanel : UiPanel
     {
         public override string Id => "assayer";
-        public override string Title => "The Assayer";
+        public override string Title => "The ferryman";
         public override string Icon => "balance";
         public override bool OpenByDefault => false;
         public override Vector2? FixedSize => new Vector2(480f, 240f);

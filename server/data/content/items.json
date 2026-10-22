@@ -356,5 +356,14 @@
     "value": 25,
     "color": "#9bd14a",
     "tags": [ "reagent-base", "vitriol" ]
+  },
+  {
+    "id": "obol",
+    "name": "Obol",
+    "icon": "coins",
+    "examine": "A small dull coin with a hole through it. Carried when you die, it pays the ferryman.",
+    "value": 1000,
+    "color": "#a8a59a",
+    "tags": [ "obol" ]
   }
 ]

@@ -82,6 +82,7 @@ namespace Rth.Server.Game
             new InterfaceSystem(),
             new DialogueSystem(),
             new BankSystem(),
+            new FerrySystem(),
             new ShopSystem(),
             new PointsSystem(),
             new TaskSystem(),

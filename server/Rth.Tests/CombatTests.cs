@@ -400,7 +400,7 @@ public class CombatTests
     }
 
     [Fact]
-    public void DyingSendsTheAssayerAndRespawnsBalanced()
+    public void DyingSendsTheFerrymanAndRespawnsBalanced()
     {
         var fx = Arena(At("brute", 6, 5));
         FakeConnection client = fx.Login("Alice");
@@ -411,24 +411,12 @@ public class CombatTests
 
         Assert.True(alice.IsDead);
         Assert.Equal(1, alice.Deaths);
-        Assert.Contains(client.Sent.OfType<GameTextMessage>(), t => t.Kind == TextKind.Assayer && t.Text == "first Alice");
+        Assert.Contains(client.Sent.OfType<GameTextMessage>(), t => t.Kind == TextKind.Ferryman && t.Text == "first Alice");
 
         fx.Ticks(fx.World.Rules.RespawnDelayTicks);
         Assert.False(alice.IsDead);
         Assert.Equal((Spawn, 1000, 0, 0), (alice.Position, alice.Blood, alice.Bile, alice.Phlegm));
         Assert.NotEqual(alice.Id, fx.Npc("brute").TargetId);
-    }
-
-    [Fact]
-    public void TheAssayerNoticesYourBileOnLaterDeaths()
-    {
-        var fx = Arena(At("brute", 6, 5));
-        FakeConnection client = fx.Login("Alice");
-        Player alice = fx.Player("Alice");
-        alice.Deaths = 1;
-        alice.Bile = -60;
-        fx.World.Get<CombatSystem>().Damage(alice, 5000, fx.Npc("brute"), HitKind.Normal);
-        Assert.Contains(client.Sent.OfType<GameTextMessage>(), t => t.Kind == TextKind.Assayer && t.Text == "cold");
     }
 
     [Fact]

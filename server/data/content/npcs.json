@@ -428,5 +428,19 @@
     "shape": "Capsule",
     "color": "#4a6a80",
     "scale": 1.0
+  },
+  {
+    "id": "ferryman",
+    "name": "The ferryman",
+    "examine": "He holds an oar he never seems to need. He holds your things, too.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 0,
+    "actions": [ { "id": "talk", "label": "Talk-to" } ],
+    "dialogue": "ferryman",
+    "shape": "Capsule",
+    "color": "#2b2a33",
+    "scale": 1.1
   }
 ]

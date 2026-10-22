@@ -405,5 +405,57 @@
         "next": "greet"
       }
     }
+  },
+
+  {
+    "id": "ferryman",
+    "start": "start",
+    "nodes": {
+      "start": {
+        "branches": [
+          { "conditions": [ { "type": "ferryHolds", "not": true } ], "next": "empty" },
+          { "conditions": [ { "type": "ferryObol" } ], "next": "obol" },
+          { "conditions": [ { "type": "ferryFree" } ], "next": "free" }
+        ],
+        "next": "fee"
+      },
+      "empty": {
+        "text": "You came with nothing. Nothing is what I charge for that. Shall we go?",
+        "options": [
+          { "text": "Take me back.", "actions": [ { "type": "ferryLeave" } ] },
+          { "text": "Not yet." }
+        ]
+      },
+      "obol": {
+        "text": "You had an obol on you. I took it. That settles what I hold, all of it. Shall we go?",
+        "options": [
+          { "text": "Take me back, with my things.", "actions": [ { "type": "ferryPay" } ] },
+          { "text": "Not yet." }
+        ]
+      },
+      "free": {
+        "text": "What you brought is hardly worth the oar. I'll take you back with it, and ask nothing.",
+        "options": [
+          { "text": "Take me back, with my things.", "actions": [ { "type": "ferryPay" } ] },
+          { "text": "Not yet." }
+        ]
+      },
+      "fee": {
+        "text": "I have your things. {ferryValue} worth, by my count. To take them back with you: {ferryFee}. From your purse, or your bank if the purse is light.",
+        "options": [
+          { "text": "Pay {ferryFee}.", "conditions": [ { "type": "ferryCanPay" } ], "actions": [ { "type": "ferryPay" } ] },
+          { "text": "I can't pay that.", "conditions": [ { "type": "ferryCanPay", "not": true } ], "next": "without" },
+          { "text": "Take me back without them.", "conditions": [ { "type": "ferryCanPay" } ], "next": "without" },
+          { "text": "Not yet." }
+        ]
+      },
+      "without": {
+        "text": "Then you go back light. I keep your things about {ferryHours} hours. Pay me before then and they're yours. After that, they're the river's.",
+        "options": [
+          { "text": "Take me back.", "actions": [ { "type": "ferryLeave" } ] },
+          { "text": "Wait.", "next": "fee" }
+        ]
+      }
+    }
   }
 ]
