@@ -23,6 +23,7 @@ often **sealed**: undecided until a quest needs it, with only constraints fixed)
 | **The stillness has lasted about a thousand years.** | Owner. |
 | **The game never removes places.** Removal belongs to history: lost places that used to exist, and places that still exist but not where they were recorded. The present revision shows itself in the game by what appears and what moves. | Owner. |
 | **Gods and all kinds of superhuman beings exist** and act in the world. This is a fantasy RPG. | Owner. |
+| **The dead go to a realm of the dead (p-name to come), and a ferryman brings players back for a fee: the death cost.** | Owner. |
 | **What's taken goes to p-spoil**, a heap of everything rejected, layered by age. | Owner, name a placeholder. |
 
 ## How it reads in the world
