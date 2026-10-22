@@ -31,6 +31,8 @@ namespace Rth.Shared.Items
 
         public EquipmentDef? Equipment;
         public ConsumableDef? Consumable;
+        /// <summary>A gathering tool (pickaxe, hatchet), used from the pack or worn.</summary>
+        public ToolDef? Tool;
     }
 
     /// <summary>A number of one item: a cost, an ingredient, a reward.</summary>
@@ -108,5 +110,44 @@ namespace Rth.Shared.Items
         /// <summary>For <see cref="ApplyEffect"/>.</summary>
         public EffectType Effect;
         public int Ticks;
+    }
+
+    /// <summary>
+    /// A gathering tool (docs/skills.md 2.3). A node names the kind it needs (and optionally a
+    /// lowest tier); the best usable tool of that kind in the pack or worn is used automatically.
+    /// Every effect is optional, so two tools of one tier can feel different.
+    /// </summary>
+    public sealed class ToolDef
+    {
+        /// <summary>What it is for nodes ("pickaxe", "hatchet"); also the word in messages.</summary>
+        public string Kind = "";
+        /// <summary>Its rung on the tier ladder (2.2); nodes may ask for a lowest tier, and the best tier is picked.</summary>
+        public int Tier = 1;
+        /// <summary>Skill levels needed to use it (a tier-2 pickaxe needs mining 10).</summary>
+        public List<SkillRequirement> Requirements = new List<SkillRequirement>();
+        /// <summary>Added to each attempt's chance of success.</summary>
+        public double Success;
+        /// <summary>The chance that a success doesn't use the node up.</summary>
+        public double Conservation;
+        /// <summary>A drop table rolled on each success, besides the node's extras (or instead, with <see cref="ReplacesExtras"/>).</summary>
+        public string? Extras;
+        public bool ReplacesExtras;
+        /// <summary>Chances to change what's gathered as it comes (a hatchet that chars the log).</summary>
+        public List<ToolTransform> Transforms = new List<ToolTransform>();
+    }
+
+    /// <summary>
+    /// A tool's transformation: each <see cref="From"/> a node gives becomes <see cref="To"/> with
+    /// <see cref="Chance"/>, if the player meets <see cref="Skill"/> at <see cref="Level"/>, and
+    /// gives <see cref="Xp"/> in that skill.
+    /// </summary>
+    public sealed class ToolTransform
+    {
+        public string From = "";
+        public string To = "";
+        public double Chance;
+        public string? Skill;
+        public int Level = 1;
+        public double Xp;
     }
 }

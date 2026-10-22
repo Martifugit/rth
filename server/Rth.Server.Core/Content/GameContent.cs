@@ -395,6 +395,28 @@ namespace Rth.Server.Content
                     problems.Add("Item '" + i.Id + "': only weapons have a combat style or an auto-attack.");
             }
 
+            var toolKinds = new HashSet<string>();
+            foreach (ItemDef i in parts.Items)
+            {
+                ToolDef? tool = i.Tool;
+                if (tool == null) continue;
+                string where = "Item '" + i.Id + "' (tool): ";
+                if (string.IsNullOrWhiteSpace(tool.Kind)) problems.Add(where + "needs a kind.");
+                else toolKinds.Add(tool.Kind);
+                if (tool.Tier < 0) problems.Add(where + "tier can't be negative.");
+                if (i.Stackable) problems.Add(where + "tools can't be stackable.");
+                CheckRequirements(tool.Requirements, where.TrimEnd(' ', ':'));
+                if (tool.Conservation < 0 || tool.Conservation > 1) problems.Add(where + "conservation must be 0-1.");
+                if (tool.Extras != null && !tables.ContainsKey(tool.Extras)) problems.Add(where + "extras table '" + tool.Extras + "' doesn't exist.");
+                if (tool.ReplacesExtras && tool.Extras == null) problems.Add(where + "replacesExtras needs an extras table.");
+                foreach (ToolTransform t in tool.Transforms)
+                {
+                    if (!items.ContainsKey(t.From) || !items.ContainsKey(t.To)) problems.Add(where + "transform '" + t.From + "' to '" + t.To + "' names an unknown item.");
+                    if (t.Skill != null && !skills.ContainsKey(t.Skill)) problems.Add(where + "transform skill '" + t.Skill + "' doesn't exist.");
+                    if (t.Chance < 0 || t.Chance > 1) problems.Add(where + "transform chance must be 0-1.");
+                }
+            }
+
             Dictionary<string, ObjectDef> objects = Index(parts.Objects, o => o.Id, "object", problems);
             Dictionary<string, RecipeDef> recipes = Index(parts.Recipes, r => r.Id, "recipe", problems);
             foreach (RecipeDef r in parts.Recipes)
@@ -449,6 +471,9 @@ namespace Rth.Server.Content
                 if (node.Extras != null && !tables.ContainsKey(node.Extras)) problems.Add(where + "extras table '" + node.Extras + "' doesn't exist.");
                 if (node.Points != null && !pools.ContainsKey(node.Points)) problems.Add(where + "points pool '" + node.Points + "' doesn't exist.");
                 if (!o.Actions.Any(a => a.Id == "gather")) problems.Add(where + "needs a 'gather' action to be worked.");
+                if (node.Tool != null && !toolKinds.Contains(node.Tool)) problems.Add(where + "no item is a '" + node.Tool + "' tool.");
+                if (node.ToolTier < 0) problems.Add(where + "toolTier can't be negative.");
+                if (node.DepleteChance < 0 || node.DepleteChance > 1) problems.Add(where + "depleteChance must be 0-1.");
                 if (node.Surge != null && (node.Surge.EveryTicks < 1 || node.Surge.Ticks < 1)) problems.Add(where + "surge everyTicks and ticks must be at least 1.");
             }
 
