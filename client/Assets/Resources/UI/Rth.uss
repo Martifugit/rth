@@ -1309,3 +1309,80 @@
 .rth-root .unity-scroller--horizontal {
     display: none;
 }
+
+/* ---------------------------------------------------------------- XP drops (XpDropsPanel) */
+/* No surface: only the numbers, an icon and a soft shadow so they read over the world.
+   Position, fade and scale are set per frame in code; nothing here catches the pointer. */
+
+.xpdrops {
+    flex-grow: 1;
+    border-width: 1px;
+    border-radius: 4px;
+    border-color: rgba(201, 162, 94, 0);
+}
+
+/* Only while the move handle is under the pointer: a faint outline shows how far the piece reaches. */
+.window--bare:hover .xpdrops {
+    border-color: rgba(201, 162, 94, 0.3);
+}
+
+.xpdrop {
+    position: absolute;
+    right: 4px;
+    bottom: 0;
+    flex-direction: row;
+    align-items: center;
+    height: 22px;
+    transform-origin: right;
+}
+
+.xpdrop__icon-box {
+    width: 18px;
+    height: 18px;
+    margin-right: 4px;
+}
+
+.xpdrop__icon {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 18px;
+    height: 18px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.xpdrop__icon--shadow {
+    left: 1px;
+    top: 1px;
+}
+
+.xpdrop__amount {
+    -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
+    font-size: 17px;
+    color: rgb(240, 213, 140);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
+    padding: 0;
+    margin: 0;
+}
+
+.xpdrop__level {
+    -unity-font-definition: resource("UI/Fonts/Cinzel");
+    -unity-font-style: bold;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: rgb(224, 195, 135);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
+    margin: 0 6px 0 0;
+    padding: 0;
+}
+
+/* A level gained: a touch larger and brighter, with a warm glow. */
+.xpdrop--level {
+    height: 26px;
+}
+
+.xpdrop--level .xpdrop__amount {
+    font-size: 19px;
+    color: rgb(255, 232, 160);
+    text-shadow: 0 0 6px rgba(240, 190, 90, 0.75);
+}
