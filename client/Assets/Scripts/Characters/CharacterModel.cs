@@ -181,6 +181,29 @@ namespace Rth.Client.Characters
             return holder;
         }
 
+        /// <summary>
+        /// Colours one attachment's materials by name (its own palette colours and recolours),
+        /// leaving the rest of the character alone. <paramref name="colourOf"/> gets each
+        /// material's name (lower case) and returns null to leave it be.
+        /// </summary>
+        public void ColorAttached(GameObject attached, System.Func<string, Color?> colourOf)
+        {
+            if (attached == null) return;
+            foreach (Renderer r in attached.GetComponentsInChildren<Renderer>(true))
+            {
+                if (!_slots.TryGetValue(r, out string[] channels)) continue;
+                for (int i = 0; i < channels.Length; i++)
+                {
+                    Color? colour = colourOf(channels[i]);
+                    if (colour == null) continue;
+                    var block = new MaterialPropertyBlock();
+                    r.GetPropertyBlock(block, i);
+                    block.SetColor(BaseColor, colour.Value);
+                    r.SetPropertyBlock(block, i);
+                }
+            }
+        }
+
         /// <summary>Takes off what <see cref="Attach"/> put on.</summary>
         public void Detach(GameObject attached)
         {

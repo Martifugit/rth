@@ -78,6 +78,7 @@
 
   {
     "id": "apprentice_athame",
+    "model": "Athame",
     "name": "Apprentice's athame",
     "icon": "dagger",
     "examine": "A ritual knife, blunt on purpose. The point is where you put it.",
@@ -88,6 +89,8 @@
   },
   {
     "id": "watchmans_sword",
+    "model": "Sword",
+    "recolor": { "Copper": "Steel" },
     "name": "Watchman's sword",
     "icon": "sword",
     "examine": "Short, plain and Synod-issue. The wardens of Palmerway carry one each and sharpen them on Sundays.",
@@ -98,6 +101,8 @@
   },
   {
     "id": "penitents_mace",
+    "model": "Mace",
+    "recolor": { "Copper": "Iron" },
     "name": "Penitent's mace",
     "icon": "mace",
     "examine": "Iron flanges on an ash haft. Pilgrims to Cruor carry them for the road, and for themselves.",
@@ -368,6 +373,7 @@
   },
   {
     "id": "copper_pickaxe",
+    "model": "Pickaxe",
     "name": "Copper pickaxe",
     "icon": "mining",
     "examine": "Soft metal on an alder haft. It will see you through the first seams, and bend on the rest.",
@@ -379,6 +385,8 @@
   },
   {
     "id": "ironshod_pickaxe",
+    "model": "Pickaxe",
+    "recolor": { "Copper": "Iron" },
     "name": "Ironshod pickaxe",
     "icon": "mining",
     "examine": "An iron point on a copper-banded head. It bites where copper only scratched.",
@@ -390,6 +398,7 @@
   },
   {
     "id": "copper_hatchet",
+    "model": "Hatchet",
     "name": "Copper hatchet",
     "icon": "woodcutting",
     "examine": "A soft blade that wants sharpening every other tree. Good enough for alder.",
@@ -401,6 +410,8 @@
   },
   {
     "id": "ironshod_hatchet",
+    "model": "Hatchet",
+    "recolor": { "Copper": "Iron" },
     "name": "Ironshod hatchet",
     "icon": "woodcutting",
     "examine": "An iron edge welded onto an old copper head. It holds its bite through ash.",

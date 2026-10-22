@@ -255,6 +255,20 @@ def paint(bm, point, mat, facing=None, size=1.0):
     return f
 
 
+def hull(bm, points, mat=0):
+    """The solid wrapped around a set of points: wedges, blades, axe heads, guards. Give the
+    corners; the faces come for free."""
+    verts = [bm.verts.new(p) for p in points]
+    out = bmesh.ops.convex_hull(bm, input=verts)
+    for v in out.get("geom_interior", []) + out.get("geom_unused", []):
+        if isinstance(v, bmesh.types.BMVert) and v.is_valid:
+            bm.verts.remove(v)
+    faces = [g for g in out["geom"] if isinstance(g, bmesh.types.BMFace)]
+    for f in faces:
+        f.material_index = mat
+    return faces
+
+
 def decal(bm, outline, toward, mat=0, lift=0.0015):
     """A flat mark laid onto the surface already in `bm` (eyes on a face, a sigil on a shield):
     each outline point is cast along -toward onto the surface and lifted a hair off it, so the

@@ -68,7 +68,7 @@ namespace Rth.Client.Characters
             if (art == null) return;
             _held = _model.Attach(art, socket: "grip.R");
             Destroy(art);
-            HeldItemArt.Tint(_held, item);
+            HeldItemArt.Tint(_held, item, _model);
         }
 
         public override void PlayHit()

@@ -22,6 +22,12 @@ namespace Rth.Shared.Items
         public string Color = "#a0a0a0";
         /// <summary>Icon id (the client's icon library); empty means a guess from what the item is.</summary>
         public string Icon = "";
+        /// <summary>Its model under the client's Resources/Items (held or worn art, made in
+        /// tools/art/blender/items); empty draws a stand-in.</summary>
+        public string Model = "";
+        /// <summary>Colours swapped on the model: a material's palette name to another palette name
+        /// or #RRGGBB ("Copper": "Iron"), so one model serves every metal.</summary>
+        public Dictionary<string, string> Recolor = new Dictionary<string, string>();
         /// <summary>For a bank note: the item it stands for. Notes are made for every unstackable item.</summary>
         public string? NoteOf;
         /// <summary>The bank note for this item, if it has one.</summary>

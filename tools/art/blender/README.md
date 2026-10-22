@@ -10,6 +10,11 @@ and reviewed in a diff. The rules the art must follow are in [docs/assets.md](..
   `report` (triangles and colours, to check against `client/Assets/Art/art-budgets.json`).
 - `props/well.py`: the first test prop, a village well (172 triangles, 4 colours).
 - `creatures/fen_rat.py`: the fen rat (136 triangles, 3 colours), in the game.
+- `items/held.py`: held weapons and tools. The smithed roster (all tier-1 copper, one metal
+  material): knife, sword (a gladius), falcata, longsword (a claymore with a church hilt),
+  warhammer, hatchet, pickaxe. Plus the athame and the penitent's mace. Origin at the grip,
+  handle along -Y, blades in the vertical plane. A variant in another metal is `"recolor"` on
+  the item in items.json, not a new model. `strip` builds curved and wavy blades.
 
 Run a prop from the MCP:
 
@@ -66,6 +71,16 @@ Learned by making the well with the owner. Add to this list as more props are ma
   follows the surface. Inner ends a little lower than the outer ones.
 - **Do** shade heads smooth. The reference's characters are lit softly; the facets come from the
   low triangle count.
+
+**Weapons (learned on the smithed set)**
+- **Do** start from real weapons of the age of blades: their shapes were tested in war and read
+  instantly. Leave out what is iconic to another game (the scimitar).
+- **Do** give every weapon in a set its own silhouette. A sword and a longsword that differ only
+  in length read as the same weapon; a gladius and a claymore don't.
+- **Do** show the owner a line-up of candidates beside the player and let them pick. Taste
+  decides here: of eleven shapes, four were kept and one was asked for a second pass.
+- **Do** tie a high-end piece to the world through its ornament, not its outline (the
+  longsword's wheel-cross ring and quatrefoils for the church).
 
 **Checking**
 - **Do** render two views every round: the game view (pitch about 40°) and a low side view
