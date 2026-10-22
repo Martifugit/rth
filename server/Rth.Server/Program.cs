@@ -7,8 +7,9 @@ using Rth.Server.Game;
 
 // Standalone R'th server. Usage:
 //   dotnet run --project server/Rth.Server -- [--port N] [--maps dir] [--spawn region] [--saves dir] [--content dir]
-//                                             [--tick-ms N] [--no-hot-reload]
-// Paths default to server/data/maps (every region in it) and server/saves (found from the working directory).
+//                                             [--layout dir] [--tick-ms N] [--no-hot-reload]
+// Paths default to server/data/maps (every region in it), server/saves and world/layout (the world
+// map), found from the working directory.
 
 var config = new ServerConfig
 {
@@ -19,6 +20,7 @@ string serverDir = FindServerDirectory();
 config.MapDirectory = Path.Combine(serverDir, "data", "maps");
 config.SaveDirectory = Path.Combine(serverDir, "saves");
 config.ContentDirectory = Path.Combine(serverDir, "data", "content");
+config.LayoutDirectory = Path.Combine(serverDir, "..", "world", "layout");
 
 for (int i = 0; i < args.Length; i++)
 {
@@ -30,6 +32,7 @@ for (int i = 0; i < args.Length; i++)
         case "--spawn": config.SpawnRegion = Next(); break;
         case "--saves": config.SaveDirectory = Next(); break;
         case "--content": config.ContentDirectory = Next(); break;
+        case "--layout": config.LayoutDirectory = Next(); break;
         case "--no-hot-reload": config.HotReloadContent = false; break;
         case "--tick-ms": config.TickMillis = int.Parse(Next()); break;
         default:

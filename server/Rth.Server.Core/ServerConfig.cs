@@ -35,6 +35,12 @@ namespace Rth.Server
 
         public string ContentDirectory = "data/content";
 
+        /// <summary>
+        /// The continent layout (world/layout/, docs/layout.md), sent to players as the world map.
+        /// Empty or missing: no world map.
+        /// </summary>
+        public string LayoutDirectory = "";
+
         /// <summary>Reload content files when they change (development).</summary>
         public bool HotReloadContent = true;
 

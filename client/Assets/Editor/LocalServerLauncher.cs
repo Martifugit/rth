@@ -72,6 +72,7 @@ namespace Rth.Client.Editor
                 MapDirectory = Path.Combine(serverDir, "data", "maps"),
                 SaveDirectory = Path.Combine(serverDir, "saves"),
                 ContentDirectory = Path.Combine(serverDir, "data", "content"),
+                LayoutDirectory = Path.Combine(serverDir, "..", "world", "layout"),
                 DevCommands = true,
                 Log = line => Debug.Log("[Server] " + line),
             };
