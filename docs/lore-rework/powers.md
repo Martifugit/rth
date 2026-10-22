@@ -32,7 +32,25 @@ first build; frontiers add land later.
 - **Shares are a guide, not a target**: the continent can grow, so the balance can shift.
 - **House Gall dominates** the occult houses.
 
+## Relations (proposed)
+
+| Between | Relation |
+| --- | --- |
+| Empire and Gall | **Open war** along a long front. Neither can win; each claims the other's border towns, which change hands. |
+| Empire and the lesser houses | Hunts them and burns their cells. Some imperial lords quietly buy what they make. |
+| Empire and the surface people | Needs their passes and roads, and pays their tolls. They won't swear oaths, so the empire can't absorb them peacefully. Its salient climbs into their foothills. |
+| Empire and the dwarves | Trade: grain for metal. The dwarves won't swear either, and the empire wants their mines. |
+| Empire and Sere | The salient up Sere's river is a hand on its water. Sere pays the empire to keep it from closing. |
+| Empire and the Faceless | Hunts them as the Traitor's people. They hollow it out from inside. |
+| Gall and the lesser houses | Wants them under its rule. Some submit; some hide from Gall as hard as from the empire. |
+| Gall and the surface people | Buys what they sell. They sell to both sides, and profit from the war. |
+| Gall and the dwarves | The dwarves keep Gall's fire away from the deep, and won't say why. |
+| Gall and Sere | Offers alliance against the empire. Sere hedges. |
+| The surface people and the dwarves | The treaty: the surface to one, the caves to the other, no questions either way. Both break the last clause. |
+| The surface people and Sere | Sere's caravans cross the range by their passes. |
+| The dwarves and Sere | Sere buys dwarven tools to dig for water. |
+| The Faceless and the rest | Hidden among all of them. Nobody knows how many. |
+
 ## Open
 
-1. **Relations**: one line per pair.
-2. Where Gall's kingdom and the other powers sit (the map).
+1. Where Gall's kingdom and the other powers sit (the map).
