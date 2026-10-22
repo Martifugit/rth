@@ -16,11 +16,16 @@ are in [`decisions.md`](decisions.md).
 
    A target is a range for the world (or a realm) as a whole, for example "40–65% of settlements
    have a bank". It is never a quota for a place ("this village needs a bank"). An absence counts
-   towards the target; it isn't a failure.
-2. **Character comes before services.** Every place declares its character (section 3), and what
-   it has follows from that. A frontier camp without a bank, a city that won't let you teleport
-   in, a wild valley with nothing but a path: those are design, not exceptions, and need no
-   justification beyond their character.
+   towards the target; it isn't a failure, and needs no justification.
+2. **An area is what is in it.** It is described by its actual content, not by labels:
+   - its places;
+   - what you can do there and when;
+   - who lives there;
+   - what it looks like;
+   - how it connects.
+
+   A city with many districts, or a town that changes through a quest line, is described the
+   same way: its parts each have their content, and content can depend on a state (section 3).
 3. **Only a few rules are firm, and they are about the game working** (section 4), not about how
    the world is laid out.
 4. **Variety is checked as well as shortfall.** A world where every village has the same four
@@ -50,35 +55,37 @@ are in [`decisions.md`](decisions.md).
 | **Reason to visit** | One of **Q** (quest), **S** (skilling), **N** (an NPC or service: shop, bank, trainer, faction), **A** (an activity: a boss or a repeatable minigame), **T** (travel: a transport hub). Each is tagged with its stage. |
 | **Heartland and periphery** | The dense centre (Venaria) and the specialised realms around it. |
 
-## 3. Characters
+## 3. Content and states
 
-Every place gets one main character, and an area gets the mix of its places. A character
-describes what a place **tends** to have. It is a starting point for its design, not a checklist.
-
-| Character | The player should feel | Tends to have | Tends to lack |
-| --- | --- | --- | --- |
-| **Hub** | At home, provided for | bank, shops, fast travel, many quest starts | danger |
-| **Market or port** | Busy, foreign goods, comings and goings | shops, transport, trade NPCs | quiet |
-| **Village** | Ordinary life | a shop or two, cooking, local quests | a bank (often), fast travel |
-| **Frontier** | At the edge, self-reliant | a camp, a trader, a guard post | bank, fast travel, comfort |
-| **Wild** | Alone, exposed | resources, creatures, a path | services of any kind |
-| **Occupied or hostile** | Not in control, watched | guards, closed doors, forbidden areas | your bank, your teleports, welcome |
-| **Sacred** | Small, observed | a monument or shrine, pilgrims, rites | commerce |
-| **Industrial** | Work, noise, smoke | workstations, raw materials, workers | comfort |
-| **Ruin** | Something happened here | lore, dungeons, scavenging | people |
-| **Hidden** | You found something | a secret, a shortcut, a reward | signposts |
-
-**New characters can be added** when a place needs one. Keep the list short.
+- **Places within places.** An area holds places, and a large place holds parts of its own: a
+  city's districts, a dungeon's levels, a mountain's surface and its caves. Each part is described
+  by its content, like an area.
+- **Content can depend on a state.** A place may change through play. A district occupied until a
+  quest frees it, a mine that reopens, a village burned in one storyline: each item of content
+  records when it applies (always, before or after a quest placeholder, during an event).
+- **No labels standing in for content.** A one-word summary ("frontier", "hub") is not a
+  description. If something about an area matters, it shows up as content: what is there, what
+  isn't, and when.
 
 ## 4. Invariants (firm: break only with an owner's decision)
 
 | Id | Invariant |
 | --- | --- |
-| **I-REACH** | Every place is reachable on foot from Tolling, except places the plan marks as closed (locked by quest, or later). |
-| **I-RETURN** | From anywhere a player can stand, there is a way back to safety and a bank: a route, a home teleport, or the game's death rules. |
-| **I-TIERS** | Every tier of every gathering skill exists somewhere, and each skill's best tiers are where `skills.md` puts them. |
-| **I-SUPPLY** | For every stage, the supplies a fight needs (food, potions, ammunition, reagents) can be obtained and banked somewhere reachable at that stage. This is world-wide, not per area. |
+| **I-REACH** | Every place is reachable on foot from Tolling, or through the requirements that open it (a quest, a skill level, a transport). |
+| **I-NO-TRAPS** | No accidental traps. Outside content the plan marks as **committed**, there is always a way back to safety and a bank. Committed content is a deliberate exception: a boss instance you can't leave, a point of no return in a quest, a dangerous zone. It must be marked, and entering it is a clear choice (an entrance, a warning, a quest step). |
+| **I-TIERS** | Every tier of every gathering skill exists somewhere, possibly behind requirements the plan records, and each skill's best tiers are where `skills.md` puts them. |
+| **I-NO-DEAD-ENDS** | Whatever a player faces, they can overcome it through their own play. No requirement chain is impossible, and no challenge's supplies are out of reach (below). |
 | **I-NAMES** | Every name in `world-map.md` is placed exactly once, and every new place has a `p-` name until the owner names it. |
+
+**What I-NO-DEAD-ENDS means.** Hard content is fine: a player can fail, train, gear up and come
+back better. What must never happen is a dead end:
+- **A requirement chain that can't be completed.** For example, a tier-8 resource whose unlocking
+  quest needs that same resource.
+- **A challenge whose supplies a player who has reached it can't get.** That means food, potions,
+  ammunition and reagents they can't gather, make and bank themselves. There is no big player
+  economy, so every player must be able to supply their own fights (`docs/systems.md`). For
+  example: mid-game bosses in Slough while the only mid-tier fish and herbs are behind a
+  late-game quest in Candora.
 
 ## 5. Targets (ranges for the world or a realm)
 
@@ -112,7 +119,7 @@ The numbers, tolerances and evidence are in `targets.json`. This table is the re
 | --- | --- |
 | V-SAME-SERVICES | More than 40% of the settlements of one tier have exactly the same set of services. |
 | V-ABSENCE | Fewer than 30% of settlements lack a bank, or fewer than 50% lack fast travel. The world is too comfortable. |
-| V-CHARACTER | A realm uses fewer than 3 different characters, or one character makes up more than half its places. |
+| V-STATIC | Too little of the world changes through play: no areas whose content depends on a state. The threshold gets set on the first plan. |
 | V-EVEN | Banks or fast travel are spaced too evenly: the spread of gaps is narrow. The threshold gets calibrated on the first plan. |
 | V-REALM-SHAPE | Two periphery realms have the same profile (the same reasons in the same stages). Each realm should lean towards something. |
 
@@ -125,8 +132,8 @@ The numbers, tolerances and evidence are in `targets.json`. This table is the re
    | --- | --- | --- |
    | 1 | Skeleton | land, ladder, underground, city dominance |
    | 2 | Reasons to visit | stages, heartland, activities, bosses |
-   | 3 | Resources | I-TIERS |
-   | 4 | Infrastructure | banks, fast travel, I-RETURN, I-SUPPLY |
+   | 3 | Resources | I-TIERS, I-NO-DEAD-ENDS |
+   | 4 | Infrastructure | banks, fast travel, I-NO-TRAPS, I-NO-DEAD-ENDS |
    | 5 | Activities | bosses, activities |
    | 6 | Quest hooks | stage mix, quest spread |
 
@@ -134,6 +141,7 @@ The numbers, tolerances and evidence are in `targets.json`. This table is the re
    - an invariant or firm target that fails is fixed, or gets a decision;
    - a guide outside its range is fixed or accepted, with one line in the pass's notes;
    - a variety warning is looked at.
-4. **A single place that differs from the norm needs nothing but its character.** The decision
-   log is for world-wide choices: moving a range, dropping a target, adding a character.
+4. **A single place that differs from the norm needs no justification:** its content is the
+   design. The decision log is for world-wide choices: moving a range, or dropping or adding a
+   target.
 5. **The owner reviews each pass** before the next one starts.
