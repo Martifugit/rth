@@ -33,6 +33,8 @@ Every god gets these, briefly. Anything undecided is a placeholder or **sealed**
 
 ### p-sworn: the god of Cruor's empire
 
+The name is a placeholder until more gods exist, so the names can sound like one family.
+
 The god the Cruorian empire worships. Not a god "of war", but war follows it.
 
 | Field | |
@@ -43,7 +45,7 @@ The god the Cruorian empire worships. Not a god "of war", but war follows it.
 | **Bargain** | Swear in blood and its strength is yours. Break the oath and the blood is called in. |
 | **Sign** | A taste of iron (blood) in your mouth. |
 | **Faces** | To the empire, a keeper of faith. To the peoples it conquers, a debt collector. *(More faces to come as other peoples are designed.)* |
-| **Presence** | *Proposed:* never seen. It is felt, in the taste of iron and in the strength of sworn soldiers. Its priests speak for it. |
+| **Presence** | Unseen for now: felt in the taste of iron and in the strength of sworn soldiers, and its priests speak for it. **It has a place in the world and will make an entrance** at some point (not v1). Where and how: open. |
 | **Fear** | A world where nobody swears any more; and, secretly, bleeding out. |
-| **Origin** | Sealed. |
+| **Origin** | Sealed. Constraint: it was wounded in something that happened at the dawn of the world, and **whatever wounded it is still out there**. |
 | **In the game** | Melee's pledges are oaths sworn in blood; Cruor's monuments are where the blood is collected. Religion's verses draw on it. |
