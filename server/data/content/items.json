@@ -228,7 +228,7 @@
     "id": "skinning_knife",
     "name": "Skinning knife",
     "icon": "knife",
-    "examine": "Short, curved and sharper than it looks. For basin wildlife.",
+    "examine": "Short, curved and sharper than it looks. For fen game.",
     "value": 15,
     "color": "#b0a99a",
     "tags": [ "tool", "butchering" ]

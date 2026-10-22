@@ -69,11 +69,11 @@
         "next": null
       },
       "about": {
-        "text": "Basin wildlife comes in whole and goes out in pieces. The rack's by the path. Keep your knife sharp, work quick, and the better you get the more you'll pull out of each carcass.",
+        "text": "Fen game comes in whole and goes out in pieces. The rack's by the path. Keep your knife sharp, work quick, and the better you get the more you'll pull out of each carcass.",
         "next": "greet"
       },
       "scalth": {
-        "text": "Not on my racks. Mites from Scalth eat through iron, never mind hide. There's a lye vat over the river in Sour Hollow, where the mites nest. Somebody dumped a cask of the old war-stuff there after the Scalding and it never stopped leaking. You'll want a glass hook, and you'll want to know what you're doing first.",
+        "text": "Not on my racks. Mites from Scalth eat through iron, never mind hide. There's a lye vat over the river in Sour Hollow, where the mites nest. Somebody dumped a cask of the old war-stuff there long ago and it never stopped leaking. You'll want a glass hook, and you'll want to know what you're doing first.",
         "next": "greet"
       }
     }
@@ -346,7 +346,7 @@
         ]
       },
       "synod": {
-        "text": "Keeps it. That's the covenant, the way Cruor reads it: we are keepers. Tithe would tell you everything is a debt that comes due one day. I prefer Cruor's arithmetic. Tithe's always ends with somebody paying.",
+        "text": "Keeps it. Every oath in the empire is sworn in blood, and the blood is kept against the oath. Out in the conquered lands they call us debt collectors. In here we call it keeping faith.",
         "next": "greet"
       },
       "chain": {
@@ -370,7 +370,7 @@
         "next": "intro2"
       },
       "intro2": {
-        "text": "Cruor raises these wherever the faith walks. Put your arm in a fount and give. A little, often. The monument keeps it, Cruor keeps the bay, and the bay keeps us all.",
+        "text": "Cruor raises these wherever the faith walks. Put your arm in a fount and give. A little, often. The monument keeps it, the blood seals your oath, and the oath keeps us all.",
         "next": "intro3"
       },
       "intro3": {

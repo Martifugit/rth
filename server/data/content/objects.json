@@ -2,7 +2,7 @@
   {
     "id": "skinning_rack",
     "name": "Skinning rack",
-    "examine": "Pegs, hooks and a lot of old stains. For basin wildlife.",
+    "examine": "Pegs, hooks and a lot of old stains. For fen game.",
     "actions": [ { "id": "process", "label": "Butcher" } ]
   },
   {
@@ -64,7 +64,7 @@
       {
         "id": "read",
         "label": "Read",
-        "message": "THE BLOOD OF THE MANY IS THE KEEPING OF THE BAY. GIVE, AND BE KEPT. Below, in smaller letters: Raised in the forty-first year of the Keeping, by the faithful of Palmerway."
+        "message": "SWEAR IN BLOOD, AND THE BLOOD KEEPS THE OATH. GIVE, AND BE KEPT. Below, in smaller letters: Raised by the faithful of Palmerway."
       }
     ]
   },
@@ -143,7 +143,7 @@
     "id": "cruor_first_monument",
     "name": "The First Monument",
     "examine": "The needle every other Cruorian monument is copied from. The founts around it never quite empty.",
-    "actions": [ { "id": "read", "label": "Read", "message": "HERE THE MANY GAVE, AND THE BAY WAS KEPT. EVERY MONUMENT IN THE WORLD IS A DRAWING OF THIS ONE. Below, cut deep and recut many times: KEEP." } ]
+    "actions": [ { "id": "read", "label": "Read", "message": "HERE THE FIRST BLOOD WAS GIVEN, AND KEPT. EVERY MONUMENT IN THE WORLD IS A DRAWING OF THIS ONE. Below, cut deep and recut many times: KEEP." } ]
   },
   {
     "id": "vigil_altar",
