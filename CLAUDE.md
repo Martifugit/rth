@@ -21,7 +21,10 @@ data over code for one case.
 See `README.md` for how to build, run and test.
 
 Design docs:
-- `docs/lore.md`: the world, history, factions and characters. Place names are listed in `docs/world-map.md`.
+- `docs/lore.md`: **the canon** for the world, its powers, death and characters (rewritten
+  2026-10-22 from `docs/lore-rework/`). Place names are listed in `docs/world-map.md`. The game
+  still carries some old lore (Tithe's hymns, the Assayer, Scalth); `docs/plan.md` says what
+  replaces it and when.
 - `docs/systems.md`: combat resources and the rules of a fight.
 - `docs/skills.md`: the v1 skill roster, the rules every skill follows, and each skill in full.
 - `docs/world-scale.md`: sizes, terrain, town and camera rules from the measured 2004 game
@@ -195,7 +198,8 @@ phlegm and breath came with it. The prototype numbers are in `docs/systems.md`.
 - [x] Breath deflection against one style.
 - [x] NPCs placed in the scene (`MapNpcSpawn`), with chase, melee/ranged rules, line of sight,
       aggression, retaliation, leashing, death and respawn.
-- [x] Death and the Assayer; respawn with balanced humours.
+- [x] Death and the Assayer; respawn with balanced humours. (A stand-in: death v1, the ferryman
+      of `docs/lore.md` III, replaces it; workstream D in `docs/plan.md`.)
 - [x] Content (abilities, NPCs, rules, Assayer lines) as JSON in `server/data/content/`, hot-reloaded.
 - [x] Client: click to attack, 1-8 action bar, resource bars and bile axis, hitsplats, projectiles.
 - [x] Simulation tests (`CombatTests`), including 1000 ticks of fighting.
@@ -259,7 +263,9 @@ stockpile carcasses.
 - [x] Client Quests tab (red / yellow / green, hover for the journal entry).
 - [x] First quest, **Dreamless**: Edda Marsh sleepwalks by the pond; Corvin brews her a
       dreamless draught from rat galls and a saltfig; she says something she shouldn't know.
-      Touches the Assayer and the Dreamweaver threads from the lore, and Corvin's curiosity.
+      Touches Corvin's curiosity and, in the canon, the Dreaming and the nightmare's thread
+      (`docs/lore.md` II, V); it was planned against the old Assayer and Dreamweaver threads,
+      which its text never names.
 
 Not yet: item-on-object/item-on-NPC "use", noted items, the other butchering tiers, a larger map.
 
@@ -320,7 +326,8 @@ the world map, item art, world labels and the login box (still IMGUI).
 The design pass on every v1 skill (`docs/skills.md`), and the code changes it called for.
 
 - [x] Breath, focuses and breath-based deflection removed. **Religion's hymns** (hymns.json,
-      Tithe's prayers for every style) drain **devotion**: 10 a Religion level, no natural
+      prayers for every style, still "Tithe's" in flavour text until the text pass; in the canon
+      they are sung by p-sworn's church) drain **devotion**: 10 a Religion level, no natural
       regeneration; altars (the "pray" object action, on the waystone for now), devotion
       draughts (`restoreDevotion`, `restoreDevotionPercent`) and respawning restore it.
 - [x] A hymn is only stats, so deflection, per-style boosts and life steal became stats that
@@ -373,7 +380,8 @@ Not yet: weapon models in the hand, one- and two-handed kinds, shields and dual 
 raising monuments and reliquaries, final ability names.
 
 **World building (in progress):** the capitals blocked out as regions, one builder each, with an
-asset list for the art pass. All four capitals are done: Cruor, Tithe, Cistern and Meridian (`docs/regions/`). Meridian is being
+asset list for the art pass. All four capitals are done: Cruor, Tithe, Cistern and Meridian (`docs/regions/`), on the old
+map (Tithe is retired in the canon; the areas are rebuilt to the new lore later, see `docs/plan.md`). Meridian is being
 rebuilt to `docs/regions/meridian-redesign.md`: phase 1 (terraces and routes), phase 2 (every building
 enterable, upper floors included) and phase 3 (objects: readables, view points, stations, banks, gates,
 gathering spots, skill shortcuts) are built; people and data (phase 4) are next.

@@ -1,7 +1,8 @@
 # R'th
 
 A private multiplayer RPG for a group of friends: RuneScape 3-style play, Old School RuneScape-style
-looks, in an original world. See `CLAUDE.md` for the architecture and `docs/` for the design.
+looks, in an original world. See `CLAUDE.md` for the architecture, `docs/` for the design and
+`docs/lore.md` for the world (the canon; the game still carries some older lore until it catches up).
 
 ## What you need
 
@@ -113,7 +114,7 @@ barred (for now, the edge of the built world).
 ## Tuning content
 
 Abilities, creatures, combat rules, items, drop tables, the starter kit and the Assayer's lines
-are JSON in `server/data/content/`.
+(today's death screen, until the ferryman replaces it) are JSON in `server/data/content/`.
 Edit and save them while the server runs: the server reloads them within a second and logs
 `Content reloaded.` If a file has a mistake, it logs what's wrong and keeps the last good version.
 - A second player can join from a standalone build, a Multiplayer Play Mode virtual player, or

@@ -5,7 +5,7 @@ Oct 21, 2026 · @Martin
 ## Overview
 
 The Unquiet Saint is a repeatable, instanced skilling boss for the Religion skill. A martyr of
-Cruor lies in a crypt beneath one of the see's monuments, and he will not stay at rest. You give
+p-sworn's church (Cruor's faith) lies in a crypt beneath one of its monuments, and he will not stay at rest. You give
 blood at the crypt's founts, carry the phials to his altar to sing his **Requiem**, and survive his
 shouts until two cleanses lay him back down. A clean run takes 3 to 3.5 minutes. Fail too many
 mechanics and the Saint wakes, which ends the run with no payout, the same as dying in a boss fight.
@@ -39,12 +39,13 @@ and the [Gate of Elidinis](https://runescape.wiki/w/Gate_of_Elidinis).
 
 ## Who he is
 
-A saint of Cruor, martyred for the Keeping and buried under a monument so the faithful's blood
-would pass over him on its way to the bay. Something keeps waking him (the open question of the
-lore: whether it is the dreams, the moons or the covenant itself). His shouts are Cruor's own
-teaching turned sharp: the faithful *owe* their blood to the Keeping, the believer must prove it,
-silence is reverence, and light reveals. Cruor keeps the crypt sealed and sends the faithful down
-to sing him back to sleep. Placeholder name; to be named with the lore.
+A martyr of p-sworn's church (`docs/lore.md` II and VIII), who died keeping his blood-oath and
+was buried under a monument so the faithful's blood would pass over him on its way to the god.
+Something keeps waking him (open; it should tie into the canon's threads, such as the nightmare,
+the stirring revision, or what the monuments' blood is really for). His shouts are the church's
+own teaching turned sharp: the faithful *owe* their blood, every oath is collateral, the believer
+must prove it, silence is reverence, and light reveals. The church keeps the crypt sealed and
+sends the faithful down to sing him back to sleep. Placeholder name; to be named with the lore.
 
 ## Arena
 
@@ -114,7 +115,7 @@ room: the Saint's eyes open, the lamps gutter and the choir swells as it fills.
 ## Owed blood
 
 Owed blood is the one mechanic on a fixed timer: about every 60 seconds the Saint marks you as
-owing the Keeping, and you must pour phials into the offertory within a window.
+owing blood on your oath, and you must pour phials into the offertory within a window.
 
 - **See:** a marker appears over your character and a counter shows the amount owed.
 - **Do:** pour 12 phials into the offertory within 15 seconds. Waiting until the last second is risky.

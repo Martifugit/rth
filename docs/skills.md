@@ -2,7 +2,8 @@
 
 The reference for every skill R'th launches with: what it is for, how it is trained, what it
 takes in and gives out, and what each level band unlocks. Combat resources and the rules of a
-fight are in `docs/systems.md`; this file says which skill feeds which of them.
+fight are in `docs/systems.md`; this file says which skill feeds which of them. The lore behind
+the skills is in `docs/lore.md` (canon); `p-` names there are placeholders.
 
 **Status.** The roster and the combat split are **decided** (2026-10-21): melee, ranged,
 occultism and defence; Religion's hymns and verses; Breath is gone; Medicine is the herblore.
@@ -17,18 +18,18 @@ provisional.
 | Group | Skill | In one line | Feeds |
 |---|---|---|---|
 | Combat | **Melee** | Attack and strength in one: swords, maces, spears, shields. | Melee damage |
-| Combat | **Ranged** | Rationalist crossbows and slings; calibration. | Ranged damage |
+| Combat | **Ranged** | Crossbows and slings of the spine's surface people; calibration. | Ranged damage |
 | Combat | **Occultism** | Bile abilities, house spellbooks, and the rites that make reagents. | Occult damage, reagents |
 | Combat | **Defence** | Armour, max blood, shared defensive abilities. Trained by any style. | Survival |
-| Faith | **Religion** | Tithe's hymns (prayers, any style) and Cruor's verses (melee's power), gathered at monuments. | Hymns, verses |
+| Faith | **Religion** | p-sworn's church: hymns (prayers, any style) and verses (melee's power), gathered at monuments. | Hymns, verses |
 | Hub | **Butchering** | Carcasses into everything else: meat, hide, gall, remains. | Nearly every skill |
 | Gathering | **Mining** | Ore, stone, salt, gems. | Smithing, Occultism, Medicine |
 | Gathering | **Woodcutting** | Logs, charcoal, resin. | Artifice, Smithing, Cooking, Medicine, Religion (casings) |
 | Gathering | **Fishing** | Fish, shells, brine. | Cooking, Medicine |
 | Gathering | **Foraging** | Herbs, fibres, fungi, fruit. | Medicine, Tailoring, Cooking |
-| Gathering | **Dreaming** | Fragments pulled from memory orbs in the Veilwood. | Occultism, Medicine, lore |
+| Gathering | **Dreaming** | Fragments pulled from memory orbs in the Dreaming. | Occultism, Medicine, lore |
 | Making | **Smithing** | Metal into melee weapons, plate, tools, jewellery, bolt heads, reliquary casings. | Melee, Defence, Religion, everyone's tools |
-| Making | **Artifice** | Crossbows, bolts and sights (the Rationalist craft). | Ranged |
+| Making | **Artifice** | Crossbows, bolts and sights (the spine's surface people's craft). | Ranged |
 | Making | **Tailoring** | Hide into leather, fibre into cloth: leathers, robes, capes. | Ranged, Occultism |
 | Making | **Cooking** | Fish and meat into food. | Blood |
 | Making | **Medicine** | Herbs and extracts into potions. | Phlegm, bile, boosts, cures |
@@ -105,7 +106,9 @@ obsolete, because the old one is still the best place for something.
 - A material's name can say where it's most at home (sere cedar, glare salt) without that being
   the only place it grows.
 
-**Where each region is strongest** (names from `docs/world-map.md`):
+**Where each region is strongest.** *This table and the "where" columns in sections 5 and 7 are still
+drawn on the old map: Calcinia, the Cradle and its bay are retired, and the rest move to the new
+map in the area plan's resources pass (A4 in `docs/plan.md`). The tiers themselves stand.*
 
 | Region | Biome | Great for (its high tiers) | Decent for |
 |---|---|---|---|
@@ -115,7 +118,7 @@ obsolete, because the old one is still the best place for something.
 | **Calcinia** | salt coast and flats | salt, Mining (glare-silver), Fishing (mullet) | tamarisk |
 | **Candora** (the range's surface) | mountains, high forests | **Mining high** (frostiron), Woodcutting high (pale pine) | ice char |
 | **The Veilwood** | the mist forest | **Woodcutting top**, Dreaming | moonbark |
-| **The Cradle's shores** | the bay | **Fishing top** (hushfin, during the Cradle's event) | |
+| *(retired: the Cradle's shores)* | a shore, to be placed | **Fishing top** (hushfin, during its event; see Fishing) | |
 | **Undermost** | the depths | **Mining top** (deepglass) | |
 | **Craters** (anywhere, as events) | moonfall | verdigris, lightfin (both temporary) | |
 
@@ -227,7 +230,7 @@ hand.
 
 ### 2.8 Shortcuts without Agility
 Shortcuts still exist, but each is gated by **the skill that fits it**: Mining clears rubble,
-Woodcutting cuts through a thicket, Defence forces a jammed gate, Religion opens a Synod-sealed
+Woodcutting cuts through a thicket, Defence forces a jammed gate, Religion opens a church-sealed
 door, Fishing wades a ford, Dreaming walks through a place that remembers being open. A shortcut
 is an object action with a requirement and a destination, so it needs no new system.
 
@@ -291,7 +294,8 @@ add occult power. Not yet: one- and two-handed weapons as kinds, shields and dua
 weapon models in the hand.
 
 ### 3.4 Ranged
-The Rationalists' style: patient, from a distance, precise.
+The style of the spine's surface people (still "the Rationalists" in the game until they are
+renamed): patient, from a distance, precise.
 
 - **Weapons** of every kind, one-handed or two-handed, all from Artifice. Slings throw stones
   you mine, so they cost nothing to run.
@@ -363,15 +367,20 @@ your ammunition).
 
 ## 4. Religion
 
-**Decided (2026-10-21).** Religion is the faith of Blood, in two halves that belong to the two
-sees. It replaces the breath skill: focuses become its hymns.
+**Decided (2026-10-21).** Religion is the faith of Cruor's empire: p-sworn's church (still the
+Sanguine Synod in the game until it is renamed; `docs/lore.md` II and IV). One church, two
+practices: its choirs sing **hymns** and its blood-knights read **verses**. It replaces the
+breath skill: focuses become its hymns.
 
-| Half | See | What it is | Who it serves | Paid with |
+*In the game today, hymns are still called "Tithe's prayers" in a few flavour strings; Tithe is
+no longer a power, and the text pass (B1 in `docs/plan.md`) changes them.*
+
+| Half | Practised by | What it is | Who it serves | Paid with |
 |---|---|---|---|---|
-| **Hymns** | Tithe | Prayers, our equivalent of RuneScape's | Every style | **Devotion** |
-| **Verses** | Cruor | Melee's power engine, as bile is Occultism's and special ammo is Ranged's | Melee | Blood, **scriptures**, long cooldowns |
+| **Hymns** | the church's choirs | Prayers, our equivalent of RuneScape's | Every style | **Devotion** |
+| **Verses** | the blood-knights | Melee's power engine, as bile is Occultism's and special ammo is Ranged's | Melee | Blood, **scriptures**, long cooldowns |
 
-### 4.1 Hymns (Tithe)
+### 4.1 Hymns
 Plain prayers, deliberately: nothing fancier than RuneScape's.
 
 - **Singing a hymn** turns it on; it does one specific thing while it lasts and drains
@@ -380,15 +389,15 @@ Plain prayers, deliberately: nothing fancier than RuneScape's.
 - **Devotion** is the bar that replaces breath on the main action bar.
 - **What hymns cover:** protection (deflecting melee, ranged or occult attacks) and boosts
   (damage, accuracy, defence). They work for every combat style, and unlock with Religion level.
-- **Their themes are Tithe's faith, not its treasury:** being found worthy (steadfastness,
-  zeal, judgement, revelation, penance), with a little of the salt coast's harsh light. Names are
-  short and iconic, like RuneScape's best prayers.
+- **Their themes are the faith kept, not the blood paid:** being found worthy (steadfastness,
+  zeal, judgement, revelation, penance). Names are short and iconic, like RuneScape's best
+  prayers.
 **Devotion** works like RuneScape's prayer points:
 - **Size:** `10 x Religion level` (10 at level 1, 1,000 at 100), plus gear.
 - **Drain:** each hymn drains its rate every tick it is sung; rates add up. A **devotion bonus**
-  on gear (Tithe's vestments, holy symbols) slows all drain by 1% per point.
-- **No natural regeneration.** It comes back by praying at an **altar** (any altar of Blood:
-  Tithe's chapels, wayside chapels, the Synod's churches; it refills completely), by
+  on gear (choir vestments, holy symbols) slows all drain by 1% per point.
+- **No natural regeneration.** It comes back by praying at an **altar** (any altar of the
+  church, from wayside chapels to its great churches; it refills completely), by
   **devotion draughts** from Medicine (`70 + 25%` of max per dose), by a slow **renewal
   draught** (1% of max per tick for 50 ticks), and in full on respawn.
 - With an overhead and a Turmoil-type hymn up (1.6 per tick), a level-100 player's 1,000
@@ -415,7 +424,7 @@ replaces Zeal, and Penance is the top of the melee line (it replaces Judgement).
 tiers form a line too, so the most anyone sings is one defence hymn, one hymn per style and one
 overhead.
 
-### 4.2 Verses (Cruor)
+### 4.2 Verses
 Verses take melee beyond the rotation its abilities settle into: they raise its skill ceiling
 and its power. They **complement** melee abilities and never compete with them.
 
@@ -552,8 +561,8 @@ is how most materials enter the world, and the carcass is where combat and skill
   carcasses.
 - **Task-givers,** one per family, paying points per family to spend at their shops on the
   family's butchering tool, gear and yield boosts: Wenna Thole (wildlife) and Corvin Sallow (Scalth-touched) are built;
-  Brannoch takes the deep. The other three (a Synod quartermaster, a Concordian at a crater
-  camp, someone in Slough) get designed with their regions.
+  Brannoch takes the deep. The other three (a church quartermaster, one of the spine's surface
+  people at a crater camp, someone in the lesser houses' fens) get designed with their regions.
 - **Stockpiling:** carcasses are unstackable but can be noted, and any butchering station takes
   notes, so a long session needs one bank trip.
 - **Trained by** butchering carcasses (main) and task completions.
@@ -599,7 +608,7 @@ fixed region (2.2).
 |---|---|---|---|
 | 1 | **Copper** | river cliffs, road cuttings | none: the plain one, to learn on |
 | 2 | **Iron** | hills, quarries | none: the workhorse |
-| 3 | **Hematite** | old Synod quarries, red hills | none (its rust-red streaks are why miners say "the rock bleeds"); smelted with charcoal into steel |
+| 3 | **Hematite** | old church quarries, red hills | none (its rust-red streaks are why miners say "the rock bleeds"); smelted with charcoal into steel |
 | 4 | **Bog iron** | fens, marsh pits | not in rock: **dredged from wet pits**, a node that refills over time instead of depleting |
 | 5 | **Cinnabar** | dry red country | none |
 | 6 | **Glare-silver** | salt flats, white stone | none |
@@ -669,13 +678,15 @@ instead of depleting. Quirks are kept to a few tiers, so most fishing is plain.
 | 6 | **Mullet** | Calcinia's salt lagoons | none |
 | 7 | **Ice char** | Candora's tarns, Nivil's edge | **cut your own hole**: you make the spot, and it freezes over after a while |
 | 8 | **Lightfin** | crater lakes, moonlit pools | **follows light**: a lantern in your off-hand draws the school to you |
-| 9 | **Hushfin** | the Cradle's shores | **only during the Cradle's event** (below) |
-| 10 | **Sturgeon** | the Cradle's shores | none beyond hushfin's: also only during the event, in smaller numbers |
+| 9 | **Hushfin** | one shore, during its event | **only during the hushfin event** (below) |
+| 10 | **Sturgeon** | the same shore | none beyond hushfin's: also only during the event, in smaller numbers |
 
-**The Cradle's event.** Every few hours (about every 3, to tune) the bay draws in its breath. The
-game announces it to everyone a few minutes ahead, and for about 15 minutes hushfin spots appear
-along the Cradle's shores. It is a world event, like a moonfall, and it's the only time tier-9
-fish (and fewer sturgeon) can be caught, which makes the shore a place people gather.
+**The hushfin event.** Every few hours (about every 3, to tune) the sea along one shore draws
+back. The game announces it to everyone a few minutes ahead, and for about 15 minutes hushfin
+spots appear along that shore. It is a world event, like a moonfall, and it's the only time
+tier-9 fish (and fewer sturgeon) can be caught, which makes the shore a place people gather.
+*On the old map this was the Cradle's event on the bay, both retired; the shore and the event's
+cause are placed with the new map (A4).*
 
 - **Brine** comes from any salt-water spot, for rites.
 - **Extras:** shells, eel slime, scales and lamprey teeth (Medicine).
@@ -721,8 +732,10 @@ hives (a smoker lets you take it).
 **Trained by** picking.
 
 ### Dreaming
-The skill closest to the story: it pulls fragments out of memory orbs in the Veilwood, the
-Dreamweaver's archive. It arrives with the Veilwood region; the design is ready before that.
+The skill closest to the story: it pulls fragments out of memory orbs in **the Dreaming**, the
+dreamer's realm, where places stand as people remember them (`docs/lore.md` II). The dreamer
+notices who takes what. It arrives with the first way into the Dreaming; the design is ready
+before that.
 
 - **How it plays:** an orb opens a small instanced memory scene. Threads (glowing motes) drift
   through it; clicking one starts pulling it, which takes a few ticks and can fail by level.
@@ -732,8 +745,9 @@ Dreamweaver's archive. It arrives with the Veilwood region; the design is ready 
 - **Yields:** dream fragments by tier (catalysts for tier 7+ rites, rare Medicine secondaries),
   **lucid draught** ingredients, and **vignettes**: short lore scenes, one per orb type, kept in
   the journal. A full set of an orb's vignettes is a collection log.
-- **Unlocks:** deeper orbs by level (orbs of the town, the Schism, the Scalding, the Physician's
-  edges). Higher orbs are where the nightmare boss is fought (`lore.md`), so Dreaming gives
+- **Unlocks:** deeper orbs by level (orbs of the town, of moved places still standing where they
+  used to be, of what the last revision took out). Higher orbs are where the nightmare, loose
+  from the Dreaming, is fought (`docs/lore.md` V), so Dreaming gives
   utility there: dreamwards (charms against its effects) and more pulls per orb.
 - **Trained by** pulling threads.
 
@@ -766,7 +780,7 @@ skills define them).
 - **Trained by** smelting (a little) and smithing (most).
 
 ### Artifice
-**Decided (2026-10-21).** The Rationalist craft: ranged weapons and ammunition. Its supplier role
+**Decided (2026-10-21).** The craft of the spine's surface people: ranged weapons and ammunition. Its supplier role
 is fishing gear.
 
 - **Ranged weapons** of **every kind**, none excluded (slings, crossbows, hand crossbows, bows,
@@ -835,7 +849,7 @@ Smaller decisions that can wait until the content that needs them:
 - Religion's numbers: all starting values; balance them in play (4.1–4.4).
 - Verses: which ones come from quests or boss codices; more verses later.
 - **A sink for gear** (decided that one is needed, 2026-10-21): gear doesn't wear out and is kept
-  on death, so Smithing and Tailoring have little lasting demand. Something like RuneScape's
+  on death (until death v1, where the ferryman holds it for a fee: `docs/lore.md` III), so Smithing and Tailoring have little lasting demand. Something like RuneScape's
   alchemy, or the much bigger sink of Invention. To design later.
 - An ammunition slot: ranged needs somewhere to hold ammunition, and the 10 equipment slots have
   none (a quiver slot, as in RuneScape, or the pack).

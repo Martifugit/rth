@@ -93,7 +93,7 @@ Wave 3
 | **Runs** | cloud |
 | **Depends on** | nothing |
 | **Owns** | `docs/lore.md`, `docs/world-map.md`; lore notes in `docs/skills.md`, `docs/systems.md`, `docs/interface.md`, `CLAUDE.md`, `README.md`, `docs/ideas/*Unquiet Saint*` |
-| **Status** | **half done.** `lore.md` and `world-map.md` are canon (2026-10-22). The rest remains. |
+| **Status** | **done** (2026-10-22). `lore.md` and `world-map.md` are canon; the lore notes in the other docs follow them. |
 
 **Done:**
 - `docs/lore.md` rewritten from `docs/lore-rework/`.
@@ -383,6 +383,8 @@ Notes from one workstream to another ("A1 needs B1 to also change X"). Newest fi
 | From | To | Note |
 | --- | --- | --- |
 | E1 | C, L2 | Rocks and trees need placing (`MapObject` + `MapBlocker`, then export), checked open on today's collision. Tolling: `copper_seam` (8,12), (10,12), (9,14); `alder_tree` (38,88), (39,84), (36,91), (50,20), (53,18). Palmerway: `copper_seam` (100,88), (102,88); `ironstone_seam` (150,85), (152,85), (151,87); `ash_tree` (140,70), (144,72), (148,68); `alder_tree` (139,37). Region builders were left alone (regions are becoming data). |
+| A1 | L1, owner | `docs/world-building.md` (decision W2) and `docs/world-scale.md` still place Tolling and the rivers against the old map's bay and the Cradle, which are retired. Restate W2 against the new layout when L1 has one. |
+| A1 | C, A4 | `docs/regions/` (the Cruor, Tithe, Cistern and Meridian blockouts) still describe Tithe, the bay, the Quaere and the Plaza of the Keeping as current. Left as is, since the areas are rebuilt rather than patched; give each a superseded line when that work starts. `docs/areas/decisions.md` also mentions the bay. |
 | G | C, A4 | The capital blockouts on `main` are on the old map. Keep the `WorldKit` kits; rebuild the areas once A4 and C3 allow, not before. |
 | A1 | A4 | `docs/skills.md` places skill tiers in old regions (the Veilwood, Candora, Slough...), and `docs/areas/rules.md` lists the old realms in its definitions. Both move with the new map: the tiers in pass 3 (resources), the realm list in pass 1. |
 | A1 | B2 | `docs/world-map.md` lists the names to be replaced in the game (the Synod, the Rationalists, Scalth). |
