@@ -12,7 +12,7 @@ looks, in an original world. See `CLAUDE.md` for the architecture and `docs/` fo
 
 ```powershell
 dotnet build        # builds everything and copies the shared DLLs into client/Assets/Plugins/Rth
-dotnet test         # ~115 tests, about a second, no Unity needed
+dotnet test         # server, shared and the client's Unity-free maths; a few seconds, no Unity needed
 ```
 
 Run `dotnet build` **before** opening the Unity project the first time, and again whenever you

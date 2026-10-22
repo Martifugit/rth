@@ -23,6 +23,10 @@ Design docs:
 - `docs/lore.md`: the world, history, factions and characters. Place names are listed in `docs/world-map.md`.
 - `docs/systems.md`: combat resources and the rules of a fight.
 - `docs/skills.md`: the v1 skill roster, the rules every skill follows, and each skill in full.
+- `docs/world-scale.md`: sizes, terrain, town and camera rules from the measured 2004 game
+  (`docs/research/`); decisions D1-D4 wait on the owner and the scale test region.
+- `docs/assets.md`: triangle budgets, the palette, textures, leafy trees, recolouring.
+- `docs/world-building.md`: the world layout, region bakes and stamps (a prototype; W1, W2 open).
 
 ---
 
@@ -423,6 +427,10 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | A model for players or creatures | An `EntityBody` subclass in `client/Assets/Scripts/Characters/` (height, radius, `Animate`, action/hit/death, `InCombat`), picked in `EntityBody.Create`. Players use `ModelBody` (skinned art + clips) when the clips exist, else `HumanoidBody` (code-built, procedural). |
 | Character art (body parts, hair, equipment) | Skinned meshes on the shared skeleton, made in Blender (`tools/character-models/`, see its README for the bone, part and colour-channel contract), exported to `client/Assets/Resources/Characters/`. `CharacterModel` assembles them: `Attach` (with the kit parts it hides, or a bone socket), `SetColor(channel)`, `SetHair`. |
 | A character animation | A humanoid clip file in `client/Assets/Resources/Characters/Animations/` named by what it is (Mixamo works; `CharacterImporter` sets it up); tune its strength, speed, trim and upper-body masking in `Resources/Characters/animations.json`. `ClipAnimator.Play(name)` plays any clip by name. |
+| Ground with height (hills, cliffs, terraces) | A `MapTerrain` in the region (`WorldKit.Terrain`, or **R'th > World > Bake Terrain From Layout** from `client/Assets/World/layout.json`); shape it with `MapTerrainStamp`s, never by editing baked heights. Steep tiles (over `cliffStep`) and impassable biomes are blocked by the exporter; `GroundHeight` stands things on it. Heights are client and tooling only (`Heightfield`, `WorldLayout` in shared). |
+| A colour variant of a model (an ore, a metal) | A `Recolor` on the placement or prefab, or `"recolor": { "Material": "PaletteName" }` on the object type in objects.json. Colours come from `Resources/Art/palette.json`. |
+| A tree, rock or prop | Within the budgets in `Assets/Art/art-budgets.json` (check with **R'th > Art > Validate Art**), 2-4 palette colours as materials; leafy trees via `kit.LeafyTree` and `LeafyTree` specs; world textures in `Assets/Art/Textures/` (128 px, point filtered). |
+| A camera rule | Plain maths in `client/Assets/Scripts/View/CameraRules.cs` with tests in `client/Assets/Tests/EditMode/` (also run by `dotnet test` through `tools/client-tests`); `CameraRig` applies it. Limit sets are `CameraProfile`s. |
 | An icon | 16 rows of pixel art in `client/Assets/Resources/UI/pixelicons.txt` (or a PNG at `Resources/Icons/<id>.png`); name it with `"icon"` on the item, ability or skill. |
 | A modal (big tabbed window) | A `UiModal` subclass in `client/Assets/Scripts/Ui/Modals/` listing `ModalTab`s; it registers itself. `MasterDetail` gives the list-and-detail layout. |
 | Something draggable, or a place to drop it | `UiRoot.BeginDrag` with a payload from `DragData.cs` (or a new one); `UiRoot.AddDropTarget` on the receiving element. |
