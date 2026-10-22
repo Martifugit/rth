@@ -1,0 +1,34 @@
+{
+  "about": "Targets for the area plan, read by its checks. Ranges are for the world or a realm, never for one place. See docs/areas/rules.md; evidence in docs/research/world-density.md. 'measured' gives the reference value; 'calibrated' is false where the range is a first guess.",
+  "invariants": [
+    { "id": "I-REACH", "rule": "Every place is reachable on foot from Tolling unless marked closed." },
+    { "id": "I-RETURN", "rule": "From anywhere a player can stand there is a way back to safety and a bank." },
+    { "id": "I-TIERS", "rule": "Every tier of every gathering skill exists somewhere; each skill's best tiers are where skills.md puts them." },
+    { "id": "I-SUPPLY", "rule": "For every stage, a fight's supplies can be obtained and banked somewhere reachable at that stage." },
+    { "id": "I-NAMES", "rule": "Every name in world-map.md is placed exactly once; new places carry a p- name until named." }
+  ],
+  "targets": [
+    { "id": "T-LAND-SPARSE", "scope": "world", "metric": "share of land 8x8 patches that are empty or sparse", "range": [0.55, 0.75], "strength": "guide", "passes": [1], "measured": { "2004": 0.66 }, "calibrated": true },
+    { "id": "T-LAND-BUILT", "scope": "world", "metric": "share of land inside settlements", "range": [0.10, 0.20], "strength": "guide", "passes": [1], "measured": { "2004": 0.14 }, "calibrated": true },
+    { "id": "T-UNDER", "scope": "world", "metric": "underground area / surface area", "range": [0.3, 0.6], "except": ["Candora"], "strength": "guide", "passes": [1], "measured": { "2004": 0.39 }, "calibrated": true },
+    { "id": "T-CITY-DOMINANCE", "scope": "world", "metric": "(shops + quest starts) of Cruor / of the next city", "range": [1.5, 3.0], "strength": "firm", "passes": [1, 2], "measured": { "rs3": "Varrock 67 / Lumbridge 39 = 1.7; / Falador 29 = 2.3" }, "calibrated": true },
+    { "id": "T-LADDER", "scope": "world", "metric": "towns and villages per 100,000 land tiles", "range": { "towns": [0.5, 1.5], "villages": [1.5, 4.0] }, "strength": "guide", "passes": [1], "measured": { "2004": { "towns": 0.7, "villages": 2.0 } }, "calibrated": true },
+    { "id": "T-BANK-SHARE", "scope": "world", "metric": "share of villages, towns and cities with a bank", "range": [0.40, 0.65], "strength": "guide", "passes": [4], "measured": { "rs3": 0.57 }, "calibrated": true },
+    { "id": "T-BANK-REACH", "scope": "world", "metric": "share of land within 100 route tiles of a bank", "range": [0.30, 0.55], "strength": "guide", "passes": [4], "measured": { "2004": 0.38 }, "calibrated": true },
+    { "id": "T-TRAVEL", "scope": "world", "metric": "median route distance between neighbouring fast-travel points", "range": [120, 200], "strength": "guide", "passes": [4], "measured": { "rs3": 152 }, "calibrated": true },
+    { "id": "T-DUNGEON", "scope": "world, realm", "metric": "dungeons and caves per named place", "range": [0.15, 0.35], "except": ["Candora"], "strength": "guide", "passes": [1, 5], "measured": { "rs3": 0.25 }, "calibrated": true },
+    { "id": "T-BOSS", "scope": "realm", "metric": "bosses in the realm", "min": 2, "strength": "guide", "passes": [5], "measured": { "rs3": "every region at least 2, median 13" }, "calibrated": true },
+    { "id": "T-ACTIVITY", "scope": "realm", "metric": "repeatable activities (minigame or D&D equivalents)", "min": { "heartland": 3, "periphery": 1 }, "strength": "guide", "passes": [2, 5], "measured": { "rs3": "heartland regions 9-13, periphery 1-6" }, "calibrated": true },
+    { "id": "T-STAGES", "scope": "realm", "metric": "stages the realm has reasons to visit in", "min": 2, "unless": "the realm is marked a destination", "strength": "firm", "passes": [2], "measured": { "rs3": "every region but Tirannwn (late only, a destination)" }, "calibrated": true },
+    { "id": "T-STAGE-MIX", "scope": "world", "metric": "share of quests early / mid / late", "range": { "early": [0.50, 0.65], "mid": [0.15, 0.25], "late": [0.15, 0.30] }, "strength": "guide", "passes": [6], "measured": { "rs3": { "early": 0.61, "mid": 0.19, "late": 0.20 } }, "calibrated": true },
+    { "id": "T-HEARTLAND", "scope": "world", "metric": "heartland's share of quests and of shops", "range": [0.45, 0.70], "strength": "guide", "passes": [2], "measured": { "rs3": "Misthalin, Asgarnia, Kandarin: about two thirds" }, "calibrated": true },
+    { "id": "T-QUEST-SPREAD", "scope": "world", "metric": "quest starts per settlement: median and busiest", "range": { "median": [0, 2], "busiest_min": 8 }, "strength": "info", "passes": [6], "measured": { "rs3": { "median": 0, "p90": 9, "max": 24 } }, "calibrated": true }
+  ],
+  "variety": [
+    { "id": "V-SAME-SERVICES", "warn": "more than this share of one tier's settlements have exactly the same set of services", "max": 0.40, "calibrated": false },
+    { "id": "V-ABSENCE", "warn": "fewer than these shares of settlements lack a bank / fast travel", "min": { "no_bank": 0.30, "no_fast_travel": 0.50 }, "measured": { "rs3": { "no_bank": 0.43, "no_fast_travel": 0.60 } }, "calibrated": true },
+    { "id": "V-CHARACTER", "warn": "a realm uses fewer distinct characters, or one character exceeds this share of its places", "min_distinct": 3, "max_share": 0.5, "calibrated": false },
+    { "id": "V-EVEN", "warn": "gaps between banks or fast-travel points are too even (coefficient of variation below this)", "min_cv": null, "calibrated": false },
+    { "id": "V-REALM-SHAPE", "warn": "two periphery realms have the same profile of reasons and stages", "calibrated": false }
+  ]
+}

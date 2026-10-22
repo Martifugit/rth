@@ -23,6 +23,7 @@ Design docs:
 - `docs/lore.md`: the world, history, factions and characters. Place names are listed in `docs/world-map.md`.
 - `docs/systems.md`: combat resources and the rules of a fight.
 - `docs/skills.md`: the v1 skill roster, the rules every skill follows, and each skill in full.
+- `docs/areas/`: the area plan for the whole continent, built in passes. Start with `rules.md` (how the research targets are used); the evidence is in `docs/research/`.
 
 ---
 
