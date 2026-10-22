@@ -15,7 +15,7 @@ namespace Rth.MapTools.Editor
     ///  - No collider under the tile centre (ignoring walls and blockers): blocked, there is no ground.
     ///  - Overlapped by the colliders of a <see cref="MapBlocker"/>: blocked.
     ///  - <see cref="MapWall"/> colliders snap to the nearest grid line and block those tile edges.
-    ///  - A tile of a <see cref="MapTerrain"/> steeper than its cliff step: blocked (a cliff face).
+    ///  - A tile of a <see cref="MapTerrain"/> steeper than its cliff step (a cliff face), or marked impassable: blocked.
     /// </summary>
     public static class MapExporter
     {
@@ -245,7 +245,7 @@ namespace Rth.MapTools.Editor
                 Heightfield field = terrain.Field;
                 for (int y = field.OriginY; y < field.OriginY + field.Depth; y++)
                     for (int x = field.OriginX; x < field.OriginX + field.Width; x++)
-                        if (map.Contains(plane, x, y) && field.IsSteep(x, y, terrain.cliffStep)) map.Block(plane, x, y);
+                        if (map.Contains(plane, x, y) && (field.IsSteep(x, y, terrain.cliffStep) || terrain.IsBlocked(x, y))) map.Block(plane, x, y);
             }
         }
 

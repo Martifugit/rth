@@ -34,6 +34,9 @@ namespace Rth.MapTools
         [Tooltip("A colour per tile, size.x × size.y, row by row from the south. Empty: the base colour everywhere.")]
         [HideInInspector] public Color32[] tileColors = new Color32[0];
 
+        [Tooltip("Tiles nobody walks on (the mountain wall, the frozen north), size.x × size.y. Empty: none. The exporter blocks them.")]
+        [HideInInspector] public bool[] blocked = new bool[0];
+
         public Color baseColor = new Color(0.36f, 0.55f, 0.22f);
         [Tooltip("Colour of tiles too steep to walk (cliff faces).")]
         public Color cliffColor = new Color(0.42f, 0.4f, 0.36f);
@@ -72,13 +75,21 @@ namespace Rth.MapTools
             return false;
         }
 
-        /// <summary>Replaces the heights (and optionally the colours) and rebuilds. For builders.</summary>
-        public void Set(Heightfield field, Color32[] colors = null)
+        /// <summary>Whether a tile is marked impassable (cliffs are separate: see <see cref="cliffStep"/>).</summary>
+        public bool IsBlocked(int x, int y)
+        {
+            int i = x - origin.x, j = y - origin.y;
+            return blocked != null && blocked.Length == size.x * size.y && i >= 0 && i < size.x && j >= 0 && j < size.y && blocked[j * size.x + i];
+        }
+
+        /// <summary>Replaces the heights (and optionally the colours and impassable tiles) and rebuilds. For builders.</summary>
+        public void Set(Heightfield field, Color32[] colors = null, bool[] impassable = null)
         {
             origin = new Vector2Int(field.OriginX, field.OriginY);
             size = new Vector2Int(field.Width, field.Depth);
             heights = field.Corners;
             tileColors = colors ?? new Color32[0];
+            blocked = impassable ?? new bool[0];
             _field = null;
             Rebuild();
         }
