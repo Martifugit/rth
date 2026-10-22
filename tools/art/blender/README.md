@@ -82,6 +82,20 @@ Learned by making the well with the owner. Add to this list as more props are ma
 - **Do** tie a high-end piece to the world through its ornament, not its outline (the
   longsword's wheel-cross ring and quatrefoils for the church).
 
+**Special weapons (learned on Sealbreaker)**
+- **Do** push a special piece's outline to the extreme first (a split head, spikes, chain): a
+  safe shape with carving on it reads as "a sledgehammer with a sign".
+- **Do** build a special weapon as the pieces it drops as, and assemble it from them
+  (`items/special.py`), so every piece is a real part and the drops show progress.
+- **Do** cast anything that sits on a surface onto it (`decal`, links cast per piece), and let a
+  mark that would hang off an edge be dropped rather than placed.
+- **Do** give ornament contrast in brightness, not just in shape: a black iron boss on a black
+  iron plate disappears. One warm accent metal (bronze) carries it.
+- **Don't** repeat a striking idea four times (four glowing keyholes): one idea per piece, the
+  rest plain.
+- **Do** expect special weapons to need their own triangle budget (Sealbreaker is about 1 150);
+  chains and rings are where triangles go.
+
 **Checking**
 - **Do** render two views every round: the game view (pitch about 40°) and a low side view
   (pitch about 8°). The game view hides gaps between parts; the side view shows them.

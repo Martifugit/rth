@@ -20,8 +20,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 import rth_art as A  # noqa: E402
 
 EXPORT = True
-STONE, IRON, GLOW, GRIP = range(4)
-COLOURS = ["Slate", "Blackiron", "Lye", "Umber"]
+STONE, IRON, GLOW, GRIP, ORNAMENT = range(5)
+COLOURS = ["Slate", "Blackiron", "Lye", "Umber", "Bronze"]
 
 HEAD_AT = 1.05                   # along the haft, the middle of the head (and of its split)
 HALF_LEN, HALF_HEIGHT, HALF_THICK = 0.12, 0.26, 0.11
@@ -33,6 +33,20 @@ CLASPS_AT = (-0.02, 0.15)        # heights of the two clasps
 
 def F(along, up=0.0, side=0.0):
     return (side, -along, up)
+
+
+def ring_bars(bm, centre, axis_a, axis_b, radius, thick, n=8, mat=IRON):
+    """A loop of n short bars in the plane of axis_a and axis_b (rings, bands)."""
+    c, a, b = Vector(centre), Vector(axis_a).normalized(), Vector(axis_b).normalized()
+    nrm = a.cross(b)
+    for k in range(n):
+        pts = []
+        for ang in (2 * math.pi * k / n, 2 * math.pi * (k + 1) / n):
+            d = a * math.cos(ang) + b * math.sin(ang)
+            for r in (radius - thick, radius + thick):
+                for z in (-thick, thick):
+                    pts.append(c + d * r + nrm * z)
+        A.hull(bm, pts, mat)
 
 
 def half_len(u):
@@ -164,8 +178,8 @@ def clasps(bm, stone):
 
 def lock(bm, u, side):
     """Where a clasp crosses the split, on a broad face: a heavy iron plate shaped like a small
-    keystone (echoing the head), bridging the two halves, with two big rivets and a glowing
-    keyhole. The pieces that hold the whole thing together."""
+    keystone (echoing the head), bridging the two halves, with four rivets and an ornamental boss.
+    The pieces that hold the whole thing together."""
     hs = HALF_THICK
     face = side * hs
     out = lambda d: face + side * d                                 # noqa: E731  (distance off the face)
@@ -179,18 +193,24 @@ def lock(bm, u, side):
                + [F(HEAD_AT + 0.034, u + du, out(0.048))], IRON)
         A.hull(bm, [F(HEAD_AT - 0.034 + x, u + du + y, out(0.024)) for x in (-0.013, 0.013) for y in (-0.013, 0.013)]
                + [F(HEAD_AT - 0.034, u + du, out(0.048))], IRON)
-    # The keyhole, running along the clasp: a round top and a slot below it, glowing with the core.
-    top = out(0.0305)
-    ring = [F(HEAD_AT + 0.012 + 0.009 * math.cos(k * math.pi / 3), u + 0.009 * math.sin(k * math.pi / 3), top)
-            for k in range(6)]
-    slot = [F(HEAD_AT + 0.012, u - 0.004, top), F(HEAD_AT + 0.012, u + 0.004, top),
-            F(HEAD_AT - 0.022, u + 0.006, top), F(HEAD_AT - 0.022, u - 0.006, top)]
-    for outline in (ring, slot):
-        f = bm.faces.new([bm.verts.new(p) for p in outline])
+    # The ornament, in bronze so it reads against the dark iron: a stepped eight-sided boss inside
+    # a flat inlaid ring.
+    centre = Vector(F(HEAD_AT, u, out(0.03)))
+    normal = Vector((side, 0, 0))
+    a_dir, u_dir = Vector(F(1, 0, 0)), Vector(F(0, 1, 0))
+    rings = [(0.018, 0.0), (0.018, 0.007), (0.010, 0.014), (0.0, 0.018)]
+    A.loft(bm, [(tuple(centre + normal * h), r, r) for r, h in rings], sides=8, ref=tuple(u_dir),
+           roll=math.pi / 8, mats=ORNAMENT)
+    lifted = centre + normal * 0.0015
+    for k in range(8):
+        a0, a1 = 2 * math.pi * k / 8, 2 * math.pi * (k + 1) / 8
+        quad = [lifted + (a_dir * math.cos(a) + u_dir * math.sin(a)) * r
+                for a, r in ((a0, 0.024), (a0, 0.031), (a1, 0.031), (a1, 0.024))]
+        f = bm.faces.new([bm.verts.new(q) for q in quad])
         f.normal_update()
-        if f.normal.x * side < 0:
+        if f.normal.dot(normal) < 0:
             f.normal_flip()
-        f.material_index = GLOW
+        f.material_index = ORNAMENT
 
 
 # ---- the shaft (smithed) ----
