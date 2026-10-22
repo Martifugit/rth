@@ -476,7 +476,7 @@ of the Pass; a loose paving stone on the meridian where the brass line has a sea
 | **0. Height and levels** (done) | The feature in 3.2: ground snap, `MapLevel`, the `climb` action, level display. | A test scene with a slope and a two-storey hut: you walk up the slope, climb the ladder, see the upper floor, and clicks, camera and the collision preview work on both levels. |
 | **1. Terrain and routes** (built, see 9.4) | The five tiers, retaining walls, stairs, ramps, the Cut and its bridges, the Span, the Ore Road. **No buildings.** | You can walk every loop and see the next tier from each; nothing exports as walkable that should not (check the collision preview). |
 | **2. Landmarks and building shells** (built, see 9.5) | Every building in 6 as an enterable shell with its door, floors, stairs and roof (hideable); the Rows from one template. | Every building can be entered; the building count and 25% rule hold. |
-| **3. Interiors and objects** | Stations, shops' counters, benches, readables, view points, nodes, gates. | The "every 15 tiles" rule holds on every route. |
+| **3. Interiors and objects** (built, see 9.6) | Stations, shops' counters, benches, readables, view points, nodes, gates. | The "every 15 tiles" rule holds on every route. |
 | **4. Placement and data** | NPCs, their dialogue, shops, stations and nodes in the content files, region data. | Every building has what 7.2 says. |
 
 Dividing 4 by system keeps each reviewable: NPC placement first, then shops and banks, then
@@ -652,6 +652,40 @@ Where it differs from section 6, and why:
 ![Roofs off: the Academy and the Forum, upstairs](img/meridian-p2-cut-academy1.png)
 
 ![Undergate Heights](img/meridian-p2-view-heights.png)
+
+### 9.6 Phase 3 as built
+
+Every building now has things to use, and so does the ground between them: **337 objects** in
+the export, about 100 object types in `objects.json`, all original text in the city's voice
+(dry, measured, with the crack showing). What there is, by kind:
+
+| Kind | Where |
+|---|---|
+| **Readables and view points** | In every building (shipping board and log, barometer, notices, lectern, library shelves, bestiary desk, star charts, forecast desk, appointment book, timetable, register, map tables...) and on the routes: berth posts, hour-stones, the Span's plaques, a milestone, a waymark, a cairn, a statue, the Under-Treaty stone, weather posts, clipped trees, and telescopes and brass view plates at the beacons, the observatories, the Arcade Stair, Line Street's top landing and the **Observers' Walk** (now built: the Crag's south lip east of the Crag stair, three view plates, a bench and the pocket orrery, the perch over the pass round the corner). |
+| **Stations** (`process`, recipes later) | Cooking ranges (Fish Market, Plumb Line), gear bench and sail loom (Net Loft), instrument bench, physic bench, furnace and anvil (Smeltery), the cold cellar (the Stevedores' Hall's hatch, Butchering). |
+| **Banks** | The Exchequer's strongbox (Hall of Measures), the dwarves' stockroom chest (Undergate), the carters' chest (Wayhouse). |
+| **Religion** | The Sailors' Shrine's altar (`pray`) and its votive ships. |
+| **Gathering spots** | Shoals off the quay and the mole, the Cut's pool, ironstone on the Heights' gorge edge, frostiron under the mountain, pale pines on the slope, the Physic Garden's herb beds. Objects with a message until their skills exist: give the type a `node` and a `gather` action and they work. |
+| **Gates** (flag-locked, 7.4) | The Orrery Gate (`orrery_gate_open`), the vault (`exchequer_vault_open`), the professor's study (`academy_study_open`), the forbidden shelf (`cold_archive_open`), the Undergate's inner door (`undergate_inner_open`), Bore Nine's shaft (`bore_nine_open`). |
+| **Shortcuts** (level-locked, 7.4) | Rubble from the Ore Road's first bend to the Heights (Mining 10), the thicket from the pine slope to the Observers' Walk (Woodcutting 15), stepping stones over the Cut between the falls (Fishing 20). Each is a `climb` pair with `requirements` on the action; any object or NPC action can now carry skill requirements. The jammed gate (Defence) waits for a fence round the survey camp. |
+| **Small things in rooms** | Beds to rest in, benches to sit on (garden, Concord, the walk), the chiming clock that gives hints, the bell, the semaphore levers, the hoard chest. |
+| **Secrets placed** | The occultist's table above the Chandlery, the forbidden shelf, the third observatory's telescope set to the wrong phase (the puzzle's hook), the perch's view of a camp no map shows. |
+
+**The "every 15 tiles" rule.** The builder now checks it (`CheckInterest`): it logs how much of
+the ground is more than 8 tiles from something to use, and where. After phase 3, **14%** is. That
+14% is the open middles of lawns and terraces, the east end of the quay, the Crag's north side and
+the pine slope, which is where phase 4's people will stand. Every route passes something within
+its first 15 tiles.
+
+**Reachability.** `ShippedMapTests` walks every exported region from its spawn through every stair,
+ladder and shortcut and asserts each object has a tile beside it someone can stand on. It found
+(and this phase fixed) the ore rocks' turned colliders blocking their neighbours, and Cruor's first
+monument standing in the middle of its plinth. Cruor's fix is in its builder, so the test fails until
+Cruor is rebuilt.
+
+**Not yet:** No. 7's difference and the Rows' own small things (the house is a kit template),
+balconies, the cellar and vault ways down, the funicular ride, the Butts' training dummies (they are
+creatures, phase 4), and every shop, task-giver and NPC (phase 4).
 
 ## 10. Decisions I made, and what I need
 

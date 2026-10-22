@@ -368,8 +368,9 @@ raising monuments and reliquaries, tools for gathering (with Mining), final abil
 
 **World building (in progress):** the capitals blocked out as regions, one builder each, with an
 asset list for the art pass. All four capitals are done: Cruor, Tithe, Cistern and Meridian (`docs/regions/`). Meridian is being
-rebuilt to `docs/regions/meridian-redesign.md`: phase 1 (terraces and routes) and phase 2 (every building
-enterable, upper floors included) are built; interiors and objects, then people and data, are next.
+rebuilt to `docs/regions/meridian-redesign.md`: phase 1 (terraces and routes), phase 2 (every building
+enterable, upper floors included) and phase 3 (objects: readables, view points, stations, banks, gates,
+gathering spots, skill shortcuts) are built; people and data (phase 4) are next.
 
 **Next: not chosen yet.** Candidates: the first gathering skills (mining, woodcutting) on the
 node system with tools, ranged, an art pass on Tolling, more quests and achievements.
@@ -433,6 +434,9 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | Something per region (music, rules, title) | A field on `WorldRegion`, written to `<name>.region.json` by `MapExporter`; it reaches clients in `RegionsMessage` as JSON. |
 | "Who is near this tile" | `World.EntitiesNear(plane, tile, radius)` (zone index), not a scan of every entity. |
 | A sign, notice or flavour action | An object action with a `message` in objects.json (no handler needed). |
+| An action only some players may use | `requiresFlag` + `lockedMessage` (story gates), or `requirements` (skill levels) on the object or NPC action; `ObjectSystem.Unlocked` checks both. |
+| A skill shortcut (rubble, a ford, a thicket) | A `climb` object at each end with `requirements` on its action and `climbTo` on the far side; see `MeridianBuilder.Shortcut`. |
+| Furniture you can use (a counter that's a bank, a shelf you read) | `Shell.Thing`/`Shelves`/`Table` plus a `MapObject` on the returned object (`MeridianBuilder.Use`); keep it one or two tiles deep so a tile beside its middle is free. |
 | An interface panel | A `UiPanel` subclass in `client/Assets/Scripts/Ui/Panels/` (id, title, icon, default window, `Build`, `Refresh`); it registers itself. Build it from `UiKit` pieces so it matches the theme (`Resources/UI/Rth.uss`). A new default spot goes in `UiDefaultLayout`. A window the server opens overrides `ServerOpen` and `OnClosedByPlayer`. |
 | A model for players or creatures | An `EntityBody` subclass in `client/Assets/Scripts/Characters/` (height, radius, `Animate`, action/hit/death, `InCombat`), picked in `EntityBody.Create`. Players use `ModelBody` (skinned art + clips) when the clips exist, else `HumanoidBody` (code-built, procedural). |
 | Character art (body parts, hair, equipment) | Skinned meshes on the shared skeleton, made in Blender (`tools/character-models/`, see its README for the bone, part and colour-channel contract), exported to `client/Assets/Resources/Characters/`. `CharacterModel` assembles them: `Attach` (with the kit parts it hides, or a bone socket), `SetColor(channel)`, `SetHair`. |
@@ -449,7 +453,8 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 
 Tests: build worlds with `WorldFixture` and `TestContent` (server/Rth.Tests/TestSupport.cs), which
 uses fixed content so tuning the real data files never breaks tests. `World` can also be built
-with an explicit list of systems.
+with an explicit list of systems. `ShippedMapTests` walks every exported region in `server/data/maps`
+from its spawn and fails on any object nobody can stand beside.
 
 ---
 
