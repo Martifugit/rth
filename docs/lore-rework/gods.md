@@ -28,6 +28,8 @@ Every god gets these, briefly. Anything undecided is a placeholder or **sealed**
 - **Their presence is uneven**, and part of each god's character: one walks the world in a body,
   one speaks only through omens, one hasn't been heard from in centuries. As the revision stirs,
   quiet gods can start to show themselves again.
+- **No single rivalry runs the world.** Gods have their own lives, enemies and aims; the world
+  is moved by many of them at once, not by one feud.
 
 ## The gods
 
@@ -58,10 +60,10 @@ The name is a placeholder.
 | --- | --- |
 | **Story** | Among p-sworn's first followers, the ones who broke their oaths. The betrayal and the wound were one event: they struck the blow, and one of them took some of p-sworn's power and became a god. |
 | **Wound** | *Open.* |
-| **Hunger** | That p-sworn never recovers. |
+| **Hunger** | *Open* (an ascended god now, with its own aims, not only p-sworn's enemy). |
 | **Bargain** | *Open.* |
 | **Sign** | Your name, spoken behind you, in the voice of someone you trust. Nobody is there when you turn. |
-| **Faces** | *Open.* |
-| **Presence** | *Open.* |
+| **Faces** | To the empire, the Traitor: the root of every evil, the devil of its faith. To deserters, the conquered and anyone who swore under duress, a liberator. |
+| **Presence** | It walks the world, but never as itself. It wears the faces of trusted people: a friend, a captain, a priest. You meet it without knowing, and may only realise much later. |
 | **Fear** | *Open.* |
 | **Origin** | Ascended, through the betrayal. |
