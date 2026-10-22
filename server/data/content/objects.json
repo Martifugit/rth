@@ -1336,5 +1336,11 @@
       "startMessage": "You swing your hatchet at the tree.",
       "depletedMessage": "The ash comes down."
     }
+  },
+  {
+    "id": "grave_chest",
+    "name": "Grave chest",
+    "examine": "A black chest on the landing, dry inside though the water laps at it. Whatever you banked among the living is somehow in here too.",
+    "actions": [ { "id": "bank", "label": "Bank" } ]
   }
 ]

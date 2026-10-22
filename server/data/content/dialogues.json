@@ -413,6 +413,29 @@
     "nodes": {
       "start": {
         "branches": [
+          { "conditions": [ { "type": "flag", "key": "ferry_explained", "not": true } ], "next": "explain" }
+        ],
+        "next": "terms"
+      },
+      "explain": {
+        "text": "You died. Everyone does once; your sort, more than once. This is the landing, and I'm the one who takes people back across.",
+        "actions": [ { "type": "setFlag", "key": "ferry_explained" } ],
+        "next": "explain2"
+      },
+      "explain2": {
+        "text": "Everything you carried and wore came over with you, and now it's with me. Pay my fee and you go back with it. The finer your things, the more it costs: coin from your purse, or your bank if the purse is light.",
+        "next": "explain3"
+      },
+      "explain3": {
+        "text": "Die with an obol in your pack and I take that instead, whatever you were wearing. Can't pay? Then you go back without your things. I keep them about a day. After that they're the river's.",
+        "next": "explain4"
+      },
+      "explain4": {
+        "text": "The chest on the landing holds what you banked among the living, if you need it. Now.",
+        "next": "terms"
+      },
+      "terms": {
+        "branches": [
           { "conditions": [ { "type": "ferryHolds", "not": true } ], "next": "empty" },
           { "conditions": [ { "type": "ferryObol" } ], "next": "obol" },
           { "conditions": [ { "type": "ferryFree" } ], "next": "free" }

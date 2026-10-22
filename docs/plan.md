@@ -307,7 +307,7 @@ Design: `docs/lore-rework/death.md`.
 | **Runs** | cloud |
 | **Depends on** | nothing |
 | **Owns** | `DeathSystem.cs`, a new ferryman system or component, `assayer.json` (replaced), `shared/Net/Messages.cs` (the death text kind), death-related tests |
-| **Status** | **done** on `claude/d1-death` (2026-10-22): `FerrySystem`, `death.json`, `DeathTests`. The wake tile is a placeholder (Tolling's spawn, 33,53) until D2. |
+| **Status** | **done** on `claude/d1-death` (2026-10-22): `FerrySystem`, `death.json`, `DeathTests`. The wake tile was a placeholder (Tolling's spawn) until D2 built the landing. |
 
 - On death, everything the player carried and wore goes to the ferryman's hold; nothing is kept.
 - The player wakes in the realm of the dead (a spawn named in data; a placeholder tile until D2
@@ -328,6 +328,7 @@ Design: `docs/lore-rework/death.md`.
 | --- | --- |
 | **Runs** | local (region), cloud writes client code for local checking |
 | **Depends on** | C3, D1 |
+| **Status** | **done** on `claude/d2-realm` (2026-10-22), data and client code; needs Sync World to create `Assets/Scenes/RealmOfTheDead.unity` and a Unity compile. Region `realm_of_the_dead` ("The Landing", 32x32 at 8192,8192), wake (8208, 8206), bank object `grave_chest`; the first-death explanation is dialogue (flag `ferry_explained`); `AssayerPanel` removed (the remark is a chat line). No new interface pieces, per U1. |
 
 - A small, very dark region: a landing, a bank and the ferryman. The first region built through
   the new data path.
@@ -416,6 +417,7 @@ Notes from one workstream to another ("A1 needs B1 to also change X"). Newest fi
 
 | From | To | Note |
 | --- | --- | --- |
+| D2 | D3, U1 | The landing is `world/regions/realm_of_the_dead.json` (x 8192-8223, y 8192-8223), ringed by water; the long way back can start from its south or east shore (extend the region or add one beside it). Death has no window of its own now: the remark is a chat line (`chat-line--ferryman`) and the ferryman talks through the dialogue box. If U1 wants a death screen (or a richer payment view), it is new interface work. |
 | D1 | D2 | The ferryman is NPC `ferryman` (npcs.json, Talk-to opens dialogue `ferryman`); place him on the landing and set death.json `wake` to it. On waking the server opens his conversation with no NPC (`DialogueSystem.Start(player, id, speaker)`), so today's dialogue box already works. The death remark is `TextKind.Ferryman` (was `Assayer`, same value 2, no protocol bump); `AssayerPanel` still shows it. |
 | E1 | C, L2 | Done in C3: the proposed rocks and trees are pieces in `world/regions/tolling.json` and `palmerway.json`. |
 | A1 | L1, owner | `docs/world-building.md` (decision W2) and `docs/world-scale.md` still place Tolling and the rivers against the old map's bay and the Cradle, which are retired. Restate W2 against the new layout when L1 has one. |

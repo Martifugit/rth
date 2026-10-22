@@ -825,7 +825,7 @@
     color: rgb(240, 140, 100);
 }
 
-.chat-line--assayer {
+.chat-line--ferryman {
     color: rgb(200, 170, 255);
 }
 

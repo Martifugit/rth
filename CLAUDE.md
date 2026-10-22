@@ -11,7 +11,8 @@ classic layout). It is set in its own world, **R'th**, built around the four hum
 multi-region world streamed by the client), 8 (the window-based interface, chat), 9 (the
 skills rework: Religion's hymns replace breath, the v1 skill roster) and 10 (melee: weapon
 styles, melee abilities, Cruor's verses, gathering nodes and the first monument) are done, and
-death v1's server half (D1 in `docs/plan.md`: the ferryman holds what you die with) and
+death v1 (D1 and D2 in `docs/plan.md`: the ferryman holds what you die with, on a dark landing
+built as region data) and
 workstream E1 (gathering tools, the first Mining and Woodcutting) have landed. The v1 skills are
 designed in `docs/skills.md`; most of them exist only as a skill and a level so far.
 
@@ -408,13 +409,20 @@ Not yet: rocks and trees placed in the scenes (proposed tiles in `docs/plan.md` 
 seller for tools (Smithing makes them later), mining/chopping animations (nodes use "work").
 
 **Death v1, server (D1, done):** `FerrySystem` and death.json. Everything carried and worn goes
-to the ferryman's hold; the player wakes at death.json's `wake` tile (a placeholder at Tolling's
-spawn until D2 builds the landing) and his conversation opens (dialogue `ferryman`, no NPC needed).
+to the ferryman's hold; the player wakes at death.json's `wake` tile and his conversation opens
+(dialogue `ferryman`, no NPC needed).
 The fee is `feePercent` of the held items' `value` (free under `freeBelow`), paid in `currency` from
 the pack, then the bank; an `obol` in the pack at death is taken as the fee; unpaid gear is kept
 `holdHours` of real time (`ServerConfig.UtcNow`), and dying again adds to it. Paying returns it
-and sends the player to `returnTo` (null: the spawn); leaving sends them back without it. The
-client still shows the remark in `AssayerPanel` (text kind `Ferryman`) until D2.
+and sends the player to `returnTo` (null: the spawn); leaving sends them back without it.
+
+**Death v1, the landing (D2, done; scene from Sync World):** `world/regions/realm_of_the_dead.json`,
+"The Landing": an instanced 32x32 region at (8192, 8192), far from the continent. Ash ground in
+dark water, a jetty with the ferryman (npc `ferryman`) at its landward end, his boat, lanterns, a
+bench, and a `grave_chest` (a bank). Very low sun, near-black fog. The dead wake at (8208, 8206).
+The shipped conversation explains death the first time (flag `ferry_explained`). The client has
+no death window any more: the remark (text kind `Ferryman`) is a line in chat, and the
+conversation is the dialogue box.
 
 **The world as data (C1-C4, done):** regions are text (`world/regions`), compiled to the server maps by
 `tools/world` without Unity, drawn and checked in Unity by **R'th > World > Sync World**; Tolling,

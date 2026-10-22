@@ -157,8 +157,6 @@ namespace Rth.Client
         public List<LogLine> Log { get; } = new List<LogLine>();
         /// <summary>How many lines have ever been logged, so views can tell what's new after old lines drop off.</summary>
         public int LogTotal { get; private set; }
-        /// <summary>The Assayer's last words, shown until dismissed.</summary>
-        public string AssayerText { get; set; }
 
         /// <summary>The server tick right now, extrapolated from the last state message (fractional).</summary>
         public float EstimatedTick =>
@@ -396,7 +394,6 @@ namespace Rth.Client
                         break;
                     case GameTextMessage text:
                         AddLog(text.Kind, text.Text);
-                        if (text.Kind == TextKind.Ferryman) AssayerText = text.Text;
                         break;
                 }
             }
@@ -730,7 +727,6 @@ namespace Rth.Client
             DropClient();
             world.Clear();
             PlayerState = null;
-            AssayerText = null;
             Inventory.Clear();
             Equipment.Clear();
             Stats.Clear();
