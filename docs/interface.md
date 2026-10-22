@@ -65,7 +65,17 @@ every piece and how they are organised.
   what its carcass yields).
 - **Guide** (G) ✓: **skills** (pick a skill; its unlocks level by level, filterable and
   sortable, gathered from the content itself) and **abilities** (every ability as a full card).
-- **World map** (M) ✓: the regions to scale and where you are. Waystone travel will be a tab.
+- **World map** (M) ✓: the continent, drawn from the layout the world is built from
+  (`world/layout/`, sent as `ClientContent.Chart`), so it always matches the world. The ground is
+  painted once (each ground in its colour, wandering edges, hill shading, shallows, an inked coast,
+  faint borders between the powers); over it, as vectors that stay crisp at every zoom, rivers,
+  main roads, roads, passes (dashed) and ferries (dotted), the built regions outlined in gold with
+  the rest shaded as unexplored, and the places' marks by tier. Names by tier (cities and towns in
+  Cinzel, villages smaller, hamlets and landmarks only close in), realm names faint across their
+  land, named rivers and passes close in; a place that has no name yet is an unnamed mark. Drag to
+  pan, the wheel or +/- to zoom in fixed steps, "you are here" with your facing, a button to come
+  back to it, a legend with toggles, and the ground, realm and region under the pointer at the
+  bottom. Waystone travel will be a tab.
 - **Settings** ✓: general (roofs, lock, scale, reset layout, log out) and controls.
 - To come: announcements (level up, quest complete, new drop), player examine.
 
@@ -95,4 +105,9 @@ every piece and how they are organised.
 - **Server state for the interface** arrives as `JsonStateMessage`s ("achievements",
   "bestiary", "client") read with `GameSession.ServerState<T>`. The client keeps its own
   state (action bar layouts) on the server with `SetClientState`; it follows the player.
-- **Window layout** is saved per machine in PlayerPrefs.
+- **Window layout** is saved per machine in PlayerPrefs (the world map's legend and toggles too).
+- **The world map's data** is the server's `WorldChart` (from `world/layout/continent.json`;
+  `shared/World/Layout/WorldChart.cs`). The client paints it with `ChartPainter` on a worker
+  thread and draws the rest with `Painter2D` (`WorldMapModal`); zoom and pan are plain maths
+  (`WorldMapView`, EditMode tests). `dotnet run --project tools/world -- chart` paints the same
+  ground to `world/renders/chart.png` to look at without Unity.

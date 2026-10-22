@@ -234,9 +234,16 @@ readability), not its geography.
 | --- | --- |
 | **Runs** | cloud (data), local (client checks) |
 | **Depends on** | L1 |
+| **Status** | **world map done** on `claude/u2-world-map` (2026-10-22, with U2); the minimap is still to do |
 
 - The world map modal and the minimap draw from the layout data, so the map in the game always
   matches the world.
+- Done: the server compiles `world/layout/continent.json` at startup (`ServerConfig.LayoutDirectory`,
+  `ChartLoader`) into a `WorldChart` (`shared/World/Layout/WorldChart.cs`: the zone grids run-length
+  encoded, about 23 KB) and sends it in `ClientContent.Chart`, so no protocol change. The client
+  paints its ground with `ChartPainter` (shared, so `dotnet run --project tools/world -- chart` draws
+  the same picture to `world/renders/chart.png`). The minimap could read the same chart for what lies
+  beyond the streamed regions.
 
 ---
 
@@ -414,7 +421,9 @@ The owner's list (2026-10-22):
 - **XP drops:** a piece you can place where XP gains appear as they happen: very nice to look at
   but subtle, no surface behind it, mostly the numbers coming in.
 - **World map:** redo it (today's is "really, really bad"); draw it from the continent layout
-  (`world/layout/`), so the map always matches the world (this is also L3).
+  (`world/layout/`), so the map always matches the world (this is also L3). **Done** on
+  `claude/u2-world-map` (2026-10-22), compiled outside Unity: check it in the Editor (see the
+  handoff below).
 - **Bestiary:** tabs inside, Bosses, then one per region (butchering's special creatures sit in
   their region). The **drop log hints** at what a creature can drop (its rare and unique drops),
   not only what you have had.
@@ -455,6 +464,7 @@ Notes from one workstream to another ("A1 needs B1 to also change X"). Newest fi
 
 | From | To | Note |
 | --- | --- | --- |
+| U2 (world map) | local, owner | `claude/u2-world-map`, compiled outside Unity; look at it in the Editor: M opens it centred on you at a tile a pixel; drag to pan, wheel or +/- to zoom (whole map, 0.75, 1, 1.5, 2, 3 px a tile); the compass button re-centres; the book button shows the legend and the toggles (place names, realm names, shade unexplored). The ground appears as a coarse draft first, then sharpens (painted on a worker thread; the Editor's Debug build of `Rth.Shared` may take a few seconds for the full picture). Things to judge: colours of the painting against the interface, label sizes, the unexplored shade's strength (`MapInk.Veil`), road widths. Places named `p-...` show as unnamed marks; `p-` landmarks are left off (the hidden occult cells among them); `"hidden": true` on a place in `continent.json` keeps any place off the map. |
 | D2 | D3, U1 | The landing is `world/regions/realm_of_the_dead.json` (x 8192-8223, y 8192-8223), ringed by water; the long way back can start from its south or east shore (extend the region or add one beside it). Death has no window of its own now: the remark is a chat line (`chat-line--ferryman`) and the ferryman talks through the dialogue box. If U1 wants a death screen (or a richer payment view), it is new interface work. |
 | E3 | U1, local | Use mode touches `client/Assets/Scripts/GameSession.cs` (use state, `UseOptions`, Escape/right-click) and, narrowly, U1's `Ui/GameText.cs` (`DefaultAction` and `ItemOptions` route clicks to the picked-up item). Compiled outside Unity against 6000.6.6f1's assemblies; check it in the Editor. U1 may want a highlight on the picked-up slot (`session.UseSlot`) and a "use" cursor. Plain items now left-click to Use (it is first in `ItemActions`, before Drop). |
 | L1 | A4 | Pass 1 can be read off `world/layout/continent.json` (places, tiers, realms) and `world/layout/regions.txt` (every 96-tile region's realm and rough role). `p-` places there are suggestions; rename or drop freely. |
