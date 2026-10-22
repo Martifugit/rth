@@ -60,7 +60,7 @@ The name is a placeholder.
 | **Wound** | *Open.* |
 | **Hunger** | That p-sworn never recovers. |
 | **Bargain** | *Open.* |
-| **Sign** | *Open* (being chosen). |
+| **Sign** | Your name, spoken behind you, in the voice of someone you trust. Nobody is there when you turn. |
 | **Faces** | *Open.* |
 | **Presence** | *Open.* |
 | **Fear** | *Open.* |
