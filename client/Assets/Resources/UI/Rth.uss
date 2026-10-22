@@ -1504,6 +1504,8 @@
     font-size: 19px;
     color: rgb(255, 232, 160);
     text-shadow: 0 0 6px rgba(240, 190, 90, 0.75);
+}
+
 /* ---------------------------------------------------------------- U2: worn buttons, character window, inspect */
 
 /* The row of buttons under the worn equipment figure. */
@@ -1647,6 +1649,8 @@
 .bestiary-carcass__text {
     flex-grow: 1;
     flex-shrink: 1;
+}
+
 /* ---------------------------------------------------------------- world map (U2) */
 /* WorldMapModal: the painted continent, the vector ink over it, labels by tier, tools, legend. */
 
