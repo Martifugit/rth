@@ -14,8 +14,8 @@ Work goes top-down, because each layer hangs off the one above it:
 
 | Step | Subject | Output |
 | --- | --- | --- |
-| 1 | **Triage**: which entities stay, change, merge, go or are new | the table below, agreed |
-| 2 | **The foundations**: the bay, the humours, the deep, the moon. What is actually true about the world, including what players never learn early | `foundations.md` |
+| 1 | **The universe**: what kind of world R'th is, its great mysteries and what stays sealed | `universe.md` |
+| 2 | **Triage**: which existing entities survive into that universe, and which are new | a table, agreed |
 | 3 | **The board**: the powers, how much land each holds, where their borders press, who wants what from whom | `powers.md` with a relations matrix |
 | 4 | **One sheet per entity**, one at a time, in an agreed order | `entities/<id>.md` |
 | 5 | **The timeline**: founding events in order, checked against every sheet | `timeline.md` |
@@ -57,7 +57,7 @@ The rework may change anything, but these exist in the game and changing them co
   Rationalists (phlegm).
 - **The Assayer** (death) is in the game.
 
-## Step 1: triage (proposed)
+## Triage (superseded: redone after the universe is agreed)
 
 | Entity | Proposal | Why |
 | --- | --- | --- |
