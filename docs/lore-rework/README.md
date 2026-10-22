@@ -57,17 +57,51 @@ The rework may change anything, but these exist in the game and changing them co
   Rationalists (phlegm).
 - **The Assayer** (death) is in the game.
 
-## Triage (superseded: redone after the universe is agreed)
+## Triage (proposed, against the new universe)
+
+What each existing entity becomes in the universe of `universe.md` and `gods.md`. **Keep**: stays,
+gets a sheet. **Rework**: the idea survives, changed. **Absorbed**: its job is done by something
+new. **Cut**: gone. **New**: didn't exist before.
+
+### Peoples and powers
 
 | Entity | Proposal | Why |
 | --- | --- | --- |
-| **Cruor and the Sanguine Synod** | **Grows**: an empire, a third of the land, with a ragged expansionist border. The sole source of the Religion skill: hymns and verses become two practices of one church. | Owner. One faith is easier for players to grasp than two sees. |
-| **Tithe** | **Goes as a power.** Its best ideas move: the debt doctrine becomes a heresy *inside* Cruor (the schism thread survives as an internal split; two pontiffs still possible); the toll on the bay's mouth goes to whoever replaces it. Brother Cassius Ember stays, as a Cruorian auditor. | Owner. |
-| **Calcinia** | **Changes hands.** The salt coast and the bay's mouth become the seat of the dominant occult house. | Gives the occultists real land and one dominant house. |
-| **The occult houses** | **Grow and spread.** One dominant house (Gall, already "the largest") rules a kingdom; the lesser houses hold Slough's fens, sea caves and hidden cells inside the empire. Sallow stays fallen. | Owner: occult land spread out, quite a lot of it, one house clearly dominant. |
-| **Concordia, the dwarves, the Under-Treaty** | **Stay**, along the range, which becomes a long spine with land on both sides instead of a ring. | Owner: keep the range and the treaty. |
-| **Undermost and the older peoples** | Stay. | The deep thread depends on them. |
-| **Sere** | Stays; gets a sheet like everyone else. Its borders now press against the empire's salients. | |
-| **Nivil** | Becomes one of several **frontiers** at the map's edges, each a later expansion. | Extendable world. |
-| **New: what lies beyond the range** | A placeholder frontier power or wild land, decided in step 3. | Extendable world. |
-| **The Dreamweaver, the Assayer, the Physician, the Quaere, the broken moon, the nightmare** | Stay; they get sheets in step 4 and their truths are fixed in step 2. | They are the world's deep story. |
+| **Cruor's empire** | **Keep, grown.** The largest power, about a third of the land, with salients pressing into every neighbour. Worships p-sworn: the blood tithes feed its god. Source of melee's verses and pledges, and of the Religion skill. | Owner. |
+| **The Sanguine Synod** | **Rework**: the empire's church of p-sworn. Name may change. | Its god changed. |
+| **Tithe, its see, its doctrine** | **Cut** as a power. Brother Cassius Ember can survive as a Cruorian auditor. Hymns become a practice of p-sworn's church. | Owner. |
+| **The occultists** | **Keep, grown and spread**: much land, scattered across the map, **one dominant house**. Their source: *open* (a god for them is a later sheet; the betrayers' Faceless are a separate faith). | Owner. |
+| **The occult houses** (Gall, Umber, Mordant, Sallow) | **Rework**: kept as houses, re-founded in the new history; which one dominates is decided on the board. Sallow (Corvin's house) stays fallen. | Corvin and Dreamless are built. |
+| **The range: the surface people and the dwarves under a treaty** | **Keep**, along a long range (spine or other shape, decided on the map). The treaty's hidden reason: *open*. | Owner. |
+| **Concordia, the Rationalists** | **Rework**: the range's surface people. Their creed (reason over faith) needs grounding in a world where gods are plainly real: perhaps they don't deny gods, they refuse to serve them. Source of ranged. | Gods exist now. |
+| **The dwarves** | **Keep**, inside the range. | |
+| **Undermost and the older peoples** | **Keep** as the deep. What they guard or flee: *open*. | |
+| **Sere** | **Keep**, rethought on the board: a kingdom pressed by the empire's salients. | |
+| **The Faceless** | **New**: followers of the betrayers, in every land, hidden. | `gods.md`. |
+| **Keepers of the pieces** | **New**: each of p-scattered's demigods has followers and a place. | `gods.md`. |
+| **The village on the brow** | **New**: the people living on p-head. | `gods.md`. |
+| **Peoples of the frontiers** | **New, placeholders**: whoever lives where the world grows next. | Extendable world. |
+
+### Beings and threads
+
+| Entity | Proposal | Why |
+| --- | --- | --- |
+| **The Assayer** | **Absorbed** by death v1 (the ferryman). The idea of something weighing the dead can return in the realm of the dead later. | `death.md`. |
+| **The Dreamweaver and her archive** | **Absorbed** by the dreamer (a constant) and the Dreaming. | `gods.md`. |
+| **The nightmare loose in the archive** | **Keep** as a thread: something loose from the Dreaming. Details reworked with the dreamer. | Strong boss idea (rotating orbs). |
+| **The Physician** | **Keep, reworked**: someone who treats the world as a patient fits a world being revised (are the revisions the illness, or the cure?). Mortal, lesser power or worse: *open*. | Strong twist engine. |
+| **The bay, the Cradle and the Quaere** | **Rework**: the bay can stay as geography; it is **not** the origin of the faith any more. What's in it: *open*, or cut. | Owner: not the origin. |
+| **The cracked moon and moonfalls** | **Keep** as a mystery and an event system. What cracked it: *open*. | Moonfalls are a strong repeatable activity. |
+| **The bound thing in the deep** | **Keep** as a mystery. Candidates: a reject that never reached p-spoil, or whatever wounded p-sworn. | Fits the universe. |
+| **The Covenant, the Schism, the Scalding** | **Cut** as written; history is rewritten in the timeline step. The Scalding's scar (Scalth) can survive as a place with a new cause. | The history depended on the bay and Tithe. |
+
+### Characters
+
+| Character | Proposal |
+| --- | --- |
+| **Corvin Sallow** | **Keep** (built). |
+| **Sister Odile Vane** | **Keep**: a blood-knight of the empire. |
+| **Brother Cassius Ember** | **Rework** into a Cruorian auditor, or cut with Tithe. |
+| **Magister Ilse Varrow** | **Keep** with the range's surface people. |
+| **Brannoch** | **Keep** with the dwarves. |
+| **Queen Saffiya of Sere** | **Keep** with Sere. |
