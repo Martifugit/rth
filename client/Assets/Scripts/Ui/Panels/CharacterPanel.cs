@@ -11,7 +11,7 @@ namespace Rth.Client.Ui.Panels
         public override string Id => "character";
         public override string Title => "Character";
         public override string Icon => "character";
-        public override string DefaultWindow => UiDefaultLayout.Side;
+        public override string DefaultWindow => UiDefaultLayout.Side2;
         public override int Order => 2;
 
         private Label _name;

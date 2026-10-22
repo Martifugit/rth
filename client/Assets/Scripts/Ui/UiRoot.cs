@@ -32,6 +32,8 @@ namespace Rth.Client.Ui
         private PanelSettings _settings;
         private VisualElement _root;
         private VisualElement _windowLayer;
+        private VisualElement _floatLayer;
+        private VisualElement _landingLayer;
         private VisualElement _modalLayer;
         private Label _tooltip;
         private Label _hover;
@@ -63,9 +65,13 @@ namespace Rth.Client.Ui
             }
         }
 
+        /// <summary>
+        /// The interface scale: the player's choice (Settings), or until they choose, one that fits
+        /// the screen (the layout is made for 1080 pixels high, so 720p gets 0.75, 1440p 1.25).
+        /// </summary>
         public float Scale
         {
-            get => PlayerPrefs.GetFloat(ScalePref, 1f);
+            get => PlayerPrefs.HasKey(ScalePref) ? PlayerPrefs.GetFloat(ScalePref, 1f) : AutoScale;
             set
             {
                 float s = Mathf.Clamp(value, 0.75f, 2f);
@@ -73,6 +79,18 @@ namespace Rth.Client.Ui
                 if (_settings != null) _settings.scale = s;
             }
         }
+
+        /// <summary>Whether the scale follows the screen (the player hasn't chosen one).</summary>
+        public bool AutoScaled => !PlayerPrefs.HasKey(ScalePref);
+
+        /// <summary>Goes back to the scale that fits the screen.</summary>
+        public void UseAutoScale()
+        {
+            PlayerPrefs.DeleteKey(ScalePref);
+            if (_settings != null) _settings.scale = AutoScale;
+        }
+
+        private static float AutoScale => Mathf.Clamp(Mathf.Round(Screen.height / 1080f * 4f) / 4f, 0.75f, 2f);
 
         /// <summary>The panel's size in its own pixels (screen pixels divided by the interface scale).</summary>
         public Vector2 ScreenSize => _root?.panel != null ? _root.panel.visualTree.layout.size : new Vector2(Screen.width, Screen.height);
@@ -106,6 +124,8 @@ namespace Rth.Client.Ui
             _root.RegisterCallback<ClickEvent>(GuardImgui, TrickleDown.TrickleDown);
 
             _windowLayer = Layer();
+            _floatLayer = Layer();
+            _landingLayer = Layer();
             _hover = UiKit.Text(_root, "", "hover-text");
             _hover.pickingMode = PickingMode.Ignore;
             _modalLayer = Layer();
@@ -172,7 +192,9 @@ namespace Rth.Client.Ui
             if (screen != _lastScreen)
             {
                 _lastScreen = screen;
+                if (AutoScaled && _settings != null && !Mathf.Approximately(_settings.scale, AutoScale)) _settings.scale = AutoScale;
                 foreach (UiWindow w in _windows) w.Apply(screen);
+                SettleDocked();
             }
 
             _hover.text = PopupMenu.IsOpen || _drag != null ? "" : session.HoverText;
@@ -577,21 +599,24 @@ namespace Rth.Client.Ui
                 panel.Window.Root.BringToFront();
                 return;
             }
-            UiWindow home = _windows.FirstOrDefault(w => !w.IsBare && w.Panels.Any(p => p.DefaultWindow == panel.DefaultWindow));
-            if (home != null && !panel.Bare)
+            UiWindow home = _windows.FirstOrDefault(w => w.CanDock(panel) && w.Panels.Any(p => p.DefaultWindow == panel.DefaultWindow));
+            if (home != null)
             {
                 home.Add(panel);
                 home.Root.BringToFront();
             }
-            else if (_placements.TryGetValue(panel.Id, out SavedWindow last))
-            {
-                CreateWindow(last.anchor, last.offset, last.size, panel);
-            }
             else
             {
-                UiDefaultLayout.Placement place = UiDefaultLayout.Windows.TryGetValue(panel.DefaultWindow, out UiDefaultLayout.Placement p)
-                    ? p : UiDefaultLayout.Centred(panel);
-                CreateWindow(place.Anchor, place.Offset, place.Size, panel);
+                UiWindow window;
+                if (_placements.TryGetValue(panel.Id, out SavedWindow last))
+                    window = CreateWindow(last.anchor, last.offset, last.size, panel);
+                else
+                {
+                    UiDefaultLayout.Placement place = UiDefaultLayout.Windows.TryGetValue(panel.DefaultWindow, out UiDefaultLayout.Placement p) && !panel.Floating
+                        ? p : UiDefaultLayout.Centred(panel);
+                    window = CreateWindow(place.Anchor, place.Offset, place.Size, panel);
+                }
+                FitIn(window);
             }
             SaveLayout();
         }
@@ -634,10 +659,10 @@ namespace Rth.Client.Ui
         private UiWindow CreateWindow(Vector2 anchor, Vector2 offset, Vector2 size, params UiPanel[] panels)
         {
             var window = new UiWindow(this) { Anchor = anchor, Offset = offset, Size = size };
-            foreach (UiPanel p in panels) window.Add(p, activate: false);
+            foreach (UiPanel p in panels.Take(UiWindow.MaxTabs)) window.Add(p, activate: false);
             if (window.Panels.Count > 0) window.Activate(window.Panels[0]);
             _windows.Add(window);
-            _windowLayer.Add(window.Root);
+            (window.IsFloating ? _floatLayer : _windowLayer).Add(window.Root);
             window.Apply(ScreenSize);
             return window;
         }
@@ -648,29 +673,148 @@ namespace Rth.Client.Ui
             window.Root.RemoveFromHierarchy();
         }
 
+        // ------------------------------------------------------------------ placement: no overlap, snapping, previews
+
+        /// <summary>What a docked window may not overlap: every other docked window.</summary>
+        public List<WindowRules.Box> ObstaclesFor(UiWindow window) =>
+            _windows.Where(w => w != window && !w.IsFloating).Select(w => w.Box).ToList();
+
+        /// <summary>What a moving window lines up with.</summary>
+        public List<WindowRules.Box> SnapTargetsFor(UiWindow window) =>
+            _windows.Where(w => w != window && w.IsFloating == window.IsFloating).Select(w => w.Box).ToList();
+
+        /// <summary>Moves a docked window to the nearest place where it overlaps nothing (if it doesn't already fit).</summary>
+        private void FitIn(UiWindow window)
+        {
+            if (window.IsFloating) return;
+            Vector2 screen = ScreenSize;
+            WindowRules.Box? free = WindowRules.NearestFree(window.Box, ObstaclesFor(window), screen.x, screen.y);
+            if (free.HasValue && !free.Value.Equals(window.Box)) window.SetBox(free.Value, screen);
+        }
+
+        /// <summary>Settles every docked window so none overlaps another (earlier windows keep their place).</summary>
+        private void SettleDocked()
+        {
+            Vector2 screen = ScreenSize;
+            List<UiWindow> docked = _windows.Where(w => !w.IsFloating).ToList();
+            List<WindowRules.Box> settled = WindowRules.Settle(docked.Select(w => w.Box).ToList(), screen.x, screen.y);
+            for (int i = 0; i < docked.Count; i++)
+                if (!settled[i].Equals(docked[i].Box)) docked[i].SetBox(settled[i], screen);
+        }
+
+        private VisualElement _landing;
+        private Label _landingLabel;
+        private readonly List<VisualElement> _guides = new List<VisualElement>();
+        private UiWindow _dockTarget;
+
+        /// <summary>
+        /// Shows where a window being moved or resized will land: an outline (red if it won't fit
+        /// anywhere), an optional label ("Add as a tab", "New window"), and the guide lines it
+        /// lined up with.
+        /// </summary>
+        public void ShowLanding(WindowRules.Box box, bool fits, string label, List<WindowRules.Guide> guides)
+        {
+            if (_landing == null)
+            {
+                _landing = UiKit.El(_landingLayer, "landing");
+                _landing.pickingMode = PickingMode.Ignore;
+                _landingLabel = UiKit.Text(_landing, "", "landing__label");
+                _landingLabel.pickingMode = PickingMode.Ignore;
+            }
+            _landing.style.display = DisplayStyle.Flex;
+            _landing.style.left = box.X;
+            _landing.style.top = box.Y;
+            _landing.style.width = box.W;
+            _landing.style.height = box.H;
+            _landing.EnableInClassList("landing--blocked", !fits);
+            _landingLabel.text = label ?? "";
+            _landingLabel.style.display = string.IsNullOrEmpty(label) ? DisplayStyle.None : DisplayStyle.Flex;
+
+            Vector2 screen = ScreenSize;
+            for (int i = 0; i < Mathf.Max(_guides.Count, guides?.Count ?? 0); i++)
+            {
+                if (i >= _guides.Count)
+                {
+                    VisualElement g = UiKit.El(_landingLayer, "guide");
+                    g.pickingMode = PickingMode.Ignore;
+                    _guides.Add(g);
+                }
+                VisualElement line = _guides[i];
+                if (guides == null || i >= guides.Count)
+                {
+                    line.style.display = DisplayStyle.None;
+                    continue;
+                }
+                WindowRules.Guide guide = guides[i];
+                line.style.display = DisplayStyle.Flex;
+                line.style.left = guide.Vertical ? guide.At : 0f;
+                line.style.top = guide.Vertical ? 0f : guide.At;
+                line.style.width = guide.Vertical ? 1f : screen.x;
+                line.style.height = guide.Vertical ? screen.y : 1f;
+            }
+        }
+
+        public void HideLanding()
+        {
+            if (_landing != null) _landing.style.display = DisplayStyle.None;
+            foreach (VisualElement g in _guides) g.style.display = DisplayStyle.None;
+            SetDockTarget(null);
+        }
+
+        private void SetDockTarget(UiWindow window)
+        {
+            if (_dockTarget == window) return;
+            _dockTarget?.Root.RemoveFromClassList("window--dock-target");
+            _dockTarget = window;
+            _dockTarget?.Root.AddToClassList("window--dock-target");
+        }
+
+        /// <summary>Where a tab being dragged would go: into the window under it (as a tab) or a window of its own.</summary>
+        private (UiWindow dock, WindowRules.Box box, bool fits) PanelDrop(UiPanel panel, Vector2 at)
+        {
+            UiWindow from = panel.Window;
+            UiWindow dock = _windows.FirstOrDefault(w => w != from && w.AcceptsDropAt(at) && w.CanDock(panel));
+            if (dock != null) return (dock, dock.Box, true);
+            Vector2 size = from != null && from.Panels.Count == 1 ? from.Size : Vector2.Max(panel.MinSize, from != null ? from.Size : panel.DefaultSize);
+            Vector2 screen = ScreenSize;
+            var wanted = new WindowRules.Box(at.x - 20f, at.y - 10f, size.x, size.y);
+            if (panel.Floating) return (null, WindowRules.Clamp(wanted, screen.x, screen.y), true);
+            // A window of its own may not land on another docked window (its old one included, if it stays).
+            List<WindowRules.Box> others = _windows.Where(w => !w.IsFloating && !(w == from && from.Panels.Count == 1)).Select(w => w.Box).ToList();
+            WindowRules.Box? free = WindowRules.NearestFree(wanted, others, screen.x, screen.y);
+            return (null, free ?? wanted, free.HasValue);
+        }
+
+        /// <summary>While a tab is dragged: highlight the window it would join, or outline its new window.</summary>
+        public void PreviewPanelDrop(UiPanel panel, Vector2 at)
+        {
+            (UiWindow dock, WindowRules.Box box, bool fits) = PanelDrop(panel, at);
+            SetDockTarget(dock);
+            bool alone = panel.Window != null && panel.Window.Panels.Count == 1;
+            ShowLanding(box, fits, dock != null ? "Add as a tab" : fits ? (alone ? "Move here" : "Own window") : "No room here", null);
+        }
+
         /// <summary>A tab dropped somewhere: onto another window's title bar joins it; anywhere else gets its own window.</summary>
         public void DropPanel(UiPanel panel, Vector2 at)
         {
             UiWindow from = panel.Window;
-            UiWindow target = _windows.FirstOrDefault(w => w != from && w.AcceptsDropAt(at) && !w.FixedSize.HasValue && !panel.FixedSize.HasValue);
-            if (target != null)
+            (UiWindow dock, WindowRules.Box box, bool fits) = PanelDrop(panel, at);
+            if (!fits) return;
+            if (dock != null)
             {
-                target.Add(panel);
-                target.Root.BringToFront();
+                dock.Add(panel);
+                dock.Root.BringToFront();
             }
             else if (from != null && from.Panels.Count == 1)
             {
-                // Its own window: just move it.
-                from.Reanchor(ScreenSize, at - new Vector2(20f, 10f));
-                from.Apply(ScreenSize);
+                from.SetBox(box, ScreenSize); // its own window: just move it
+                SaveLayout();
                 return;
             }
             else
             {
-                Vector2 size = from != null ? from.Size : panel.DefaultSize;
-                UiWindow window = CreateWindow(Vector2.zero, Vector2.zero, size, panel);
-                window.Reanchor(ScreenSize, at - new Vector2(20f, 10f));
-                window.Apply(ScreenSize);
+                UiWindow window = CreateWindow(Vector2.zero, Vector2.zero, new Vector2(box.W, box.H), panel);
+                window.SetBox(box, ScreenSize);
             }
             if (from != null && from.Panels.Count == 0) RemoveWindow(from);
             SaveLayout();
@@ -697,8 +841,12 @@ namespace Rth.Client.Ui
                 UiPanel first = group.First();
                 UiDefaultLayout.Placement place = UiDefaultLayout.Windows.TryGetValue(group.Key, out UiDefaultLayout.Placement p)
                     ? p : UiDefaultLayout.Centred(first);
-                CreateWindow(place.Anchor, place.Offset, place.Size, group.ToArray());
+                UiPanel[] panels = group.ToArray();
+                CreateWindow(place.Anchor, place.Offset, place.Size, panels);
+                // A group larger than a window holds opens the rest in windows of their own.
+                foreach (UiPanel extra in panels.Skip(UiWindow.MaxTabs)) Open(extra);
             }
+            SettleDocked();
         }
 
         [Serializable]
@@ -771,9 +919,12 @@ namespace Rth.Client.Ui
                 if (panels.Length == 0) continue;
                 UiWindow window = CreateWindow(saved.anchor, saved.offset, saved.size, panels);
                 if (saved.active != null && byId.TryGetValue(saved.active, out UiPanel active) && active.Window == window) window.Activate(active);
+                // A layout saved before windows had a tab limit: the rest open on their own.
+                foreach (UiPanel extra in panels.Skip(UiWindow.MaxTabs)) Open(extra);
             }
             foreach (UiPanel panel in _panels)
                 if (panel.OpenByDefault && panel.ServerOpen == null && panel.Window == null && !layout.known.Contains(panel.Id)) Open(panel);
+            SettleDocked();
             return true;
         }
 

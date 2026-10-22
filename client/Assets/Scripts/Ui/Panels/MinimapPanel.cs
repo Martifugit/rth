@@ -92,8 +92,12 @@ namespace Rth.Client.Ui.Panels
             Orb(buttons, "journal", () => "Journal: quests, achievements, bestiary (J)", () => Ui.ToggleModal(Ui.Modal<JournalModal>()));
             Orb(buttons, "guide", () => "Guide: skills and abilities (G)", () => Ui.ToggleModal(Ui.Modal<GuideModal>()));
             Orb(buttons, "settings", () => "Settings", () => Ui.ToggleModal(Ui.Modal<SettingsModal>()));
-            VisualElement menu = Orb(buttons, "menu", () => "Open or close any window", null);
-            menu.RegisterCallback<PointerDownEvent>(e => Ui.Menu(e.position, "Windows", PanelOptions()));
+            VisualElement menu = Orb(buttons, "menu", () => WindowsMenu.IsOpen ? null : "Interface: show or hide windows, lock, reset", null);
+            menu.RegisterCallback<PointerDownEvent>(e =>
+            {
+                if (WindowsMenu.IsOpen) WindowsMenu.Close();
+                else WindowsMenu.Open(Ui, e.position);
+            });
 
             RenderPipelineManager.beginCameraRendering += BeforeRender;
             RenderPipelineManager.endCameraRendering += AfterRender;
@@ -226,19 +230,6 @@ namespace Rth.Client.Ui.Panels
             Vector3 target = local.transform.position + new Vector3(world.x, 0f, world.y);
             Session.WalkTo(TileMath.FromWorld(target));
             e.StopPropagation();
-        }
-
-        private List<(string Label, Action Action)> PanelOptions()
-        {
-            var options = new List<(string Label, Action Action)>();
-            foreach (UiPanel panel in Ui.Panels)
-            {
-                if (panel.ServerOpen != null) continue; // the server opens those
-                UiPanel p = panel;
-                options.Add(((p.Window == null ? "Open " : "Close ") + p.Title, () => Ui.Toggle(p)));
-            }
-            options.Add(("Reset layout", () => Ui.ResetLayout()));
-            return options;
         }
     }
 }

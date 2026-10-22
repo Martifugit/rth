@@ -37,7 +37,7 @@ namespace Rth.Client.Ui.Panels
         }
 
         private GameSession Session => _ui.session;
-        private bool BarsLocked => Session.Bars == null || Session.Bars.Locked;
+        private bool BarsLocked => Session.Bars == null || _ui.Locked;
 
         public ActionBarRow(UiRoot ui, VisualElement parent, int bar)
         {
@@ -78,7 +78,7 @@ namespace Rth.Client.Ui.Panels
                     if (e.button != 1 || Session.Bars == null) return;
                     var options = new List<(string, System.Action)>();
                     if (Session.Bars.Get(_bar, index) != null && !BarsLocked) options.Add(("Remove from bar", () => Session.Bars.Set(_bar, index, null)));
-                    options.Add((BarsLocked ? "Unlock action bars" : "Lock action bars", () => Session.Bars.Locked = !Session.Bars.Locked));
+                    options.Add((_ui.Locked ? "Unlock the interface" : "Lock the interface", () => _ui.Locked = !_ui.Locked));
                     _ui.Menu(e.position, "Action bar", options);
                 });
                 _ui.AddDropTarget(slot.Root, data => !BarsLocked && Accepts(data), data => Drop(index, data));

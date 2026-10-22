@@ -14,7 +14,7 @@ namespace Rth.Client.Ui.Panels
         public override string Id => "metrics";
         public override string Title => "XP tracker";
         public override string Icon => "xp";
-        public override string DefaultWindow => UiDefaultLayout.Side;
+        public override string DefaultWindow => UiDefaultLayout.Side2;
         public override int Order => 8;
 
         private readonly Dictionary<string, long> _baseline = new Dictionary<string, long>();

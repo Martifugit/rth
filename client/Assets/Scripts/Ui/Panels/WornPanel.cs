@@ -22,12 +22,17 @@ namespace Rth.Client.Ui.Panels
         public override int Order => 1;
         public override Key Hotkey => Key.E;
 
+        public override Vector2 MinSize => new Vector2(3 * 40f + 24f, 5 * 40f + 60f);
+        public override bool Scrolls => false;
+
         private Figure _figure;
 
         protected override void Build(VisualElement root)
         {
             _figure = new Figure(Ui, Session, root, null);
-            _figure.Root.style.marginTop = 10f;
+            // The figure grows and shrinks with the window.
+            root.RegisterCallback<GeometryChangedEvent>(_ =>
+                _figure.Fit(Mathf.Clamp(Mathf.Min(root.contentRect.width / 3f, (root.contentRect.height - 8f) / 5f), 40f, 76f)));
         }
 
         public override void Refresh() => _figure.Refresh(Session);
@@ -38,7 +43,7 @@ namespace Rth.Client.Ui.Panels
         /// </summary>
         public sealed class Figure
         {
-            private const float Cell = 50f;
+            private float _cell = 50f;
 
             private static readonly Dictionary<EquipSlot, Vector2Int> Layout = new Dictionary<EquipSlot, Vector2Int>
             {
@@ -57,25 +62,23 @@ namespace Rth.Client.Ui.Panels
             public readonly VisualElement Root;
             private readonly Dictionary<EquipSlot, (VisualElement Slot, VisualElement Icon)> _slots = new Dictionary<EquipSlot, (VisualElement, VisualElement)>();
             private readonly Dictionary<EquipSlot, string> _shown = new Dictionary<EquipSlot, string>();
+            private readonly VisualElement _spine;
+            private readonly VisualElement _shoulders;
 
             public Figure(UiRoot ui, GameSession session, VisualElement parent, Action<EquipSlot> onClick)
             {
                 Root = UiKit.El(parent);
-                Root.style.width = 3 * Cell;
-                Root.style.height = 5 * Cell;
                 Root.style.alignSelf = Align.Center;
 
                 // A faint body behind the slots: spine and shoulders.
-                Line(Root, 1.5f * Cell - 1f, 0.5f * Cell, 2f, 4f * Cell);
-                Line(Root, 0.5f * Cell, 2.5f * Cell - 1f, 2f * Cell, 2f);
+                _spine = Line(Root);
+                _shoulders = Line(Root);
 
                 foreach (KeyValuePair<EquipSlot, Vector2Int> place in Layout)
                 {
                     EquipSlot slot = place.Key;
                     VisualElement box = UiKit.El(Root, "slot");
                     box.style.position = Position.Absolute;
-                    box.style.left = place.Value.x * Cell + 4f;
-                    box.style.top = place.Value.y * Cell + 4f;
                     VisualElement icon = UiKit.El(box, "slot__icon");
                     icon.pickingMode = PickingMode.Ignore;
                     box.RegisterCallback<PointerDownEvent>(e =>
@@ -95,17 +98,40 @@ namespace Rth.Client.Ui.Panels
                     UiKit.Tooltip(box, () => Def(session, slot) is ItemDef d ? GameText.Describe(d, 1) : UiKit.Colour(slot + ": nothing worn", UiKit.Muted));
                     _slots[slot] = (box, icon);
                 }
+                Fit(_cell);
             }
 
-            private static void Line(VisualElement parent, float left, float top, float width, float height)
+            /// <summary>Lays the figure out with cells <paramref name="cell"/> pixels square.</summary>
+            public void Fit(float cell)
+            {
+                _cell = cell;
+                Root.style.width = 3 * cell;
+                Root.style.height = 5 * cell;
+                Place(_spine, 1.5f * cell - 1f, 0.5f * cell, 2f, 4f * cell);
+                Place(_shoulders, 0.5f * cell, 2.5f * cell - 1f, 2f * cell, 2f);
+                float slot = cell - 8f;
+                foreach (KeyValuePair<EquipSlot, Vector2Int> place in Layout)
+                {
+                    (VisualElement box, VisualElement icon) = _slots[place.Key];
+                    Place(box, place.Value.x * cell + 4f, place.Value.y * cell + 4f, slot, slot);
+                    icon.style.width = icon.style.height = slot * 0.8f;
+                }
+            }
+
+            private static VisualElement Line(VisualElement parent)
             {
                 VisualElement line = UiKit.El(parent);
                 line.style.position = Position.Absolute;
-                line.style.left = left;
-                line.style.top = top;
-                line.style.width = width;
-                line.style.height = height;
                 line.style.backgroundColor = new Color(0.79f, 0.64f, 0.37f, 0.25f);
+                return line;
+            }
+
+            private static void Place(VisualElement e, float left, float top, float width, float height)
+            {
+                e.style.left = left;
+                e.style.top = top;
+                e.style.width = width;
+                e.style.height = height;
             }
 
             private static ItemDef Def(GameSession session, EquipSlot slot)

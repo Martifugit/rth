@@ -253,5 +253,77 @@ namespace Rth.Client.Ui
 
         public static string FormatXp(long xp) =>
             xp >= 10_000_000 ? (xp / 1_000_000f).ToString("0.#") + "M" : xp >= 10_000 ? (xp / 1000f).ToString("0.#") + "K" : xp.ToString("N0");
+
+        // ------------------------------------------------------------------ responsive grids
+
+        /// <summary>
+        /// A grid of slots that fills the space it is given (docs/interface.md, the panel contract):
+        /// with fixed <c>columns</c> and <c>rows</c> (the pack's 4 x 7) the slots grow and shrink to
+        /// fit both ways; with <c>rows</c> 0 the columns follow the width at the preferred slot size
+        /// (skills, hymns). Slots are children with the "slot" class (or any child, for tiles: they
+        /// are sized the same way). The grid's parent must be given a size by its window.
+        /// </summary>
+        public sealed class FitGrid
+        {
+            public readonly VisualElement Root;
+            private readonly int _columns;
+            private readonly int _rows;
+            private readonly float _min;
+            private readonly float _max;
+            private readonly float _aspect;
+            private const float Gap = 4f;
+
+            /// <param name="columns">Columns (or, with rows 0, the most columns it will use).</param>
+            /// <param name="rows">Rows to fit in the height, or 0 to let the slots flow.</param>
+            /// <param name="aspect">Width over height of each cell (1 for slots; wider for skill tiles).</param>
+            public FitGrid(VisualElement parent, int columns, int rows, float minSize, float maxSize, float aspect = 1f)
+            {
+                _columns = columns;
+                _rows = rows;
+                _min = minSize;
+                _max = maxSize;
+                _aspect = aspect;
+                Root = El(parent, "slot-grid", "fit-grid");
+                Root.style.flexGrow = 1;
+                Root.style.alignSelf = Align.Stretch;
+                Root.style.alignContent = Align.Center;
+                Root.style.justifyContent = Justify.Center;
+                parent.RegisterCallback<GeometryChangedEvent>(_ => Layout());
+                Root.RegisterCallback<GeometryChangedEvent>(_ => Layout());
+            }
+
+            /// <summary>The cell height the grid last chose.</summary>
+            public float Size { get; private set; } = 40f;
+
+            public void Layout()
+            {
+                Rect space = Root.parent != null ? Root.parent.contentRect : Root.contentRect;
+                if (space.width < 1f) return;
+                float cellW;
+                int count = Root.childCount;
+                if (_rows > 0)
+                {
+                    cellW = Mathf.Min(space.width / _columns, space.height / _rows * _aspect);
+                }
+                else
+                {
+                    int columns = Mathf.Clamp(Mathf.FloorToInt(space.width / (_max * _aspect * 0.8f + Gap)), 1, Mathf.Max(1, _columns));
+                    cellW = space.width / Mathf.Max(1, Mathf.Min(columns, Mathf.Max(1, count)));
+                }
+                float h = Mathf.Clamp(cellW / _aspect - Gap, _min, _max);
+                float w = h * _aspect;
+                Size = h;
+                int cols = _rows > 0 ? _columns : Mathf.Max(1, Mathf.FloorToInt(space.width / (w + Gap)));
+                Root.style.width = cols * (w + Gap);
+                foreach (VisualElement child in Root.Children())
+                {
+                    child.style.width = w;
+                    child.style.height = h;
+                    child.style.marginLeft = child.style.marginRight = child.style.marginTop = child.style.marginBottom = Gap / 2f;
+                    VisualElement icon = child.Q(className: "slot__icon");
+                    if (icon != null) icon.style.width = icon.style.height = h * 0.8f;
+                }
+            }
+        }
     }
 }

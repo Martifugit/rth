@@ -24,7 +24,7 @@ namespace Rth.Client.Ui.Panels
         public override string DefaultWindow => UiDefaultLayout.Side;
         public override int Order => 5;
         public override Key Hotkey => Key.K;
-        public override Vector2 MinSize => new Vector2(280f, 160f);
+        public override Vector2 MinSize => new Vector2(2 * (TileWidth + 4f) + 24f, 160f);
 
         private VisualElement _grid;
         private Label _total;
@@ -45,6 +45,9 @@ namespace Rth.Client.Ui.Panels
             _grid = UiKit.El(root, "slot-grid");
             _grid.style.width = 3 * (TileWidth + 4f);
             _grid.style.alignSelf = Align.Center;
+            // As many columns of tiles as the window is wide.
+            root.RegisterCallback<GeometryChangedEvent>(_ =>
+                _grid.style.width = Mathf.Max(1, Mathf.FloorToInt(root.contentRect.width / (TileWidth + 4f))) * (TileWidth + 4f));
             UiKit.El(root, "spacer");
             VisualElement total = UiKit.El(root, "footer-row");
             UiKit.Text(total, "Combat", "heading").style.marginTop = total.style.marginBottom = 0f;

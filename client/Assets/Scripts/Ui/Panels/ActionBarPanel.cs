@@ -31,6 +31,13 @@ namespace Rth.Client.Ui.Panels
             VisualElement frame = UiKit.El(root, "hud");
             frame.style.flexGrow = 1;
 
+            // The interface lock, at the bar's top right: locks windows, action bars and ability books.
+            _lock = UiKit.El(frame, "hud__lock");
+            UiKit.SetIcon(_lock, IconLibrary.Get("padlock"));
+            _lock.RegisterCallback<ClickEvent>(_ => Ui.Locked = !Ui.Locked);
+            UiKit.Tooltip(_lock, () => UiKit.Title(Ui.Locked ? "Interface locked" : "Interface unlocked") + "\n" +
+                (Ui.Locked ? "Windows, action bars and ability books stay put. Click to unlock." : "Click to lock windows, action bars and ability books in place."));
+
             VisualElement gauges = UiKit.El(frame, "row");
             _blood = new UiKit.Gauge(gauges, "blood", UiKit.BloodColour);
             _phlegm = new UiKit.Gauge(gauges, "phlegm", UiKit.PhlegmColour);
@@ -48,6 +55,8 @@ namespace Rth.Client.Ui.Panels
             _slots = new ActionBarRow(Ui, slots, 0);
         }
 
+        private VisualElement _lock;
+
         public override void Refresh()
         {
             PlayerStateMessage state = Session.PlayerState;
@@ -61,6 +70,7 @@ namespace Rth.Client.Ui.Panels
             _devotion.Fill = singing ? new Color(1f, 0.93f, 0.7f) : UiKit.DevotionColour;
             _bile.Set(state.Bile, content);
             _slots.Refresh();
+            _lock.EnableInClassList("hud__lock--on", Ui.Locked);
         }
 
         /// <summary>

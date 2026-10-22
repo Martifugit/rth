@@ -71,7 +71,7 @@ namespace Rth.Client.Ui.Panels
                 Label level = UiKit.Text(slot, "", "slot__level");
                 level.pickingMode = PickingMode.Ignore;
                 Ui.DragSource(slot,
-                    () => new UiRoot.Drag { Data = new HymnDrag { HymnId = id }, Icon = IconLibrary.Get(Hymns.Get(Session, id)?.Icon), Tint = Hymns.Tint },
+                    () => Ui.Locked ? null : new UiRoot.Drag { Data = new HymnDrag { HymnId = id }, Icon = IconLibrary.Get(Hymns.Get(Session, id)?.Icon), Tint = Hymns.Tint },
                     () => Hymns.Toggle(Session, id));
                 UiKit.Tooltip(slot, () =>
                 {

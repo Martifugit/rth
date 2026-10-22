@@ -129,15 +129,35 @@
     padding: 0;
 }
 
+/* Any corner resizes: an L of bronze, shown while the pointer is over the window. */
 .window__grip {
     position: absolute;
-    right: 4px;
-    bottom: 4px;
-    width: 10px;
-    height: 10px;
-    border-right-width: 2px;
-    border-bottom-width: 2px;
-    border-color: rgba(201, 162, 94, 0.6);
+    width: 14px;
+    height: 14px;
+    border-color: rgba(201, 162, 94, 0);
+}
+
+.window:hover > .window__grip {
+    border-color: rgba(201, 162, 94, 0.55);
+}
+
+.window__grip:hover {
+    border-color: rgb(240, 213, 140);
+}
+
+.window__grip--tl { left: 0; top: 0; border-left-width: 2px; border-top-width: 2px; }
+.window__grip--tr { right: 0; top: 0; border-right-width: 2px; border-top-width: 2px; }
+.window__grip--bl { left: 0; bottom: 0; border-left-width: 2px; border-bottom-width: 2px; }
+.window__grip--br { right: 0; bottom: 0; border-right-width: 2px; border-bottom-width: 2px; }
+
+/* Room to grab the title bar between the tabs and the close button. */
+.window__drag-space {
+    min-width: 28px;
+    flex-grow: 1;
+}
+
+.window__tabs {
+    flex-grow: 0;
 }
 
 .window__handle {
@@ -157,13 +177,175 @@
     opacity: 1;
 }
 
-.window--fixed > .window__grip {
+.window--fixed > .window__grip,
+.window--bare > .window__grip {
     display: none;
 }
 
+/* Locked: nothing moves, resizes or closes. */
 .rth-root--locked .window__grip,
-.rth-root--locked .window__handle {
+.rth-root--locked .window__handle,
+.rth-root--locked .window__close {
     display: none;
+}
+
+/* Floating windows (bank, shop, conversation) sit above the HUD: a deeper shadow sets them apart. */
+.window--floating {
+    border-width: 1px;
+    border-color: rgba(0, 0, 0, 0.6);
+}
+
+/* The window a dragged tab will join. */
+.window--dock-target {
+    border-width: 2px;
+    border-color: rgb(240, 213, 140);
+}
+
+/* Where a window being moved or resized will land, and the lines it lines up with. */
+.landing {
+    position: absolute;
+    border-width: 2px;
+    border-color: rgba(240, 213, 140, 0.9);
+    background-color: rgba(240, 213, 140, 0.08);
+    border-radius: 4px;
+    align-items: center;
+    justify-content: center;
+}
+
+.landing--blocked {
+    border-color: rgba(224, 96, 78, 0.9);
+    background-color: rgba(224, 96, 78, 0.08);
+}
+
+.landing__label {
+    -unity-font-definition: resource("UI/Fonts/Cinzel");
+    -unity-font-style: bold;
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: rgb(240, 213, 140);
+    background-color: rgba(12, 10, 9, 0.85);
+    padding: 3px 8px;
+    border-radius: 3px;
+}
+
+.guide {
+    position: absolute;
+    background-color: rgba(240, 213, 140, 0.5);
+}
+
+/* A panel's content scrolls inside its window rather than spilling or squashing. */
+.panel-scroll {
+    flex-grow: 1;
+}
+
+.panel-scroll > .unity-scroll-view__content-viewport > .unity-scroll-view__content-container {
+    flex-grow: 1;
+}
+
+/* Hints and help text wrap instead of running off the edge. */
+.window__body .muted,
+.window__body .small {
+    white-space: normal;
+}
+
+/* The interface lock on the main action bar. */
+.hud__lock {
+    position: absolute;
+    right: 4px;
+    top: 3px;
+    width: 14px;
+    height: 14px;
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: rgba(168, 156, 134, 0.55);
+}
+
+.hud__lock:hover {
+    -unity-background-image-tint-color: rgb(240, 213, 140);
+}
+
+.hud__lock--on {
+    -unity-background-image-tint-color: rgb(224, 195, 135);
+}
+
+/* The interface menu (the button under the minimap). */
+.windows-menu {
+    min-width: 250px;
+    background-color: rgba(12, 10, 9, 0.97);
+    border-width: 1px;
+    border-color: rgb(110, 90, 58);
+    border-radius: 4px;
+    padding: 4px 0 6px 0;
+}
+
+.windows-menu__title {
+    -unity-font-definition: resource("UI/Fonts/Cinzel");
+    -unity-font-style: bold;
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: rgb(224, 195, 135);
+    padding: 4px 12px 6px 12px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(201, 162, 94, 0.3);
+}
+
+.windows-menu__section {
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: rgb(143, 132, 113);
+    padding: 8px 12px 2px 12px;
+}
+
+.windows-menu__row {
+    flex-direction: row;
+    align-items: center;
+    padding: 3px 12px;
+}
+
+.windows-menu__row:hover {
+    background-color: rgba(224, 195, 135, 0.12);
+}
+
+.windows-menu__icon {
+    margin-right: 8px;
+    -unity-background-image-tint-color: rgb(139, 128, 108);
+}
+
+.windows-menu__row--open > .windows-menu__icon {
+    -unity-background-image-tint-color: rgb(240, 213, 140);
+}
+
+.windows-menu__name {
+    flex-grow: 1;
+    color: rgb(168, 156, 134);
+}
+
+.windows-menu__row--open > .windows-menu__name {
+    color: rgb(221, 211, 191);
+}
+
+.windows-menu__key {
+    font-size: 13px;
+    color: rgb(143, 132, 113);
+    margin-right: 10px;
+}
+
+.windows-menu__state {
+    font-size: 13px;
+    width: 50px;
+    -unity-text-align: middle-right;
+    color: rgb(143, 132, 113);
+}
+
+.windows-menu__row--open > .windows-menu__state {
+    color: rgb(124, 207, 98);
+}
+
+.windows-menu__footer {
+    flex-direction: row;
+    margin: 8px 12px 0 12px;
+    padding-top: 6px;
+    border-top-width: 1px;
+    border-top-color: rgba(201, 162, 94, 0.3);
 }
 
 /* ---------------------------------------------------------------- modal windows */

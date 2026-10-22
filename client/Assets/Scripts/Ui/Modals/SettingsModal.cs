@@ -27,7 +27,6 @@ namespace Rth.Client.Ui.Modals
         private UiKit.Check _lift;
         private readonly Dictionary<CameraProfile, UiKit.Check> _camera = new Dictionary<CameraProfile, UiKit.Check>();
         private UiKit.Check _lock;
-        private UiKit.Check _barLock;
         private UiKit.Check _queueing;
         private readonly Dictionary<RevolutionMode, UiKit.Check> _revolution = new Dictionary<RevolutionMode, UiKit.Check>();
         private readonly Dictionary<TrainDefence, UiKit.Check> _trainDefence = new Dictionary<TrainDefence, UiKit.Check>();
@@ -70,20 +69,17 @@ namespace Rth.Client.Ui.Modals
 
             UiKit.Heading(scroll, "Interface").style.marginTop = 12f;
             VisualElement ui = UiKit.El(scroll, "card");
-            _lock = new UiKit.Check(ui, "Lock windows in place", () => Ui.Locked = !Ui.Locked);
-            _barLock = new UiKit.Check(ui, "Lock action bars (no dragging, no tooltips)", () =>
-            {
-                if (Session.Bars != null) Session.Bars.Locked = !Session.Bars.Locked;
-            });
+            _lock = new UiKit.Check(ui, "Lock the interface: windows, action bars and ability books stay put (also the lock on the main bar)", () => Ui.Locked = !Ui.Locked);
             VisualElement scaleRow = UiKit.El(ui, "row");
             scaleRow.style.marginTop = 4f;
             UiKit.Text(scaleRow, "Interface scale");
             UiKit.El(scaleRow, "spacer");
             UiKit.Button(scaleRow, "-", () => Ui.Scale -= 0.125f);
             _scale = UiKit.Text(scaleRow, "", "value", "bold");
-            _scale.style.width = 56f;
+            _scale.style.width = 84f;
             _scale.style.unityTextAlign = TextAnchor.MiddleCenter;
             UiKit.Button(scaleRow, "+", () => Ui.Scale += 0.125f);
+            UiKit.Button(scaleRow, "Fit to screen", () => Ui.UseAutoScale());
             VisualElement resetRow = UiKit.El(ui, "row");
             resetRow.style.marginTop = 4f;
             UiKit.Text(resetRow, "Put every window back where it started.", "muted", "small");
@@ -132,12 +128,11 @@ namespace Rth.Client.Ui.Modals
             _lift.Set(CameraRig.TerrainLift);
             foreach (KeyValuePair<CameraProfile, UiKit.Check> c in _camera) c.Value.Set(CameraRig.Profile == c.Key);
             _lock.Set(Ui.Locked);
-            _barLock.Set(Session.Bars != null && Session.Bars.Locked);
             CombatOptions options = Options();
             _queueing.Set(options.Queueing);
             foreach (KeyValuePair<RevolutionMode, UiKit.Check> r in _revolution) r.Value.Set(options.Revolution == r.Key);
             foreach (KeyValuePair<TrainDefence, UiKit.Check> t in _trainDefence) t.Value.Set(options.TrainDefence == t.Key);
-            _scale.text = Mathf.RoundToInt(Ui.Scale * 100f) + "%";
+            _scale.text = Mathf.RoundToInt(Ui.Scale * 100f) + "%" + (Ui.AutoScaled ? " (fit)" : "");
             _music.text = Mathf.RoundToInt(MusicPlayer.Volume * 100f) + "%";
             EntityView local = Ui.world.Local;
             _who.text = "Logged in as " + UiKit.Colour(Session.PlayerName, UiKit.Value) + (local != null ? UiKit.Colour("   at " + local.Tile, UiKit.Muted) : "");

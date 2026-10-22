@@ -8,7 +8,7 @@ using UnityEngine.UIElements;
 namespace Rth.Client.Ui.Panels
 {
     /// <summary>
-    /// The 28-slot backpack, four across. Click uses an item's first action (or deposits/sells
+    /// The 28-slot backpack, four across, its slots sized to fill the window. Click uses an item's first action (or deposits/sells
     /// while a bank or shop is open), right-click lists every option. Drag an item to another
     /// slot to move it, onto an action bar to put it there, or onto the bank to deposit it.
     /// </summary>
@@ -20,22 +20,24 @@ namespace Rth.Client.Ui.Panels
         public override string DefaultWindow => UiDefaultLayout.Side;
         public override int Order => 0;
         public override Key Hotkey => Key.B;
-        public override Vector2 MinSize => new Vector2(200f, 260f);
+        // Four across and seven down, as ever: the slots grow and shrink with the window.
+        public override Vector2 MinSize => new Vector2(4 * 36f + 24f, 7 * 36f + 60f);
+        public override bool Scrolls => false;
 
-        private VisualElement _grid;
+        private UiKit.FitGrid _grid;
         private readonly List<ItemSlotView> _slots = new List<ItemSlotView>();
 
         protected override void Build(VisualElement root)
         {
-            _grid = UiKit.El(root, "slot-grid");
-            _grid.style.width = 4 * 44f;
-            _grid.style.alignSelf = Align.Center;
+            _grid = new UiKit.FitGrid(root, 4, 7, 32f, 64f);
         }
 
         public override void Refresh()
         {
             List<ItemSlot> items = Session.Inventory;
-            while (_slots.Count < items.Count) _slots.Add(CreateSlot(Ui, Session, _grid, _slots.Count));
+            bool added = _slots.Count < items.Count;
+            while (_slots.Count < items.Count) _slots.Add(CreateSlot(Ui, Session, _grid.Root, _slots.Count));
+            if (added) _grid.Layout();
             for (int i = 0; i < _slots.Count; i++)
             {
                 ItemSlot slot = i < items.Count ? items[i] : default;

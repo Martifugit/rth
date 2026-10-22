@@ -7,7 +7,9 @@ namespace Rth.Client.Ui
     /// Where each default window sits before the player moves anything, docked like a classic
     /// layout: the minimap top right, the tabbed side window bottom right, chat bottom left, the
     /// main action bar bottom centre. Panels name their window with <see cref="UiPanel.DefaultWindow"/>;
-    /// fixed-size panels use their own size. One not listed here opens in the middle.
+    /// fixed-size panels use their own size. One not listed here opens in the middle. Sizes are for
+    /// a 1080-pixel-high screen; the interface scale (<see cref="UiRoot.Scale"/>) fits them to others,
+    /// and docked windows are settled so none overlaps another.
     /// </summary>
     public static class UiDefaultLayout
     {
@@ -28,6 +30,8 @@ namespace Rth.Client.Ui
 
         public const string Minimap = "minimap";
         public const string Side = "side";
+        /// <summary>The second side window, above the first: a window holds at most <see cref="UiWindow.MaxTabs"/> panels.</summary>
+        public const string Side2 = "side2";
         public const string Chat = "chat";
         public const string ActionBar = "actionbar";
         public const string ActionBar2 = "actionbar2";
@@ -43,6 +47,7 @@ namespace Rth.Client.Ui
         {
             [Minimap] = new Placement(1f, 0f, 0f, 0f, 236f, 282f),
             [Side] = new Placement(1f, 1f, 0f, 0f, 312f, 400f),
+            [Side2] = new Placement(1f, 1f, 0f, -404f, 312f, 220f),
             [Chat] = new Placement(0f, 1f, 0f, 0f, 480f, 230f),
             [ActionBar] = new Placement(0.5f, 1f, 0f, 0f, 636f, 110f),
             [Buffs] = new Placement(0.5f, 1f, -160f, -114f, 316f, 40f),

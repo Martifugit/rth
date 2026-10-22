@@ -61,7 +61,25 @@ namespace Rth.Client.Ui
         {
         }
 
+        /// <summary>
+        /// Floating windows (the bank, a shop, the conversation) sit above the HUD, open centred and
+        /// may overlap it; everything else is docked and never overlaps another docked window. By
+        /// default the windows the server opens float.
+        /// </summary>
+        public virtual bool Floating => ServerOpen != null;
+
+        /// <summary>
+        /// Whether the panel's content scrolls when the window is smaller than it (the default for
+        /// resizable panels). A panel that fills its window itself (a grid that resizes its slots,
+        /// the chat, the minimap) says false and must fit whatever size it gets.
+        /// </summary>
+        public virtual bool Scrolls => !Bare && !FixedSize.HasValue;
+
+        /// <summary>What <see cref="Build"/> fills: inside the scroll view when the panel scrolls.</summary>
         public VisualElement Root { get; private set; }
+
+        /// <summary>What the window holds: <see cref="Root"/>, or the scroll view around it.</summary>
+        public VisualElement Container { get; private set; }
         protected UiRoot Ui { get; private set; }
         protected GameSession Session => Ui.session;
         protected WorldView World => Ui.world;
@@ -77,6 +95,18 @@ namespace Rth.Client.Ui
             Ui = ui;
             Root = new VisualElement { name = Id };
             Root.style.flexGrow = 1;
+            Container = Root;
+            if (Scrolls)
+            {
+                // Content that doesn't fit scrolls; it never spills over the window or squashes.
+                var scroll = new ScrollView(ScrollViewMode.Vertical) { name = Id + "-scroll" };
+                scroll.AddToClassList("panel-scroll");
+                scroll.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
+                scroll.style.flexGrow = 1;
+                Root.style.flexShrink = 0;
+                scroll.Add(Root);
+                Container = scroll;
+            }
             Build(Root);
         }
 

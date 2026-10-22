@@ -141,6 +141,7 @@ namespace Rth.Client.Ui.Panels
 
             ui.DragSource(slot, () =>
             {
+                if (ui.Locked) return null; // a locked interface: nothing is dragged out of the book
                 AbilityDef a = session.Ability(id);
                 return new UiRoot.Drag { Data = new AbilityDrag { AbilityId = id }, Icon = IconLibrary.ForAbility(a), Tint = IconLibrary.AbilityTint(a) };
             }, () => session.UseAbility(id));

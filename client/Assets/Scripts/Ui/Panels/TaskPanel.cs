@@ -11,7 +11,7 @@ namespace Rth.Client.Ui.Panels
         public override string Id => "task";
         public override string Title => "Task";
         public override string Icon => "task";
-        public override string DefaultWindow => UiDefaultLayout.Side;
+        public override string DefaultWindow => UiDefaultLayout.Side2;
         public override int Order => 7;
 
         private Label _giver;
