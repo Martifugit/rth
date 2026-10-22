@@ -1309,3 +1309,83 @@
 .rth-root .unity-scroller--horizontal {
     display: none;
 }
+
+/* ---------------------------------------------------------------- U2: worn buttons, character window, inspect */
+
+/* The row of buttons under the worn equipment figure. */
+.worn__buttons {
+    justify-content: center;
+    height: 40px;
+}
+
+.worn__buttons > .button--icon {
+    margin: 0 3px;
+}
+
+.character-columns {
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+.character-column {
+    flex-grow: 1;
+    flex-basis: 0;
+    margin: 0 6px;
+}
+
+.character-card {
+    margin-bottom: 10px;
+}
+
+/* A label on the left, numbers in fixed-width cells on the right (stats, the per-style table, highlights). */
+.stat-row {
+    flex-direction: row;
+    align-items: center;
+    padding: 2px 4px;
+}
+
+.stat-row__label {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.stat-cell {
+    width: 72px;
+    flex-shrink: 0;
+    -unity-text-align: middle-right;
+}
+
+.stat-cell--zero {
+    color: rgb(143, 132, 113);
+}
+
+.inspect-head {
+    margin-bottom: 8px;
+}
+
+.inspect-head__who {
+    flex-grow: 1;
+    margin-left: 12px;
+}
+
+.inspect-note {
+    margin: 0 4px 8px 4px;
+}
+
+.inspect-body {
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+.inspect-figure {
+    padding: 8px 14px;
+    margin-right: 16px;
+}
+
+.inspect-side {
+    flex-grow: 1;
+}
+
+.inspect-line__icon {
+    margin-right: 8px;
+}

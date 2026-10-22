@@ -11,7 +11,8 @@ namespace Rth.Client.Ui.Panels
     /// <summary>
     /// Worn equipment as a figure: head at the top, then cape and neck, weapon, body and offhand,
     /// legs, and hands, feet and ring. Empty slots show what goes there. Click an item to take it
-    /// off, right-click for its options. Your stats are on the Character tab.
+    /// off, right-click for its options. Beneath the figure, a row of buttons (<see cref="Buttons"/>):
+    /// your combat stats and how others see you, both in the character window.
     /// </summary>
     public sealed class WornPanel : UiPanel
     {
@@ -22,24 +23,59 @@ namespace Rth.Client.Ui.Panels
         public override int Order => 1;
         public override Key Hotkey => Key.E;
 
-        public override Vector2 MinSize => new Vector2(3 * 40f + 24f, 5 * 40f + 60f);
+        public override Vector2 MinSize => new Vector2(3 * 40f + 24f, 5 * 40f + 60f + ButtonRowHeight);
         public override bool Scrolls => false;
+
+        private const float ButtonRowHeight = 40f;
+
+        /// <summary>A button in the row under the figure.</summary>
+        public sealed class WornButton
+        {
+            public string Icon;
+            public string Tooltip;
+            public Action<UiRoot> Click;
+        }
+
+        /// <summary>
+        /// The buttons under the figure, in order. Add one here for a new view of your gear (items
+        /// kept on death, a price check); the row is built from this list.
+        /// </summary>
+        public static readonly List<WornButton> Buttons = new List<WornButton>
+        {
+            new WornButton { Icon = "character", Tooltip = "Combat stats", Click = ui => ui.OpenModal<Modals.CharacterModal>(Modals.StatsTab.TabId) },
+            new WornButton { Icon = "eye", Tooltip = "Inspect: what other players see", Click = ui => ui.session.Inspect(ui.session.LocalPlayerId) },
+        };
 
         private Figure _figure;
 
         protected override void Build(VisualElement root)
         {
-            _figure = new Figure(Ui, Session, root, null);
-            // The figure grows and shrinks with the window.
-            root.RegisterCallback<GeometryChangedEvent>(_ =>
-                _figure.Fit(Mathf.Clamp(Mathf.Min(root.contentRect.width / 3f, (root.contentRect.height - 8f) / 5f), 40f, 76f)));
+            // The figure takes the space above the buttons, and grows and shrinks with the window.
+            VisualElement area = UiKit.El(root, "worn__figure-area");
+            area.style.flexGrow = 1;
+            area.style.flexShrink = 1;
+            area.style.flexBasis = 0;
+            area.style.minHeight = 0;
+            area.style.justifyContent = Justify.Center;
+            _figure = new Figure(Ui, Session, area, null);
+            area.RegisterCallback<GeometryChangedEvent>(_ =>
+                _figure.Fit(Mathf.Clamp(Mathf.Min(area.contentRect.width / 3f, (area.contentRect.height - 8f) / 5f), 40f, 76f)));
+
+            VisualElement row = UiKit.El(root, "footer-row", "worn__buttons");
+            foreach (WornButton b in Buttons)
+            {
+                WornButton button = b;
+                UiKit.IconButton(row, button.Icon, button.Tooltip, () => button.Click(Ui));
+            }
         }
 
         public override void Refresh() => _figure.Refresh(Session);
 
         /// <summary>
-        /// The equipment figure, reusable (the bank shows it too). By default a click uses the
-        /// item's first action (remove); <paramref name="onClick"/> replaces that (deposit).
+        /// The equipment figure, reusable (the bank and the inspect page show it too). By default it
+        /// shows your own gear and a click uses the item's first action (remove);
+        /// <paramref name="onClick"/> replaces that (deposit). A read-only figure only shows what
+        /// it is given (<see cref="Show"/>): someone else's gear, with tooltips and no clicks.
         /// </summary>
         public sealed class Figure
         {
@@ -64,9 +100,13 @@ namespace Rth.Client.Ui.Panels
             private readonly Dictionary<EquipSlot, string> _shown = new Dictionary<EquipSlot, string>();
             private readonly VisualElement _spine;
             private readonly VisualElement _shoulders;
+            private readonly Func<EquipSlot, ItemDef> _own;
+            private Func<EquipSlot, ItemDef> _source;
 
-            public Figure(UiRoot ui, GameSession session, VisualElement parent, Action<EquipSlot> onClick)
+            public Figure(UiRoot ui, GameSession session, VisualElement parent, Action<EquipSlot> onClick, bool readOnly = false)
             {
+                _own = slot => Def(session, slot);
+                _source = _own;
                 Root = UiKit.El(parent);
                 Root.style.alignSelf = Align.Center;
 
@@ -83,8 +123,8 @@ namespace Rth.Client.Ui.Panels
                     icon.pickingMode = PickingMode.Ignore;
                     box.RegisterCallback<PointerDownEvent>(e =>
                     {
-                        ItemDef def = Def(session, slot);
-                        if (def == null) return;
+                        ItemDef def = _source(slot);
+                        if (def == null || readOnly) return;
                         if (e.button == 0)
                         {
                             if (onClick != null) onClick(slot);
@@ -95,7 +135,7 @@ namespace Rth.Client.Ui.Panels
                             ui.Menu(e.position, def.Name, GameText.ItemOptions(session, ContainerKind.Equipment, (int)slot, def));
                         }
                     });
-                    UiKit.Tooltip(box, () => Def(session, slot) is ItemDef d ? GameText.Describe(d, 1) : UiKit.Colour(slot + ": nothing worn", UiKit.Muted));
+                    UiKit.Tooltip(box, () => _source(slot) is ItemDef d ? GameText.Describe(d, 1) : UiKit.Colour(slot + ": nothing worn", UiKit.Muted));
                     _slots[slot] = (box, icon);
                 }
                 Fit(_cell);
@@ -142,11 +182,16 @@ namespace Rth.Client.Ui.Panels
                 return s.IsEmpty ? null : session.Item(s.ItemId);
             }
 
-            public void Refresh(GameSession session)
+            /// <summary>Shows your own gear.</summary>
+            public void Refresh(GameSession session) => Show(_own);
+
+            /// <summary>Shows the gear <paramref name="source"/> gives for each slot (null: nothing worn).</summary>
+            public void Show(Func<EquipSlot, ItemDef> source)
             {
+                _source = source;
                 foreach (KeyValuePair<EquipSlot, (VisualElement Slot, VisualElement Icon)> s in _slots)
                 {
-                    ItemDef def = Def(session, s.Key);
+                    ItemDef def = source(s.Key);
                     string id = def?.Id ?? "";
                     if (_shown.TryGetValue(s.Key, out string was) && was == id) continue;
                     _shown[s.Key] = id;
