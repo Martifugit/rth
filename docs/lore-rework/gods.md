@@ -55,8 +55,9 @@ The god the Cruorian empire worships. Not a god "of war", but war follows it.
 ### p-betrayers: the first oathbreakers
 
 The name is a placeholder. **A group, not one character:** the followers who broke their oaths
-to p-sworn together. A scene to build towards: the player is brought into a room where several
-of them (say three) wait, faceless.
+to p-sworn together. A scene to build towards: the player meets the Faceless (say three of them, in a room), and
+something is off: one of them isn't really there. It is one of the betrayers, embodying a lesser
+being.
 
 **Their mortal followers are called the Faceless**, after their gods' feature (the followers
 themselves have faces).
