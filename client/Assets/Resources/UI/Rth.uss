@@ -171,6 +171,12 @@
     border-color: rgb(14, 12, 10);
     border-radius: 7px;
     opacity: 0;
+    display: none;
+}
+
+/* Only frameless windows (bars, the minimap) have a move handle; framed ones move by the title bar. */
+.window--bare > .window__handle {
+    display: flex;
 }
 
 .window--bare:hover > .window__handle {
@@ -212,6 +218,13 @@
     justify-content: center;
 }
 
+/* Where a dragged tab will go in a tab strip. */
+.landing--marker {
+    border-width: 0;
+    background-color: rgb(240, 213, 140);
+    border-radius: 2px;
+}
+
 .landing--blocked {
     border-color: rgba(224, 96, 78, 0.9);
     background-color: rgba(224, 96, 78, 0.08);
@@ -251,10 +264,10 @@
 /* The interface lock on the main action bar. */
 .hud__lock {
     position: absolute;
-    right: 4px;
-    top: 3px;
-    width: 14px;
-    height: 14px;
+    right: 7px;
+    top: 7px;
+    width: 18px;
+    height: 18px;
     -unity-background-scale-mode: scale-to-fit;
     -unity-background-image-tint-color: rgba(168, 156, 134, 0.55);
 }

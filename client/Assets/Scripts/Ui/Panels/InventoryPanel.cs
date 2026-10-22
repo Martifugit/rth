@@ -8,7 +8,7 @@ using UnityEngine.UIElements;
 namespace Rth.Client.Ui.Panels
 {
     /// <summary>
-    /// The 28-slot backpack, four across, its slots sized to fill the window. Click uses an item's first action (or deposits/sells
+    /// The 28-slot backpack, its slots flowing across as the window is wide. Click uses an item's first action (or deposits/sells
     /// while a bank or shop is open), right-click lists every option. Drag an item to another
     /// slot to move it, onto an action bar to put it there, or onto the bank to deposit it.
     /// </summary>
@@ -20,16 +20,15 @@ namespace Rth.Client.Ui.Panels
         public override string DefaultWindow => UiDefaultLayout.Side;
         public override int Order => 0;
         public override Key Hotkey => Key.B;
-        // Four across and seven down, as ever: the slots grow and shrink with the window.
-        public override Vector2 MinSize => new Vector2(4 * 36f + 24f, 7 * 36f + 60f);
-        public override bool Scrolls => false;
+        // Slots flow like the ability book's: as many columns as the window is wide.
+        public override Vector2 MinSize => new Vector2(4 * 44f + 24f, 3 * 44f + 60f);
 
         private UiKit.FitGrid _grid;
         private readonly List<ItemSlotView> _slots = new List<ItemSlotView>();
 
         protected override void Build(VisualElement root)
         {
-            _grid = new UiKit.FitGrid(root, 4, 7, 32f, 64f);
+            _grid = new UiKit.FitGrid(root, 28, 0, 40f, 48f);
         }
 
         public override void Refresh()

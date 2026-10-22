@@ -92,6 +92,39 @@ namespace Rth.Client.Tests
         }
 
         [Test]
+        public void AWindowDroppedBesideAnotherTakesItsHeight()
+        {
+            var neighbour = new Box(100, 100, 200, 400);
+            Box matched = WindowRules.MatchNeighbour(new Box(300, 150, 180, 220), new[] { neighbour }, 100, 100, W, H);
+            Assert.AreEqual(new Box(300, 100, 180, 400), matched);
+        }
+
+        [Test]
+        public void AWindowDroppedBelowAnotherTakesItsWidth()
+        {
+            var neighbour = new Box(100, 100, 300, 200);
+            Box matched = WindowRules.MatchNeighbour(new Box(140, 300, 180, 150), new[] { neighbour }, 100, 100, W, H);
+            Assert.AreEqual(new Box(100, 300, 300, 150), matched);
+        }
+
+        [Test]
+        public void AWindowNotTouchingAnythingKeepsItsSize()
+        {
+            var b = new Box(500, 500, 180, 150);
+            Assert.AreEqual(b, WindowRules.MatchNeighbour(b, new[] { new Box(100, 100, 300, 200) }, 100, 100, W, H));
+        }
+
+        [Test]
+        public void AResizedEdgeSnapsOntoANeighboursEdge()
+        {
+            var start = new Box(100, 100, 200, 200);
+            var neighbour = new Box(320, 100, 200, 296);
+            // The bottom edge, dragged to 391, snaps to the neighbour's bottom at 396.
+            Box r = WindowRules.Resize(start, WindowRules.Corner.BottomRight, 0, 91, 100, 100, new[] { neighbour }, W, H);
+            Assert.AreEqual(396f, r.Bottom);
+        }
+
+        [Test]
         public void SettlingALayoutLeavesNoOverlaps()
         {
             var layout = new[] { new Box(0, 0, 400, 400), new Box(300, 300, 400, 400), new Box(350, 100, 300, 300) };

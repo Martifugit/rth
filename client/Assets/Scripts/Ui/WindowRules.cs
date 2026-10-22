@@ -212,9 +212,68 @@ namespace Rth.Client.Ui
                 if (top && o.Bottom <= start.Y + 0.5f) y0 = Math.Max(y0, o.Bottom);
                 if (!top && o.Y >= start.Bottom - 0.5f) y1 = Math.Min(y1, o.Y);
             }
+            // The moving edges snap onto nearby edges of the neighbours and the screen, so windows line up.
+            var xs = new List<float> { 0f, screenW };
+            var ys = new List<float> { 0f, screenH };
+            foreach (Box o in others)
+            {
+                xs.Add(o.X);
+                xs.Add(o.Right);
+                ys.Add(o.Y);
+                ys.Add(o.Bottom);
+            }
+            if (left) x0 = Math.Min(SnapEdge(x0, xs), x1 - minW);
+            else x1 = Math.Max(SnapEdge(x1, xs), x0 + minW);
+            if (top) y0 = Math.Min(SnapEdge(y0, ys), y1 - minH);
+            else y1 = Math.Max(SnapEdge(y1, ys), y0 + minH);
+
             var result = new Box(x0, y0, Math.Max(minW, x1 - x0), Math.Max(minH, y1 - y0));
-            // If the minimum size itself can't fit, keep the window as it was.
-            return Fits(result, others, screenW, screenH) ? result : start;
+            if (Fits(result, others, screenW, screenH)) return result;
+            // Snapping may have pushed an edge into a neighbour: try without it, then give up.
+            return start;
+        }
+
+        private static float SnapEdge(float edge, List<float> lines)
+        {
+            float best = SnapDistance;
+            float result = edge;
+            foreach (float line in lines)
+            {
+                float d = Math.Abs(edge - line);
+                if (d < best)
+                {
+                    best = d;
+                    result = line;
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// A resizable window that has come to rest flush beside a neighbour takes its size along
+        /// the shared edge: beside it (left or right), its top and height; above or below it, its
+        /// left and width. That lines windows up without fiddling. Unchanged if the matched box
+        /// would be under the minimum size or wouldn't fit.
+        /// </summary>
+        public static Box MatchNeighbour(Box b, IReadOnlyList<Box> others, float minW, float minH, float screenW, float screenH)
+        {
+            foreach (Box o in others)
+            {
+                bool besideX = Math.Abs(b.X - o.Right) < 0.5f || Math.Abs(b.Right - o.X) < 0.5f;
+                bool besideY = Math.Abs(b.Y - o.Bottom) < 0.5f || Math.Abs(b.Bottom - o.Y) < 0.5f;
+                bool overlapY = b.Y < o.Bottom && o.Y < b.Bottom;
+                bool overlapX = b.X < o.Right && o.X < b.Right;
+                Box matched;
+                if (besideX && overlapY && o.H >= minH) matched = new Box(b.X, o.Y, b.W, o.H);
+                else if (besideY && overlapX && o.W >= minW) matched = new Box(o.X, b.Y, o.W, b.H);
+                else continue;
+                if (matched.Equals(b)) return b;
+                var rest = new List<Box>();
+                foreach (Box r in others)
+                    if (!r.Equals(o)) rest.Add(r);
+                if (Fits(matched, rest, screenW, screenH) && !matched.Overlaps(o)) return matched;
+            }
+            return b;
         }
 
         // ------------------------------------------------------------------ settling a layout

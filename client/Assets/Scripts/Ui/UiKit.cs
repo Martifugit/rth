@@ -285,9 +285,9 @@ namespace Rth.Client.Ui
                 _aspect = aspect;
                 Root = El(parent, "slot-grid", "fit-grid");
                 Root.style.flexGrow = 1;
-                Root.style.alignSelf = Align.Stretch;
-                Root.style.alignContent = Align.Center;
-                Root.style.justifyContent = Justify.Center;
+                Root.style.alignSelf = Align.Center; // the grid's width is set to whole columns, centred
+                Root.style.alignContent = Align.FlexStart;
+                Root.style.justifyContent = Justify.FlexStart; // a short last row starts at the left
                 parent.RegisterCallback<GeometryChangedEvent>(_ => Layout());
                 Root.RegisterCallback<GeometryChangedEvent>(_ => Layout());
             }
@@ -299,21 +299,22 @@ namespace Rth.Client.Ui
             {
                 Rect space = Root.parent != null ? Root.parent.contentRect : Root.contentRect;
                 if (space.width < 1f) return;
-                float cellW;
-                int count = Root.childCount;
+                int cols;
+                float h;
                 if (_rows > 0)
                 {
-                    cellW = Mathf.Min(space.width / _columns, space.height / _rows * _aspect);
+                    // Fixed columns and rows: the slots grow and shrink to fit both ways.
+                    cols = _columns;
+                    h = Mathf.Clamp(Mathf.Min(space.width / _columns, space.height / _rows * _aspect) / _aspect - Gap, _min, _max);
                 }
                 else
                 {
-                    int columns = Mathf.Clamp(Mathf.FloorToInt(space.width / (_max * _aspect * 0.8f + Gap)), 1, Mathf.Max(1, _columns));
-                    cellW = space.width / Mathf.Max(1, Mathf.Min(columns, Mathf.Max(1, count)));
+                    // Flowing: as many columns as fit at the smallest size, then the slots widen to fill the row.
+                    cols = Mathf.Clamp(Mathf.FloorToInt(space.width / (_min * _aspect + Gap)), 1, Mathf.Max(1, _columns));
+                    h = Mathf.Clamp((space.width / cols - Gap) / _aspect, _min, _max);
                 }
-                float h = Mathf.Clamp(cellW / _aspect - Gap, _min, _max);
                 float w = h * _aspect;
                 Size = h;
-                int cols = _rows > 0 ? _columns : Mathf.Max(1, Mathf.FloorToInt(space.width / (w + Gap)));
                 Root.style.width = cols * (w + Gap);
                 foreach (VisualElement child in Root.Children())
                 {

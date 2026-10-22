@@ -39,6 +39,7 @@ namespace Rth.Client.Ui.Panels
                 (Ui.Locked ? "Windows, action bars and ability books stay put. Click to unlock." : "Click to lock windows, action bars and ability books in place."));
 
             VisualElement gauges = UiKit.El(frame, "row");
+            gauges.style.marginRight = 20f; // clear of the lock
             _blood = new UiKit.Gauge(gauges, "blood", UiKit.BloodColour);
             _phlegm = new UiKit.Gauge(gauges, "phlegm", UiKit.PhlegmColour);
             _devotion = new UiKit.Gauge(gauges, "devotion", UiKit.DevotionColour);
@@ -53,6 +54,7 @@ namespace Rth.Client.Ui.Panels
             VisualElement slots = UiKit.El(frame);
             slots.style.marginTop = 5f;
             _slots = new ActionBarRow(Ui, slots, 0);
+            _lock.BringToFront(); // above the gauges, so its own tooltip and click win
         }
 
         private VisualElement _lock;

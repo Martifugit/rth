@@ -727,6 +727,7 @@ namespace Rth.Client.Ui
             _landing.style.width = box.W;
             _landing.style.height = box.H;
             _landing.EnableInClassList("landing--blocked", !fits);
+            _landing.RemoveFromClassList("landing--marker");
             _landingLabel.text = label ?? "";
             _landingLabel.style.display = string.IsNullOrEmpty(label) ? DisplayStyle.None : DisplayStyle.Flex;
 
@@ -769,12 +770,20 @@ namespace Rth.Client.Ui
             _dockTarget?.Root.AddToClassList("window--dock-target");
         }
 
-        /// <summary>Where a tab being dragged would go: into the window under it (as a tab) or a window of its own.</summary>
+        /// <summary>
+        /// Where a tab being dragged would go: into a window's tab strip under the pointer (its own,
+        /// to put it back or reorder it; another, to dock), or a window of its own.
+        /// </summary>
         private (UiWindow dock, WindowRules.Box box, bool fits) PanelDrop(UiPanel panel, Vector2 at)
         {
             UiWindow from = panel.Window;
-            UiWindow dock = _windows.FirstOrDefault(w => w != from && w.AcceptsDropAt(at) && w.CanDock(panel));
-            if (dock != null) return (dock, dock.Box, true);
+            UiWindow dock = _windows.FirstOrDefault(w => w.AcceptsDropAt(at) && (w == from || w.CanDock(panel)));
+            if (dock != null)
+            {
+                (int _, float x) = dock.TabSlotAt(at);
+                Rect bar = dock.TitleBarBound;
+                return (dock, new WindowRules.Box(x - 2f, bar.y + 3f, 4f, bar.height - 6f), true); // the insertion marker
+            }
             Vector2 size = from != null && from.Panels.Count == 1 ? from.Size : Vector2.Max(panel.MinSize, from != null ? from.Size : panel.DefaultSize);
             Vector2 screen = ScreenSize;
             var wanted = new WindowRules.Box(at.x - 20f, at.y - 10f, size.x, size.y);
@@ -789,9 +798,14 @@ namespace Rth.Client.Ui
         public void PreviewPanelDrop(UiPanel panel, Vector2 at)
         {
             (UiWindow dock, WindowRules.Box box, bool fits) = PanelDrop(panel, at);
-            SetDockTarget(dock);
-            bool alone = panel.Window != null && panel.Window.Panels.Count == 1;
-            ShowLanding(box, fits, dock != null ? "Add as a tab" : fits ? (alone ? "Move here" : "Own window") : "No room here", null);
+            UiWindow from = panel.Window;
+            SetDockTarget(dock != null && dock != from ? dock : null);
+            bool alone = from != null && from.Panels.Count == 1;
+            string label = dock == null ? (fits ? (alone ? "Move here" : "Own window") : "No room here")
+                : dock == from ? null // putting it back, or reordering: the marker says where
+                : null;
+            ShowLanding(box, fits, label, null);
+            _landing.EnableInClassList("landing--marker", dock != null);
         }
 
         /// <summary>A tab dropped somewhere: onto another window's title bar joins it; anywhere else gets its own window.</summary>
@@ -800,9 +814,16 @@ namespace Rth.Client.Ui
             UiWindow from = panel.Window;
             (UiWindow dock, WindowRules.Box box, bool fits) = PanelDrop(panel, at);
             if (!fits) return;
+            if (dock != null && dock == from)
+            {
+                // Dropped back on its own tab strip: put back, or moved along it.
+                from.MoveTab(panel, from.TabSlotAt(at).Index);
+                SaveLayout();
+                return;
+            }
             if (dock != null)
             {
-                dock.Add(panel);
+                dock.Add(panel, true, dock.TabSlotAt(at).Index);
                 dock.Root.BringToFront();
             }
             else if (from != null && from.Panels.Count == 1)

@@ -129,14 +129,18 @@ namespace Rth.Client.Ui
 
         // ------------------------------------------------------------------ panels and tabs
 
-        public void Add(UiPanel panel, bool activate = true)
+        /// <summary>Adds a panel as a tab, at <paramref name="index"/> among the tabs (the end by default).</summary>
+        public void Add(UiPanel panel, bool activate = true, int index = -1)
         {
             if (Panels.Contains(panel)) return;
             panel.Window?.Remove(panel);
-            Panels.Add(panel);
+            index = index < 0 || index > Panels.Count ? Panels.Count : index;
+            Panels.Insert(index, panel);
             panel.Window = this;
 
-            VisualElement tab = UiKit.El(_tabs, "tab");
+            var tab = new VisualElement();
+            tab.AddToClassList("tab");
+            _tabs.Insert(index, tab);
             UiKit.Icon(tab, IconLibrary.Get(panel.Icon), 22f, "tab__icon").pickingMode = PickingMode.Ignore;
             UiKit.Tooltip(tab, () => panel.Title);
             tab.RegisterCallback<PointerDownEvent>(e => PressTab(panel, e));
@@ -147,6 +151,43 @@ namespace Rth.Client.Ui
             if (activate || Active == null) Activate(panel);
             UpdateFrame();
         }
+
+        /// <summary>Moves one of its tabs to another place in the strip.</summary>
+        public void MoveTab(UiPanel panel, int index)
+        {
+            int from = Panels.IndexOf(panel);
+            if (from < 0) return;
+            index = Mathf.Clamp(index > from ? index - 1 : index, 0, Panels.Count - 1);
+            if (index == from) return;
+            Panels.RemoveAt(from);
+            Panels.Insert(index, panel);
+            VisualElement tab = _tabElements[panel];
+            tab.RemoveFromHierarchy();
+            _tabs.Insert(index, tab);
+        }
+
+        /// <summary>
+        /// Where in the tab strip a point (panel space) falls: the index a dropped tab would take,
+        /// and the x of the gap it would go into.
+        /// </summary>
+        public (int Index, float X) TabSlotAt(Vector2 point)
+        {
+            if (Panels.Count == 1 || _tabs.resolvedStyle.display == DisplayStyle.None)
+            {
+                Rect bar = _titleBar.worldBound;
+                bool before = point.x < bar.center.x;
+                return (before ? 0 : 1, before ? bar.xMin + 4f : _title.worldBound.xMax);
+            }
+            for (int i = 0; i < Panels.Count; i++)
+            {
+                Rect r = _tabElements[Panels[i]].worldBound;
+                if (point.x < r.center.x) return (i, r.xMin);
+            }
+            return (Panels.Count, _tabElements[Panels[Panels.Count - 1]].worldBound.xMax);
+        }
+
+        /// <summary>The title bar's place on screen (panel space), for drop markers.</summary>
+        public Rect TitleBarBound => _titleBar.worldBound;
 
         public void Remove(UiPanel panel)
         {
@@ -284,6 +325,12 @@ namespace Rth.Client.Ui
                 WindowRules.Box moved = _startBox.At(_startBox.X + delta.x, _startBox.Y + delta.y);
                 WindowRules.Box snapped = WindowRules.Snap(moved, _ui.SnapTargetsFor(this), screen.x, screen.y, guides);
                 WindowRules.Box? free = IsFloating ? WindowRules.Clamp(snapped, screen.x, screen.y) : WindowRules.NearestFree(snapped, others, screen.x, screen.y);
+                // Flush beside a neighbour, a resizable window takes its height (or width): easy alignment.
+                if (free.HasValue && !IsFloating && !FixedSize.HasValue)
+                {
+                    Vector2 min = MinSize;
+                    free = WindowRules.MatchNeighbour(free.Value, others, min.x, min.y, screen.x, screen.y);
+                }
                 _landingFits = free.HasValue;
                 _landing = free ?? _startBox;
                 // The window follows the pointer; the outline shows where it will settle.
