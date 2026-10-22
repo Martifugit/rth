@@ -12,8 +12,9 @@ owns, and when it is done. Update the status column as work lands.
 - **The lore is being rebuilt** in `docs/lore-rework/`. Decided so far: an unfinished world revised
   in ages (a thousand-year stillness, now stirring), p-spoil, death through the ferryman, the first
   gods (p-sworn, the betrayers, p-scattered, p-head, the three constants), the powers and a
-  concept map. `docs/lore.md` and `docs/world-map.md` are **out of date** until workstream A1
-  lands. Nobody should build content from them.
+  concept map. `docs/lore.md` and `docs/world-map.md` are now canon, rewritten from the rework. The
+  lore notes in other docs (`skills.md`, `systems.md`, `CLAUDE.md`, the Saint spec) still mention
+  Tithe and the Assayer until A1 finishes.
 - **The old area plan** (`docs/areas/skeleton.*`) is drawn on the old map and is superseded. Its
   rulebook (`docs/areas/rules.md`, `targets.json`) and research still apply.
 - **Unmerged work:** the world-scale, camera and art-style session reported its changes on
@@ -81,7 +82,7 @@ Wave 3
 | **Runs** | cloud |
 | **Depends on** | nothing |
 | **Owns** | `docs/lore.md`, `docs/world-map.md`; lore notes in `docs/skills.md`, `docs/systems.md`, `docs/interface.md`, `CLAUDE.md`, `docs/ideas/*Unquiet Saint*` |
-| **Status** | not started |
+| **Status** | `lore.md` and `world-map.md` rewritten (2026-10-22); the other docs' lore notes remain |
 
 - Rewrite `docs/lore.md` from `docs/lore-rework/` (`universe.md`, `gods.md`, `death.md`,
   `powers.md`, `README.md`'s triage, `concept-map.png`). Short, factual, sectioned like the sheets;

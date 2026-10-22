@@ -1,376 +1,303 @@
-# A Chronicle of the Basin
+# The lore of R'th
 
-*A first sketch of R'th's history, its people and the powers that move it. Names are adopted
-for now (see `docs/world-map.md`) and can still change. The thing in the bay is deliberately
-left undefined.*
+*Canon as of 2026-10-22, from the lore rework (`docs/lore-rework/`, where each part was decided and
+where the open questions live). Names written `p-something` are placeholders that never reach
+players; until a real name is chosen, the game keeps its current wording. Truths marked **sealed**
+are deliberately undecided: only their constraints are fixed, so later stories can't contradict
+earlier ones.*
 
 ---
 
-## I. The shape of the known world
+## I. The universe
 
-The known kingdoms live in a basin. A great mountain range, **Candora**, curves around the
-continent like a wall, sloping down to the sea at both ends, and encloses the lowlands on the north and the west.
-Beyond it lies frozen country nobody farms: **Nivil**. In the middle of the lowlands lies a
-round bay, **the Cradle**. Its
-water rises and falls more steadily than any tide should, and out of it rises a shape that can be
-seen from anywhere in the lowlands. Nobody agrees what it is. Nobody who has tried to find out has
-come back with an answer worth keeping. Most people call it **the Quaere**, an old word for an open question. The Synod calls it
-**the Responsory**, the sung response to a call.
+### An unfinished world
 
-Around the bay lies the **heartland**: green river country, **Venaria**, ruled from the
-oldest seat of the faith of Blood at **Cruor**. Across the bay's narrow mouth to the south-east lies **Tithe**, the second seat
-of the same faith, harder, hotter and prouder, and its salt coast, **Calcinia**. West of the heartland, in the rain shadow of the
-mountains, the dry kingdom of **Sere** grows rich on salt and caravans and poor in water. Its capital is
-**Cistern**, built around the deepest wells in the west. In the
-far north-east the range itself gives out: eroded, broken open, and finally eaten away by the
-Scalding. That broken country of fen and scar, **Slough**, belongs to the **occult houses**: Gall,
-Umber, Mordant and the fallen house of Sallow.
+R'th was made, and the making was never completed. **Who or what made it is unknown**, and will
+stay unknown for a long time. Whatever it is, it is not present in the world in any form people
+recognise.
 
-**The range is held in three layers.** Its liveable surface (the passes, the high valleys, the
-observatories) belongs to the **Rationalists** of **Concordia**, whose capital, **Meridian**, stands where the
-range comes down to the sea. Its caves and cart-lines belong to the **dwarves**, scattered through the mountains, who trade from the hall
-of **Frostpeak Forge**. And beneath the dwarves are the depths, **Undermost**, which belong to peoples older still, whom nobody visits on purpose.
+The making happens in **revisions**, ages apart. In a revision, things are **added** to the world,
+**moved** within it, and **taken out** of it: a species, a river, a village, sometimes a whole
+people. Between revisions nothing large changes, for centuries.
 
-Over all of it hang **two moons**. One of them is cracked.
+The last revision ended **about a thousand years ago**. Now the signs of a new one are appearing.
+**The game begins at that turn**, and later updates can belong to it: a place appears, a place
+turns out to have moved, something comes back.
 
-The story begins far from all of this, in **Tolling**, a river town at the western edge of
-Cruor's lands, where the heartland starts to dry out towards Sere. The Synod keeps a clerk and
-a strongbox there and not much else. It is the kind of place the great powers forget about,
-which is why strange things can happen in it for a long time before anyone important notices.
-(See `docs/world-map.md` for every place name.)
+**The people of R'th barely know any of this.** To them, the world is simply the world. They see
+the effects and never the cause:
 
-### Why the borders hold
+- **Ordinary people** remember catastrophes, extinctions, a lost city, a people that "came from
+  nowhere".
+- **Scholars** keep lists that nobody can explain: places on old maps that aren't on the ground;
+  places that are on the ground, but not where the old records put them; places with no history
+  at all; ruins of a style nobody made; records that contradict each other in the same way at the
+  same date.
+- **Unfinished places** exist inside the world: places that were never quite completed. Scholars
+  investigate them, and most people avoid them.
 
-Every power in the basin holds its land for a reason the land itself gives it.
+(The game never removes places. Removal belongs to history; in play, a revision shows itself by
+what appears and what moves.)
 
-- **Cruor** holds the heartland because everything flows to it. Every river in the basin runs
-  down to the bay, and so does every road, barge and pilgrim. It is the richest city in the
-  basin, it keeps the largest army, and its faith honours martyrdom: its soldiers would rather
-  die than yield, and its enemies know it. Nobody has taken ground from Cruor in living memory.
-  It needs no wall but its people.
-- **Tithe** holds the south-east because it holds the bay's only mouth to the open sea. Every
-  ship that leaves the bay passes under its towers and pays, which is where its name comes from.
-  Behind it lie the salt pans of Salinas and the flats of Ascia, salt flats and bare rock where no army
-  can live off the land. Cruor has tried to take it three times. The channel and the glare beat
-  it every time, and so did Cruor's own debts: Tithe is the basin's creditor, and a see at war
-  with its banker is ruined by winning.
-- **Sere** holds the west because nobody else can live there. The mountains take the rain,
-  and only Sere knows the wells and cisterns. Armies that march in die of thirst. It also holds
-  the lowland ends of the western passes, so the caravan trade through the range runs through
-  its markets and its salt reaches every table in the basin.
-- **The Rationalists** hold the range's surface because they hold the passes, and the high
-  ground looks down on everyone. Their neutrality is a toll gate: every crossing pays, every war
-  needs their roads, and every side needs their moonfall forecasts.
-- **The dwarves** hold the caves because nobody else can find their way in them, and they hold
-  the depths' bindings because nobody else knows they exist.
-- **The occult houses** survive in the north-east because nobody else wants it. The fens swallow
-  plate armour and cavalry, Scalth still burns, and where the range has fallen apart the coast
-  is all inlets and sea caves. The Synod can burn a house, but it cannot hold the ground after.
+### p-spoil
 
-## II. The four humours
+Everything taken out of the world goes somewhere: **p-spoil**, a heap of everything rejected,
+piled up age after age like a spoil heap beside a mine. Unfinished creatures, removed places,
+lost peoples and things that only half work lie there in layers, the deepest the oldest. It can be
+reached, rarely and dangerously, and what's in it sometimes leaks back.
 
-Every culture of the basin agrees that a living thing is made of four humours: blood, phlegm and
-two biles, yellow and black. What they disagree about is which of them is *true*.
+### The humours
 
-- **The Sanguine Synod (Blood).** Blood is life and covenant. To bleed for something is to make it
-  holy. The Synod is liturgical, martial and proud, and it fights in plate at close quarters. It is
-  ruled by pontiffs, two of them at present, which is one too many.
-- **The Rationalists (Phlegm).** Calm, cold reason. Religion is a fever and occultism a poison.
-  They measure, calculate and shoot from a long way off. Their neutrality in the wars of faith is
-  policy, profitable and much resented.
-- **The occultists (Bile).** The flesh is unfinished, and the will can finish it. Bile, yellow and
-  black, is the solvent and the fire of transformation. Their arts burn, dissolve and explode, and
-  they make their practitioners terribly strong and slowly strange. The faith calls them
-  apostates. They call themselves the only honest people in the basin.
+Blood, phlegm, and yellow and black bile are how bodies work in R'th. They are nature, not
+cosmology: they give combat its identity (`docs/systems.md`), and the peoples of the world
+practise arts built on them, but they are not the secret of the universe.
 
-### The two sees of Blood
+### Sealed
 
-The Sanguine Synod is one church with two seats, and they have grown into two very different
-societies. **Cruor** is the first: the river city on the bay's rim, the richest and most populous
-see, whose faith honours martyrdom and grows by spreading. Its power comes from the many. It
-gathers the blood of the faithful by the hundreds of thousands, and the more the faith spreads,
-the stronger it becomes. That is why Cruor keeps raising its monuments in every corner of the
-world.
+| Question | Constraints so far |
+| --- | --- |
+| Who or what makes and revises the world? | Not present in the world in any recognisable form. |
+| Why does a revision start, and why now? | Something in the present can be connected to it. |
+| How is it decided what is rejected? | |
+| Is anything in p-spoil aware, or trying to get back? | |
 
-**Tithe** is the second, and it needs none of that.
+---
 
-#### Tithe, the creditor see
+## II. The powers above mortals
 
-Tithe stands on the south-eastern lip of the bay's narrow mouth, where the Cradle meets the open
-sea. Every ship that leaves the bay passes under its towers, and every ship pays. The city took
-its name from that toll; its people would say the toll took its name from them.
+### The constants
 
-The land behind it is salt coast: the pans of Salinas, Saltglare, and the white flats of
-Ascia, where at noon nothing casts a shadow and no army can live off the ground.
-Calcinia feeds almost nobody. The city feeds on what passes through its gate. Tithe is a
-crowded, rich, salt-white port of shipping houses, counting halls and choirs, and the wealthiest
-treasury in the lowlands.
+Three siblings older than the gods: **p-constants**. Each **is** part of how existence works. They
+are not worshipped and want nothing from mortals. **The revisions never touch them**: a god can be
+taken, a constant can't, and the gods are quietly afraid of them. They rarely meet; when they do,
+something in the world shifts. Each keeps a realm:
 
-**The doctrine.** Tithe holds the same covenant, scripture and blood as Cruor. What it disputes is
-what the covenant asks. Something was given at the water's edge, and one day it will be called in.
-When it is, every soul will be weighed against what it owes, and the faithful must be found
-worthy. Tithe lives as though that day could come tomorrow. Every Tithian is born owing: the debt
-passes from parent to child, and living rightly is repayment. Each faithful soul has its entry in
-**the Ledger**, the account of what it owes and what it has repaid, and a Tithian's standing comes
-from that record, not from birth or rank. Tithe barely seeks converts. A debt can't be preached,
-but an outsider can choose to take one on.
+- **the dreamer** keeps **the Dreaming**;
+- **the keeper of the dead** keeps the realm of the dead, where the ferryman works for them;
+- **the keeper of p-spoil** receives everything rejected.
 
-**The liturgy.** Tithe doesn't preach, it sings. Its worship is sung by choirs under salt-white
-vaults, each hymn part of the account spoken aloud before the covenant: power drawn from one's own
-devotion, not borrowed from anyone else. Tithe salts and keeps its dead in the flats of Ascia,
-because when the debt is called in, every debtor must be present to answer for it.
+### The Dreaming
 
-**The auditors.** Tithe's inquisitors are examiners of accounts more than hunters of heretics.
-They know what every soul owes, and so, in practice, they know everyone's secrets. Brother Cassius
-Ember is one of them. His office is the truth of what is owed, which is why he is the most honest
-person in either see, and why nobody wants to hear what he finds.
+A landscape built from everyone's dreams, always shifting. The waking world's places appear in it
+**as people remember them**, not as they are, so **moved places still stand in their old
+locations there**: old maps are true in the Dreaming. For scholars hunting places that don't
+exist, it is the best evidence there is, if they can reach it. The Dreaming skill gathers
+fragments here, and the dreamer notices who takes what.
 
-**The creditor.** Tithe took its own doctrine literally. Centuries of tolls built a treasury, and
-the treasury lends: to Sere's queen, to the Rationalists' observatories, to the dwarves' trading
-halls, and above all **to Cruor**. Crusades, garrisons and the monuments Cruor raises across the
-world are paid for, in part, with Tithian money. Cruor spreads outward, and Tithe owns a share of
-everything it gains.
+### The gods
 
-**Why Cruor has never taken it.** Cruor has tried three times. Each time it met the channel, the
-glare, Tithe's fleet and the armies Tithe's treasury could hire. Worse, it met its own debts. A
-Cruor at war with Tithe sees its loans called in, its expansion stopped and the bay's mouth
-chained shut, and the bay is landlocked except through Tithe. One of the Synod's two pontiffs sits
-in Tithe, so a war between the sees splits every congregation in the basin, Cruor's included.
-Cruor could take Tithe's ground, but it would be ruined doing it. And Tithe can't feed itself
-without the heartland's grain. So the three wars ended in four peaces.
+Gods and every kind of superhuman being exist and act in the world.
 
-**What Tithe waits for.** It isn't trying to win. It wants to be found worthy when the debt falls
-due, so it is patient, slow to go to war, and very hard to move. It watches the bay, as Cruor
-does, but it prepares for a different day: not to defend the world from what lies there, but to
-settle with it.
+- **A handful of gods** everyone has heard of, and many **lesser powers** beneath them: local gods,
+  great spirits, old beasts, beings like the ferryman.
+- **A god is a character, not a domain.** Nobody here is "the god of war"; each god is known by its
+  story, its wound, its hunger, its bargain, its sign, its faces, its presence and its fear.
+- **Their presence is uneven**, and part of who they are: one walks the world, one speaks only
+  through omens, one hasn't been heard from in centuries. As the revision stirs, quiet gods can
+  start to show themselves again.
+- **They come from different places:** some were made with the world, some came back from
+  p-spoil, some ascended from something lesser. Which is which is usually sealed.
+- **Every god can be taken in a revision.** All of them know it.
+- **No single rivalry runs the world.** The gods have their own lives, enemies and aims.
+- Many gods grow from myths and stories, reimagined so the inspiration stays discoverable.
 
-#### What separates them
+#### p-sworn: the god of Cruor's empire
 
-| | **Cruor** (the Keeping) | **Tithe** (the Debt) |
-|---|---|---|
-| **The covenant is...** | a keeping: the faithful guard against what is in the bay | a debt: one day it will be called in, and the faithful must be found worthy |
-| **The faithful are...** | guards and martyrs | debtors |
-| **Holiness comes from...** | blood given: bleeding for the covenant makes it holy | a life lived in repayment |
-| **Power comes from...** | outside, from the many: the pooled blood of hundreds of thousands | inside, from the one: personal devotion, sung |
-| **Its engine** | expansion: more faithful, more blood, more monuments | credit: tolls and loans; it is paid whoever grows |
-| **How it grows** | by spreading the faith across the world | it doesn't need to; the world passes through its gate |
-| **Converts** | wanted, everywhere | rare; a debt can't be preached, only taken on |
-| **Worship** | blood given at monuments and altars | hymns sung by choirs; the Ledger |
-| **Its dead** | their blood returns to the keeping | salted and kept, to answer when the debt is called |
-| **The individual** | one of the many; the cause outlives you | accountable by name; your record is your own |
-| **Its clergy** | blood-knights | auditor-inquisitors |
-| **Its power in the world** | the largest army, the richest land, soldiers who would rather die than yield | the bay's mouth, the treasury, the Ledger's secrets |
-| **Its weakness** | its expansion runs on borrowed money | it can't feed itself |
-| **What it thinks of the other** | Tithe hoards grace and does nothing with it | Cruor spends blood that isn't its own, to pay a debt it won't admit it owes |
-| **In the game** | **verses**: melee's power, bought with pledges gathered at its monuments | **hymns**: prayers for every style, sung on your own devotion |
-| **What it prepares for** | to hold the line against what is in the bay | to settle with it |
+It is **made of the oaths its followers swear in blood**. Long ago its first followers betrayed it,
+so now it takes blood as collateral for every oath: swear in blood and its strength is yours;
+break the oath and the blood is called in. Its sign is **a taste of iron in your mouth**. To the
+empire it is a keeper of faith; to the peoples it conquers, a debt collector.
 
-**What they share:** one covenant, one scripture, one blood, one Synod with two pontiffs, and one
-enemy, the occult houses, against whom they once united in the crusade that ended in the Scalding.
+It starves without new oaths, so the empire must keep swearing in new peoples. War follows it,
+though it is not a god of war.
 
-## III. A short history
+**Its secret:** it was wounded at the dawn of the world, and **the wound never closed**. The blood
+the empire gathers at every monument is, in truth, feeding its god and keeping it from bleeding
+out. The faithful are told the blood seals their oaths; very few know what it is really for. It
+fears a world where nobody swears any more, and, secretly, bleeding out.
 
-### Before memory
-The mountains were already old when anything that remembers came to them. Something lies under
-them, bound in the deep by peoples who were there before the dwarves. The dwarves arrived later
-and found the bindings. They do not know who made them, but they understood enough to keep them.
-They have done so ever since, in silence.
+It is unseen for now: felt in the taste of iron and the strength of sworn soldiers, spoken for by
+its priests. **It has a place in the world, and will make an entrance.** Whatever wounded it is
+still out there (sealed).
 
-### The Covenant
-The first settlers of the heartland came to the bay. What happened there is told in a hundred
-versions. The Synod's version is that a covenant was made at the water's edge, in blood, with
-something that answered. The faith of Blood begins there, and so does Cruor, built on the
-bay's rim facing what lies in it.
+#### p-betrayers: the first oathbreakers
 
-### The Cracking
-On a night still kept as a feast in some places and a fast in others, the second moon cracked. The
-first fragment struck the range in the north-west, tore Selenfall through it, and burned for
-a month. From the scholars and
-sky-watchers who studied the falls came the **Rationalists**: they predicted the second fall and
-were right, and in the basin that is a kind of power. They took to the mountains for clearer skies.
-There they met the dwarves and struck the **Under-Treaty**: the surface to the scholars, the caves
-to the dwarves, and no questions asked in either direction. Both sides have broken the last clause
-many times.
+Among p-sworn's first followers were the ones who broke their oaths together. The betrayal and
+the wound were one event: they struck the blow, took some of p-sworn's power and ascended.
+**Ascending destroyed their bodies and fused them into one: a single, powerful abomination they
+all share.** They have **no faces of their own**.
 
-### The Great Schism
-The faith split over a single question: **what the covenant asks of the faithful**.
-- **Cruor** teaches that the covenant is a *keeping*. The faithful guard what is in the bay,
-  and they guard the world from it.
-- **Tithe** teaches that the covenant is a *debt*. One day it will be called in, and the
-  faithful must be found worthy when it is.
+Each of them can still, alone, **embody a lesser being** and wear it like a borrowed face. They
+walk the world that way, never as themselves, in the faces of trusted people: a friend, a captain,
+a priest. You may only realise much later that you met one. Their sign is **your name, spoken
+behind you, in the voice of someone you trust**; nobody is there when you turn.
 
-The two sees have fought three wars over the difference and made peace four times. Today they are
-allies, for now. Each keeps spies in the other's cathedral. (How differently they live is in
-section II, "The two sees of Blood".)
+Their mortal followers are **the Faceless**, named for their gods (the followers have faces). To
+the empire they are the Traitor, the devil of its faith; to deserters, the conquered and anyone
+who swore under duress, a liberator. They offer a new life for your old name: a new face and a
+fresh start, while everyone who knew you forgets you. They hunger to be what they were, separate
+and whole, and fear being forgotten.
 
-### The Apostasy and the Scalding
-The occult arts were once practised openly in the fens. As the occultists grew stronger and
-stranger, both sees, for once united, declared crusade. Driven back against the northern mountains,
-the occult masters answered with **vitriol on a scale nobody has dared since**. The acid ate the
-crusade, the fens and the mountains themselves. Where it fell, the range is broken open and the land
-is still poisonous: **Scalth**. The occultists lost the war and were outlawed everywhere. They
-did not die out. They went into the cities, under the counters of apothecaries and behind the doors
-of quiet neighbours, and into the fens and sea caves the Synod cannot hold.
+#### p-scattered: the god that became demigods
 
-### The present
-An uneasy calm. The sees are allied and suspicious of each other. Sere plays them off against the
-Rationalists for water and metal. The occult houses are rebuilding, each alone. Fragments still fall.
+Long ago a god was torn apart (by whom, and why, is sealed). Its pieces didn't die: **each became a
+demigod**, with a life, a character, followers and a place of its own. **None of them knows what
+they were.** Restoring the god would cost each of them the life they have lived.
 
-And people have begun to fall asleep and not wake.
+#### p-head: the face in the cliff
 
-## IV. The player
+An enormous face in a cliff, carved by nobody remembers whom, with **a waterfall pouring from it**.
+Drink from the falls and you see what it remembers, and leave one memory of your own in the water.
+Thousands of years of drinkers mean it holds memories from before the revisions: removed places,
+moved places, forgotten peoples. **It is the only mind that does.** A village lives on its brow.
+One day, the falls will stop flowing.
 
-The player wakes in a riverside town at the edge of the heartland, as one of the sleepers. Of all
-the sleepers in the town, the player is the only one who woke. They remember everything about
-themselves, and something else too: a dream that is not theirs.
+---
 
-That is why everyone is interested in them:
-- **The Synod** wants to know whether they are blessed or tainted.
-- **The occultists** want to know what was taken out of them, and what was put in.
-- **The Rationalists** want to measure them.
-- **The Dreamweaver** chose them, because whatever passed through them left a trail.
+## III. Death
 
-The player begins **unaligned**, and the game never forces a single loyalty. They can serve a see,
-learn from a house or study under the scholars. Most players will do
-something with all of them. The story is built so that each faction's quests show the others from
-inside: the Synod's crusade looks different once you have had tea with an apothecary.
+When a body fails, the dead go to **the realm of the dead**, kept by one of the constants. For now,
+what the living know of it is small: a **very dark landing** with a bank, and **the ferryman**.
 
-Over the long arc, the player moves from local troubles (a missing survey, a sleepwalker who knows
-things she shouldn't, a moonfall in the hills) to the questions underneath them: what was bound in
-the deep, what the nightmare is, who has been arranging the basin's catastrophes, and what lies in
-the bay.
+- **The ferryman** brings players back to the living, and holds everything they died with. Nothing
+  is kept: what you carried and wore is his until you pay.
+- **He takes coin**, more the more valuable the gear.
+- **Or an obol.** If you died carrying one, he says he noticed it and took it as payment. An obol
+  costs a pack slot and isn't cheap, but it is far cheaper than the fee on fine gear. It only
+  counts if you carried it when you died.
+- **No coin, no gear.** He takes you back without it, and keeps it about a day. There is no owing
+  him.
+- **The long way back.** A player can refuse the ferry and walk back through the realm of the
+  dead: a short, brutal route that is just as hard for the strongest as for the weakest. At its
+  end waits **the walker**, who tried it in life and failed, and who has spent the afterlife
+  helping those who make it. Make it, and your gear is yours for free.
 
-## V. The powers that are neither good nor evil
+Why the dead stay dead and players return is not explained.
 
-### The Dreamweaver
-A vast being of silver starlight and lavender thread, with more eyes than anyone has counted. She
-keeps the **archive**: every dream, memory and nightmare that mortals and gods have let go of,
-spun into orbs and hung in the mist of the **Veilwood**. She is not cruel and she is not kind. She
-is doing her job, and she is very good at it.
+---
 
-She cannot act in the waking world. When something escapes her archive, she needs a waking agent.
-Her dealings with the player are courteous, precise and faintly alarming. She will show them almost
-anything, and she will not lie, but she answers exactly the question asked.
+## IV. The continent
 
-### The Assayer
-When a body fails, its humours come apart. **The Assayer** weighs them, and the dead of R'th meet it
-often. It appears as a figure at a long table with scales of every size. It tallies what each
-person was made of and decides what goes back into them. Players meet it every time they die. It is
-dry, patient and occasionally funny. Over many deaths it comes to know them, and it remarks on how
-their balance is changing: more blood since the crusade, more bile since that business in the fens.
+### The land
 
-It takes no side. It has opinions. In the late game, the question of what it does with the humours
-it keeps becomes very important.
+The known continent is varied all over: rivers, forests, lakes, fens, hills, deserts, volcanic
+country, coasts and islands. Its greatest feature is **the spine**, a long mountain range running
+from the warm south **north into the cold**.
 
-### What lies in the bay
-Left open on purpose. It is the one thing in the basin that every faith, school and house has built
-its story around, and the one thing none of them understands.
+The world is not closed. Beyond the spine to the west, in the cold north, and out among the
+southern and eastern islands lie **frontiers**: land where the world grows next, where frontier
+peoples live, and where the revision may add more. The concept map is
+`docs/lore-rework/concept-map.png`; `docs/world-map.md` has the places.
 
-## VI. The twist engine: the Physician
+### The powers
 
-The basin has suffered a remarkable number of catastrophes for a land so small: the Schism, the
-Scalding, the plague years, the war of the three kings of Sere. In memory orbs from centuries
-apart, the player keeps seeing the same figure at the edge of the scene. It is someone in a plain
-coat, carrying a case of instruments, and always in the right place.
-
-**The Physician** believes the world is sick. Not wicked: *ill*, unbalanced in its humours like a
-feverish patient, and dying of it slowly. The Physician has spent longer than any life lasts
-treating it the way humoral medicine treats a body:
-- **Bleeding,** when there is too much blood. Wars between the faithful are bloodletting.
-- **Purging,** when there is too much bile. The Scalding was a purge.
-- **Cooling** with phlegm, or **heating** with it, as needed.
-
-Every great disaster was a treatment, and every treatment was meant to help.
-
-Why the Physician is a reliable source of twists:
-- **They are almost never the villain in the moment.** They help the player, often, because the
-  player is useful to the cure. A trusted ally turns out to be one of their **patients**, someone
-  they have been quietly dosing for years. A victory turns out to have been the next step of a
-  course of treatment.
-- **They are not lying about the illness.** Something really is wrong with the world. The arguments
-  are over the diagnosis, and over whether the cure is worse than the disease.
-- **Each faction sees them differently.** The Synod calls them the Bloodletter and blames them for
-  the Schism. The occult houses call them the Master Chirurgeon and half revere them. The
-  Rationalists say they do not exist, that the pattern is a statistical artefact, and they say it a
-  little too firmly.
-- **They can't be fought head-on for most of the game,** because there is never one Physician
-  act to oppose, only consequences. When the player finally confronts them, it should be the
-  argument of the game, and then the fight.
-
-How this differs from a trickster god: the Physician isn't playing. They are deadly serious, they
-don't want power or entertainment, and they believe every word of their prognosis. The horror is
-that they might be right.
-
-## VII. The great threads
-
-### The nightmare loose in the archive
-Something in the Dreamweaver's archive refused to stay archived. It slipped its orb and moves from
-sleeper to sleeper, wearing their dreams. Those it passes through wake with pieces missing, or don't
-wake at all. The player is the one it left behind, and the trail it left is how they follow it.
-
-It grows slowly over many updates. At first there are shared bad dreams in a few villages. Later
-there are sleepwalkers who speak in other people's voices. Later still, the nightmare reaches into
-the waking world in the places where the most people are dreaming of the same thing.
-
-**As a boss** it is fought inside memory orbs, and it takes the shape of whatever that memory
-feared most. In one orb it is a crusader of the Scalding, in another a fever ward, in another
-something the Synod has struck from its histories. Which orb it hides in changes on a rotation, so
-the same boss is a different fight from week to week. Each fight teaches a piece of the world's
-real history while the player survives it.
-
-The question at the bottom: **whose nightmare is it?**
-
-### The deep
-A Rationalist survey team goes missing in the lower mines. The dwarves begin closing halls and
-buying explosives, and won't say why. It is the start of a grandmaster-length story, told in acts
-across years:
-1. Find the team, and what took it. It isn't the real danger, only something fleeing from it.
-2. Earn the trust of the dwarves. Ride the cart lines to the **Frostpeak Forge**, and learn that
-   the dwarves only *keep* the seals. They did not make them.
-3. Discover the cause. The Rationalists have been boring deep for moon-touched stone, without
-   understanding what their bores were weakening. The scholars' neutrality was never as clean as
-   they claimed.
-4. Meet the older peoples below the dwarves, who are fleeing upward. They are not the enemy; they
-   are the warning.
-5. Descend, seal by seal, to the bound thing. Each seal is a great fight, and the last one is the
-   deep's grandmaster encounter.
-
-### The broken moon
-Fragments keep falling. Each fall marks an area for a while:
-- the crater glows with **anima**;
-- **moonborn creatures** crawl out of it;
-- the largest falls bring a **world boss**.
-
-The Rationalists forecast falls, so knowing the sky is a skill and a source of power. Factions
-race each other to every crater. The scholars' own figures say the cracks are widening, and that
-one day something much larger will come down. They have not told anyone.
-
-### The faith divided
-The covenant debate between the sees is not academic. If Cruor is right, the faithful are
-guards. If Tithe is right, they are debtors, and the debt is coming due. Both sees watch the
-bay. Both are preparing for different things. When it matters most, the player will have to decide
-which of them understood the covenant, or whether either did.
-
-## VIII. People the player meets
-
-| Character | Who they are at the start | How they change |
+| Power | What it holds | Why it can hold it |
 | --- | --- | --- |
-| **Sister Odile Vane** | A young blood-knight of Cruor, devout, brave and a little insufferable. Assigned to watch the woken sleeper. | Comes to doubt her see through what she sees at the player's side. She can end as the reformer who reconciles the sees, or as a martyr for a covenant she no longer understands. The player's choices tip it. |
-| **Brother Cassius Ember** | A Tithe inquisitor, an auditor of souls, who suspects the player is tainted and says so. | The most honest person in either see, and he never warms to the player. He is the first to see the Physician's hand in the Schism, and nobody believes him. |
-| **Corvin Sallow** | The friendly apothecary in the player's home town who sells them their first potions. | Revealed as an occultist, then as far more: a would-be house master, and one of the Physician's oldest patients. Whether he masters his own transformation or is consumed by it is one of the long tragedies. |
-| **Magister Ilse Varrow** | Chief astronomer of Meridian, forecaster of moonfalls, brilliant and cold. | Carries the secret of the coming great fall, and later the guilt of the deep bores. She turns from the player's most useful patron into the person they must decide whether to expose. |
-| **Brannoch** | Master of the cart lines: a dwarf who talks to the player like weather talks to a field. | Slowly opens up about the seals. Late in the deep story he reveals that his family has kept one of them for thirty generations, and that it is failing. |
-| **Queen Saffiya of Sere** | A pragmatic young monarch with a thirsty kingdom. | Plays every power against every other with real skill. She becomes either the player's best ally or the most dangerous opponent in the lowlands, depending on what the player gives her. |
-| **The Physician** | A pleasant, helpful stranger met briefly, early, and soon forgotten. | Section VI. |
+| **Cruor's empire** | The rich heart of the continent, about a third of the land, around its capital **Cruor**. Rivers, farmland, roads, forests and a great lake. | The largest army: soldiers sworn in blood and made strong by p-sworn. |
+| **House Gall** | A kingdom of its own in the south-east: volcanic, openly occult. | Fire. Gall is the largest and loudest of the occult houses, and burns first. |
+| **The lesser occult houses** | Scattered ground nobody else wants: fens, sea caves and broken country in the north-east, and hidden cells inside the empire's own cities. | Ground the empire can burn but not keep. |
+| **The spine's surface people** | The passes, the high valleys and the observatories along the spine, from **Meridian**. | The high ground and the passes: every crossing pays. |
+| **The dwarves** | The caves of the spine, trading from **Frostpeak Forge** in the cold north. | Nobody else can find their way inside the mountains. |
+| **The older peoples of Undermost** | The depths beneath the dwarves. | Nobody visits on purpose. |
+| **Sere** | Dry country in the spine's rain shadow, from **Cistern**, built on the deepest wells. | Only its people know the water. Armies that march in die of thirst. |
+| **The Faceless** | No land: hidden among every people, strongest inside the empire among deserters and the conquered. | Nobody knows who they are. |
 
-## IX. Where the bosses come from
+**Cruor's empire** must keep growing, because its god starves without new oaths and bleeds without
+new blood. Its border is ragged: it reaches into every neighbour's ground, **up Sere's river**,
+**into the spine's foothills**, **a fortress pocket inside Gall's land** and **a coastal enclave in
+the lesser houses' fens**. Each is a disputed place, and each can change hands. Its church (still
+called the Sanguine Synod in the game, until it is renamed) gathers the blood at monuments raised
+across the empire. Its blood-knights fight with p-sworn's **verses**, and its choirs sing
+**hymns**: one church, two practices, one Religion skill.
 
-Every boss is a turning point in somebody's story:
-- **The heartland:** fights over contested relics and the champions of the schism.
-- **The occult houses:** each house master, at a different stage of finishing their own flesh.
-- **The mountains:** the guardians and breakers of the deep's seals, ending in its grandmaster
-  encounter.
-- **Moonfalls:** moonborn world bosses.
-- **The archive:** the nightmare's rotations, and whatever else the orbs remember.
-- **The Physician's treatments:** catastrophes the player arrives in the middle of, and the
-  creatures and people those treatments made.
+**The occultists** practise arts of bile: transformation, fire, solvents, flesh that won't settle.
+Their arts make them terribly strong and slowly strange. Where their power comes from is open.
+Their houses are **Gall**, dominant; and the lesser houses, among them **Sallow**, a minor house
+fallen on hard times, whose last son in the empire is Corvin.
+
+**The spine's surface people** don't deny the gods, which would be absurd in this world: **they
+refuse to serve them**. They measure, calculate and shoot from a long way off (the ranged style).
+They and **the dwarves** share the spine under **a treaty**: the surface to one, the caves to the
+other, and no questions asked in either direction. Both break the last clause. Why the treaty
+really exists is open.
+
+### How the powers stand
+
+| Between | |
+| --- | --- |
+| Empire and Gall | Open war along a long front. Neither can win; border towns change hands. |
+| Empire and the lesser houses | It hunts them and burns their cells; some imperial lords quietly buy what they make. |
+| Empire and the surface people | It needs their passes and pays their tolls. They won't swear, so it can't absorb them peacefully. |
+| Empire and the dwarves | Grain for metal. The dwarves won't swear either, and the empire wants their mines. |
+| Empire and Sere | Its salient up Sere's river is a hand on Sere's water; Sere pays to keep it open. |
+| Empire and the Faceless | It hunts them as the Traitor's people. They hollow it out from inside. |
+| Gall and the lesser houses | Gall wants them under its rule. Some submit; some hide from Gall as hard as from the empire. |
+| Gall and the surface people | They sell to both sides, and profit from the war. |
+| Gall and the dwarves | The dwarves keep Gall's fire away from the deep, and won't say why. |
+| Gall and Sere | Gall offers alliance against the empire. Sere hedges. |
+| The surface people and the dwarves | The treaty. |
+| The surface people and Sere | Sere's caravans cross the spine by their passes. |
+| The dwarves and Sere | Sere buys dwarven tools to dig for water. |
+
+---
+
+## V. Threads
+
+The long stories the world is built to carry. Each is open beyond what is written here.
+
+- **The revision.** Places appearing, places that have moved, things leaking out of p-spoil, quiet
+  gods stirring. Why now is sealed.
+- **The bleeding god.** What the empire's blood is really for, and what wounded p-sworn.
+- **The Faceless.** Who among the people you trust is one of them, or one of their gods.
+- **The demigods.** Helping p-scattered's pieces learn what they were, and one day asking them to
+  give up their lives and become one again.
+- **The face in the cliff.** What it remembers, and what happens when the falls stop.
+- **The nightmare.** Something loose from the Dreaming, moving from sleeper to sleeper. Those it
+  passes through wake with pieces missing, or don't wake at all.
+- **The cracked moon.** One of the two moons is cracked, and fragments still fall. **Selenfall**,
+  on the spine, is the scar of the first. A fall marks an area for a while: strange growth,
+  moonborn creatures, and for the largest, a world boss.
+- **The deep.** Something is bound beneath the spine, below the dwarves and below Undermost. The
+  dwarves keep the seals but did not make them.
+
+---
+
+## VI. The player
+
+The player begins in **Tolling**, a small river town at the empire's western edge, where the green
+country starts to dry out towards Sere. The church keeps a clerk and a strongbox there and not
+much else.
+
+The player is **unaligned**, and the game never forces a single loyalty: they can swear to the
+empire, learn from the occultists, study with the spine's surface people or trade with the
+dwarves, and most players will do something with all of them. Each power's stories show the
+others from inside.
+
+*Open: who the player is and why they matter (the earlier premise, a sleeper who woke, is under
+review).*
+
+---
+
+## VII. People
+
+| Character | Who they are |
+| --- | --- |
+| **Corvin Sallow** | Tolling's friendly apothecary, who sells the player their first potions. Secretly an occultist, the last son of the fallen house of Sallow in the empire. |
+| **Edda Marsh** | A Tolling woman who sleepwalks by the pond and says things she shouldn't know (the Dreamless quest). |
+| **Clerk Ambrose** | The church's clerk and banker in Tolling. |
+| **Wenna Thole** | Runs Tolling's skinning yard. |
+| **Brother Hollis** | Keeps the church's monument on Palmerway, and trades scriptures for pledges. |
+| **Sister Odile Vane** | A young blood-knight of the empire, devout, brave and a little insufferable. |
+| **Magister Ilse Varrow** | A brilliant, cold astronomer of the spine's surface people, forecaster of moonfalls. |
+| **Brannoch** | A dwarf, master of the cart-lines, who talks to the player like weather talks to a field. |
+| **Queen Saffiya of Sere** | A pragmatic young monarch with a thirsty kingdom, playing every power against every other. |
+
+---
+
+## VIII. Where the bosses come from
+
+Every boss is a turning point in somebody's story: the empire's martyrs and champions (the
+**Unquiet Saint**, a martyr of p-sworn's church who won't stay at rest in his crypt); the occult
+houses' masters; the guardians and breakers of the deep's seals; moonborn things from the falls;
+the nightmare in the Dreaming; p-scattered's demigods; and whatever leaks out of p-spoil, which
+has a reason to be strange: it was rejected.

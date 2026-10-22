@@ -2,8 +2,8 @@
 
 A rebuild of `docs/lore.md` so that every power that survives it has a strong foundation: where
 it came from, what it wants, what it holds and why, and where it is heading. The goal is lore you
-can build places and quests from, not lore to read. `docs/lore.md` stays the current canon until
-the rework replaces it.
+can build places and quests from, not lore to read. `docs/lore.md` and `docs/world-map.md` are the canon
+written from it (2026-10-22); this folder keeps the reasoning, the decisions and what's open.
 
 ## Method
 
