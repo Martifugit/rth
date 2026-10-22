@@ -52,18 +52,23 @@ The god the Cruorian empire worships. Not a god "of war", but war follows it.
 | **Origin** | Sealed. Constraint: it was wounded in something that happened at the dawn of the world, and **whatever wounded it is still out there**. |
 | **In the game** | Melee's pledges are oaths sworn in blood; Cruor's monuments are where the blood is collected. Religion's verses draw on it. |
 
-### p-betrayer: the first oathbreaker
+### p-betrayers: the first oathbreakers
 
-The name is a placeholder.
+The name is a placeholder. **A group, not one character:** the followers who broke their oaths
+to p-sworn together. A scene to build towards: the player is brought into a room where several
+of them (say three) wait, faceless.
+
+**Their mortal followers are called the Faceless**, after their gods' feature (the followers
+themselves have faces).
 
 | Field | |
 | --- | --- |
-| **Story** | Among p-sworn's first followers, the ones who broke their oaths. The betrayal and the wound were one event: they struck the blow, and one of them took some of p-sworn's power and became a god. |
-| **Wound** | *Open.* |
+| **Story** | Among p-sworn's first followers, the ones who broke their oaths. The betrayal and the wound were one event: they struck the blow, took some of p-sworn's power and ascended. |
+| **Wound** | They have no faces of their own. They gave them up when they ascended, and exist only in borrowed ones. |
 | **Hunger** | *Open* (an ascended god now, with its own aims, not only p-sworn's enemy). |
 | **Bargain** | *Open.* |
 | **Sign** | Your name, spoken behind you, in the voice of someone you trust. Nobody is there when you turn. |
 | **Faces** | To the empire, the Traitor: the root of every evil, the devil of its faith. To deserters, the conquered and anyone who swore under duress, a liberator. |
 | **Presence** | It walks the world, but never as itself. It wears the faces of trusted people: a friend, a captain, a priest. You meet it without knowing, and may only realise much later. |
 | **Fear** | *Open.* |
-| **Origin** | Ascended, through the betrayal. |
+| **Origin** | Ascended, through the betrayal. Whether they are several gods or one god in several bodies: *open*. |
