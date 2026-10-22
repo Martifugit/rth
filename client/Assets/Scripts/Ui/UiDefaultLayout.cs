@@ -45,7 +45,7 @@ namespace Rth.Client.Ui
 
         public static readonly Dictionary<string, Placement> Windows = new Dictionary<string, Placement>
         {
-            [Minimap] = new Placement(1f, 0f, 0f, 0f, 236f, 282f),
+            [Minimap] = new Placement(1f, 0f, 0f, 0f, 240f, 240f),
             [Side] = new Placement(1f, 1f, 0f, 0f, 312f, 400f),
             [Side2] = new Placement(1f, 1f, 0f, -404f, 312f, 220f),
             [Chat] = new Placement(0f, 1f, 0f, 0f, 480f, 230f),

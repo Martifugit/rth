@@ -1130,14 +1130,38 @@
 }
 
 /* ---------------------------------------------------------------- minimap */
+/* A round map in a bronze bezel (Skin/minimap-bezel: ring, crest, medallions and the cradle the
+   round buttons sit on). MinimapPanel.cs places everything; its geometry matches make_skin.py. */
 
+.minimap-frame {
+    width: 240px;
+    height: 240px;
+}
+
+/* The map is clipped to a circle: the round border radius with overflow hidden masks its children. */
 .minimap {
-    border-width: 2px;
-    border-color: rgb(92, 76, 52);
-    border-radius: 4px;
+    border-radius: 88px;
     overflow: hidden;
     background-color: rgb(10, 10, 10);
-    align-self: center;
+}
+
+.minimap__view,
+.minimap__layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.minimap__bezel {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-image: resource("UI/Skin/minimap-bezel");
+    -unity-background-scale-mode: stretch-to-fill;
 }
 
 .minimap__dot {
@@ -1149,73 +1173,61 @@
     border-color: rgb(0, 0, 0);
 }
 
-.minimap__compass {
-    position: absolute;
-    left: 5px;
-    top: 5px;
-    width: 38px;
-    height: 38px;
-    border-radius: 19px;
-    background-color: rgba(14, 12, 10, 0.88);
-    border-width: 2px;
-    border-color: rgb(150, 120, 74);
-    align-items: center;
-    justify-content: center;
+.minimap__you {
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+    background-color: rgb(255, 255, 255);
 }
 
-.minimap__compass:hover {
-    border-color: rgb(224, 195, 135);
-}
-
-.minimap__shade {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    -unity-slice-left: 14;
-    -unity-slice-right: 14;
-    -unity-slice-top: 14;
-    -unity-slice-bottom: 14;
-}
-
+/* The region's name, low on the map where the ring's shadow keeps it readable. */
 .minimap__region {
     position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 4px;
+    left: 20px;
+    right: 20px;
+    bottom: 24px;
     -unity-font-definition: resource("UI/Fonts/Cinzel");
     -unity-font-style: bold;
     font-size: 12px;
     letter-spacing: 1px;
+    white-space: nowrap;
     -unity-text-align: middle-center;
     color: rgb(240, 222, 176);
     text-shadow: 0 1px 2px rgb(0, 0, 0);
 }
 
-.minimap__orbs {
-    flex-direction: row;
-    justify-content: space-between;
-    margin-top: 7px;
-    padding: 0 2px;
-    margin-bottom: 1px;
-}
-
-.orb {
-    width: 32px;
-    height: 32px;
-    border-radius: 16px;
+/* The compass and the clock sit in the bezel's two medallions; a gold ring lights on hover. */
+.minimap__medal {
+    border-radius: 20px;
+    border-width: 1px;
+    border-color: rgba(0, 0, 0, 0);
     align-items: center;
     justify-content: center;
-    background-color: rgb(24, 21, 17);
-    border-width: 2px;
-    border-color: rgb(92, 76, 52);
-    border-top-color: rgb(130, 106, 70);
+}
+
+.minimap__medal:hover {
+    border-color: rgb(224, 195, 135);
+}
+
+.minimap__clock {
+    -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
+    font-size: 13px;
+    color: rgb(240, 213, 140);
+    -unity-text-align: middle-center;
+    padding: 0;
+    margin: 0;
+}
+
+/* Round buttons in the cradle (Skin/orb, orb-hover, orb-on). */
+.orb {
+    align-items: center;
+    justify-content: center;
+    background-image: resource("UI/Skin/orb");
+    -unity-background-scale-mode: stretch-to-fill;
 }
 
 .orb:hover {
-    border-color: rgb(201, 162, 94);
-    background-color: rgb(36, 31, 24);
+    background-image: resource("UI/Skin/orb-hover");
 }
 
 .orb:hover > .orb__icon {
@@ -1227,26 +1239,11 @@
 }
 
 .orb--on {
-    border-color: rgb(124, 207, 98);
-    background-color: rgb(28, 44, 22);
+    background-image: resource("UI/Skin/orb-on");
 }
 
 .orb--on > .orb__icon {
-    -unity-background-image-tint-color: rgb(170, 235, 140);
-}
-
-.minimap__clock {
-    position: absolute;
-    right: 5px;
-    top: 5px;
-    padding: 1px 8px;
-    border-radius: 3px;
-    background-color: rgba(14, 12, 10, 0.88);
-    border-width: 1px;
-    border-color: rgb(150, 120, 74);
-    -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
-    font-size: 14px;
-    color: rgb(240, 213, 140);
+    -unity-background-image-tint-color: rgb(200, 245, 170);
 }
 
 /* ---------------------------------------------------------------- scrollbars: thin and quiet */
