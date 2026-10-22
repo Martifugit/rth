@@ -299,7 +299,7 @@ Design: `docs/lore-rework/death.md`.
 | **Runs** | cloud |
 | **Depends on** | nothing |
 | **Owns** | `DeathSystem.cs`, a new ferryman system or component, `assayer.json` (replaced), `shared/Net/Messages.cs` (the death text kind), death-related tests |
-| **Status** | not started |
+| **Status** | **done** on `claude/d1-death` (2026-10-22): `FerrySystem`, `death.json`, `DeathTests`. The wake tile is a placeholder (Tolling's spawn, 33,53) until D2. |
 
 - On death, everything the player carried and wore goes to the ferryman's hold; nothing is kept.
 - The player wakes in the realm of the dead (a spawn named in data; a placeholder tile until D2
@@ -382,6 +382,7 @@ Notes from one workstream to another ("A1 needs B1 to also change X"). Newest fi
 
 | From | To | Note |
 | --- | --- | --- |
+| D1 | D2 | The ferryman is NPC `ferryman` (npcs.json, Talk-to opens dialogue `ferryman`); place him on the landing and set death.json `wake` to it. On waking the server opens his conversation with no NPC (`DialogueSystem.Start(player, id, speaker)`), so today's dialogue box already works. The death remark is `TextKind.Ferryman` (was `Assayer`, same value 2, no protocol bump); `AssayerPanel` still shows it. |
 | G | C, A4 | The capital blockouts on `main` are on the old map. Keep the `WorldKit` kits; rebuild the areas once A4 and C3 allow, not before. |
 | A1 | A4 | `docs/skills.md` places skill tiers in old regions (the Veilwood, Candora, Slough...), and `docs/areas/rules.md` lists the old realms in its definitions. Both move with the new map: the tiers in pass 3 (resources), the realm list in pass 1. |
 | A1 | B2 | `docs/world-map.md` lists the names to be replaced in the game (the Synod, the Rationalists, Scalth). |

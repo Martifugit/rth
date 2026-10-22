@@ -10,8 +10,8 @@ classic layout). It is set in its own world, **R'th**, built around the four hum
 5 (townsfolk: dialogue, bank, shops, tasks; Distillation and reagents), 6 (quests), 7 (a
 multi-region world streamed by the client), 8 (the window-based interface, chat), 9 (the
 skills rework: Religion's hymns replace breath, the v1 skill roster) and 10 (melee: weapon
-styles, melee abilities, Cruor's verses, gathering nodes and the first monument) are done. The
-v1 skills are designed in `docs/skills.md`; most of them exist only as a skill and a level so far.
+styles, melee abilities, Cruor's verses, gathering nodes and the first monument) are done, and
+death v1's server half (D1 in `docs/plan.md`: the ferryman holds what you die with). The v1 skills are designed in `docs/skills.md`; most of them exist only as a skill and a level so far.
 
 **Build everything as extensible systems.** New features plug into the mechanisms under
 "Extending the server" below (systems, events, interactions, stats, item components, effect ops,
@@ -194,8 +194,8 @@ phlegm and breath came with it. The prototype numbers are in `docs/systems.md`.
 - [x] Breath deflection against one style.
 - [x] NPCs placed in the scene (`MapNpcSpawn`), with chase, melee/ranged rules, line of sight,
       aggression, retaliation, leashing, death and respawn.
-- [x] Death and the Assayer; respawn with balanced humours.
-- [x] Content (abilities, NPCs, rules, Assayer lines) as JSON in `server/data/content/`, hot-reloaded.
+- [x] Death; respawn with balanced humours. (The Assayer was replaced by the ferryman in D1.)
+- [x] Content (abilities, NPCs, rules, death lines) as JSON in `server/data/content/`, hot-reloaded.
 - [x] Client: click to attack, 1-8 action bar, resource bars and bile axis, hitsplats, projectiles.
 - [x] Simulation tests (`CombatTests`), including 1000 ticks of fighting.
 
@@ -377,6 +377,15 @@ rebuilt to `docs/regions/meridian-redesign.md`: phase 1 (terraces and routes), p
 enterable, upper floors included) and phase 3 (objects: readables, view points, stations, banks, gates,
 gathering spots, skill shortcuts) are built; people and data (phase 4) are next.
 
+**Death v1, server (D1, done):** `FerrySystem` and death.json. Everything carried and worn goes
+to the ferryman's hold; the player wakes at death.json's `wake` tile (a placeholder at Tolling's
+spawn until D2 builds the landing) and his conversation opens (dialogue `ferryman`, no NPC needed).
+The fee is `feePercent` of the held items' `value` (free under `freeBelow`), paid in `currency` from
+the pack, then the bank; an `obol` in the pack at death is taken as the fee; unpaid gear is kept
+`holdHours` of real time (`ServerConfig.UtcNow`), and dying again adds to it. Paying returns it
+and sends the player to `returnTo` (null: the spawn); leaving sends them back without it. The
+client still shows the remark in `AssayerPanel` (text kind `Ferryman`) until D2.
+
 **Next: not chosen yet.** Candidates: the first gathering skills (mining, woodcutting) on the
 node system with tools, ranged, an art pass on Tolling, more quests and achievements.
 
@@ -389,7 +398,7 @@ and saving. Everything else is a `GameSystem` listed in `World.StandardSystems` 
 systems run in that order within each phase, and a system may use those before it while
 attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `DeathSystem`,
 `NpcSystem`, `GroundItemSystem`, `LootSystem`, `ObjectSystem`, `ClimbSystem`, `ReligionSystem`, `RecipeSystem`, `GatheringSystem`, `InterfaceSystem`,
-`DialogueSystem`, `BankSystem`, `ShopSystem`, `PointsSystem`, `TaskSystem`, `QuestSystem`.
+`DialogueSystem`, `BankSystem`, `FerrySystem`, `ShopSystem`, `PointsSystem`, `TaskSystem`, `QuestSystem`.
 
 | To add... | Use |
 |---|---|
@@ -419,6 +428,8 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | A new object behaviour (mine, open, pray) | An action on the object def, a handler via `ObjectSystem.RegisterAction`, usually starting an `ObjectInteraction`. |
 | An NPC menu option (pickpocket, follow) | An action on the NPC def; a handler via `NpcSystem.RegisterAction` (runs once the player is beside the NPC). |
 | Something said or done in dialogue | `DialogueSystem.RegisterCondition` / `RegisterAction` / `RegisterToken`. Conversations themselves are data. |
+| A conversation with no NPC in the world (a voice, the ferryman before his landing) | `DialogueSystem.Start(player, dialogueId, speaker)`; it ends when finished, closed or on death, not by walking away. |
+| What happens at death, the fee, the obol | death.json (`DeathRules`); the ferryman's conversation uses `ferryHolds` / `ferryFree` / `ferryCanPay` / `ferryObol` / `inRealm`, actions `ferryPay` / `ferryLeave`, tokens `{ferryFee}` `{ferryValue}` `{ferryHours}` `{deaths}`. Something else reacting to waking: subscribe to `PlayerRespawned`. |
 | A quest | An entry in quests.json (stages, objectives, rewards) and dialogue that starts/advances/completes it. New objective kinds: count an event in `QuestSystem`. |
 | Remembering story progress | `FlagSystem` (persistent per-player key/values); gate actions with `requiresFlag`. |
 | A window the server opens | A value in `InterfaceKind`; `InterfaceSystem.Open/IsOpen/Close`; draw it in the client's `TownWindows`. |

@@ -112,8 +112,8 @@ barred (for now, the edge of the built world).
 
 ## Tuning content
 
-Abilities, creatures, combat rules, items, drop tables, the starter kit and the Assayer's lines
-are JSON in `server/data/content/`.
+Abilities, creatures, combat rules, items, drop tables, the starter kit and death (the ferryman's
+fee and lines, `death.json`) are JSON in `server/data/content/`.
 Edit and save them while the server runs: the server reloads them within a second and logs
 `Content reloaded.` If a file has a mistake, it logs what's wrong and keeps the last good version.
 - A second player can join from a standalone build, a Multiplayer Play Mode virtual player, or
