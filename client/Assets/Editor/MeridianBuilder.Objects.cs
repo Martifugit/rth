@@ -39,13 +39,11 @@ namespace Rth.Client.Editor
             foreach ((int x, int z) in new[] { (126, 9), (133, 11), (172, 14), (186, 14) })
                 Spot(g, "Shoal", "meridian_sea_spot", x, z);
             Spot(g, "Pool", "cut_pool", 47, 14);
-            Tag(g, "fishing_spot", "A fishing spot: a ripple on the water at the quay's edge, a few gulls. Becomes a gathering node with Fishing.");
 
             // Berth posts along the quay's edge, the west quay's too, and a milestone where the road east begins.
             foreach (int x in new[] { 14, 28, 66, 80, 94, 108, 120, 142, 156 })
-                Place(g, "Berth post", "berth_post", x, Sea, M.Granite, 0.9f);
-            Place(g, "Milestone", "pass_milestone", 180, 30, M.Granite, 1.1f);
-            Tag(g, "berth_post", "A squat granite berth post with an iron mooring ring and a painted number.");
+                Tag(Place(g, "Berth post", "berth_post", x, Sea, M.Granite, 0.9f), "berth_post", "A squat granite berth post with an iron mooring ring and a painted number.");
+            Tag(Place(g, "Milestone", "pass_milestone", 180, 30, M.Granite, 1.1f), "milestone", "A granite milestone, the distances cut and painted black.");
         }
 
         /// <summary>A fishing spot on the quay's edge: a low, pale ripple marker standing on the tile.</summary>
@@ -54,6 +52,7 @@ namespace Rth.Client.Editor
             Transform t = WorldKit.Station(g, name, type, X(x), Z(z));
             t.position = On(x + 0.5f, z + 0.5f);
             WorldKit.Box("Ripple", t, On(x + 0.5f, z + 0.5f, 0.05f), new Vector3(0.9f, 0.1f, 0.9f), M.Foam);
+            Tag(t, "fishing_spot", "A fishing spot: a ripple on the water at the quay's edge, a few gulls. Becomes a gathering node with Fishing.");
         }
 
         /// <summary>
@@ -64,31 +63,29 @@ namespace Rth.Client.Editor
         /// </summary>
         private static void BuildObserversWalk(Transform g)
         {
-            Ground.Patch("Observers' Walk", g, X(121), Z(136), X(150), Z(140), M.Paving);
-            Place(g, "View point", "walk_view_academy", 126, 136, M.Brass, 1.1f);
-            Place(g, "View point", "walk_view_forum", 142, 136, M.Brass, 1.1f);
-            Place(g, "View point", "walk_view_harbour", 86, 136, M.Brass, 1.1f);
+            Tag(Ground.Patch("Observers' Walk", g, X(121), Z(136), X(150), Z(140), M.Paving).transform, "observers_walk",
+                "The Observers' Walk: a paved belvedere on the Crag's lip, its parapet lower than elsewhere so the view is clear.");
+            foreach ((string type, int x, int z) in new[] { ("walk_view_academy", 126, 136), ("walk_view_forum", 142, 136), ("walk_view_harbour", 86, 136), ("walk_view_gorge", 60, 166) })
+                Tag(Place(g, "View point", type, x, z, M.Brass, 1.1f), "view_plate", "A view plate: a brass plate on a short granite post at the parapet, the skyline engraved on it with every building named.");
             Use(Block(g, "Bench", 131, 139, 134, 140, 0.5f, M.Granite), "walk_bench");
             Transform twin = WorldKit.Armillary(g, On(137.5f, 139.5f), 0.6f, M.Brass, M.Granite, M.Brass, M.MoonGlow);
             Use(Block(twin, "Post", 137, 139, 138, 140, 1f, M.Granite), "orrery_twin");
+            Tag(twin, "pocket_orrery", "The pocket orrery: a small brass armillary on a granite post, twin of the Little Orrery, its green moon cracked.");
             Place(g, "Perch", "pass_perch", 149, 152, M.Rock, 0.5f);
-            Place(g, "View point", "walk_view_gorge", 60, 166, M.Brass, 1.1f);
-            Place(g, "Waymark", "crag_waymark", 113, 148, M.Granite, 1.4f);
-            Place(g, "Cairn", "knoll_cairn", 112, 174, M.Granite, 1.2f);
-            Tag(g, "observers_walk", "The Observers' Walk: a paved belvedere on the Crag's lip, brass view plates engraved with the skyline, a granite bench, a pocket orrery on a post.");
+            Tag(Place(g, "Waymark", "crag_waymark", 113, 148, M.Granite, 1.4f), "waymark", "A granite waymark, arrows and names cut in each face.");
+            Tag(Place(g, "Cairn", "knoll_cairn", 112, 174, M.Granite, 1.2f), "surveyors_cairn", "A cairn of squared, identical stones, each cut with a surveyor's name and year.");
         }
 
         private static void BuildNodes(Transform g)
         {
             // Ironstone along the Heights' gorge edge, frostiron at the foot of the mountain.
             foreach ((int x, int z) in new[] { (44, 82), (46, 87), (42, 91), (46, 95) })
-                Rock(g, "Ironstone", "cutting_rock", x, z, M.Bark);
+                Tag(Rock(g, "Ironstone", "cutting_rock", x, z, M.Bark), "ironstone_rock", "An ironstone boulder: rough grey rock streaked rust-brown. A mining node once Mining exists.");
             foreach ((int x, int z) in new[] { (38, 138), (41, 136), (44, 138) })
-                Rock(g, "Frostiron seam", "frostiron_seam", x, z, M.Snow);
-            Tag(g, "ore_rocks", "Ore in the rock: rough boulders streaked brown (ironstone) or rimed blue-white (frostiron). Become gathering nodes with Mining.");
+                Tag(Rock(g, "Frostiron seam", "frostiron_seam", x, z, M.Snow), "frostiron_rock", "A frostiron seam: dark rock with a blue-white vein, rimed with frost. A high-level mining node.");
         }
 
-        private static void Rock(Transform g, string name, string type, int x, int z, Material streak)
+        private static Transform Rock(Transform g, string name, string type, int x, int z, Material streak)
         {
             Transform t = WorldKit.Station(g, name, type, X(x), Z(z));
             t.position = On(x + 0.5f, z + 0.5f);
@@ -96,6 +93,7 @@ namespace Rth.Client.Editor
             WorldKit.Box("Boulder", t, On(x + 0.5f, z + 0.5f, 0.55f), new Vector3(0.8f, 1.1f, 0.8f), M.Rock);
             WorldKit.Prop("Shoulder", t, On(x + 0.5f, z + 0.5f, 0.45f), new Vector3(0.95f, 0.9f, 0.6f), M.Rock, x * 37f);
             WorldKit.Prop("Streak", t, On(x + 0.5f, z + 0.5f, 0.7f), new Vector3(0.6f, 0.25f, 0.82f), streak, x * 37f);
+            return t;
         }
 
         /// <summary>
@@ -105,22 +103,19 @@ namespace Rth.Client.Editor
         /// </summary>
         private static void BuildLandmarks(Transform g)
         {
-            Place(g, "Span plaque", "span_plaque", 60, 107, M.Brass, 1.1f);
-            Place(g, "Span plaque", "span_plaque", 47, 107, M.Brass, 1.1f);
-            Place(g, "Scoreboard", "butts_scoreboard", 184, 101, M.Slate, 2f);
-            Place(g, "Drinking fountain", "stair_fountain", 90, 40, M.Granite, 1f);
-            Place(g, "Top landing", "line_street_view", 91, 114, M.Brass, 1.1f);
-            Place(g, "Rail telescope", "arcade_telescope", 145, 80, M.Brass, 1.3f);
+            foreach (int x in new[] { 60, 47 })
+                Tag(Place(g, "Span plaque", "span_plaque", x, 107, M.Brass, 1.1f), "span_plaque", "A brass plaque on a granite post at the end of the Span, the dimensions in Concordian and a much longer dwarven text.");
+            Tag(Place(g, "Scoreboard", "butts_scoreboard", 184, 101, M.Slate, 2f), "butts_scoreboard", "A slate scoreboard on two posts, six lanes ruled in white.");
+            Tag(Place(g, "Drinking fountain", "stair_fountain", 90, 40, M.Granite, 1f), "drinking_fountain", "A granite drinking fountain: a bowl on a pedestal with a brass spout and two brass plates.");
+            Tag(Place(g, "Top landing", "line_street_view", 91, 114, M.Brass, 1.1f), "view_plate", "A view plate: a brass plate on a short granite post at the parapet, the skyline engraved on it with every building named.");
+            Tag(Place(g, "Rail telescope", "arcade_telescope", 145, 80, M.Brass, 1.3f), "rail_telescope", "A brass telescope on a swivel, bolted to the rail, with a coin slot that has been soldered shut.");
             Transform statue = Place(g, "Statue", "rationalist_statue", 86, 112, M.Granite, 1.2f);
             WorldKit.Prop("Figure", statue, On(86.5f, 112.5f, 2.6f), new Vector3(0.7f, 2.2f, 0.5f), M.Ashlar);
             Tag(statue, "rationalist_statue", "The first Rationalist: a robed figure with a set square on a plain granite plinth, the face left uncut.");
             Transform stele = Place(g, "Treaty stone", "under_treaty_stele", 36, 118, M.DwarfStone, 3.2f);
             Tag(stele, "under_treaty_stele", "The Under-Treaty stone: a tall slab of dark stone, the treaty cut in Concordian and dwarven side by side, bronze-banded.");
             foreach ((int x, int z) in new[] { (72, 164), (86, 152), (104, 157), (128, 152) })
-            {
-                Transform post = Place(g, "Weather post", "crag_instrument", x, z, M.Iron, 2.4f);
-                if (x == 72) Tag(post, "weather_post", "A weather post: an iron pole with a wind vane, a rain gauge and a thermometer in a louvred box.");
-            }
+                Tag(Place(g, "Weather post", "crag_instrument", x, z, M.Iron, 2.4f), "weather_post", "A weather post: an iron pole with a wind vane, a rain gauge and a thermometer in a louvred box.");
         }
 
         /// <summary>
@@ -133,17 +128,19 @@ namespace Rth.Client.Editor
             Transform rubble = WorldKit.Group(g, "Ore Road rubble");
             Shortcut(rubble, "Rubble", "ore_rubble", (46, 71), (46, 80), (46, 79), (46, 70), M.Rock);
             WorldKit.Beam("Scree", rubble, On(46.5f, 71.5f, 0.3f), On(46.5f, 78.5f, 0.3f), 1.2f, 0.6f, M.Rock);
+            Tag(rubble, "ore_road_rubble", "A slope of fallen rock and scree up the cliff between the Ore Road's bends, a few iron hand-holds driven in.");
 
             // The thicket from the pine slope up to the Observers' Walk's east end.
             Transform thicket = WorldKit.Group(g, "Pine thicket");
             Shortcut(thicket, "Thicket", "pine_thicket", (151, 137), (148, 137), (149, 138), (151, 138), M.Pine);
+            Tag(thicket, "pine_thicket", "A dense tangle of young pine and scrub on the steep bank between the pine slope and the Crag.");
 
             // The ford: stepping stones over the Cut between the falls, Heights (+20) to the Crag (+24).
             Transform ford = WorldKit.Group(g, "The ford");
             Shortcut(ford, "Stepping stones", "cut_ford", (47, 137), (60, 137), (60, 138), (46, 138), M.Granite);
             for (int x = GorgeX0; x < GorgeX1; x += 2)
                 WorldKit.Prop("Stepping stone", ford, P(x + 1f, 13f, 137.5f + (x % 4 == 0 ? 0.3f : -0.3f)), new Vector3(1.2f, 0.6f, 1.1f), M.Granite, x * 23f);
-            Tag(g, "shortcuts", "Skill shortcuts: a rubble slope on the Ore Road, a pine thicket, stepping stones over the Cut. Each a climb with a level requirement.");
+            Tag(ford, "cut_ford", "Stepping stones over the Cut between the falls: flat-topped granite blocks, wet and mossy, white water round them.");
         }
 
         /// <summary>One shortcut: an object at <paramref name="a"/> landing at <paramref name="aTo"/>, and its way back from <paramref name="b"/> to <paramref name="bTo"/>.</summary>
