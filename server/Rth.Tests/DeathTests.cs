@@ -117,6 +117,38 @@ public class DeathTests
     }
 
     [Fact]
+    public void TheShippedFerrymanExplainsHimselfOnlyTheFirstTime()
+    {
+        DialogueDef shipped = GameContent.Load(Repo.ContentDirectory).Dialogues["ferryman"];
+        var (fx, _) = Field(parts =>
+        {
+            parts.Dialogues.RemoveAll(d => d.Id == shipped.Id);
+            parts.Dialogues.Add(shipped);
+            parts.Death.Dialogue = shipped.Id;
+        });
+        FakeConnection client = fx.Login("Alice");
+        Kit(fx);
+        DieAndWake(fx);
+
+        DialogueMessage line = client.Sent.OfType<DialogueMessage>().Last();
+        Assert.StartsWith("You died.", line.Text);
+        for (int i = 0; i < 10 && line.Options.Count == 0; i++)
+        {
+            client.FromClient(new DialogueChoiceMessage { Option = 0 });
+            fx.Ticks(1);
+            line = client.Sent.OfType<DialogueMessage>().Last();
+        }
+        Assert.Contains("120 coins", line.Text); // past the explanation, on to his fee
+        Assert.Contains("Not yet.", line.Options);
+
+        Choose(client, fx, "Not yet.");
+        Kill(fx);
+        fx.Ticks(fx.World.Rules.RespawnDelayTicks + 1);
+        line = client.Sent.OfType<DialogueMessage>().Last();
+        Assert.StartsWith("I have your things.", line.Text);
+    }
+
+    [Fact]
     public void AWakeTileThatIsntOpenGroundFallsBackToTheSpawn()
     {
         var (fx, _) = Field(p => p.Death.Wake = new TilePlace { X = 500, Y = 500 });

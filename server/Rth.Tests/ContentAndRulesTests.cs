@@ -32,6 +32,22 @@ public class ContentAndRulesTests
         if (wake != null)
             Assert.True(world.Map.Contains(wake.Plane, wake.X, wake.Y) && !world.Map.IsBlocked(wake.Plane, wake.X, wake.Y), "death.json's wake tile isn't open ground");
 
+        // The dead wake on the landing, and can walk to the ferryman and to a bank there.
+        if (wake != null && world.Map.FindRegion("realm_of_the_dead") is WorldRegion realm)
+        {
+            GameContent content = GameContent.Load(Repo.ContentDirectory);
+            Assert.True(realm.Contains(wake.X, wake.Y), "death.json's wake tile isn't on the landing");
+            var start = new TileCoord(wake.X, wake.Y);
+            NpcSpawn ferryman = Assert.Single(world.Placements.Npcs, n => n.Npc == "ferryman" && realm.Contains(n.X, n.Y));
+            Assert.Equal(new TileCoord(ferryman.X, ferryman.Y), Pathfinder.FindPath(world.Map, wake.Plane, start, new TileCoord(ferryman.X, ferryman.Y))[^1]);
+            PlacedObject bank = Assert.Single(world.Placements.Objects, o => realm.Contains(o.X, o.Y) &&
+                content.Objects.TryGetValue(o.Type, out var def) && def.Actions.Any(a => a.Id == "bank"));
+            var beside = new[] { (1, 0), (-1, 0), (0, 1), (0, -1) }
+                .Select(d => new TileCoord(bank.X + d.Item1, bank.Y + d.Item2))
+                .Where(t => !world.Map.IsBlocked(bank.Plane, t.X, t.Y));
+            Assert.Contains(beside, t => Pathfinder.FindPath(world.Map, wake.Plane, start, t) is { Count: > 0 } p && p[^1] == t);
+        }
+
         // Palmerway joins Tolling: walk from the town's east road over the border.
         if (world.Map.FindRegion("palmerway") != null)
         {
