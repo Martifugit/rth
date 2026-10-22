@@ -30,21 +30,29 @@ namespace Rth.Client.Characters
         /// <summary>Shows what it holds (null for nothing). Bodies without hands ignore it.</summary>
         public virtual void SetHeld(Rth.Shared.Items.ItemDef item) { }
 
-        public static EntityBody Create(EntityAdded added, Color color, Transform parent)
+        /// <param name="model">The creature's model under Resources/Creatures (NPCs; empty for none).</param>
+        public static EntityBody Create(EntityAdded added, Color color, Transform parent, string model = "")
         {
             var go = new GameObject("Body");
             go.transform.SetParent(parent, false);
             if (added.Kind == EntityKind.Player)
             {
                 // The animated character art when it (and its clips) exist, else the built-in one.
-                var model = go.AddComponent<ModelBody>();
-                if (model.Build("HumanMale", HumanoidLook.For(added.Id, color), added.Scale / 10f)) return model;
-                DestroyImmediate(model);
+                var art = go.AddComponent<ModelBody>();
+                if (art.Build("HumanMale", HumanoidLook.For(added.Id, color), added.Scale / 10f)) return art;
+                DestroyImmediate(art);
                 foreach (Transform child in go.transform) Destroy(child.gameObject);
 
                 var humanoid = go.AddComponent<HumanoidBody>();
                 humanoid.Build(HumanoidLook.For(added.Id, color), added.Scale / 10f);
                 return humanoid;
+            }
+            if (!string.IsNullOrEmpty(model))
+            {
+                var creature = go.AddComponent<CreatureBody>();
+                if (creature.Build(model, added.Scale / 10f)) return creature;
+                DestroyImmediate(creature);
+                foreach (Transform child in go.transform) Destroy(child.gameObject);
             }
             var primitive = go.AddComponent<PrimitiveBody>();
             primitive.Build(added.Shape, color, added.Scale / 10f, added.Kind);

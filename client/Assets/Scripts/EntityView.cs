@@ -47,7 +47,7 @@ namespace Rth.Client
         public string Overhead { get; set; } = "";
         public bool IsDying => _deathTime >= 0f;
 
-        public static EntityView Create(EntityAdded added, Color color, float tickSeconds)
+        public static EntityView Create(EntityAdded added, Color color, float tickSeconds, string model = "")
         {
             var go = new GameObject((added.Kind == EntityKind.Npc ? "NPC " : "Player ") + added.Name + " #" + added.Id);
             var view = go.AddComponent<EntityView>();
@@ -57,7 +57,7 @@ namespace Rth.Client
             view.DisplayName = added.Name;
             view.HealthPercent = added.HealthPercent;
             view._tickSeconds = tickSeconds;
-            view.BuildBody(added, color);
+            view.BuildBody(added, color, model);
             view.Plane = added.Plane;
             view.Teleport(added.Position);
             return view;
@@ -69,9 +69,9 @@ namespace Rth.Client
             if (_body != null) _body.SetHeld(item);
         }
 
-        private void BuildBody(EntityAdded added, Color color)
+        private void BuildBody(EntityAdded added, Color color, string model)
         {
-            _body = EntityBody.Create(added, color, transform);
+            _body = EntityBody.Create(added, color, transform, model);
 
             // One collider on the root so clicks find the entity.
             var hitbox = gameObject.AddComponent<CapsuleCollider>();

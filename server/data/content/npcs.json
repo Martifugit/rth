@@ -15,8 +15,9 @@
     "respawnTicks": 20,
     "dropTable": "fen_rat",
     "shape": "Box",
+    "model": "FenRat",
     "color": "#6b5a43",
-    "scale": 0.6
+    "scale": 1.0
   },
   {
     "id": "vitriol_mite",

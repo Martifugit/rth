@@ -195,6 +195,7 @@ namespace Rth.Client
             ui.cameraRig = cameraRig;
             ui.regions = regions;
             world.ItemLookup = Item;
+            world.NpcLookup = Npc;
             world.AbilityLookup = Ability;
             world.HymnIconLookup = id => Ui.Hymns.Get(this, id)?.Icon;
             _name = PlayerPrefs.GetString(NamePref, "");

@@ -9,6 +9,7 @@ and reviewed in a diff. The rules the art must follow are in [docs/assets.md](..
   (tiled ground, the game's sun, a camera at the game's pitch, the player model for scale) and
   `report` (triangles and colours, to check against `client/Assets/Art/art-budgets.json`).
 - `props/well.py`: the first test prop, a village well (172 triangles, 4 colours).
+- `creatures/fen_rat.py`: the fen rat (136 triangles, 3 colours), in the game.
 
 Run a prop from the MCP:
 
@@ -19,6 +20,12 @@ ns = runpy.run_path(r"C:\dev\rth\tools\art\blender\props\well.py"); result = ns[
 
 then `rth_art.render(path)` for the game view, or pass `focus`, `distance`, `pitch` and `yaw`
 for another angle.
+
+**Into the game:** `rth_art.export(objs, "Resources/Creatures/FenRat.fbx")` writes the FBX into the
+client (the model faces Blender -Y, which becomes Unity +Z; its origin is the middle of its
+tile). Name the NPC's model in `server/data/content/npcs.json` (`"model": "FenRat"`) and the
+client's `CreatureBody` draws it, colouring each material by the palette colour it is named
+after. `creatures/fen_rat.py` exports itself when run.
 
 ## Dos and don'ts
 

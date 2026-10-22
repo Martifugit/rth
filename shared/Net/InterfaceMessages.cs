@@ -20,6 +20,8 @@ namespace Rth.Shared.Net
         public bool Attackable = true;
         /// <summary>Other menu options ("Talk-to", "Bank", "Trade"), dispatched by id on the server.</summary>
         public List<ActionDef> Actions = new List<ActionDef>();
+        /// <summary>Its model under Resources/Creatures (empty: the placeholder shape).</summary>
+        public string Model = "";
     }
 
     /// <summary>Which window the server has open for the player.</summary>

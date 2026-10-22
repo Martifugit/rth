@@ -60,6 +60,8 @@ namespace Rth.Server.Content
         public string? Shop;
 
         public EntityShape Shape = EntityShape.Capsule;
+        /// <summary>The client's model for it (Resources/Creatures/&lt;model&gt;); empty draws <see cref="Shape"/>.</summary>
+        public string Model = "";
         public string Color = "#888888";
         public double Scale = 1.0;
 
@@ -814,7 +816,7 @@ namespace Rth.Server.Content
             Npcs = Npcs.Values.Select(n => new NpcInfo
             {
                 Id = n.Id, Name = n.Name, Examine = n.Examine, Attackable = n.Attackable, Actions = n.Actions,
-                Blood = n.Blood, MaxHit = n.MaxHit, Style = n.Style, Aggressive = n.Aggressive,
+                Blood = n.Blood, MaxHit = n.MaxHit, Style = n.Style, Aggressive = n.Aggressive, Model = n.Model,
             }).ToList(),
             Recipes = Recipes.Values.Select(r => new RecipeInfo
             {

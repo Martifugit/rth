@@ -6,7 +6,8 @@ and body, spikes for legs, a tapered stick for a tail, the eyes painted onto the
 Everything that grows from the body has its base buried in it.
 
 Coordinates are written as (forward, side, up) from the rat's own point of view and turned into
-Blender's with P(): the rat faces Blender -Y and stands on tile (0, 0)."""
+Blender's with P(): the rat faces Blender -Y (Unity +Z) and stands centred on the origin, which
+is the middle of its tile in the game."""
 import math
 import os
 import sys
@@ -18,10 +19,11 @@ import rth_art as A  # noqa: E402
 
 COLOURS = ["CliffRock", "Hide", "Blood"]
 FUR, BARE, EYE = range(3)
+EXPORT = True
 
 
 def P(f, s, u):
-    return (0.5 + s, 0.5 - f, u)
+    return (s, -f, u)
 
 
 def sec(f, u, w, h):
@@ -71,5 +73,7 @@ def build():
 
 
 objs = build()
-cam = A.preview_rig(focus=(0.5, 0.5, 0.4), distance=6.0, pitch=40, yaw=-30)
+cam = A.preview_rig(focus=(0, 0, 0.3), distance=4.5, pitch=40, yaw=-30, human_at=(-1.0, 0.0))
 result = A.report(objs)
+if __name__ == "__main__" and EXPORT:
+    result["export"] = A.export(objs, "Resources/Creatures/FenRat.fbx")

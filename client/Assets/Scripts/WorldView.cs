@@ -30,6 +30,8 @@ namespace Rth.Client
 
         /// <summary>Looks up item definitions (set by the session from the server's content).</summary>
         public System.Func<string, ItemDef> ItemLookup { get; set; } = _ => null;
+        /// <summary>An NPC type's info (for its model), by type id.</summary>
+        public System.Func<string, NpcInfo> NpcLookup { get; set; } = _ => null;
         public System.Func<string, AbilityDef> AbilityLookup { get; set; } = _ => null;
         /// <summary>An overhead hymn's icon id, by hymn id.</summary>
         public System.Func<string, string> HymnIconLookup { get; set; } = _ => null;
@@ -120,7 +122,8 @@ namespace Rth.Client
                 Color color = added.Kind == EntityKind.Player
                     ? (added.Id == LocalId ? new Color(0.25f, 0.45f, 0.85f) : ColorFor(added.Id))
                     : FromRgb(added.Color);
-                EntityView view = EntityView.Create(added, color, _tickSeconds);
+                string model = added.Kind == EntityKind.Npc ? NpcLookup(added.TypeId)?.Model ?? "" : "";
+                EntityView view = EntityView.Create(added, color, _tickSeconds, model);
                 view.transform.SetParent(transform, true);
                 if (!string.IsNullOrEmpty(added.Held)) view.SetHeld(ItemLookup(added.Held));
                 view.Overhead = added.Overhead ?? "";

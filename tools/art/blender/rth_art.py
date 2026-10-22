@@ -268,7 +268,7 @@ def finish(bm):
 # ---- preview ----
 
 def preview_rig(focus=(0.5, 0.5, 0.6), distance=9.0, pitch=40.0, yaw=-30.0, ground=6, human=True,
-                ground_colour="Grass"):
+                ground_colour="Grass", human_at=(-0.5, 0.5)):
     """Ground of tiles, the game's sun, a camera at the game's pitch, and the player for scale.
     Everything goes in the 'Preview' collection, which the export skips."""
     coll = collection("Preview")
@@ -334,7 +334,7 @@ def preview_rig(focus=(0.5, 0.5, 0.6), distance=9.0, pitch=40.0, yaw=-30.0, grou
                 c.objects.unlink(o)
             coll.objects.link(o)
             if o.parent is None:
-                o.location = (-0.5, 0.5, 0)
+                o.location = (human_at[0], human_at[1], 0)
     return cam
 
 
@@ -354,6 +354,25 @@ def render(path, cam=None, focus=None, distance=None, pitch=None, yaw=None):
     scene.camera = cam
     scene.render.filepath = path
     bpy.ops.render.render(write_still=True)
+    return path
+
+
+def export(objs, relative_path):
+    """Write the prop's meshes as an FBX under the client (e.g. "Resources/Creatures/FenRat.fbx"),
+    with the axis settings the character art uses: Blender -Y (the model's front) becomes Unity +Z,
+    1 unit stays 1 tile. Materials keep their palette names, which the client colours by."""
+    path = os.path.join(REPO, "client", "Assets", *relative_path.split("/"))
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    bpy.ops.object.select_all(action="DESELECT")
+    for o in objs:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = objs[0]
+    bpy.ops.export_scene.fbx(
+        filepath=path, use_selection=True, object_types={"MESH"},
+        apply_scale_options="FBX_SCALE_ALL", axis_forward="-Z", axis_up="Y",
+        mesh_smooth_type="FACE", use_mesh_modifiers=True, bake_space_transform=True,
+        bake_anim=False,
+    )
     return path
 
 
