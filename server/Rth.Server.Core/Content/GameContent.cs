@@ -109,7 +109,7 @@ namespace Rth.Server.Content
         public string Verb = "process";
         public string Skill = "";
         public int Level = 1;
-        /// <summary>Object type it's done at.</summary>
+        /// <summary>Object type it's done at; empty for a recipe made only through a use (uses.json).</summary>
         public string Station = "";
         public List<ItemAmount> Inputs = new List<ItemAmount>();
         /// <summary>Items needed in the pack or worn, not used up.</summary>
@@ -180,6 +180,7 @@ namespace Rth.Server.Content
         public List<StatusDef> Statuses = new List<StatusDef>();
         public HymnsFile Hymns = new HymnsFile();
         public List<Rth.Shared.Progress.BossDef> Bosses = new List<Rth.Shared.Progress.BossDef>();
+        public List<UseDef> Uses = new List<UseDef>();
     }
 
     /// <summary>
@@ -228,6 +229,8 @@ namespace Rth.Server.Content
         public IReadOnlyDictionary<string, StatusDef> Statuses { get; private set; } = new Dictionary<string, StatusDef>();
         public IReadOnlyDictionary<string, HymnDef> Hymns { get; private set; } = new Dictionary<string, HymnDef>();
         public IReadOnlyDictionary<string, Rth.Shared.Progress.BossDef> Bosses { get; private set; } = new Dictionary<string, Rth.Shared.Progress.BossDef>();
+        /// <summary>Item-on-something uses, in file order (the first that matches and passes wins).</summary>
+        public IReadOnlyList<UseDef> Uses { get; private set; } = new List<UseDef>();
         /// <summary>The skill hymns need and train, and how much singing trains it.</summary>
         public HymnsFile HymnSettings { get; private set; } = new HymnsFile();
         public string? DefenceSkill { get; private set; }
@@ -273,6 +276,7 @@ namespace Rth.Server.Content
                 Statuses = ReadJson<List<StatusDef>>(directory, "statuses.json"),
                 Hymns = ReadJson<HymnsFile>(directory, "hymns.json"),
                 Bosses = ReadJson<List<Rth.Shared.Progress.BossDef>>(directory, "bosses.json"),
+                Uses = ReadJson<List<UseDef>>(directory, "uses.json"),
             });
         }
 
@@ -411,7 +415,8 @@ namespace Rth.Server.Content
             {
                 string where = "Recipe '" + r.Id + "': ";
                 if (!skills.ContainsKey(r.Skill)) problems.Add(where + "skill '" + r.Skill + "' doesn't exist.");
-                if (!objects.ContainsKey(r.Station)) problems.Add(where + "station '" + r.Station + "' isn't an object.");
+                // No station: made only through a use (uses.json), e.g. a knife on a carcass.
+                if (r.Station.Length > 0 && !objects.ContainsKey(r.Station)) problems.Add(where + "station '" + r.Station + "' isn't an object.");
                 if (r.Inputs.Count == 0) problems.Add(where + "needs at least one input.");
                 foreach (ItemAmount a in r.Inputs.Concat(r.Outputs))
                     if (!items.ContainsKey(a.Item) || a.Count < 1) problems.Add(where + "bad item '" + a.Item + "' x" + a.Count + ".");
@@ -497,6 +502,7 @@ namespace Rth.Server.Content
                         QuestObjective o = s.Objective;
                         bool ok = o.Kind == "kill" ? parts.Npcs.Any(n => n.Id == o.Target)
                             : o.Kind == "recipe" ? recipes.ContainsKey(o.Target)
+                            : o.Kind == "use" ? parts.Uses.Any(u => u.Id == o.Target)
                             : o.Kind == "item" && items.ContainsKey(o.Target);
                         if (!ok) problems.Add(where + "stage " + s.Stage + " has a bad objective (" + o.Kind + " " + o.Target + ").");
                         if (s.Next == null) problems.Add(where + "stage " + s.Stage + " has an objective but no next stage.");
@@ -525,6 +531,7 @@ namespace Rth.Server.Content
                     "obtain" => items.ContainsKey(o.Target),
                     "object" => o.Target.Contains(":") && objects.ContainsKey(o.Target.Split(':')[0]),
                     "region" => o.Target.Length > 0,
+                    "use" => parts.Uses.Any(u => u.Id == o.Target),
                     _ => false,
                 };
                 if (!ok) problems.Add(where + "has a bad objective (" + o.Kind + " " + o.Target + ").");
@@ -542,6 +549,9 @@ namespace Rth.Server.Content
                 if (n.Actions.Any(a => a.Id == "talk") && n.Dialogue == null) problems.Add("NPC '" + n.Id + "': has Talk-to but no dialogue.");
                 if (n.Actions.Any(a => a.Id == "trade") && n.Shop == null) problems.Add("NPC '" + n.Id + "': has Trade but no shop.");
             }
+
+            Index(parts.Uses, u => u.Id, "use", problems);
+            foreach (UseDef u in parts.Uses) ValidateUse(u, items, npcs, objects, recipes, dialogues, CheckRequirements, problems);
 
             CombatRules rules = parts.Rules;
             if (rules.BileLimit <= 0) problems.Add("Rules: bileLimit must be positive.");
@@ -615,6 +625,7 @@ namespace Rth.Server.Content
                 Hymns = hymns,
                 HymnSettings = hymnFile,
                 Bosses = bosses,
+                Uses = parts.Uses.ToList(),
                 DefenceSkill = parts.Skills.DefenceSkill,
                 RetiredSkills = parts.Skills.Retired,
                 CombatLevel = parts.Skills.CombatLevel,
@@ -672,6 +683,32 @@ namespace Rth.Server.Content
                 if (item.Consumable.Leaves != null && !items.ContainsKey(item.Consumable.Leaves))
                     problems.Add(where + "leaves '" + item.Consumable.Leaves + "', which doesn't exist.");
             }
+        }
+
+        /// <summary>
+        /// A use names a real item (or a tag), exactly one real target, and only real recipes,
+        /// conversations and effect ops. Whether its dialogue condition and action types have
+        /// handlers is checked at runtime (and by tests), as for dialogue.
+        /// </summary>
+        private static void ValidateUse(UseDef u, Dictionary<string, ItemDef> items, Dictionary<string, NpcDef> npcs, Dictionary<string, ObjectDef> objects,
+            Dictionary<string, RecipeDef> recipes, Dictionary<string, DialogueDef> dialogues, Action<IEnumerable<SkillRequirement>, string> checkRequirements, List<string> problems)
+        {
+            string where = "Use '" + u.Id + "': ";
+            bool ItemOk(string? spec) => spec != null && (spec.StartsWith("tag:") ? spec.Length > 4 : items.ContainsKey(spec));
+            if (!ItemOk(u.Item)) problems.Add(where + "item '" + u.Item + "' doesn't exist.");
+            int targets = (u.OnObject != null ? 1 : 0) + (u.OnNpc != null ? 1 : 0) + (u.OnItem != null ? 1 : 0);
+            if (targets != 1) problems.Add(where + "needs exactly one of onObject, onNpc and onItem.");
+            if (u.OnObject != null && !objects.ContainsKey(u.OnObject)) problems.Add(where + "object '" + u.OnObject + "' doesn't exist.");
+            if (u.OnNpc != null && !(u.OnNpc.StartsWith("tag:") ? u.OnNpc.Length > 4 : npcs.ContainsKey(u.OnNpc))) problems.Add(where + "NPC '" + u.OnNpc + "' doesn't exist.");
+            if (u.OnItem != null && !ItemOk(u.OnItem)) problems.Add(where + "item '" + u.OnItem + "' doesn't exist.");
+            if (u.ConsumeTarget && u.OnItem == null) problems.Add(where + "consumeTarget only applies to an item used on an item.");
+            if (u.Recipe != null && !recipes.ContainsKey(u.Recipe)) problems.Add(where + "recipe '" + u.Recipe + "' doesn't exist.");
+            if (u.Dialogue != null && !dialogues.ContainsKey(u.Dialogue)) problems.Add(where + "dialogue '" + u.Dialogue + "' doesn't exist.");
+            foreach (EffectOp op in u.Effects)
+                if (!KnownEffectOps.Contains(op.Op)) problems.Add(where + "unknown effect op '" + op.Op + "'.");
+            if (u.Conditions.Any(c => string.IsNullOrEmpty(c.Type)) || u.Actions.Any(a => string.IsNullOrEmpty(a.Type)))
+                problems.Add(where + "a condition or action has no type.");
+            checkRequirements(u.Requirements, where.TrimEnd(' ', ':'));
         }
 
         /// <summary>Structure only: every jump lands on a node, every condition and action has a type.

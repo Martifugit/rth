@@ -1,0 +1,20 @@
+[
+  {
+    "id": "carcass_on_skinning_rack",
+    "item": "fen_rat_carcass",
+    "onObject": "skinning_rack",
+    "recipe": "butcher_fen_rat"
+  },
+  {
+    "id": "knife_on_fen_rat_carcass",
+    "item": "skinning_knife",
+    "onItem": "fen_rat_carcass",
+    "message": "Not on your knees in the mud. Hang it on Wenna's skinning rack and work it there."
+  },
+  {
+    "id": "rat_gall_on_corvin",
+    "item": "rat_gall",
+    "onNpc": "corvin_sallow",
+    "message": "Corvin sniffs the gall. \"Fresh enough. Bring it to the still, not to me.\""
+  }
+]

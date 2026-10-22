@@ -54,21 +54,42 @@ namespace Rth.Server.Game
             }
             foreach (RecipeDef recipe in candidates)
             {
-                if (Skills.Level(player, recipe.Skill) < recipe.Level)
+                string? blocked = Blocker(player, recipe);
+                if (blocked != null)
                 {
-                    problem ??= "You need " + Skills.Name(recipe.Skill).ToLowerInvariant() + " level " + recipe.Level + " to " + recipe.Verb + " the " + recipe.Name + ".";
-                    continue;
-                }
-                string? missing = recipe.Tools.FirstOrDefault(t => !HasTool(player, t));
-                if (missing != null)
-                {
-                    problem ??= "You need a " + (World.Content.Item(missing)?.Name.ToLowerInvariant() ?? missing) + " to " + recipe.Verb + " the " + recipe.Name + ".";
+                    problem ??= blocked;
                     continue;
                 }
                 problem = null;
                 return recipe;
             }
             return null;
+        }
+
+        /// <summary>Why the player can't make this recipe even with its inputs (level, a missing tool), or null.</summary>
+        internal string? Blocker(Player player, RecipeDef recipe)
+        {
+            if (Skills.Level(player, recipe.Skill) < recipe.Level)
+                return "You need " + Skills.Name(recipe.Skill).ToLowerInvariant() + " level " + recipe.Level + " to " + recipe.Verb + " the " + recipe.Name + ".";
+            string? missing = recipe.Tools.FirstOrDefault(t => !HasTool(player, t));
+            if (missing != null)
+                return "You need a " + (World.Content.Item(missing)?.Name.ToLowerInvariant() ?? missing) + " to " + recipe.Verb + " the " + recipe.Name + ".";
+            return null;
+        }
+
+        /// <summary>
+        /// Makes one recipe over and over where the player stands (facing <paramref name="face"/>),
+        /// until its inputs run out or they walk away: a use (a carcass on a rack, a knife on a
+        /// carcass) names the recipe rather than leaving the station to choose.
+        /// </summary>
+        public void Repeat(Player player, RecipeDef recipe, TileCoord? face = null) =>
+            World.StartInteraction(player, new RepeatRecipeInteraction(recipe, face));
+
+        internal bool CanMake(Player player, RecipeDef recipe, out string? problem, out bool ranOut)
+        {
+            ranOut = !HasInputs(player, recipe);
+            problem = ranOut ? "You have nothing to " + recipe.Verb + "." : Blocker(player, recipe);
+            return problem == null;
         }
 
         /// <summary>Does one completion of a recipe: inputs out, outputs in (or on the ground if full), XP.</summary>
@@ -137,6 +158,51 @@ namespace Rth.Server.Game
             _current = next;
             _readyAt = world.CurrentTick + (uint)next.Ticks;
             world.Animate(player, next.Animation, Object.Tile);
+            return true;
+        }
+    }
+
+    /// <summary>Making one named recipe again and again where the player stands (see <see cref="RecipeSystem.Repeat"/>).</summary>
+    public sealed class RepeatRecipeInteraction : Interaction
+    {
+        private readonly RecipeDef _recipe;
+        private readonly TileCoord? _face;
+        private bool _started;
+        private uint _readyAt;
+
+        public RepeatRecipeInteraction(RecipeDef recipe, TileCoord? face)
+        {
+            _recipe = recipe;
+            _face = face;
+        }
+
+        public override bool Tick(World world, Player player)
+        {
+            RecipeSystem recipes = world.Get<RecipeSystem>();
+            if (!_started)
+            {
+                player.Waypoints.Clear();
+                if (!recipes.CanMake(player, _recipe, out string? problem, out _))
+                {
+                    world.Tell(player, TextKind.Warning, problem ?? "You can't do that.");
+                    return false;
+                }
+                _started = true;
+                world.Tell(player, TextKind.Info, "You begin to " + _recipe.Verb + " the " + _recipe.Name + ".");
+                _readyAt = world.CurrentTick + (uint)_recipe.Ticks;
+                world.Animate(player, _recipe.Animation, _face);
+                return true;
+            }
+
+            if (world.CurrentTick < _readyAt) return true;
+            recipes.Complete(player, _recipe);
+            if (!recipes.CanMake(player, _recipe, out string? stop, out bool ranOut))
+            {
+                world.Tell(player, TextKind.Info, ranOut ? "You have nothing left to " + _recipe.Verb + "." : stop ?? "You stop.");
+                return false;
+            }
+            _readyAt = world.CurrentTick + (uint)_recipe.Ticks;
+            world.Animate(player, _recipe.Animation, _face);
             return true;
         }
     }
