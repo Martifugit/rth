@@ -59,6 +59,7 @@ owns, and when it is done. Update the status column as work lands.
 | **D. Death v1** | D1 server, D2 region and client, D3 the long way back | cloud, then local | now / after C3 |
 | **E. Gameplay** | E1 tools, Mining, Woodcutting; E2 ranged; E3 item-on-object use | cloud (client parts checked locally) | now |
 | **F. Art** | F1 scale and style applied, F2 Tolling art pass | local | after C0 |
+| **U. Interface** | U1 a robust UI framework before more UI pieces | local (needs the Editor to see) | now |
 | **G. Integration** | merges, `CLAUDE.md`, this file | owner | always |
 
 ## Order and dependencies
@@ -344,13 +345,39 @@ Design: `docs/lore-rework/death.md`.
 | Id | What | Source | Notes |
 | --- | --- | --- | --- |
 | **E1** | **Tools for gathering, then Mining and Woodcutting** on the existing node system: tool items and tiers, tool requirements on nodes, the first rocks and trees in Tolling and Palmerway. | `docs/skills.md` 2.3, 7 | Mostly data plus a tool check in `GatheringSystem`. Tests like `GatheringTests`. **Status: done** on `claude/e1-gathering-tools` (tools, content, `ToolTests`); scene placements wait (see Handoffs). |
-| **E2** | **Ranged**, the third combat style: weapons, ammunition, the auto-attack, abilities, power stats. | `docs/skills.md` 3.4 | Follow how melee was added (milestone 10). Client ability book tab checked locally. |
+| **E2** | **On hold until U1** (owner, 2026-10-22): no new interface pieces until the framework is robust. **Ranged**, the third combat style: weapons, ammunition, the auto-attack, abilities, power stats. | `docs/skills.md` 3.4 | Follow how melee was added (milestone 10). Client ability book tab checked locally. |
 | **E3** | **Using an item on an object or NPC** ("use"), a gap listed since milestone 6. | `CLAUDE.md` milestone 6 | A general mechanism: an interaction plus data hooks; no one-off cases. |
 
 Each owns its own system files and adds content entries; all three touch `items.json` and
 `objects.json`, so rule 3 applies.
 
 ---
+
+## Track U: the interface framework
+
+### U1. A robust UI framework
+
+| | |
+| --- | --- |
+| **Runs** | local (every fix is checked by eye in the Editor) |
+| **Depends on** | nothing; **blocks E2** and any new interface piece |
+| **Owns** | `client/Assets/Scripts/Ui/*` (`UiRoot`, `UiWindow`, `UiPanel`, `UiKit`, `UiDefaultLayout`, panels), `Resources/UI/Rth.uss`, `docs/interface.md` |
+| **Status** | not started |
+
+The owner's findings (2026-10-22):
+- Content overflows its window in some panels.
+- Too much fluff in places, and some tab options are odd.
+- Windows overlap each other. Only modal or temporary windows (dialogs, the bank, a shop) may
+  overlap; the others must not.
+- Building your own layout is hard: aligning and placing windows where they should go.
+- The pack grid and the worn items don't respond to the window's width and height.
+
+To do: audit every panel at several window sizes (screenshots), then fix it in the framework, not
+panel by panel: layout rules every panel follows (responsive grids, no overflow), a placement
+model with snapping and alignment that keeps docked windows from overlapping, and a clear split
+between docked windows and floating, modal ones. **Done when** every panel holds up at its
+smallest and largest size, docked windows never overlap, and the owner finds laying out an
+interface easy.
 
 ## Track F: art (local)
 
