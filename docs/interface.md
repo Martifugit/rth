@@ -25,7 +25,7 @@ every piece and how they are organised.
 |---|---|---|
 | **Panel** (`UiPanel`) | Lives in a movable window; can share it as a tab. Resizable unless it has a fixed size. | Pack, worn, character, abilities, hymns, skills, quests, task, XP tracker |
 | **Fixed panel** (`FixedSize`) | Movable, never resized: the size it has to be. | Action bars, minimap, chat, target, bank, shop, conversation |
-| **Server window** (`ServerOpen`) | Opens and closes when the server says; closing it tells the server. | Bank, shop, conversation, the Assayer (today's death screen; the ferryman replaces it in death v1) |
+| **Server window** (`ServerOpen`) | Opens and closes when the server says; closing it tells the server. | Bank, shop, conversation (the ferryman's too: death has no window of its own) |
 | **Modal** (`UiModal`) | Centred, fixed size, tabs of related pages, one at a time; Escape or a click outside closes it. | Journal, guide, world map, settings |
 
 ## Always on screen
