@@ -57,6 +57,10 @@ namespace Rth.Client.Ui
             var lines = new List<string> { UiKit.Title(def.Name) + (count > 1 ? UiKit.Colour("  x" + count.ToString("N0"), UiKit.Value) : "") };
             string kind = def.Equipment != null ? def.Equipment.Slot.ToString() : def.Consumable != null ? def.Consumable.Verb == "Drink" ? "Drink" : "Food" : def.Stackable ? "Stackable" : "";
             if (kind.Length > 0) lines.Add(UiKit.Colour(kind, UiKit.Muted));
+            if (def.Tool != null)
+                lines.Add(UiKit.Colour("Tier " + def.Tool.Tier + " " + def.Tool.Kind
+                    + (def.Tool.Success > 0 ? ", +" + (def.Tool.Success * 100).ToString("0.#") + "% success" : "")
+                    + (def.Tool.Conservation > 0 ? ", " + (def.Tool.Conservation * 100).ToString("0.#") + "% conservation" : ""), UiKit.Value));
             if (!string.IsNullOrEmpty(def.Examine)) lines.Add(def.Examine);
             if (def.Equipment != null && def.Equipment.Stats.Count > 0)
             {

@@ -40,6 +40,7 @@ namespace Rth.Client.Ui.Modals
             Abilities,
             Equipment,
             Recipes,
+            Gathering,
         }
 
         private struct Unlock
@@ -94,7 +95,7 @@ namespace Rth.Client.Ui.Modals
             right.style.flexGrow = 1;
             VisualElement bar = UiKit.El(right, "row");
             bar.style.marginBottom = 6f;
-            foreach (Kind k in new[] { Kind.All, Kind.Abilities, Kind.Equipment, Kind.Recipes })
+            foreach (Kind k in new[] { Kind.All, Kind.Abilities, Kind.Equipment, Kind.Recipes, Kind.Gathering })
             {
                 Kind kind = k;
                 Label button = UiKit.Text(bar, k.ToString().ToUpperInvariant(), "filter-tab");
@@ -222,6 +223,24 @@ namespace Rth.Client.Ui.Modals
                                 Level = r.Level, Kind = Kind.Equipment, Icon = IconLibrary.ForItem(item), Tint = IconLibrary.ItemTint(item),
                                 Text = item.Name, Tooltip = GameText.Describe(item, 1),
                             });
+            foreach (ItemDef item in content.Items)
+                if (item.Tool != null)
+                    foreach (SkillRequirement r in item.Tool.Requirements)
+                        if (r.Skill == skill)
+                            unlocks.Add(new Unlock
+                            {
+                                Level = r.Level, Kind = Kind.Equipment, Icon = IconLibrary.ForItem(item), Tint = IconLibrary.ItemTint(item),
+                                Text = item.Name + "  (tool)", Tooltip = GameText.Describe(item, 1),
+                            });
+            foreach (Rth.Shared.World.ObjectDef obj in content.Objects)
+                if (obj.Node != null && obj.Node.Skill == skill)
+                    unlocks.Add(new Unlock
+                    {
+                        Level = obj.Node.Level, Kind = Kind.Gathering, Icon = IconLibrary.Get(content.Skills.FirstOrDefault(s => s.Id == skill)?.Icon ?? skill), Tint = UiKit.IconTint,
+                        Text = Capitalise(obj.Node.Verb) + " " + obj.Name.ToLowerInvariant(),
+                        Tooltip = UiKit.Title(obj.Name) + (obj.Node.Tool != null ? "\nNeeds " + (obj.Node.ToolTier > 1 ? "a tier-" + obj.Node.ToolTier + " " : "a ") + obj.Node.Tool + "." : "")
+                            + "\n" + UiKit.Colour(obj.Node.Xp.ToString("0.#") + " XP each", UiKit.Value),
+                    });
             foreach (RecipeInfo recipe in content.Recipes)
                 if (recipe.Skill == skill)
                 {
