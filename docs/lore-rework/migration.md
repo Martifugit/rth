@@ -31,10 +31,17 @@ dialogue text. If an id ever has to change, it goes through the existing retired
 | **4. The map** | Redo the area plan's pass 1 on the concept map: `skeleton.json` from `powers.md`, then the checks and render. | Planning, like the old pass 1. |
 | **5. New content** | Gods, the Faceless, the demigods, p-head and the rest arrive with the areas and quests that use them. | Ongoing. |
 
-## Questions
+## Decided
 
-1. **The church's name.** Keep "the Sanguine Synod" for p-sworn's church? (Most strings stay.)
-2. **The Rationalists' name.** Keep it for the surface people of the spine?
-3. **Scalth.** Keep it as a scarred place (in the lesser houses' broken land, with a new cause), or
-   rename the mites' and salts' origin?
-4. **Phase order.** Canon, text pass, death v1, map: or death v1 sooner?
+- **The church gets a new name** (not "the Sanguine Synod"). Until it has one, player-facing text
+  keeps the old name rather than showing a placeholder.
+- **The surface people of the spine get a new name** (not "Rationalists"), same rule.
+- **Scalth isn't kept for its own sake.** The concept map decides: the mites, the lye vat and the
+  salt get an origin that fits it (likely the lesser houses' broken land), named with it.
+- **Order** (with the workflow rework in it):
+  1. **Canon and text pass** (cloud): docs, plus every old-lore string in content and code that
+     doesn't need a scene. Independent of the workflow rework.
+  2. **The workflow rework** (local, with the Unity MCP): its prompt is updated to point at the
+     new map and to carry the scene-side text (signs, the `SynodRed` material, builders).
+  3. **Death v1**: its realm-of-the-dead region is the first region built the new way.
+  4. **The map and regions**, built the new way.
