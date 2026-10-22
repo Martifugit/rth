@@ -20,6 +20,9 @@ namespace Rth.Server.Game
             _spawns = spawns.ToList();
         }
 
+        /// <summary>Where the map places creatures (the bestiary reads where each one lives).</summary>
+        public IReadOnlyList<NpcSpawn> Spawns => _spawns;
+
         public const string Examine = "examine";
 
         private readonly Dictionary<string, Action<Player, Npc>> _actions = new Dictionary<string, Action<Player, Npc>>();
