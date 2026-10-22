@@ -75,3 +75,29 @@ themselves have faces).
 | **Presence** | It walks the world, but never as itself. It wears the faces of trusted people: a friend, a captain, a priest. You meet it without knowing, and may only realise much later. |
 | **Fear** | Being forgotten. *(Provisional.)* |
 | **Origin** | Ascended, through the betrayal. **Ascending destroyed their former bodies** and made them into one: **a single, powerful abomination they all share**. Abroad in the world they appear in borrowed faces; the shared body is their true form. |
+
+### p-scattered: the god that became demigods (inspired by Osiris)
+
+The name is a placeholder.
+
+- **Story:** long ago a god was torn apart. Its pieces didn't die: each became a **demigod** with
+  a life, a character, followers and a place of its own. None of them knows what they were.
+- **The quest line:** the player helps them discover it, piece by piece. In its climax, the player
+  has to **convince them to recombine** into the god they were, to face some threat. *(The threat:
+  open.)* Recombining costs each demigod the life it has lived, so convincing them is the hard part.
+- **Discoverable inspiration:** a dismembered god, someone gathering its pieces, a reassembly.
+- *Open:* who tore it apart and why (sealed), how many pieces, where they are, whether any piece is
+  missing or in p-spoil.
+
+### p-head: the face in the cliff (inspired by Mimir)
+
+The name is a placeholder.
+
+- **The place:** an enormous face in a cliff, a Mount Rushmore of something nobody remembers
+  carving, with a **waterfall** pouring from it.
+- **The bargain:** drink from the falls and you see what it remembers, and leave one memory of
+  your own in the water. Thousands of years of drinkers mean it holds memories from before the
+  revisions: removed places, moved places, forgotten peoples. It is the only mind that does.
+- **A disaster to come:** one day **the falls stop flowing**.
+- **Discoverable inspiration:** a living head, water, and a price paid for what it knows.
+- *Open:* whether it is one of p-scattered's pieces.
