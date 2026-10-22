@@ -89,8 +89,8 @@ new. **Cut**: gone. **New**: didn't exist before.
 | **The Assayer** | **Absorbed** by death v1 (the ferryman). The idea of something weighing the dead can return in the realm of the dead later. | `death.md`. |
 | **The Dreamweaver and her archive** | **Absorbed** by the dreamer (a constant) and the Dreaming. | `gods.md`. |
 | **The nightmare loose in the archive** | **Keep** as a thread: something loose from the Dreaming. Details reworked with the dreamer. | Strong boss idea (rotating orbs). |
-| **The Physician** | **Keep, reworked**: someone who treats the world as a patient fits a world being revised (are the revisions the illness, or the cure?). Mortal, lesser power or worse: *open*. | Strong twist engine. |
-| **The bay, the Cradle and the Quaere** | **Rework**: the bay can stay as geography; it is **not** the origin of the faith any more. What's in it: *open*, or cut. | Owner: not the origin. |
+| **The Physician** | **Cut.** | Owner. |
+| **The bay, the Cradle and the Quaere** | **Cut.** | Owner. |
 | **The cracked moon and moonfalls** | **Keep** as a mystery and an event system. What cracked it: *open*. | Moonfalls are a strong repeatable activity. |
 | **The bound thing in the deep** | **Keep** as a mystery. Candidates: a reject that never reached p-spoil, or whatever wounded p-sworn. | Fits the universe. |
 | **The Covenant, the Schism, the Scalding** | **Cut** as written; history is rewritten in the timeline step. The Scalding's scar (Scalth) can survive as a place with a new cause. | The history depended on the bay and Tithe. |
