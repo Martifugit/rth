@@ -2,8 +2,8 @@
 
 Sealbreaker (a concept): a two-handed maul made of the Keystone, the guardian bound into one of
 the deep's seals. Its head is a keystone of seal-stone split through the middle, the seal's
-glowing core showing in the split, held together by two clasps of chain laid flat against it; the
-far end bristles with four spikes. Three pieces drop separately (the upper half of the head, the
+glowing core showing in the split, held together by two clasps of chain laid flat against it,
+locked on the top face; the far end bristles with four spikes. Three pieces drop separately (the upper half of the head, the
 lower half, the chain clasps); the shaft is smithed, and the four are assembled.
 
 Same held-art convention as held.py: origin at the grip, the handle along Blender -Y, the
@@ -103,14 +103,18 @@ def head_marks(bm, stone):
 
 # ---- the clasps ----
 
-def link(bm, stone, centre, along_dir, out_dir, length, width, face_on, mat=IRON):
-    """One chain link lying flat on the stone: cast onto the surface at `centre` from `out_dir`.
+def link(bm, stone, centre, along_dir, out_dir, length, width, face_on, mat=IRON, surface=None):
+    """One chain link lying flat on the stone: cast onto the surface at `centre` from `out_dir`
+    (or placed on `surface`, a (point, normal) pair, where a cast would fall into the split).
     face_on: a flat plate with a slot showing the stone through it; else a narrow bar on edge.
     The link follows the surface's slant there."""
-    out_dir = Vector(out_dir).normalized()
-    hit, normal, _, _ = stone.ray_cast(Vector(centre) + out_dir * 0.4, -out_dir)
-    if hit is None:
-        return
+    if surface is not None:
+        hit, normal = Vector(surface[0]), Vector(surface[1]).normalized()
+    else:
+        out_dir = Vector(out_dir).normalized()
+        hit, normal, _, _ = stone.ray_cast(Vector(centre) + out_dir * 0.4, -out_dir)
+        if hit is None:
+            return
     t = Vector(along_dir)
     t = (t - normal * t.dot(normal)).normalized()
     b = normal.cross(t).normalized()
@@ -135,9 +139,10 @@ def link(bm, stone, centre, along_dir, out_dir, length, width, face_on, mat=IRON
 
 
 def clasps(bm, stone):
-    """Two clasps round the head, each an unbroken loop of flat chain links: links are spaced
-    evenly round the head's outline (across the broad faces, round the corners, over the slanted
-    top and bottom of the keystone), each cast onto the stone from its outward direction."""
+    """Two clasps round the head, each an unbroken loop of flat chain links spaced evenly round
+    the head's outline (across the broad faces and the split, round the corners, over the
+    slanted ends), each cast onto the stone from its outward direction. Each clasp's lock sits
+    on the top face, the slanted end farthest from the hands."""
     hs = HALF_THICK
     link_len = 0.052
     for u in CLASPS_AT:
@@ -168,43 +173,52 @@ def clasps(bm, stone):
                 ca, cs = (a if d < length / 2 else b)
                 k = 1 - near_end / (link_len * 0.6)
                 na, ns = na + (ca / hl) * 0.7 * k, ns + (cs / hs) * 0.7 * k
-            if abs(ts) < 1e-6 and abs(pa) < link_len * 0.75:
-                continue                                            # the lock goes here, over the split
+            on_top = abs(ta) < 1e-6 and pa > 0
+            if on_top and abs(ps) < link_len * 0.9:
+                continue                                            # the lock goes here
+            surface = None
+            if abs(ts) < 1e-6 and abs(pa) < link_len:              # over the split: the face's own plane
+                side = 1 if ps > 0 else -1
+                surface = (F(HEAD_AT + pa, u, side * hs), (side, 0, 0))
             link(bm, stone, F(HEAD_AT + pa, u, ps), F(ta, 0, ts), F(na, 0, ns), link_len * 1.12, 0.05,
-                 face_on=i % 2 == 0)
-        for side in (-1, 1):
-            lock(bm, u, side)
+                 face_on=i % 2 == 0, surface=surface)
+        lock(bm, stone, u, hl)
 
 
-def lock(bm, u, side):
-    """Where a clasp crosses the split, on a broad face: a heavy iron plate shaped like a small
-    keystone (echoing the head), bridging the two halves, with four rivets and an ornamental boss.
-    The pieces that hold the whole thing together."""
-    hs = HALF_THICK
-    face = side * hs
-    out = lambda d: face + side * d                                 # noqa: E731  (distance off the face)
+def lock(bm, stone, u, hl):
+    """A clasp's lock, on the top face: a heavy iron plate shaped like a small keystone (echoing
+    the head), four rivets and a bronze ornament (a stepped boss in an inlaid ring). Built on the
+    surface where it sits, so it follows the top face's slant."""
+    out = Vector(F(1, 0, 0))
+    hit, normal, _, _ = stone.ray_cast(Vector(F(HEAD_AT + hl, u, 0)) + out * 0.4, -out)
+    if hit is None:
+        return
+    t = Vector((1, 0, 0))                                          # along the clasp (across the head)
+    t = (t - normal * t.dot(normal)).normalized()
+    b = normal.cross(t).normalized()                               # across the clasp
+    if b.z < 0:
+        b = -b                                                     # b points toward the striking face
+
+    def at(x, y, h):
+        return hit + t * x + b * y + normal * h
+
     pts = []
-    for du, half_a in ((-0.045, 0.040), (0.045, 0.055)):            # narrower toward the back: a keystone
-        for a in (-half_a, half_a):
-            pts += [F(HEAD_AT + a, u + du, out(-0.006)), F(HEAD_AT + a * 0.85, u + du * 0.85, out(0.03))]
+    for y, half_x in ((-0.045, 0.040), (0.045, 0.055)):            # narrower toward the back: a keystone
+        for x in (-half_x, half_x):
+            pts += [at(x, y, -0.006), at(x * 0.85, y * 0.85, 0.03)]
     A.hull(bm, pts, IRON)
-    for du in (-0.026, 0.026):                                      # rivets standing on the plate
-        A.hull(bm, [F(HEAD_AT + 0.034 + x, u + du + y, out(0.024)) for x in (-0.013, 0.013) for y in (-0.013, 0.013)]
-               + [F(HEAD_AT + 0.034, u + du, out(0.048))], IRON)
-        A.hull(bm, [F(HEAD_AT - 0.034 + x, u + du + y, out(0.024)) for x in (-0.013, 0.013) for y in (-0.013, 0.013)]
-               + [F(HEAD_AT - 0.034, u + du, out(0.048))], IRON)
-    # The ornament, in bronze so it reads against the dark iron: a stepped eight-sided boss inside
-    # a flat inlaid ring.
-    centre = Vector(F(HEAD_AT, u, out(0.03)))
-    normal = Vector((side, 0, 0))
-    a_dir, u_dir = Vector(F(1, 0, 0)), Vector(F(0, 1, 0))
+    for x in (-0.034, 0.034):                                       # rivets standing on the plate
+        for y in (-0.026, 0.026):
+            A.hull(bm, [at(x + dx, y + dy, 0.024) for dx in (-0.013, 0.013) for dy in (-0.013, 0.013)]
+                   + [at(x, y, 0.048)], IRON)
+    centre = at(0, 0, 0.03)
     rings = [(0.018, 0.0), (0.018, 0.007), (0.010, 0.014), (0.0, 0.018)]
-    A.loft(bm, [(tuple(centre + normal * h), r, r) for r, h in rings], sides=8, ref=tuple(u_dir),
+    A.loft(bm, [(tuple(centre + normal * h), r, r) for r, h in rings], sides=8, ref=tuple(b),
            roll=math.pi / 8, mats=ORNAMENT)
     lifted = centre + normal * 0.0015
     for k in range(8):
         a0, a1 = 2 * math.pi * k / 8, 2 * math.pi * (k + 1) / 8
-        quad = [lifted + (a_dir * math.cos(a) + u_dir * math.sin(a)) * r
+        quad = [lifted + (t * math.cos(a) + b * math.sin(a)) * r
                 for a, r in ((a0, 0.024), (a0, 0.031), (a1, 0.031), (a1, 0.024))]
         f = bm.faces.new([bm.verts.new(q) for q in quad])
         f.normal_update()
