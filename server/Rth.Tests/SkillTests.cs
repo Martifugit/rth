@@ -244,19 +244,26 @@ public class SkillTests
     [Fact]
     public void SignpostsAndGatesSpeakWithoutCode()
     {
-        var sign = new PlacedObject { Type = "sign", X = 6, Y = 6 };
+        var sign = new PlacedObject { Type = "sign", X = 12, Y = 5 };
         var gate = new PlacedObject { Type = "gate", X = 7, Y = 6 };
         var fx = new WorldFixture(Maps.Open(40, 40, Spawn), objects: new[] { sign, gate });
         FakeConnection client = fx.Login("Alice");
 
+        // You read a sign standing at it, not from across the street.
         Act(client, sign, "read");
-        Act(client, gate, "open");
         fx.Ticks(1);
-        Assert.Equal(new[] { "Tolling, west.", "Barred." }, client.Texts.ToArray());
+        Assert.Empty(client.Texts);
+        fx.Ticks(8);
+        Assert.Equal(new TileCoord(11, 5), fx.Player("Alice").Position);
+        Assert.Equal(new[] { "Tolling, west." }, client.Texts.ToArray());
+
+        Act(client, gate, "open");
+        fx.Ticks(8);
+        Assert.Equal("Barred.", client.Texts.Last());
 
         fx.World.Get<FlagSystem>().Set(fx.Player("Alice"), "gate_open", "1");
         Act(client, gate, "open");
-        fx.Ticks(1);
+        fx.Ticks(2);
         Assert.Equal("It creaks open.", client.Texts.Last());
     }
 

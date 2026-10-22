@@ -68,10 +68,17 @@ namespace Rth.Server.Game
             }
             ActionDef? action = def.Actions.FirstOrDefault(a => a.Id == m.ActionId);
             if (action == null) return;
-            if (!Unlocked(World, player, action)) return;
-            // An action with an animation is done standing at the thing; others happen at once.
-            if (action.Animation != null) World.StartInteraction(player, new ObjectOnceInteraction(placed, p => Use(p, placed, def, action)));
-            else Use(player, placed, def, action);
+            // Systems' handlers walk the player up themselves (a station, a bank, a stair). Anything
+            // else (a sign to read, a lock to try, an altar to kneel at) is done standing beside it.
+            if (_actions.ContainsKey(action.Id) && action.Animation == null)
+            {
+                if (Unlocked(World, player, action)) Use(player, placed, def, action);
+                return;
+            }
+            World.StartInteraction(player, new ObjectOnceInteraction(placed, p =>
+            {
+                if (Unlocked(World, p, action)) Use(p, placed, def, action);
+            }));
         }
 
         private void Use(Player player, PlacedObject placed, ObjectDef def, ActionDef action)

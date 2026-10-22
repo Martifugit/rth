@@ -120,6 +120,7 @@ public class ProgressTests
         Assert.Equal(7, Items(fx).CountOf(fx.Player("Alice"), "coins"));
 
         client.FromClient(new NpcActionMessage { NpcId = fx.Npc("merchant").Id, ActionId = "talk" });
+        fx.Ticks(4);
         client.FromClient(new ObjectActionMessage { ObjectType = "sign", X = 6, Y = 6, ActionId = "read" });
         fx.Ticks(4);
         Assert.True(diary.IsDone(fx.Player("Alice"), "talk"));
