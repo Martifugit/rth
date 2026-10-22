@@ -1024,28 +1024,6 @@
     color: rgb(200, 170, 255);
 }
 
-/* Filter buttons over a list (the skill guide's kinds). */
-.filter-tab {
-    padding: 2px 12px;
-    margin-right: 2px;
-    -unity-font-definition: resource("UI/Fonts/Cinzel");
-    -unity-font-style: bold;
-    font-size: 12px;
-    letter-spacing: 1px;
-    color: rgb(168, 156, 134);
-    border-bottom-width: 2px;
-    border-bottom-color: rgba(0, 0, 0, 0);
-}
-
-.filter-tab:hover {
-    color: rgb(205, 185, 143);
-}
-
-.filter-tab--on {
-    color: rgb(240, 213, 140);
-    border-bottom-color: rgb(224, 195, 135);
-}
-
 /* The filter tabs: a slim row of their own over the text, with a faint line under it from edge to edge. */
 .chat-tabs {
     flex-direction: row;
@@ -1244,6 +1222,150 @@
 
 .orb--on > .orb__icon {
     -unity-background-image-tint-color: rgb(200, 245, 170);
+}
+
+/* ---------------------------------------------------------------- guide: skill unlocks */
+/* One list in level order: icon, level, name, a badge for the kind. Chips over it narrow it to a
+   kind; a line marks the player's level. */
+
+.guide-chips {
+    flex-direction: row;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+    margin-bottom: 6px;
+}
+
+.guide-chip {
+    flex-direction: row;
+    align-items: center;
+    height: 24px;
+    padding: 0 10px;
+    margin: 0 6px 4px 0;
+    border-radius: 12px;
+    border-width: 1px;
+    border-color: rgba(201, 162, 94, 0.3);
+    background-color: rgba(0, 0, 0, 0.25);
+}
+
+.guide-chip:hover {
+    border-color: rgba(224, 195, 135, 0.7);
+}
+
+.guide-chip--on {
+    border-color: rgb(224, 195, 135);
+    background-color: rgba(201, 162, 94, 0.2);
+}
+
+.guide-chip__text {
+    font-size: 13px;
+    color: rgb(205, 190, 160);
+    padding: 0;
+    margin: 0;
+}
+
+.guide-chip--on > .guide-chip__text {
+    color: rgb(240, 213, 140);
+}
+
+.guide-chip__count {
+    -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
+    font-size: 13px;
+    color: rgb(168, 156, 134);
+    padding: 0;
+    margin: 0 0 0 6px;
+}
+
+.guide-unlock {
+    align-items: center;
+    padding: 3px 8px 3px 6px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(201, 162, 94, 0.07);
+}
+
+.guide-unlock:hover {
+    background-color: rgba(255, 240, 210, 0.03);
+}
+
+.guide-unlock__slot {
+    width: 32px;
+    height: 32px;
+}
+
+.guide-unlock__level {
+    width: 36px;
+    -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
+    -unity-text-align: middle-center;
+    color: rgb(124, 207, 98);
+}
+
+.guide-unlock__name {
+    white-space: normal;
+}
+
+.guide-unlock--locked .slot__icon {
+    opacity: 0.45;
+}
+
+.guide-unlock--locked > .guide-unlock__level,
+.guide-unlock--locked > .guide-unlock__name {
+    color: rgb(143, 132, 113);
+}
+
+/* The kind, small and quiet: a word in the kind's colour on a faint wash of it. */
+.guide-badge {
+    flex-shrink: 0;
+    font-size: 13px;
+    padding: 0 7px;
+    margin: 0 0 0 8px;
+    border-radius: 3px;
+    border-width: 1px;
+}
+
+.guide-badge--abilities {
+    color: rgb(226, 150, 120);
+    border-color: rgba(226, 150, 120, 0.3);
+    background-color: rgba(226, 150, 120, 0.08);
+}
+
+.guide-badge--equipment {
+    color: rgb(160, 182, 214);
+    border-color: rgba(160, 182, 214, 0.3);
+    background-color: rgba(160, 182, 214, 0.08);
+}
+
+.guide-badge--recipes {
+    color: rgb(150, 205, 128);
+    border-color: rgba(150, 205, 128, 0.3);
+    background-color: rgba(150, 205, 128, 0.08);
+}
+
+.guide-badge--gathering {
+    color: rgb(224, 195, 135);
+    border-color: rgba(224, 195, 135, 0.3);
+    background-color: rgba(224, 195, 135, 0.08);
+}
+
+/* "Your level: 12" between what you have and what comes next. */
+.guide-yours {
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 8px;
+}
+
+.guide-yours__rule {
+    flex-grow: 1;
+    height: 1px;
+    background-color: rgba(224, 195, 135, 0.45);
+}
+
+.guide-yours__text {
+    -unity-font-definition: resource("UI/Fonts/Cinzel");
+    -unity-font-style: bold;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: rgb(224, 195, 135);
+    margin: 0 8px;
+    padding: 0;
 }
 
 /* ---------------------------------------------------------------- scrollbars: thin and quiet */
