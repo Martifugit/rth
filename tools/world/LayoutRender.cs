@@ -171,6 +171,50 @@ namespace Rth.WorldTool
             }
         }
 
+        /// <summary>
+        /// Rivers and roads stamped roughly onto a painted chart (RGBA, rows from the south), for
+        /// the chart preview: the game draws them as vectors.
+        /// </summary>
+        public static void StrokeChartLines(WorldChart chart, byte[] rgba, int w, int h)
+        {
+            void Stamp(float x, float y, float radius, Rgb c, float alpha)
+            {
+                int r = (int)Math.Ceiling(radius);
+                for (int dy = -r; dy <= r; dy++)
+                    for (int dx = -r; dx <= r; dx++)
+                    {
+                        if (dx * dx + dy * dy > radius * radius) continue;
+                        int px = (int)(x - chart.OriginX) + dx, py = (int)(y - chart.OriginY) + dy;
+                        if (px < 0 || py < 0 || px >= w || py >= h) continue;
+                        int o = (py * w + px) * 4;
+                        rgba[o] = (byte)(rgba[o] + (c.R - rgba[o]) * alpha);
+                        rgba[o + 1] = (byte)(rgba[o + 1] + (c.G - rgba[o + 1]) * alpha);
+                        rgba[o + 2] = (byte)(rgba[o + 2] + (c.B - rgba[o + 2]) * alpha);
+                    }
+            }
+            void Line(ChartLine l, float radius, Rgb c, float alpha, int dash)
+            {
+                float walked = 0;
+                for (int k = 0; k + 3 < l.Points.Length; k += 2)
+                {
+                    float x0 = l.Points[k], y0 = l.Points[k + 1], x1 = l.Points[k + 2], y1 = l.Points[k + 3];
+                    float len = (float)Math.Sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
+                    for (float t = 0; t <= len; t += 1f, walked += 1f)
+                        if (dash == 0 || (int)(walked / dash) % 2 == 0)
+                            Stamp(x0 + (x1 - x0) * t / Math.Max(1f, len), y0 + (y1 - y0) * t / Math.Max(1f, len), radius, c, alpha);
+                }
+            }
+            foreach (ChartLine r in chart.Rivers) Line(r, Math.Max(1.2f, r.Width / 2f), new Rgb(66, 118, 170), 1f, 0);
+            foreach (ChartLine r in chart.Roads)
+            {
+                if (r.Kind == "ferry") Line(r, 1f, new Rgb(230, 220, 190), 0.8f, 4);
+                else if (r.Kind == "pass") Line(r, 1.5f, new Rgb(70, 50, 30), 0.9f, 6);
+                else Line(r, r.Kind == "main" ? 1.6f : 1.1f, new Rgb(92, 66, 40), 0.85f, 0);
+            }
+            foreach (ChartPlace p in chart.Places)
+                Stamp(p.X, p.Y, p.Tier == "city" ? 6 : p.Tier == "town" ? 4 : 2.5f, string.IsNullOrEmpty(p.Name) ? new Rgb(120, 100, 70) : new Rgb(240, 213, 140), 1f);
+        }
+
         private static int FloorTo(int v, int step) => (int)Math.Floor(v / (double)step) * step;
 
         private static Rgb Hex(string hex, Rgb fallback)

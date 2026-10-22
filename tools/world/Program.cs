@@ -74,6 +74,9 @@ switch (command)
     case "layout":
         return Layout(root, rest);
 
+    case "chart":
+        return Chart(root, rest);
+
     default:
         Console.WriteLine("""
             R'th world data (docs/workflow.md). Commands:
@@ -84,6 +87,8 @@ switch (command)
               layout [check]     compile world/layout/continent.json: run its checks, write zones.json and
                                  regions.txt, and draw docs/images/layout-*.png (check: only check, and that
                                  the generated files are up to date)
+              chart [x0 y0 x1 y1] draw the players' world map's ground (WorldChart + ChartPainter) to
+                                 world/renders/chart.png, with rivers and roads roughly on top
             """);
         return command == "help" ? 0 : 2;
 }
@@ -118,6 +123,43 @@ static int Layout(string root, string[] args)
         });
     }
     return lw.Report.HasErrors ? 1 : 0;
+}
+
+// The ground the in-game world map paints (docs/interface.md), to look at without Unity.
+static int Chart(string root, string[] args)
+{
+    LayoutWorkspace lw = LayoutWorkspace.Load(root);
+    if (lw.Map.Count == 0)
+    {
+        foreach (string e in lw.Map.Errors) Console.Error.WriteLine("error: " + e);
+        return 1;
+    }
+    var timer = System.Diagnostics.Stopwatch.StartNew();
+    WorldChart chart = WorldChart.From(lw.Map);
+    string json = Newtonsoft.Json.JsonConvert.SerializeObject(chart);
+    long built = timer.ElapsedMilliseconds;
+    byte[] rgba = ChartPainter.Paint(chart, null, 1, out int w, out int h);
+    Console.WriteLine($"chart: {json.Length / 1024} KB as JSON (ground {chart.Ground.Length / 1024} KB, power {chart.Power.Length / 1024} KB), built in {built} ms; painted {w} x {h} in {timer.ElapsedMilliseconds - built} ms");
+    LayoutRender.StrokeChartLines(chart, rgba, w, h);
+    int x0 = 0, y0 = 0, x1 = w, y1 = h;
+    if (args.Length == 4)
+    {
+        x0 = int.Parse(args[0]) - chart.OriginX; y0 = int.Parse(args[1]) - chart.OriginY;
+        x1 = int.Parse(args[2]) - chart.OriginX; y1 = int.Parse(args[3]) - chart.OriginY;
+    }
+    int cw = x1 - x0, ch = y1 - y0;
+    var rgb = new byte[cw * ch * 3];
+    for (int y = 0; y < ch; y++)
+        for (int x = 0; x < cw; x++)
+        {
+            int src = ((y1 - 1 - y) * w + x0 + x) * 4, dst = (y * cw + x) * 3;
+            rgb[dst] = rgba[src]; rgb[dst + 1] = rgba[src + 1]; rgb[dst + 2] = rgba[src + 2];
+        }
+    string outDir = Path.Combine(root, "world", "renders");
+    Directory.CreateDirectory(outDir);
+    File.WriteAllBytes(Path.Combine(outDir, "chart.png"), MapRender.Png(cw, ch, rgb));
+    Console.WriteLine("wrote world/renders/chart.png");
+    return 0;
 }
 
 static int Check(WorldWorkspace ws)

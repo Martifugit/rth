@@ -10,7 +10,8 @@ namespace Rth.Shared.World.Layout
     /// and lines in absolute tiles (Tolling's south-west corner is (0, 0); east +x, north +y).
     /// <see cref="ContinentCompiler"/> turns it into a grid of 8 × 8 tile zones, each with a ground
     /// and a power, and writes the zone grid in the <see cref="WorldLayout"/> format the terrain bake
-    /// reads. Tooling and presentation only: the server never loads it.
+    /// reads. Tooling and presentation: the server only loads it to send players the world map
+    /// (<see cref="WorldChart"/>).
     /// </summary>
     public sealed class ContinentData
     {
@@ -172,6 +173,8 @@ namespace Rth.Shared.World.Layout
         /// <summary>Rough width across in tiles, when it differs from the tier's.</summary>
         public int? Across;
         public string Note = "";
+        /// <summary>Kept off the players' world map (a secret place), whatever its name.</summary>
+        public bool Hidden;
 
         public bool IsSettlement => Tier != "landmark";
     }
