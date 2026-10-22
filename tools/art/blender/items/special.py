@@ -154,8 +154,43 @@ def clasps(bm, stone):
                 ca, cs = (a if d < length / 2 else b)
                 k = 1 - near_end / (link_len * 0.6)
                 na, ns = na + (ca / hl) * 0.7 * k, ns + (cs / hs) * 0.7 * k
+            if abs(ts) < 1e-6 and abs(pa) < link_len * 0.75:
+                continue                                            # the lock goes here, over the split
             link(bm, stone, F(HEAD_AT + pa, u, ps), F(ta, 0, ts), F(na, 0, ns), link_len * 1.12, 0.05,
                  face_on=i % 2 == 0)
+        for side in (-1, 1):
+            lock(bm, u, side)
+
+
+def lock(bm, u, side):
+    """Where a clasp crosses the split, on a broad face: a heavy iron plate shaped like a small
+    keystone (echoing the head), bridging the two halves, with two big rivets and a glowing
+    keyhole. The pieces that hold the whole thing together."""
+    hs = HALF_THICK
+    face = side * hs
+    out = lambda d: face + side * d                                 # noqa: E731  (distance off the face)
+    pts = []
+    for du, half_a in ((-0.045, 0.040), (0.045, 0.055)):            # narrower toward the back: a keystone
+        for a in (-half_a, half_a):
+            pts += [F(HEAD_AT + a, u + du, out(-0.006)), F(HEAD_AT + a * 0.85, u + du * 0.85, out(0.03))]
+    A.hull(bm, pts, IRON)
+    for du in (-0.026, 0.026):                                      # rivets standing on the plate
+        A.hull(bm, [F(HEAD_AT + 0.034 + x, u + du + y, out(0.024)) for x in (-0.013, 0.013) for y in (-0.013, 0.013)]
+               + [F(HEAD_AT + 0.034, u + du, out(0.048))], IRON)
+        A.hull(bm, [F(HEAD_AT - 0.034 + x, u + du + y, out(0.024)) for x in (-0.013, 0.013) for y in (-0.013, 0.013)]
+               + [F(HEAD_AT - 0.034, u + du, out(0.048))], IRON)
+    # The keyhole, running along the clasp: a round top and a slot below it, glowing with the core.
+    top = out(0.0305)
+    ring = [F(HEAD_AT + 0.012 + 0.009 * math.cos(k * math.pi / 3), u + 0.009 * math.sin(k * math.pi / 3), top)
+            for k in range(6)]
+    slot = [F(HEAD_AT + 0.012, u - 0.004, top), F(HEAD_AT + 0.012, u + 0.004, top),
+            F(HEAD_AT - 0.022, u + 0.006, top), F(HEAD_AT - 0.022, u - 0.006, top)]
+    for outline in (ring, slot):
+        f = bm.faces.new([bm.verts.new(p) for p in outline])
+        f.normal_update()
+        if f.normal.x * side < 0:
+            f.normal_flip()
+        f.material_index = GLOW
 
 
 # ---- the shaft (smithed) ----
