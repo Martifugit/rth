@@ -145,15 +145,16 @@ namespace Rth.Client.Characters
         /// "grip.R" or "grip.L", the middle of each closed fist). Held art is modelled as if held
         /// by the body in its rest T-pose: origin at the grip, the handle running along +Z
         /// (forward), in the body's own axes. The kit parts in <paramref name="hides"/> disappear
-        /// until it comes off.
+        /// until it comes off. <paramref name="hold"/> turns held art within the fist (in the
+        /// art's own axes), for art that should sit in the hand otherwise than modelled.
         /// </summary>
-        public GameObject Attach(GameObject prefab, string[] hides = null, string socket = null)
+        public GameObject Attach(GameObject prefab, string[] hides = null, string socket = null, Quaternion? hold = null)
         {
             var holder = new GameObject(prefab.name);
             if (socket != null && _bones.TryGetValue(socket, out Transform bone))
             {
                 holder.transform.SetParent(bone, false);
-                holder.transform.localRotation = Quaternion.Inverse(_rest[socket]);
+                holder.transform.localRotation = Quaternion.Inverse(_rest[socket]) * (hold ?? Quaternion.identity);
             }
             else holder.transform.SetParent(transform, false);
             GameObject art = Instantiate(prefab, holder.transform, false);
