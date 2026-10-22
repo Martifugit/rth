@@ -183,8 +183,8 @@ readability), not its geography.
 | --- | --- |
 | **Runs** | cloud, owner reviews |
 | **Depends on** | the concept map and `docs/lore.md` (done) |
-| **Owns** | `world/layout/*` (new), `tools/layout/*` (new), `docs/layout.md` (new) |
-| **Status** | not started |
+| **Owns** | `world/layout/*` (new), `shared/World/Layout/*` and `tools/world`'s `layout` command (instead of `tools/layout/*`), `docs/layout.md` (new) |
+| **Status** | **ready for the owner's review** (2026-10-22) on `claude/l1-layout`: `world/layout/continent.json`, checked and drawn by `dotnet run --project tools/world -- layout`; 1.43M tiles of core land, 172 core regions, every check passing. The choices and the owner's decisions are in `docs/layout.md`. |
 
 - **One layout, as data**, in absolute tiles with **Tolling's south-west corner at (0, 0)**, so the
   built regions sit inside it unchanged: Tolling on the empire's western edge, Palmerway running
@@ -402,8 +402,8 @@ interface easy.
 | --- | --- |
 | Names (church, spine people, realm of the dead, ferryman, walker, p-spoil, gods, places), and which "under review" names come back | A2, B2 |
 | Who the player is (the sleeper premise: keep, change or drop) | A3, the first quests |
-| Whether L1 extends the art branch's layout prototype (`client/Assets/World/layout.json`, `tools/world-layout/`) or replaces it | L1 |
-| The rough layout | L1 |
+| ~~Whether L1 extends the art branch's layout prototype or replaces it~~ L1 extended it: `world/layout/zones.json` is in its format and the bake reads it. Whether to delete the old `layout.json` and `tools/world-layout/` | L1 |
+| The rough layout: size, Tolling-Cruor distance, Sere west of Tolling, the drainage, the passes, the cold north (`docs/layout.md` section 6) | L1 |
 | How much terrain to use: the scale decisions D1-D4 (`docs/world-scale.md`) | L2 |
 | The coin fee's rate and free threshold; the obol's price and where it's sold | D1 (defaults in data until then) |
 | The long way back's hazards | D3 |
@@ -419,6 +419,10 @@ Notes from one workstream to another ("A1 needs B1 to also change X"). Newest fi
 | --- | --- | --- |
 | D2 | D3, U1 | The landing is `world/regions/realm_of_the_dead.json` (x 8192-8223, y 8192-8223), ringed by water; the long way back can start from its south or east shore (extend the region or add one beside it). Death has no window of its own now: the remark is a chat line (`chat-line--ferryman`) and the ferryman talks through the dialogue box. If U1 wants a death screen (or a richer payment view), it is new interface work. |
 | E3 | U1, local | Use mode touches `client/Assets/Scripts/GameSession.cs` (use state, `UseOptions`, Escape/right-click) and, narrowly, U1's `Ui/GameText.cs` (`DefaultAction` and `ItemOptions` route clicks to the picked-up item). Compiled outside Unity against 6000.6.6f1's assemblies; check it in the Editor. U1 may want a highlight on the picked-up slot (`session.UseSlot`) and a "use" cursor. Plain items now left-click to Use (it is first in `ItemActions`, before Drop). |
+| L1 | A4 | Pass 1 can be read off `world/layout/continent.json` (places, tiers, realms) and `world/layout/regions.txt` (every 96-tile region's realm and rough role). `p-` places there are suggestions; rename or drop freely. |
+| L1 | L2, L3 | The layout's data: `zones.json` (a `WorldLayout`: ground and height per zone), and in `continent.json` the rivers, roads and passes as lines in tiles. Load it with `LayoutWorkspace.Load` / `ContinentCompiler.Compile` (`shared/World/Layout`). |
+| L1 | local agent | `LayoutBaker` (client) now reads `world/layout/zones.json`, falling back to `Assets/World/layout.json`: compile it in the Editor. Its palette names were checked against `palette.json`. |
+| L1 | owner, C | `docs/workflow.md`'s command list and `docs/world-building.md` (W1, W2, the layout section) could point at `docs/layout.md`: W2 is answered by the layout, W1 becomes its `scale`. Not edited here (not L1's files). |
 | D1 | D2 | The ferryman is NPC `ferryman` (npcs.json, Talk-to opens dialogue `ferryman`); place him on the landing and set death.json `wake` to it. On waking the server opens his conversation with no NPC (`DialogueSystem.Start(player, id, speaker)`), so today's dialogue box already works. The death remark is `TextKind.Ferryman` (was `Assayer`, same value 2, no protocol bump); `AssayerPanel` still shows it. |
 | E1 | C, L2 | Done in C3: the proposed rocks and trees are pieces in `world/regions/tolling.json` and `palmerway.json`. |
 | A1 | L1, owner | `docs/world-building.md` (decision W2) and `docs/world-scale.md` still place Tolling and the rivers against the old map's bay and the Cradle, which are retired. Restate W2 against the new layout when L1 has one. |
