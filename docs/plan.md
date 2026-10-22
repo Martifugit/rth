@@ -421,8 +421,13 @@ The owner's list (2026-10-22):
 - **Equipment tab:** a row of buttons at its bottom. One opens a modal-like window with your
   combat stats (today's draggable Character window goes) and your **inspect** view (what others
   see when they right-click and inspect you).
-- **Minimap:** a fantasy RPG frame; today it looks like an old TV screen.
-- **Guide:** rethink the skill guide's filter tabs (ALL, ABILITIES, EQUIPMENT...).
+- **Minimap:** a fantasy RPG frame; today it looks like an old TV screen. **Done** on
+  `claude/u2-minimap-guide` (compile-checked, not yet seen in the Editor): a round map in a bronze
+  bezel (`Skin/minimap-bezel`, `orb`, `orb-hover`, `orb-on` from `make_skin.py`), the compass and
+  clock in medallions on the ring, the six round buttons in a cradle around its bottom.
+- **Guide:** rethink the skill guide's filter tabs (ALL, ABILITIES, EQUIPMENT...). **Done** on
+  `claude/u2-minimap-guide`: one list in level order with a small kind badge per row, chips
+  (only the kinds the skill has, with counts) to narrow it, a "Your level" line; no sort button.
 - **Achievements:** the progress bar's text isn't centred on the bar and overflows it.
 
 ## Track F: art (local)

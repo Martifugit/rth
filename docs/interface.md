@@ -34,7 +34,7 @@ every piece and how they are organised.
 |---|---|
 | **Main action bar** ✓ | Blood, phlegm and breath as three equal gauges; the bile axis (two halves filling outward from a black centre that holds the value); 14 slots on keys 1 to 0, - and =. Fixed size. Devotion (hymns) replaced breath. **To change:** the style meter shown may follow the weapon you hold. |
 | **Secondary action bars** ✓ | Two more bars of 14 slots (from the window menu). Abilities and items are dragged onto any bar; layouts are kept on the server. |
-| **Minimap** ✓ | Square; compass and clock in its corners; beneath it the run toggle and buttons for the world map, journal, guide, settings and a menu of every window. No blood orb: blood is on the action bar. |
+| **Minimap** ✓ | Round, in a bronze bezel with a gold crest (`Skin/minimap-bezel`); it turns with the camera, click to walk. The compass (click to face north) and the clock sit in medallions on the ring's upper corners, the region's name low on the map. Six round buttons sit in a cradle around the bottom of the ring: run, world map, journal, guide, settings and a menu of every window. Fixed at 240 px; its geometry is shared by `MinimapPanel.cs` and `make_skin.py`. No blood orb: blood is on the action bar. |
 | **Chat** ✓ | Filters (all, game, public) and the line you type on (Enter). Fixed size. Private and group chat to come. |
 | **Target** ✓ | What you are fighting, and its health. Kept while you walk away in combat. |
 | **Buffs / debuffs** ✓ | Two fixed rows of status icons above the action bar (bile's four statuses, wards from abilities), each with its % or time left; hover for what it does. |
@@ -63,8 +63,11 @@ every piece and how they are organised.
   **achievements** (the diary by area and tier, with progress and rewards) and the
   **bestiary** (every creature: how dangerous, how many you've killed, a drop log that includes
   what its carcass yields).
-- **Guide** (G) ✓: **skills** (pick a skill; its unlocks level by level, filterable and
-  sortable, gathered from the content itself) and **abilities** (every ability as a full card).
+- **Guide** (G) ✓: **skills** (pick a skill; its unlocks as one list in level order, each with
+  a small badge for its kind (builder, equipment, tool, recipe, gathering...), a "Your level" line
+  between what you have and what comes next, and chips to narrow the list to one kind, shown
+  only when the skill has more than one; gathered from the content itself) and **abilities**
+  (every ability as a full card).
 - **World map** (M) ✓: the regions to scale and where you are. Waystone travel will be a tab.
 - **Settings** ✓: general (roofs, lock, scale, reset layout, log out) and controls.
 - To come: announcements (level up, quest complete, new drop), player examine.
