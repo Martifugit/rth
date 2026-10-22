@@ -11,7 +11,7 @@ namespace Rth.Shared.Net
     public static class Protocol
     {
         /// <summary>Bump whenever a message layout changes, so mismatched builds are refused at login.</summary>
-        public const int Version = 18;
+        public const int Version = 19;
         public const int DefaultPort = 43600;
         /// <summary>Sanity limits on a single frame's length, in bytes.</summary>
         public const int MaxClientFrame = 4 * 1024;
@@ -41,6 +41,7 @@ namespace Rth.Shared.Net
         Chat = 18,
         SetClientState = 19,
         UseItem = 20,
+        Query = 21,
 
         // Server to client: state.
         LoginOk = 100,
@@ -60,6 +61,7 @@ namespace Rth.Shared.Net
         Regions = 114,
         ChatLine = 115,
         JsonState = 116,
+        QueryResult = 117,
     }
 
     public abstract class Message
@@ -851,6 +853,56 @@ namespace Rth.Shared.Net
         public static JsonStateMessage Of(string key, object value) => new JsonStateMessage { Key = key, Json = JsonConvert.SerializeObject(value) };
 
         public T Parse<T>() where T : class, new() => JsonConvert.DeserializeObject<T>(Json) ?? new T();
+    }
+
+    /// <summary>
+    /// The client asks the server for something it doesn't keep: a <see cref="Kind"/> of question
+    /// ("inspect") and an argument (an entity id). Answered with a <see cref="QueryResultMessage"/>
+    /// of the same kind and argument. New questions (price check, items kept on death) are new kinds.
+    /// </summary>
+    public sealed class QueryMessage : Message
+    {
+        public const int MaxLength = 64;
+
+        public string Kind = "";
+        public string Arg = "";
+
+        public override MessageType Type => MessageType.Query;
+
+        internal override void WriteBody(BinaryWriter w)
+        {
+            w.Write(Kind);
+            w.Write(Arg);
+        }
+
+        internal static QueryMessage Read(BinaryReader r) => new QueryMessage { Kind = r.ReadString(), Arg = r.ReadString() };
+    }
+
+    /// <summary>The answer to a <see cref="QueryMessage"/>: JSON, or why there is none (<see cref="Problem"/>).</summary>
+    public sealed class QueryResultMessage : Message
+    {
+        public string Kind = "";
+        public string Arg = "";
+        /// <summary>Why there's no answer ("They are too far away."), or empty when <see cref="Json"/> holds one.</summary>
+        public string Problem = "";
+        public string Json = "";
+
+        public bool Answered => Problem.Length == 0;
+
+        public override MessageType Type => MessageType.QueryResult;
+
+        internal override void WriteBody(BinaryWriter w)
+        {
+            w.Write(Kind);
+            w.Write(Arg);
+            w.Write(Problem);
+            w.Write(Json);
+        }
+
+        internal static QueryResultMessage Read(BinaryReader r) =>
+            new QueryResultMessage { Kind = r.ReadString(), Arg = r.ReadString(), Problem = r.ReadString(), Json = r.ReadString() };
+
+        public T? Parse<T>() where T : class => Answered && Json.Length > 0 ? JsonConvert.DeserializeObject<T>(Json) : null;
     }
 
     /// <summary>

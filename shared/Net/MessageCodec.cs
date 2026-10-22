@@ -75,6 +75,8 @@ namespace Rth.Shared.Net
                     MessageType.ChatLine => ChatLineMessage.Read(r),
                     MessageType.JsonState => JsonStateMessage.Read(r),
                     MessageType.SetClientState => SetClientStateMessage.Read(r),
+                    MessageType.Query => QueryMessage.Read(r),
+                    MessageType.QueryResult => QueryResultMessage.Read(r),
                     _ => throw new InvalidDataException("Unknown message type " + (int)type + "."),
                 };
                 if (ms.Position != count) throw new InvalidDataException("Trailing bytes after " + type + " message.");
