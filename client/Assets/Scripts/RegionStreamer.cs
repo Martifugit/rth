@@ -136,8 +136,9 @@ namespace Rth.Client
                 if (e.Region.Contains(focus.X, focus.Y)) here = e.Region;
             if (here != null && here != _current && (_current == null || here.Name != _current.Name))
             {
-                // Announce the region on entering, as classic area names do; not on first login.
-                if (_current != null && !string.IsNullOrEmpty(here.Title)) _titleTime = Time.time;
+                // Announce the region on entering, as classic area names do; not on first login, and
+                // not again when the next region has the same name (the open land of one power).
+                if (_current != null && !string.IsNullOrEmpty(here.Title) && here.Title != _current.Title) _titleTime = Time.time;
                 _current = here;
             }
         }

@@ -176,7 +176,8 @@ namespace Rth.Client.Editor
             MapExporter.AddSceneToBuild(scene.path);
 
             ExportAndVerify(region.Id, area, report);
-            WorldSnapshot.Write(region, area, data, handmade, screenshots, report);
+            // Generated regions (the blockout) are pictured by `tools/world render`; three screenshots each would only bloat the repository.
+            WorldSnapshot.Write(region, area, data, handmade, screenshots && region.Generated == null, report);
             report.Info($"synced {region.Id}: {region.Pieces.Count} pieces, scene {region.Scene}");
         }
 

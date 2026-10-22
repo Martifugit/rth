@@ -11,7 +11,7 @@ namespace Rth.Client.Editor
     /// Draws a region's data (<see cref="RegionData"/>) under its scene's <see cref="DataRoot"/>,
     /// with the same footprints, walls and ground the C# compiler (<see cref="RegionCompiler"/>)
     /// gives the server: area kinds (patches, roads, water, walls, fences, houses) through
-    /// <see cref="WorldKit"/>; placed kinds (trees, rocks, props, creatures, the spawn) as one object
+    /// <see cref="WorldKit"/>, tiles through <see cref="TileGround"/>; placed kinds (trees, rocks, props, creatures, the spawn) as one object
     /// on their tile whose look has no colliders, plus a collider over exactly their footprint.
     /// </summary>
     public static class PieceBuilder
@@ -106,6 +106,24 @@ namespace Rth.Client.Editor
                 {
                     int[] r = piece.Rect;
                     AddFootprint(group, r[0], r[1], r[2], r[3], 1.5f);
+                    break;
+                }
+                case PieceKind.Tiles:
+                {
+                    // The rows go into the scene; TileGround builds the mesh and the ground collider from them on load.
+                    int[] r = piece.Rect;
+                    List<string> keys = piece.Legend.Keys.ToList();
+                    var ground = group.gameObject.AddComponent<TileGround>();
+                    ground.originX = r[0];
+                    ground.originY = r[1];
+                    ground.width = r[2] - r[0];
+                    ground.height = r[3] - r[1];
+                    ground.rows = piece.Rows.ToArray();
+                    ground.kinds = string.Concat(keys);
+                    ground.materials = keys.Select(k => Material(kit, region, piece.Legend[k].Material)).ToArray();
+                    ground.heights = keys.Select(k => piece.Legend[k].Height ?? 0f).ToArray();
+                    ground.walkable = keys.Select(k => piece.Legend[k].Walkable).ToArray();
+                    ground.Rebuild();
                     break;
                 }
                 default:

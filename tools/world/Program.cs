@@ -41,6 +41,7 @@ switch (command)
     {
         string outDir = Path.Combine(root, "world", "renders");
         Directory.CreateDirectory(outDir);
+        MapRender.LoadPalette(root);
         var regions = rest.Length == 0 ? ws.Regions : ws.Regions.Where(e => rest.Contains(e.Region.Id, StringComparer.OrdinalIgnoreCase)).ToList();
         foreach (WorldWorkspace.Entry e in regions)
         {
@@ -52,7 +53,7 @@ switch (command)
         }
         if (rest.Length == 0 && ws.Regions.Count > 0)
         {
-            File.WriteAllBytes(Path.Combine(outDir, "world.png"), MapRender.World(ws.Regions.Select(e => e.Compiled).ToList(), 2));
+            File.WriteAllBytes(Path.Combine(outDir, "world.png"), MapRender.World(ws.Regions.Where(e => !e.Region.Instanced).Select(e => e.Compiled).ToList(), 2));
             Console.WriteLine("wrote world/renders/world.png");
         }
         return 0;
@@ -77,6 +78,9 @@ switch (command)
     case "chart":
         return Chart(root, rest);
 
+    case "blockout":
+        return BlockoutCommand(root, rest);
+
     default:
         Console.WriteLine("""
             R'th world data (docs/workflow.md). Commands:
@@ -87,6 +91,9 @@ switch (command)
               layout [check]     compile world/layout/continent.json: run its checks, write zones.json and
                                  regions.txt, and draw docs/images/layout-*.png (check: only check, and that
                                  the generated files are up to date)
+              blockout [check]   generate the walkable blockout from the layout: world/regions/land_*.json for
+                                 every region with core land and the ring around it, then export their maps
+                                 (check: only check that the generated regions are up to date)
               chart [x0 y0 x1 y1] draw the players' world map's ground (WorldChart + ChartPainter) to
                                  world/renders/chart.png, with rivers and roads roughly on top
             """);
@@ -123,6 +130,53 @@ static int Layout(string root, string[] args)
         });
     }
     return lw.Report.HasErrors ? 1 : 0;
+}
+
+// The walkable blockout (L2, docs/layout.md): regions generated from the layout.
+static int BlockoutCommand(string root, string[] args)
+{
+    LayoutWorkspace lw = LayoutWorkspace.Load(root);
+    if (lw.Map.Count == 0)
+    {
+        foreach (string e in lw.Map.Errors) Console.Error.WriteLine("error: " + e);
+        return 1;
+    }
+    var timer = System.Diagnostics.Stopwatch.StartNew();
+    Blockout.Result result = Blockout.Generate(lw.Map, lw.Built);
+    string regions = Path.Combine(root, "world", "regions");
+    (Dictionary<string, string> write, List<string> delete) = Blockout.Changes(regions, result);
+    foreach (string w in result.Warnings) Console.WriteLine("warning: " + w);
+    string Rel(string path) => Path.GetRelativePath(root, path).Replace('\\', '/');
+    if (args.Contains("check"))
+    {
+        foreach (string path in write.Keys) Console.Error.WriteLine($"error: {Rel(path)} is out of date with the layout: run `blockout`");
+        foreach (string path in delete) Console.Error.WriteLine($"error: {Rel(path)} is no longer in the layout: run `blockout`");
+        Console.WriteLine($"{result.Regions.Count} blockout regions, {write.Count + delete.Count} out of date.");
+        return write.Count + delete.Count > 0 ? 1 : 0;
+    }
+    foreach (KeyValuePair<string, string> f in write) File.WriteAllText(f.Key, f.Value);
+    string maps = Path.Combine(root, "server", "data", "maps");
+    foreach (string path in delete)
+    {
+        File.Delete(path);
+        string id = Path.GetFileNameWithoutExtension(path);
+        foreach (string map in Directory.Exists(maps) ? Directory.GetFiles(maps, id + ".*") : Array.Empty<string>())
+            if (Path.GetFileName(map).Split('.')[0] == id) File.Delete(map);
+        Console.WriteLine("deleted " + Rel(path));
+    }
+    Console.WriteLine($"{result.Regions.Count} blockout regions: {write.Count} written, {delete.Count} deleted ({timer.ElapsedMilliseconds} ms).");
+
+    WorldWorkspace ws = WorldWorkspace.Load(root);
+    int failed = 0;
+    foreach (WorldWorkspace.Entry e in ws.Regions)
+        foreach (string error in e.Compiled.Errors)
+        {
+            Console.Error.WriteLine($"error: {e.Region.Id}: {error}");
+            failed++;
+        }
+    List<string> changed = ws.Export();
+    Console.WriteLine(changed.Count == 0 ? "Maps are up to date." : $"{changed.Count} map files written.");
+    return failed > 0 ? 1 : 0;
 }
 
 // The ground the in-game world map paints (docs/interface.md), to look at without Unity.

@@ -36,6 +36,11 @@ namespace Rth.Shared.World.Data
         public SortedDictionary<string, string> Materials = new SortedDictionary<string, string>(StringComparer.Ordinal);
         /// <summary>Seeds the look of pieces that don't spell out their parts (a tree's crown).</summary>
         public int Seed = 1;
+        /// <summary>
+        /// Made by a generator, by name ("blockout": `tools/world blockout`, docs/layout.md), which
+        /// rewrites or deletes the file whenever it runs. Remove it to take the region over by hand.
+        /// </summary>
+        public string? Generated;
         public List<Piece> Pieces = new List<Piece>();
 
         [JsonIgnore] public int OriginX => Origin.Length > 0 ? Origin[0] : 0;
@@ -73,8 +78,13 @@ namespace Rth.Shared.World.Data
         public const string Npc = "npc";
         /// <summary>Where new players appear.</summary>
         public const string Spawn = "spawn";
+        /// <summary>
+        /// Ground tile by tile over <see cref="Piece.Rect"/>: <see cref="Piece.Rows"/> of characters
+        /// from the north, each one a <see cref="Piece.Legend"/> entry (ground, blocked ground or water).
+        /// </summary>
+        public const string Tiles = "tiles";
 
-        public static readonly string[] All = { Patch, Road, Water, Wall, Fence, House, Blocker, Tree, Rock, Prop, Npc, Spawn };
+        public static readonly string[] All = { Patch, Road, Water, Wall, Fence, House, Blocker, Tree, Rock, Prop, Npc, Spawn, Tiles };
 
         /// <summary>Kinds placed at one tile (<see cref="Piece.At"/>), which can be moved and turned in the Editor.</summary>
         public static bool IsPlaced(string kind) => kind == Tree || kind == Rock || kind == Prop || kind == Npc || kind == Spawn;
@@ -136,6 +146,10 @@ namespace Rth.Shared.World.Data
         public string? Model;
         /// <summary>What it looks like: primitives around the tile's centre.</summary>
         public List<Part>? Parts;
+        /// <summary>A tiles piece's characters by what they are; a space is no ground at all.</summary>
+        public SortedDictionary<string, TileKind>? Legend;
+        /// <summary>A tiles piece's ground: one string a row from the north, a character a tile from the west.</summary>
+        public List<string>? Rows;
 
         // ---------------------------------------------------------------- what it does
         /// <summary>Makes it interactive: an id in server/data/content/objects.json.</summary>
@@ -164,6 +178,21 @@ namespace Rth.Shared.World.Data
             if (DoorAt.HasValue && Door != null) DoorAt += Door == "N" || Door == "S" ? dx : dy;
             // ClimbTo is where it leads, not where it is: a moved ladder still lands on the same floor.
         }
+    }
+
+    /// <summary>One character of a tiles piece's <see cref="Piece.Legend"/>.</summary>
+    public sealed class TileKind
+    {
+        /// <summary>A material name from the region's <see cref="RegionData.Materials"/>.</summary>
+        public string Material = "";
+        /// <summary>Not walkable (rock, the edge of the built world). Water always blocks.</summary>
+        public bool? Blocks;
+        /// <summary>Drawn as water, and blocks.</summary>
+        public bool? Water;
+        /// <summary>Where its top is drawn, in metres (a rock shelf above, water below); the server is flat.</summary>
+        public float? Height;
+
+        [JsonIgnore] public bool Walkable => Blocks != true && Water != true;
     }
 
     /// <summary>

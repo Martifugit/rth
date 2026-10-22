@@ -45,6 +45,11 @@ rectangles are `[x0, y0, x1, y1]` with the far edges excluded. The kinds
 | `prop` | Anything on `at`: `parts` (boxes, cylinders) or a `model` prefab | `footprint` (objects: own tile) |
 | `npc` | A creature or person (`npc`, `wander`) living at `at` | none |
 | `spawn` | Where new players appear | none |
+| `tiles` | Ground tile by tile over `rect`: `rows` of characters from the north, each one a `legend` entry (`material`, `blocks`, `water`, a drawn `height`); a space is no ground. Drawn by `TileGround` | ground; blocks where the legend says |
+
+**Generated regions** carry `"generated": "<generator>"` and are rewritten by that generator: the
+open land between places is `land_*.json`, from the continent layout (`tools/world blockout`,
+`docs/layout.md` section 8). Delete the `generated` line to take one over by hand.
 
 Any piece placed on a tile becomes **interactive** with `"object": "<id in objects.json>"` (a rock
 you mine, a tree you cut, a counter that is a bank), and a stair or ladder adds `climbTo`.
@@ -66,6 +71,7 @@ dotnet run --project tools/world -- check     # is the data valid, and are the s
 dotnet run --project tools/world -- export    # write server/data/maps from world/regions
 dotnet run --project tools/world -- render    # draw every region to world/renders/<id>.png and .txt
 dotnet run --project tools/world -- format    # put region files in the standard layout
+dotnet run --project tools/world -- blockout  # regenerate the open land (land_*.json) from the layout
 dotnet test                                   # includes the same check (WorldDataTests)
 ```
 

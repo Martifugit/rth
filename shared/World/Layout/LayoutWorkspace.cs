@@ -110,7 +110,8 @@ namespace Rth.Shared.World.Layout
             {
                 if (file.EndsWith(".handmade.json", StringComparison.Ordinal)) continue;
                 JObject r = JObject.Parse(File.ReadAllText(file));
-                if ((bool?)r["instanced"] == true) continue;
+                // Instanced places lie off the map; generated regions (the blockout) are drawn from the layout, not built.
+                if ((bool?)r["instanced"] == true || r["generated"] != null) continue;
                 int x = (int)r["origin"]![0]!, y = (int)r["origin"]![1]!;
                 built.Add(new BuiltRegion { Id = (string?)r["id"] ?? Path.GetFileNameWithoutExtension(file), X0 = x, Y0 = y, X1 = x + (int)r["size"]![0]!, Y1 = y + (int)r["size"]![1]! });
             }
