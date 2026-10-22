@@ -197,18 +197,22 @@ namespace Rth.WorldTool
 
         private static byte[] Png(int w, int h, Rgb[] image)
         {
+            var rgb = new byte[w * h * 3];
+            for (int i = 0; i < image.Length; i++)
+            {
+                rgb[i * 3] = image[i].R;
+                rgb[i * 3 + 1] = image[i].G;
+                rgb[i * 3 + 2] = image[i].B;
+            }
+            return Png(w, h, rgb);
+        }
+
+        /// <summary>An RGB PNG from rows of pixels, top first, three bytes each.</summary>
+        public static byte[] Png(int w, int h, byte[] rgb)
+        {
             var raw = new byte[h * (w * 3 + 1)];
             for (int y = 0; y < h; y++)
-            {
-                int row = y * (w * 3 + 1);
-                for (int x = 0; x < w; x++)
-                {
-                    Rgb c = image[y * w + x];
-                    raw[row + 1 + x * 3] = c.R;
-                    raw[row + 2 + x * 3] = c.G;
-                    raw[row + 3 + x * 3] = c.B;
-                }
-            }
+                Buffer.BlockCopy(rgb, y * w * 3, raw, y * (w * 3 + 1) + 1, w * 3);
             using var png = new MemoryStream();
             png.Write(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 });
             var header = new byte[13];
