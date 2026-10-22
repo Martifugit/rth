@@ -1,9 +1,9 @@
 [
-  { "type": "waystone", "plane": 0, "x": 128, "y": 55 },
+  { "type": "palmerway_waygate", "plane": 0, "x": 182, "y": 49 },
   { "type": "cruorian_monument", "plane": 0, "x": 163, "y": 59 },
   { "type": "monument_fount", "plane": 0, "x": 161, "y": 59 },
   { "type": "monument_fount", "plane": 0, "x": 165, "y": 59 },
   { "type": "monument_fount", "plane": 0, "x": 163, "y": 61 },
   { "type": "monument_fount", "plane": 0, "x": 163, "y": 57 },
-  { "type": "palmerway_waygate", "plane": 0, "x": 182, "y": 49 }
+  { "type": "waystone", "plane": 0, "x": 128, "y": 55 }
 ]

@@ -1,5 +1,7 @@
 {
   "scene": "Tolling",
   "title": "Tolling",
-  "hasSpawn": true
+  "hasSpawn": true,
+  "instanced": false,
+  "music": ""
 }

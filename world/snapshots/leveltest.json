@@ -1,0 +1,18 @@
+{
+  "note": "Written by Sync World from Assets/Scenes/LevelTest.unity. Read-only: change world/regions/leveltest.json, or the scene's Handmade root in Unity.",
+  "region": "leveltest",
+  "origin": [1080, 1008], "size": [48, 48],
+  "dataPieces": { "npc": 2, "prop": 4 },
+  "handmade": [
+    { "path": "Lookout", "tiles": [1109, 1027, 1114, 1032], "objects": 9, "walls": 3, "levels": 1 },
+    { "path": "Lookout/Deck", "tiles": [1109, 1027, 1114, 1032], "objects": 4, "walls": 3, "levels": 1, "components": "MapLevel, Occluder" },
+    { "path": "Hut", "tiles": [1087, 1027, 1099, 1037], "objects": 17, "blockers": 1, "walls": 9, "levels": 2 },
+    { "path": "Hut/Ground walls", "tiles": [1087, 1027, 1099, 1037], "objects": 5, "walls": 5, "components": "Occluder" },
+    { "path": "Hut/Upper walls", "tiles": [1087, 1027, 1099, 1037], "objects": 4, "walls": 4, "levels": 1, "components": "MapLevel, Occluder" },
+    { "path": "Hut/Upper floor", "tiles": [1088, 1028, 1098, 1036], "objects": 2, "blockers": 1, "levels": 1, "components": "MapLevel" },
+    { "path": "Hut/Roof", "tiles": [1087, 1027, 1099, 1037], "objects": 1, "components": "Occluder, RoofHider" },
+    { "path": "Ramp", "tiles": [1115, 1009, 1128, 1023], "objects": 5, "walls": 3 },
+    { "path": "Hill", "tiles": [1089, 1009, 1115, 1023], "objects": 20, "walls": 7 },
+    { "path": "Ground", "tiles": [1080, 1008, 1128, 1056], "objects": 0 }
+  ]
+}

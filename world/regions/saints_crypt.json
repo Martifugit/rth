@@ -1,0 +1,51 @@
+{
+  "id": "saints_crypt",
+  "title": "The Saint's Crypt",
+  "scene": "Assets/Scenes/SaintsCrypt.unity",
+  "origin": [1016, 1008],
+  "size": [56, 56],
+  "plane": 0,
+  "instanced": true,
+  "music": "saints_crypt",
+  "atmosphere": { "sunIntensity": 0.04, "sun": "#FFF5E0", "ambientSky": "#383040", "ambientEquator": "#2B2121", "ambientGround": "#0A0808", "fog": "#050405", "fogStart": 20, "fogEnd": 75 },
+  "materials": {
+    "BloodChannelGlow": "#59050A",
+    "Bronze": "#997333",
+    "CandleWax": "#E6DBB8",
+    "CryptDais": "#665C54",
+    "CryptDarkStone": "#2B2626",
+    "CryptWall": "#574F4A",
+    "SaintBone": "#C7BDA3",
+    "SynodRed": "#8C191F"
+  },
+  "seed": 1,
+  "pieces": [
+    { "id": "prop-crypt-altar-1043-1039", "kind": "prop", "at": [1043, 1039], "object": "crypt_altar", "parts": [
+      { "shape": "box", "name": "Plinth", "at": [0, 0.08, 0], "size": [1.6, 0.16, 1.5], "material": "CryptDarkStone" },
+      { "shape": "box", "name": "Step", "at": [0, 0.22, 0], "size": [1.3, 0.14, 1.2], "material": "CryptDais" },
+      { "shape": "box", "name": "Block", "at": [0, 0.6, 0], "size": [0.96, 0.8, 0.9], "material": "CryptDais" },
+      { "shape": "box", "name": "Carving", "at": [0, 0.6, -0.46], "size": [0.66, 0.46, 0.04], "material": "CryptDarkStone" },
+      { "shape": "box", "name": "Carving", "at": [0, 0.6, 0.46], "size": [0.66, 0.46, 0.04], "material": "CryptDarkStone" },
+      { "shape": "box", "name": "Top", "at": [0, 1.06, 0], "size": [1.3, 0.12, 1.15], "material": "CryptDais" },
+      { "shape": "box", "name": "Runner", "at": [0, 1.125, 0], "size": [0.5, 0.02, 1.2], "material": "SynodRed" },
+      { "shape": "box", "name": "Runner end", "at": [0, 0.88, -0.6], "size": [0.5, 0.5, 0.03], "material": "SynodRed" },
+      { "shape": "box", "name": "Runner end", "at": [0, 0.88, 0.6], "size": [0.5, 0.5, 0.03], "material": "SynodRed" },
+      { "shape": "cylinder", "name": "Bowl", "at": [0, 1.2, 0], "size": [0.6, 0.07, 0.6], "material": "Bronze" },
+      { "shape": "cylinder", "name": "Requiem", "at": [0, 1.27, 0], "size": [0.48, 0.01, 0.48], "material": "BloodChannelGlow" },
+      { "shape": "cylinder", "name": "Candle", "at": [-0.5, 1.25, -0.45], "size": [0.08, 0.12, 0.08], "material": "CandleWax" },
+      { "shape": "cylinder", "name": "Candle", "at": [0.5, 1.25, -0.45], "size": [0.08, 0.12, 0.08], "material": "CandleWax" },
+      { "shape": "cylinder", "name": "Candle", "at": [-0.5, 1.25, 0.45], "size": [0.08, 0.12, 0.08], "material": "CandleWax" },
+      { "shape": "cylinder", "name": "Candle", "at": [0.5, 1.25, 0.45], "size": [0.08, 0.12, 0.08], "material": "CandleWax" }
+    ] },
+    { "id": "prop-unquiet-saint-1043-1052", "kind": "prop", "at": [1043, 1052], "footprint": [0, 0, 2, 1], "object": "unquiet_saint", "parts": [
+      { "shape": "box", "name": "Bier", "at": [0.5, 0.55, 0], "size": [1.9, 0.9, 1.2], "material": "CryptWall" },
+      { "shape": "box", "name": "Pall", "at": [0.5, 1.02, 0], "size": [2.1, 0.06, 1.35], "material": "SynodRed" },
+      { "shape": "box", "name": "Body", "at": [0.5, 1.18, 0], "size": [1.5, 0.24, 0.4], "material": "SaintBone" },
+      { "shape": "box", "name": "Head", "at": [-0.35, 1.2, 0], "size": [0.3, 0.28, 0.28], "material": "SaintBone" },
+      { "shape": "cylinder", "name": "Pool", "at": [0.6, 1.06, 0], "size": [1.1, 0.01, 0.8], "material": "BloodChannelGlow" }
+    ] },
+    { "id": "prop-crypt-stair-1043-1025", "kind": "prop", "at": [1043, 1025], "object": "crypt_stair", "parts": [
+      { "shape": "box", "name": "Threshold", "at": [0, 0.05, 0], "size": [0.9, 0.1, 0.9], "material": "CryptDais" }
+    ] }
+  ]
+}

@@ -1,5 +1,7 @@
 {
   "scene": "Palmerway",
   "title": "Palmerway",
-  "hasSpawn": false
+  "hasSpawn": false,
+  "instanced": false,
+  "music": ""
 }

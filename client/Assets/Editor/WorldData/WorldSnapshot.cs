@@ -78,9 +78,9 @@ namespace Rth.Client.Editor
                       (markers.Count > 0 ? ", " + string.Join(", ", markers) : "") +
                       (own.Length > 0 ? $", \"components\": {Q(own)}" : "") + " }");
             if (depth >= MaxDepth) return;
+            // Groups only: a group's leaves (a headstone, a fence rail) are counted in its line.
             foreach (Transform child in t)
-                if (child.childCount > 0 || child.GetComponent<MonoBehaviour>() != null)
-                    Describe(child, path + "/" + child.name, depth + 1, lines);
+                if (child.childCount > 0) Describe(child, path + "/" + child.name, depth + 1, lines);
         }
 
         private static string Q(string s) => "\"" + (s ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";

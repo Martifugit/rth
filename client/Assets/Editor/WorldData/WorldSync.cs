@@ -135,9 +135,11 @@ namespace Rth.Client.Editor
         public static void SyncRegion(WorldWorkspace.Entry entry, Report report, bool screenshots)
         {
             RegionData region = entry.Region;
-            if (entry.Compiled.Errors.Count > 0)
+            // Errors that the hand-made content can't fix stop the sync; the rest are checked after capturing it.
+            var pieceErrors = RegionCompiler.Compile(region, new HandmadeData()).Errors.Where(e => !e.Contains("is blocked")).ToList();
+            if (pieceErrors.Count > 0)
             {
-                foreach (string e in entry.Compiled.Errors) report.Error(region.Id + ": " + e);
+                foreach (string e in pieceErrors) report.Error(region.Id + ": " + e);
                 report.Error(region.Id + ": not synced until its data compiles.");
                 return;
             }
@@ -147,9 +149,12 @@ namespace Rth.Client.Editor
                 return;
             }
 
-            Scene scene = File.Exists(Path.Combine(Application.dataPath, "..", region.Scene))
-                ? EditorSceneManager.OpenScene(region.Scene, OpenSceneMode.Single)
-                : NewRegionScene(region, report);
+            // An open scene is used as it is (it may hold edits not yet saved, such as a conversion's).
+            Scene scene = SceneManager.GetSceneByPath(region.Scene);
+            if (!scene.IsValid() || !scene.isLoaded)
+                scene = File.Exists(Path.Combine(Application.dataPath, "..", region.Scene))
+                    ? EditorSceneManager.OpenScene(region.Scene, OpenSceneMode.Single)
+                    : NewRegionScene(region, report);
             MapArea area = FindArea(scene, region, report);
             if (area == null) return;
 

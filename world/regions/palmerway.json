@@ -1,0 +1,136 @@
+{
+  "id": "palmerway",
+  "title": "Palmerway",
+  "scene": "Assets/Scenes/Palmerway.unity",
+  "origin": [96, 0],
+  "size": [96, 96],
+  "plane": 0,
+  "instanced": false,
+  "music": "",
+  "materials": {
+    "Bark": "#5C4026",
+    "Bronze": "#997333",
+    "DarkLeaves": "#265429",
+    "FountBlood": "#59080D",
+    "Leaves": "#336B2E",
+    "MossyStone": "#73806B",
+    "Stone": "#858580",
+    "SynodRed": "#8C191F",
+    "Timber": "#66472E",
+    "WillowLeaves": "#618540"
+  },
+  "seed": 1,
+  "pieces": [
+    { "id": "npc-fen-rat-116-33", "kind": "npc", "at": [116, 33], "npc": "fen_rat", "wander": 3 },
+    { "id": "npc-fen-rat-127-28", "kind": "npc", "at": [127, 28], "npc": "fen_rat", "wander": 3 },
+    { "id": "npc-fen-rat-133-22", "kind": "npc", "at": [133, 22], "npc": "fen_rat", "wander": 3 },
+    { "id": "npc-brother-hollis-160-55", "kind": "npc", "at": [160, 55], "npc": "brother_hollis", "wander": 1 },
+    { "id": "prop-palmerway-waygate-182-49", "kind": "prop", "at": [182, 49], "footprint": [0, 0, 2, 1], "object": "palmerway_waygate", "parts": [
+      { "shape": "box", "name": "Gate", "at": [0.5, 0.8, 0], "size": [0.25, 1.6, 1], "material": "Timber" },
+      { "shape": "box", "name": "Seal", "at": [0.35, 1, 0], "size": [0.05, 0.35, 0.35], "material": "SynodRed" }
+    ] },
+    { "id": "prop-cruorian-monument-163-59", "kind": "prop", "at": [163, 59], "object": "cruorian_monument", "parts": [
+      { "shape": "box", "name": "Plinth", "at": [0, 0.45, 0], "size": [0.95, 0.6, 0.95], "material": "Stone" },
+      { "shape": "box", "name": "Needle", "at": [0, 2.1, 0], "size": [0.5, 2.8, 0.5], "material": "SynodRed" },
+      { "shape": "box", "name": "Tip", "at": [0, 3.65, 0], "size": [0.28, 0.35, 0.28], "rot": [0, 45, 0], "material": "Bronze" }
+    ] },
+    { "id": "prop-monument-fount-161-59", "kind": "prop", "at": [161, 59], "object": "monument_fount", "parts": [
+      { "shape": "cylinder", "name": "Pedestal", "at": [0, 0.3, 0], "size": [0.45, 0.3, 0.45], "material": "Stone" },
+      { "shape": "cylinder", "name": "Bowl", "at": [0, 0.66, 0], "size": [0.7, 0.08, 0.7], "material": "Bronze" },
+      { "shape": "cylinder", "name": "Blood", "at": [0, 0.76, 0], "size": [0.55, 0.02, 0.55], "material": "FountBlood" }
+    ] },
+    { "id": "prop-monument-fount-165-59", "kind": "prop", "at": [165, 59], "object": "monument_fount", "parts": [
+      { "shape": "cylinder", "name": "Pedestal", "at": [0, 0.3, 0], "size": [0.45, 0.3, 0.45], "material": "Stone" },
+      { "shape": "cylinder", "name": "Bowl", "at": [0, 0.66, 0], "size": [0.7, 0.08, 0.7], "material": "Bronze" },
+      { "shape": "cylinder", "name": "Blood", "at": [0, 0.76, 0], "size": [0.55, 0.02, 0.55], "material": "FountBlood" }
+    ] },
+    { "id": "prop-monument-fount-163-61", "kind": "prop", "at": [163, 61], "object": "monument_fount", "parts": [
+      { "shape": "cylinder", "name": "Pedestal", "at": [0, 0.3, 0], "size": [0.45, 0.3, 0.45], "material": "Stone" },
+      { "shape": "cylinder", "name": "Bowl", "at": [0, 0.66, 0], "size": [0.7, 0.08, 0.7], "material": "Bronze" },
+      { "shape": "cylinder", "name": "Blood", "at": [0, 0.76, 0], "size": [0.55, 0.02, 0.55], "material": "FountBlood" }
+    ] },
+    { "id": "prop-monument-fount-163-57", "kind": "prop", "at": [163, 57], "object": "monument_fount", "parts": [
+      { "shape": "cylinder", "name": "Pedestal", "at": [0, 0.3, 0], "size": [0.45, 0.3, 0.45], "material": "Stone" },
+      { "shape": "cylinder", "name": "Bowl", "at": [0, 0.66, 0], "size": [0.7, 0.08, 0.7], "material": "Bronze" },
+      { "shape": "cylinder", "name": "Blood", "at": [0, 0.76, 0], "size": [0.55, 0.02, 0.55], "material": "FountBlood" }
+    ] },
+    { "id": "prop-waystone-128-55", "kind": "prop", "at": [128, 55], "object": "waystone", "parts": [
+      { "shape": "box", "name": "Stone", "at": [0, 0.7, 0], "size": [0.6, 1.4, 0.35], "material": "MossyStone" },
+      { "shape": "box", "name": "Cap", "at": [0, 1.45, 0], "size": [0.7, 0.12, 0.45], "material": "Stone" }
+    ] },
+    { "id": "rock-rock-122-74", "kind": "rock", "at": [122, 74], "parts": [
+      { "shape": "box", "name": "Rock", "at": [0, 0.28, 0], "size": [0.8, 0.56, 0.8], "rot": [0, 48, 0], "material": "Stone" }
+    ] },
+    { "id": "rock-rock-160-80", "kind": "rock", "at": [160, 80], "parts": [
+      { "shape": "box", "name": "Rock", "at": [0, 0.28, 0], "size": [0.8, 0.56, 0.8], "rot": [0, 20, 0], "material": "Stone" }
+    ] },
+    { "id": "rock-rock-172-30", "kind": "rock", "at": [172, 30], "parts": [
+      { "shape": "box", "name": "Rock", "at": [0, 0.28, 0], "size": [0.8, 0.56, 0.8], "rot": [0, 34, 0], "material": "Stone" }
+    ] },
+    { "id": "rock-rock-138-31", "kind": "rock", "at": [138, 31], "parts": [
+      { "shape": "box", "name": "Rock", "at": [0, 0.28, 0], "size": [0.8, 0.56, 0.8], "rot": [0, 47, 0], "material": "Stone" }
+    ] },
+    { "id": "rock-rock-104-58", "kind": "rock", "at": [104, 58], "parts": [
+      { "shape": "box", "name": "Rock", "at": [0, 0.28, 0], "size": [0.8, 0.56, 0.8], "rot": [0, 46, 0], "material": "Stone" }
+    ] },
+    { "id": "tree-oak-112-64", "kind": "tree", "at": [112, 64], "variant": "Oak", "parts": [
+      { "shape": "box", "name": "Trunk", "at": [0, 0.8701, 0], "size": [0.32, 1.7402, 0.32], "material": "Bark" },
+      { "shape": "box", "name": "Leaves", "at": [0, 1.849, 0], "size": [1.7402, 0.7613, 1.7402], "rot": [0, 11.0087, 0], "material": "Leaves" },
+      { "shape": "box", "name": "Leaves", "at": [0, 2.4471, 0], "size": [1.2508, 0.7613, 1.2508], "rot": [0, 10.014, 0], "material": "Leaves" }
+    ] },
+    { "id": "tree-oak-115-67", "kind": "tree", "at": [115, 67], "variant": "Oak", "parts": [
+      { "shape": "box", "name": "Trunk", "at": [0, 0.828, 0], "size": [0.32, 1.656, 0.32], "material": "Bark" },
+      { "shape": "box", "name": "Leaves", "at": [0, 1.7595, 0], "size": [1.656, 0.7245, 1.656], "rot": [0, 41.352, 0], "material": "Leaves" },
+      { "shape": "box", "name": "Leaves", "at": [0, 2.3287, 0], "size": [1.1902, 0.7245, 1.1902], "rot": [0, 78.5097, 0], "material": "Leaves" },
+      { "shape": "box", "name": "Leaves", "at": [0, 2.898, 0], "size": [0.7245, 0.7245, 0.7245], "rot": [0, 59.2417, 0], "material": "Leaves" }
+    ] },
+    { "id": "tree-tree-110-70", "kind": "tree", "at": [110, 70], "variant": "Tree", "parts": [
+      { "shape": "box", "name": "Trunk", "at": [0, 0.9583, 0], "size": [0.32, 1.9166, 0.32], "material": "Bark" },
+      { "shape": "box", "name": "Leaves", "at": [0, 2.0364, 0], "size": [1.9166, 0.8385, 1.9166], "rot": [0, 82.7372, 0], "material": "DarkLeaves" },
+      { "shape": "box", "name": "Leaves", "at": [0, 2.6952, 0], "size": [1.3775, 0.8385, 1.3775], "rot": [0, 67.6174, 0], "material": "DarkLeaves" }
+    ] },
+    { "id": "tree-tree-152-28", "kind": "tree", "at": [152, 28], "variant": "Tree", "parts": [
+      { "shape": "box", "name": "Trunk", "at": [0, 0.7635, 0], "size": [0.32, 1.5269, 0.32], "material": "Bark" },
+      { "shape": "box", "name": "Leaves", "at": [0, 1.6224, 0], "size": [1.5269, 0.668, 1.5269], "rot": [0, 21.845, 0], "material": "DarkLeaves" },
+      { "shape": "box", "name": "Leaves", "at": [0, 2.1473, 0], "size": [1.0975, 0.668, 1.0975], "rot": [0, 3.9004, 0], "material": "DarkLeaves" }
+    ] },
+    { "id": "tree-tree-155-25", "kind": "tree", "at": [155, 25], "variant": "Tree", "parts": [
+      { "shape": "box", "name": "Trunk", "at": [0, 0.9407, 0], "size": [0.32, 1.8813, 0.32], "material": "Bark" },
+      { "shape": "box", "name": "Leaves", "at": [0, 1.9989, 0], "size": [1.8813, 0.8231, 1.8813], "rot": [0, 69.7557, 0], "material": "Leaves" },
+      { "shape": "box", "name": "Leaves", "at": [0, 2.6456, 0], "size": [1.3522, 0.8231, 1.3522], "rot": [0, 89.0964, 0], "material": "Leaves" },
+      { "shape": "box", "name": "Leaves", "at": [0, 3.2923, 0], "size": [0.8231, 0.8231, 0.8231], "rot": [0, 60.2153, 0], "material": "Leaves" }
+    ] },
+    { "id": "tree-tree-157-29", "kind": "tree", "at": [157, 29], "variant": "Tree", "parts": [
+      { "shape": "box", "name": "Trunk", "at": [0, 0.8158, 0], "size": [0.32, 1.6316, 0.32], "material": "Bark" },
+      { "shape": "box", "name": "Leaves", "at": [0, 1.7336, 0], "size": [1.6316, 0.7138, 1.6316], "rot": [0, 74.7216, 0], "material": "DarkLeaves" },
+      { "shape": "box", "name": "Leaves", "at": [0, 2.2945, 0], "size": [1.1727, 0.7138, 1.1727], "rot": [0, 25.5194, 0], "material": "DarkLeaves" }
+    ] },
+    { "id": "tree-willow-121-30", "kind": "tree", "at": [121, 30], "variant": "Willow", "parts": [
+      { "shape": "box", "name": "Trunk", "at": [0, 0.7714, 0], "size": [0.32, 1.5427, 0.32], "material": "Bark" },
+      { "shape": "box", "name": "Leaves", "at": [0, 1.6391, 0], "size": [1.5427, 0.6749, 1.5427], "rot": [0, 44.1952, 0], "material": "WillowLeaves" },
+      { "shape": "box", "name": "Leaves", "at": [0, 2.1695, 0], "size": [1.1088, 0.6749, 1.1088], "rot": [0, 72.7769, 0], "material": "WillowLeaves" },
+      { "shape": "box", "name": "Leaves", "at": [0, 2.6998, 0], "size": [0.6749, 0.6749, 0.6749], "rot": [0, 28.0646, 0], "material": "WillowLeaves" }
+    ] },
+    { "id": "tree-tree-135-40", "kind": "tree", "at": [135, 40], "variant": "Tree", "parts": [
+      { "shape": "box", "name": "Trunk", "at": [0, 0.7263, 0], "size": [0.32, 1.4525, 0.32], "material": "Bark" },
+      { "shape": "box", "name": "Leaves", "at": [0, 1.5433, 0], "size": [1.4525, 0.6355, 1.4525], "rot": [0, 49.6138, 0], "material": "Leaves" },
+      { "shape": "box", "name": "Leaves", "at": [0, 2.0426, 0], "size": [1.044, 0.6355, 1.044], "rot": [0, 16.8775, 0], "material": "Leaves" }
+    ] },
+    { "id": "tree-oak-150-66", "kind": "tree", "at": [150, 66], "variant": "Oak", "parts": [
+      { "shape": "box", "name": "Trunk", "at": [0, 0.848, 0], "size": [0.32, 1.6961, 0.32], "material": "Bark" },
+      { "shape": "box", "name": "Leaves", "at": [0, 1.8021, 0], "size": [1.6961, 0.742, 1.6961], "rot": [0, 46.3498, 0], "material": "Leaves" },
+      { "shape": "box", "name": "Leaves", "at": [0, 2.3851, 0], "size": [1.219, 0.742, 1.219], "rot": [0, 21.2978, 0], "material": "Leaves" }
+    ] },
+    { "id": "tree-tree-166-36", "kind": "tree", "at": [166, 36], "variant": "Tree", "parts": [
+      { "shape": "box", "name": "Trunk", "at": [0, 0.9358, 0], "size": [0.32, 1.8715, 0.32], "material": "Bark" },
+      { "shape": "box", "name": "Leaves", "at": [0, 1.9885, 0], "size": [1.8715, 0.8188, 1.8715], "rot": [0, 42.2204, 0], "material": "Leaves" },
+      { "shape": "box", "name": "Leaves", "at": [0, 2.6319, 0], "size": [1.3452, 0.8188, 1.3452], "rot": [0, 57.3136, 0], "material": "Leaves" },
+      { "shape": "box", "name": "Leaves", "at": [0, 3.2752, 0], "size": [0.8188, 0.8188, 0.8188], "rot": [0, 6.9912, 0], "material": "Leaves" }
+    ] },
+    { "id": "tree-tree-171-63", "kind": "tree", "at": [171, 63], "variant": "Tree", "parts": [
+      { "shape": "box", "name": "Trunk", "at": [0, 0.77, 0], "size": [0.32, 1.54, 0.32], "material": "Bark" },
+      { "shape": "box", "name": "Leaves", "at": [0, 1.6363, 0], "size": [1.54, 0.6738, 1.54], "rot": [0, 36.7165, 0], "material": "DarkLeaves" },
+      { "shape": "box", "name": "Leaves", "at": [0, 2.1657, 0], "size": [1.1069, 0.6738, 1.1069], "rot": [0, 7.2234, 0], "material": "DarkLeaves" }
+    ] }
+  ]
+}

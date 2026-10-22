@@ -1,0 +1,6 @@
+{
+  "note": "Written by Sync World. The regions, their rectangles and scenes; see <id>.json for what each scene holds and world/screens/<id>/ for how it looks.",
+  "regions": [
+    { "id": "tolling", "title": "Tolling", "scene": "Assets/Scenes/Tolling.unity", "origin": [0, 0], "size": [96, 96], "pieces": 53, "objects": 4, "npcs": 15 }
+  ]
+}

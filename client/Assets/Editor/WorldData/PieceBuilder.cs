@@ -213,6 +213,12 @@ namespace Rth.Client.Editor
             Color colour = new Color(0.8f, 0.2f, 0.8f);
             if (!region.Materials.TryGetValue(name, out string value) || !Palette.TryParse(value, out colour))
                 Debug.LogWarning($"[R'th] {region.Id}: material '{name}' has no colour in the region's materials; drawn magenta.");
+            // Keep a material whose colour already rounds to this one, rather than nudging it to the
+            // nearest 8-bit value (which would touch every scene that shares it).
+            var existing = AssetDatabase.LoadAssetAtPath<Material>("Assets/Art/Materials/" + name + ".mat");
+            if (existing != null && existing.HasProperty("_BaseColor") &&
+                ColorUtility.ToHtmlStringRGB(existing.GetColor("_BaseColor")) == ColorUtility.ToHtmlStringRGB(colour))
+                return existing;
             return kit.Mat(name, colour);
         }
 

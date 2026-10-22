@@ -1,6 +1,6 @@
 [
-  { "type": "stairs_up", "plane": 0, "x": 1089, "y": 1034, "toPlane": 1, "toX": 1090, "toY": 1034 },
-  { "type": "stairs_down", "plane": 1, "x": 1089, "y": 1034, "toPlane": 0, "toX": 1090, "toY": 1034 },
   { "type": "ladder_down", "plane": 1, "x": 1112, "y": 1030, "toPlane": 0, "toX": 1113, "toY": 1030 },
-  { "type": "ladder_up", "plane": 0, "x": 1113, "y": 1029, "toPlane": 1, "toX": 1112, "toY": 1029 }
+  { "type": "ladder_up", "plane": 0, "x": 1113, "y": 1029, "toPlane": 1, "toX": 1112, "toY": 1029 },
+  { "type": "stairs_up", "plane": 0, "x": 1089, "y": 1034, "toPlane": 1, "toX": 1090, "toY": 1034 },
+  { "type": "stairs_down", "plane": 1, "x": 1089, "y": 1034, "toPlane": 0, "toX": 1090, "toY": 1034 }
 ]

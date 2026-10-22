@@ -1,0 +1,30 @@
+{
+  "id": "leveltest",
+  "title": "Level Test",
+  "scene": "Assets/Scenes/LevelTest.unity",
+  "origin": [1080, 1008],
+  "size": [48, 48],
+  "plane": 0,
+  "instanced": true,
+  "music": "",
+  "materials": {
+    "LevelTestWood": "#735433"
+  },
+  "seed": 1,
+  "pieces": [
+    { "id": "npc-concord-surveyor-1094-1033", "kind": "npc", "plane": 1, "at": [1094, 1033], "npc": "concord_surveyor", "wander": 1 },
+    { "id": "npc-meridian-fisher-1094-1031", "kind": "npc", "at": [1094, 1031], "npc": "meridian_fisher", "wander": 1 },
+    { "id": "prop-ladder-down-1112-1030", "kind": "prop", "plane": 1, "at": [1112, 1030], "object": "ladder_down", "climbTo": [0, 1113, 1030], "parts": [
+      { "shape": "box", "name": "Ladder", "at": [0, 4.5, 0], "size": [0.3, 1, 0.8], "material": "LevelTestWood" }
+    ] },
+    { "id": "prop-ladder-up-1113-1029", "kind": "prop", "at": [1113, 1029], "object": "ladder_up", "climbTo": [1, 1112, 1029], "parts": [
+      { "shape": "box", "name": "Ladder", "at": [0, 2, 0], "size": [0.3, 4, 0.8], "material": "LevelTestWood" }
+    ] },
+    { "id": "prop-stairs-up-1089-1034", "kind": "prop", "at": [1089, 1034], "object": "stairs_up", "climbTo": [1, 1090, 1034], "parts": [
+      { "shape": "box", "name": "Stair", "at": [0, 1.5, 0], "size": [0.9, 3, 0.9], "material": "LevelTestWood" }
+    ] },
+    { "id": "prop-stairs-down-1089-1034", "kind": "prop", "plane": 1, "at": [1089, 1034], "object": "stairs_down", "climbTo": [0, 1090, 1034], "parts": [
+      { "shape": "box", "name": "Stair", "at": [0, 3.5, 0], "size": [0.9, 1, 0.9], "material": "LevelTestWood" }
+    ] }
+  ]
+}

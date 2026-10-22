@@ -110,6 +110,7 @@ namespace Rth.Client.Editor
                 lifted.Add(b.gameObject);
             }
             foreach (GameObject go in lifted) Object.DestroyImmediate(go);
+            RemoveEmptyGroups(handmade.transform);
 
             RegionFiles.SaveRegion(region, path);
             report.Info($"{region.Id}: {region.Pieces.Count} pieces lifted into world/regions/{region.Id}.json; everything else is hand-made");
@@ -131,6 +132,17 @@ namespace Rth.Client.Editor
             if (diffs.Count > 0) report.Error($"{region.Id}: the converted region differs from before in {diffs.Count} places: {string.Join(", ", diffs.Take(12))}");
             else report.Info($"{region.Id}: converted; the map, objects and creatures are exactly as before");
             return report;
+        }
+
+        /// <summary>Removes groups left empty by lifting their contents into data (a "Creatures" group, say).</summary>
+        private static void RemoveEmptyGroups(Transform root)
+        {
+            for (int i = root.childCount - 1; i >= 0; i--)
+            {
+                Transform child = root.GetChild(i);
+                RemoveEmptyGroups(child);
+                if (child.childCount == 0 && child.GetComponents<Component>().Length == 1) Object.DestroyImmediate(child.gameObject);
+            }
         }
 
         private static bool Same(IEnumerable<string> a, IEnumerable<string> b) => a.OrderBy(s => s).SequenceEqual(b.OrderBy(s => s));

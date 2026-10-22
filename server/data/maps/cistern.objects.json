@@ -1,0 +1,9 @@
+[
+  { "type": "lucern_signpost", "plane": 0, "x": -268, "y": 110 },
+  { "type": "cistern_deepwell", "plane": 0, "x": -248, "y": 37 },
+  { "type": "saffiya_doors", "plane": 0, "x": -248, "y": 85 },
+  { "type": "cistern_water_rolls", "plane": 0, "x": -279, "y": 45 },
+  { "type": "great_cistern", "plane": 0, "x": -223, "y": 20 },
+  { "type": "dry_fountain", "plane": 0, "x": -248, "y": 20 },
+  { "type": "synod_strongbox", "plane": 0, "x": -296, "y": 23 }
+]

@@ -1,0 +1,10 @@
+[
+  { "type": "tithe_salt_heap", "plane": 0, "x": 662, "y": -149 },
+  { "type": "tithe_saltery_door", "plane": 0, "x": 681, "y": -154 },
+  { "type": "tithe_toll_board", "plane": 0, "x": 692, "y": -47 },
+  { "type": "chain_winch", "plane": 0, "x": 726, "y": -47 },
+  { "type": "tithe_balance", "plane": 0, "x": 688, "y": -80 },
+  { "type": "tithe_ledger", "plane": 0, "x": 654, "y": -80 },
+  { "type": "synod_strongbox", "plane": 0, "x": 710, "y": -76 },
+  { "type": "chantry_altar", "plane": 0, "x": 688, "y": -134 }
+]
