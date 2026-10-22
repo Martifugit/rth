@@ -27,6 +27,7 @@ Design docs:
   (`docs/research/`); decisions D1-D4 wait on the owner and the scale test region.
 - `docs/assets.md`: triangle budgets, the palette, textures, leafy trees, recolouring.
 - `docs/world-building.md`: the world layout, region bakes and stamps (a prototype; W1, W2 open).
+- `docs/areas/`: the area plan for the whole continent, built in passes. Start with `rules.md` (how the research targets are used); the evidence is in `docs/research/`.
 
 ---
 

@@ -1,0 +1,1640 @@
+{
+ "about": "Pass 1 of the area plan: the skeleton. Areas, their parts, rough size and links; no content yet. See docs/areas/rules.md. Edit this file; tools/areas/plan.py checks it, renders it and writes skeleton.md.",
+ "scale": {
+  "sketch": "images/map.png",
+  "tilesPerSketchPixel": 1.75,
+  "tollingSketchPixel": [
+   550,
+   472
+  ],
+  "regionTiles": 96
+ },
+ "areas": [
+  {
+   "id": "tolling",
+   "name": "Tolling",
+   "realm": "Venaria",
+   "layer": "surface",
+   "sketch": [
+    550,
+    472
+   ],
+   "sizeRegions": 1,
+   "status": "built",
+   "parts": [
+    {
+     "id": "tolling-town",
+     "name": "Tolling",
+     "settlement": "town"
+    },
+    {
+     "id": "widdermill",
+     "name": "Widdermill"
+    },
+    {
+     "id": "sour-hollow",
+     "name": "Sour Hollow"
+    },
+    {
+     "id": "sleepers-graves",
+     "name": "The sleepers' graves"
+    }
+   ],
+   "links": [
+    {
+     "to": "palmerway",
+     "by": "road"
+    },
+    {
+     "to": "p-cidermoot",
+     "by": "path"
+    },
+    {
+     "to": "p-rookery-wood",
+     "by": "path"
+    },
+    {
+     "to": "p-bellow",
+     "by": "path"
+    }
+   ],
+   "notes": "Built: tiles 0-95, 0-95. Positions in this plan follow docs/world-map.md over the sketch where they disagree."
+  },
+  {
+   "id": "palmerway",
+   "name": "Wennow and Palmerway",
+   "realm": "Venaria",
+   "layer": "surface",
+   "sketch": [
+    604,
+    480
+   ],
+   "sizeRegions": 2,
+   "status": "part built",
+   "parts": [
+    {
+     "id": "wennow",
+     "name": "Wennow"
+    },
+    {
+     "id": "palmerway-road",
+     "name": "Palmerway"
+    },
+    {
+     "id": "palmerway-waystone",
+     "name": "The waystone"
+    },
+    {
+     "id": "palmerway-tollhouse",
+     "name": "The old toll-house",
+     "settlement": "hamlet"
+    },
+    {
+     "id": "palmerway-waygate",
+     "name": "The wardens' palisade and waygate"
+    }
+   ],
+   "links": [
+    {
+     "to": "tolling",
+     "by": "road"
+    },
+    {
+     "to": "p-wending",
+     "by": "road",
+     "notes": "beyond the waygate (flag palmerway_open)"
+    },
+    {
+     "to": "p-cradle-west-shore",
+     "by": "path"
+    }
+   ],
+   "notes": "Built: tiles 96-191, 0-95 (the road and Wennow's north shore)."
+  },
+  {
+   "id": "p-wending",
+   "name": "p-wending",
+   "realm": "Venaria",
+   "layer": "surface",
+   "sketch": [
+    633,
+    444
+   ],
+   "sizeRegions": 3,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "p-wending-village",
+     "name": "p-wending",
+     "settlement": "village"
+    },
+    {
+     "id": "p-wending-crossing",
+     "name": "p-wending river crossing"
+    },
+    {
+     "id": "p-wending-farms",
+     "name": "river farms",
+     "settlement": "hamlet"
+    }
+   ],
+   "links": [
+    {
+     "to": "palmerway",
+     "by": "road"
+    },
+    {
+     "to": "cruor",
+     "by": "road"
+    },
+    {
+     "to": "p-bellow",
+     "by": "path"
+    }
+   ]
+  },
+  {
+   "id": "cruor",
+   "name": "Cruor",
+   "realm": "Venaria",
+   "layer": "surface",
+   "sketch": [
+    685,
+    422
+   ],
+   "sizeRegions": 6,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "cruor-quays",
+     "name": "p-quays (the Brazenhithe Quays on the sketch)"
+    },
+    {
+     "id": "cruor-close",
+     "name": "The Synod's close"
+    },
+    {
+     "id": "cruor-markets",
+     "name": "p-markets"
+    },
+    {
+     "id": "cruor-old-town",
+     "name": "p-old-town"
+    },
+    {
+     "id": "cruor-barracks",
+     "name": "p-barracks"
+    },
+    {
+     "id": "cruor-outer-wards",
+     "name": "p-outer-wards"
+    },
+    {
+     "id": "cruor-city",
+     "name": "Cruor",
+     "settlement": "city"
+    },
+    {
+     "id": "cruor-catacombs",
+     "name": "p-catacombs and the martyrs' crypts",
+     "layer": "underground"
+    }
+   ],
+   "links": [
+    {
+     "to": "p-wending",
+     "by": "road"
+    },
+    {
+     "to": "the-cradle",
+     "by": "ferry"
+    },
+    {
+     "to": "causeholm",
+     "by": "causeway"
+    },
+    {
+     "to": "p-cradle-north-shore",
+     "by": "road"
+    }
+   ],
+   "notes": "The one very large city: about twice the next city in what it holds. Its districts get their content in pass 2."
+  },
+  {
+   "id": "p-cradle-north-shore",
+   "name": "p-cradle-north-shore",
+   "realm": "Venaria",
+   "layer": "surface",
+   "sketch": [
+    755,
+    439
+   ],
+   "sizeRegions": 3,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "p-shore-villages-north",
+     "name": "fishing villages",
+     "settlement": "village"
+    }
+   ],
+   "links": [
+    {
+     "to": "cruor",
+     "by": "road"
+    },
+    {
+     "to": "ascia",
+     "by": "road"
+    }
+   ]
+  },
+  {
+   "id": "p-cradle-west-shore",
+   "name": "p-cradle-west-shore",
+   "realm": "Venaria",
+   "layer": "surface",
+   "sketch": [
+    628,
+    522
+   ],
+   "sizeRegions": 2,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "p-shore-villages-west",
+     "name": "fishing hamlets",
+     "settlement": "hamlet"
+    }
+   ],
+   "links": [
+    {
+     "to": "palmerway",
+     "by": "path"
+    },
+    {
+     "to": "p-nethercombe",
+     "by": "path"
+    },
+    {
+     "to": "the-cradle",
+     "by": "ferry"
+    }
+   ]
+  },
+  {
+   "id": "p-nethercombe",
+   "name": "p-nethercombe",
+   "realm": "Venaria",
+   "layer": "surface",
+   "sketch": [
+    577,
+    602
+   ],
+   "sizeRegions": 3,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "p-nethercombe-village",
+     "name": "p-nethercombe",
+     "settlement": "village"
+    }
+   ],
+   "links": [
+    {
+     "to": "p-cradle-west-shore",
+     "by": "path"
+    },
+    {
+     "to": "p-rookery-wood",
+     "by": "path"
+    },
+    {
+     "to": "tithe",
+     "by": "road",
+     "notes": "round the bay's south shore"
+    }
+   ]
+  },
+  {
+   "id": "p-bellow",
+   "name": "p-bellow",
+   "realm": "Venaria",
+   "layer": "surface",
+   "sketch": [
+    572,
+    367
+   ],
+   "sizeRegions": 2,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "p-bellow-village",
+     "name": "p-bellow",
+     "settlement": "village"
+    }
+   ],
+   "links": [
+    {
+     "to": "tolling",
+     "by": "path"
+    },
+    {
+     "to": "p-wending",
+     "by": "path"
+    },
+    {
+     "to": "p-snap",
+     "by": "path"
+    },
+    {
+     "to": "dunstair",
+     "by": "cart-line",
+     "notes": "the lowland end of the dwarven line"
+    }
+   ]
+  },
+  {
+   "id": "p-cidermoot",
+   "name": "p-cidermoot",
+   "realm": "Venaria",
+   "layer": "surface",
+   "sketch": [
+    467,
+    359
+   ],
+   "sizeRegions": 2,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "p-cidermoot-village",
+     "name": "p-cidermoot",
+     "settlement": "village"
+    },
+    {
+     "id": "p-cidermoot-orchards",
+     "name": "orchards and presses"
+    }
+   ],
+   "links": [
+    {
+     "to": "tolling",
+     "by": "path"
+    },
+    {
+     "to": "p-snap",
+     "by": "path"
+    },
+    {
+     "to": "p-last-sheaf",
+     "by": "road"
+    }
+   ]
+  },
+  {
+   "id": "p-rookery-wood",
+   "name": "p-rookery-wood",
+   "realm": "Venaria",
+   "layer": "surface",
+   "sketch": [
+    474,
+    591
+   ],
+   "sizeRegions": 2,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "p-rookery",
+     "name": "p-rookery-wood"
+    }
+   ],
+   "links": [
+    {
+     "to": "tolling",
+     "by": "path"
+    },
+    {
+     "to": "p-nethercombe",
+     "by": "path"
+    },
+    {
+     "to": "p-gleanings",
+     "by": "path"
+    }
+   ]
+  },
+  {
+   "id": "p-snap",
+   "name": "p-snap",
+   "realm": "Venaria",
+   "layer": "surface",
+   "sketch": [
+    489,
+    317
+   ],
+   "sizeRegions": 2,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "p-snap-ravine",
+     "name": "the scar: a ravine left by a moonfall"
+    },
+    {
+     "id": "p-snap-edges",
+     "name": "its edges (moonbark, moonmoss)"
+    }
+   ],
+   "links": [
+    {
+     "to": "p-cidermoot",
+     "by": "path"
+    },
+    {
+     "to": "p-bellow",
+     "by": "path"
+    },
+    {
+     "to": "veilwood",
+     "by": "path"
+    },
+    {
+     "to": "selenfall",
+     "by": "path"
+    }
+   ]
+  },
+  {
+   "id": "veilwood",
+   "name": "The Veilwood",
+   "realm": "Venaria",
+   "layer": "surface",
+   "sketch": [
+    511,
+    261
+   ],
+   "sizeRegions": 4,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "veilwood-edges",
+     "name": "the edges"
+    },
+    {
+     "id": "veilwood-deep",
+     "name": "the deep"
+    },
+    {
+     "id": "veilwood-heart",
+     "name": "the heart"
+    },
+    {
+     "id": "veilwood-archive",
+     "name": "the Dreamweaver's archive"
+    },
+    {
+     "id": "veilwood-dream-ways",
+     "name": "ways into the Dreaming"
+    }
+   ],
+   "links": [
+    {
+     "to": "p-snap",
+     "by": "path"
+    },
+    {
+     "to": "selenfall",
+     "by": "path"
+    },
+    {
+     "to": "sodden",
+     "by": "path",
+     "notes": "the long way round the fens"
+    },
+    {
+     "to": "the-dreaming",
+     "by": "dream"
+    }
+   ],
+   "notes": "Location proposed in pass 1 (no doc placed it): beside Selenfall and the moonfall scar, since moonbark grows on old moonfall scars."
+  },
+  {
+   "id": "the-dreaming",
+   "name": "The Dreaming",
+   "realm": "The Dreaming",
+   "layer": "dreaming",
+   "sketch": null,
+   "sizeRegions": 0,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "dreaming-orbs",
+     "name": "memory orbs"
+    },
+    {
+     "id": "dreaming-nightmare",
+     "name": "the nightmare's rotations"
+    }
+   ],
+   "links": [
+    {
+     "to": "veilwood",
+     "by": "dream"
+    }
+   ],
+   "notes": "A realm apart from the continent, entered from the Veilwood. Not on the map; its size and shape are decided later."
+  },
+  {
+   "id": "the-cradle",
+   "name": "The Cradle",
+   "realm": "The Cradle",
+   "layer": "water",
+   "sketch": [
+    680,
+    500
+   ],
+   "sizeRegions": 0,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "cradle-ferries",
+     "name": "the ferries"
+    },
+    {
+     "id": "p-ebb",
+     "name": "p-ebb"
+    },
+    {
+     "id": "p-axle",
+     "name": "p-axle"
+    },
+    {
+     "id": "cradle-hushfin",
+     "name": "the hushfin waters",
+     "when": "during the Cradle's event"
+    },
+    {
+     "id": "the-quaere",
+     "name": "The Quaere (the Responsory)",
+     "notes": "seen from everywhere; reached late, if at all"
+    }
+   ],
+   "links": [
+    {
+     "to": "cruor",
+     "by": "ferry"
+    },
+    {
+     "to": "tithe",
+     "by": "ferry"
+    },
+    {
+     "to": "p-cradle-west-shore",
+     "by": "ferry"
+    }
+   ]
+  },
+  {
+   "id": "tithe",
+   "name": "Tithe",
+   "realm": "Calcinia",
+   "layer": "surface",
+   "sketch": [
+    742,
+    587
+   ],
+   "sizeRegions": 3,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "tithe-city",
+     "name": "Tithe",
+     "settlement": "city"
+    },
+    {
+     "id": "tithe-towers",
+     "name": "the towers over the channel"
+    },
+    {
+     "id": "tithe-counting-houses",
+     "name": "the customs and counting houses"
+    },
+    {
+     "id": "tithe-cathedral",
+     "name": "the see's cathedral"
+    },
+    {
+     "id": "tithe-harbour",
+     "name": "the harbour"
+    }
+   ],
+   "links": [
+    {
+     "to": "the-cradle",
+     "by": "ferry"
+    },
+    {
+     "to": "p-crackmouth",
+     "by": "road"
+    },
+    {
+     "to": "salinas",
+     "by": "road"
+    },
+    {
+     "to": "p-nethercombe",
+     "by": "road"
+    },
+    {
+     "to": "p-noonhaven",
+     "by": "road"
+    }
+   ]
+  },
+  {
+   "id": "p-crackmouth",
+   "name": "p-crackmouth",
+   "realm": "Calcinia",
+   "layer": "surface",
+   "sketch": [
+    719,
+    630
+   ],
+   "sizeRegions": 1,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "p-crackmouth-channel",
+     "name": "the channel to the open sea"
+    }
+   ],
+   "links": [
+    {
+     "to": "tithe",
+     "by": "road"
+    }
+   ]
+  },
+  {
+   "id": "salinas",
+   "name": "Salinas",
+   "realm": "Calcinia",
+   "layer": "surface",
+   "sketch": [
+    873,
+    552
+   ],
+   "sizeRegions": 3,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "salinas-pans",
+     "name": "the salt pans"
+    },
+    {
+     "id": "salinas-works",
+     "name": "the salt works",
+     "settlement": "hamlet"
+    }
+   ],
+   "links": [
+    {
+     "to": "tithe",
+     "by": "road"
+    },
+    {
+     "to": "saltglare",
+     "by": "road"
+    }
+   ]
+  },
+  {
+   "id": "saltglare",
+   "name": "Saltglare",
+   "realm": "Calcinia",
+   "layer": "surface",
+   "sketch": [
+    864,
+    506
+   ],
+   "sizeRegions": 2,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "saltglare-town",
+     "name": "Saltglare",
+     "settlement": "town"
+    }
+   ],
+   "links": [
+    {
+     "to": "salinas",
+     "by": "road"
+    },
+    {
+     "to": "ascia",
+     "by": "path"
+    }
+   ]
+  },
+  {
+   "id": "ascia",
+   "name": "Ascia",
+   "realm": "Calcinia",
+   "layer": "surface",
+   "sketch": [
+    802,
+    486
+   ],
+   "sizeRegions": 2,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "ascia-stones",
+     "name": "the shadowless stones"
+    }
+   ],
+   "links": [
+    {
+     "to": "saltglare",
+     "by": "path"
+    },
+    {
+     "to": "p-cradle-north-shore",
+     "by": "road"
+    }
+   ]
+  },
+  {
+   "id": "p-noonhaven",
+   "name": "p-noonhaven",
+   "realm": "Calcinia",
+   "layer": "surface",
+   "sketch": [
+    819,
+    611
+   ],
+   "sizeRegions": 2,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "p-noonhaven-port",
+     "name": "p-noonhaven",
+     "settlement": "village"
+    }
+   ],
+   "links": [
+    {
+     "to": "tithe",
+     "by": "road"
+    }
+   ]
+  },
+  {
+   "id": "cistern",
+   "name": "Cistern",
+   "realm": "Sere",
+   "layer": "surface",
+   "sketch": [
+    417,
+    481
+   ],
+   "sizeRegions": 3,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "cistern-city",
+     "name": "Cistern",
+     "settlement": "city"
+    },
+    {
+     "id": "cistern-wells",
+     "name": "the deep wells"
+    },
+    {
+     "id": "cistern-markets",
+     "name": "the caravan markets"
+    },
+    {
+     "id": "cistern-palace",
+     "name": "Queen Saffiya's palace"
+    }
+   ],
+   "links": [
+    {
+     "to": "p-last-sheaf",
+     "by": "road"
+    },
+    {
+     "to": "p-sere-hills",
+     "by": "road"
+    },
+    {
+     "to": "lucern-pass",
+     "by": "road"
+    },
+    {
+     "to": "p-gleanings",
+     "by": "road"
+    }
+   ]
+  },
+  {
+   "id": "p-last-sheaf",
+   "name": "p-last-sheaf",
+   "realm": "Sere",
+   "layer": "surface",
+   "sketch": [
+    347,
+    433
+   ],
+   "sizeRegions": 2,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "p-last-sheaf-farms",
+     "name": "the last farms before the dry country",
+     "settlement": "hamlet"
+    }
+   ],
+   "links": [
+    {
+     "to": "p-cidermoot",
+     "by": "road"
+    },
+    {
+     "to": "cistern",
+     "by": "road"
+    },
+    {
+     "to": "dunstair",
+     "by": "path"
+    }
+   ]
+  },
+  {
+   "id": "p-gleanings",
+   "name": "p-gleanings",
+   "realm": "Sere",
+   "layer": "surface",
+   "sketch": [
+    326,
+    582
+   ],
+   "sizeRegions": 2,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "p-gleanings-village",
+     "name": "p-gleanings",
+     "settlement": "village"
+    }
+   ],
+   "links": [
+    {
+     "to": "cistern",
+     "by": "road"
+    },
+    {
+     "to": "p-rookery-wood",
+     "by": "path"
+    },
+    {
+     "to": "p-saltward-gap",
+     "by": "road"
+    }
+   ]
+  },
+  {
+   "id": "p-sere-hills",
+   "name": "p-sere-hills",
+   "realm": "Sere",
+   "layer": "surface",
+   "sketch": [
+    378,
+    533
+   ],
+   "sizeRegions": 8,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "p-sere-wilds",
+     "name": "dry hills, wells and cinnabar workings"
+    }
+   ],
+   "links": [
+    {
+     "to": "cistern",
+     "by": "road"
+    }
+   ]
+  },
+  {
+   "id": "causeholm",
+   "name": "Causeholm",
+   "realm": "Slough",
+   "layer": "surface",
+   "sketch": [
+    695,
+    311
+   ],
+   "sizeRegions": 2,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "causeholm-causeway",
+     "name": "the old causeway"
+    },
+    {
+     "id": "causeholm-hamlet",
+     "name": "Causeholm",
+     "settlement": "hamlet"
+    }
+   ],
+   "links": [
+    {
+     "to": "cruor",
+     "by": "causeway"
+    },
+    {
+     "to": "sodden",
+     "by": "causeway"
+    },
+    {
+     "to": "mereling",
+     "by": "path"
+    }
+   ]
+  },
+  {
+   "id": "sodden",
+   "name": "Sodden",
+   "realm": "Slough",
+   "layer": "surface",
+   "sketch": [
+    619,
+    249
+   ],
+   "sizeRegions": 2,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "sodden-town",
+     "name": "Sodden",
+     "settlement": "town"
+    }
+   ],
+   "links": [
+    {
+     "to": "causeholm",
+     "by": "causeway"
+    },
+    {
+     "to": "knellmere",
+     "by": "path"
+    },
+    {
+     "to": "veilwood",
+     "by": "path"
+    },
+    {
+     "to": "p-houselands",
+     "by": "path"
+    }
+   ]
+  },
+  {
+   "id": "knellmere",
+   "name": "Knellmere",
+   "realm": "Slough",
+   "layer": "surface",
+   "sketch": [
+    702,
+    200
+   ],
+   "sizeRegions": 2,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "knellmere-belfry",
+     "name": "the drowned belfry"
+    }
+   ],
+   "links": [
+    {
+     "to": "sodden",
+     "by": "path"
+    },
+    {
+     "to": "p-houselands",
+     "by": "path"
+    }
+   ]
+  },
+  {
+   "id": "mereling",
+   "name": "Mereling",
+   "realm": "Slough",
+   "layer": "surface",
+   "sketch": [
+    778,
+    280
+   ],
+   "sizeRegions": 2,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "mereling-village",
+     "name": "Mereling",
+     "settlement": "village"
+    }
+   ],
+   "links": [
+    {
+     "to": "causeholm",
+     "by": "path"
+    },
+    {
+     "to": "skerrin",
+     "by": "path"
+    }
+   ]
+  },
+  {
+   "id": "p-houselands",
+   "name": "p-houselands",
+   "realm": "Slough",
+   "layer": "surface",
+   "sketch": [
+    667,
+    167
+   ],
+   "sizeRegions": 4,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "seat-gall",
+     "name": "the seat of Gall"
+    },
+    {
+     "id": "seat-umber",
+     "name": "the seat of Umber"
+    },
+    {
+     "id": "seat-mordant",
+     "name": "the seat of Mordant"
+    },
+    {
+     "id": "seat-sallow",
+     "name": "Sallow's ruined seat"
+    }
+   ],
+   "links": [
+    {
+     "to": "sodden",
+     "by": "path"
+    },
+    {
+     "to": "knellmere",
+     "by": "path"
+    },
+    {
+     "to": "scalth",
+     "by": "path"
+    }
+   ],
+   "notes": "The four occult houses' estates; whether they share an area or spread across Slough is open."
+  },
+  {
+   "id": "scalth",
+   "name": "Scalth",
+   "realm": "Slough",
+   "layer": "surface",
+   "sketch": [
+    717,
+    114
+   ],
+   "sizeRegions": 3,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "scalth-burning",
+     "name": "the burning ground"
+    }
+   ],
+   "links": [
+    {
+     "to": "p-houselands",
+     "by": "path"
+    },
+    {
+     "to": "swallow",
+     "by": "path"
+    }
+   ],
+   "notes": "\"The Escapement\" on the sketch."
+  },
+  {
+   "id": "swallow",
+   "name": "Swallow",
+   "realm": "Slough",
+   "layer": "surface",
+   "sketch": [
+    661,
+    141
+   ],
+   "sizeRegions": 2,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "swallow-sinkhole",
+     "name": "the sinkhole"
+    }
+   ],
+   "links": [
+    {
+     "to": "scalth",
+     "by": "path"
+    },
+    {
+     "to": "undermost",
+     "by": "shaft",
+     "notes": "a way down into the depths"
+    }
+   ],
+   "notes": "\"The Mainspring Pit\" on the sketch."
+  },
+  {
+   "id": "skerrin",
+   "name": "Skerrin",
+   "realm": "Slough",
+   "layer": "surface",
+   "sketch": [
+    855,
+    144
+   ],
+   "sizeRegions": 3,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "skerrin-stacks",
+     "name": "the sea stacks"
+    },
+    {
+     "id": "skerrin-caves",
+     "name": "the sea caves",
+     "layer": "underground"
+    }
+   ],
+   "links": [
+    {
+     "to": "mereling",
+     "by": "path"
+    }
+   ]
+  },
+  {
+   "id": "meridian",
+   "name": "Meridian",
+   "realm": "Candora",
+   "layer": "surface",
+   "sketch": [
+    287,
+    658
+   ],
+   "sizeRegions": 3,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "meridian-city",
+     "name": "Meridian",
+     "settlement": "city"
+    }
+   ],
+   "links": [
+    {
+     "to": "p-saltward-gap",
+     "by": "road"
+    },
+    {
+     "to": "the-orrery",
+     "by": "path"
+    },
+    {
+     "to": "p-high-valleys-west",
+     "by": "pass"
+    }
+   ],
+   "notes": "Where the range comes down to the sea, at its south-western end."
+  },
+  {
+   "id": "the-orrery",
+   "name": "The Orrery",
+   "realm": "Candora",
+   "layer": "surface",
+   "sketch": [
+    272,
+    620
+   ],
+   "sizeRegions": 1,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "orrery",
+     "name": "the observatory",
+     "settlement": "hamlet"
+    }
+   ],
+   "links": [
+    {
+     "to": "meridian",
+     "by": "path"
+    }
+   ]
+  },
+  {
+   "id": "p-saltward-gap",
+   "name": "p-saltward-gap",
+   "realm": "Candora",
+   "layer": "surface",
+   "sketch": [
+    244,
+    558
+   ],
+   "sizeRegions": 2,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "p-saltward-pass",
+     "name": "the southern pass"
+    }
+   ],
+   "links": [
+    {
+     "to": "p-gleanings",
+     "by": "road"
+    },
+    {
+     "to": "meridian",
+     "by": "road"
+    },
+    {
+     "to": "nivil",
+     "by": "pass"
+    }
+   ]
+  },
+  {
+   "id": "lucern-pass",
+   "name": "Lucern Pass",
+   "realm": "Candora",
+   "layer": "surface",
+   "sketch": [
+    267,
+    362
+   ],
+   "sizeRegions": 3,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "lucern-beacons",
+     "name": "the beacon towers",
+     "settlement": "hamlet"
+    },
+    {
+     "id": "p-lantern-hold",
+     "name": "p-lantern-hold (the Nivil end)",
+     "settlement": "hamlet"
+    }
+   ],
+   "links": [
+    {
+     "to": "cistern",
+     "by": "road"
+    },
+    {
+     "to": "nivil",
+     "by": "pass"
+    },
+    {
+     "to": "p-high-valleys-west",
+     "by": "path"
+    },
+    {
+     "to": "p-high-valleys-north",
+     "by": "path"
+    }
+   ],
+   "notes": "\"Lantern Gap\" and \"Lantern Hold\" on the sketch."
+  },
+  {
+   "id": "p-high-valleys-west",
+   "name": "p-high-valleys-west",
+   "realm": "Candora",
+   "layer": "surface",
+   "sketch": [
+    261,
+    489
+   ],
+   "sizeRegions": 6,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "p-west-valleys",
+     "name": "high valleys and pale-pine forests"
+    }
+   ],
+   "links": [
+    {
+     "to": "lucern-pass",
+     "by": "path"
+    },
+    {
+     "to": "meridian",
+     "by": "pass"
+    },
+    {
+     "to": "frostpeak-forge",
+     "by": "path"
+    }
+   ]
+  },
+  {
+   "id": "p-high-valleys-north",
+   "name": "p-high-valleys-north",
+   "realm": "Candora",
+   "layer": "surface",
+   "sketch": [
+    333,
+    222
+   ],
+   "sizeRegions": 6,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "p-north-valleys",
+     "name": "high valleys and pale-pine forests"
+    }
+   ],
+   "links": [
+    {
+     "to": "lucern-pass",
+     "by": "path"
+    },
+    {
+     "to": "selenfall",
+     "by": "path"
+    },
+    {
+     "to": "p-rimeward-gap",
+     "by": "path"
+    }
+   ]
+  },
+  {
+   "id": "selenfall",
+   "name": "Selenfall",
+   "realm": "Candora",
+   "layer": "surface",
+   "sketch": [
+    420,
+    247
+   ],
+   "sizeRegions": 3,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "selenfall-breach",
+     "name": "the breach"
+    },
+    {
+     "id": "verdigris-crater",
+     "name": "the Verdigris Moon's crater"
+    }
+   ],
+   "links": [
+    {
+     "to": "veilwood",
+     "by": "path"
+    },
+    {
+     "to": "p-snap",
+     "by": "path"
+    },
+    {
+     "to": "p-high-valleys-north",
+     "by": "path"
+    },
+    {
+     "to": "p-rimeward-gap",
+     "by": "path"
+    }
+   ]
+  },
+  {
+   "id": "p-rimeward-gap",
+   "name": "p-rimeward-gap",
+   "realm": "Candora",
+   "layer": "surface",
+   "sketch": [
+    407,
+    170
+   ],
+   "sizeRegions": 2,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "p-rimeward-pass",
+     "name": "the northern pass"
+    }
+   ],
+   "links": [
+    {
+     "to": "selenfall",
+     "by": "path"
+    },
+    {
+     "to": "p-high-valleys-north",
+     "by": "path"
+    },
+    {
+     "to": "nivil",
+     "by": "pass"
+    }
+   ]
+  },
+  {
+   "id": "dunstair",
+   "name": "Dunstair",
+   "realm": "Candora",
+   "layer": "underground",
+   "sketch": [
+    333,
+    367
+   ],
+   "sizeRegions": 3,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "dunstair-line",
+     "name": "the cart-line"
+    }
+   ],
+   "links": [
+    {
+     "to": "p-bellow",
+     "by": "cart-line"
+    },
+    {
+     "to": "p-last-sheaf",
+     "by": "path"
+    },
+    {
+     "to": "frostpeak-forge",
+     "by": "cart-line"
+    },
+    {
+     "to": "p-deepworks",
+     "by": "cart-line"
+    }
+   ]
+  },
+  {
+   "id": "frostpeak-forge",
+   "name": "Frostpeak Forge",
+   "realm": "Candora",
+   "layer": "underground",
+   "sketch": [
+    253,
+    439
+   ],
+   "sizeRegions": 2,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "frostpeak-hall",
+     "name": "the trade hall",
+     "settlement": "town"
+    },
+    {
+     "id": "frostpeak-great-forge",
+     "name": "the great forge"
+    }
+   ],
+   "links": [
+    {
+     "to": "dunstair",
+     "by": "cart-line"
+    },
+    {
+     "to": "p-high-valleys-west",
+     "by": "path"
+    },
+    {
+     "to": "p-deepworks",
+     "by": "cart-line"
+    }
+   ]
+  },
+  {
+   "id": "p-deepworks",
+   "name": "p-deepworks",
+   "realm": "Candora",
+   "layer": "underground",
+   "sketch": [
+    300,
+    300
+   ],
+   "sizeRegions": 10,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "p-deepworks-mines",
+     "name": "frostiron mines and cave networks along the range"
+    }
+   ],
+   "links": [
+    {
+     "to": "dunstair",
+     "by": "cart-line"
+    },
+    {
+     "to": "frostpeak-forge",
+     "by": "cart-line"
+    },
+    {
+     "to": "undermost",
+     "by": "shaft"
+    }
+   ]
+  },
+  {
+   "id": "undermost",
+   "name": "Undermost",
+   "realm": "Undermost",
+   "layer": "underground",
+   "sketch": [
+    467,
+    189
+   ],
+   "sizeRegions": 10,
+   "status": "planned",
+   "parts": [
+    {
+     "id": "undermost-seals",
+     "name": "the seals"
+    },
+    {
+     "id": "undermost-deep",
+     "name": "the oldest peoples' depths"
+    }
+   ],
+   "links": [
+    {
+     "to": "p-deepworks",
+     "by": "shaft"
+    },
+    {
+     "to": "swallow",
+     "by": "shaft"
+    }
+   ],
+   "notes": "Committed content likely: nobody visits on purpose."
+  },
+  {
+   "id": "nivil",
+   "name": "Nivil",
+   "realm": "Nivil",
+   "layer": "surface",
+   "sketch": [
+    206,
+    367
+   ],
+   "sizeRegions": 18,
+   "status": "later",
+   "parts": [
+    {
+     "id": "p-glass-mere",
+     "name": "p-glass-mere"
+    },
+    {
+     "id": "p-frozen-wave",
+     "name": "p-frozen-wave"
+    }
+   ],
+   "links": [
+    {
+     "to": "lucern-pass",
+     "by": "pass"
+    },
+    {
+     "to": "p-rimeward-gap",
+     "by": "pass"
+    },
+    {
+     "to": "p-saltward-gap",
+     "by": "pass"
+    }
+   ]
+  }
+ ]
+}

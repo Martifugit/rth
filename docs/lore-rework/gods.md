@@ -1,0 +1,128 @@
+# Gods and great powers
+
+Gods exist and act in R'th. They are not defined by a domain ("god of war"): each is a character,
+known by what happened to it, what it wants and what it offers. War can follow a god without
+being what the god is "of".
+
+## The god sheet
+
+Every god gets these, briefly. Anything undecided is a placeholder or **sealed**.
+
+| Field | Question |
+| --- | --- |
+| **Story** | What did it do, or what happened to it? |
+| **Wound** | What did it lose or pay, and how does that still shape it? |
+| **Hunger** | What does it need, and what does it do to get it? |
+| **Bargain** | What does it give its followers, and what does it ask in return? |
+| **Sign** | How do you know it is near: a sound, a smell, a colour, a feeling? |
+| **Faces** | How do different peoples see it? (The same being can be several gods to different peoples.) |
+| **Presence** | Does it walk among people, speak only through priests, or is it only rumoured? |
+| **Fear** | What is it afraid of? (In this universe, every god can be taken in a revision.) |
+| **Origin** | Made with the world, back from p-spoil, or ascended from something lesser. Often sealed. |
+
+## The pantheon (decided)
+
+- **A handful of gods** (about 6-10) everyone has heard of, and many **lesser powers** beneath them:
+  local gods, great spirits, old beasts, beings like the ferryman. More can arrive in later
+  updates (ascended, or back from p-spoil).
+- **Their presence is uneven**, and part of each god's character: one walks the world in a body,
+  one speaks only through omens, one hasn't been heard from in centuries. As the revision stirs,
+  quiet gods can start to show themselves again.
+- **Myth-inspired, reimagined.** Gods can grow from myths and stories, but each is reimagined so
+  the game feels its own, while its inspiration stays clear and discoverable to those who know.
+- **No single rivalry runs the world.** Gods have their own lives, enemies and aims; the world
+  is moved by many of them at once, not by one feud.
+
+## The gods
+
+### p-sworn: the god of Cruor's empire
+
+The name is a placeholder until more gods exist, so the names can sound like one family.
+
+The god the Cruorian empire worships. Not a god "of war", but war follows it.
+
+| Field | |
+| --- | --- |
+| **Story** | It is made of the oaths its followers swear in blood. Long ago its first followers betrayed it, so now it takes blood as collateral for every oath. |
+| **Wound** (secret) | It was wounded at the dawn of the world, and the wound never closed. It is still bleeding. This is why the Cruorians collect blood all over their empire: the tithes of blood at every monument are, in truth, feeding their god, keeping it from bleeding out. The faithful are told the blood seals their oaths. Very few know what it is really for. |
+| **Hunger** | Oaths and blood. It starves without new oaths, so the empire must keep swearing in new peoples; and it bleeds without new blood, so the empire must keep collecting. Both make it expand. |
+| **Bargain** | Swear in blood and its strength is yours. Break the oath and the blood is called in. |
+| **Sign** | A taste of iron (blood) in your mouth. |
+| **Faces** | To the empire, a keeper of faith. To the peoples it conquers, a debt collector. *(More faces to come as other peoples are designed.)* |
+| **Presence** | Unseen for now: felt in the taste of iron and in the strength of sworn soldiers, and its priests speak for it. **It has a place in the world and will make an entrance** at some point (not v1). Where and how: open. |
+| **Fear** | A world where nobody swears any more; and, secretly, bleeding out. |
+| **Origin** | Sealed. Constraint: it was wounded in something that happened at the dawn of the world, and **whatever wounded it is still out there**. |
+| **In the game** | Melee's pledges are oaths sworn in blood; Cruor's monuments are where the blood is collected. Religion's verses draw on it. |
+
+### p-betrayers: the first oathbreakers
+
+The name is a placeholder. **A group, not one character:** the followers who broke their oaths
+to p-sworn together. A scene to build towards: the player meets the Faceless (say three of them, in a room), and
+something is off: one of them isn't really there. It is one of the betrayers, embodying a lesser
+being.
+
+**Their mortal followers are called the Faceless**, after their gods' feature (the followers
+themselves have faces).
+
+| Field | |
+| --- | --- |
+| **Story** | Among p-sworn's first followers, the ones who broke their oaths. The betrayal and the wound were one event: they struck the blow, took some of p-sworn's power and ascended. |
+| **Wound** | They have no faces of their own. They gave them up when they ascended, and exist only in borrowed ones. |
+| **Hunger** | To be what they were: separate, whole, with faces of their own. Embodying lesser beings is the closest they come. *(Provisional.)* |
+| **Bargain** | A new life for your old name: a new face and a fresh start where nobody can find you; everyone who knew you forgets you. *(Provisional.)* |
+| **Sign** | Your name, spoken behind you, in the voice of someone you trust. Nobody is there when you turn. |
+| **Faces** | To the empire, the Traitor: the root of every evil, the devil of its faith. To deserters, the conquered and anyone who swore under duress, a liberator. |
+| **Presence** | It walks the world, but never as itself. It wears the faces of trusted people: a friend, a captain, a priest. You meet it without knowing, and may only realise much later. |
+| **Fear** | Being forgotten. *(Provisional.)* |
+| **Origin** | Ascended, through the betrayal. **Ascending destroyed their former bodies** and made them into one: **a single, powerful abomination they all share**. Abroad in the world they appear in borrowed faces; the shared body is their true form. |
+
+### p-scattered: the god that became demigods (inspired by Osiris)
+
+The name is a placeholder.
+
+- **Story:** long ago a god was torn apart. Its pieces didn't die: each became a **demigod** with
+  a life, a character, followers and a place of its own. None of them knows what they were.
+- **The quest line:** the player helps them discover it, piece by piece. In its climax, the player
+  has to **convince them to recombine** into the god they were, to face some threat. *(The threat:
+  open.)* Recombining costs each demigod the life it has lived, so convincing them is the hard part.
+- **Discoverable inspiration:** a dismembered god, someone gathering its pieces, a reassembly.
+- *Open:* who tore it apart and why (sealed), how many pieces, where they are, whether any piece is
+  missing or in p-spoil.
+
+### p-head: the face in the cliff (inspired by Mimir)
+
+The name is a placeholder.
+
+- **The place:** an enormous face in a cliff, a Mount Rushmore of something nobody remembers
+  carving, with a **waterfall** pouring from it.
+- **The bargain:** drink from the falls and you see what it remembers, and leave one memory of
+  your own in the water. Thousands of years of drinkers mean it holds memories from before the
+  revisions: removed places, moved places, forgotten peoples. It is the only mind that does.
+- **A disaster to come:** one day **the falls stop flowing**.
+- **Discoverable inspiration:** a living head, water, and a price paid for what it knows.
+- *Open:* whether it is one of p-scattered's pieces.
+
+### p-constants: older than the gods (inspired by Sandman's Endless)
+
+The name is a placeholder.
+
+- **What they are:** three siblings older than the gods. Each **is** part of how existence works;
+  they are not worshipped and want nothing from mortals.
+- **The revisions never touch them.** A god can be taken; a constant can't. The gods are quietly
+  afraid of them.
+- **They rarely meet.** When they do, something in the world shifts.
+- **The three, each keeping a realm:**
+  - **the dreamer**, who keeps the Dreaming (the dream power: this is it);
+  - **the keeper of the dead**, whose realm the dead go to; the ferryman works for them;
+  - **the keeper of p-spoil**, to whom everything rejected goes.
+- **Discoverable inspiration:** a family of beings who are concepts, each with a realm. Not a
+  retelling: no more siblings are needed.
+
+### The Dreaming
+
+- A landscape built from everyone's dreams, always shifting. The waking world's places appear in
+  it **as people remember them**, not as they are.
+- So **moved places still stand in their old locations there**: old maps are true in the
+  Dreaming. For scholars hunting places that don't exist, it is the best evidence, if they can
+  reach it.
+- The Dreaming skill gathers fragments here, and the dreamer notices who takes what.
