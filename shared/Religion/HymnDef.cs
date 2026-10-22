@@ -4,7 +4,7 @@ using Rth.Shared.Skills;
 namespace Rth.Shared.Religion
 {
     /// <summary>
-    /// A hymn: one of Tithe's prayers (server/data/content/hymns.json), sung for any combat style.
+    /// A hymn: one of the church's prayers (server/data/content/hymns.json), sung for any combat style.
     /// While it's sung it adds its stats and drains devotion every tick. Everything a hymn does is
     /// a stat (deflection, boosts, life steal), so a new hymn needs no code.
     /// </summary>

@@ -16,7 +16,7 @@ namespace Rth.Server.Game
     }
 
     /// <summary>
-    /// Religion: Tithe's hymns (prayers for every style) and the devotion they drain. A hymn's
+    /// Religion: hymns (the church's prayers, for every style) and the devotion they drain. A hymn's
     /// effect is its stats, so combat needs no hymn code; this system decides which hymns are sung,
     /// drains devotion each tick and restores it (altars, draughts, respawning). Cruor's verses
     /// belong here too, when melee exists.
