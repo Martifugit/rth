@@ -25,7 +25,7 @@ namespace Rth.Client.Ui.Modals
     public sealed class WorldMapTab : ModalTab
     {
         public override string Id => "map";
-        public override string Title => "The Basin";
+        public override string Title => "The world";
         public override string Icon => "map";
 
         private static readonly Color Sea = new Color(0.16f, 0.24f, 0.3f);

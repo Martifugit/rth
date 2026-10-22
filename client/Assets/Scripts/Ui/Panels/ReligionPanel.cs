@@ -10,7 +10,7 @@ using UnityEngine.UIElements;
 namespace Rth.Client.Ui.Panels
 {
     /// <summary>
-    /// Religion: devotion at the top, then the faith's two halves. <b>Hymns</b> (Tithe's prayers,
+    /// Religion: devotion at the top, then the faith's two halves. <b>Hymns</b> (the church's prayers,
     /// for every style) as a book of icons, in level order; a sung one glows, a locked one is dimmed
     /// with the level it needs. Click one to sing it or stop, or drag it onto an action bar.
     /// <b>Verses</b> (Cruor's, for melee) below them: read in combat with a melee weapon, over
@@ -59,7 +59,7 @@ namespace Rth.Client.Ui.Panels
             _verses.Clear();
 
             UiKit.Heading(_list, "Hymns");
-            UiKit.Text(_list, "Tithe's prayers, for every style. One overhead at a time.", "muted", "small");
+            UiKit.Text(_list, "The church's prayers, for every style. One overhead at a time.", "muted", "small");
             VisualElement grid = UiKit.El(_list, "slot-grid");
             foreach (HymnDef hymn in _builtFor.OrderBy(Hymns.LevelNeeded))
             {

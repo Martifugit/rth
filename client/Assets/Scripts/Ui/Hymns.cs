@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Rth.Client.Ui
 {
     /// <summary>
-    /// Hymns as the interface knows them (from content): Tithe's prayers, sung from the religion
+    /// Hymns as the interface knows them (from content): the church's prayers, sung from the religion
     /// tab or from an action bar slot ("h:id"), and draining devotion while sung. The server
     /// decides what is sung; these just look things up, toggle and describe.
     /// </summary>

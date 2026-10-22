@@ -32,7 +32,7 @@
       "id": "religion",
       "name": "Religion",
       "icon": "religion",
-      "description": "The faith of Blood: Tithe's hymns for every style, and Cruor's verses for melee. Each level adds 10 devotion.",
+      "description": "The faith of blood: its choirs' hymns for every style, and Cruor's verses for melee. Each level adds 10 devotion.",
       "statsPerLevel": { "maxDevotion": 10 }
     },
     {
@@ -69,7 +69,7 @@
       "id": "dreaming",
       "name": "Dreaming",
       "icon": "dreaming",
-      "description": "Pulling fragments out of the memories hung in the Veilwood."
+      "description": "Pulling fragments out of the Dreaming, where every place stands as people remember it."
     },
     {
       "id": "smithing",
