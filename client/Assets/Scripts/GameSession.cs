@@ -383,13 +383,7 @@ namespace Rth.Client
                         foreach (KeyValuePair<string, int> s in stats.Stats) Stats[s.Key] = s.Value;
                         break;
                     case SkillsMessage skills:
-                        // XP drops for what went up (not the first message, which is the whole save).
-                        bool first = SkillXp.Count == 0;
-                        foreach (KeyValuePair<string, long> s in skills.Xp)
-                        {
-                            long before = SkillXp.TryGetValue(s.Key, out long had) ? had : 0;
-                            if (!first && s.Value > before) world.ShowXpDrop(SkillName(s.Key), s.Value - before);
-                        }
+                        // The XP drops panel (Ui/Panels/XpDropsPanel) shows what went up.
                         SkillXp.Clear();
                         foreach (KeyValuePair<string, long> s in skills.Xp) SkillXp[s.Key] = s.Value;
                         break;

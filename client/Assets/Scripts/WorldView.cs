@@ -47,7 +47,6 @@ namespace Rth.Client
         private float _tickSeconds = 0.6f;
         private GUIStyle _labelStyle;
         private GUIStyle _splatStyle;
-        private GUIStyle _xpStyle;
         private Texture2D _white;
 
         /// <summary>The entity under the pointer, or 0 (set by the session each frame): its name shows.</summary>
@@ -77,23 +76,6 @@ namespace Rth.Client
             _markers[entityId] = (label, Time.time, Mathf.Max(0.1f, seconds));
             EntityView view = Find(entityId);
             if (view != null) BloodMark.Attach(view, seconds);
-        }
-
-        private const float XpDropSeconds = 1.6f;
-        private readonly List<(string Text, float Time)> _xpDrops = new List<(string, float)>();
-
-        /// <summary>A little "+12 Melee" rising beside the local player; drops for the same skill close together add up.</summary>
-        public void ShowXpDrop(string skill, long amount)
-        {
-            for (int i = _xpDrops.Count - 1; i >= 0; i--)
-            {
-                (string text, float time) = _xpDrops[i];
-                if (Time.time - time > 0.3f || !text.EndsWith(" " + skill)) continue;
-                long had = long.TryParse(text.Substring(1, text.IndexOf(' ') - 1), out long n) ? n : 0;
-                _xpDrops[i] = ("+" + (had + amount) + " " + skill, time);
-                return;
-            }
-            _xpDrops.Add(("+" + amount + " " + skill, Time.time));
         }
 
         /// <summary>Shows what someone said above their head for a few seconds.</summary>
@@ -307,7 +289,6 @@ namespace Rth.Client
             _hitsplats.Clear();
             _overhead.Clear();
             _later.Clear();
-            _xpDrops.Clear();
             _markers.Clear();
             LocalId = -1;
             TargetId = 0;
@@ -404,25 +385,6 @@ namespace Rth.Client
                 GUI.Label(centre, m.Value.Label, _splatStyle);
             }
 
-            // XP drops rise from beside the local player's head.
-            _xpDrops.RemoveAll(d => Time.time - d.Time > XpDropSeconds);
-            EntityView local = Local;
-            if (local != null && _xpDrops.Count > 0)
-            {
-                Vector3 head = cam.WorldToScreenPoint(local.transform.position + Vector3.up * (local.Height + 0.2f));
-                if (head.z > 0f)
-                    for (int i = 0; i < _xpDrops.Count; i++)
-                    {
-                        float age = (Time.time - _xpDrops[i].Time) / XpDropSeconds;
-                        float alpha = age < 0.7f ? 1f : 1f - (age - 0.7f) / 0.3f;
-                        var rect = new Rect(head.x + 34f, Screen.height - head.y - age * 50f - (_xpDrops.Count - 1 - i) * 16f, 160f, 18f);
-                        Ink(_xpStyle, new Color(0f, 0f, 0f, 0.8f * alpha));
-                        GUI.Label(new Rect(rect.x + 1f, rect.y + 1f, rect.width, rect.height), _xpDrops[i].Text, _xpStyle);
-                        Ink(_xpStyle, new Color(1f, 0.85f, 0.35f, alpha));
-                        GUI.Label(rect, _xpDrops[i].Text, _xpStyle);
-                    }
-            }
-
             // Hitsplats: a coloured badge that pops in on the body, holds, then lifts and fades.
             foreach (Hitsplat h in _hitsplats)
             {
@@ -455,7 +417,6 @@ namespace Rth.Client
             if (_labelStyle != null) return;
             _labelStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold };
             _splatStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold, fontSize = 18 };
-            _xpStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleLeft, fontStyle = FontStyle.Bold, fontSize = 13 };
             _white = Texture2D.whiteTexture;
         }
 
