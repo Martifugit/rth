@@ -2,7 +2,8 @@
 
 Working notes on combat resources and the rules of a fight. All names and numbers are
 provisional. Sections marked **Proposal** are suggestions that the designer has not yet
-confirmed. Every skill (what it does, how it trains, what it feeds) is in `docs/skills.md`.
+confirmed. Every skill (what it does, how it trains, what it feeds) is in `docs/skills.md`; the
+world and its powers are in `docs/lore.md` (canon).
 
 ## Design principles
 
@@ -20,9 +21,9 @@ confirmed. Every skill (what it does, how it trains, what it feeds) is in `docs/
 | **Blood** | Health pool | Max from Defence. Restored by food; Medicine has one mild tick-heal. |
 | **Phlegm** | Adrenaline (RS3-style) | Universal across all styles. Builder abilities build it, spenders and ultimates spend it. Nothing else uses it. |
 | **Bile** | Occultism's live axis, from −100 to +100 | Every player has it. Occult abilities push it either way. Some abilities also need a bile level, on top of phlegm. Holding a position (e.g. +30) gives a passive bonus. |
-| **Verses** | Melee's power engine (Religion, Cruor) | **Decided (2026-10-21):** to melee what bile is to occultism. Read on the global cooldown for blood and scriptures; they shape the fight rather than deal damage. See `skills.md` 4.2. Built in Milestone 10. |
+| **Verses** | Melee's power engine (Religion, p-sworn's church) | **Decided (2026-10-21):** to melee what bile is to occultism. Read on the global cooldown for blood and scriptures; they shape the fight rather than deal damage. See `skills.md` 4.2. Built in Milestone 10. |
 | **Calibration** | Ranged's live meter, 0–100 | Builds while you keep shooting one target without moving. |
-| **Devotion** | Hymns (Religion, Tithe), any style | **Decided:** replaces breath. Hymns are plain prayers (protection, boosts, utility) that drain it. |
+| **Devotion** | Hymns (Religion, p-sworn's church), any style | **Decided:** replaces breath. Hymns are plain prayers (protection, boosts, utility) that drain it. |
 
 **Removed (2026-10-21):** **breath** (the deflection resource, and the skill and faction behind
 it). Deflection and the other focuses become Religion's hymns, on devotion.
@@ -67,8 +68,8 @@ live in `server/data/content/` and hot-reload, so they're meant to be tuned by p
     and the main bar from `bars`.
 - **Hymns (Milestone 9):** deflection is three overhead hymns (Bulwark, Glare, Salt Ward), each
   halving one style's damage while sung; breath is gone.
-- **Death:** the Assayer resets bile to 0 on respawn. That is the cost of dying in the
-  prototype; there is nothing to lose until items exist.
+- **Death (today):** the Assayer resets bile to 0 on respawn, and items are kept. That is the
+  prototype's stand-in; death v1 replaces it (see Death, below).
 - **Abilities:** Gall Spark (+10), Black Draught (−10, heals 25% of damage), Still the Humours
   (25 towards zero), Bitter Salt (needs +20), Choleric Flare (spender, needs +30), Melancholy
   Shroud (spender, needs −30, 30% ward), Vitriol Rain (ultimate, needs +60), Black Sun
@@ -94,9 +95,11 @@ and Religion's hymns are in `skills.md`, section 4.)
 **Decided (2026-10-21):** four combat skills. **Melee** (attack and strength in one),
 **Ranged**, **Occultism**, and **Defence**, which any style trains (see `skills.md`, 3.2).
 
-- **Melee: Blood / the Sanguine Synod.** Plate, close quarters. Its power comes from Cruor's
-  verses (Religion), read for blood and scriptures; most of them reward fighting low on blood.
-- **Ranged: the Rationalists (phlegm).** Its meter is calibration. Bolts come from **Artifice**,
+- **Melee: Blood / Cruor's empire and p-sworn's church** (still the Sanguine Synod in the game).
+  Plate, close quarters. Its power comes from the church's verses (Religion), read for blood and
+  scriptures; most of them reward fighting low on blood.
+- **Ranged: the spine's surface people (phlegm)** (still the Rationalists in the game). Its meter
+  is calibration. Bolts come from **Artifice**,
   with moon-touched materials at higher tiers.
 - **Occultism: the occult houses (bile).** Moves the bile axis. Abilities cost phlegm and bile,
   not items. On top of the abilities sit **spellbooks** (below), whose spells do burn reagents.
@@ -132,8 +135,15 @@ rites.
 
 ## Death
 
-Players meet **the Assayer** each time they die (see `docs/lore.md`). It replaces the RS grave
-screen and comments on how the player's humour balance is changing.
+**The design** is death through **the ferryman** in the realm of the dead (`docs/lore.md`,
+section III): he holds everything you died with until you pay, in coin scaled by the gear's value
+or with an obol you carried; with nothing to pay, he keeps it about a day; and the long way back
+gets it free. The details are in `docs/lore-rework/death.md`, and the build is workstream D
+(D1 server, D2 region and client, D3 the long way back) in `docs/plan.md`.
+
+**In the game today** players still meet **the Assayer**, the prototype's stand-in: it comments
+on the player's humour balance and respawns them with bile at 0, and nothing is lost. D1
+replaces it.
 
 ## Open questions
 
