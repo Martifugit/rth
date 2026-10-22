@@ -24,9 +24,12 @@ namespace Rth.Client.Ui.Modals
 
     /// <summary>
     /// Each skill's guide. On the left, every skill as an icon to pick, with the chosen skill's
-    /// name and level above. On the right, what it unlocks level by level, filterable by kind
-    /// and sortable. Unlocks are gathered from the content itself (abilities, equipment and
-    /// recipes that need the skill), so the guide is always as complete as the game.
+    /// name and level above. On the right, what it unlocks as one list in level order: each row
+    /// an icon, the level, the name and a small badge for its kind. A line marks your level, so
+    /// what you have and what comes next read at a glance. Chips above the list narrow it to one
+    /// kind (only the kinds this skill has, with counts; click again for all). Unlocks are
+    /// gathered from the content itself (abilities, equipment, tools, recipes and gathering that
+    /// need the skill), so the guide is always as complete as the game.
     /// </summary>
     public sealed class SkillGuideTab : ModalTab
     {
@@ -36,7 +39,6 @@ namespace Rth.Client.Ui.Modals
 
         private enum Kind
         {
-            All,
             Abilities,
             Equipment,
             Recipes,
@@ -47,6 +49,8 @@ namespace Rth.Client.Ui.Modals
         {
             public int Level;
             public Kind Kind;
+            /// <summary>The badge's word ("Ability", "Tool"...) and its style modifier.</summary>
+            public string Badge;
             public Texture2D Icon;
             public Color Tint;
             public string Text;
@@ -57,13 +61,11 @@ namespace Rth.Client.Ui.Modals
         private Label _skillLevel;
         private VisualElement _picker;
         private Label _summary;
+        private VisualElement _chips;
         private ScrollView _list;
         private readonly Dictionary<string, VisualElement> _pickerSlots = new Dictionary<string, VisualElement>();
-        private readonly List<(Kind Kind, Label Button)> _filterButtons = new List<(Kind, Label)>();
-        private Label _sortButton;
         private string _skill;
-        private Kind _filter = Kind.All;
-        private bool _descending;
+        private Kind? _filter;
         private int _builtFor = -1;
 
         protected override void Build(VisualElement root)
@@ -93,27 +95,9 @@ namespace Rth.Client.Ui.Modals
 
             VisualElement right = UiKit.El(columns);
             right.style.flexGrow = 1;
-            VisualElement bar = UiKit.El(right, "row");
-            bar.style.marginBottom = 6f;
-            foreach (Kind k in new[] { Kind.All, Kind.Abilities, Kind.Equipment, Kind.Recipes, Kind.Gathering })
-            {
-                Kind kind = k;
-                Label button = UiKit.Text(bar, k.ToString().ToUpperInvariant(), "filter-tab");
-                button.RegisterCallback<ClickEvent>(_ =>
-                {
-                    _filter = kind;
-                    Redraw();
-                });
-                _filterButtons.Add((k, button));
-            }
-            UiKit.El(bar, "spacer");
-            _sortButton = UiKit.Button(bar, "", () =>
-            {
-                _descending = !_descending;
-                Redraw();
-            });
-            _summary = UiKit.Text(right, "", "muted", "small");
-            _summary.style.marginBottom = 4f;
+            _summary = UiKit.Text(right, "", "muted", "small", "prose");
+            _summary.style.marginBottom = 6f;
+            _chips = UiKit.El(right, "guide-chips");
             VisualElement well = UiKit.El(right, "well");
             well.style.flexGrow = 1;
             // The rows run edge to edge inside the frame.
@@ -145,6 +129,7 @@ namespace Rth.Client.Ui.Modals
                 UiKit.SetIcon(icon, IconLibrary.Get(skill.Icon), UiKit.IconTint);
                 slot.RegisterCallback<ClickEvent>(_ =>
                 {
+                    if (_skill != id) _filter = null;
                     _skill = id;
                     Redraw();
                 });
@@ -158,8 +143,6 @@ namespace Rth.Client.Ui.Modals
             SkillDef skill = Session.Content?.Skills.FirstOrDefault(s => s.Id == _skill);
             if (skill == null) return;
             foreach (KeyValuePair<string, VisualElement> slot in _pickerSlots) slot.Value.EnableInClassList("slot--on", slot.Key == _skill);
-            foreach ((Kind k, Label button) in _filterButtons) button.EnableInClassList("filter-tab--on", k == _filter);
-            _sortButton.text = _descending ? "Level: high - low" : "Level: low - high";
 
             XpCurve curve = Session.Content.XpCurve;
             Session.SkillXp.TryGetValue(skill.Id, out long xp);
@@ -170,36 +153,70 @@ namespace Rth.Client.Ui.Modals
             _summary.text = xp.ToString("N0") + " XP" + (level < cap ? ",  " + (curve.XpForLevel(level + 1, cap) - xp).ToString("N0") + " to level " + (level + 1) : "") +
                             (string.IsNullOrEmpty(skill.Description) ? "" : ".  " + skill.Description);
 
-            List<Unlock> unlocks = UnlocksFor(skill.Id).Where(u => _filter == Kind.All || u.Kind == _filter).ToList();
-            unlocks = (_descending ? unlocks.OrderByDescending(u => u.Level) : unlocks.OrderBy(u => u.Level)).ThenBy(u => u.Text).ToList();
+            List<Unlock> all = UnlocksFor(skill.Id);
+            DrawChips(all);
+            List<Unlock> unlocks = all.Where(u => _filter == null || u.Kind == _filter).OrderBy(u => u.Level).ThenBy(u => u.Text).ToList();
             _list.Clear();
-            if (unlocks.Count == 0) UiKit.Text(_list, "Nothing here needs this skill yet.", "muted").style.marginLeft = 6f;
+            if (unlocks.Count == 0) UiKit.Text(_list, "Nothing needs this skill yet.", "muted").style.marginLeft = 6f;
+            bool marked = false;
             for (int i = 0; i < unlocks.Count; i++)
             {
                 Unlock u = unlocks[i];
                 bool reached = level >= u.Level;
-                VisualElement row = UiKit.El(_list, "row");
-                row.style.paddingTop = row.style.paddingBottom = 3f;
-                row.style.paddingLeft = 6f;
-                row.style.backgroundColor = new Color(1f, 0.95f, 0.85f, i % 2 == 0 ? 0.011f : 0.004f); // barely-there stripes (blended in linear space)
-                VisualElement slot = UiKit.El(row, "slot");
-                slot.style.width = slot.style.height = 34f;
+                // A line at your level, between what you have and what comes next.
+                if (!reached && !marked)
+                {
+                    marked = true;
+                    if (i > 0) YourLevel(level);
+                }
+                VisualElement row = UiKit.El(_list, "row", "guide-unlock");
+                row.EnableInClassList("guide-unlock--locked", !reached);
+                VisualElement slot = UiKit.El(row, "slot", "guide-unlock__slot");
                 VisualElement icon = UiKit.El(slot, "slot__icon");
-                icon.style.width = icon.style.height = 26f;
+                icon.style.width = icon.style.height = 24f;
                 UiKit.SetIcon(icon, u.Icon, u.Tint);
-                icon.style.opacity = reached ? 1f : 0.4f;
-                Label lvl = UiKit.Text(row, u.Level.ToString(), "bold");
-                lvl.style.width = 34f;
-                lvl.style.unityTextAlign = TextAnchor.MiddleCenter;
-                lvl.style.color = reached ? UiKit.Good : UiKit.Muted;
-                Label text = UiKit.Text(row, u.Text);
+                icon.pickingMode = PickingMode.Ignore;
+                UiKit.Text(row, u.Level.ToString(), "guide-unlock__level");
+                Label text = UiKit.Text(row, u.Text, "guide-unlock__name");
                 text.style.flexGrow = 1;
-                text.style.color = reached ? UiKit.TextColour : UiKit.Muted;
-                Label kind = UiKit.Text(row, u.Kind.ToString().TrimEnd('s'), "muted", "small");
-                kind.style.marginRight = 8f;
+                text.style.flexShrink = 1;
+                UiKit.Text(row, u.Badge, "guide-badge", "guide-badge--" + u.Kind.ToString().ToLowerInvariant());
                 string tip = u.Tooltip;
                 if (tip != null) UiKit.Tooltip(row, () => tip);
             }
+        }
+
+        /// <summary>The kinds this skill unlocks, as chips with counts; none when there is only one kind.</summary>
+        private void DrawChips(List<Unlock> all)
+        {
+            _chips.Clear();
+            List<IGrouping<Kind, Unlock>> kinds = all.GroupBy(u => u.Kind).OrderBy(g => g.Key).ToList();
+            if (_filter != null && kinds.All(g => g.Key != _filter)) _filter = null;
+            _chips.style.display = kinds.Count > 1 ? DisplayStyle.Flex : DisplayStyle.None;
+            if (kinds.Count <= 1) return;
+            Chip("All", all.Count, null);
+            foreach (IGrouping<Kind, Unlock> g in kinds) Chip(g.Key.ToString(), g.Count(), g.Key);
+        }
+
+        private void Chip(string text, int count, Kind? kind)
+        {
+            VisualElement chip = UiKit.El(_chips, "guide-chip");
+            chip.EnableInClassList("guide-chip--on", _filter == kind);
+            UiKit.Text(chip, text, "guide-chip__text").pickingMode = PickingMode.Ignore;
+            UiKit.Text(chip, count.ToString(), "guide-chip__count").pickingMode = PickingMode.Ignore;
+            chip.RegisterCallback<ClickEvent>(_ =>
+            {
+                _filter = _filter == kind ? null : kind;
+                Redraw();
+            });
+        }
+
+        private void YourLevel(int level)
+        {
+            VisualElement line = UiKit.El(_list, "guide-yours");
+            UiKit.El(line, "guide-yours__rule");
+            UiKit.Text(line, "Your level: " + level, "guide-yours__text");
+            UiKit.El(line, "guide-yours__rule");
         }
 
         private List<Unlock> UnlocksFor(string skill)
@@ -211,8 +228,8 @@ namespace Rth.Client.Ui.Modals
                     if (r.Skill == skill)
                         unlocks.Add(new Unlock
                         {
-                            Level = r.Level, Kind = Kind.Abilities, Icon = IconLibrary.ForAbility(a), Tint = IconLibrary.AbilityTint(a),
-                            Text = a.Name + "  (" + a.Type.ToString().ToLowerInvariant() + ")", Tooltip = GameText.Describe(a, Session.TickSeconds, null, Session.ItemName),
+                            Level = r.Level, Kind = Kind.Abilities, Badge = a.Type.ToString(), Icon = IconLibrary.ForAbility(a), Tint = IconLibrary.AbilityTint(a),
+                            Text = a.Name, Tooltip = GameText.Describe(a, Session.TickSeconds, null, Session.ItemName),
                         });
             foreach (ItemDef item in content.Items)
                 if (item.Equipment != null)
@@ -220,7 +237,7 @@ namespace Rth.Client.Ui.Modals
                         if (r.Skill == skill)
                             unlocks.Add(new Unlock
                             {
-                                Level = r.Level, Kind = Kind.Equipment, Icon = IconLibrary.ForItem(item), Tint = IconLibrary.ItemTint(item),
+                                Level = r.Level, Kind = Kind.Equipment, Badge = "Equipment", Icon = IconLibrary.ForItem(item), Tint = IconLibrary.ItemTint(item),
                                 Text = item.Name, Tooltip = GameText.Describe(item, 1),
                             });
             foreach (ItemDef item in content.Items)
@@ -229,14 +246,14 @@ namespace Rth.Client.Ui.Modals
                         if (r.Skill == skill)
                             unlocks.Add(new Unlock
                             {
-                                Level = r.Level, Kind = Kind.Equipment, Icon = IconLibrary.ForItem(item), Tint = IconLibrary.ItemTint(item),
-                                Text = item.Name + "  (tool)", Tooltip = GameText.Describe(item, 1),
+                                Level = r.Level, Kind = Kind.Equipment, Badge = "Tool", Icon = IconLibrary.ForItem(item), Tint = IconLibrary.ItemTint(item),
+                                Text = item.Name, Tooltip = GameText.Describe(item, 1),
                             });
             foreach (Rth.Shared.World.ObjectDef obj in content.Objects)
                 if (obj.Node != null && obj.Node.Skill == skill)
                     unlocks.Add(new Unlock
                     {
-                        Level = obj.Node.Level, Kind = Kind.Gathering, Icon = IconLibrary.Get(content.Skills.FirstOrDefault(s => s.Id == skill)?.Icon ?? skill), Tint = UiKit.IconTint,
+                        Level = obj.Node.Level, Kind = Kind.Gathering, Badge = "Gathering", Icon = IconLibrary.Get(content.Skills.FirstOrDefault(s => s.Id == skill)?.Icon ?? skill), Tint = UiKit.IconTint,
                         Text = Capitalise(obj.Node.Verb) + " " + obj.Name.ToLowerInvariant(),
                         Tooltip = UiKit.Title(obj.Name) + (obj.Node.Tool != null ? "\nNeeds " + (obj.Node.ToolTier > 1 ? "a tier-" + obj.Node.ToolTier + " " : "a ") + obj.Node.Tool + "." : "")
                             + "\n" + UiKit.Colour(obj.Node.Xp.ToString("0.#") + " XP each", UiKit.Value),
@@ -250,6 +267,7 @@ namespace Rth.Client.Ui.Modals
                     {
                         Level = recipe.Level,
                         Kind = Kind.Recipes,
+                        Badge = "Recipe",
                         Icon = input != null ? IconLibrary.ForItem(input) : IconLibrary.Get("pouch"),
                         Tint = input != null ? IconLibrary.ItemTint(input) : UiKit.IconTint,
                         Text = Capitalise(recipe.Verb) + " " + recipe.Name,

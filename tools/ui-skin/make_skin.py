@@ -3,6 +3,7 @@
 Everything is drawn at 4x and scaled down for clean edges. Slice sizes used by the stylesheet are
 noted per texture; change both together.
 """
+import math
 import os
 from PIL import Image, ImageDraw
 
@@ -17,13 +18,11 @@ def rounded(draw, box, r, fill):
     draw.rounded_rectangle(box, radius=r, fill=fill)
 
 def vgradient(w, h, top, bottom):
-    img = Image.new("RGBA", (w, h))
-    px = img.load()
+    column = Image.new("RGBA", (1, h))
+    px = column.load()
     for y in range(h):
-        c = lerp(top, bottom, y / max(1, h - 1))
-        for x in range(w):
-            px[x, y] = c
-    return img
+        px[0, y] = lerp(top, bottom, y / max(1, h - 1))
+    return column.resize((w, h), Image.NEAREST)
 
 def frame(name, size, radius, rim_top, rim_bottom, inner_top, inner_bottom, ornaments, outline=(5, 4, 3, 255)):
     """A rounded frame: dark outline, bronze rim (lighter at the top), dark line, gradient body."""
@@ -122,6 +121,164 @@ def divider(name):
     d.polygon([(cx, mid - 2 * SS), (cx + 2 * SS, mid), (cx, mid + 2 * SS), (cx - 2 * SS, mid)], fill=(40, 32, 22, 255))
     save(img.resize((256, 9), Image.LANCZOS), name)
 
+# ---------------------------------------------------------------- minimap
+# The minimap is a round map in a bronze bezel. Its geometry is in panel pixels and must match
+# MinimapPanel.cs (Size, Centre, MapRadius, OrbRing, OrbAngles, MedalRing, MedalSize...).
+# Angles run clockwise from the top. The bezel texture covers the whole panel at MM_TEX pixels.
+MM_SIZE = 240
+MM_TEX = 512
+MM_C = 120.0
+MM_MAP_R = 88.0          # the map is clipped to this circle (the ring covers its edge)
+MM_RING_IN = 86.5
+MM_RING_OUT = 100.5
+MM_ORB_RING = 105.0      # orb centres
+MM_ORB_ANGLES = (240, 216, 192, 168, 144, 120)   # run, map, journal, guide, settings, menu
+MM_CRADLE = (108, 252, 92.0, 118.0)              # the band the orbs sit on: angles, radii
+MM_MEDAL_RING = 97.0     # compass and clock medallion centres
+MM_MEDAL_R = 23.0
+MM_COMPASS_ANGLE = 315
+MM_CLOCK_ANGLE = 45
+
+RIM_TOP = (190, 156, 100, 255)
+RIM_BOTTOM = (70, 52, 28, 255)
+OUTLINE = (5, 4, 3, 255)
+GOLD = (226, 192, 120, 255)
+
+def dgradient(n, lit, shade):
+    """A diagonal gradient, lit from the top left like the rest of the skin's metal."""
+    small = Image.new("RGBA", (64, 64))
+    px = small.load()
+    for y in range(64):
+        for x in range(64):
+            px[x, y] = lerp(lit, shade, (x * 0.6 + y) / (63 * 1.6))
+    return small.resize((n, n), Image.BILINEAR)
+
+def darker(c, f):
+    return tuple(int(v * f) for v in c[:3]) + (c[3],)
+
+def polar(angle, r, k=1.0):
+    a = math.radians(angle)
+    return ((MM_C + r * math.sin(a)) * k, (MM_C - r * math.cos(a)) * k)
+
+def disc_mask(n, centre, r):
+    m = Image.new("L", (n, n), 0)
+    ImageDraw.Draw(m).ellipse((centre[0] - r, centre[1] - r, centre[0] + r, centre[1] + r), fill=255)
+    return m
+
+def annulus_mask(n, centre, r0, r1):
+    m = disc_mask(n, centre, r1)
+    ImageDraw.Draw(m).ellipse((centre[0] - r0, centre[1] - r0, centre[0] + r0, centre[1] + r0), fill=0)
+    return m
+
+def band_mask(n, k, a0, a1, r0, r1):
+    """An arc band with round ends, in panel units scaled by k."""
+    m = Image.new("L", (n, n), 0)
+    d = ImageDraw.Draw(m)
+    steps = 96
+    outer = [polar(a0 + (a1 - a0) * i / steps, r1, k) for i in range(steps + 1)]
+    inner = [polar(a1 - (a1 - a0) * i / steps, r0, k) for i in range(steps + 1)]
+    d.polygon(outer + inner, fill=255)
+    cap, mid = (r1 - r0) / 2 * k, (r0 + r1) / 2
+    for a in (a0, a1):
+        cx, cy = polar(a, mid, k)
+        d.ellipse((cx - cap, cy - cap, cx + cap, cy + cap), fill=255)
+    return m
+
+def fill(img, colour_or_image, mask):
+    src = colour_or_image if isinstance(colour_or_image, Image.Image) else Image.new("RGBA", img.size, colour_or_image)
+    img.paste(src, (0, 0), mask)
+
+def radial_alpha(n, centre, r, fn):
+    """A mask whose value is fn(distance / r) (0..1 in, 0..255 out) around a centre."""
+    size = max(1, int(2 * r))
+    g = Image.radial_gradient("L").resize((size, size), Image.BILINEAR)
+    g = g.point(lambda v: int(max(0, min(255, fn(v / 181.0)))))
+    m = Image.new("L", (n, n), 0)
+    m.paste(g, (int(centre[0] - r), int(centre[1] - r)))
+    return m
+
+def diamond(d, cx, cy, r, colour):
+    d.polygon([(cx, cy - r), (cx + r, cy), (cx, cy + r), (cx - r, cy)], fill=colour)
+
+def medallion(img, k, centre):
+    """A round bronze mount with a dark face (the compass and the clock sit in these)."""
+    n = img.size[0]
+    r = MM_MEDAL_R * k
+    fill(img, OUTLINE, disc_mask(n, centre, r + 1.2 * k))
+    fill(img, dgradient(n, RIM_TOP, RIM_BOTTOM), disc_mask(n, centre, r))
+    fill(img, (10, 9, 7, 255), disc_mask(n, centre, r - 3.2 * k))
+    fill(img, vgradient(n, n, (36, 31, 25, 255), (12, 11, 9, 255)), disc_mask(n, centre, r - 4.0 * k))
+    fill(img, (226, 192, 120, 110), annulus_mask(n, centre, r - 5.6 * k, r - 5.0 * k))
+
+def minimap_bezel(name):
+    n = MM_TEX * SS
+    k = n / MM_SIZE
+    c = (MM_C * k, MM_C * k)
+    img = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+
+    # A shadow inside the ring, so the map sinks into the frame.
+    def vignette(t):
+        if t > 1.0:
+            return 0
+        return 190 * max(0.0, (t - 0.55) / 0.45) ** 2
+    fill(img, (0, 0, 0, 255), radial_alpha(n, c, MM_RING_IN * k + k, vignette))
+
+    # The cradle: a band below the map that the round buttons sit on.
+    a0, a1, r0, r1 = MM_CRADLE
+    fill(img, OUTLINE, band_mask(n, k, a0, a1, r0 - 1.2, r1 + 1.2))
+    fill(img, dgradient(n, darker(RIM_TOP, 0.85), darker(RIM_BOTTOM, 0.85)), band_mask(n, k, a0, a1, r0, r1))
+    fill(img, vgradient(n, n, (30, 27, 23, 255), (14, 12, 10, 255)), band_mask(n, k, a0, a1, r0 + 1.6, r1 - 1.6))
+    # Gold studs between the buttons.
+    for i in range(len(MM_ORB_ANGLES) - 1):
+        x, y = polar((MM_ORB_ANGLES[i] + MM_ORB_ANGLES[i + 1]) / 2, r1 - 4.5, k)
+        diamond(d, x, y, 2.6 * k, OUTLINE)
+        diamond(d, x, y, 1.8 * k, GOLD)
+
+    # The ring: dark outline, a bronze band lit from above, a fine groove, gold studs.
+    # The inner half is a step down (darker), so the ring reads as a bevel.
+    fill(img, OUTLINE, annulus_mask(n, c, MM_RING_IN * k - 1.2 * k, MM_RING_OUT * k + 1.2 * k))
+    mid = (MM_RING_IN + MM_RING_OUT) / 2
+    fill(img, dgradient(n, RIM_TOP, RIM_BOTTOM), annulus_mask(n, c, mid * k, MM_RING_OUT * k))
+    fill(img, dgradient(n, darker(RIM_TOP, 0.62), darker(RIM_BOTTOM, 0.62)), annulus_mask(n, c, MM_RING_IN * k, mid * k))
+    fill(img, (20, 15, 9, 230), annulus_mask(n, c, (mid - 0.5) * k, (mid + 0.4) * k))
+    fill(img, (255, 236, 190, 60), annulus_mask(n, c, (MM_RING_OUT - 1.3) * k, (MM_RING_OUT - 0.6) * k))
+    fill(img, (226, 192, 120, 90), annulus_mask(n, c, (MM_RING_IN + 0.6) * k, (MM_RING_IN + 1.2) * k))
+    for angle in (90, 270):
+        x, y = polar(angle, mid, k)
+        diamond(d, x, y, 4.2 * k, OUTLINE)
+        diamond(d, x, y, 3.2 * k, GOLD)
+        diamond(d, x, y, 1.2 * k, (60, 44, 22, 255))
+    # A crest at the top, flanked by two rivets.
+    for angle in (-14, 14):
+        x, y = polar(angle, mid, k)
+        fill(img, OUTLINE, disc_mask(n, (x, y), 2.2 * k))
+        fill(img, dgradient(n, (255, 226, 160, 255), (150, 112, 52, 255)), disc_mask(n, (x, y), 1.5 * k))
+    x, y = polar(0, mid, k)
+    diamond(d, x, y, 7.0 * k, OUTLINE)
+    diamond(d, x, y, 5.8 * k, GOLD)
+    diamond(d, x, y, 3.4 * k, (120, 88, 40, 255))
+    diamond(d, x, y, 1.6 * k, (255, 230, 170, 255))
+
+    medallion(img, k, polar(MM_COMPASS_ANGLE, MM_MEDAL_RING, k))
+    medallion(img, k, polar(MM_CLOCK_ANGLE, MM_MEDAL_RING, k))
+    save(img.resize((MM_TEX, MM_TEX), Image.LANCZOS), name)
+
+def orb(name, face_top, face_bottom, rim_top, rim_bottom, size=64):
+    """A round button for the minimap's cradle: bronze rim, domed dark face, a soft highlight."""
+    n = size * SS
+    k = n / 30.0  # drawn for a 30 px button
+    c = (n / 2, n / 2)
+    img = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    fill(img, OUTLINE, disc_mask(n, c, 15.0 * k - 1))
+    fill(img, vgradient(n, n, rim_top, rim_bottom), disc_mask(n, c, 14.0 * k))
+    fill(img, (8, 7, 5, 255), disc_mask(n, c, 12.0 * k))
+    fill(img, vgradient(n, n, face_top, face_bottom), disc_mask(n, c, 11.2 * k))
+    hl = Image.new("L", (n, n), 0)
+    ImageDraw.Draw(hl).ellipse((c[0] - 7 * k, c[1] - 10 * k, c[0] + 7 * k, c[1] - 3 * k), fill=34)
+    fill(img, (255, 240, 210, 255), hl)
+    save(img.resize((size, size), Image.LANCZOS), name)
+
 def save(img, name):
     os.makedirs(OUT, exist_ok=True)
     img.save(os.path.join(OUT, name + ".png"))
@@ -143,4 +300,9 @@ if __name__ == "__main__":
     title("title")
     tab_active("tab-active")
     divider("divider")
+    # The minimap: its bezel (the whole panel, MM_SIZE px shown) and its round buttons (30 px shown).
+    minimap_bezel("minimap-bezel")
+    orb("orb", (52, 45, 36, 255), (18, 16, 13, 255), (190, 156, 98, 255), (92, 72, 42, 255))
+    orb("orb-hover", (76, 64, 48, 255), (26, 22, 17, 255), (240, 214, 150, 255), (130, 102, 60, 255))
+    orb("orb-on", (60, 104, 44, 255), (18, 36, 14, 255), (214, 236, 160, 255), (92, 120, 54, 255))
     print("skin written to", os.path.normpath(OUT))
