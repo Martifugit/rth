@@ -21,7 +21,7 @@ import rth_art as A  # noqa: E402
 
 EXPORT = True
 STONE, IRON, GLOW, GRIP, ORNAMENT = range(5)
-COLOURS = ["Slate", "Blackiron", "Lye", "Umber", "Bronze"]
+COLOURS = ["Slate", "Blackiron", "Ember", "Umber", "Bronze"]
 
 HEAD_AT = 1.05                   # along the haft, the middle of the head (and of its split)
 HALF_LEN, HALF_HEIGHT, HALF_THICK = 0.12, 0.26, 0.11
@@ -87,17 +87,28 @@ def head_half(bm, which):
 
 
 def head_marks(bm, stone):
-    """Glowing cracks on the broad faces, cast onto the stone only."""
+    """Fire leaking from the split: on each broad face, cracks start at the glowing seam and
+    branch out into the open stone between and beside the clasps (never behind them), tapering
+    as they go. The second face mirrors the first along the haft, so the two sides differ."""
+    # Each crack: (height on the head, direction along the haft from the seam, [(along, height)
+    # steps from its start]). Heights keep clear of the clasps (CLASPS_AT, +-0.03).
+    cracks = [
+        (0.065, 1, [(0.0, 0.0), (0.035, 0.018), (0.06, -0.006), (0.09, 0.012)]),
+        (0.055, -1, [(0.0, 0.0), (0.03, -0.02), (0.065, -0.006), (0.085, -0.024)]),
+        (0.215, 1, [(0.0, 0.0), (0.03, 0.012), (0.06, -0.004)]),
+        (-0.075, -1, [(0.0, 0.0), (0.03, 0.014), (0.055, -0.004)]),
+    ]
     for side in (-1, 1):
         toward = (side, 0, 0)
-        for crack in ([(HEAD_AT + 0.03, 0.05), (HEAD_AT + 0.08, 0.0), (HEAD_AT + 0.06, -0.05),
-                       (HEAD_AT + 0.10, -0.09)],
-                      [(HEAD_AT - 0.03, 0.04), (HEAD_AT - 0.08, 0.09), (HEAD_AT - 0.06, 0.13),
-                       (HEAD_AT - 0.11, 0.20)]):
-            for (a0, u0), (a1, u1) in zip(crack, crack[1:]):
-                w0, w1 = 0.010, 0.006
-                A.decal(bm, [F(a0 - w0, u0, side * 0.4), F(a0 + w0, u0, side * 0.4),
-                             F(a1 + w1, u1, side * 0.4), F(a1 - w1, u1, side * 0.4)], toward,
+        for u0, direction, steps in cracks:
+            d = direction * side                                    # the other face mirrors along the haft
+            pts = [(HEAD_AT + d * (GAP / 2 + a), u0 + u) for a, u in steps]
+            n = len(pts) - 1
+            for i, ((a0, u_a), (a1, u_b)) in enumerate(zip(pts, pts[1:])):
+                w0 = 0.011 * (1 - i / n) + 0.002
+                w1 = 0.011 * (1 - (i + 1) / n) + 0.002
+                A.decal(bm, [F(a0, u_a - w0, side * 0.4), F(a0, u_a + w0, side * 0.4),
+                             F(a1, u_b + w1, side * 0.4), F(a1, u_b - w1, side * 0.4)], toward,
                         mat=GLOW, onto=stone)
 
 

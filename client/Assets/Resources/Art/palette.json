@@ -90,6 +90,7 @@
   { "name": "Mere", "hex": "#335c7a", "group": "water" },
   { "name": "Sea", "hex": "#21456b", "group": "water" },
   { "name": "FountBlood", "hex": "#59080d", "group": "accent" },
+  { "name": "Ember", "hex": "#e0602a", "group": "accent" },
   { "name": "SaintBone", "hex": "#c7bda3", "group": "accent" },
   { "name": "BlockoutRing", "hex": "#524224", "group": "accent" },
   { "name": "BlockoutSigil", "hex": "#998f61", "group": "accent" },
