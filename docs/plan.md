@@ -17,12 +17,15 @@ owns, and when it is done. Update the status column as work lands.
   Tithe and the Assayer until A1 finishes.
 - **The old area plan** (`docs/areas/skeleton.*`) is drawn on the old map and is superseded. Its
   rulebook (`docs/areas/rules.md`, `targets.json`) and research still apply.
-- **This plan, the new canon and the rework live on `claude/area-plan`**, not `main` yet. Merge
-  it into `main` before starting parallel workstreams, so every agent branches from the new canon
-  (step 0 below).
-- **Unmerged work:** the world-scale, camera and art-style session reported its changes on
-  `claude/world-scale-camera-art`. That branch was not visible on GitHub when this plan was
-  written; find out where it is before starting track F (workstream C0).
+- **Everything is on `main`** (2026-10-22): this plan and the new canon, the art branch (scale,
+  camera, art kit, terrain, a layout prototype) and the capitals work. No other branches are open.
+- **Terrain exists:** `MapTerrain` with stamps, cliffs blocked by the exporter, the camera lifting
+  over hills (`docs/world-scale.md`, `docs/world-building.md`). The scale decisions D1-D4 and the
+  layout prototype's W1-W2 are still open.
+- **The capital blockouts** (Cruor, Tithe, Cistern, Meridian: their builders and `docs/regions/`)
+  were made on the old map. Keep the kits they use (`WorldKit.City`, `.Interiors`, `.Terraces`);
+  the areas themselves are **rebuilt later**, to the new lore and through the new workflow (C3),
+  not patched now.
 
 ## Rules for working in parallel
 
@@ -61,13 +64,13 @@ owns, and when it is done. Update the status column as work lands.
 ## Order and dependencies
 
 ```
-Step 0: merge claude/area-plan into main (owner)
+Step 0: merge claude/area-plan into main (owner)  [done]
 
 Wave 1 (now, in parallel)
   A1 canon ──────────────┬──> B1 text pass (old-lore strings that need no new names)
   A2 names ──────────────┼──> B2 text pass (church, spine people, Scalth's replacement)
   L1 rough continent layout ──> A4 area plan v2 (passes 2-7 on top of it)
-  C0 art branch ──> C1 audit ──> C2 snapshots ──> C3 world as data ──> C4 migrate regions
+  C0 art branch [done] ──> C1 audit ──> C2 snapshots ──> C3 world as data ──> C4 migrate regions
   D1 death (server) ─────────────────────────────────────────────┐
   E1 tools, Mining, Woodcutting    E2 ranged    E3 item-on-object│
                                                                  v
@@ -218,9 +221,9 @@ readability), not its geography.
 - Generate every region of the core from the layout as sparse but real land: ground, water,
   roads, the spine's rock, a placeholder at each landmark. Tolling, Palmerway and the Saint's crypt
   keep their hand-built content.
-- **Ground height needs an owner decision first**: the collision map and the ground are flat
-  today. Gentle terrain (as the research describes) touches the exporter, the server map and the
-  client camera.
+- **Ground height:** terrain exists (`MapTerrain`; the exporter blocks cliffs, the camera lifts
+  over hills; the server stays flat). What waits on the owner is how much of it to use: the scale
+  decisions D1-D4 in `docs/world-scale.md`.
 - **Done when** the owner can walk from Tolling to Cruor, over a pass of the spine, and into
   every power's land.
 
@@ -277,7 +280,7 @@ agents can build the world together"). Update it before use: the continent layou
 
 | Id | What | Depends on | Done when |
 | --- | --- | --- | --- |
-| **C0** | Find and merge the world-scale, camera and art-style branch (`claude/world-scale-camera-art`), checking it in the Editor. | nothing | merged to `main`, Tolling plays as before with the new camera. |
+| **C0** | Find and merge the world-scale, camera and art-style branch (`claude/world-scale-camera-art`), checking it in the Editor. | nothing | **Done** (2026-10-22): merged to `main`; the owner checked the new camera. |
 | **C1** | Audit: MCP tools, how content flows (builders, `WorldKit`, map markers, exporter), repository hygiene, open branches. Write `docs/workflow-audit.md`. | C0 | the owner has read the audit. |
 | **C2** | Snapshots: `world/snapshots/<region>.json` and `world/screens/<region>/` so cloud agents can see regions without Unity. | C1 | every region has a fresh snapshot and screenshots. |
 | **C3** | World as data: object definitions and region placements as text data, one **Sync World** step that builds scenes and exports maps, and `docs/workflow.md` (who edits what). | C2 | a cloud agent can add an object to a region in data, and one local sync puts it in the game. |
@@ -364,8 +367,9 @@ Each owns its own system files and adds content entries; all three touch `items.
 | --- | --- |
 | Names (church, spine people, realm of the dead, ferryman, walker, p-spoil, gods, places), and which "under review" names come back | A2, B2 |
 | Who the player is (the sleeper premise: keep, change or drop) | A3, the first quests |
+| Whether L1 extends the art branch's layout prototype (`client/Assets/World/layout.json`, `tools/world-layout/`) or replaces it | L1 |
 | The rough layout | L1 |
-| Ground height (gentle terrain, or stay flat for now) | L2 |
+| How much terrain to use: the scale decisions D1-D4 (`docs/world-scale.md`) | L2 |
 | The coin fee's rate and free threshold; the obol's price and where it's sold | D1 (defaults in data until then) |
 | The long way back's hazards | D3 |
 | Each power's sheet | A3 |
@@ -378,5 +382,6 @@ Notes from one workstream to another ("A1 needs B1 to also change X"). Newest fi
 
 | From | To | Note |
 | --- | --- | --- |
+| G | C, A4 | The capital blockouts on `main` are on the old map. Keep the `WorldKit` kits; rebuild the areas once A4 and C3 allow, not before. |
 | A1 | A4 | `docs/skills.md` places skill tiers in old regions (the Veilwood, Candora, Slough...), and `docs/areas/rules.md` lists the old realms in its definitions. Both move with the new map: the tiers in pass 3 (resources), the realm list in pass 1. |
 | A1 | B2 | `docs/world-map.md` lists the names to be replaced in the game (the Synod, the Rationalists, Scalth). |
