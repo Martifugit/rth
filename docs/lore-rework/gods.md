@@ -66,10 +66,10 @@ themselves have faces).
 | --- | --- |
 | **Story** | Among p-sworn's first followers, the ones who broke their oaths. The betrayal and the wound were one event: they struck the blow, took some of p-sworn's power and ascended. |
 | **Wound** | They have no faces of their own. They gave them up when they ascended, and exist only in borrowed ones. |
-| **Hunger** | *Open* (an ascended god now, with its own aims, not only p-sworn's enemy). |
-| **Bargain** | *Open.* |
+| **Hunger** | To be what they were: separate, whole, with faces of their own. Embodying lesser beings is the closest they come. *(Provisional.)* |
+| **Bargain** | A new life for your old name: a new face and a fresh start where nobody can find you; everyone who knew you forgets you. *(Provisional.)* |
 | **Sign** | Your name, spoken behind you, in the voice of someone you trust. Nobody is there when you turn. |
 | **Faces** | To the empire, the Traitor: the root of every evil, the devil of its faith. To deserters, the conquered and anyone who swore under duress, a liberator. |
 | **Presence** | It walks the world, but never as itself. It wears the faces of trusted people: a friend, a captain, a priest. You meet it without knowing, and may only realise much later. |
-| **Fear** | *Open.* |
+| **Fear** | Being forgotten. *(Provisional.)* |
 | **Origin** | Ascended, through the betrayal. **Ascending destroyed their former bodies** and made them into one: **a single, powerful abomination they all share**. Abroad in the world they appear in borrowed faces; the shared body is their true form. |
