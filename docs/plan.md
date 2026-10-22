@@ -420,7 +420,10 @@ The owner's list (2026-10-22):
   not only what you have had.
 - **Equipment tab:** a row of buttons at its bottom. One opens a modal-like window with your
   combat stats (today's draggable Character window goes) and your **inspect** view (what others
-  see when they right-click and inspect you).
+  see when they right-click and inspect you). **Done** on `claude/u2-character` (2026-10-22),
+  compiled outside Unity; check it in the Editor. `CharacterModal` (Stats, Inspect), the button row
+  (`WornPanel.Buttons`), right-click Inspect on players, and a general server question
+  (`QueryMessage`, `QuerySystem`, protocol 19) that inspect is the first use of.
 - **Minimap:** a fantasy RPG frame; today it looks like an old TV screen.
 - **Guide:** rethink the skill guide's filter tabs (ALL, ABILITIES, EQUIPMENT...).
 - **Achievements:** the progress bar's text isn't centred on the bar and overflows it.

@@ -23,10 +23,10 @@ every piece and how they are organised.
 
 | Kind | What it is | Examples |
 |---|---|---|
-| **Panel** (`UiPanel`) | Lives in a movable window; can share it as a tab. Resizable unless it has a fixed size. | Pack, worn, character, abilities, hymns, skills, quests, task, XP tracker |
+| **Panel** (`UiPanel`) | Lives in a movable window; can share it as a tab. Resizable unless it has a fixed size. | Pack, worn, abilities, hymns, skills, quests, task, XP tracker |
 | **Fixed panel** (`FixedSize`) | Movable, never resized: the size it has to be. | Action bars, minimap, chat, target, bank, shop, conversation |
 | **Server window** (`ServerOpen`) | Opens and closes when the server says; closing it tells the server. | Bank, shop, conversation (the ferryman's too: death has no window of its own) |
-| **Modal** (`UiModal`) | Centred, fixed size, tabs of related pages, one at a time; Escape or a click outside closes it. | Journal, guide, world map, settings |
+| **Modal** (`UiModal`) | Centred, fixed size, tabs of related pages, one at a time; Escape or a click outside closes it. | Journal, guide, world map, settings, character |
 
 ## Always on screen
 
@@ -43,8 +43,10 @@ every piece and how they are organised.
 ## Side window tabs
 
 - **Pack** (28 slots; drag to move, onto a bar, onto the bank). ✓
-- **Worn equipment** (the figure only). ✓
-- **Character:** total level and every combat stat. ✓
+- **Worn equipment** ✓: the figure (it scales with the window) and, under it, a row of icon
+  buttons (`WornPanel.Buttons`, a list: add one for a new view of your gear, such as items kept on
+  death or a price check): **combat stats** and **inspect**, both opening the character modal.
+  The draggable Character panel is gone (a saved layout that names it just skips it).
 - **Ability books:** one per combat style (Occultism first); drag onto a bar. ✓
 - **Religion** (F): devotion at the top, then the **hymns** (prayers; the panel still calls them
   Tithe's until the text pass, and in the canon they belong to p-sworn's church) as a book of icons
@@ -67,7 +69,14 @@ every piece and how they are organised.
   sortable, gathered from the content itself) and **abilities** (every ability as a full card).
 - **World map** (M) ✓: the regions to scale and where you are. Waystone travel will be a tab.
 - **Settings** ✓: general (roofs, lock, scale, reset layout, log out) and controls.
-- To come: announcements (level up, quest complete, new drop), player examine.
+- **Character** ✓ (from the worn equipment's buttons): **stats** (every combat stat, grouped:
+  offence, defence, devotion, a per-style table of power, accuracy, damage and deflection, and the
+  verse and buff stats only while one is active; any stat no group names shows under Other) and
+  **inspect** (what anyone sees of a player: name, combat and total level, the worn figure
+  read-only, and highlights: best three skills, quests and achievements done). Right-clicking
+  another player offers **Inspect** (after Walk here, so a left click still walks), which opens
+  the same page on them. The server answers with public information only.
+- To come: announcements (level up, quest complete, new drop).
 
 ## Server windows
 
@@ -96,3 +105,7 @@ every piece and how they are organised.
   "bestiary", "client") read with `GameSession.ServerState<T>`. The client keeps its own
   state (action bar layouts) on the server with `SetClientState`; it follows the player.
 - **Window layout** is saved per machine in PlayerPrefs.
+- **Questions to the server** (things the client doesn't keep, such as another player's inspect
+  card) go through `GameSession.Query(kind, arg)`; the answer lands in `GameSession.QueryResults`
+  (`QueryResult(kind, arg)`, `QueryVersion` to know when to redraw). Server side, a kind is a
+  handler registered with `QuerySystem.Register`.
