@@ -71,4 +71,4 @@ themselves have faces).
 | **Faces** | To the empire, the Traitor: the root of every evil, the devil of its faith. To deserters, the conquered and anyone who swore under duress, a liberator. |
 | **Presence** | It walks the world, but never as itself. It wears the faces of trusted people: a friend, a captain, a priest. You meet it without knowing, and may only realise much later. |
 | **Fear** | *Open.* |
-| **Origin** | Ascended, through the betrayal. Whether they are several gods or one god in several bodies: *open*. |
+| **Origin** | Ascended, through the betrayal. **Ascending destroyed their former bodies** and made them into one: **a single, powerful abomination they all share**. Abroad in the world they appear in borrowed faces; the shared body is their true form. |
