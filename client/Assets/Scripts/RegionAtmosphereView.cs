@@ -18,12 +18,13 @@ namespace Rth.Client
         private struct Look
         {
             public float Sun;
-            public Color Sky, Equator, Ground, Fog;
+            public Color SunColor, Sky, Equator, Ground, Fog;
             public float FogStart, FogEnd;
 
             public static Look Lerp(Look a, Look b, float t) => new Look
             {
                 Sun = Mathf.Lerp(a.Sun, b.Sun, t),
+                SunColor = Color.Lerp(a.SunColor, b.SunColor, t),
                 Sky = Color.Lerp(a.Sky, b.Sky, t),
                 Equator = Color.Lerp(a.Equator, b.Equator, t),
                 Ground = Color.Lerp(a.Ground, b.Ground, t),
@@ -52,6 +53,7 @@ namespace Rth.Client
             _world = new Look
             {
                 Sun = _sun != null ? _sun.intensity : 1f,
+                SunColor = _sun != null ? _sun.color : Color.white,
                 Sky = RenderSettings.ambientSkyColor,
                 Equator = RenderSettings.ambientEquatorColor,
                 Ground = RenderSettings.ambientGroundColor,
@@ -82,6 +84,7 @@ namespace Rth.Client
             return new Look
             {
                 Sun = a.SunIntensity,
+                SunColor = Parse(a.Sun, _world.SunColor),
                 Sky = Parse(a.AmbientSky, _world.Sky),
                 Equator = Parse(a.AmbientEquator, _world.Equator),
                 Ground = Parse(a.AmbientGround, _world.Ground),
@@ -95,7 +98,11 @@ namespace Rth.Client
 
         private void Apply(Look look)
         {
-            if (_sun != null) _sun.intensity = look.Sun;
+            if (_sun != null)
+            {
+                _sun.intensity = look.Sun;
+                _sun.color = look.SunColor;
+            }
             RenderSettings.ambientSkyColor = look.Sky;
             RenderSettings.ambientEquatorColor = look.Equator;
             RenderSettings.ambientGroundColor = look.Ground;

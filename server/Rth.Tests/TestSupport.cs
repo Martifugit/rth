@@ -178,6 +178,8 @@ internal static class TestContent
         new ObjectDef { Id = "sign", Name = "Signpost", Actions = { new ActionDef { Id = "read", Label = "Read", Message = "Tolling, west." } } },
         new ObjectDef { Id = "shrine", Name = "Shrine", Actions = { new ActionDef { Id = "kneel", Label = "Kneel", Animation = "kneel", Message = "You kneel." } } },
         new ObjectDef { Id = "gate", Name = "Gate", Actions = { new ActionDef { Id = "open", Label = "Open", RequiresFlag = "gate_open", LockedMessage = "Barred.", Message = "It creaks open." } } },
+        new ObjectDef { Id = "rubble", Name = "Rubble", Actions = { new ActionDef { Id = "clear", Label = "Clear", Message = "You clear the rubble.",
+            Requirements = { new SkillRequirement { Skill = "butchering", Level = 5 } } } } },
     };
 
     public static List<RecipeDef> Recipes() => new()

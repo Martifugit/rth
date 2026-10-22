@@ -9,6 +9,8 @@ namespace Rth.Shared.World
     public sealed class RegionAtmosphere
     {
         public float SunIntensity = 1.1f;
+        /// <summary>#RRGGBB: the sun's colour (a golden haze, a white glare, a cold dawn).</summary>
+        public string Sun = "#fff5e0";
         /// <summary>#RRGGBB: ambient light from above, around and below.</summary>
         public string AmbientSky = "#9eadc7";
         public string AmbientEquator = "#808580";

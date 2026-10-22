@@ -113,6 +113,8 @@ namespace Rth.Shared.World
         public string? RequiresFlag;
         /// <summary>Said when the flag is missing.</summary>
         public string? LockedMessage;
+        /// <summary>Skill levels it needs: a rubble pile cleared with Mining, a ford waded with Fishing.</summary>
+        public List<Rth.Shared.Skills.SkillRequirement> Requirements = new List<Rth.Shared.Skills.SkillRequirement>();
         /// <summary>Said when the action is used (signposts, notices). Needs no handler.</summary>
         public string? Message;
         /// <summary>
@@ -130,7 +132,18 @@ namespace Rth.Shared.World
         public int Plane;
         public int X;
         public int Y;
+        /// <summary>
+        /// For a stair, ladder or trapdoor (the "climb" action): the floor and tile it leads to,
+        /// the landing marked in the scene. Null for everything else.
+        /// </summary>
+        public int? ToPlane;
+        public int? ToX;
+        public int? ToY;
 
         public TileCoord Tile => new TileCoord(X, Y);
+
+        /// <summary>Where a climb ends up, if this object leads anywhere.</summary>
+        public (int Plane, TileCoord Tile)? Landing =>
+            ToPlane.HasValue && ToX.HasValue && ToY.HasValue ? (ToPlane.Value, new TileCoord(ToX.Value, ToY.Value)) : ((int, TileCoord)?)null;
     }
 }

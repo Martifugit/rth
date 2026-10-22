@@ -91,6 +91,7 @@ Correct for drift so ticks stay on a 600 ms grid. Allow a faster tick rate in te
 
 - Tile grid, click-to-move, server-side pathfinding. Walking is 1 tile per tick, running 2.
 - Each client only receives entities within a view radius ("interest management").
+- **Height and floors (decided):** the server is flat; the client draws height by casting down onto the ground colliders of the entity's floor. A floor above the ground is a plane (`MapLevel`, up to 4), with its own collision, and stairs and ladders move you between planes (`ClimbSystem`). `Assets/Scenes/LevelTest.unity` (`::tele leveltest`, **R'th > Dev > Rebuild Level Test Scene**) is the worked example.
 - **Map pipeline:** the map is designed in Unity scenes. A `/tools` exporter writes tile data
   (walkability, wall edges, object footprints, plane/level) to a file the server loads. The
   client renders the scene and the server reads the export. Keep them in sync through this one
@@ -369,6 +370,12 @@ The second combat style, and the Religion half that powers it (`docs/skills.md` 
 Not yet: weapon models in the hand, one- and two-handed kinds, shields and dual wield,
 raising monuments and reliquaries, tools for gathering (with Mining), final ability names.
 
+**World building (in progress):** the capitals blocked out as regions, one builder each, with an
+asset list for the art pass. All four capitals are done: Cruor, Tithe, Cistern and Meridian (`docs/regions/`). Meridian is being
+rebuilt to `docs/regions/meridian-redesign.md`: phase 1 (terraces and routes), phase 2 (every building
+enterable, upper floors included) and phase 3 (objects: readables, view points, stations, banks, gates,
+gathering spots, skill shortcuts) are built; people and data (phase 4) are next.
+
 **Next: not chosen yet.** Candidates: the first gathering skills (mining, woodcutting) on the
 node system with tools, ranged, an art pass on Tolling, more quests and achievements.
 
@@ -380,7 +387,7 @@ node system with tools, ranged, an art pass on Tolling, more quests and achievem
 and saving. Everything else is a `GameSystem` listed in `World.StandardSystems` (order matters:
 systems run in that order within each phase, and a system may use those before it while
 attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `DeathSystem`,
-`NpcSystem`, `GroundItemSystem`, `LootSystem`, `ObjectSystem`, `ReligionSystem`, `RecipeSystem`, `GatheringSystem`, `InterfaceSystem`,
+`NpcSystem`, `GroundItemSystem`, `LootSystem`, `ObjectSystem`, `ClimbSystem`, `ReligionSystem`, `RecipeSystem`, `GatheringSystem`, `InterfaceSystem`,
 `DialogueSystem`, `BankSystem`, `ShopSystem`, `PointsSystem`, `TaskSystem`, `QuestSystem`.
 
 | To add... | Use |
@@ -419,15 +426,25 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | An ability cost | `reagents` on the ability (items), checked by the shared requirement rule and consumed on use. Occult abilities use none: phlegm and bile only. |
 | A status (buff or debuff icon) | An entry in statuses.json (name, icon, `{value}` text, `debuff`); a system implementing `IStatusSource` lists who has it each tick. Timed ability effects show as the status named after their `EffectType`. |
 | A new kind of map placement | A marker component in tools/unity-map-tools, an export file in `MapExporter`, a field on `MapPlacements` (merged across regions by `WorldLoader`). |
+| A terraced landscape (a city on a hillside, a gorge with bridges) | A `Terraces` map (`WorldKit.Terraces.cs`): `Flat`, `Stair`, `Ramp`, `Deck` and `Void` tile by tile, then `Build`; it walls every drop (kerbs and parapets) and warns about steps over 0.5 m or ramps steeper than 1 in 3. Start the region with `BeginTerrainRegion`; `Viaduct` and `Stream` draw what goes under and through it. See `MeridianBuilder`. |
+| A floor above the ground (upper storey, gallery, footbridge, tower room) | A `MapLevel` (1-3) on a group holding that floor's slab (ground collider), walls (`MapWall`), blockers, objects and spawns: the exporter writes one plane per level. `hiddenFromBelow` (default) switches the group off while the player is on a lower floor; turn it off for what must always show from outside (outer walls, an open-air deck). Planes are separate collision, and people only see people on their own plane. There is no plane below the ground: cellars, caves and dungeons are separate small regions (instanced, 1024 tiles north of the surface place) entered by a `climb` object whose landing is in that region (`trapdoor_down`/`trapdoor_up`, `cave_mouth`/`cave_exit`, or the stairs and ladders). |
+| Stairs, ladders, trapdoors | An object with a `climb` action (`stairs_up`/`stairs_down`/`ladder_up`/`ladder_down` exist) placed with `MapObject` + a collider, and its `climbTo` set to an empty object on the landing tile under the target floor's `MapLevel`. One object per end. The exporter warns about a blocked landing; `ClimbSystem` moves the player. |
 | A new region of the world | A scene with a `MapArea` at its absolute, zone-aligned rectangle (a builder using `WorldKit.BeginRegion`/`SaveRegion`); export it. No server code. |
+| A city or town blockout | A builder using `WorldKit.City.cs` (buildings with roofs, walk-in halls with doors, city walls, towers, gatehouse arches, bridges, statues, braziers, banners, stalls, boats, domes, colonnades, shade sails, windcatchers, water wheels, armillaries, rails, the Quaere's silhouette; `CutGround` for a pit); see `CruorBuilder`, `TitheBuilder`, `CisternBuilder`, `MeridianBuilder` and `docs/regions/`. |
+| A building you walk into (on any terrace, with upper floors) | `WorldKit.Enterable` (`WorldKit.Interiors.cs`) returns a `Shell`: doors, a `MapLevel` per upper floor (outer walls always drawn, slab only from above, or a railed gallery), a roof that hides inside. `Shell.Stairs`/`Ladder` join floors with their landings set; `Table`, `Counter`, `Shelves`, `Hearth`, `Bed`, `Thing`, `Object` furnish any floor. `Pavilion` for open halls on posts (optionally a deck), `RowHouse` for a house repeated down a street, `CheckBuildings` for the three-tile gap and 25% rules. See `MeridianBuilder.Buildings.cs`. |
+| A stand-in for an asset still to be made | `WorldKit.Asset(go, "region/id", note)` adds a `BlockoutAsset`; saving the region writes `docs/regions/<region>-assets.md` (count, size, notes). |
+| A region's own light (sun colour and strength, ambient, fog) | `ownAtmosphere` and its fields on the `MapArea`; exported to `.region.json`, blended in by `RegionAtmosphereView`. |
 | Something per region (music, rules, title) | A field on `WorldRegion`, written to `<name>.region.json` by `MapExporter`; it reaches clients in `RegionsMessage` as JSON. |
 | "Who is near this tile" | `World.EntitiesNear(plane, tile, radius)` (zone index), not a scan of every entity. |
 | A sign, notice or flavour action | An object action with a `message` in objects.json (no handler needed). |
+| An action only some players may use | `requiresFlag` + `lockedMessage` (story gates), or `requirements` (skill levels) on the object or NPC action; `ObjectSystem.Unlocked` checks both. |
+| A skill shortcut (rubble, a ford, a thicket) | A `climb` object at each end with `requirements` on its action and `climbTo` on the far side; see `MeridianBuilder.Shortcut`. |
+| Furniture you can use (a counter that's a bank, a shelf you read) | `Shell.Thing`/`Shelves`/`Table` plus a `MapObject` on the returned object (`MeridianBuilder.Use`); keep it one or two tiles deep so a tile beside its middle is free. |
 | An interface panel | A `UiPanel` subclass in `client/Assets/Scripts/Ui/Panels/` (id, title, icon, default window, `Build`, `Refresh`); it registers itself. Build it from `UiKit` pieces so it matches the theme (`Resources/UI/Rth.uss`). A new default spot goes in `UiDefaultLayout`. A window the server opens overrides `ServerOpen` and `OnClosedByPlayer`. |
 | A model for players or creatures | An `EntityBody` subclass in `client/Assets/Scripts/Characters/` (height, radius, `Animate`, action/hit/death, `InCombat`), picked in `EntityBody.Create`. Players use `ModelBody` (skinned art + clips) when the clips exist, else `HumanoidBody` (code-built, procedural). |
 | Character art (body parts, hair, equipment) | Skinned meshes on the shared skeleton, made in Blender (`tools/character-models/`, see its README for the bone, part and colour-channel contract), exported to `client/Assets/Resources/Characters/`. `CharacterModel` assembles them: `Attach` (with the kit parts it hides, or a bone socket), `SetColor(channel)`, `SetHair`. |
 | A character animation | A humanoid clip file in `client/Assets/Resources/Characters/Animations/` named by what it is (Mixamo works; `CharacterImporter` sets it up); tune its strength, speed, trim and upper-body masking in `Resources/Characters/animations.json`. `ClipAnimator.Play(name)` plays any clip by name. |
-| Ground with height (hills, cliffs, terraces) | A `MapTerrain` in the region (`WorldKit.Terrain`, or **R'th > World > Bake Terrain From Layout** from `client/Assets/World/layout.json`); shape it with `MapTerrainStamp`s, never by editing baked heights. Steep tiles (over `cliffStep`) and impassable biomes are blocked by the exporter; `GroundHeight` stands things on it. Heights are client and tooling only (`Heightfield`, `WorldLayout` in shared). |
+| Ground with height (hills, cliffs, stairs, terraces) | Natural ground: a `MapTerrain` in the region (`WorldKit.Terrain`, or **R'th > World > Bake Terrain From Layout** from `client/Assets/World/layout.json`), shaped with `MapTerrainStamp`s, never by editing baked heights; the exporter blocks its steep tiles (over `cliffStep`) and impassable biomes. Built ground (terraces, stairs, decks): colliders at the real height; the exporter ignores their height, so every drop needs a `MapWall` (or the tiles beyond a `MapBlocker`), and a ramp climbs at most 1 m in 3 tiles (see `LevelTestBuilder`). The client stands characters, items and markers on the ground colliders of their floor (`GroundHeight.Centre`); the camera reads the terrain alone (`GroundHeight.TerrainAt`). The server stays flat; heights are client and tooling only (`Heightfield`, `WorldLayout` in shared). |
 | A colour variant of a model (an ore, a metal) | A `Recolor` on the placement or prefab, or `"recolor": { "Material": "PaletteName" }` on the object type in objects.json. Colours come from `Resources/Art/palette.json`. |
 | A tree, rock or prop | Within the budgets in `Assets/Art/art-budgets.json` (check with **R'th > Art > Validate Art**), 2-4 palette colours as materials; leafy trees via `kit.LeafyTree` and `LeafyTree` specs; world textures in `Assets/Art/Textures/` (128 px, point filtered). |
 | A camera rule | Plain maths in `client/Assets/Scripts/View/CameraRules.cs` with tests in `client/Assets/Tests/EditMode/` (also run by `dotnet test` through `tools/client-tests`); `CameraRig` applies it. Limit sets are `CameraProfile`s. |
@@ -443,7 +460,8 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 
 Tests: build worlds with `WorldFixture` and `TestContent` (server/Rth.Tests/TestSupport.cs), which
 uses fixed content so tuning the real data files never breaks tests. `World` can also be built
-with an explicit list of systems.
+with an explicit list of systems. `ShippedMapTests` walks every exported region in `server/data/maps`
+from its spawn and fails on any object nobody can stand beside.
 
 ---
 

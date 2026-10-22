@@ -16,6 +16,9 @@ namespace Rth.MapTools.Editor
     ///  - Overlapped by the colliders of a <see cref="MapBlocker"/>: blocked.
     ///  - <see cref="MapWall"/> colliders snap to the nearest grid line and block those tile edges.
     ///  - A tile of a <see cref="MapTerrain"/> steeper than its cliff step (a cliff face), or marked impassable: blocked.
+    ///  - A <see cref="MapLevel"/> puts everything under it on another plane (floor): a tile is walkable
+    ///    on that plane only where a ground collider of that level is under its centre, and its
+    ///    blockers, walls, objects and spawns land on that plane.
     /// </summary>
     public static class MapExporter
     {
@@ -63,6 +66,7 @@ namespace Rth.MapTools.Editor
             ExportRegionInfo(area, Path.ChangeExtension(path, null) + ".region.json");
             AddSceneToBuild(area.gameObject.scene.path);
             CollisionPreview.Show(map, area.plane);
+            ReportLandings(area, map);
             Debug.Log($"[R'th] Exported '{area.exportName}' ({map.Width}x{map.Height}, spawn {map.Spawn}, {npcs} NPCs, {objects} objects) to {path}");
             return path;
         }
@@ -75,7 +79,7 @@ namespace Rth.MapTools.Editor
         {
             string Hex(Color c) => "\"#" + ColorUtility.ToHtmlStringRGB(c) + "\"";
             string F(float f) => f.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            return "  \"atmosphere\": { \"sunIntensity\": " + F(area.sunIntensity) +
+            return "  \"atmosphere\": { \"sunIntensity\": " + F(area.sunIntensity) + ", \"sun\": " + Hex(area.sunColor) +
                    ", \"ambientSky\": " + Hex(area.ambientSky) + ", \"ambientEquator\": " + Hex(area.ambientEquator) +
                    ", \"ambientGround\": " + Hex(area.ambientGround) + ", \"fog\": " + Hex(area.fog) +
                    ", \"fogStart\": " + F(area.fogStart) + ", \"fogEnd\": " + F(area.fogEnd) + " }";
@@ -122,10 +126,17 @@ namespace Rth.MapTools.Editor
                 Vector2Int t = obj.Tile;
                 if (count++ > 0) sb.Append(",\n");
                 sb.Append("  { \"type\": \"").Append(obj.objectType.Trim().Replace("\"", ""))
-                  .Append("\", \"plane\": ").Append(area.plane)
+                  .Append("\", \"plane\": ").Append(MapLevel.Of(obj, area.plane))
                   .Append(", \"x\": ").Append(t.x)
-                  .Append(", \"y\": ").Append(t.y)
-                  .Append(" }");
+                  .Append(", \"y\": ").Append(t.y);
+                if (obj.climbTo != null)
+                {
+                    Vector3 to = obj.climbTo.position;
+                    sb.Append(", \"toPlane\": ").Append(MapLevel.Of(obj.climbTo, area.plane))
+                      .Append(", \"toX\": ").Append(Mathf.FloorToInt(to.x))
+                      .Append(", \"toY\": ").Append(Mathf.FloorToInt(to.z));
+                }
+                sb.Append(" }");
             }
             sb.Append("\n]\n");
             File.WriteAllText(path, sb.ToString());
@@ -147,11 +158,12 @@ namespace Rth.MapTools.Editor
                     Debug.LogWarning($"[R'th] MapNpcSpawn '{spawn.name}' has no npcId; skipped.", spawn);
                     continue;
                 }
-                if (map.IsBlocked(area.plane, x, y))
-                    Debug.LogWarning($"[R'th] NPC spawn '{spawn.name}' stands on a blocked tile ({x}, {y}).", spawn);
+                int level = MapLevel.Of(spawn, area.plane);
+                if (map.IsBlocked(level, x, y))
+                    Debug.LogWarning($"[R'th] NPC spawn '{spawn.name}' stands on a blocked tile ({x}, {y}) on level {level}.", spawn);
                 if (count++ > 0) sb.Append(",\n");
                 sb.Append("  { \"npc\": \"").Append(spawn.npcId.Trim().Replace("\"", ""))
-                  .Append("\", \"plane\": ").Append(area.plane)
+                  .Append("\", \"plane\": ").Append(level)
                   .Append(", \"x\": ").Append(x)
                   .Append(", \"y\": ").Append(y)
                   .Append(", \"wander\": ").Append(spawn.wanderRadius)
@@ -166,10 +178,12 @@ namespace Rth.MapTools.Editor
         {
             Physics.SyncTransforms();
             int plane = area.plane;
-            var map = new MapData(area.origin.x, area.origin.y, area.size.x, area.size.y, plane + 1);
+            int planes = plane + 1;
+            foreach (MapLevel floor in area.GetComponentsInChildren<MapLevel>(true)) planes = Mathf.Max(planes, floor.level + 1);
+            var map = new MapData(area.origin.x, area.origin.y, area.size.x, area.size.y, planes);
 
-            MarkMissingGround(area, map, plane);
-            MarkCliffs(area, map, plane);
+            MarkMissingGround(area, map);
+            MarkCliffs(area, map);
 
             foreach (MapBlocker blocker in area.GetComponentsInChildren<MapBlocker>())
             {
@@ -178,9 +192,10 @@ namespace Rth.MapTools.Editor
                     Debug.LogWarning($"[R'th] MapBlocker '{blocker.name}' has no collider; ignored.", blocker);
                     continue;
                 }
+                int level = MapLevel.Of(blocker, plane);
                 foreach (int x in Overlapped(b.min.x, b.max.x))
                     foreach (int y in Overlapped(b.min.z, b.max.z))
-                        map.Block(plane, x, y);
+                        map.Block(level, x, y);
             }
 
             foreach (MapWall wall in area.GetComponentsInChildren<MapWall>())
@@ -190,16 +205,17 @@ namespace Rth.MapTools.Editor
                     Debug.LogWarning($"[R'th] MapWall '{wall.name}' has no collider; ignored.", wall);
                     continue;
                 }
+                int level = MapLevel.Of(wall, plane);
                 if (b.size.x >= b.size.z)
                 {
                     // Runs east-west along the line z = line: blocks the north edge of the row below it.
                     int line = Mathf.RoundToInt(b.center.z);
-                    foreach (int x in Overlapped(b.min.x, b.max.x)) map.AddWall(plane, x, line - 1, WallSide.North);
+                    foreach (int x in Overlapped(b.min.x, b.max.x)) map.AddWall(level, x, line - 1, WallSide.North);
                 }
                 else
                 {
                     int line = Mathf.RoundToInt(b.center.x);
-                    foreach (int y in Overlapped(b.min.z, b.max.z)) map.AddWall(plane, line - 1, y, WallSide.East);
+                    foreach (int y in Overlapped(b.min.z, b.max.z)) map.AddWall(level, line - 1, y, WallSide.East);
                 }
             }
 
@@ -207,7 +223,7 @@ namespace Rth.MapTools.Editor
             if (spawn != null)
             {
                 Vector3 p = spawn.transform.position;
-                map.SpawnPlane = plane;
+                map.SpawnPlane = MapLevel.Of(spawn, plane);
                 map.Spawn = new TileCoord(Mathf.FloorToInt(p.x), Mathf.FloorToInt(p.z));
                 if (map.IsBlocked(map.SpawnPlane, map.Spawn.X, map.Spawn.Y))
                     Debug.LogError($"[R'th] The spawn tile {map.Spawn} is blocked.", area);
@@ -217,35 +233,61 @@ namespace Rth.MapTools.Editor
             return map;
         }
 
-        private static void MarkMissingGround(MapArea area, MapData map, int plane)
+        /// <summary>
+        /// Blocks every tile with no ground on a plane. Ground is any collider under the tile's
+        /// centre that isn't a wall or blocker, counted on the plane of the <see cref="MapLevel"/>
+        /// it belongs to (the region's own plane if it has none), so a floor above a room is ground
+        /// on its own plane and leaves the room's plane alone.
+        /// </summary>
+        private static void MarkMissingGround(MapArea area, MapData map)
         {
+            var ground = new bool[map.Planes];
             for (int y = area.origin.y; y < area.origin.y + area.size.y; y++)
             {
                 for (int x = area.origin.x; x < area.origin.x + area.size.x; x++)
                 {
+                    System.Array.Clear(ground, 0, ground.Length);
                     var from = new Vector3(x + 0.5f, 500f, y + 0.5f);
-                    bool ground = false;
                     foreach (RaycastHit hit in Physics.RaycastAll(from, Vector3.down, 1000f, ~0, QueryTriggerInteraction.Ignore))
                     {
                         Transform t = hit.collider.transform;
                         if (!t.IsChildOf(area.transform)) continue;
                         if (t.GetComponentInParent<MapWall>() != null || t.GetComponentInParent<MapBlocker>() != null) continue;
-                        ground = true;
-                        break;
+                        int level = MapLevel.Of(hit.collider, area.plane);
+                        if (level >= 0 && level < ground.Length) ground[level] = true;
                     }
-                    if (!ground) map.Block(plane, x, y);
+                    for (int plane = 0; plane < ground.Length; plane++)
+                        if (!ground[plane]) map.Block(plane, x, y);
                 }
             }
         }
 
-        private static void MarkCliffs(MapArea area, MapData map, int plane)
+        /// <summary>Blocks cliff faces and impassable tiles of each terrain, on the plane the terrain is on.</summary>
+        private static void MarkCliffs(MapArea area, MapData map)
         {
             foreach (MapTerrain terrain in area.GetComponentsInChildren<MapTerrain>())
             {
                 Heightfield field = terrain.Field;
+                int plane = MapLevel.Of(terrain, area.plane);
                 for (int y = field.OriginY; y < field.OriginY + field.Depth; y++)
                     for (int x = field.OriginX; x < field.OriginX + field.Width; x++)
                         if (map.Contains(plane, x, y) && (field.IsSteep(x, y, terrain.cliffStep) || terrain.IsBlocked(x, y))) map.Block(plane, x, y);
+            }
+        }
+
+        /// <summary>Warns about stairs and ladders that lead nowhere: a landing nobody can stand on.</summary>
+        private static void ReportLandings(MapArea area, MapData map)
+        {
+            foreach (MapObject obj in area.GetComponentsInChildren<MapObject>())
+            {
+                if (obj.climbTo == null) continue;
+                Vector3 to = obj.climbTo.position;
+                int x = Mathf.FloorToInt(to.x);
+                int y = Mathf.FloorToInt(to.z);
+                int level = MapLevel.Of(obj.climbTo, area.plane);
+                if (level >= map.Planes || !map.Contains(level, x, y)) continue; // lands in another region, which can't be checked here
+                if (map.IsBlocked(level, x, y))
+                    Debug.LogWarning($"[R'th] '{obj.name}' climbs to ({x}, {y}) on level {level}, which is blocked there (no floor, or something stands on it).", obj);
             }
         }
 

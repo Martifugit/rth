@@ -28,11 +28,17 @@ namespace Rth.Server.Game
 
         public void RegisterAction(string actionId, Action<Player, PlacedObject, ObjectDef> handler) => _actions[actionId] = handler;
 
-        /// <summary>Whether a flag-gated action is available to this player; tells them why not if it isn't.</summary>
+        /// <summary>Whether a flag- or level-gated action is available to this player; tells them why not if it isn't.</summary>
         public static bool Unlocked(World world, Player player, ActionDef action)
         {
-            if (action.RequiresFlag == null || world.Find<FlagSystem>()?.IsSet(player, action.RequiresFlag) == true) return true;
-            world.Tell(player, TextKind.Warning, action.LockedMessage ?? "You can't do that yet.");
+            if (action.RequiresFlag != null && world.Find<FlagSystem>()?.IsSet(player, action.RequiresFlag) != true)
+            {
+                world.Tell(player, TextKind.Warning, action.LockedMessage ?? "You can't do that yet.");
+                return false;
+            }
+            string? problem = world.Find<SkillSystem>()?.Check(player, action.Requirements, action.Label.ToLowerInvariant() + " that");
+            if (problem == null) return true;
+            world.Tell(player, TextKind.Warning, problem);
             return false;
         }
 
@@ -62,10 +68,17 @@ namespace Rth.Server.Game
             }
             ActionDef? action = def.Actions.FirstOrDefault(a => a.Id == m.ActionId);
             if (action == null) return;
-            if (!Unlocked(World, player, action)) return;
-            // An action with an animation is done standing at the thing; others happen at once.
-            if (action.Animation != null) World.StartInteraction(player, new ObjectOnceInteraction(placed, p => Use(p, placed, def, action)));
-            else Use(player, placed, def, action);
+            // Systems' handlers walk the player up themselves (a station, a bank, a stair). Anything
+            // else (a sign to read, a lock to try, an altar to kneel at) is done standing beside it.
+            if (_actions.ContainsKey(action.Id) && action.Animation == null)
+            {
+                if (Unlocked(World, player, action)) Use(player, placed, def, action);
+                return;
+            }
+            World.StartInteraction(player, new ObjectOnceInteraction(placed, p =>
+            {
+                if (Unlocked(World, p, action)) Use(p, placed, def, action);
+            }));
         }
 
         private void Use(Player player, PlacedObject placed, ObjectDef def, ActionDef action)

@@ -29,7 +29,7 @@ namespace Rth.Client
         public float dragRotateSpeed = 0.25f;
         public float followSharpness = 12f;
 
-        private static readonly System.Func<int, int, float> TileHeight = GroundHeight.AtTile;
+        private static readonly System.Func<int, int, float> TileHeight = GroundHeight.TerrainAtTile;
 
         private Vector3 _focus;
         private float _floor;
@@ -131,7 +131,7 @@ namespace Rth.Client
             float floorTarget = minPitch;
             if (TerrainLift)
             {
-                float here = GroundHeight.At(ground.x, ground.z);
+                float here = GroundHeight.TerrainAt(ground.x, ground.z);
                 float highest = CameraRules.HighestNear(TileHeight, Mathf.FloorToInt(ground.x), Mathf.FloorToInt(ground.z));
                 floorTarget = CameraRules.LiftFloor(highest - here, minPitch, maxPitch);
             }

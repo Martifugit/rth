@@ -1,0 +1,4 @@
+[
+  { "npc": "concord_surveyor", "plane": 1, "x": 1094, "y": 1033, "wander": 1 },
+  { "npc": "meridian_fisher", "plane": 0, "x": 1094, "y": 1031, "wander": 1 }
+]

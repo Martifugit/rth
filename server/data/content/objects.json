@@ -138,5 +138,1113 @@
     "name": "Stair",
     "examine": "The way back up to the monument.",
     "actions": [ { "id": "climb", "label": "Climb", "message": "The stair leads up to a sealed door. (Blockout: the way out comes with instancing.)" } ]
+  },
+  {
+    "id": "cruor_first_monument",
+    "name": "The First Monument",
+    "examine": "The needle every other Cruorian monument is copied from. The founts around it never quite empty.",
+    "actions": [ { "id": "read", "label": "Read", "message": "HERE THE MANY GAVE, AND THE BAY WAS KEPT. EVERY MONUMENT IN THE WORLD IS A DRAWING OF THIS ONE. Below, cut deep and recut many times: KEEP." } ]
+  },
+  {
+    "id": "vigil_altar",
+    "name": "High altar",
+    "examine": "The high altar of the Vigil. The cloth on it is changed every hour, and never washed.",
+    "actions": [ { "id": "pray", "label": "Pray", "animation": "kneel" } ]
+  },
+  {
+    "id": "cruor_proclamation",
+    "name": "Proclamation",
+    "examine": "A Synod proclamation, nailed up over older ones.",
+    "actions": [ { "id": "read", "label": "Read", "message": "BY ORDER OF THE PONTIFF OF CRUOR: the Letting House is open from first bell to last. Pilgrims are bled in the order they arrive. Those who sleep and do not wake are to be reported to the Vigil, not buried." } ]
+  },
+  {
+    "id": "letting_chair",
+    "name": "Letting chair",
+    "examine": "A leather chair with a strap for the arm and a copper bowl beneath. The bowl drains into a channel in the floor.",
+    "actions": [ { "id": "give", "label": "Give-blood", "message": "A Sister of the Letting takes your wrist, looks at the vein for a long moment, and lets it go. 'Not you. Not yet. Something has already had its share of you.'" } ]
+  },
+  {
+    "id": "watch_rail",
+    "name": "The Watch",
+    "examine": "A long stone rail over the bay, worn smooth where people lean on it to look at the Quaere.",
+    "actions": [ { "id": "watch", "label": "Keep-vigil", "animation": "kneel", "message": "You watch the Quaere across the Cradle for a while. The water breathes in, and out. Nothing else moves. That is the point of the Watch." } ]
+  },
+  {
+    "id": "cruor_shuttered_shop",
+    "name": "Shuttered shop",
+    "examine": "An apothecary's sign, painted over. The shutters are new, and the lock is newer.",
+    "actions": [ { "id": "knock", "label": "Knock", "message": "Nobody answers. Behind the shutters something stops bubbling, as if it had been listening." } ]
+  },
+  {
+    "id": "concord_skyglass",
+    "name": "Sky-glass",
+    "examine": "A brass telescope on a tripod outside the Concordian consulate. A small sign: FORECASTS WITHIN.",
+    "actions": [ { "id": "look", "label": "Look-through", "message": "The glass is aimed at the Quaere, not the sky. Someone has scratched tally marks along the brass, hundreds of them." } ]
+  },
+  {
+    "id": "tithe_toll_board",
+    "name": "The toll board",
+    "examine": "A tall black board in gilt letters: the toll on every cargo that leaves the bay, rewritten each season.",
+    "actions": [ { "id": "read", "label": "Read", "message": "GRAIN, the hundredweight: two marks. SALT, outbound: none (it is ours). PILGRIMS, the head: one mark, waived for the dead. BLOOD, in any vessel: not to pass. Masters will heave to under the Tollkeep and wait to be weighed." } ]
+  },
+  {
+    "id": "chain_winch",
+    "name": "Chain capstan",
+    "examine": "The capstan that winds the chain across the Mouth. The bars are polished by hands; the chain is not.",
+    "actions": [ { "id": "look", "label": "Look-at", "message": "The chain runs from the Tollkeep down into the water and away across the Mouth on its floats. A tollman says it has been wound up three times in three hundred years, and each time Cruor paid to have it lowered." } ]
+  },
+  {
+    "id": "tithe_balance",
+    "name": "The Balance",
+    "examine": "The public scale of Tithe. Gold in one pan, salt in the other, and they hang level.",
+    "actions": [ { "id": "read", "label": "Read-plaque", "message": "The plaque reads: WHAT IS GIVEN WILL BE CALLED IN. BE FOUND LEVEL. Under it, smaller, someone has scratched: and Cruor?" } ]
+  },
+  {
+    "id": "tithe_ledger",
+    "name": "The Ledger",
+    "examine": "A book as wide as a door, open on a black lectern. Every soul in Tithe has a line in it.",
+    "actions": [ { "id": "read", "label": "Read", "message": "An auditor turns the great pages for you without being asked, finds the place where your name would go, and runs a finger down a column that is entirely empty. 'Not yet,' she says. 'But you were looked for.'" } ]
+  },
+  {
+    "id": "chantry_altar",
+    "name": "Altar",
+    "examine": "The Chantry altar: an open ledger and a small gold balance on a plain stone block.",
+    "actions": [ { "id": "pray", "label": "Pray", "animation": "kneel" } ]
+  },
+  {
+    "id": "tithe_saltery_door",
+    "name": "Saltery door",
+    "examine": "A black door in a white wall, with no handle on this side.",
+    "actions": [ { "id": "knock", "label": "Knock", "message": "A shutter opens at eye height. 'Living?' Yes. 'Then come back when you aren't, and we'll keep you for the reckoning.' The shutter closes." } ]
+  },
+  {
+    "id": "tithe_salt_heap",
+    "name": "Salt heap",
+    "examine": "Raked salt from the pans of Salinas, drying in the glare.",
+    "actions": [ { "id": "look", "label": "Look-at", "message": "The salt is so white at noon it hurts to look at. The rakers wear veils; the heaps cast no shadow you can see." } ]
+  },
+  {
+    "id": "cistern_deepwell",
+    "name": "The Deepwell",
+    "examine": "The deepest well in the west: five terraces down to water you can see but not reach.",
+    "actions": [ { "id": "look", "label": "Look-down", "message": "Far below, the water is bright turquoise and perfectly still, except where the wheel dips into it. A guard watches you look. In Cistern, nobody draws from the Deepwell without a tally from the Water Office." } ]
+  },
+  {
+    "id": "cistern_water_rolls",
+    "name": "The Rolls",
+    "examine": "Long scrolls listing every household's water ration, re-inked every dry season.",
+    "actions": [ { "id": "read", "label": "Read", "message": "House of the tanner Iskar: four jars the week. House of the widow Daoud: three jars, and one for the fig tree, by the Queen's mercy. Strangers and pilgrims: one cup the day, at the seller's price. At the bottom, in a newer hand: rations to be cut by a fifth from the new moon." } ]
+  },
+  {
+    "id": "dry_fountain",
+    "name": "The dry fountain",
+    "examine": "A great fountain basin, cracked dry. The green stains on the bowl are the only water it remembers.",
+    "actions": [ { "id": "look", "label": "Look-at", "message": "Coins lie in the cracks of the dry basin: people still throw them in, though nobody remembers what for. A water-seller watches you, in case you're thirsty." } ]
+  },
+  {
+    "id": "great_cistern",
+    "name": "Cistern stair",
+    "examine": "Steps going down under the Great Cistern's dome into cool darkness. The air coming up smells of stone and water.",
+    "actions": [ { "id": "listen", "label": "Listen", "message": "From deep under the dome comes the slow drip of water into a tank as big as a cathedral, and, once, something like a voice counting. Then only the drip." } ]
+  },
+  {
+    "id": "saffiya_doors",
+    "name": "Palace doors",
+    "examine": "Gilded doors in the deep tiled arch of the palace.",
+    "actions": [ { "id": "enter", "label": "Enter", "message": "Two guards cross their spears. 'The Queen hears petitions on the first day of the month. Bring water, or bring something better than water.'" } ]
+  },
+  {
+    "id": "lucern_signpost",
+    "name": "Signpost",
+    "examine": "A weathered signpost by the Pass Gate, its arms written in three scripts.",
+    "actions": [ { "id": "read", "label": "Read", "message": "NORTH: LUCERN PASS, AND CONCORDIA BEYOND (by the beacons). EAST: VENARIA AND THE CRADLE. Someone has added, under NORTH, in chalk: carry twice the water you think." } ]
+  },
+  {
+    "id": "meridian_gnomon",
+    "name": "Gnomon plaque",
+    "examine": "A brass plaque on the gnomon's plinth, polished by a great many thumbs.",
+    "actions": [
+      {
+        "id": "read",
+        "label": "Read",
+        "message": "THIS LINE IS THE MERIDIAN OF CONCORDIA. ALL MEASURE BEGINS HERE. At noon the shadow lies on the brass. Under it, smaller: Corrected after the fall of the second year, by a hand's width."
+      }
+    ]
+  },
+  {
+    "id": "concord_rostrum",
+    "name": "Rostrum",
+    "examine": "The rostrum of the Concord, a brass lectern and a sand-glass. The sand is all in the bottom.",
+    "actions": [
+      {
+        "id": "look",
+        "label": "Look",
+        "message": "The sand-glass is labelled ONE SPEAKER, ONE GLASS. Somebody has scratched beside it: the Synod's envoy turns it over when it's half done."
+      }
+    ]
+  },
+  {
+    "id": "standard_measures",
+    "name": "The standards",
+    "examine": "A glazed case: the standard ell, a nest of brass weights, a balance.",
+    "actions": [
+      {
+        "id": "look",
+        "label": "Look",
+        "message": "Every ell and pound in Concordia is checked against these. A card in the case reads: The Synod's ell is three fingers shorter. Trade accordingly."
+      }
+    ]
+  },
+  {
+    "id": "moonfall_almanac",
+    "name": "Almanac board",
+    "examine": "The season's moonfall forecast, pinned up on slate and updated by semaphore.",
+    "actions": [
+      {
+        "id": "read",
+        "label": "Read",
+        "message": "MOONFALL FORECAST. North-west sectors: likely. The Cradle: unlikely. Calcinia: none expected. Below, in a different hand and struck through: Revised upward. See Magister Varrow."
+      }
+    ]
+  },
+  {
+    "id": "moon_fragment",
+    "name": "Fragment rail",
+    "examine": "A brass rail round a piece of the cracked moon. The label on it is very small.",
+    "actions": [
+      {
+        "id": "look",
+        "label": "Look",
+        "message": "Fragment, Selenfall, eleventh year. Do not touch. Do not sleep within ten paces. The stone hums, low, just under hearing, and the green in it moves when you don't look at it."
+      }
+    ]
+  },
+  {
+    "id": "orrery_lift",
+    "name": "Funicular gate",
+    "examine": "The turnstile of the funicular up to the Orrery. Locked, with a brass plate.",
+    "actions": [
+      {
+        "id": "use",
+        "label": "Ride",
+        "message": "The plate reads: ASCENTS BY APPOINTMENT OF THE ORRERY ONLY. The cable above you hums as a car comes down empty."
+      }
+    ]
+  },
+  {
+    "id": "concord_toll_board",
+    "name": "Toll board",
+    "examine": "The tolls for the pass, painted white on slate.",
+    "actions": [
+      {
+        "id": "read",
+        "label": "Read",
+        "message": "CROSSING TOLL, BY ORDER OF THE CONCORD. By head: one. By mule: three. By cart: by weight. Scholars of the Orrery, dwarves under the Treaty: none. Pilgrims of the Synod: by head, and no argument."
+      }
+    ]
+  },
+  {
+    "id": "survey_notice",
+    "name": "Notice",
+    "examine": "A fresh notice on the survey office's board.",
+    "actions": [
+      {
+        "id": "read",
+        "label": "Read",
+        "message": "SURVEY OF THE CONCORD. Bore Nine has reached its depth. All work suspended pending the Magister's review. Spoil is NOT to be taken home, burned, or eaten."
+      }
+    ]
+  },
+  {
+    "id": "bore_nine",
+    "name": "Survey sign",
+    "examine": "A slate sign on the fence round the derrick.",
+    "actions": [
+      {
+        "id": "read",
+        "label": "Read",
+        "message": "BORE NINE. AUTHORISED SURVEYORS ONLY. Under it, in chalk, in a dwarf's square letters: you are too deep."
+      }
+    ]
+  },
+  {
+    "id": "ladder_up",
+    "name": "Ladder",
+    "examine": "Rungs worn smooth in the middle. It goes up.",
+    "actions": [ { "id": "climb", "label": "Climb up" } ]
+  },
+  {
+    "id": "ladder_down",
+    "name": "Ladder",
+    "examine": "Rungs worn smooth in the middle. It goes down.",
+    "actions": [ { "id": "climb", "label": "Climb down" } ]
+  },
+  {
+    "id": "stairs_up",
+    "name": "Stairs",
+    "examine": "A stair, going up.",
+    "actions": [ { "id": "climb", "label": "Go up" } ]
+  },
+  {
+    "id": "stairs_down",
+    "name": "Stairs",
+    "examine": "A stair, going down.",
+    "actions": [ { "id": "climb", "label": "Go down" } ]
+  },
+  {
+    "id": "trapdoor_down",
+    "name": "Trapdoor",
+    "examine": "A trapdoor with an iron ring. There are steps below.",
+    "actions": [ { "id": "climb", "label": "Climb down" } ]
+  },
+  {
+    "id": "trapdoor_up",
+    "name": "Trapdoor",
+    "examine": "The underside of a trapdoor, and a ladder up to it.",
+    "actions": [ { "id": "climb", "label": "Climb up" } ]
+  },
+  {
+    "id": "cave_mouth",
+    "name": "Cave mouth",
+    "examine": "A dark opening in the rock. Cold air breathes out of it.",
+    "actions": [ { "id": "climb", "label": "Enter" } ]
+  },
+  {
+    "id": "cave_exit",
+    "name": "Cave exit",
+    "examine": "Daylight, a long way up the passage.",
+    "actions": [ { "id": "climb", "label": "Leave" } ]
+  },
+  {
+    "id": "meridian_crane",
+    "name": "Quay crane",
+    "examine": "A timber jib crane on an iron turntable, its safe load chalked on the arm to the pound.",
+    "actions": [
+      {"id": "use", "label": "Work", "message": "You lean on the winch. The hook rises one notch a turn, exactly as the plate on the drum promises."}
+    ]
+  },
+  {
+    "id": "meridian_sea_spot",
+    "name": "Shoal",
+    "examine": "Silver backs turning in the green water under the quay.",
+    "actions": [
+      {"id": "fish", "label": "Net", "message": "The shoal scatters at your shadow and comes straight back. A net would do better than hands."}
+    ]
+  },
+  {
+    "id": "cut_pool",
+    "name": "Pool",
+    "examine": "Cold water where the Cut meets the sea. Trout hang in the current, facing the mountain.",
+    "actions": [
+      {"id": "fish", "label": "Fish", "message": "The trout don't move for you. They don't move for anything but a fly. A rod would help."}
+    ]
+  },
+  {
+    "id": "fish_stall",
+    "name": "Fish stall",
+    "examine": "Ice, wet baskets and a slate price list ruled into columns.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "Today's catch, priced by the pound and by the hour: it gets cheaper as the day goes on, to a published schedule."}
+    ]
+  },
+  {
+    "id": "meridian_range",
+    "name": "Cooking range",
+    "examine": "An iron range with a firebox, and a thermometer bolted to the oven door.",
+    "actions": [
+      {"id": "process", "label": "Cook"}
+    ]
+  },
+  {
+    "id": "plumb_barometer",
+    "name": "Barometer",
+    "examine": "A brass barometer by the inn door. Someone has scratched LIAR beside FAIR.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "The needle points at CHANGE. It always points at CHANGE, the landlord says, which makes it the most honest instrument in the city."}
+    ]
+  },
+  {
+    "id": "plumb_hearth",
+    "name": "Hearth",
+    "examine": "A big open fire of driftwood, banked high.",
+    "actions": [
+      {"id": "look", "label": "Warm-hands", "message": "The only fire in Meridian nobody has measured. Nobody wants to be the one who tries."}
+    ]
+  },
+  {
+    "id": "inn_bed",
+    "name": "Bed",
+    "examine": "A narrow bed, its blanket folded square to the wall.",
+    "actions": [
+      {"id": "rest", "label": "Rest", "message": "You lie down for a moment. Someone has painted a grid on the ceiling, so there is always something to count.", "animation": "rest"}
+    ]
+  },
+  {
+    "id": "shipping_board",
+    "name": "Shipping board",
+    "examine": "A slate board of berths, ships and tides.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "BERTH 2: the Even Keel, salt from Tithe. BERTH 5: empty. BERTH 6: the Due Course, overdue. Freshly chalked below: tides corrected again; see the Almanac Office."}
+    ]
+  },
+  {
+    "id": "harbour_log",
+    "name": "Harbourmaster's log",
+    "examine": "A heavy ledger, every line dated to the minute.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "Arrivals, departures, weights. Twice this month an entry reads 'light on the water to the south-west, no vessel', and twice it has been struck out in another hand."}
+    ]
+  },
+  {
+    "id": "chandlery_shelves",
+    "name": "Chandlery shelves",
+    "examine": "Rope by the fathom, lamp oil by the pint, tar by the bucket.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "Everything a ship could want, labelled. The back shelf is labelled in a different hand, and it is all candles and chalk."}
+    ]
+  },
+  {
+    "id": "lodger_table",
+    "name": "Cluttered table",
+    "examine": "Candle stubs, a cracked bowl, chalk dust in the grain.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "A page of notes in a cramped hand: three circles, a line drawn through for the bile, and 'they measure everything but this'. The rest has been burned."}
+    ]
+  },
+  {
+    "id": "net_bench",
+    "name": "Gear bench",
+    "examine": "A long bench for rods, nets and traps, hung with twine.",
+    "actions": [
+      {"id": "process", "label": "Craft"}
+    ]
+  },
+  {
+    "id": "sail_loom",
+    "name": "Sail loom",
+    "examine": "A broad loom threaded with pale sailcloth.",
+    "actions": [
+      {"id": "process", "label": "Weave"}
+    ]
+  },
+  {
+    "id": "boatyard_keel",
+    "name": "Keel on the stocks",
+    "examine": "A keel and its first ribs, every rib numbered in chalk.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "A slate hung on the stocks: KEEL 41. RIBS 1-9 OF 38. FINISH BY THE SECOND MOON. 'Second' has been underlined twice."}
+    ]
+  },
+  {
+    "id": "stevedore_ledger",
+    "name": "Cargo ledger",
+    "examine": "A ledger of everything that crossed the quay, by number.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "Bales in, crates out. A column headed 'Bore stores, uninsured' was started last spring, and then it stops."}
+    ]
+  },
+  {
+    "id": "cold_cellar",
+    "name": "Cold cellar hatch",
+    "examine": "An iron hatch breathing cold air. The cellar under it is packed with ice cut from the mountain.",
+    "actions": [
+      {"id": "process", "label": "Butcher"}
+    ]
+  },
+  {
+    "id": "loft_hoard",
+    "name": "Hoard chest",
+    "examine": "An iron-bound chest under the eaves.",
+    "actions": [
+      {"id": "search", "label": "Search", "message": "Rope ends, odd buttons, a dented sextant and somebody's lost wages, all sorted by size. You put it back as you found it."}
+    ]
+  },
+  {
+    "id": "sailors_altar",
+    "name": "Sailors' altar",
+    "examine": "A plain altar under the one Synod lamp the city tolerates, ringed with votive ships.",
+    "actions": [
+      {"id": "pray", "label": "Pray", "animation": "kneel"}
+    ]
+  },
+  {
+    "id": "votive_ships",
+    "name": "Votive ships",
+    "examine": "Little carved ships, one for every crew that came home.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "Each has a name and a date cut into its keel. The Rationalists call religion a fever; the sailors keep carving."}
+    ]
+  },
+  {
+    "id": "beacon_lamp",
+    "name": "Beacon lamp",
+    "examine": "A great oil lamp behind lenses as tall as you are.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "The keeper's log hangs beside it: LIT, LIT, LIT, every night for eleven years, and not one entry more."}
+    ]
+  },
+  {
+    "id": "harbour_telescope",
+    "name": "Telescope",
+    "examine": "A brass telescope on a pivot, aimed out to sea.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "Past the breakwater the sea is empty to the horizon. To the south-west, where the log says lights were seen, there is a faint green sheen on the water."}
+    ]
+  },
+  {
+    "id": "knoll_telescope",
+    "name": "Telescope",
+    "examine": "A brass telescope on a pivot, aimed down at the city.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "The whole city falls away below you, tier on tier, the brass line running straight down it to the sea. To the north the Orrery's slit is open."}
+    ]
+  },
+  {
+    "id": "pass_telescope",
+    "name": "Telescope",
+    "examine": "A brass telescope on a pivot, aimed up the pass.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "The beacon road climbs into the pass, a lamp tower every few miles. The nearest is lit. The one after it is not."}
+    ]
+  },
+  {
+    "id": "exchange_notices",
+    "name": "Notice board",
+    "examine": "Errands, tasks and lost property, pinned in straight rows.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "WANTED: a steady pair of hands to carry an instrument to the Butts (fragile). WANTED: a second opinion on the Almanac (ask for no one). FOUND: one plumb-bob, slightly out of true."}
+    ]
+  },
+  {
+    "id": "exchange_scales",
+    "name": "Scales",
+    "examine": "Brass scales and a box of weights, each stamped by the Hall of Measures.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "You try a weight on the scales. It is exactly what it says it is. Everything here is exactly what it says it is."}
+    ]
+  },
+  {
+    "id": "chiming_clock",
+    "name": "Chiming clock",
+    "examine": "A tall case clock with a little brass grille under its face, like a mouth.",
+    "actions": [
+      {"id": "listen", "label": "Listen", "message": "It whirs, and a small voice says: 'Ask the brass line where it goes. Then go there.' Then it chimes the quarter, a minute early."}
+    ]
+  },
+  {
+    "id": "exchequer_strongbox",
+    "name": "Exchequer strongbox",
+    "examine": "An iron strongbox behind the counter, stamped with the Exchequer's balance.",
+    "actions": [
+      {"id": "bank", "label": "Bank"}
+    ]
+  },
+  {
+    "id": "exchequer_vault",
+    "name": "Vault door",
+    "examine": "A round iron door with three dials.",
+    "actions": [
+      {"id": "open", "label": "Open", "requiresFlag": "exchequer_vault_open", "lockedMessage": "The dials are set to numbers you don't know, and a clerk downstairs is watching you not know them."}
+    ]
+  },
+  {
+    "id": "instrument_bench",
+    "name": "Instrument bench",
+    "examine": "A bench of half-made locks, sights and crossbow stocks.",
+    "actions": [
+      {"id": "process", "label": "Craft"}
+    ]
+  },
+  {
+    "id": "hour_stone",
+    "name": "Hour-stone",
+    "examine": "A granite stone at the end of an hour-line.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "The hour is cut deep. Under it, cut later and smaller, a correction: add a hand's width, since the second year."}
+    ]
+  },
+  {
+    "id": "little_orrery",
+    "name": "Little Orrery",
+    "examine": "A brass armillary of the moons on a granite drum.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "The moons turn on their rings. One is green glass, cracked right across, and someone has tried to glue it."}
+    ]
+  },
+  {
+    "id": "square_fountain",
+    "name": "Fountain",
+    "examine": "A square granite basin with a single jet.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "You put your hand in the jet. It is exactly one metre high. Of course it is."}
+    ]
+  },
+  {
+    "id": "garden_bench",
+    "name": "Garden bench",
+    "examine": "A bench on a strip of lawn mown to the height of every other strip.",
+    "actions": [
+      {"id": "sit", "label": "Sit", "message": "You sit. The bench is perfectly level, and you find yourself checking.", "animation": "sit"}
+    ]
+  },
+  {
+    "id": "lodging_books",
+    "name": "Scholar's books",
+    "examine": "Books on every flat surface, spines out.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "Tables of moon-rise against tide, worked over and over. In the margin: 'The forecast is wrong. Not by much. Not by much yet.'"}
+    ]
+  },
+  {
+    "id": "lodging_letters",
+    "name": "Letters",
+    "examine": "A neat stack of letters, still sealed.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "Every one is addressed to the Almanac Office, and every one has come back unopened, stamped NOTED."}
+    ]
+  },
+  {
+    "id": "academy_lectern",
+    "name": "Lectern",
+    "examine": "A tall lectern with the day's lecture pinned to it.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "TODAY: On the Errors of the Ancients, with Corrections. TOMORROW: On the Errors of Today's Lecture."}
+    ]
+  },
+  {
+    "id": "professors_study",
+    "name": "Study door",
+    "examine": "A blue door with a brass plate: THE PROFESSOR IS NOT IN.",
+    "actions": [
+      {"id": "open", "label": "Open", "requiresFlag": "academy_study_open", "lockedMessage": "Locked. A note asks for a field assistant to apply in person, which you can't, because the professor is not in."}
+    ]
+  },
+  {
+    "id": "library_shelves",
+    "name": "Library shelves",
+    "examine": "Shelves to the roof, catalogued by skill.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "Every shelf is a skill, Artifice to Woodcutting, its books ranked by what a reader could make or do after them. The guide in your pack says much the same in fewer words."}
+    ]
+  },
+  {
+    "id": "bestiary_desk",
+    "name": "Bestiary desk",
+    "examine": "A desk under a lamp, and a great open book of creatures.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "Each creature has its page: drawn, measured, weighed. The Moonborn pages are mostly blank, with a note: specimens wanted, whole if possible."}
+    ]
+  },
+  {
+    "id": "forbidden_shelf",
+    "name": "Roped-off shelf",
+    "examine": "A shelf behind a velvet rope, the books on it bound in grey.",
+    "actions": [
+      {"id": "read", "label": "Read", "requiresFlag": "cold_archive_open", "lockedMessage": "The rope is only velvet, but the librarian downstairs has very good hearing."}
+    ]
+  },
+  {
+    "id": "specimen_case",
+    "name": "Specimen case",
+    "examine": "Glass cases of beetles, ores and shells, labelled in brass.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "Every specimen is pinned, named and measured. One tray of glowing green grit has no label at all."}
+    ]
+  },
+  {
+    "id": "crag_goat",
+    "name": "Crag-goat",
+    "examine": "A stuffed crag-goat, one horn mended with wire.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "Its plaque says it was taken on the pine slope. Its glass eyes have been set perfectly level, so it looks surprised."}
+    ]
+  },
+  {
+    "id": "moon_glass_case",
+    "name": "Moon-glass case",
+    "examine": "A locked case of green glass beads.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "Moon-glass: what the fragment sheds as it cools. The beads are warmer than the room. The label says DO NOT BREATHE ON."}
+    ]
+  },
+  {
+    "id": "alpine_herb_bed",
+    "name": "Herb bed",
+    "examine": "A raised bed of alpine herbs, each labelled in brass.",
+    "actions": [
+      {"id": "pick", "label": "Pick", "message": "You rub a leaf: sharp and cold, a little like snow. The labels say what each one cures, with a margin of error."}
+    ]
+  },
+  {
+    "id": "physic_bench",
+    "name": "Physic bench",
+    "examine": "A physician's bench: a balance, a mortar and a rack of stoppered jars.",
+    "actions": [
+      {"id": "process", "label": "Mix"}
+    ]
+  },
+  {
+    "id": "observatory_telescope",
+    "name": "Brass telescope",
+    "examine": "A brass telescope under the dome's slit.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "You find the moon and it fills the glass: grey, scarred, and very slightly closer than the ring on the eyepiece says it ought to be."}
+    ]
+  },
+  {
+    "id": "aligned_telescope",
+    "name": "Brass telescope",
+    "examine": "A brass telescope whose rings are engraved with the moon's phases.",
+    "actions": [
+      {"id": "look", "label": "Turn", "message": "The rings are set to the full moon, and tonight's is not full. A note on the mount: 'set it true, and look where it then points.'"}
+    ]
+  },
+  {
+    "id": "star_charts",
+    "name": "Star charts",
+    "examine": "Charts of the sky in sectors, pinned at every moonfall.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "Every moonfall since the second year has its pin. The pins are getting closer together."}
+    ]
+  },
+  {
+    "id": "concord_bench",
+    "name": "Assembly bench",
+    "examine": "Plain dark wood, a numbered brass plate on every seat.",
+    "actions": [
+      {"id": "sit", "label": "Sit", "message": "You take a seat. The plate says it belongs to someone, and that their attendance is recorded.", "animation": "sit"}
+    ]
+  },
+  {
+    "id": "crossbow_rack",
+    "name": "Crossbow rack",
+    "examine": "Crossbows in rows, each tagged with its draw weight.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "Every bow has a tag: weight, range, and who last sighted it. The tag on lane four's bow just says SEE ME."}
+    ]
+  },
+  {
+    "id": "range_ledger",
+    "name": "Range ledger",
+    "examine": "Scores by lane and by day.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "Lane four's column has been wrong for a week, always by the same amount."}
+    ]
+  },
+  {
+    "id": "butts_target",
+    "name": "Target",
+    "examine": "A straw boss on an easel, painted with rings.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "A tight cluster of holes a hand's width left of the gold, as if the target had moved."}
+    ]
+  },
+  {
+    "id": "judges_bench",
+    "name": "Judges' bench",
+    "examine": "A bench for three above the lanes.",
+    "actions": [
+      {"id": "look", "label": "Watch", "message": "From up here you can see every lane at once, and the bay beyond them, and a lot of marksmen pretending not to look up."}
+    ]
+  },
+  {
+    "id": "arcade_telescope",
+    "name": "Rail telescope",
+    "examine": "A brass telescope on the rail, with a coin slot that takes no coins.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "East over the bay: fishing boats, a trader beating in from Tithe, and the beacons stepping up the pass."}
+    ]
+  },
+  {
+    "id": "forecast_desk",
+    "name": "Forecast desk",
+    "examine": "The desk where the day's forecast is written out in fair copy.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "TODAY: CLEAR. MOONFALL RISK: LOW. Beneath it in the same hand, struck through and written again: LOW (REVISED)."}
+    ]
+  },
+  {
+    "id": "semaphore_levers",
+    "name": "Semaphore levers",
+    "examine": "Two brass levers that work the arms on the mast above.",
+    "actions": [
+      {"id": "work", "label": "Work", "message": "The arms clank overhead. Far up the pass a beacon's arms clank back: RECEIVED. Then, after a pause: REPEAT."}
+    ]
+  },
+  {
+    "id": "almanac_telescope",
+    "name": "Telescope",
+    "examine": "A brass telescope, aimed not at the sky but at the Orrery.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "Through it you can see the Orrery's slit, and someone in it looking back at you through a much bigger one."}
+    ]
+  },
+  {
+    "id": "winding_wheel",
+    "name": "Winding wheel",
+    "examine": "The great brass wheel that hauls the funicular, behind glass.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "Still. A tag hangs on it: SEIZED? NO. STOPPED, BY ORDER."}
+    ]
+  },
+  {
+    "id": "appointment_book",
+    "name": "Appointment book",
+    "examine": "The ledger of ascents to the Orrery.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "Every page for a year ahead is empty but one line: 'Field assistant (to be found). I. Varrow.'"}
+    ]
+  },
+  {
+    "id": "orrery_gate",
+    "name": "The Orrery Gate",
+    "examine": "Brass-bound iron gates across the meridian. A plaque: ASCENTS BY APPOINTMENT.",
+    "actions": [
+      {"id": "open", "label": "Open", "requiresFlag": "orrery_gate_open", "lockedMessage": "Locked. Under the plaque, smaller: AND NOT OTHERWISE."}
+    ]
+  },
+  {
+    "id": "walk_view_academy",
+    "name": "View point",
+    "examine": "A brass plate on the parapet, engraved with everything you can see from here.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "Below: the Academy's lawns, the Library's roof, the Rows in their straight lines, and the gnomon's shadow lying exactly on the brass."}
+    ]
+  },
+  {
+    "id": "walk_view_harbour",
+    "name": "View point",
+    "examine": "A brass plate on the parapet, engraved with everything you can see from here.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "The harbour, the mole and its beacon, and the sea going on south. The plate names every berth; you can count the empty ones."}
+    ]
+  },
+  {
+    "id": "walk_view_forum",
+    "name": "View point",
+    "examine": "A brass plate on the parapet, engraved with everything you can see from here.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "The Concord's dome and the Butts beside it on their arches over the sea. From here you hear each bow a moment after you see it."}
+    ]
+  },
+  {
+    "id": "walk_bench",
+    "name": "Bench",
+    "examine": "A granite bench on the Observers' Walk, facing the drop.",
+    "actions": [
+      {"id": "sit", "label": "Sit", "message": "You sit with the whole city below you. The wind takes your breath away, which the plate on the bench says is the point.", "animation": "sit"}
+    ]
+  },
+  {
+    "id": "orrery_twin",
+    "name": "Pocket orrery",
+    "examine": "A little brass orrery on a post, the twin of the one in the Square.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "Its moons turn with the big one's. Its green moon is cracked in the same place, though nobody has ever dropped this one."}
+    ]
+  },
+  {
+    "id": "pass_perch",
+    "name": "Perch",
+    "examine": "A flat rock past the end of the walk, out of the wind.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "From here you can see over the pines into the pass, and a camp no map shows: tents, a cart, and a derrick like Bore Nine's, smaller and newer."}
+    ]
+  },
+  {
+    "id": "pine_thicket",
+    "name": "Thicket",
+    "examine": "A tangle of pine and scrub on the steep ground between the slope and the Crag.",
+    "actions": [
+      {"id": "climb", "label": "Push-through", "requirements": [{"skill": "woodcutting", "level": 15}]}
+    ]
+  },
+  {
+    "id": "survey_map_table",
+    "name": "Map table",
+    "examine": "The Heights in survey, weighted flat with rock cores.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "Every bore is numbered. Nine is circled. Ten to fourteen were drawn in pencil and rubbed out."}
+    ]
+  },
+  {
+    "id": "glowing_cores",
+    "name": "Glowing cores",
+    "examine": "Rock cores in crates, banded grey and green.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "The green bands are warm to the touch. The crate is stencilled RETURN TO SURVEY, and then, freshly, DO NOT RETURN."}
+    ]
+  },
+  {
+    "id": "bore_nine_shaft",
+    "name": "Shaft cover",
+    "examine": "An iron cap bolted over the bore, every bolt painted with a seal.",
+    "actions": [
+      {"id": "open", "label": "Open", "requiresFlag": "bore_nine_open", "lockedMessage": "Sealed by order of the Survey. The seals are fresh. The bolts under them are not."}
+    ]
+  },
+  {
+    "id": "glowing_spoil",
+    "name": "Spoil heap",
+    "examine": "Waste rock from the bore, faintly green and faintly warm.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "Nothing grows on it, and nothing grows near it either."}
+    ]
+  },
+  {
+    "id": "cart_timetable",
+    "name": "Timetable",
+    "examine": "The cart-line's timetable, chalked on slate.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "To the quay: hourly. To Frostpeak Forge: CLOSED. To the Deep Halls: ASK."}
+    ]
+  },
+  {
+    "id": "dwarf_counter",
+    "name": "Trading counter",
+    "examine": "A long counter of dark stone, banded in bronze.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "A sign in two hands, dwarven above and Concordian below: ALL WEIGHTS CHECKED BY BOTH PARTIES. The dwarven one adds: TWICE."}
+    ]
+  },
+  {
+    "id": "dwarf_stockroom",
+    "name": "Stockroom chest",
+    "examine": "The dwarves' bronze-bound stockroom chest, inside the door.",
+    "actions": [
+      {"id": "bank", "label": "Bank"}
+    ]
+  },
+  {
+    "id": "smeltery_furnace",
+    "name": "Furnace",
+    "examine": "A dwarven furnace under a tall stack, roaring.",
+    "actions": [
+      {"id": "process", "label": "Smelt"}
+    ]
+  },
+  {
+    "id": "smeltery_anvil",
+    "name": "Anvil",
+    "examine": "A frostiron anvil, its face polished like a mirror.",
+    "actions": [
+      {"id": "process", "label": "Smith"}
+    ]
+  },
+  {
+    "id": "ore_cart",
+    "name": "Ore cart",
+    "examine": "An iron ore cart on the rails.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "Half full of dull rock. Chalked on its side, in Concordian: WEIGHED. Underneath, in dwarven: REWEIGHED."}
+    ]
+  },
+  {
+    "id": "undergate_door",
+    "name": "Sealed portal",
+    "examine": "The Undergate's inner door, bronze on stone, shut.",
+    "actions": [
+      {"id": "open", "label": "Open", "requiresFlag": "undergate_inner_open", "lockedMessage": "A dwarf behind a grille says the door is open to friends of the Under-Treaty, and that you are not on the list yet."}
+    ]
+  },
+  {
+    "id": "cutting_rock",
+    "name": "Ironstone",
+    "examine": "Brown ironstone in the side of the road cutting.",
+    "actions": [
+      {"id": "mine", "label": "Mine", "message": "Good ore, close to the surface. You'll want a pick, and to know what to do with it."}
+    ]
+  },
+  {
+    "id": "frostiron_seam",
+    "name": "Frostiron seam",
+    "examine": "A seam of blue-white metal in the rock, rimed with frost.",
+    "actions": [
+      {"id": "mine", "label": "Mine", "message": "Frostiron, cold enough to burn. The dwarves watch this seam closely, and you, now, just as closely."}
+    ]
+  },
+  {
+    "id": "ore_rubble",
+    "name": "Rubble",
+    "examine": "A slope of fallen rock between the bends of the Ore Road.",
+    "actions": [
+      {"id": "climb", "label": "Scramble", "requirements": [{"skill": "mining", "level": 10}]}
+    ]
+  },
+  {
+    "id": "cut_ford",
+    "name": "Stepping stones",
+    "examine": "Stepping stones across the Cut between the falls, slick with spray.",
+    "actions": [
+      {"id": "climb", "label": "Cross", "requirements": [{"skill": "fishing", "level": 20}]}
+    ]
+  },
+  {
+    "id": "cart_wheels",
+    "name": "Wheels",
+    "examine": "Cart wheels in stacks.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "Every spoke is the same length, which the cartwrights will tell you is harder than it looks."}
+    ]
+  },
+  {
+    "id": "toll_bell",
+    "name": "Bell",
+    "examine": "The toll-house bell, for calling the clerk.",
+    "actions": [
+      {"id": "ring", "label": "Ring", "message": "The bell rings out over the road. Below, the toll clerk looks up, then writes something down."}
+    ]
+  },
+  {
+    "id": "wayhouse_chest",
+    "name": "Carters' chest",
+    "examine": "A strongbox the Wayhouse keeps for carters' goods.",
+    "actions": [
+      {"id": "bank", "label": "Bank"}
+    ]
+  },
+  {
+    "id": "wayhouse_register",
+    "name": "Register",
+    "examine": "Travellers by name, origin and weight of luggage.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "A caravan from Sere, three pilgrims from Cruor, and a surveyor who signed in and never signed out."}
+    ]
+  },
+  {
+    "id": "guild_world_map",
+    "name": "World map table",
+    "examine": "R'th as the Guild has measured it, every coast to the inch.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "The far edges are blank and labelled UNSURVEYED, rather than anything more interesting. Your own world map opens from the minimap."}
+    ]
+  },
+  {
+    "id": "diary_desk",
+    "name": "Diary desk",
+    "examine": "A ledger of deeds done in the city and beyond, open for anyone to sign.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "The clerk checks every entry against the evidence. Your own deeds are kept in your journal's achievement diary."}
+    ]
+  },
+  {
+    "id": "pale_pine",
+    "name": "Pale pine",
+    "examine": "A pale mountain pine, its bark silver-grey.",
+    "actions": [
+      {"id": "chop", "label": "Chop", "message": "Good straight timber. You'll want an axe, and the know-how to use it."}
+    ]
+  },
+  {
+    "id": "berth_post",
+    "name": "Berth post",
+    "examine": "A granite post with an iron ring and a painted berth number.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "The number is repainted every spring, the plate under it says, in the same white, to the same height above the tide. The tide has been ignoring it."}
+    ]
+  },
+  {
+    "id": "pass_milestone",
+    "name": "Milestone",
+    "examine": "A granite milestone at the foot of the road east.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "LUCERN PASS, 40 MILES. TITHE BY SEA, 3 DAYS. MERIDIAN, 0. Someone has chalked a fourth line: THE MOON, NEARER."}
+    ]
+  },
+  {
+    "id": "tub_tree",
+    "name": "Clipped tree",
+    "examine": "An evergreen clipped into a ball on a straight stem, in a granite tub.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "Clipped to a perfect sphere. A brass tag on the tub gives the date of the last clipping, and of the next."}
+    ]
+  },
+  {
+    "id": "span_plaque",
+    "name": "Span plaque",
+    "examine": "A brass plaque set into the parapet at the end of the Span.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "THE SPAN. 17 METRES ABOVE THE CUT, 12 ACROSS, LEVEL TO A HAIR. RAISED UNDER THE UNDER-TREATY, BY BOTH PARTIES. The dwarven half of the text is a good deal longer."}
+    ]
+  },
+  {
+    "id": "beacon_log",
+    "name": "Keeper's log",
+    "examine": "The lamp-keeper's log, on a shelf by the door.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "Oil in, oil burned, wick trimmed, glass cleaned; and in the last month, three nights marked 'lamp lit, but the light looked green.'"}
+    ]
+  },
+  {
+    "id": "crag_waymark",
+    "name": "Waymark",
+    "examine": "A granite waymark at the head of the Crag stair, arrows cut in its faces.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "UP: THE ORRERY GATE, THE BEACON. WEST: THE ALMANAC OFFICE. EAST: THE OBSERVERS' WALK. DOWN: THE ACADEMY, AND EVERYTHING ELSE."}
+    ]
+  },
+  {
+    "id": "walk_view_gorge",
+    "name": "View point",
+    "examine": "A brass plate on the parapet, engraved with everything you can see from here.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "Across the Gorge: the Span, the Undergate's bronze door in the mountain, Bore Nine's derrick, and the Cut falling white between them."}
+    ]
+  },
+  {
+    "id": "knoll_cairn",
+    "name": "Cairn",
+    "examine": "A cairn of squared stones at the foot of the knoll, every stone the same size.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "Each stone is cut with a name and a year: the surveyors who measured the knoll. The newest stone has a name and no year."}
+    ]
+  },
+  {
+    "id": "butts_scoreboard",
+    "name": "Scoreboard",
+    "examine": "A slate scoreboard on posts beside the firing line.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "Today's best, lane by lane. Lane four: struck through, and beside it in the range master's hand: TARGET RE-SURVEYED. GROUND MOVED 2 CM."}
+    ]
+  },
+  {
+    "id": "line_street_view",
+    "name": "Top landing",
+    "examine": "The top landing of the Line Street stair, a brass rail along its edge.",
+    "actions": [
+      {"id": "look", "label": "Look", "message": "Straight down the brass line: the Rows, the gnomon, the Harbour Stair, the quay, the sea. Everything in Meridian is in a straight line from here, which is the point of it."}
+    ]
+  },
+  {
+    "id": "stair_fountain",
+    "name": "Drinking fountain",
+    "examine": "A granite drinking fountain at the foot of the Harbour Stair.",
+    "actions": [
+      {"id": "drink", "label": "Drink", "message": "Cold mountain water, a little metallic. A plate says it was tested this morning and found pure. A smaller plate says when it was last tested before that."}
+    ]
+  },
+  {
+    "id": "rationalist_statue",
+    "name": "Statue",
+    "examine": "A statue of a robed scholar holding a set square, on a plain plinth.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "THE FIRST OF THE RATIONALISTS, WHO MEASURED THE FEVER AND FOUND IT WANTING. The face has been left smooth: nobody agreed on what it looked like, so it was left uncut until they do."}
+    ]
+  },
+  {
+    "id": "crag_instrument",
+    "name": "Weather post",
+    "examine": "A post on the Crag hung with a wind vane, a rain gauge and a thermometer.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "Wind north-east, light. Rain, none. Cold, as ever. A card in a brass frame is filled in every hour, and the last few are signed by people who were asked to stay later."}
+    ]
+  },
+  {
+    "id": "under_treaty_stele",
+    "name": "Treaty stone",
+    "examine": "A tall dark stone carved in two scripts, Concordian and dwarven, side by side.",
+    "actions": [
+      {"id": "read", "label": "Read", "message": "THE UNDER-TREATY: what is above is Concordia's, what is beneath is the dwarves', and what is found between is shared. The last clause has been re-cut, deeper, by a dwarven hand."}
+    ]
   }
 ]

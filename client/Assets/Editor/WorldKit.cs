@@ -16,7 +16,7 @@ namespace Rth.Client.Editor
     /// exporter turns the scene straight into server collision and placements. Coordinates are
     /// tiles: tile (x, z) covers world X [x, x+1], Z [z, z+1].
     /// </summary>
-    public sealed class WorldKit
+    public sealed partial class WorldKit
     {
         private const string MaterialDir = "Assets/Art/Materials";
         private readonly Dictionary<string, Material> _materials = new Dictionary<string, Material>();
@@ -79,7 +79,8 @@ namespace Rth.Client.Editor
             Directory.CreateDirectory(Path.GetDirectoryName(scenePath));
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), scenePath);
             MapExporter.Export(area);
-            Debug.Log("[R'th] Built region " + area.exportName + " at " + scenePath);
+            string assets = WriteAssetList(area);
+            Debug.Log("[R'th] Built region " + area.exportName + " at " + scenePath + (assets != null ? "; its assets are listed in " + assets : ""));
         }
 
         /// <summary>Asks before replacing a scene that already exists (rebuilding loses hand edits).</summary>

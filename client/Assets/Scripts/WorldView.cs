@@ -97,6 +97,12 @@ namespace Rth.Client
         /// <summary>Shows what someone said above their head for a few seconds.</summary>
         public void ShowOverheadText(int entityId, string text) => _overhead[entityId] = (text, Time.time);
 
+        private void Awake()
+        {
+            // Floors above the player's are switched off while they are below (see MapLevel).
+            if (GetComponent<LevelDisplay>() == null) gameObject.AddComponent<LevelDisplay>();
+        }
+
         public void Begin(int localId, float tickSeconds)
         {
             Clear();
