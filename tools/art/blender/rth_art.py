@@ -269,17 +269,22 @@ def hull(bm, points, mat=0):
     return faces
 
 
-def decal(bm, outline, toward, mat=0, lift=0.0015):
-    """A flat mark laid onto the surface already in `bm` (eyes on a face, a sigil on a shield):
-    each outline point is cast along -toward onto the surface and lifted a hair off it, so the
-    mark follows the surface instead of floating. Returns the new face, facing `toward`."""
+def decal(bm, outline, toward, mat=0, lift=0.0015, onto=None, facing=0.5):
+    """A flat mark laid onto a surface (eyes on a face, a sigil on a shield): each outline point
+    is cast along -toward onto the surface and lifted a hair off it, so the mark follows the
+    surface instead of floating. The surface is `onto` (a BVHTree) or everything already in `bm`.
+    If any point misses, or lands on a face turned away from `toward` (by less than `facing`),
+    nothing is made and None comes back: a mark never hangs off an edge. Else the new face."""
     from mathutils.bvhtree import BVHTree
-    bvh = BVHTree.FromBMesh(bm)
+    bvh = onto or BVHTree.FromBMesh(bm)
     toward = Vector(toward).normalized()
-    verts = []
+    hits = []
     for p in outline:
         hit, normal, _, _ = bvh.ray_cast(Vector(p) + toward * 0.5, -toward)
-        verts.append(bm.verts.new((hit + normal * lift) if hit is not None else Vector(p)))
+        if hit is None or normal.dot(toward) < facing:
+            return None
+        hits.append(hit + normal * lift)
+    verts = [bm.verts.new(h) for h in hits]
     f = bm.faces.new(verts)
     f.normal_update()
     if f.normal.dot(toward) < 0:
