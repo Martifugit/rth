@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using Rth.MapTools;
 using Rth.MapTools.Editor;
+using Rth.Shared.World;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -67,7 +68,8 @@ namespace Rth.Client.Editor
             area.title = title;
             area.origin = origin;
             area.size = size;
-            Box("Ground", root.transform, new Vector3(origin.x + size.x / 2f, -0.1f, origin.y + size.y / 2f), new Vector3(size.x, 0.2f, size.y), ground);
+            if (ground != null) // null: the region brings its own ground (a MapTerrain)
+                Box("Ground", root.transform, new Vector3(origin.x + size.x / 2f, -0.1f, origin.y + size.y / 2f), new Vector3(size.x, 0.2f, size.y), ground);
             return area;
         }
 
@@ -195,7 +197,7 @@ namespace Rth.Client.Editor
         // ------------------------------------------------------------------ walls and buildings
 
         /// <summary>A wall along a grid line from (x0,z0) to (x1,z1), with gaps at the given tiles. Blocks edges (MapWall).</summary>
-        public static void Wall(Transform parent, string name, int x0, int z0, int x1, int z1, Material material, float height = 1.7f, float thickness = 0.2f, params int[] gaps)
+        public static void Wall(Transform parent, string name, int x0, int z0, int x1, int z1, Material material, float height = DefaultStorey, float thickness = 0.2f, params int[] gaps)
         {
             bool alongX = z0 == z1;
             int from = alongX ? Mathf.Min(x0, x1) : Mathf.Min(z0, z1);
@@ -222,6 +224,9 @@ namespace Rth.Client.Editor
             }
         }
 
+        /// <summary>Today's storey (wall) height; docs/world-scale.md proposes 2.3 (decision D2).</summary>
+        public const float DefaultStorey = 1.7f;
+
         public enum Side
         {
             North,
@@ -236,23 +241,37 @@ namespace Rth.Client.Editor
         /// local player is inside.
         /// </summary>
         public Transform House(Transform parent, string name, int x0, int z0, int x1, int z1, Side doorSide, int doorAt,
-            Material walls, Material floor, Material roof)
+            Material walls, Material floor, Material roof, float storey = DefaultStorey, int storeys = 1)
         {
             Transform house = Group(parent, name);
             Patch("Floor", house, x0, z0, x1, z1, floor, 0.02f);
             Transform wallGroup = Group(house, "Walls");
-            Wall(wallGroup, "Wall S", x0, z0, x1, z0, walls, gaps: doorSide == Side.South ? new[] { doorAt } : new int[0]);
-            Wall(wallGroup, "Wall N", x0, z1, x1, z1, walls, gaps: doorSide == Side.North ? new[] { doorAt } : new int[0]);
-            Wall(wallGroup, "Wall W", x0, z0, x0, z1, walls, gaps: doorSide == Side.West ? new[] { doorAt } : new int[0]);
-            Wall(wallGroup, "Wall E", x1, z0, x1, z1, walls, gaps: doorSide == Side.East ? new[] { doorAt } : new int[0]);
+            Wall(wallGroup, "Wall S", x0, z0, x1, z0, walls, storey, gaps: doorSide == Side.South ? new[] { doorAt } : new int[0]);
+            Wall(wallGroup, "Wall N", x0, z1, x1, z1, walls, storey, gaps: doorSide == Side.North ? new[] { doorAt } : new int[0]);
+            Wall(wallGroup, "Wall W", x0, z0, x0, z1, walls, storey, gaps: doorSide == Side.West ? new[] { doorAt } : new int[0]);
+            Wall(wallGroup, "Wall E", x1, z0, x1, z1, walls, storey, gaps: doorSide == Side.East ? new[] { doorAt } : new int[0]);
             Fades(wallGroup, 0.35f);
 
-            // A simple pitched roof: two slabs meeting at a ridge along the longer side.
+            // Upper storeys belong with the roof: they hide with it (indoors, or in the line of sight).
             Transform roofGroup = Group(house, "Roof");
+            for (int level = 1; level < storeys; level++)
+            {
+                float y = level * storey;
+                Box("Upper floor", roofGroup, new Vector3((x0 + x1) / 2f, y + 0.05f, (z0 + z1) / 2f), new Vector3(x1 - x0 + 0.2f, 0.1f, z1 - z0 + 0.2f), walls, collider: false);
+                foreach ((int ax, int az, int bx, int bz) in new[] { (x0, z0, x1, z0), (x0, z1, x1, z1), (x0, z0, x0, z1), (x1, z0, x1, z1) })
+                {
+                    bool alongX = az == bz;
+                    var centre = new Vector3((ax + bx) / 2f, y + storey / 2f, (az + bz) / 2f);
+                    var size = alongX ? new Vector3(bx - ax + 0.2f, storey, 0.2f) : new Vector3(0.2f, storey, bz - az + 0.2f);
+                    Box("Upper wall", roofGroup, centre, size, walls, collider: false);
+                }
+            }
+
+            // A simple pitched roof: two slabs meeting at a ridge along the longer side.
             bool ridgeAlongX = x1 - x0 >= z1 - z0;
             float w = x1 - x0 + 0.6f;
             float d = z1 - z0 + 0.6f;
-            var c = new Vector3((x0 + x1) / 2f, 2.05f, (z0 + z1) / 2f);
+            var c = new Vector3((x0 + x1) / 2f, storeys * storey + 0.35f, (z0 + z1) / 2f);
             float span = (ridgeAlongX ? d : w) / 2f;
             float pitch = 32f;
             float slab = span / Mathf.Cos(pitch * Mathf.Deg2Rad);
@@ -339,6 +358,69 @@ namespace Rth.Client.Editor
         {
             Box("Rock", parent, new Vector3(x + 0.5f, size * 0.35f, z + 0.5f), new Vector3(size, size * 0.7f, size), stone, yaw: (x * 37 + z * 11) % 60)
                 .AddComponent<MapBlocker>();
+        }
+
+        /// <summary>
+        /// Ground with height over a region (docs/world-scale.md, section 6): a MapTerrain with these
+        /// corner heights and tile colours. It is the region's ground, so pass null to BeginRegion.
+        /// </summary>
+        public static MapTerrain Terrain(Transform parent, Heightfield field, Color32[] colours, Material material, Color baseColor, int blend = 2)
+        {
+            var go = new GameObject("Terrain");
+            go.transform.SetParent(parent, false);
+            go.transform.position = Vector3.zero;
+            MapTerrain terrain = go.AddComponent<MapTerrain>();
+            go.GetComponent<MeshRenderer>().sharedMaterial = material;
+            terrain.baseColor = baseColor;
+            terrain.blend = blend;
+            terrain.Set(field, colours);
+            return terrain;
+        }
+
+        /// <summary>
+        /// The leaf-clump material (docs/assets.md): the 128-pixel leaf texture, alpha-clipped so
+        /// its fringe cuts out (shadows too), drawn on both sides, matte.
+        /// </summary>
+        public Material LeafMat()
+        {
+            Material m = Mat("LeafClump", Color.white);
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Art/Textures/LeafClump.png");
+            m.SetTexture("_BaseMap", texture);
+            m.SetFloat("_AlphaClip", 1f);
+            m.SetFloat("_Cutoff", 0.5f);
+            m.EnableKeyword("_ALPHATEST_ON");
+            m.SetFloat("_Cull", 0f); // both sides: the fringe shows from behind as well
+            m.SetOverrideTag("RenderType", "TransparentCutout");
+            m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
+            EditorUtility.SetDirty(m);
+            return m;
+        }
+
+        /// <summary>
+        /// A leafy tree (<see cref="LeafyTree"/>): blocks its footprint (1 × 1 or 2 × 2 tiles
+        /// from (x, z)), fades when it hides the player, and stands at height <paramref name="y"/>.
+        /// </summary>
+        public GameObject LeafyTree(Transform parent, int x, int z, LeafyTreeSpec spec, float y = 0f)
+        {
+            var tree = new GameObject(spec.Name);
+            tree.transform.SetParent(parent, false);
+            float half = spec.Footprint / 2f;
+            tree.transform.position = new Vector3(x + half, y, z + half);
+            tree.transform.rotation = Quaternion.Euler(0f, Range(0f, 360f), 0f);
+            tree.AddComponent<MeshFilter>().sharedMesh = global::Rth.Client.Editor.LeafyTree.MeshAsset(spec);
+            tree.AddComponent<MeshRenderer>().sharedMaterials = new[]
+            {
+                Mat("Bark", new Color(0.36f, 0.25f, 0.15f)), Mat("LeafCore", new Color(0.11f, 0.2f, 0.1f)), LeafMat(),
+            };
+            var trunk = new GameObject("Trunk collider");
+            trunk.transform.SetParent(tree.transform, false);
+            var box = trunk.AddComponent<BoxCollider>();
+            box.center = new Vector3(0f, spec.TrunkTop / 2f, 0f);
+            box.size = new Vector3(spec.Footprint - 0.4f, spec.TrunkTop, spec.Footprint - 0.4f);
+            tree.AddComponent<MapBlocker>();
+            tree.AddComponent<ArtKind>().kind = "tree";
+            Fades(tree.transform, 0.25f);
+            return tree;
         }
 
         // ------------------------------------------------------------------ map markers

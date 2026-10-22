@@ -200,7 +200,7 @@ namespace Rth.Client.Editor
             {
                 MeshFilter filter = r.GetComponent<MeshFilter>();
                 Mesh mesh = r is SkinnedMeshRenderer skinned ? skinned.sharedMesh : filter != null ? filter.sharedMesh : null;
-                if (mesh == null || r is ParticleSystemRenderer) continue;
+                if (mesh == null || r is ParticleSystemRenderer || r.GetComponent<MapTerrain>() != null) continue; // ground isn't a model
                 triangles += Triangles(mesh);
                 foreach (Material m in r.sharedMaterials)
                     if (m != null) materials.Add(m);

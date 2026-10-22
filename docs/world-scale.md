@@ -83,8 +83,8 @@ land gets a soft base noise of **0.6–3.75 tiles**, the reference's default.
 **Slopes.** At least **97 %** of neighbouring tile corners differ by under a tile. Those are
 walkable. The rest are cliffs.
 
-**Cliffs** are **1–3 tiles** high and block movement (`MapTerrain` turns every tile edge steeper
-than its `cliffStep`, 1 tile by default, into a wall when the map is exported). Use a cliff to
+**Cliffs** are **1–3 tiles** high and block movement (the exporter blocks every `MapTerrain` tile
+that rises more than its `cliffStep`, 1 tile by default, from one corner to another). Use a cliff to
 say "this terrace is higher"; use several stepped ones for a big climb. Higher than 3 tiles in one
 place needs a reason: a lookout, a waterfall, a boss arena.
 
@@ -160,9 +160,9 @@ landmarks and the few big things (a later decision, after playing with it).
 - **`MapTerrain`** (in `tools/unity-map-tools`): a heightfield over a rectangle of tiles, one
   height per tile corner, with a colour per tile blended over a few tiles. It builds its own
   mesh and collider, so it is ground to the exporter like any other collider.
-- **Cliffs come from the data:** the exporter turns every tile edge whose corners differ by more
-  than `cliffStep` into a wall, so the server's collision matches the shape without hand-placed
-  walls.
+- **Cliffs come from the data:** the exporter blocks every tile whose corners differ by more than
+  `cliffStep` (drawn in the cliff colour), so the server's collision matches the shape without
+  hand-placed blockers.
 - **The client reads heights from it directly** (`GroundHeight.At`): characters and ground items
   stand on it, and the camera's terrain lift reads it. Where there is no `MapTerrain` the
   ground is at 0, as today, so existing regions are unchanged.
@@ -171,24 +171,25 @@ landmarks and the few big things (a later decision, after playing with it).
 
 ## 7. The scale test region
 
-**R'th > Dev > Rebuild Scale Test Scene** builds `ScaleTest.unity`, a region at tiles
-**(0, 96)–(95, 191)**, just north of Tolling, through the normal pipeline (`WorldKit`, the
-exporter, streaming). The region's south edge touches Tolling's north edge, so walk north from
-the mill. Each area has a sign (left-click to read it).
+**R'th > Dev > Rebuild Scale Test Scene** builds `ScaleTest.unity` (`ScaleTestBuilder`), a region at
+tiles **(0, 96)–(95, 191)**, just north of Tolling, through the normal pipeline (`WorldKit`, the
+exporter, streaming). Its south edge meets Tolling's north edge: walk north from the meadow
+west of the mill, up the road at x 28–29. The ground is a `MapTerrain`; the town part is flat.
 
-| Area | What to look at |
-| --- | --- |
-| Storey street | Houses at today's 1.7 on one side, the proposed 2.3 on the other, a 3-tile street between. |
-| Alley | Two two-storey houses (2 × 2.3) with a 2-tile alley between: walk it at the default camera and see how much of it the player is hidden for. |
-| Square | A three-storey landmark tower (≈ 7.9 with its roof) alone on an open square. |
-| Grove | Today's block trees (south row) beside the new leafy small (3) and large (4) trees (north row). |
-| Hill | A gentle 4-tile rise: the camera should tilt up as you walk towards it, and settle back slowly after. |
-| Cliff | A 2-tile cliff you cannot walk up, with a ramp at one end. |
-| Terraces | Three 1.5-tile terraces joined by ramps. |
-| Field | A fenced field with a gap. |
+| Area | Tiles | What to look at |
+| --- | --- | --- |
+| Storey street | street y 117–120, x 8–63 | Houses at today's 1.7 on the south side, the proposed 2.3 on the north, facing each other. |
+| Alley | x 52–53, y 121–129 | Two two-storey houses (2 × 2.3) with a 2-tile alley between: walk it at both camera profiles and see how long the player is hidden. |
+| Square | x 64–80, y 109–126 | A three-storey landmark tower (6.9, about 7.9 with its roof) alone on an open square. |
+| Grove | x 10–33, y 138 (today) and 143–144 (leafy) | Today's block trees beside the leafy small (3) and large (4) trees. |
+| Hill | centred (60, 146), radius 11 | A gentle 4-tile rise with a few trees on it: the camera tilts up as you walk towards it and settles back slowly after. |
+| Cliff | plateau x 40–70, y 170–182; ramp x 66–69 from y 158 | A 2-tile cliff you cannot walk up, and a ramp at its east end. |
+| Terraces | x 74–95; steps at y 148, 160, 172; ramps x 90–93 | Three 1.5-tile terraces joined by ramps. |
+| Field | x 6–22, y 156–170 | A fenced field with a gap in the north fence. |
+| Base noise | x 0–35, y 176–191 | Untouched ground with the reference's rolling noise. |
 
-Change a number in `ScaleTestBuilder` (the storey, the tree heights, the cliff) and rebuild to try
-another.
+Change a constant at the top of `ScaleTestBuilder` (the storey, the hill, the cliff, the terrace
+step) or a tree spec in `LeafyTree` and rebuild to try another value.
 
 ## 8. Work after the decisions
 
