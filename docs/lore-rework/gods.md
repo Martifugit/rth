@@ -101,3 +101,9 @@ The name is a placeholder.
 - **A disaster to come:** one day **the falls stop flowing**.
 - **Discoverable inspiration:** a living head, water, and a price paid for what it knows.
 - *Open:* whether it is one of p-scattered's pieces.
+
+### A dream power (open)
+
+Inspired by Sandman (not the TV series), tied to the realm of dreams and the Dreaming skill. Four
+takes were rejected: a Sandman-like lord imprisoned by mortals (too close to the show), a
+shepherd of sleep, a night ferry, a night market. Open until the right idea comes.
