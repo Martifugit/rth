@@ -255,6 +255,25 @@ def paint(bm, point, mat, facing=None, size=1.0):
     return f
 
 
+def decal(bm, outline, toward, mat=0, lift=0.0015):
+    """A flat mark laid onto the surface already in `bm` (eyes on a face, a sigil on a shield):
+    each outline point is cast along -toward onto the surface and lifted a hair off it, so the
+    mark follows the surface instead of floating. Returns the new face, facing `toward`."""
+    from mathutils.bvhtree import BVHTree
+    bvh = BVHTree.FromBMesh(bm)
+    toward = Vector(toward).normalized()
+    verts = []
+    for p in outline:
+        hit, normal, _, _ = bvh.ray_cast(Vector(p) + toward * 0.5, -toward)
+        verts.append(bm.verts.new((hit + normal * lift) if hit is not None else Vector(p)))
+    f = bm.faces.new(verts)
+    f.normal_update()
+    if f.normal.dot(toward) < 0:
+        f.normal_flip()
+    f.material_index = mat
+    return f
+
+
 def mirror_y(points):
     return [(x, -y, z) for (x, y, z) in points]
 
@@ -336,6 +355,51 @@ def preview_rig(focus=(0.5, 0.5, 0.6), distance=9.0, pitch=40.0, yaw=-30.0, grou
             if o.parent is None:
                 o.location = (human_at[0], human_at[1], 0)
     return cam
+
+
+def look_rig(colours=None, front_light=True):
+    """A sun and a camera, without ground or a reference figure: for looking at a character.
+    front_light: light from the front-left above (to judge a face's shape; the game's sun is
+    behind a character facing +Y, leaving the face in shade). colours: channel material ->
+    palette colour, to preview the game's colouring."""
+    scene = bpy.context.scene
+    coll = collection("Preview")
+    ld = bpy.data.lights.new("LookSun", "SUN")
+    ld.energy = 3.5
+    sun = bpy.data.objects.new("LookSun", ld)
+    coll.objects.link(sun)
+    p, yw = math.radians(50), math.radians(-35)
+    fu = Vector((math.sin(yw) * math.cos(p), -math.sin(p), math.cos(yw) * math.cos(p)))
+    travel = Vector((fu.x, fu.z, fu.y))
+    if front_light:
+        travel = Vector((0.45, -0.75, -0.55)).normalized()
+    sun.rotation_euler = travel.to_track_quat("-Z", "Y").to_euler()
+    cd = bpy.data.cameras.new("LookCam")
+    cd.lens = 85
+    cam = bpy.data.objects.new("LookCam", cd)
+    coll.objects.link(cam)
+    scene.camera = cam
+    scene.render.engine = "BLENDER_EEVEE"
+    scene.render.resolution_x = scene.render.resolution_y = 700
+    scene.view_settings.view_transform = "Standard"
+    world = scene.world or bpy.data.worlds.new("World")
+    scene.world = world
+    world.use_nodes = True
+    world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.55, 0.62, 0.70, 1)
+    for channel, name in (colours or {}).items():
+        m = bpy.data.materials.get(channel)
+        if m is None:
+            continue
+        m.use_nodes = True
+        bsdf = m.node_tree.nodes.get("Principled BSDF")
+        if bsdf:
+            bsdf.inputs["Base Color"].default_value = rgba(name)
+            bsdf.inputs["Roughness"].default_value = 1.0
+    return cam
+
+
+PLAYER_PREVIEW = {"skin": "Skin2", "hair": "HairBrown", "primary": "Indigo", "secondary": "Umber",
+                  "leather": "Hide", "eyes": "Sable"}
 
 
 def aim_camera(cam, focus, distance, pitch, yaw):

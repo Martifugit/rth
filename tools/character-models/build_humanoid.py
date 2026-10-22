@@ -15,7 +15,9 @@ What it does, for the male base (the female follows once there is an appearance 
      they cover.
   4. Gives every face a colour channel through its material name (skin, hair, primary,
      secondary, leather); the game colours each channel, so one mesh can be recoloured.
-  5. Adds short hair as its own part, and exports one FBX (skeleton + parts) into the Unity
+  5. Gives the head a face the way the reference does, almost nothing: two thin dark strokes
+     for the eyes, smooth shading, and a bare neck above the collar.
+  6. Adds short hair as its own part, and exports one FBX (skeleton + parts) into the Unity
      project. Also saves the built .blend beside this script for hand edits.
 
 Naming contract with the client (client/Assets/Scripts/Characters/):
@@ -24,11 +26,12 @@ Naming contract with the client (client/Assets/Scripts/Characters/):
            closed fist, where held things attach)
   - meshes: "body_<part>" for body kit (head, torso, arms, hands, legs, feet) and "hair_<style>"
             (a mesh may not share a name with a bone, or Unity can't map the Humanoid)
-  - materials: the colour channel name
+  - materials: the colour channel name (skin, hair, primary, secondary, leather, eyes)
 """
 
 import math
 import os
+import sys
 import bpy
 import bmesh
 from mathutils import Matrix, Vector
@@ -38,6 +41,8 @@ SOURCE = os.path.join(HERE, "source", "human.blend")
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
 EXPORT = os.path.join(REPO, "client", "Assets", "Resources", "Characters", "HumanMale.fbx")
 BUILT_BLEND = os.path.join(HERE, "HumanMale.blend")
+sys.path.insert(0, os.path.join(REPO, "tools", "art", "blender"))
+import rth_art as A  # noqa: E402  (decal)
 
 # Old vertex group -> new bone. Back and Head are split by height below.
 GROUP_MAP = {
@@ -70,6 +75,12 @@ CHANNEL_OF_PART = {
 
 HEAD_SCALE = 1.15          # how much bigger than the source the head is
 WAIST_ABOVE_HIP = 0.07     # where the shirt meets the trousers, above the hip joints
+
+# The eyes: a small dark ellipse each, cast onto the face from the front. (x, z) of the centre,
+# half width, half height, and the tilt (the inner end a little lower, as in the reference).
+EYE_CENTRE = (0.036, 1.757)
+EYE_HALF_W, EYE_HALF_H = 0.017, 0.0075
+EYE_TILT = 0.20
 
 
 def smoothstep(a, b, x):
@@ -123,7 +134,7 @@ def material(name):
     mat = bpy.data.materials.get(name) or bpy.data.materials.new(name)
     preview = {
         "skin": (0.85, 0.66, 0.49, 1), "hair": (0.25, 0.16, 0.09, 1), "primary": (0.25, 0.45, 0.85, 1),
-        "secondary": (0.3, 0.24, 0.17, 1), "leather": (0.2, 0.13, 0.08, 1),
+        "secondary": (0.3, 0.24, 0.17, 1), "leather": (0.2, 0.13, 0.08, 1), "eyes": (0.08, 0.06, 0.06, 1),
     }
     mat.diffuse_color = preview.get(name, (0.6, 0.6, 0.6, 1))
     return mat
@@ -289,8 +300,51 @@ def build():
         obj.data.materials.append(material(CHANNEL_OF_PART[part]))
         parts[part] = obj
 
-    # 5. Short hair: the top and back of the head, pushed out along the normals.
+    # 5. The face: eye strokes on the head, smooth shading, and a bare neck.
     head = parts["head"]
+    head.data.materials.append(material("eyes"))
+    bm = bmesh.new()
+    bm.from_mesh(head.data)
+    for s in (-1, 1):
+        cx, cz = EYE_CENTRE
+        outline = []
+        for i in range(10):
+            a = 2 * math.pi * i / 10
+            dx, dz = EYE_HALF_W * math.cos(a), EYE_HALF_H * math.sin(a)
+            outline.append((s * (cx + dx), 0.3, cz + dz + dx * EYE_TILT))
+        A.decal(bm, outline, (0, 1, 0), mat=1)
+    # The neck: a short tube from inside the collar up into the head, so it shows above the shirt.
+    neck_rings = []
+    for z, r in ((back_top - 0.02, 0.056), (neck_z + 0.05, 0.052)):
+        neck_rings.append([bm.verts.new((r * math.cos(a), back_y + 0.01 + r * math.sin(a), z))
+                           for a in [2 * math.pi * i / 8 for i in range(8)]])
+    for i in range(8):
+        j = (i + 1) % 8
+        bm.faces.new((neck_rings[0][i], neck_rings[0][j], neck_rings[1][j], neck_rings[1][i]))
+    bmesh.ops.recalc_face_normals(bm, faces=[f for f in bm.faces if f.material_index == 0])
+    bm.to_mesh(head.data)
+    bm.free()
+    neck_g, head_g = head.vertex_groups["neck"], head.vertex_groups["head"]
+    for v in head.data.vertices:
+        if v.groups:
+            continue                      # the source's own vertices keep their weights
+        t = smoothstep(back_top + 0.01, neck_z + 0.03, v.co.z)
+        if t < 0.999:
+            neck_g.add([v.index], 1 - t, "REPLACE")
+        if t > 0.001:
+            head_g.add([v.index], t, "REPLACE")
+    for p in head.data.polygons:
+        p.use_smooth = True
+    torso = parts["torso"]
+    bm = bmesh.new()
+    bm.from_mesh(torso.data)
+    bmesh.ops.delete(bm, geom=[f for f in bm.faces
+                               if f.calc_center_median().z > back_top + 0.03
+                               and abs(f.calc_center_median().x) < 0.09], context="FACES")
+    bm.to_mesh(torso.data)
+    bm.free()
+
+    # 6. Short hair: the top and back of the head, pushed out along the normals.
     hair = head.copy()
     hair.data = head.data.copy()
     hair.name = hair.data.name = "hair_short"
@@ -315,7 +369,8 @@ def build():
     hair.data.materials.clear()
     hair.data.materials.append(material("hair"))
     for p in hair.data.polygons:
-        p.use_smooth = False
+        p.use_smooth = True
+        p.material_index = 0
     hair.vertex_groups.clear()
     hg = hair.vertex_groups.new(name="head")
     hg.add(list(range(len(hair.data.vertices))), 1.0, "REPLACE")

@@ -56,6 +56,17 @@ Learned by making the well with the owner. Add to this list as more props are ma
   and let the shape carry it.
 - **Do** start well under budget. The first rat was 378 triangles and worse; the second is 136.
 
+**Faces (learned on the player)**
+- **Do** look at the reference image before starting, and match its amount of detail, not more.
+  The reference player's face is a plain smooth head, a pointed chin and two thin dark strokes for
+  eyes. No modelled nose, no ears, no mouth (the female has a tiny mouth mark).
+- **Don't** give a person a creature's toolkit. Spikes for a nose, triangles for eyes and ears
+  that stick out read as a monster. A sculpted, realistic face fails just as badly the other way.
+- **Do** paint eye strokes with `decal`: a thin quad cast onto the face from the front, so it
+  follows the surface. Inner ends a little lower than the outer ones.
+- **Do** shade heads smooth. The reference's characters are lit softly; the facets come from the
+  low triangle count.
+
 **Checking**
 - **Do** render two views every round: the game view (pitch about 40°) and a low side view
   (pitch about 8°). The game view hides gaps between parts; the side view shows them.
