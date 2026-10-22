@@ -22,6 +22,7 @@ often **sealed**: undecided until a quest needs it, with only constraints fixed)
 | **The making happens in revisions**, ages apart: things are added, moved and taken out. Between revisions, nothing large changes for centuries. | Owner. |
 | **The stillness has lasted about a thousand years.** | Owner. |
 | **The game never removes places.** Removal belongs to history: lost places that used to exist, and places that still exist but not where they were recorded. The present revision shows itself in the game by what appears and what moves. | Owner. |
+| **Gods and all kinds of superhuman beings exist** and act in the world. This is a fantasy RPG. | Owner. |
 | **What's taken goes to p-spoil**, a heap of everything rejected, layered by age. | Owner, name a placeholder. |
 
 ## How it reads in the world
