@@ -1,0 +1,12 @@
+{
+ "_comment": "Which palette-named material wears which surface texture (Assets/Art/Textures, made by tools/art/surface_textures.py), and how many tiles one repeat covers. The texture is a light grey pattern; the material's palette colour tints it, so a recolour keeps the pattern. Materials not listed are flat colour (docs/assets.md 4).",
+ "surfaces": {
+  "Thatch": { "texture": "Thatch", "tiles": 2 },
+  "Slate": { "texture": "Slate", "tiles": 1 },
+  "Stone": { "texture": "Fieldstone", "tiles": 1 },
+  "Granite": { "texture": "Fieldstone", "tiles": 1 },
+  "CliffRock": { "texture": "Fieldstone", "tiles": 1 },
+  "Cobble": { "texture": "Ashlar", "tiles": 2 },
+  "Planks": { "texture": "Planks", "tiles": 1 }
+ }
+}

@@ -20,9 +20,23 @@ from mathutils import Vector
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 PALETTE_PATH = os.path.join(REPO, "client", "Assets", "Resources", "Art", "palette.json")
+SURFACES_PATH = os.path.join(REPO, "client", "Assets", "Resources", "Art", "surfaces.json")
+TEXTURES_DIR = os.path.join(REPO, "client", "Assets", "Art", "Textures")
 HUMAN_FBX = os.path.join(REPO, "client", "Assets", "Resources", "Characters", "HumanMale.fbx")
 
 _palette = None
+_surfaces = None
+
+
+def surfaces():
+    """Palette name -> {"texture", "tiles"}: the materials that wear a surface texture."""
+    global _surfaces
+    if _surfaces is None:
+        _surfaces = {}
+        if os.path.exists(SURFACES_PATH):
+            with open(SURFACES_PATH, encoding="utf-8") as f:
+                _surfaces = json.load(f).get("surfaces", {})
+    return _surfaces
 
 
 def palette():
@@ -43,17 +57,50 @@ def rgba(name):
 
 
 def mat(name):
-    """A matte material named after (and coloured as) a palette colour."""
+    """A matte material named after (and coloured as) a palette colour. If surfaces.json gives
+    the colour a texture, the texture's grey pattern is tinted by the colour (point filtered)."""
     m = bpy.data.materials.get(name)
     if m is None:
         m = bpy.data.materials.new(name)
         m.use_nodes = True
-    bsdf = m.node_tree.nodes.get("Principled BSDF")
+    nodes, links = m.node_tree.nodes, m.node_tree.links
+    bsdf = nodes.get("Principled BSDF")
     bsdf.inputs["Base Color"].default_value = rgba(name)
     bsdf.inputs["Roughness"].default_value = 1.0
     bsdf.inputs["Specular IOR Level"].default_value = 0.0
     m.diffuse_color = rgba(name)
+    surface = surfaces().get(name)
+    if surface and not nodes.get("Surface"):
+        path = os.path.join(TEXTURES_DIR, surface["texture"] + ".png")
+        if os.path.exists(path):
+            tex = nodes.new("ShaderNodeTexImage")
+            tex.name = "Surface"
+            tex.image = bpy.data.images.load(path, check_existing=True)
+            tex.interpolation = "Closest"
+            mix = nodes.new("ShaderNodeMix")
+            mix.data_type = "RGBA"
+            mix.blend_type = "MULTIPLY"
+            mix.inputs["Factor"].default_value = 1.0
+            mix.inputs[7].default_value = rgba(name)               # B: the palette colour
+            links.new(tex.outputs["Color"], mix.inputs[6])         # A: the pattern
+            links.new(mix.outputs[2], bsdf.inputs["Base Color"])
     return m
+
+
+def box_uvs(me):
+    """Texture coordinates from position, so a pattern runs on across neighbouring pieces: each
+    face takes the two axes it faces least along (walls: along and up; roofs: along and up the
+    slope), in tiles, divided by its material's repeat size."""
+    uv = me.uv_layers.new(name="UVMap") if not me.uv_layers else me.uv_layers[0]
+    for p in me.polygons:
+        n = p.normal
+        ax = max(range(3), key=lambda i: abs(n[i]))
+        a, b = {0: (1, 2), 1: (0, 2), 2: (0, 1)}[ax]
+        name = me.materials[p.material_index].name if me.materials else ""
+        tiles = surfaces().get(name, {}).get("tiles", 1)
+        for li in p.loop_indices:
+            co = me.vertices[me.loops[li].vertex_index].co
+            uv.data[li].uv = (co[a] / tiles, co[b] / tiles)
 
 
 def reset():
@@ -86,6 +133,7 @@ def mesh_from(name, bm, materials, coll="Prop", smooth_angle=None):
     bm.free()
     for n in materials:
         me.materials.append(mat(n))
+    box_uvs(me)
     ob = bpy.data.objects.new(name, me)
     collection(coll).objects.link(ob)
     if smooth_angle is not None:
