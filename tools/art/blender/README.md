@@ -96,6 +96,24 @@ Learned by making the well with the owner. Add to this list as more props are ma
 - **Do** expect special weapons to need their own triangle budget (Sealbreaker is about 1 150);
   chains and rings are where triangles go.
 
+**Buildings (learned on Venaria's village kit, `buildings/venaria.py`)**
+- **Do** split a realm's architecture into layers: the realm's shared language, each city's own
+  twist, and the common village buildings. A village is low, thatched and humble; two storeys,
+  cut stone and much leaded glass belong to towns.
+- **Do** let the faith show in rationed signatures, not everywhere: in the empire, red only where
+  the faith or the regime is (church glass, banners, the blood in a font); leaded glass in
+  growing amounts from poor house to chapel; the lancet (the wound's shape).
+- **Do** give dressing rules for where it may go (a flower box under a window, a lantern by a
+  door, firewood, benches and ivy on plain walls), so nothing covers a door or window.
+- **Don't** add a chimney for looks: build it where the hearth is, and only when there is one.
+- **Do** rest roofs on the walls' outer edge, and close every eave and corner (wall plates,
+  fillers where a jetty opens). Look at a building from every side for gaps.
+- **Do** bring buildings to life with weathering in the textures (damp along the foot of walls,
+  moss on slate, worn thatch), thick rolled thatch, and dressing round every building.
+  Clean, flat surfaces look raw.
+- **Do** make surface textures light grey patterns that the palette colour tints
+  (`tools/art/surface_textures.py`, `surfaces.json`), so recolours keep their pattern.
+
 **Checking**
 - **Do** render two views every round: the game view (pitch about 40°) and a low side view
   (pitch about 8°). The game view hides gaps between parts; the side view shows them.

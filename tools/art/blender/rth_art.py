@@ -97,10 +97,12 @@ def box_uvs(me):
         ax = max(range(3), key=lambda i: abs(n[i]))
         a, b = {0: (1, 2), 1: (0, 2), 2: (0, 1)}[ax]
         name = me.materials[p.material_index].name if me.materials else ""
-        tiles = surfaces().get(name, {}).get("tiles", 1)
+        surface = surfaces().get(name, {})
+        tiles = surface.get("tiles", 1)
+        tiles_v = surface.get("tilesV", tiles)
         for li in p.loop_indices:
             co = me.vertices[me.loops[li].vertex_index].co
-            uv.data[li].uv = (co[a] / tiles, co[b] / tiles)
+            uv.data[li].uv = (co[a] / tiles, co[b] / tiles_v)
 
 
 def reset():

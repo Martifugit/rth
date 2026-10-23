@@ -1,12 +1,43 @@
 {
- "_comment": "Which palette-named material wears which surface texture (Assets/Art/Textures, made by tools/art/surface_textures.py), and how many tiles one repeat covers. The texture is a light grey pattern; the material's palette colour tints it, so a recolour keeps the pattern. Materials not listed are flat colour (docs/assets.md 4).",
+ "_comment": "Which palette-named material wears which surface texture (Assets/Art/Textures, made by tools/art/surface_textures.py), and how many tiles one repeat covers. The texture is a light grey pattern; the material's palette colour tints it, so a recolour keeps the pattern. Materials not listed are flat colour (docs/assets.md 4). tilesV (optional): the repeat's height, when it differs (plaster repeats once per storey, so its grime sits at the bottom).",
  "surfaces": {
-  "Thatch": { "texture": "Thatch", "tiles": 2 },
-  "Slate": { "texture": "Slate", "tiles": 1 },
-  "Stone": { "texture": "Fieldstone", "tiles": 1 },
-  "Granite": { "texture": "Fieldstone", "tiles": 1 },
-  "CliffRock": { "texture": "Fieldstone", "tiles": 1 },
-  "Cobble": { "texture": "Ashlar", "tiles": 2 },
-  "Planks": { "texture": "Planks", "tiles": 1 }
+  "Thatch": {
+   "texture": "Thatch",
+   "tiles": 2
+  },
+  "Slate": {
+   "texture": "Slate",
+   "tiles": 1
+  },
+  "Stone": {
+   "texture": "Fieldstone",
+   "tiles": 1
+  },
+  "Granite": {
+   "texture": "Fieldstone",
+   "tiles": 1
+  },
+  "CliffRock": {
+   "texture": "Fieldstone",
+   "tiles": 1
+  },
+  "Cobble": {
+   "texture": "Ashlar",
+   "tiles": 2
+  },
+  "Planks": {
+   "texture": "Planks",
+   "tiles": 1
+  },
+  "Plaster": {
+   "texture": "Plaster",
+   "tiles": 1,
+   "tilesV": 2.3
+  },
+  "Linen": {
+   "texture": "Plaster",
+   "tiles": 1,
+   "tilesV": 2.3
+  }
  }
 }

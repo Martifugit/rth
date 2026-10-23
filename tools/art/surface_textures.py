@@ -24,13 +24,15 @@ SIZE = 128
 LEVELS = [0.50, 0.60, 0.68, 0.76, 0.84, 0.90, 0.95, 1.00]
 
 
-def write_png(path, grey, w, h, scale=1):
+def write_png(path, pixels, w, h, scale=1):
+    """pixels: greys (floats) or (r, g, b) floats, 0-1."""
     rows = []
     for y in range(h * scale):
         row = bytearray(b"\x00")
         for x in range(w * scale):
-            v = int(round(grey[(y // scale) * w + (x // scale)] * 255))
-            row += bytes((v, v, v))
+            p = pixels[(y // scale) * w + (x // scale)]
+            rgb = (p, p, p) if isinstance(p, float) else p
+            row += bytes(int(round(c * 255)) for c in rgb)
         rows.append(bytes(row))
     raw = b"".join(rows)
 
@@ -68,6 +70,31 @@ class Canvas:
     def set(self, x, y, level):
         self.px[(y % SIZE) * SIZE + (x % SIZE)] = LEVELS[max(0, min(7, level))]
 
+    def tint(self, x, y, rgb):
+        """Multiply one pixel by a colour (moss, lichen): the pattern keeps its shade."""
+        i = (y % SIZE) * SIZE + (x % SIZE)
+        v = self.px[i]
+        v = (v, v, v) if isinstance(v, float) else v
+        self.px[i] = tuple(a * b for a, b in zip(v, rgb))
+
+    def darken(self, x, y, steps):
+        i = (y % SIZE) * SIZE + (x % SIZE)
+        v = self.px[i]
+        if isinstance(v, float) and v in LEVELS:
+            self.px[i] = LEVELS[max(0, LEVELS.index(v) - steps)]
+        elif isinstance(v, float):
+            self.px[i] = v * (1 - 0.08 * steps)
+        else:
+            self.px[i] = tuple(c * (1 - 0.08 * steps) for c in v)
+
+
+def blob(rnd, cx, cy, r, fn):
+    """Apply fn(x, y) over a ragged round patch (weathering, moss)."""
+    for dy in range(-r, r + 1):
+        for dx in range(-r, r + 1):
+            if (dx * dx + dy * dy) ** 0.5 <= r - rnd.random() * r * 0.45:
+                fn(cx + dx, cy + dy)
+
     def get_level(self, x, y):
         return LEVELS.index(self.px[(y % SIZE) * SIZE + (x % SIZE)])
 
@@ -90,6 +117,8 @@ def thatch(rnd):
                 if dy >= row_h - drop:
                     level = 2 if dy == row_h - 1 else 3            # the shadow under the overhang
                 c.set(x, y0 + dy, level)
+    for _ in range(9):                                             # older, darker patches
+        blob(rnd, rnd.randrange(SIZE), rnd.randrange(SIZE), rnd.randint(6, 13), lambda x, y: c.darken(x, y, 1))
     return c
 
 
@@ -115,6 +144,31 @@ def slate(rnd):
                         level = shade - 1
                     c.set(x + dx, y0 + dy, level)
             x += w
+    moss, lichen = (0.82, 0.95, 0.72), (0.98, 0.97, 0.80)
+    for _ in range(7):                                             # moss, gathered in patches
+        blob(rnd, rnd.randrange(SIZE), rnd.randrange(SIZE), rnd.randint(4, 10),
+             lambda x, y: c.tint(x, y, moss) if rnd.random() < 0.7 else None)
+    for _ in range(40):                                            # lichen, in specks
+        c.tint(rnd.randrange(SIZE), rnd.randrange(SIZE), lichen)
+    return c
+
+
+def plaster(rnd):
+    """Limewash over plaster, one repeat per storey (the image's bottom row is the ground):
+    faint mottling, rising damp and splashes along the bottom, a shadow under the top."""
+    c = Canvas(7)
+    for _ in range(30):                                            # mottling
+        blob(rnd, rnd.randrange(SIZE), rnd.randrange(SIZE), rnd.randint(3, 9), lambda x, y: c.set(x, y, 6))
+    damp = 22
+    for x in range(SIZE):
+        edge = damp + rnd.randint(-4, 4)
+        for k in range(edge):
+            c.set(x, SIZE - 1 - k, 5 if k > edge - 5 else (4 if rnd.random() < 0.7 else 5))
+    for _ in range(60):                                            # splashes above the damp
+        c.set(rnd.randrange(SIZE), SIZE - damp - rnd.randint(0, 10), 5)
+    for x in range(SIZE):                                          # the shadow under the top rail
+        for y in range(4 + rnd.randint(0, 2)):
+            c.set(x, y, 5)
     return c
 
 
@@ -176,6 +230,7 @@ TEXTURES = {
     "Fieldstone": lambda r: stones(r, 12, 20, 14, 30, rough=True),
     "Ashlar": lambda r: stones(r, 16, 16, 28, 36, rough=False),
     "Planks": lambda r: planks(r),
+    "Plaster": lambda r: plaster(r),
 }
 
 
