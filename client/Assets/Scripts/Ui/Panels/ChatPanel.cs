@@ -33,7 +33,6 @@ namespace Rth.Client.Ui.Panels
         private TextField _input;
         private Label _name;
         private Label _hint;
-        private int _focusedFrame = -10;
         private bool _typing;
         private readonly List<VisualElement> _focusables = new List<VisualElement>();
         private readonly List<GameSession.LogLine> _lines = new List<GameSession.LogLine>();
@@ -86,12 +85,7 @@ namespace Rth.Client.Ui.Panels
         {
             if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter)
             {
-                // The Enter that opened the chat arrives here too; it isn't a send.
-                if (UiRoot.WithinAFrame(_focusedFrame))
-                {
-                    e.StopImmediatePropagation();
-                    return;
-                }
+                // (The Enter that opens the chat opens it on release, so it never arrives here.)
                 string text = _input.value;
                 _input.value = "";
                 if (!string.IsNullOrWhiteSpace(text)) Session.Say(text);
@@ -103,6 +97,11 @@ namespace Rth.Client.Ui.Panels
                 StopTyping();
                 e.StopImmediatePropagation();
             }
+            else if (e.character == (char)10 || e.character == (char)13)
+            {
+                // Enter also comes as its character (a newline or return); the field must not act on it.
+                e.StopImmediatePropagation();
+            }
         }
 
         /// <summary>Starts typing (Enter in the game, or a click on the line): the only way the line gets the keyboard.</summary>
@@ -110,7 +109,6 @@ namespace Rth.Client.Ui.Panels
         {
             if (Window == null) Ui.Open(this);
             Window?.Activate(this);
-            _focusedFrame = Time.frameCount;
             _typing = true;
             SetTypable(true);
             _input.Focus();

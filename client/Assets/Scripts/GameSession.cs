@@ -428,12 +428,11 @@ namespace Rth.Client
         {
             Keyboard keyboard = Keyboard.current;
             Mouse mouse = Mouse.current;
+            if (keyboard != null) WatchEnterForChat(keyboard);
 
             if (FlyCamera.Active)
             {
                 // The fly camera owns the keys and clicks; Enter still opens the chat (for ::fly).
-                if (keyboard != null && !Ui.UiRoot.IsTyping && (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame))
-                    Ui.UiRoot.Instance?.Panel<Ui.Panels.ChatPanel>()?.Focus();
                 HoverText = "";
                 world.HoveredId = 0;
                 return;
@@ -441,8 +440,6 @@ namespace Rth.Client
 
             if (keyboard != null && !Ui.UiRoot.IsTyping)
             {
-                if (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame)
-                    Ui.UiRoot.Instance?.Panel<Ui.Panels.ChatPanel>()?.Focus();
                 if (keyboard.rKey.wasPressedThisFrame) ToggleRun();
                 // In conversation the dialogue window owns Space and the number keys.
                 if (Dialogue != null)
@@ -477,6 +474,25 @@ namespace Rth.Client
             if (mouse.leftButton.wasPressedThisFrame) options[0].Action();
             else if (mouse.rightButton.wasPressedThisFrame && IsUsingItem && _useTargets == 0) CancelUse();
             else if (mouse.rightButton.wasPressedThisFrame) PopupMenu.Open(new Vector2(pointer.x, Screen.height - pointer.y), title, options);
+        }
+
+        private bool _enterOpensChat;
+
+        /// <summary>
+        /// Enter opens the chat when it is let go, not when pressed: the press reaches the interface as
+        /// a key, a character and a "submit", and any of them landing in the line it had just opened
+        /// sent an empty message and shut it again. An Enter pressed while typing (the one that sends)
+        /// opens nothing.
+        /// </summary>
+        private void WatchEnterForChat(Keyboard keyboard)
+        {
+            if (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame)
+                _enterOpensChat = !Ui.UiRoot.IsTyping;
+            if (_enterOpensChat && (keyboard.enterKey.wasReleasedThisFrame || keyboard.numpadEnterKey.wasReleasedThisFrame))
+            {
+                _enterOpensChat = false;
+                if (!Ui.UiRoot.IsTyping) Ui.UiRoot.Instance?.Panel<Ui.Panels.ChatPanel>()?.Focus();
+            }
         }
 
         // ------------------------------------------------------------------ "use" an item on something
