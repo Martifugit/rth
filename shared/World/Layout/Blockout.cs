@@ -23,7 +23,7 @@ namespace Rth.Shared.World.Layout
         /// <summary>How far, in tiles, borders wander from the zone grid, and over what distance.</summary>
         public const float Warp = 5f, WarpPeriod = 13f;
 
-        public const char MainRoad = '=', Road = '-', Settlement = '+', Landmark = '*', Frontier = '%';
+        public const char MainRoad = '=', Road = '-', Settlement = '+', Landmark = '*', Frontier = '%', SnowCap = '^';
 
         public sealed class Result
         {
@@ -42,12 +42,30 @@ namespace Rth.Shared.World.Layout
             foreach ((int cx, int cy) in land.Generated)
             {
                 int x0 = map.OriginX + cx * size, y0 = map.OriginY + cy * size;
-                RegionData region = Region(map, land.Tiles[(cx, cy)], map.OriginX / size + cx, map.OriginY / size + cy, x0, y0, size);
+                char[,] tiles = land.Tiles[(cx, cy)];
+                Snow(map, tiles, land.Heights, x0, y0, size);
+                RegionData region = Region(map, tiles, map.OriginX / size + cx, map.OriginY / size + cy, x0, y0, size);
                 Heightfield? field = land.Heights.Field(x0, y0, size, size);
                 if (field != null) region.Terrain = TerrainText.Write(field);
                 result.Regions.Add(region);
             }
             return result;
+        }
+
+        /// <summary>The ridge's tiles above the snow line (all four corners) are drawn as snow.</summary>
+        private static void Snow(ContinentMap map, char[,] tiles, LandHeights heights, int x0, int y0, int size)
+        {
+            TerrainDef? t = map.Data.Terrain;
+            if (t?.SnowAbove == null) return;
+            var ridge = new HashSet<char>(t.RidgeGrounds.Where(map.Data.Grounds.ContainsKey).Select(g => map.Data.Grounds[g].Letter[0]));
+            for (int y = 0; y < size; y++)
+                for (int x = 0; x < size; x++)
+                {
+                    if (!ridge.Contains(tiles[x, y])) continue;
+                    int ax = x0 + x, ay = y0 + y;
+                    float low = Math.Min(Math.Min(heights.Corner(ax, ay), heights.Corner(ax + 1, ay)), Math.Min(heights.Corner(ax, ay + 1), heights.Corner(ax + 1, ay + 1)));
+                    if (low > t.SnowAbove.Value) tiles[x, y] = SnowCap;
+                }
         }
 
         /// <summary>
@@ -258,6 +276,7 @@ namespace Rth.Shared.World.Layout
                 case Settlement: return ("LandSettlement", "Stone", new TileKind { Material = "LandSettlement", Height = 0.02f });
                 case Landmark: return ("LandLandmark", "BlockoutSigil", new TileKind { Material = "LandLandmark", Height = 0.02f });
                 case Frontier: return ("LandFrontier", "DarkRock", new TileKind { Material = "LandFrontier", Blocks = true, Height = 0.6f });
+                case SnowCap: return ("LandSnowcap", "Snow", new TileKind { Material = "LandSnowcap", Blocks = true });
             }
             KeyValuePair<string, GroundDef> g = map.Data.Grounds.First(e => e.Value.Letter[0] == c);
             string name = "Land" + string.Concat(g.Key.Split('-', '_').Select(w => w.Length == 0 ? w : char.ToUpperInvariant(w[0]) + w.Substring(1)));
@@ -269,9 +288,10 @@ namespace Rth.Shared.World.Layout
             }
             else if (!g.Value.Walkable)
             {
-                // The crest and the glaciers: a shelf of rock about a storey high (docs/world-scale.md 3).
+                // The crest and the glaciers: a shelf of rock about a storey high (docs/world-scale.md 3),
+                // unless the terrain raises them into peaks of their own.
                 kind.Blocks = true;
-                kind.Height = 1.6f;
+                if (map.Data.Terrain?.RidgeGrounds.Contains(g.Key) != true) kind.Height = 1.6f;
             }
             else if (g.Key == map.Data.BridgeGround) kind.Height = 0.05f;
             return (name, g.Value.Palette, kind);

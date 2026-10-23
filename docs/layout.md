@@ -231,10 +231,13 @@ dotnet run --project tools/world -- render           # world/renders/world.png a
 | Frontier land | Drawn (a low dark shelf) but blocked: the edge of the first build. |
 
 **Terrain (2026-10-23).** The spine has a first terrain (`LandHeights`, from continent.json's
-`terrain`): each ground's height in tiles (highland 4, crest 6, glacier 6.5, scar 5; the rest lie at
-0), smoothed so the highland spreads into foothills, a sharp extra ridge of 2.5 on the crest and
-glaciers, each pass cut as an even climb to a saddle of 3.5 at its middle, and the land falling to
-0 within 16 tiles of a flat built region (Tolling). It is one field over the whole layout, so
+`terrain`): each ground's height in tiles (highland 4.5, crest 6.5, glacier 7, scar 5; the rest lie
+at 0), smoothed so the highland spreads into foothills. Raised land is uneven by up to 1.2 tiles,
+more so the higher it is. The crest and glaciers get a sharp ridge of 2 and peaks of up to 6 more in
+a ridged pattern (sharp crests, deep cols, about 18 tiles apart), so they rise to 12-14 with steep
+rock faces, and snow on whatever stands above 10.5; their flat rock shelf is gone. Each pass is cut
+as an even climb to a saddle of 3.5 at its middle, walled by the peaks, and the land falls to 0
+within 16 tiles of a flat built region (Tolling). It is one field over the whole layout, so
 generated regions meet at their borders. A region taken over keeps its heights, and its edges must
 go on meeting the generated land: `tools/world terrain <region> layout` gives it these heights to
 start from, and `check` warns about steps. The server stays flat; tiles too steep to walk are

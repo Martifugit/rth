@@ -144,6 +144,14 @@ namespace Rth.Shared.World.Layout
         /// <summary>Added, sharply, over <see cref="RidgeGrounds"/>, so the crest stands as a ridge.</summary>
         public float Ridge = 2.5f;
         public List<string> RidgeGrounds = new List<string>();
+        /// <summary>Peaks over the ridge grounds: up to this much more, in a ridged pattern (sharp crests, deep cols).</summary>
+        public float Peaks;
+        /// <summary>The peaks' spacing, in tiles.</summary>
+        public float PeakScale = 20f;
+        /// <summary>Unevenness of raised walkable land, in tiles either way, growing with its height (flat land stays flat).</summary>
+        public float Rough;
+        /// <summary>Ridge tiles higher than this are drawn as snow (still blocked); none: no snow.</summary>
+        public float? SnowAbove;
         /// <summary>A pass's highest point, at the middle of its line; it climbs evenly from each end.</summary>
         public float PassSaddle = 3.5f;
         /// <summary>Tiles beyond a pass's half width over which the land returns to its own height.</summary>

@@ -88,9 +88,20 @@ namespace Rth.Shared.World.Layout
                 Blur(weight, width, height, t.Smooth);
             }
             for (int pass = 0; pass < 2; pass++) Blur(crest, width, height, 2);
+            float top = 0f;
+            foreach (float h in t.Heights.Values) top = Math.Max(top, h);
             var tile = new float[width * height];
-            for (int i = 0; i < tile.Length; i++)
-                tile[i] = (weight[i] > 1e-4f ? sum[i] / weight[i] : 0f) + t.Ridge * crest[i];
+            for (int y = 0; y < height; y++)
+                for (int x = 0; x < width; x++)
+                {
+                    int i = y * width + x;
+                    float baseHeight = weight[i] > 1e-4f ? sum[i] / weight[i] : 0f;
+                    float wx = x0 + x, wy = y0 + y;
+                    // Raised land is uneven, more so the higher it is; the crest breaks into peaks and cols.
+                    float rough = top > 0 ? t.Rough * Math.Min(1f, baseHeight / top) * Noise(data.Seed + 7, wx / 23f, wy / 23f) : 0f;
+                    float peaks = t.Peaks * crest[i] * Ridged(data.Seed + 11, wx / t.PeakScale, wy / t.PeakScale);
+                    tile[i] = baseHeight + rough + t.Ridge * crest[i] + peaks;
+                }
 
             // Corners: the mean of the tiles around them.
             for (int y = 0; y <= height; y++)
@@ -202,6 +213,27 @@ namespace Rth.Shared.World.Layout
                     v[y * width + x] = (float)((line[b] - line[a]) / (b - a));
                 }
             }
+        }
+
+        /// <summary>Ridged noise in [0, 1]: two octaves of 1 - |noise|, squared, so crests are sharp and cols deep.</summary>
+        private static float Ridged(int seed, float x, float y)
+        {
+            float a = 1f - Math.Abs(Noise(seed, x, y));
+            float b = 1f - Math.Abs(Noise(seed + 1, x * 2.1f, y * 2.1f));
+            float r = 0.7f * a * a + 0.3f * b * b;
+            return Math.Max(0f, Math.Min(1f, r));
+        }
+
+        /// <summary>Smooth value noise in [-1, 1], the same for a seed on every run.</summary>
+        private static float Noise(int seed, float x, float y)
+        {
+            int ix = (int)Math.Floor(x), iy = (int)Math.Floor(y);
+            float fx = x - ix, fy = y - iy;
+            float sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+            float Lattice(int a, int b) => (Geometry.Hash(Geometry.Hash((uint)seed, (uint)a), (uint)b) & 0xFFFF) / 32767.5f - 1f;
+            float n0 = Lattice(ix, iy) + (Lattice(ix + 1, iy) - Lattice(ix, iy)) * sx;
+            float n1 = Lattice(ix, iy + 1) + (Lattice(ix + 1, iy + 1) - Lattice(ix, iy + 1)) * sx;
+            return n0 + (n1 - n0) * sy;
         }
 
         private static float Smooth(float t)

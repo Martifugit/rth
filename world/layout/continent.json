@@ -114,10 +114,14 @@
 
   "terrain": {
     "about": "The generated land's first terrain, in tiles (LandHeights, docs/layout.md section 8). Grounds not listed lie at 0.",
-    "heights": { "highland": 4, "crest": 6, "glacier": 6.5, "scar": 5 },
+    "heights": { "highland": 4.5, "crest": 6.5, "glacier": 7, "scar": 5 },
     "smooth": 6,
-    "ridge": 2.5,
+    "ridge": 2,
     "ridgeGrounds": ["crest", "glacier"],
+    "peaks": 6,
+    "peakScale": 18,
+    "rough": 1.2,
+    "snowAbove": 10.5,
     "passSaddle": 3.5,
     "passBlend": 8,
     "builtBlend": 16
