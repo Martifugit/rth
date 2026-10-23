@@ -17,11 +17,17 @@ owns, and when it is done. Update the status column as work lands.
   Tithe and the Assayer until A1 finishes.
 - **The old area plan** (`docs/areas/skeleton.*`) is drawn on the old map and is superseded. Its
   rulebook (`docs/areas/rules.md`, `targets.json`) and research still apply.
-- **Everything is on `main`** (2026-10-22): this plan and the new canon, the art branch (scale,
-  camera, art kit, terrain, a layout prototype) and the capitals work. No other branches are open.
-- **Terrain exists:** `MapTerrain` with stamps, cliffs blocked by the exporter, the camera lifting
-  over hills (`docs/world-scale.md`, `docs/world-building.md`). The scale decisions D1-D4 and the
-  layout prototype's W1-W2 are still open.
+- **Everything is on local `main`** (2026-10-23), not yet pushed: this plan and the new canon, the
+  art branch, the capitals work, L2's blockout, the U2 panels and the terrain work. The old local
+  branches (`claude/l2-blockout`, `claude/terrain-data`, `claude/u2-*`) are merged and can go.
+- **The world has a guide:** `docs/world-guide.md` (read before any world work: scale, from lore to
+  ground, how a place is made in stages, the checklist, working together) and a worked example,
+  `docs/world-example.md` (the salt road). The world is hand-crafted and fixed; generated land is
+  scaffolding that a region leaves when hand work starts.
+- **Terrain is data** (2026-10-23): a region's `terrain` holds its heights as text, the compiler
+  blocks cliffs, `TileGround` drapes over it, and **Sculpt Ground** edits it in Unity and writes it
+  back (C5). Not yet tried in the Editor. The older `MapTerrain` (stamps, baked in scenes) is still
+  there for the capitals. The scale decisions D1-D4 and the layout prototype's W1-W2 are still open.
 - **The capital blockouts** (Cruor, Tithe, Cistern, Meridian: their builders and `docs/regions/`)
   were made on the old map. Keep the kits they use (`WorldKit.City`, `.Interiors`, `.Terraces`);
   the areas themselves are **rebuilt later**, to the new lore and through the new workflow (C3),
@@ -55,7 +61,7 @@ owns, and when it is done. Update the status column as work lands.
 | **A. Lore and world design** | A1 canon, A2 names, A3 sheets, A4 area plan | cloud, owner in the loop | now |
 | **L. Continent layout** | L1 rough layout at tile scale, L2 walkable blockout, L3 maps from the layout | cloud, then local | now |
 | **B. Text pass** | B1 now, B2 after names | cloud | now / after A2 |
-| **C. Workflow** | C0 merge art branch, C1 audit, C2 snapshots, C3 world as data, C4 migrate regions | local (Unity MCP) | now |
+| **C. Workflow** | C0 merge art branch, C1 audit, C2 snapshots, C3 world as data, C4 migrate regions, C5 terrain and incremental sync, C6 the guide's tooling | local (Unity MCP) | now |
 | **D. Death v1** | D1 server, D2 region and client, D3 the long way back | cloud, then local | now / after C3 |
 | **E. Gameplay** | E1 tools, Mining, Woodcutting; E2 ranged; E3 item-on-object use | cloud (client parts checked locally) | now |
 | **F. Art** | F1 scale and style applied, F2 Tolling art pass | local | after C0 |
@@ -217,7 +223,7 @@ readability), not its geography.
 | --- | --- |
 | **Runs** | cloud (generator, data), local (sync and check in Unity) |
 | **Depends on** | L1, C3 (the world as data), F1 (scale and style rules) |
-| **Status** | **generated** on `claude/l2-blockout` (2026-10-23): 256 regions `world/regions/land_*.json` from the layout (`tools/world blockout`, `docs/layout.md` section 8), exported; `BlockoutTests` walk from Tolling to Cruor, over every pass and into every power. Flat, no assets. Needs Sync World to create the scenes (see Handoffs). |
+| **Status** | **built and synced, waiting on the owner's walk** (2026-10-23, on `main`): 256 regions `world/regions/land_*.json` from the layout (`tools/world blockout`, `docs/layout.md` section 8); Sync World has made their scenes (`Assets/Scenes/Land/`). `BlockoutTests` walk from Tolling to Cruor, over every pass and into every power. Flat, no assets. |
 
 - Generate every region of the core from the layout as sparse but real land: ground, water,
   roads, the spine's rock, a placeholder at each landmark. Tolling, Palmerway and the Saint's crypt
@@ -300,6 +306,8 @@ agents can build the world together"). Update it before use: the continent layou
 | **C2** | Snapshots: `world/snapshots/<region>.json` and `world/screens/<region>/` so agents without Unity can see regions. | C1 | **Done** (2026-10-22): Sync World writes them; `tools/world render` also draws any region from its data. |
 | **C3** | World as data: regions as text (`world/regions`), a C# compiler to the server maps (`tools/world`), **Sync World** in Unity, and `docs/workflow.md` (who edits what). | C2 | **Done** (2026-10-22): E1's rocks and trees were placed in data alone, checked and exported without Unity, then synced. |
 | **C4** | Migrate Tolling, Palmerway and the Saint's crypt to the new path, and carry the scene-side text from B2. | C3, B2 for names | **Migrated** (2026-10-22), with LevelTest: byte-identical maps; creatures, objects, trees, rocks and spawns are data, the rest hand-made. Left: B2's scene-side text, and removing the old builders (owner's call). |
+| **C5** | Incremental Sync World and terrain as data: sync redoes only what changed (`SyncState`, per machine; **Sync World (everything)** redoes all); heights in the region's `terrain`, blocked cliffs, `TileGround` draped over them, **Sculpt Ground** with write-back, `tools/world terrain`, height seam warnings in `check`. | C3, L2 | **Done** (2026-10-23, on `main`), compile-checked outside Unity: check it in the Editor (see Handoffs). |
+| **C6** | The rest of the guide's tooling (`docs/world-guide.md`): a stage per region and a coverage map, entrances and exits as data, seam checks for roads, rivers and walking, claims the tools check, static pieces combined at build time. | C5 | Decided, not built. Build each when the first test area needs it. |
 
 ---
 
@@ -466,7 +474,7 @@ The owner's list (2026-10-22):
 | Who the player is (the sleeper premise: keep, change or drop) | A3, the first quests |
 | ~~Whether L1 extends the art branch's layout prototype or replaces it~~ L1 extended it: `world/layout/zones.json` is in its format and the bake reads it. Whether to delete the old `layout.json` and `tools/world-layout/` | L1 |
 | The rough layout: size, Tolling-Cruor distance, Sere west of Tolling, the drainage, the passes, the cold north (`docs/layout.md` section 6) | L1 |
-| How much terrain to use: the scale decisions D1-D4 (`docs/world-scale.md`) | L2 |
+| How much terrain to use: the scale decisions D1-D4 (`docs/world-scale.md`) | the first test area |
 | The coin fee's rate and free threshold; the obol's price and where it's sold | D1 (defaults in data until then) |
 | The long way back's hazards | D3 |
 | Each power's sheet | A3 |
@@ -479,7 +487,8 @@ Notes from one workstream to another ("A1 needs B1 to also change X"). Newest fi
 
 | From | To | Note |
 | --- | --- | --- |
-| L2 | local, owner | `claude/l2-blockout`, compiled outside Unity. Run **Sync World (no screenshots)** (or `tools/unity-sync.ps1 -rthNoScreens`): it creates 256 scenes under `Assets/Scenes/Land/`, adds them to the build and checks each scene exports the same map. Generated regions skip screenshots in any case. New client code: `TileGround` (`Scripts/View`, builds each region's ground mesh and collider from its rows on load, never saved in the scene), its case in `PieceBuilder`, and `RegionStreamer` announcing a title only when it changes. Then walk from Tolling west over the salt pass (about x -144, y 40) or east to Cruor (`::tele 384 216` lands on its square). Things to judge: the 1.6 m rock shelf of the crest, the dark frontier shelf, road widths, how the warped coasts read. 25 new `Land*` materials appear under `Assets/Art/Materials`. |
+| C5 | local, owner | Terrain and incremental sync, compile-checked only. The first Sync World after it redoes every region once (no record yet). Try **Sculpt Ground** on a spare `land_*` region first: select `Data > ground`, pick the tool in the Scene view (Raise, Lower, Flatten, Smooth; `[` `]` size), save the scene, and check the region file gained a `terrain` and lost `"generated"`. Placed pieces only stand on new heights after the next sync. `tools/world terrain <region> layout` is rough (it cut cliffs across the salt pass); `flat` is the safer start. |
+| L2 | local, owner | *Synced (2026-10-23).* Was: run **Sync World (no screenshots)** (or `tools/unity-sync.ps1 -rthNoScreens`): it creates 256 scenes under `Assets/Scenes/Land/`, adds them to the build and checks each scene exports the same map. Generated regions skip screenshots in any case. New client code: `TileGround` (`Scripts/View`, builds each region's ground mesh and collider from its rows on load, never saved in the scene), its case in `PieceBuilder`, and `RegionStreamer` announcing a title only when it changes. Then walk from Tolling west over the salt pass (about x -144, y 40) or east to Cruor (`::tele 384 216` lands on its square). Things to judge: the 1.6 m rock shelf of the crest, the dark frontier shelf, road widths, how the warped coasts read. 25 new `Land*` materials appear under `Assets/Art/Materials`. |
 | U2 (world map) | local, owner | `claude/u2-world-map`, compiled outside Unity; look at it in the Editor: M opens it centred on you at a tile a pixel; drag to pan, wheel or +/- to zoom (whole map, 0.75, 1, 1.5, 2, 3 px a tile); the compass button re-centres; the book button shows the legend and the toggles (place names, realm names, shade unexplored). The ground appears as a coarse draft first, then sharpens (painted on a worker thread; the Editor's Debug build of `Rth.Shared` may take a few seconds for the full picture). Things to judge: colours of the painting against the interface, label sizes, the unexplored shade's strength (`MapInk.Veil`), road widths. Places named `p-...` show as unnamed marks; `p-` landmarks are left off (the hidden occult cells among them); `"hidden": true` on a place in `continent.json` keeps any place off the map. |
 | D2 | D3, U1 | The landing is `world/regions/realm_of_the_dead.json` (x 8192-8223, y 8192-8223), ringed by water; the long way back can start from its south or east shore (extend the region or add one beside it). Death has no window of its own now: the remark is a chat line (`chat-line--ferryman`) and the ferryman talks through the dialogue box. If U1 wants a death screen (or a richer payment view), it is new interface work. |
 | E3 | U1, local | Use mode touches `client/Assets/Scripts/GameSession.cs` (use state, `UseOptions`, Escape/right-click) and, narrowly, U1's `Ui/GameText.cs` (`DefaultAction` and `ItemOptions` route clicks to the picked-up item). Compiled outside Unity against 6000.6.6f1's assemblies; check it in the Editor. U1 may want a highlight on the picked-up slot (`session.UseSlot`) and a "use" cursor. Plain items now left-click to Use (it is first in `ItemActions`, before Drop). |
