@@ -572,7 +572,7 @@ def floating_parts(objs, touch=0.06):
         pieces.setdefault(p, []).append(f)
     floating, hanging = [], []
     for p, faces in pieces.items():
-        vs = {v.co.copy() for f in faces for v in f.verts}
+        vs = [v.co.copy() for v in {v for f in faces for v in f.verts}]
         low = min(v.z for v in vs)
         if low < 0.05:
             continue
@@ -580,7 +580,7 @@ def floating_parts(objs, touch=0.06):
         holds = [held(v, p) for v in base]
         mid = sum(base, Vector()) / len(base)
         tag = (round(mid.x, 2), round(mid.y, 2), round(low, 2))
-        if not any(holds):
+        if not any(holds) and not held(mid, p):
             floating.append(tag)
         elif len(base) <= 8 and not held(mid, p):
             hanging.append(tag)
