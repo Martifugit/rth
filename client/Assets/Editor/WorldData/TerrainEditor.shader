@@ -1,5 +1,6 @@
 // Edit Terrain's look (TerrainEditor.cs): the ground's colours from a map texture (a pixel a tile),
-// flat-shaded facets, a faint tile grid, region borders, cliffs tinted red, see-through by _Opacity.
+// flat-shaded facets, a faint tile grid, region borders, cliffs tinted red, slightly see-through by
+// _Opacity (only its nearest surface: a depth pass first, so it never shows itself through itself).
 // Editor only. The terrain is drawn without instancing, so the mesh carries real positions and its
 // UVs span the whole terrain. Map alpha: 0 no ground (cut away), about 0.75 locked ground (hatched),
 // 1 ground you can sculpt.
@@ -8,7 +9,7 @@ Shader "Hidden/Rth/TerrainEditor"
     Properties
     {
         _MainTex ("Ground map", 2D) = "white" {}
-        _Opacity ("Opacity", Range(0.1, 1)) = 0.85
+        _Opacity ("Opacity", Range(0.1, 1)) = 0.9
         _Grid ("Tile grid", Range(0, 1)) = 0.3
         _CliffStep ("Cliff: rise across a tile", Float) = 1
         _RegionTiles ("Region size in tiles", Float) = 96
@@ -16,12 +17,50 @@ Shader "Hidden/Rth/TerrainEditor"
     SubShader
     {
         Tags { "RenderPipeline" = "UniversalPipeline" "Queue" = "Transparent" "RenderType" = "Transparent" "IgnoreProjector" = "True" }
+        // Depth first, so only the nearest surface is drawn and blended: the ground underneath and
+        // slopes behind a hill never show through it, only what stands on or under the ground.
+        Pass
+        {
+            Name "Depth"
+            Tags { "LightMode" = "SRPDefaultUnlit" }
+            ZWrite On
+            ColorMask 0
+            Cull Back
+
+            HLSLPROGRAM
+            #pragma vertex Vert
+            #pragma fragment FragDepth
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+            TEXTURE2D(_MainTex);
+            SAMPLER(sampler_MainTex);
+
+            struct Attributes { float4 positionOS : POSITION; float2 uv : TEXCOORD0; };
+            struct Varyings { float4 positionCS : SV_POSITION; float2 uv : TEXCOORD0; };
+
+            Varyings Vert(Attributes a)
+            {
+                Varyings v;
+                v.positionCS = TransformObjectToHClip(a.positionOS.xyz);
+                v.uv = a.uv;
+                return v;
+            }
+
+            half4 FragDepth(Varyings v) : SV_Target
+            {
+                clip(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, v.uv).a - 0.25);
+                return 0;
+            }
+            ENDHLSL
+        }
+
         Pass
         {
             Name "Forward"
             Tags { "LightMode" = "UniversalForward" }
             Blend SrcAlpha OneMinusSrcAlpha
-            ZWrite On
+            ZWrite Off
+            ZTest LEqual
             Cull Back
 
             HLSLPROGRAM
@@ -79,7 +118,7 @@ Shader "Hidden/Rth/TerrainEditor"
                 float3 n = normalize(cross(ddy(v.positionWS), ddx(v.positionWS)));
                 n *= sign(n.y);
                 Light sun = GetMainLight();
-                float light = 0.5 + 0.6 * saturate(dot(n, sun.direction));
+                float light = 0.35 + 0.8 * saturate(dot(n, sun.direction));
                 float3 c = map.rgb * light;
 
                 float rise = sqrt(saturate(1 - n.y * n.y)) / max(n.y, 1e-3); // across one tile

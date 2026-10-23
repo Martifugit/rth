@@ -31,8 +31,7 @@ namespace Rth.Client
             get => _showSurface;
             set
             {
-                if (_showSurface == value) return;
-                _showSurface = value;
+                _showSurface = value; // always applied: after a script reload the flag resets, the renderers don't
                 foreach (TileGround g in Active)
                     if (g != null && g._surface != null) g._surface.GetComponent<MeshRenderer>().enabled = value;
             }

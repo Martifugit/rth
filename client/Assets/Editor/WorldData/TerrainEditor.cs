@@ -217,11 +217,11 @@ namespace Rth.Client.Editor
             }
             var material = new Material(shader) { hideFlags = HideFlags.DontSave, name = "World terrain" };
             material.mainTexture = MapTexture(world);
-            if (material.HasProperty("_Opacity")) material.SetFloat("_Opacity", EditorPrefs.GetFloat(OpacityPref, 0.85f));
+            if (material.HasProperty("_Opacity")) material.SetFloat("_Opacity", EditorPrefs.GetFloat(OpacityPref, 0.9f));
             return material;
         }
 
-        private const string OpacityPref = "RthTerrainOpacity";
+        private const string OpacityPref = "RthTerrainOpacity2"; // 2: the old default was too see-through
 
         /// <summary>The ground's colours, a pixel a tile: each tile's kind in its region's material colour; locked ground grey.</summary>
         private static Texture2D MapTexture(WorldTerrain world)
