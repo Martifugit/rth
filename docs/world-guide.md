@@ -95,6 +95,8 @@ wide.
 - Cliffs are 1-3 tiles and block. A mountain is raised ground with rock blocks about a storey
   high, not tall geometry.
 - One sea level; rivers step down only at falls; the whole world within about 16 tiles of height.
+- Nothing below -0.3 shows in play: the Game scene's unbuilt land, a green plane at -0.3 under the
+  whole world, covers it. A hole or a pit stops just above it (Selenfall's shaft stops at -0.2).
 
 **Services and spacing** (world-wide, [areas/rules.md](areas/rules.md)): a bank about every 80
 tiles along the ways people travel, fast travel about every 150, every settlement with dungeons or

@@ -54,7 +54,8 @@ step harder; the heart is late.
 - the approach's dry scrub (`LandScrub`);
 - the highland's grey-green (`LandHighland`);
 - the crest's rock (`LandCrest`);
-- the scar: pale, cold, glassy slate (`LandScar`, today `Slate`).
+- the scar: pale, cold stone (`LandScar`, `Stone`; `Slate` read as dark blue on the owner's walk);
+- in the hole only, moonlight blue (`LandMoonFace`, `Moonlight`).
 
 Each level below has its own few colours.
 
@@ -92,7 +93,7 @@ stranger, lit by the glow from beneath and what people brought (the lift's lamps
   | the rim | 9-10 |
   | the breaches | 8 (east), 8.5 (west) |
   | the shelf | from the rim down to about 7 at the lip |
-  | the mouth's wall | from the lip down to -4, then nothing |
+  | the mouth's wall | from the lip down to -0.2, its bottom moonlight blue (the Game scene's unbuilt land, at -0.3, would cover anything lower) |
   | the frontier side, below the west breach | about 2 |
 
 ### Going down (decided)
@@ -216,4 +217,15 @@ the bottom. This revision followed.
 - **The gate** moves to (-179, 253).
 - **Walked by a script** again: everything can be reached, and the gate shut still cuts off the
   frontier side.
+
+**Fourth pass, colours (2026-10-23), after the owner's third walk.** The mouth's size is right.
+The colours were wrong:
+- **Purple walls:** a mistake. `LandMoonFace` was named as the cliff colour but not added to the
+  regions' materials, so it was drawn magenta. The compiler now checks `cliff` names as it checks
+  `material` (a test covers it).
+- **Green bottom:** the Game scene's unbuilt land, a green plane at -0.3 under the whole world,
+  covered the shaft's bottom at -4. The shaft now stops at -0.2, more than 7 tiles below the lip,
+  and its bottom is moonlight blue as well: a stand-in for the glow and the mist.
+- **Dark blue ground:** the shelf's `Slate` is now a pale `Stone`, so the blue in the hole stands
+  out.
 

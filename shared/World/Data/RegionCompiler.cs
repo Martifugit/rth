@@ -177,7 +177,11 @@ namespace Rth.Shared.World.Data
                         layers.SetGround(plane, x, y);
                         if (!kind.Walkable) layers.Block(plane, x, y);
                     }
-                    foreach (TileKind kind in piece.Legend!.Values) CheckMaterial(region, kind.Material, piece.Id, result);
+                    foreach (TileKind kind in piece.Legend!.Values)
+                    {
+                        CheckMaterial(region, kind.Material, piece.Id, result);
+                        if (kind.Cliff != null) CheckMaterial(region, kind.Cliff, piece.Id, result);
+                    }
                     break;
                 case PieceKind.Npc:
                     NeedPair(piece.At, "at");

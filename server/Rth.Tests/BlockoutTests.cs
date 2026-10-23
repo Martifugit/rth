@@ -124,6 +124,24 @@ public class BlockoutTests
     }
 
     [Fact]
+    public void ACliffColourTheRegionDoesntListIsAnError()
+    {
+        var region = new RegionData { Id = "t", Origin = new[] { 0, 0 }, Size = new[] { 8, 8 } };
+        region.Materials["G"] = "#00ff00";
+        region.Pieces.Add(new Piece
+        {
+            Id = "ground",
+            Kind = PieceKind.Tiles,
+            Rect = new[] { 0, 0, 8, 8 },
+            Legend = new SortedDictionary<string, TileKind> { ["g"] = new TileKind { Material = "G", Cliff = "Moon" } },
+            Rows = Enumerable.Repeat("gggggggg", 8).ToList(),
+        });
+        Assert.Contains(RegionCompiler.Compile(region, null).Errors, e => e.Contains("'Moon'"));
+        region.Materials["Moon"] = "Moonlight";
+        Assert.Empty(RegionCompiler.Compile(region, null).Errors);
+    }
+
+    [Fact]
     public void ATilesPieceWithAnUnknownCharacterIsAnError()
     {
         var region = new RegionData { Id = "t", Origin = new[] { 0, 0 }, Size = new[] { 8, 8 } };
