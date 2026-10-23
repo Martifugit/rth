@@ -33,8 +33,8 @@ sys.path.insert(0, os.path.join(HERE, "..", ".."))
 import rth_art as A  # noqa: E402
 
 # Flat colours for judging shapes; the church then wears painted textures over some of them.
-MATS = ["Gravestone", "Ashgrey", "Sable", "SynodRed", "Shingle", "Iron", "CryptFloor", "Blood", "Yew"]
-PALE, ROOF, DARK, RED, CASTLE, METAL, FLOOR, GLASS, DOOR = range(len(MATS))
+MATS = ["Gravestone", "Ashgrey", "Sable", "SynodRed", "Shingle", "Iron", "CryptFloor", "Blood", "Yew", "CryptBanner", "Gold"]
+PALE, ROOF, DARK, RED, CASTLE, METAL, FLOOR, GLASS, DOOR, RUNNER, GOLD = range(len(MATS))
 
 # The church's painted textures (lab/church_textures.py, the paint lab's style) by the flat colour
 # they replace, with the tiles one repeat covers (along, up). The glass also glows a little.
@@ -303,7 +303,20 @@ def great_church(ox, oy, prefix="GreatChurch"):
     fx0 = ox - TOWER                                              # the west front's face
     c.base.box(fx0, oy - ha - WALL, 0, x1 + WALL, oy + ha + WALL, FLOOR_Z, FLOOR)
     c.base.hull([(x1 + (hn + WALL) * math.cos(a), oy + (hn + WALL) * math.sin(a), z)
-                 for a in (math.pi * (-0.5 + k / 18) for k in range(19)) for z in (0, 0.05)], FLOOR)
+                 for a in (math.pi * (-0.5 + k / 18) for k in range(19)) for z in (0, FLOOR_Z)], FLOOR)
+    # Inside: pale bands across the floor at every pier, a red runner up the nave, and a dais over
+    # the last bays and the apse (three steps up), left empty for the altar and what goes round it.
+    zf = FLOOR_Z
+    dais_x = x0 + BAY * (BAYS - 2) + 2.0
+    for i in PIERS:
+        c.base.box(x0 + BAY * i - 0.3, oy - ha, zf, x0 + BAY * i + 0.3, oy + ha, zf + 0.02, PALE)
+    c.base.box(fx0 - 3.0, oy - 1.6, zf, dais_x - 0.9, oy + 1.6, zf + 0.03, RUNNER)
+    for e in (-1, 1):
+        c.base.box(fx0 - 3.0, oy + e * 1.6, zf, dais_x - 0.9, oy + e * 1.45, zf + 0.035, GOLD)
+    for k in range(3):
+        c.base.box(dais_x - 0.9 + 0.3 * k, oy - hn, zf, x1, oy + hn, zf + 0.2 * (k + 1), PALE)
+    c.base.hull([(x1 + hn * math.cos(a), oy + hn * math.sin(a), z)
+                 for a in (math.pi * (-0.5 + k / 18) for k in range(19)) for z in (zf, zf + 0.6)], PALE)
 
     for side, key in ((-1, "S"), (1, "N")):
         y_pier, y_wall = oy + side * hn, oy + side * (ha + WALL / 2)
@@ -321,6 +334,8 @@ def great_church(ox, oy, prefix="GreatChurch"):
         for i in range(BAYS + 1):
             xp = x0 + BAY * i
             c.box(key, xp - 0.4, y_in, 0, xp + 0.4, y_in - side * 0.4, AISLE_H, PALE)
+        c.box(key, x0, y_in, 0, x1, y_in - side * 0.6, FLOOR_Z + 0.5, PALE)                   # a stone bench along the wall
+        c.box(key, x0, y_in, 1.45, x1, y_in - side * 0.2, 1.75, RED)                            # a sill course under the windows
         c.crown_run(key, (x0, y_wall), (x1, y_wall), (0, side), pier_every=BAY)
         # The arcade: piers with capitals (always), pointed arches between them (outside only).
         # No pier against the towers, and none in the last bays: the east end stays open for the
@@ -328,8 +343,12 @@ def great_church(ox, oy, prefix="GreatChurch"):
         supports = [x0] + [x0 + BAY * i for i in PIERS] + [x1]
         for xp in supports[1:-1]:
             c.upper.box(xp - 0.7, y_pier - WALL / 2, ARCADE_H, xp + 0.7, y_pier + WALL / 2, AISLE_H + 1, PALE)   # over the capital
-            c.base.box(xp - 0.7, y_pier - 0.7, 0, xp + 0.7, y_pier + 0.7, ARCADE_H - 0.5, PALE)
-            c.base.box(xp - 0.9, y_pier - 0.9, ARCADE_H - 0.5, xp + 0.9, y_pier + 0.9, ARCADE_H, PALE)
+            c.base.box(xp - 1.0, y_pier - 1.0, 0, xp + 1.0, y_pier + 1.0, FLOOR_Z + 0.5, PALE)   # plinth
+            c.base.box(xp - 0.6, y_pier - 0.6, FLOOR_Z + 0.5, xp + 0.6, y_pier + 0.6, ARCADE_H - 0.8, PALE)
+            for dx, dy in ((0.6, 0), (-0.6, 0), (0, 0.6), (0, -0.6)):          # four shafts round a core
+                c.base.cyl(xp + dx, y_pier + dy, 0.38, FLOOR_Z + 0.5, ARCADE_H - 0.8, PALE, sides=8)
+            c.base.box(xp - 0.8, y_pier - 0.8, ARCADE_H - 0.8, xp + 0.8, y_pier + 0.8, ARCADE_H - 0.4, PALE)   # a stepped capital
+            c.base.box(xp - 1.0, y_pier - 1.0, ARCADE_H - 0.4, xp + 1.0, y_pier + 1.0, ARCADE_H, PALE)
         for k, (sa, sb) in enumerate(zip(supports, supports[1:])):
             xa = sa + (0.7 if k > 0 else 0.0)
             xb = sb - (0.7 if k < len(supports) - 2 else 0.0)
@@ -702,6 +721,6 @@ if __name__ == "__main__":
     cam.data.clip_end = 2000
     import bpy
     bpy.data.objects["PreviewGround"].location.x = SPACING          # under all three
-    # Players for scale, in each copy: on the steps, in the nave, in both aisles, in the apse.
+    # Players for scale, in each copy: on the steps, in the nave, in both aisles, on the dais.
     scale_figures([(SPACING * i + x, y, z) for i in range(len(STATES))
-                   for x, y, z in ((-16, 2, 0.4), (20, 2, FLOOR_Z), (28, 15, FLOOR_Z), (12, -15, FLOOR_Z), (52, 0, FLOOR_Z))])
+                   for x, y, z in ((-16, 2, 0.4), (20, 2, FLOOR_Z), (28, 15, FLOOR_Z), (12, -15, FLOOR_Z), (52, 0, FLOOR_Z + 0.6))])
