@@ -1,0 +1,9 @@
+{
+  "note": "Written by Sync World from Assets/Scenes/Selenfall/Land_m2_2.unity. Read-only: change world/regions/land_m2_2.json, or the scene's Handmade root in Unity.",
+  "region": "land_m2_2",
+  "origin": [-192, 192], "size": [96, 96],
+  "dataPieces": { "tiles": 1 },
+  "handmade": [
+
+  ]
+}

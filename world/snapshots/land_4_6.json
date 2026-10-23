@@ -1,0 +1,9 @@
+{
+  "note": "Written by Sync World from Assets/Scenes/Land/Land_4_6.unity. Read-only: change world/regions/land_4_6.json, or the scene's Handmade root in Unity.",
+  "region": "land_4_6",
+  "origin": [384, 576], "size": [96, 96],
+  "dataPieces": { "tiles": 1 },
+  "handmade": [
+
+  ]
+}
