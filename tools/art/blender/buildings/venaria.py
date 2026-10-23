@@ -38,10 +38,9 @@ SLAB = 0.09
 ROOF_BASE = STOREY + (T / 2 + 0.06) * RISE
 
 MATS = ["Stone", "Plaster", "Timber", "Thatch", "Planks", "Iron", "Sable", "Glaze", "Blackiron",
-        "Blood", "SynodRed", "Bronze", "Leaves", "DarkLeaves", "Ochre", "Wool", "Bark", "Ash", "Wheat",
-        "CandleWax", "GraveTurf", "Oak"]
-(STONE, PLASTER, TIMBER, THATCH, PLANKS, IRON, DARK, GLASS, LEAD, BLOOD, BANNER, BRONZE, LEAF, LEAF_DARK,
- FLOWER, FLOWER2, BARK, LOG_END, HAY, CANDLE, GRASS, OAK) = range(len(MATS))
+        "Blood", "SynodRed", "Bronze", "Bark", "Ash", "Wheat", "CandleWax", "Oak"]
+(STONE, PLASTER, TIMBER, THATCH, PLANKS, IRON, DARK, GLASS, LEAD, BLOOD, BANNER, BRONZE,
+ BARK, LOG_END, HAY, CANDLE, OAK) = range(len(MATS))
 
 
 def box(bm, x0, x1, y0, y1, z0, z1, mat):
@@ -126,65 +125,6 @@ def panel(bm, x0, x1, z0, z1):
     box(bm, x0, x1, -T / 2, T / 2, z0, z1, PLASTER)
 
 
-MID = 1.32                     # the mid-rail of a framed wall
-
-
-def stud(bm, x, z0, z1, w=0.07):
-    box(bm, x - w / 2, x + w / 2, -T / 2 - 0.016, T / 2 + 0.016, z0, z1, TIMBER)
-
-
-def rail(bm, x0, x1, z, h=0.07):
-    box(bm, x0, x1, -T / 2 - 0.016, T / 2 + 0.016, z - h / 2, z + h / 2, TIMBER)
-
-
-def brace(bm, a, b, w=0.06):
-    """A diagonal timber from (x, z) a to b, standing proud of both faces."""
-    for y in (-T / 2 - 0.016, T / 2 + 0.016):
-        A.hull(bm, [(px + dx, y + dy, pz) for px, pz in (a, b) for dx in (-w / 2, w / 2) for dy in (-0.012, 0.012)],
-               TIMBER)
-
-
-def piece_frame_studs():
-    """Close framing over a plain wall: two studs and a mid-rail (six panels)."""
-    bm = bmesh.new()
-    for x in (1 / 3, 2 / 3):
-        stud(bm, x, LO, HI)
-    rail(bm, 0, 1, MID)
-    return bm
-
-
-def piece_frame_braced():
-    """Framing with bracing: studs, a mid-rail, and braces rising to the top rail in a V."""
-    bm = bmesh.new()
-    for x in (1 / 3, 2 / 3):
-        stud(bm, x, LO, HI)
-    rail(bm, 0, 1, MID)
-    brace(bm, (0.04, MID + 0.04), (1 / 3 - 0.02, HI - 0.04))
-    brace(bm, (0.96, MID + 0.04), (2 / 3 + 0.02, HI - 0.04))
-    brace(bm, (1 / 3 + 0.02, LO + 0.04), (2 / 3 - 0.02, MID - 0.04))
-    return bm
-
-
-def piece_frame_window():
-    """Framing round a window: the mid-rail runs up to the window on both sides."""
-    bm = bmesh.new()
-    rail(bm, 0, 0.2, MID)
-    rail(bm, 0.8, 1, MID)
-    stud(bm, 0.1, LO, HI, 0.06)
-    stud(bm, 0.9, LO, HI, 0.06)
-    return bm
-
-
-def piece_frame_gable(k):
-    """Framing in a gable: a stud in the middle of the tile up to the roof line."""
-    def make():
-        bm = bmesh.new()
-        top = ROOF_BASE + RISE * (k + 0.5) - 0.06
-        stud(bm, 0.5, STOREY, top)
-        if k == 0:
-            brace(bm, (0.06, STOREY + 0.06), (0.47, STOREY + RISE * 0.5 - 0.02))
-        return bm
-    return make
 
 
 def piece_post():
@@ -380,54 +320,12 @@ def piece_roof_slope(x0=0.0, x1=1.0):
     return make
 
 
-def piece_roof_eave_thatch(x0=0.0, x1=1.0, plate=True):
-    """A thatch eave: the slab, then the thatch rolled over the edge in a fat, rounded lip."""
-    def make():
-        bm = bmesh.new()
-        roof_slab(bm, -OVERHANG + 0.08, 1.0, x0, x1)
-        z = ROOF_BASE - RISE * (OVERHANG - 0.08)
-        y = -OVERHANG + 0.06
-        A.loft(bm, [((x0, y, z), 0.0, 0.0), ((x0, y, z), 0.13, 0.11), ((x1, y, z), 0.13, 0.11), ((x1, y, z), 0.0, 0.0)],
-               sides=6, ref=(0, 0, 1), mats=THATCH)
-        if plate:
-            top = ROOF_BASE - RISE * (T / 2 + 0.02) + SLAB * 0.5
-            box(bm, x0, x1, -T / 2 - 0.02, T / 2 + 0.02, STOREY - 0.02, top, TIMBER)
-        return bm
-    return make
-
-
-def piece_roof_ridge_thatch(x0=0.0, x1=1.0):
-    """A thatch ridge: a thick rounded bundle along the top, bound with two hazel liggers."""
-    def make():
-        bm = bmesh.new()
-        z = ROOF_BASE + SLAB - 0.02
-        A.loft(bm, [((x0, 0, z), 0.0, 0.0), ((x0, 0, z), 0.24, 0.13), ((x1, 0, z), 0.24, 0.13), ((x1, 0, z), 0.0, 0.0)],
-               sides=6, ref=(0, 0, 1), roll=math.pi / 6, mats=THATCH)
-        for y in (-0.15, 0.15):
-            zz = z + 0.08 - abs(y) * 0.35
-            box(bm, x0, x1, y - 0.012, y + 0.012, zz, zz + 0.025, BARK)
-        # The ridge's lower edge cut into points, lying on both slopes.
-        n = max(1, round((x1 - x0) / 0.33))
-        for side in (-1, 1):
-            for i in range(n):
-                xa = x0 + (x1 - x0) * i / n
-                xb = x0 + (x1 - x0) * (i + 1) / n
-                d0, d1 = 0.16, 0.42
-                pts = []
-                for x, d in ((xa, d0), (xb, d0), ((xa + xb) / 2, d1)):
-                    zz = ROOF_BASE + SLAB - RISE * d
-                    pts += [(x, side * d, zz), (x, side * d, zz + 0.05)]
-                A.hull(bm, pts, THATCH)
-        return bm
-    return make
-
-
 def piece_roof_ridge(x0=0.0, x1=1.0):
     def make():
         bm = bmesh.new()
         z = ROOF_BASE + SLAB
         A.hull(bm, [(x, y, zz) for x in (x0, x1) for y, zz in ((-0.16, z - RISE * 0.16), (0.16, z - RISE * 0.16),
-                                                              (-0.06, z + 0.08), (0.06, z + 0.08))], TIMBER)
+                                                              (-0.06, z + 0.08), (0.06, z + 0.08))], THATCH)
         return bm
     return make
 
@@ -509,19 +407,6 @@ def piece_banner():
     return bm
 
 
-def piece_flower_box():
-    """Under a window: a plank box of soil, greens and a few flowers (a window attachment)."""
-    bm = bmesh.new()
-    box(bm, 0.24, 0.76, -T / 2 - 0.2, -T / 2, 0.80, 0.93, PLANKS)
-    for i, x in enumerate((0.3, 0.4, 0.5, 0.6, 0.7)):
-        A.hull(bm, [(x + dx, -T / 2 - 0.1 + dy, 0.93 + dz) for dx in (-0.06, 0.06) for dy in (-0.07, 0.07)
-                    for dz in (0.0, 0.07 + 0.03 * (i % 2))], LEAF if i % 2 else LEAF_DARK)
-    for i, x in enumerate((0.33, 0.47, 0.62, 0.71)):
-        A.hull(bm, [(x + dx, -T / 2 - 0.1 + dy, 1.04 + dz) for dx in (-0.025, 0.025) for dy in (-0.025, 0.025)
-                    for dz in (0.0, 0.04)], FLOWER if i % 2 else FLOWER2)
-    return bm
-
-
 def piece_lantern():
     """Beside a door: an iron bracket and a small lantern with its candle (a doorway attachment)."""
     bm = bmesh.new()
@@ -583,30 +468,6 @@ def piece_hay():
     return bm
 
 
-def piece_verge_roll(run0, run1):
-    """Thatch rolled over a gable's edge, one run of the slope (placed at the verge's outer edge)."""
-    def make():
-        bm = bmesh.new()
-        pts = [(0, r, ROOF_BASE + RISE * r + SLAB * 0.4) for r in (run0, run1)]
-        A.loft(bm, [(pts[0], 0.0, 0.0), (pts[0], 0.12, 0.1), (pts[1], 0.12, 0.1), (pts[1], 0.0, 0.0)],
-               sides=6, ref=(1, 0, 0), mats=THATCH)
-        return bm
-    return make
-
-
-def piece_barge(run0, run1):
-    """A barge board under a slate roof's gable edge, one run of the slope."""
-    def make():
-        bm = bmesh.new()
-        pts = []
-        for r in (run0, run1):
-            z = ROOF_BASE + RISE * r
-            pts += [(x, r, z + dz) for x in (-0.025, 0.025) for dz in (-0.2, SLAB + 0.01)]
-        A.hull(bm, pts, TIMBER)
-        return bm
-    return make
-
-
 PIECES = {
     "Post": piece_post, "Wall": piece_wall, "WallBraced": piece_wall_braced,
     "WallShuttered": piece_wall_shuttered, "WallLeaded": piece_wall_leaded, "WallLancet": piece_wall_lancet,
@@ -618,13 +479,7 @@ PIECES = {
     "Font": piece_font, "Bellcote": piece_bellcote, "ChimneyBreast": piece_chimney_breast,
     "ChimneyStack": piece_chimney_stack, "ChimneyCap": piece_chimney_cap, "Banner": piece_banner,
     "WallBarnDoor": piece_wall_barn_door,
-    "RoofEaveThatch": piece_roof_eave_thatch(), "RoofRidgeThatch": piece_roof_ridge_thatch(),
-    "VergeEaveThatch": piece_roof_eave_thatch(0, VERGE, plate=False), "VergeRidgeThatch": piece_roof_ridge_thatch(0, VERGE),
-    "FrameStuds": piece_frame_studs, "FrameBraced": piece_frame_braced, "FrameWindow": piece_frame_window,
-    "FrameGable0": piece_frame_gable(0), "FrameGable1": piece_frame_gable(1),
-    "VergeRollEave": piece_verge_roll(-OVERHANG + 0.06, 1.0), "VergeRollSlope": piece_verge_roll(0.0, 1.0),
-    "BargeEave": piece_barge(-OVERHANG, 1.0), "BargeSlope": piece_barge(0.0, 1.0),
-    "FlowerBox": piece_flower_box, "Lantern": piece_lantern, "Woodpile": piece_woodpile, "Bench": piece_bench,
+ "Lantern": piece_lantern, "Woodpile": piece_woodpile, "Bench": piece_bench,
     "Barrel": piece_barrel, "Crate": piece_crate, "Hay": piece_hay,
 }
 
@@ -659,23 +514,14 @@ OPENINGS = {"WallDoorway": "Door"}           # pieces that bring their leaf with
 PLAIN = {"Wall", "WallBraced"}
 WINDOWS = {"WallShuttered", "WallLeaded"}
 # What may hang on which wall tiles, so dressing never covers a door or a window.
-ATTACHMENTS = {"Banner": PLAIN, "Woodpile": PLAIN, "Bench": PLAIN,
-               "FlowerBox": WINDOWS, "Lantern": {"WallDoorway"}}
+ATTACHMENTS = {"Banner": PLAIN, "Woodpile": PLAIN, "Bench": PLAIN, "Lantern": {"WallDoorway"}}
 
 
-def place_tile(kit, coll, entry, x, y, rot, z, rc, framed=False, i=0, n=1):
-    """One wall tile: "Wall", or "Wall+Banner" (attachments only on a plain wall, so they never
-    cover a door or a window). framed: the timber framing goes over it (braced next to the
-    corners and where asked for with "WallBraced", close studs between)."""
+def place_tile(kit, coll, entry, x, y, rot, z, rc):
+    """One wall tile: "Wall", or "Wall+Banner" (attachments only where they're allowed, so they
+    never cover a door or a window)."""
     name, *extra = entry.split("+")
-    if framed and name in PLAIN:
-        braced = name == "WallBraced" or i in (0, n - 1)
-        place(kit, "Wall", coll, x, y, rot, z, rc)
-        place(kit, "FrameBraced" if braced else "FrameStuds", coll, x, y, rot, z, rc)
-    else:
-        place(kit, name, coll, x, y, rot, z, rc)
-        if framed and name in WINDOWS:
-            place(kit, "FrameWindow", coll, x, y, rot, z, rc)
+    place(kit, name, coll, x, y, rot, z, rc)
     if name in OPENINGS:
         place(kit, OPENINGS[name], coll, x, y, rot, z, rc)
     for a in extra:
@@ -684,19 +530,16 @@ def place_tile(kit, coll, entry, x, y, rot, z, rc, framed=False, i=0, n=1):
 
 
 def volume(kit, coll, ox, oy, length, depth, faces, storeys=1, walls=None, roof=None, jetty=False,
-           slit=None, bellcote=None, chimney=None, thatch=True, framed=True):
+           slit=None, bellcote=None, chimney=None):
     """One block of a building on tiles [ox, ox+length) x [oy, oy+depth), gabled with its ridge
     along X (depth even). faces: {(face, storey): [entry per tile]} for faces "S" (front, -Y),
     "N", "W", "E", tiles listed west to east / south to north; an entry is a piece name with
     optional attachments ("Wall+Banner"); missing tiles are plain "Wall". walls: a recolour per
     storey. roof: the roof's recolour. jetty: upper storeys jut out over the gable ends.
     slit: the end ("W"/"E") whose top gable has the lancet slit. bellcote: the end carrying a
-    bell. chimney: (end, tile), a stack in that end wall where the hearth is, or None. thatch: a
-    thatched roof (rolled eaves and verges, a scalloped ridge); else thin-edged with barge
-    boards (slate, shingle). framed: timber framing on the walls (a bool, or one per storey)."""
-    framed_at = (lambda s: framed[s] if s < len(framed) else framed[-1]) if isinstance(framed, list) else (lambda s: framed)
-    eave, ridge = ("RoofEaveThatch", "RoofRidgeThatch") if thatch else ("RoofEave", "RoofRidge")
-    v_eave, v_ridge = ("VergeEaveThatch", "VergeRidgeThatch") if thatch else ("VergeEave", "VergeRidge")
+    bell. chimney: (end, tile), a stack in that end wall where the hearth is, or None. Roofs are
+    plain slabs: their texture paints the thatch or slate."""
+    eave, ridge, v_eave, v_ridge = "RoofEave", "RoofRidge", "VergeEave", "VergeRidge"
     walls = walls or [None] * storeys
     half = depth // 2
 
@@ -715,17 +558,16 @@ def volume(kit, coll, ox, oy, length, depth, faces, storeys=1, walls=None, roof=
             given = faces.get((face, s), [])
             return [given[i] if i < len(given) and given[i] else "Wall" for i in range(n)]
 
-        fr = framed_at(s)
         for i, entry in enumerate(tiles("S", length)):
-            place_tile(kit, coll, entry, ox + i, oy, 0, z, rc, fr, i, length)
+            place_tile(kit, coll, entry, ox + i, oy, 0, z, rc)
         for i, entry in enumerate(tiles("N", length)):
-            place_tile(kit, coll, entry, ox + i + 1, oy + depth, 180, z, rc, fr, i, length)
+            place_tile(kit, coll, entry, ox + i + 1, oy + depth, 180, z, rc)
         for j, entry in enumerate(tiles("W", depth)):
-            place_tile(kit, coll, entry, ox - jet, oy + j + 1, 270, z, rc, fr, j, depth)
+            place_tile(kit, coll, entry, ox - jet, oy + j + 1, 270, z, rc)
             if jet:
                 place(kit, "JettyBeams", coll, ox, oy + j + 1, 270, z, rc)
         for j, entry in enumerate(tiles("E", depth)):
-            place_tile(kit, coll, entry, ox + length + jet, oy + j, 90, z, rc, fr, j, depth)
+            place_tile(kit, coll, entry, ox + length + jet, oy + j, 90, z, rc)
             if jet:
                 place(kit, "JettyBeams", coll, ox + length, oy + j, 90, z, rc)
         if jet:                                                    # close the corners the jetty opens
@@ -744,9 +586,6 @@ def volume(kit, coll, ox, oy, length, depth, faces, storeys=1, walls=None, roof=
             name = "Gable1Slit" if (slit == end and k == half - 1) else f"Gable{k}"
             place(kit, name, coll, ex, oy + k, 90, top, rc)
             place(kit, f"Gable{k}", coll, ex, oy + depth - k, 270, top, rc)
-            if framed_at(storeys - 1):
-                place(kit, f"FrameGable{k}", coll, ex, oy + k, 90, top, rc)
-                place(kit, f"FrameGable{k}", coll, ex, oy + depth - k, 270, top, rc)
     for i in range(length):
         x = ox + i
         place(kit, eave, coll, x, oy, 0, top, roof)
@@ -762,13 +601,6 @@ def volume(kit, coll, ox, oy, length, depth, faces, storeys=1, walls=None, roof=
             place(kit, "VergeSlope", coll, vx, oy + k, 0, top + RISE * k, roof)
             place(kit, "VergeSlope", coll, vx + VERGE, oy + depth - k, 180, top + RISE * k, roof)
         place(kit, v_ridge, coll, vx, oy + half, 0, top + RISE * half, roof)
-    edge_eave, edge_slope = ("VergeRollEave", "VergeRollSlope") if thatch else ("BargeEave", "BargeSlope")
-    for ex in (ox - VERGE, ox + length + VERGE):                   # the gables' outer edges
-        place(kit, edge_eave, coll, ex, oy, 0, top, roof)
-        place(kit, edge_eave, coll, ex, oy + depth, 180, top, roof)
-        for k in range(1, half):
-            place(kit, edge_slope, coll, ex, oy + k, 0, top + RISE * k, roof)
-            place(kit, edge_slope, coll, ex, oy + depth - k, 180, top + RISE * k, roof)
     ridge_z = top + ROOF_BASE + RISE * half + SLAB
     if bellcote:
         bx = ox - jet if bellcote == "W" else ox + length + jet
@@ -794,12 +626,12 @@ CUT_STONE = {"Plaster": "Cobble", "Timber": "Cobble", "Stone": "Granite"}
 
 
 def cottage(kit, ox, oy):
-    """A poor cottage: timber frame and thatch, green-painted shutters with flowers under them, a
-    font and a lantern at the door, firewood by the hearth end, the slit in a gable."""
+    """A poor cottage: timber frame and thatch, shutters, a font and a lantern at the door,
+    firewood by the hearth end, the slit in a gable."""
     coll = A.collection("Cottage")
-    paint = {"Planks": "Moor", "Timber": "Umber"}
+    paint = None
     volume(kit, coll, ox, oy, 4, 4, {
-        ("S", 0): ["WallShuttered+FlowerBox", "WallDoorway+Lantern", "WallBraced", "WallShuttered+FlowerBox"],
+        ("S", 0): ["WallShuttered", "WallDoorway+Lantern", "WallBraced", "WallShuttered"],
         ("E", 0): ["Wall", "WallShuttered", None, None],
         ("W", 0): ["Wall+Woodpile", None, None, "Wall+Woodpile"],
         ("N", 0): [None, "WallShuttered", None, None]},
@@ -810,12 +642,12 @@ def cottage(kit, ox, oy):
 
 def longhouse(kit, ox, oy):
     """A farm's longhouse: people at the east end by the hearth, beasts in the byre at the west
-    end behind the wide doors, all under one long thatch. Pale lime plaster, blue-grey shutters,
-    hay and crates by the byre, a bench by the door."""
+    end behind the wide doors, all under one long thatch. Hay and crates by the byre, a bench
+    by the door."""
     coll = A.collection("Longhouse")
-    paint = {"Stone": "Granite", "Plaster": "SaltFlat", "Planks": "Indigo", "Timber": "Charcoal"}
+    paint = {"Stone": "Granite"}
     volume(kit, coll, ox, oy, 7, 4, {
-        ("S", 0): ["WallBarnDoor", "WallBraced", "Wall+Bench", "WallShuttered+FlowerBox", "WallDoorway+Lantern",
+        ("S", 0): ["WallBarnDoor", "WallBraced", "Wall+Bench", "WallShuttered", "WallDoorway+Lantern",
                    "WallBraced", "WallShuttered"],
         ("N", 0): [None, "WallBraced", None, "WallShuttered", None, "WallShuttered", None],
         ("W", 0): [None, "WallBraced", "WallBraced", None]},
@@ -829,14 +661,14 @@ def longhouse(kit, ox, oy):
 
 def village_chapel(kit, ox, oy):
     """A village chapel: fieldstone and thatch, a door in the west end under the bell, two red
-    lancets each side, one banner by the door, ivy on the north side."""
+    lancets each side, one banner by the door."""
     coll = A.collection("VillageChapel")
     volume(kit, coll, ox, oy, 5, 4, {
         ("S", 0): ["Wall+Banner", "WallLancet", "Wall", "WallLancet", "Wall"],
         ("N", 0): ["Wall", "WallLancet", "Wall", "WallLancet", "Wall"],
         ("W", 0): ["Wall", "WallDoorway+Lantern", "Wall", "Wall"],
         ("E", 0): ["Wall", "WallLancet", "WallLancet", "Wall"]},
-        walls=[dict(FIELDSTONE, Glaze="SynodRed")], bellcote="W", framed=False)
+        walls=[dict(FIELDSTONE, Glaze="SynodRed")], bellcote="W")
     place(kit, "Font", coll, ox - 1.0, oy + 1.5)
 
 
@@ -851,7 +683,7 @@ def townhouse(kit, ox, oy):
         ("W", 1): [None, "WallLeaded", "WallLeaded", None], ("E", 1): [None, "WallBraced", "WallBraced", None],
         ("W", 0): [None, "WallLeaded", None, None]},
         storeys=2, walls=[CUT_STONE, None], roof={"Thatch": "Slate", "Timber": "DarkRock"}, jetty=True,
-        slit="E", chimney=("E", 1), thatch=False, framed=[False, True])
+        slit="E", chimney=("E", 1))
 
 
 def build():

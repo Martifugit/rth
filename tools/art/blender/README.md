@@ -108,11 +108,11 @@ Learned by making the well with the owner. Add to this list as more props are ma
 - **Don't** add a chimney for looks: build it where the hearth is, and only when there is one.
 - **Do** rest roofs on the walls' outer edge, and close every eave and corner (wall plates,
   fillers where a jetty opens). Look at a building from every side for gaps.
-- **Do** make the walls and roofs themselves rich before adding things around them: dense
-  timber framing (studs, a mid-rail, braces) in strong contrast (dark timber, bright plaster),
-  grain in the timber, bold thatch courses in mixed straw colours, rolled thatch at eaves and
-  verges, a scalloped ridge, barge boards on slate, and weathering in the textures (damp along
-  the foot of walls, moss on slate). Clean, flat surfaces look raw.
+- **Do** keep buildings simple and paint the detail: a few clean lines of timber on the walls,
+  plain roof slabs, and the texture carrying the thatch courses, slates, stones and weathering
+  (damp along the foot of walls, moss on slate). Modelled thatch rolls, scalloped ridges and
+  dense framing made the buildings messy, not richer.
+- **Don't** colour doors, shutters and sills: plain wood and plaster read as one place.
 - **Don't** run ahead: plants growing on walls and similar extras come after the buildings
   themselves are right.
 - **Do** make surface textures light grey patterns that the palette colour tints

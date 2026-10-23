@@ -58,15 +58,6 @@
   "Yew": {
    "texture": "Beam",
    "tiles": 1
-  },
-  "SaltFlat": {
-   "texture": "Plaster",
-   "tiles": 1,
-   "tilesV": 2.3
-  },
-  "Charcoal": {
-   "texture": "Beam",
-   "tiles": 1
   }
  }
 }
