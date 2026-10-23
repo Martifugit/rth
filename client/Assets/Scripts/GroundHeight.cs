@@ -45,11 +45,12 @@ namespace Rth.Client
         }
 
         /// <summary>
-        /// The height of the loaded regions' <see cref="MapTerrain"/> under a point, ignoring
-        /// buildings and floors (0 where there is no terrain). A lookup, not a raycast: cheap enough
-        /// for the camera every frame.
+        /// The height of the loaded regions' terrain under a point (a <see cref="MapTerrain"/>, or a
+        /// region's data terrain drawn by <see cref="TileGround"/>), ignoring buildings and floors
+        /// (0 where there is none). A lookup, not a raycast: cheap enough for the camera every frame.
         /// </summary>
-        public static float TerrainAt(float x, float z) => MapTerrain.TryHeightAt(x, z, out float h) ? h : 0f;
+        public static float TerrainAt(float x, float z) =>
+            MapTerrain.TryHeightAt(x, z, out float h) ? h : TileGround.TryHeightAt(x, z, out float g) ? g : 0f;
 
         /// <summary>The terrain under the middle of a tile.</summary>
         public static float TerrainAtTile(int x, int y) => TerrainAt(x + 0.5f, y + 0.5f);

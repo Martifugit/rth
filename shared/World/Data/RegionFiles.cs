@@ -87,6 +87,17 @@ namespace Rth.Shared.World.Data
             foreach (JProperty p in root.Properties())
             {
                 if (p.Name == "pieces") continue;
+                if (p.Name == "terrain")
+                {
+                    // The heights one row to a line, so they read (and diff) as a picture of the ground.
+                    var t = (JObject)p.Value;
+                    var rowList = (JArray?)t["rows"] ?? new JArray();
+                    t.Remove("rows");
+                    string head = string.Join(", ", t.Properties().Select(q => Q(q.Name) + ": " + Compact(q.Value)));
+                    lines.Add("  \"terrain\": {" + (head.Length > 0 ? " " + head + "," : "") + " \"rows\": [" +
+                              (rowList.Count == 0 ? "]" : "\n" + string.Join(",\n", rowList.Select(r => "    " + Compact(r))) + "\n  ]") + " }");
+                    continue;
+                }
                 if (p.Name == "materials")
                 {
                     var mats = ((JObject)p.Value).Properties().Select(m => "    " + Q(m.Name) + ": " + Compact(m.Value)).ToList();

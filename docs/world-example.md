@@ -130,12 +130,14 @@ to this work, not the generator (delete each file's `"generated"` line).
 
 | Owner (with the Unity agent) | Data agent |
 | --- | --- |
-| Sculpts in Unity: foothills rising west of the scrub, the crest as a raised ridge of rock blocks, the pass as a notch with a gentle climb, the far side falling away. Saving writes the heights to the region files. *(To build: terrain heights in region data.)* | Declares the area's **exits** as data: the salt road meets Tolling's west edge at Tolling's road (its tiles and height read off Tolling), and leaves at p-west-toll into the frontier. *(To build: exits as data.)* |
-| Watches the slope overlay: tiles too steep to walk turn red, so cliffs are where they are meant to be. *(To build.)* | Runs the **seam check** against the neighbours: Tolling is flat, so the last 8 or so tiles of `land_m1_0` come down to Tolling's height at x -1. *(To build: the seam check.)* |
+| Sculpts in Unity with **Sculpt Ground**: foothills rising west of the scrub, the crest as a raised ridge of rock blocks, the pass as a notch with a gentle climb, the far side falling away. Saving writes the heights to the region files. | Declares the area's **exits** as data: the salt road meets Tolling's west edge at Tolling's road (its tiles and height read off Tolling), and leaves at p-west-toll into the frontier. *(To build: exits as data.)* |
+| Watches the slope overlay: tiles too steep to walk turn red under the brush, so cliffs are where they are meant to be. | Runs the **seam check** (`tools/world check` warns where heights step at a border) against the neighbours: Tolling is flat, so the last 8 or so tiles of `land_m1_0` come down to Tolling's height at x 0. *(Built for heights; roads and rivers to build.)* |
 | | Checks the terrain rules: relief per 24 × 24 window, cliffs 1-3 tiles, the road never steeper than walkable. |
 
-**Commands:** `tools/world check`, `export`, `render`, `dotnet test` (the data agent); **Sync World**
-(incremental: only these three regions) and Play (the Unity agent and the owner).
+**Commands:** `tools/world check`, `export`, `render` (hill-shaded once there is terrain),
+`dotnet test` (the data agent; `tools/world terrain <region> flat` gives a region terrain to start
+from without Unity); **Sync World** (only these three regions have changed, so only they sync) and
+Play (the Unity agent and the owner).
 
 **Walk it at player height,** at both camera profiles, from Tolling's west gate to p-west-toll.
 

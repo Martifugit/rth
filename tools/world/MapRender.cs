@@ -166,6 +166,18 @@ namespace Rth.WorldTool
                     // A broken piece is reported by check; draw the rest.
                 }
             }
+            // Hill shading, lit from the north-west, so terrain can be judged from above.
+            if (r.Terrain != null)
+                for (int y = 0; y < region.Height; y++)
+                    for (int x = 0; x < region.Width; x++)
+                    {
+                        int ax = region.OriginX + x, ay = region.OriginY + y;
+                        Heightfield f = r.Terrain;
+                        float east = (f.Corner(ax + 1, ay) + f.Corner(ax + 1, ay + 1) - f.Corner(ax, ay) - f.Corner(ax, ay + 1)) / 2f;
+                        float north = (f.Corner(ax, ay + 1) + f.Corner(ax + 1, ay + 1) - f.Corner(ax, ay) - f.Corner(ax + 1, ay)) / 2f;
+                        float light = Math.Clamp(0.5f * (north - east), -1f, 1f);
+                        paint[x, y] = light >= 0 ? paint[x, y].Mix(new Rgb(255, 255, 240), light * 0.6f) : paint[x, y].Mix(new Rgb(0, 0, 0), -light * 0.6f);
+                    }
             return paint;
         }
 

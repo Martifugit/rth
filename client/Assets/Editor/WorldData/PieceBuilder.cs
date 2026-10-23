@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Rth.MapTools;
+using Rth.Shared.World;
 using Rth.Shared.World.Data;
 using UnityEditor;
 using UnityEngine;
@@ -23,6 +24,7 @@ namespace Rth.Client.Editor
             root.builtIds.Clear();
             var kit = new WorldKit(region.Seed);
             var levels = new Dictionary<int, Transform>();
+            Heightfield terrain = TerrainText.Read(region); // null: flat
 
             Transform Level(int plane)
             {
@@ -44,7 +46,7 @@ namespace Rth.Client.Editor
                 GameObject go;
                 try
                 {
-                    go = BuildPiece(kit, region, piece, Level(plane), Level);
+                    go = BuildPiece(kit, region, piece, Level(plane), Level, plane == region.Plane ? terrain : null);
                 }
                 catch (System.Exception e)
                 {
@@ -60,10 +62,16 @@ namespace Rth.Client.Editor
             }
         }
 
-        private static GameObject BuildPiece(WorldKit kit, RegionData region, Piece piece, Transform parent, System.Func<int, Transform> level)
+        private static GameObject BuildPiece(WorldKit kit, RegionData region, Piece piece, Transform parent, System.Func<int, Transform> level, Heightfield terrain)
         {
             string name = string.IsNullOrWhiteSpace(piece.Name) ? piece.Id : piece.Name;
-            if (PieceKind.IsPlaced(piece.Kind)) return BuildPlaced(kit, region, piece, parent, level, name);
+            if (PieceKind.IsPlaced(piece.Kind))
+            {
+                GameObject placed = BuildPlaced(kit, region, piece, parent, level, name);
+                // Placed things stand on the region's terrain (built at 0, then lifted with their footprint).
+                if (terrain != null) placed.transform.position += Vector3.up * terrain.Sample(piece.X + 0.5f, piece.Y + 0.5f);
+                return placed;
+            }
 
             Transform group = WorldKit.Group(parent, name);
             switch (piece.Kind)
@@ -121,8 +129,19 @@ namespace Rth.Client.Editor
                     ground.rows = piece.Rows.ToArray();
                     ground.kinds = string.Concat(keys);
                     ground.materials = keys.Select(k => Material(kit, region, piece.Legend[k].Material)).ToArray();
-                    ground.heights = keys.Select(k => piece.Legend[k].Height ?? 0f).ToArray();
+                    ground.lifts = keys.Select(k => piece.Legend[k].Height ?? 0f).ToArray();
                     ground.walkable = keys.Select(k => piece.Legend[k].Walkable).ToArray();
+                    if (terrain != null)
+                    {
+                        // The terrain's corners under this piece's rectangle, row by row from the south.
+                        var corners = new float[(ground.width + 1) * (ground.height + 1)];
+                        for (int j = 0; j <= ground.height; j++)
+                            for (int i = 0; i <= ground.width; i++)
+                                corners[j * (ground.width + 1) + i] = terrain.Corner(r[0] + i, r[1] + j);
+                        ground.corners = corners;
+                        ground.cliffStep = region.Terrain.CliffStep;
+                        ground.cliffMaterial = kit.Mat("LandCliff", Palette.TryParse("CliffRock", out Color cliff) ? cliff : new Color(0.42f, 0.4f, 0.36f));
+                    }
                     ground.Rebuild();
                     break;
                 }

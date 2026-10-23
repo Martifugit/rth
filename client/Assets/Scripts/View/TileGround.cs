@@ -1,20 +1,27 @@
 using System.Collections.Generic;
+using Rth.Shared.World;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Serialization;
 
 namespace Rth.Client
 {
     /// <summary>
-    /// Ground drawn tile by tile from a region's "tiles" piece (world/regions, docs/workflow.md): one
-    /// mesh with a submesh per kind, tops merged into rectangles, sides where a tile stands higher
-    /// than its neighbour (a rock shelf, a bank down to water), and a collider over the walkable
-    /// tiles only, which is all the map exporter and <see cref="GroundHeight"/> count as ground.
-    /// The scene keeps only the rows; the meshes are rebuilt whenever it loads, so they cost the
-    /// scene file nothing.
+    /// Ground drawn tile by tile from a region's "tiles" piece (world/regions, docs/workflow.md),
+    /// draped over the region's terrain (<see cref="corners"/>, from its data): one mesh with a
+    /// submesh per kind, each kind lifted by its own amount (a rock shelf above, water below), sides
+    /// where a tile stands above its neighbour, and a collider over the walkable tiles that aren't
+    /// too steep, which is all the map exporter and <see cref="GroundHeight"/> count as ground.
+    /// The scene keeps only the rows and heights; the meshes are rebuilt whenever it loads, so they
+    /// cost the scene file nothing. The Editor's ground sculpting tool changes <see cref="corners"/>
+    /// and marks it <see cref="sculpted"/>; saving the scene writes the heights back to the data.
     /// </summary>
     [ExecuteAlways]
     public sealed class TileGround : MonoBehaviour
     {
+        /// <summary>Every enabled tile ground, for height lookups (the camera's terrain lift).</summary>
+        public static readonly List<TileGround> Active = new List<TileGround>();
+
         [Tooltip("Absolute tile of the south-west corner.")]
         public int originX, originY;
         public int width, height;
@@ -24,24 +31,90 @@ namespace Rth.Client
         [Tooltip("The characters the rows use, one per kind.")]
         public string kinds = "";
         public Material[] materials = new Material[0];
-        [Tooltip("Where each kind's top is drawn, in metres.")]
-        public float[] heights = new float[0];
+        [Tooltip("How far each kind's top is drawn above (or below) the ground's height, in tiles.")]
+        [FormerlySerializedAs("heights")] public float[] lifts = new float[0];
         [Tooltip("Kinds that are walkable ground (the rest block: rock, water).")]
         public bool[] walkable = new bool[0];
 
+        [Tooltip("Corner heights in tiles, (width + 1) × (height + 1), row by row from the south. Empty: flat.")]
+        [HideInInspector] public float[] corners = new float[0];
+        [Tooltip("A tile rising more than this many tiles across is a cliff: drawn in the cliff material and blocked.")]
+        public float cliffStep = 1f;
+        [Tooltip("Drawn over cliff faces; none: their own kind's material.")]
+        public Material cliffMaterial;
+        [Tooltip("Set by sculpting in the Editor: saving writes the heights back to the region's data.")]
+        [HideInInspector] public bool sculpted;
+
         private GameObject _surface, _collider;
         private Mesh _surfaceMesh, _colliderMesh;
+        private Heightfield _field;
+        private bool _dirty;
 
-        private void OnEnable() => Rebuild();
+        /// <summary>The ground's heights (flat when it has none).</summary>
+        public Heightfield Field => _field ??= BuildField();
 
-        private void OnDisable() => Clear();
+        /// <summary>Height of the ground at a point, if an enabled tile ground covers it.</summary>
+        public static bool TryHeightAt(float x, float z, out float h)
+        {
+            for (int i = 0; i < Active.Count; i++)
+            {
+                TileGround g = Active[i];
+                if (g == null || g.width <= 0 || !g.Field.Contains(x, z)) continue;
+                h = g.Field.Sample(x, z);
+                return true;
+            }
+            h = 0f;
+            return false;
+        }
 
-        /// <summary>Builds the meshes from the rows: call after changing any field.</summary>
+        private void OnEnable()
+        {
+            if (!Active.Contains(this)) Active.Add(this);
+            Rebuild();
+        }
+
+        private void OnDisable()
+        {
+            Active.Remove(this);
+            Clear();
+        }
+
+        private void OnValidate()
+        {
+            _field = null;
+            _dirty = true; // rebuilt in Update (after an undo, say): meshes can't change during OnValidate
+        }
+
+        private void Update()
+        {
+            if (_dirty) Rebuild();
+        }
+
+        private Heightfield BuildField()
+        {
+            int w = Mathf.Max(1, width), d = Mathf.Max(1, height);
+            return new Heightfield(originX, originY, w, d, corners != null && corners.Length == (w + 1) * (d + 1) ? corners : null);
+        }
+
+        /// <summary>Sets the heights (corners row by row from the south) and rebuilds.</summary>
+        public void SetCorners(float[] heights)
+        {
+            corners = heights;
+            _field = null;
+            Rebuild();
+        }
+
+        /// <summary>Builds the meshes from the rows and heights: call after changing any field.</summary>
         public void Rebuild()
         {
+            _dirty = false;
             Clear();
+            _field = BuildField();
             int k = kinds.Length;
-            if (width <= 0 || height <= 0 || k == 0 || materials.Length < k || heights.Length < k || walkable.Length < k) return;
+            if (width <= 0 || height <= 0 || k == 0 || materials.Length < k || lifts.Length < k || walkable.Length < k) return;
+            Heightfield f = _field;
+            int cliffSub = cliffMaterial != null ? k : -1;
+            int subs = cliffSub >= 0 ? k + 1 : k;
 
             var kind = new int[width, height];
             for (int x = 0; x < width; x++)
@@ -57,65 +130,73 @@ namespace Rth.Client
             var verts = new List<Vector3>();
             var normals = new List<Vector3>();
             var uvs = new List<Vector2>();
-            var tris = new List<int>[k];
-            for (int i = 0; i < k; i++) tris[i] = new List<int>();
+            var tris = new List<int>[subs];
+            for (int i = 0; i < subs; i++) tris[i] = new List<int>();
             var colliderVerts = new List<Vector3>();
             var colliderTris = new List<int>();
 
-            void Quad(List<Vector3> v, List<int> t, Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 normal, bool uv)
+            float H(int cx, int cy) => f.Corner(originX + cx, originY + cy);
+            Vector3 Normal(int cx, int cy)
             {
-                int i = v.Count;
-                v.Add(a); v.Add(b); v.Add(c); v.Add(d);
-                if (uv)
-                {
-                    normals.Add(normal); normals.Add(normal); normals.Add(normal); normals.Add(normal);
-                    uvs.Add(new Vector2(a.x, a.z + a.y)); uvs.Add(new Vector2(b.x, b.z + b.y));
-                    uvs.Add(new Vector2(c.x, c.z + c.y)); uvs.Add(new Vector2(d.x, d.z + d.y));
-                }
-                t.Add(i); t.Add(i + 1); t.Add(i + 2);
-                t.Add(i); t.Add(i + 2); t.Add(i + 3);
+                float dx = (H(cx + 1, cy) - H(cx - 1, cy)) / 2f, dz = (H(cx, cy + 1) - H(cx, cy - 1)) / 2f;
+                return new Vector3(-dx, 1f, -dz).normalized;
+            }
+            void Vertex(Vector3 p, Vector3 n)
+            {
+                verts.Add(p);
+                normals.Add(n);
+                uvs.Add(new Vector2(p.x, p.z + p.y));
             }
 
-            // Tops, merged into rectangles of one kind.
-            var used = new bool[width, height];
-            for (int y = 0; y < height; y++)
-                for (int x = 0; x < width; x++)
-                {
-                    int c = kind[x, y];
-                    if (c < 0 || used[x, y]) continue;
-                    int x1 = x + 1;
-                    while (x1 < width && kind[x1, y] == c && !used[x1, y]) x1++;
-                    int y1 = y + 1;
-                    while (y1 < height && RunIs(kind, used, x, x1, y1, c)) y1++;
-                    for (int yy = y; yy < y1; yy++)
-                        for (int xx = x; xx < x1; xx++) used[xx, yy] = true;
-                    float h = heights[c];
-                    float ax = originX + x, az = originY + y, bx = originX + x1, bz = originY + y1;
-                    Vector3 sw = new Vector3(ax, h, az), nw = new Vector3(ax, h, bz), ne = new Vector3(bx, h, bz), se = new Vector3(bx, h, az);
-                    Quad(verts, tris[c], sw, nw, ne, se, Vector3.up, true);
-                    if (walkable[c]) Quad(colliderVerts, colliderTris, sw, nw, ne, se, Vector3.up, false);
-                }
-
-            // Sides: each edge where a tile stands above its neighbour gets a face in the higher tile's
-            // kind. At the region's edge a raised tile drops to sea level, since the neighbour isn't known.
+            // Tops: two triangles a tile, split along the south-west to north-east diagonal like
+            // Heightfield.Sample, lit by the ground's slope so hills shade smoothly.
             for (int y = 0; y < height; y++)
                 for (int x = 0; x < width; x++)
                 {
                     int c = kind[x, y];
                     if (c < 0) continue;
-                    float h = heights[c];
-                    float wx = originX + x, wz = originY + y;
-                    Side(x + 1, y, new Vector3(wx + 1, 0, wz), new Vector3(wx + 1, 0, wz + 1), Vector3.right);
-                    Side(x - 1, y, new Vector3(wx, 0, wz + 1), new Vector3(wx, 0, wz), Vector3.left);
-                    Side(x, y + 1, new Vector3(wx + 1, 0, wz + 1), new Vector3(wx, 0, wz + 1), Vector3.forward);
-                    Side(x, y - 1, new Vector3(wx, 0, wz), new Vector3(wx + 1, 0, wz), Vector3.back);
+                    float lift = lifts[c];
+                    bool steep = f.IsSteep(originX + x, originY + y, cliffStep);
+                    int sub = steep && cliffSub >= 0 ? cliffSub : c;
+                    float ax = originX + x, az = originY + y;
+                    Vector3 sw = new Vector3(ax, H(x, y) + lift, az), nw = new Vector3(ax, H(x, y + 1) + lift, az + 1);
+                    Vector3 ne = new Vector3(ax + 1, H(x + 1, y + 1) + lift, az + 1), se = new Vector3(ax + 1, H(x + 1, y) + lift, az);
+                    int v = verts.Count;
+                    Vertex(sw, Normal(x, y)); Vertex(nw, Normal(x, y + 1)); Vertex(ne, Normal(x + 1, y + 1)); Vertex(se, Normal(x + 1, y));
+                    tris[sub].AddRange(new[] { v, v + 1, v + 2, v, v + 2, v + 3 });
+                    if (walkable[c] && !steep)
+                    {
+                        int cv = colliderVerts.Count;
+                        colliderVerts.Add(sw); colliderVerts.Add(nw); colliderVerts.Add(ne); colliderVerts.Add(se);
+                        colliderTris.AddRange(new[] { cv, cv + 1, cv + 2, cv, cv + 2, cv + 3 });
+                    }
+                }
 
-                    void Side(int nx, int ny, Vector3 a, Vector3 b, Vector3 normal)
+            // Sides: each edge where a tile is lifted above its neighbour gets a face in the higher
+            // tile's kind. At the region's edge a lifted tile drops to the ground, since the neighbour isn't known.
+            for (int y = 0; y < height; y++)
+                for (int x = 0; x < width; x++)
+                {
+                    int c = kind[x, y];
+                    if (c < 0) continue;
+                    float lift = lifts[c];
+                    Side(x + 1, y, x + 1, y, x + 1, y + 1, Vector3.right);
+                    Side(x - 1, y, x, y + 1, x, y, Vector3.left);
+                    Side(x, y + 1, x + 1, y + 1, x, y + 1, Vector3.forward);
+                    Side(x, y - 1, x, y, x + 1, y, Vector3.back);
+
+                    // The edge runs from corner (ax, ay) to (bx, by), tile-local; the face looks along `normal`.
+                    void Side(int nx, int ny, int ax, int ay, int bx, int by, Vector3 normal)
                     {
                         bool inside = nx >= 0 && ny >= 0 && nx < width && ny < height;
-                        float low = inside ? (kind[nx, ny] < 0 ? h : heights[kind[nx, ny]]) : Mathf.Min(h, 0f);
-                        if (low >= h - 0.001f) return;
-                        Quad(verts, tris[c], new Vector3(a.x, low, a.z), new Vector3(a.x, h, a.z), new Vector3(b.x, h, b.z), new Vector3(b.x, low, b.z), normal, true);
+                        if (inside && kind[nx, ny] < 0) return;
+                        float low = inside ? lifts[kind[nx, ny]] : Mathf.Min(lift, 0f);
+                        if (low >= lift - 0.001f) return;
+                        Vector3 a = new Vector3(originX + ax, H(ax, ay), originY + ay), b = new Vector3(originX + bx, H(bx, by), originY + by);
+                        int v = verts.Count;
+                        Vertex(a + Vector3.up * low, normal); Vertex(a + Vector3.up * lift, normal);
+                        Vertex(b + Vector3.up * lift, normal); Vertex(b + Vector3.up * low, normal);
+                        tris[c].AddRange(new[] { v, v + 1, v + 2, v, v + 2, v + 3 });
                     }
                 }
 
@@ -123,15 +204,15 @@ namespace Rth.Client
             _surfaceMesh.SetVertices(verts);
             _surfaceMesh.SetNormals(normals);
             _surfaceMesh.SetUVs(0, uvs);
-            _surfaceMesh.subMeshCount = k;
-            for (int i = 0; i < k; i++) _surfaceMesh.SetTriangles(tris[i], i);
+            _surfaceMesh.subMeshCount = subs;
+            for (int i = 0; i < subs; i++) _surfaceMesh.SetTriangles(tris[i], i);
             _surfaceMesh.RecalculateBounds();
             _surface = Child("Surface");
             _surface.AddComponent<MeshFilter>().sharedMesh = _surfaceMesh;
-            var renderer = _surface.AddComponent<MeshRenderer>();
-            var mats = new Material[k];
+            var mats = new Material[subs];
             for (int i = 0; i < k; i++) mats[i] = materials[i];
-            renderer.sharedMaterials = mats;
+            if (cliffSub >= 0) mats[cliffSub] = cliffMaterial;
+            _surface.AddComponent<MeshRenderer>().sharedMaterials = mats;
 
             if (colliderTris.Count > 0)
             {
@@ -142,13 +223,6 @@ namespace Rth.Client
                 _collider = Child("Ground collider");
                 _collider.AddComponent<MeshCollider>().sharedMesh = _colliderMesh;
             }
-        }
-
-        private static bool RunIs(int[,] kind, bool[,] used, int x0, int x1, int y, int c)
-        {
-            for (int x = x0; x < x1; x++)
-                if (kind[x, y] != c || used[x, y]) return false;
-            return true;
         }
 
         /// <summary>A child that is never saved with the scene: the meshes are rebuilt on load.</summary>

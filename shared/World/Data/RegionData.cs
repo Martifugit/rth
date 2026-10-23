@@ -41,6 +41,12 @@ namespace Rth.Shared.World.Data
         /// rewrites or deletes the file whenever it runs. Remove it to take the region over by hand.
         /// </summary>
         public string? Generated;
+        /// <summary>
+        /// The ground's height, corner by corner, over the whole region; null for flat ground. Drawn
+        /// by the region's tiles pieces, stood on by everything placed, sculpted in Unity and written
+        /// back on saving. Tiles steeper than its cliff step are blocked.
+        /// </summary>
+        public RegionTerrain? Terrain;
         public List<Piece> Pieces = new List<Piece>();
 
         [JsonIgnore] public int OriginX => Origin.Length > 0 ? Origin[0] : 0;
@@ -178,6 +184,19 @@ namespace Rth.Shared.World.Data
             if (DoorAt.HasValue && Door != null) DoorAt += Door == "N" || Door == "S" ? dx : dy;
             // ClimbTo is where it leads, not where it is: a moved ladder still lands on the same floor.
         }
+    }
+
+    /// <summary>
+    /// A region's ground heights as text (<see cref="RegionData.Terrain"/>): <see cref="Rows"/> from
+    /// the north, one per row of tile corners (the region's height + 1), each holding that row's
+    /// corners from the west (its width + 1) in hundredths of a tile, separated by spaces;
+    /// <c>h*n</c> repeats a height n times. <see cref="TerrainText"/> reads and writes it.
+    /// </summary>
+    public sealed class RegionTerrain
+    {
+        /// <summary>A tile rising more than this many tiles across is a cliff, and blocked.</summary>
+        public float CliffStep = 1f;
+        public List<string> Rows = new List<string>();
     }
 
     /// <summary>One character of a tiles piece's <see cref="Piece.Legend"/>.</summary>

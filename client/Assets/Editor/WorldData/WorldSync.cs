@@ -59,16 +59,27 @@ namespace Rth.Client.Editor
             EditorUtility.DisplayDialog("Sync World", report.Summary(), "OK");
         }
 
+        /// <summary>Every region, changed or not: after a Unity upgrade, or when a scene looks wrong.</summary>
+        [MenuItem("R'th/World/Sync World (everything)", priority = 2)]
+        private static void SyncEverythingMenu()
+        {
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+            Report report = SyncAll(null, screenshots: false, everything: true);
+            EditorUtility.DisplayDialog("Sync World", report.Summary(), "OK");
+        }
+
         /// <summary>
-        /// For batch mode (tools/unity-sync.ps1): syncs every region, or those after -rthRegions
-        /// (comma separated); -rthNoScreens skips the screenshots. Exits 1 if anything failed.
+        /// For batch mode (tools/unity-sync.ps1): syncs every region that changed, or those after
+        /// -rthRegions (comma separated); -rthAll syncs every region; -rthNoScreens skips the
+        /// screenshots. Exits 1 if anything failed.
         /// </summary>
         public static void SyncFromCommandLine()
         {
             string[] args = System.Environment.GetCommandLineArgs();
             int i = System.Array.IndexOf(args, "-rthRegions");
             string[] only = i >= 0 && i + 1 < args.Length ? args[i + 1].Split(',') : null;
-            Report report = SyncAll(only, screenshots: System.Array.IndexOf(args, "-rthNoScreens") < 0);
+            Report report = SyncAll(only, screenshots: System.Array.IndexOf(args, "-rthNoScreens") < 0,
+                everything: System.Array.IndexOf(args, "-rthAll") >= 0);
             EditorApplication.Exit(report.Failed ? 1 : 0);
         }
 
@@ -93,28 +104,44 @@ namespace Rth.Client.Editor
             }
 
             public string Summary() => (Failed ? "Sync World found problems:\n\n" : "Sync World is done.\n\n") +
-                                       string.Join("\n", Lines.Where(l => l.StartsWith("ERROR") || l.StartsWith("synced")).Take(30));
+                                       string.Join("\n", Lines.Where(l => l.StartsWith("ERROR") || l.StartsWith("synced") || l.StartsWith("unchanged")).Take(30));
         }
 
-        public static Report SyncAll(string[] only, bool screenshots)
+        /// <summary>
+        /// Syncs the regions that changed since this machine last synced them (<see cref="SyncState"/>),
+        /// or those in <paramref name="only"/>, or with <paramref name="everything"/> all of them.
+        /// </summary>
+        public static Report SyncAll(string[] only, bool screenshots, bool everything = false)
         {
             var report = new Report();
             WorldWorkspace ws = WorldWorkspace.Load(RepoRoot);
             foreach (string e in ws.LoadErrors) report.Error(e);
             string[] scenesBefore = Enumerable.Range(0, SceneManager.sceneCount).Select(n => SceneManager.GetSceneAt(n).path).Where(p => !string.IsNullOrEmpty(p)).ToArray();
+            SyncState state = SyncState.Load();
+            int unchanged = 0;
             _busy = true;
             try
             {
                 foreach (WorldWorkspace.Entry entry in ws.Regions)
                 {
                     if (only != null && !only.Contains(entry.Region.Id)) continue;
+                    if (only == null && !everything && state.Unchanged(entry, ws))
+                    {
+                        unchanged++;
+                        continue;
+                    }
+                    int errorsBefore = report.Lines.Count(l => l.StartsWith("ERROR"));
                     SyncRegion(entry, report, screenshots);
+                    if (report.Lines.Count(l => l.StartsWith("ERROR")) == errorsBefore) state.Record(entry);
+                    else state.Forget(entry.Region.Id);
+                    state.Save(); // after each region, so a sync stopped half way keeps what it did
                 }
             }
             finally
             {
                 _busy = false;
             }
+            if (unchanged > 0) report.Info($"unchanged since the last sync: {unchanged} regions (R'th > World > Sync World (everything) redoes them)");
 
             ws = WorldWorkspace.Load(RepoRoot);
             var warnings = new List<string>();
@@ -395,6 +422,27 @@ namespace Rth.Client.Editor
                 if (present.Contains(id)) continue;
                 if (region.Pieces.RemoveAll(p => p.Id == id) > 0) changes.Add("deleted " + id);
                 data.builtIds.Remove(id);
+            }
+
+            // Ground sculpted in the Editor: its heights become the region's terrain.
+            foreach (TileGround ground in data.GetComponentsInChildren<TileGround>(true))
+            {
+                if (!ground.sculpted) continue;
+                Heightfield field = TerrainText.ReadOrFlat(region);
+                Heightfield sculpted = ground.Field;
+                for (int y = ground.originY; y <= ground.originY + ground.height; y++)
+                    for (int x = ground.originX; x <= ground.originX + ground.width; x++)
+                        field.SetCorner(x, y, TerrainText.Hundredths(sculpted.Corner(x, y)) * TerrainText.Step);
+                region.Terrain = TerrainText.Write(field, region.Terrain?.CliffStep ?? ground.cliffStep);
+                ground.sculpted = false;
+                changes.Add("sculpted the ground");
+            }
+
+            // Hand work on a generated region takes it over, so the generator never undoes it (docs/world-guide.md 1).
+            if (changes.Count > 0 && region.Generated != null)
+            {
+                changes.Add($"taken over from the {region.Generated} generator");
+                region.Generated = null;
             }
             return changes;
         }

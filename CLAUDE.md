@@ -464,6 +464,13 @@ water, rivers, the spine's rock, passes, roads and a plain square per place. Fla
 `BlockoutTests` walk from Tolling to Cruor, over every pass and into every power. See
 `docs/layout.md` section 8.
 
+**Incremental sync and terrain as data (on `claude/terrain-data`):** Sync World only redoes regions
+whose data, hand-made file, scene or drawing code changed (`SyncState`, per machine in
+`client/Library/RthSync.json`; **Sync World (everything)** redoes all). A region's `terrain` holds its
+heights as text; the compiler blocks cliffs, `TileGround` drapes over it, and **Sculpt Ground** in the
+Scene view edits it, written back on saving (which takes a generated region over). See
+`docs/world-guide.md` and `docs/workflow.md`.
+
 **Next: not chosen yet.** Candidates: ranged, an art pass on Tolling, more quests and
 achievements.
 
@@ -525,6 +532,7 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | A new region of the world | A file `world/regions/<id>.json` (id, title, scene path, zone-aligned origin and size, ground, materials, pieces); `tools/world export`, then Sync World creates its scene. No server code. Over the open land, it replaces the generated `land_*` region there at the next `tools/world blockout`. |
 | The open land between places (the blockout) | Change `world/layout/continent.json` and run `tools/world blockout` (`docs/layout.md` section 8); what each layout ground looks like is in `Blockout.Kind`. Never edit a `land_*.json` that still says `"generated"`. |
 | Ground tile by tile (a whole region's land) | A `tiles` piece: `rect`, `rows` from the north, a `legend` of characters (`material`, `blocks`, `water`, `height`). The compiler gives ground or blocks; `TileGround` draws it. |
+| Terrain (hills, valleys, cliffs) in a data region | The region's `terrain` (corner heights as text rows, hundredths of a tile; `TerrainText`). The compiler blocks tiles steeper than `cliffStep`; `TileGround` drapes over it; placed pieces stand on it; `GroundHeight.TerrainAt` lifts the camera. Sculpt in Unity (**Sculpt Ground** on a tile ground, written back on save) or start one with `tools/world terrain <region> flat` (or `layout`). `check` warns about steps at region borders. |
 | Something in a region (a house, a fence, a rock to mine, a creature) | A piece in `world/regions/<id>.json` (`docs/workflow.md` lists the kinds); `tools/world check`, `export`, `render`. Interactive with `"object"`. |
 | A new kind of piece | A constant in `PieceKind`, its collision in `RegionCompiler.AddPiece`, its look in the client's `PieceBuilder`; Sync World checks the two agree. |
 | Something only worth making by hand | Under the scene's `Handmade` root; saving the scene captures it into `<id>.handmade.json`. |

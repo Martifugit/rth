@@ -25,7 +25,12 @@ namespace Rth.Shared.World.Data
             public bool HasSpawn;
             public List<string> Errors = new List<string>();
             public List<string> Warnings = new List<string>();
+            /// <summary>The region's heights, or null when it is flat.</summary>
+            public Heightfield? Terrain;
         }
+
+        /// <summary>Kinds drawn as flat boxes at height 0, which don't follow a terrain.</summary>
+        private static readonly HashSet<string> FlatKinds = new HashSet<string> { PieceKind.Patch, PieceKind.Road, PieceKind.Water, PieceKind.House, PieceKind.Wall, PieceKind.Fence };
 
         public static Result Compile(RegionData region, HandmadeData? handmade)
         {
@@ -68,6 +73,25 @@ namespace Rth.Shared.World.Data
                 {
                     result.Errors.Add($"{where}: {e.Message}");
                 }
+            }
+
+            // Terrain: a tile too steep to walk is a cliff, blocked as the Unity exporter blocks it.
+            try
+            {
+                result.Terrain = TerrainText.Read(region);
+            }
+            catch (FormatException e)
+            {
+                result.Errors.Add(e.Message);
+            }
+            if (result.Terrain != null)
+            {
+                for (int y = region.OriginY; y < region.OriginY + h; y++)
+                    for (int x = region.OriginX; x < region.OriginX + w; x++)
+                        if (result.Terrain.IsSteep(x, y, region.Terrain!.CliffStep)) layers.Block(region.Plane, x, y);
+                foreach (Piece piece in region.Pieces)
+                    if ((piece.Plane ?? region.Plane) == region.Plane && FlatKinds.Contains(piece.Kind))
+                        result.Warnings.Add($"Piece '{piece.Id}' ({piece.Kind}) is drawn flat at height 0 over the region's terrain: on terrain, draw ground with a tiles piece.");
             }
 
             if (handmade != null)

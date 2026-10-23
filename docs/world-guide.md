@@ -130,10 +130,11 @@ Unity is written back to text.
 
 - **Taking a region over:** delete its `"generated"` line. From then on it is edited like any
   other region, and the generator leaves it alone.
-- **Terrain belongs in the region's data.** *Decided* (2026-10-23), *not built.* Heights per
-  tile corner, as rows of text in the region file, so an agent without Unity can read and change
-  them and git can merge them. The owner sculpts in Unity; saving writes the heights back. Today
-  `MapTerrain` still keeps its heights inside the scene.
+- **Terrain belongs in the region's data.** *Decided* (2026-10-23), *built.* Heights per tile
+  corner, as rows of text in the region file (`terrain`), so an agent without Unity can read and
+  change them and git can merge them. The owner sculpts in Unity with **Sculpt Ground**; saving
+  writes the heights back. Regions drawn with `tiles` pieces follow it; the older `MapTerrain`
+  (the scale test region) still keeps its heights in its scene. How: [workflow.md](workflow.md).
 
 ## 5. How a place gets made
 
@@ -199,8 +200,9 @@ Use it in every brief and every review.
 - **Entrances and exits as data.** *Decided, not built.* A detailed place declares where its roads, rivers
   and paths leave it, and at what height. Its neighbours are built (or generated) to meet those
   points, as Albion joins its maps at their entrances.
-- **The seam check.** *Decided, not built.* A test that heights, walkability, roads and rivers agree across
-  every region border. A cliff seam or a road that stops dead fails it.
+- **The seam check.** *Decided; heights built.* `tools/world check` warns where two regions side
+  by side disagree on the heights along their border. Still to build: walkability, roads and
+  rivers that stop dead at a border.
 - **A busy place next to quiet land.** The busy region settles down near its own edges (the last
   few tiles close to its neighbour's ground and height), so it meets a neighbour at a lower stage
   cleanly. The quiet region carries the road, the river and a few deliberate things: a ruin, a
@@ -221,8 +223,8 @@ Use it in every brief and every review.
   `.asset`, `.mat` or `.meta` files.
 - **The owner and the agent with Unity** sculpt terrain, do the finish stage, run Sync World,
   walk it in Play mode and commit what Unity wrote.
-- **Sync World becomes incremental.** *Decided, not built.* It touches only regions whose data or
-  scene changed since the last sync.
+- **Sync World is incremental.** *Decided, built.* It touches only regions whose data, scene or
+  drawing code changed since this machine last synced them; **Sync World (everything)** redoes all.
 - **Don't build or recompile while someone is in Play mode**: building `/shared` or `/server`
   reloads the Editor's scripts.
 
@@ -244,12 +246,12 @@ Use it in every brief and every review.
 | --- | --- |
 | The continent layout (size, distances, passes, the cold north): [layout.md](layout.md) section 6 | Open: owner's review |
 | Sizes and camera, D1-D4: [world-scale.md](world-scale.md) | Open |
-| Incremental Sync World | Decided, to build |
-| Terrain heights in region data, sculpted in Unity and written back | Decided, to build |
+| Incremental Sync World | Built |
+| Terrain heights in region data, sculpted in Unity and written back | Built (check the sculpting tool in the Editor) |
 | Stages per region and the coverage map | Decided, to build |
-| Entrances and exits as data; the seam check | Decided, to build |
+| Entrances and exits as data; the seam check for roads, rivers and walkability | Decided, to build (the height seam check is built) |
 | Claims checked by the tools | Decided, to build |
-| A slope overlay while sculpting (tiles too steep to walk shown red) | Decided, to build |
+| A slope overlay while sculpting (tiles too steep to walk shown red) | Built, in Sculpt Ground |
 | Combining static pieces at build time | Decided, after measuring |
 | The first area brief (Tolling's neighbourhood) | Next |
 

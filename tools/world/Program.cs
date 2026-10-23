@@ -1,3 +1,4 @@
+using Rth.Shared.World;
 using Rth.Shared.World.Data;
 using Rth.Shared.World.Layout;
 using Rth.WorldTool;
@@ -81,6 +82,9 @@ switch (command)
     case "blockout":
         return BlockoutCommand(root, rest);
 
+    case "terrain":
+        return TerrainCommand(root, ws, rest);
+
     default:
         Console.WriteLine("""
             R'th world data (docs/workflow.md). Commands:
@@ -91,6 +95,9 @@ switch (command)
               layout [check]     compile world/layout/continent.json: run its checks, write zones.json and
                                  regions.txt, and draw docs/images/layout-*.png (check: only check, and that
                                  the generated files are up to date)
+              terrain <region> flat|layout [--force]
+                                 give a region terrain to sculpt: flat, or the continent layout's heights
+                                 (world/layout/zones.json); --force replaces terrain it already has
               blockout [check]   generate the walkable blockout from the layout: world/regions/land_*.json for
                                  every region with core land and the ring around it, then export their maps
                                  (check: only check that the generated regions are up to date)
@@ -130,6 +137,41 @@ static int Layout(string root, string[] args)
         });
     }
     return lw.Report.HasErrors ? 1 : 0;
+}
+
+// Terrain for a region (docs/world-guide.md section 4): heights in its data, to sculpt from.
+static int TerrainCommand(string root, WorldWorkspace ws, string[] args)
+{
+    if (args.Length < 2 || (args[1] != "flat" && args[1] != "layout"))
+    {
+        Console.Error.WriteLine("Usage: terrain <region> flat|layout [--force]");
+        return 2;
+    }
+    WorldWorkspace.Entry? e = ws.Find(args[0]);
+    if (e == null)
+    {
+        Console.Error.WriteLine($"No region '{args[0]}' in world/regions.");
+        return 1;
+    }
+    RegionData region = e.Region;
+    if (region.Terrain != null && !args.Contains("--force"))
+    {
+        Console.Error.WriteLine($"{region.Id} already has terrain; --force replaces it (sculpted work would be lost).");
+        return 1;
+    }
+    if (region.Generated != null)
+        Console.WriteLine($"note: {region.Id} is generated; `blockout` would overwrite it. Delete its \"generated\" line to keep the terrain.");
+    Heightfield field;
+    if (args[1] == "flat") field = new Heightfield(region.OriginX, region.OriginY, region.Width, region.Height);
+    else
+    {
+        WorldLayout layout = WorldLayout.Parse(File.ReadAllText(Path.Combine(root, "world", "layout", "zones.json")));
+        field = layout.Bake(region.OriginX, region.OriginY, region.Width, region.Height, layout.Seed);
+    }
+    region.Terrain = TerrainText.Write(field, region.Terrain?.CliffStep ?? 1f);
+    RegionFiles.SaveRegion(region, e.Path);
+    Console.WriteLine($"{region.Id}: {args[1]} terrain written. Run `export`, then `check` for steps at its borders.");
+    return 0;
 }
 
 // The walkable blockout (L2, docs/layout.md): regions generated from the layout.

@@ -1,12 +1,14 @@
 # Runs Sync World (docs/workflow.md) in batch mode, for when the Unity Editor is closed.
 # With the Editor open, use R'th > World > Sync World there instead (the project can only be open once).
 #
-#   powershell -File tools/unity-sync.ps1                       # every region, with screenshots
-#   powershell -File tools/unity-sync.ps1 -Regions tolling      # some regions
+#   powershell -File tools/unity-sync.ps1                       # regions that changed since the last sync, with screenshots
+#   powershell -File tools/unity-sync.ps1 -Regions tolling      # some regions, changed or not
+#   powershell -File tools/unity-sync.ps1 -All                  # every region
 #   powershell -File tools/unity-sync.ps1 -NoScreens            # quicker, no screenshots
 param(
     [string[]]$Regions = @(),
     [switch]$NoScreens,
+    [switch]$All,
     [string]$Unity = ""
 )
 
@@ -26,6 +28,7 @@ $log = Join-Path $project "Temp/rth-sync.log"
 $arguments = @("-batchmode", "-projectPath", $project, "-executeMethod", "Rth.Client.Editor.WorldSync.SyncFromCommandLine", "-logFile", $log)
 if ($Regions.Count -gt 0) { $arguments += @("-rthRegions", ($Regions -join ",")) }
 if ($NoScreens) { $arguments += "-rthNoScreens" }
+if ($All) { $arguments += "-rthAll" }
 
 Write-Host "Running Sync World in batch mode (log: $log)..."
 $process = Start-Process -FilePath $Unity -ArgumentList $arguments -Wait -PassThru -NoNewWindow

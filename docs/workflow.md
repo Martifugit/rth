@@ -51,6 +51,15 @@ rectangles are `[x0, y0, x1, y1]` with the far edges excluded. The kinds
 open land between places is `land_*.json`, from the continent layout (`tools/world blockout`,
 `docs/layout.md` section 8). Delete the `generated` line to take one over by hand.
 
+**Terrain** is the region's `terrain`: its corner heights, one row of text per row of tile corners
+from the north, in hundredths of a tile (`125` is 1.25 tiles up; `0*40` is forty corners at 0), and
+a `cliffStep`. A tile rising more than `cliffStep` across is a cliff and blocked, in the compiler
+and in Unity alike. It is drawn by the region's `tiles` pieces and stood on by everything placed;
+other area kinds (patches, roads, houses) are still drawn flat and get a warning on terrain.
+`check` warns where two regions side by side disagree on the heights along their border. The
+`layout` start (`tools/world terrain <region> layout`) takes the continent layout's rough heights,
+which still need sculpting (they can cut cliffs across a pass) and step against flat neighbours.
+
 Any piece placed on a tile becomes **interactive** with `"object": "<id in objects.json>"` (a rock
 you mine, a tree you cut, a counter that is a bank), and a stair or ladder adds `climbTo`.
 Placed pieces turn with `rot` (degrees, clockwise from above; footprints turn in quarter turns).
@@ -72,6 +81,7 @@ dotnet run --project tools/world -- export    # write server/data/maps from worl
 dotnet run --project tools/world -- render    # draw every region to world/renders/<id>.png and .txt
 dotnet run --project tools/world -- format    # put region files in the standard layout
 dotnet run --project tools/world -- blockout  # regenerate the open land (land_*.json) from the layout
+dotnet run --project tools/world -- terrain <region> flat|layout   # give a region terrain to sculpt
 dotnet test                                   # includes the same check (WorldDataTests)
 ```
 
@@ -83,9 +93,17 @@ orange, the spawn magenta, the 8-tile zone grid) and as text with coordinates; o
 With Unity (the owner, or the agent with Unity):
 
 - **R'th > World > Sync World** (or `tools/unity-sync.ps1` with the Editor closed): for every
-  region, redraw `Data` from the data, capture `Handmade`, export through the C# compiler, check
-  that exporting the whole scene the Unity way gives the same map, and write the snapshot and
-  screenshots. **Sync World (no screenshots)** is quicker.
+  region that changed since this machine last synced it, redraw `Data` from the data, capture
+  `Handmade`, export through the C# compiler, check that exporting the whole scene the Unity way
+  gives the same map, and write the snapshot and screenshots. A region counts as changed when its
+  data, its hand-made file, its scene or the code that draws data changed, or its server maps are
+  out of date (the record is `client/Library/RthSync.json`, per machine). **Sync World (no
+  screenshots)** is quicker; **Sync World (everything)** redoes every region.
+- **Sculpting terrain:** select a region's tile ground (`Data > ground`) and pick **Sculpt Ground**
+  in the Scene view's tools: raise, lower, flatten or smooth with a round brush (`[` and `]` change
+  its size); tiles too steep to walk show red. Saving the scene writes the heights into the region's
+  `terrain`, and takes a generated region over. The next sync stands its trees, rocks and props on
+  the new ground.
 - **Saving a region scene** writes back what you did to data pieces in the Editor: moving one by
   whole tiles, turning a placed one, deleting one. Then it captures `Handmade` and re-exports.
   Pressing Play and **R'th > Export Map** do the same capture and export.
