@@ -591,7 +591,7 @@ def great_church(ox, oy, prefix="GreatChurch"):
 #   - smooth lighting across shallow edges.
 # PLAIN_B keeps the great church's heights; PLAIN_C is lower and wider in feel.
 PLAIN_B = dict(aisle_h=10.0, arcade_h=8.0, nave_h=22.0, aisle_rise=4.0, pitch=55.0, tower_h=42.0, belfry_h=11.0,
-               spire_h=26.0, screen_h=28.0, screen_pitch=62.0, portal_w=7.0, portal_h=9.0, window_w=5.6)
+               spire_h=26.0, portal_w=7.0, portal_h=9.0, window_w=5.0)   # the screen is the nave roof's gable
 PLAIN_C = dict(aisle_h=7.0, arcade_h=5.6, nave_h=13.0, aisle_rise=2.5, pitch=45.0, tower_h=22.0, belfry_h=7.0,
                spire_h=13.0, screen_h=15.0, screen_pitch=55.0, portal_w=5.0, portal_h=6.0, window_w=4.0)
 WT = 0.25                 # a wall is a skin
@@ -601,7 +601,9 @@ CHAMFER = 3.0             # the towers' outer corners cut off
 
 def plain_church(ox, oy, P, prefix="PlainChurch"):
     AH, ARH, NH, AR = P["aisle_h"], P["arcade_h"], P["nave_h"], P["aisle_rise"]
-    TH, BH, SH, SCH = P["tower_h"], P["belfry_h"], P["spire_h"], P["screen_h"]
+    TH, BH, SH = P["tower_h"], P["belfry_h"], P["spire_h"]
+    SCH = P.get("screen_h", NH)                                   # by default the screen is the end of the nave roof:
+    screen_pitch = P.get("screen_pitch", P["pitch"])             # its eaves and its pitch
     c = Church(aisle_h=AH, crown_style="merlons")
     L = BAY * BAYS
     hn = NAVE_W / 2
@@ -774,7 +776,7 @@ def plain_church(ox, oy, P, prefix="PlainChurch"):
     pw = P["portal_w"] / 2
     PH = pw + 2.1
     T = arch_apex(pw + 1.5, P["portal_h"]) + 0.8
-    srise = hn * math.tan(math.radians(P["screen_pitch"]))
+    srise = hn * math.tan(math.radians(screen_pitch))
     c.box("W", fx0, oy - hn, 0, fx0 + WT * 2, oy - PH, SCH, PALE)
     c.box("W", fx0, oy + PH, 0, fx0 + WT * 2, oy + hn, SCH, PALE)
     c.box("W", fx0, oy - PH, T, fx0 + WT * 2, oy + PH, SCH, PALE)
@@ -784,7 +786,7 @@ def plain_church(ox, oy, P, prefix="PlainChurch"):
         c.crown_run("W", (fx0 + WT, oy + sy * hn), (fx0 + WT, oy + sy * PH), (-1, 0), thick=WT * 2)
     c.roofs.gable_roof(fx0 + WT * 2, ox, oy - hn, oy + hn, NH, rise, ROOF, over=0.0)
     ww = P["window_w"]
-    wb2 = T + 4.6
+    wb2 = T + 3.8                                                 # just over the portal's gable
     ws2 = max(SCH + 2.0, wb2 + 2.2)
     c.arch_frame("W", face, ww, ww + 0.4, ws2, 0.0, 0.3, PALE, base=wb2)
     c.arch_panel("W", face, ww, ws2, wb2, GLASS)
