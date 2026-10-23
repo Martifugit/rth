@@ -13,6 +13,8 @@ Parts (each adds to a monumental.Build; 1 unit = 1 tile, Z up):
   tower          chamfered and corbelled, battlemented, slits; a spire or a belfry and spire
   hall           a rectangular building: walls, buttresses, lancets, gable ends, slate roof
   gatehouse      two towers, a gate arch with a raised portcullis, a battlemented top
+  townhouse      a narrow house: stone ground floor, jettied plaster and timber (or all stone), slate roof
+  street         two terraced rows of town houses facing each other
 
 Run in Blender (MCP): runpy.run_path(".../lab/cruor_kit.py", run_name="__main__").
 Run lab/church_textures.py first after changing the textures."""
@@ -267,13 +269,116 @@ def gatehouse(b, cx, y, w=4.0, gate_h=5.0, s=4.6, tower_h=12.0, depth=5.0, block
         b.box(cx - w / 2, yp - 0.07, z, cx + w / 2, yp + 0.07, z + 0.12, METAL)
 
 
+# ---------------------------------------------------------------- housing
+
+# Houses add the paint lab's plaster and a dark timber to the church's materials.
+PLASTER, TIMBER = len(MATS), len(MATS) + 1
+KIT_MATS = MATS + ["Plaster", "Umber"]
+PAINT = dict(PAINT, Plaster=("TileWall", 1, 2.3))
+STOREY = 2.3                  # docs/world-scale.md, D2
+
+
+def gable_boards(b, x0, x1, y, z, rise, m, over=0.3):
+    """A board down each edge of a gable at y, eave to ridge, just proud of the roof."""
+    xm = (x0 + x1) / 2
+    for xe in (x0 - over, x1 + over):
+        b.hull([V(x, y + dy, zz + dz) for x, zz in ((xe, z), (xm, z + rise)) for dy in (-0.06, 0.06) for dz in (-0.16, 0.06)], m)
+
+
+def townhouse(b, w, d, storeys=3, plaster=True, gable_front=True, jetty=0.35, chimney=True, windows=None):
+    """A narrow town house, its street front at y = 0 facing -y, x from 0 to w, d deep.
+    Plaster: a stone ground floor, then jettied plaster storeys framed in dark timber (posts at
+    the corners and beside the windows, a beam at every floor), boards down the gable edges.
+    Stone: stone throughout, small dark lancets, a stone coping on the gables. Either way a steep
+    slate roof (gable to the street, or eaves to the street), a pointed stone doorway and a chimney.
+    Red is for the faith, so houses keep out of it."""
+    S = STOREY
+    top = S * storeys
+    nw = windows or max(1, int(w // 2.2))
+    xs = [w * (i + 0.5) / nw for i in range(nw)]
+    b.box(0, 0, 0, w, d, S, PALE)                                  # the stone ground floor
+    b.box(-0.1, -0.1, 0, w + 0.1, d + 0.1, 0.4, PALE)
+    front = 0.0
+    for k in range(1, storeys):
+        z0, z1 = S * k, S * (k + 1)
+        if plaster:
+            front = -jetty * k
+            b.box(0, front, z0, w, d, z1, PLASTER)
+            b.box(-0.06, front - 0.08, z0 - 0.2, w + 0.06, d + 0.06, z0 + 0.04, TIMBER)    # the floor beam
+            for x in [0.0, w] + [x + e for x in xs for e in (-0.55, 0.55)]:
+                b.box(x - 0.09, front - 0.06, z0, x + 0.09, front + 0.04, z1, TIMBER)
+            for x in xs:
+                b.box(x - 0.42, front - 0.04, z0 + 0.75, x + 0.42, front + 0.02, z0 + 1.75, DARK)
+                b.box(x - 0.48, front - 0.08, z0 + 0.65, x + 0.48, front + 0.02, z0 + 0.78, TIMBER)   # the sill
+        else:
+            b.box(0, 0, z0, w, d, z1, PALE)
+            for x in xs:
+                lancet(b, frame((x, 0.0), (1, 0), (0, -1)), 0.32, z0 + 0.7, z0 + 1.9, DARK)
+    if plaster and storeys > 1:
+        b.box(-0.06, front - 0.08, top - 0.14, w + 0.06, d + 0.06, top + 0.04, TIMBER)
+    wall_m = PLASTER if plaster else PALE
+    edge_m = TIMBER if plaster else PALE
+    if gable_front:
+        rise = (w / 2 + 0.3) * math.tan(math.radians(SLATE_PITCH))
+        for y in (front, d):
+            b.hull([V(x, yy, z) for yy in (y, y + (0.15 if y == front else -0.15))
+                    for x, z in ((0, top), (w, top), (w / 2, top + rise * w / (w + 0.6)))], wall_m)
+            gable_boards(b, 0, w, y - 0.32 if y == front else y + 0.32, top, rise, edge_m)
+        b.gable_roof(0, w, front, d, top, rise, ROOF, along="y", over=0.3)
+        gz = top + 0.3
+        if plaster:
+            b.box(w / 2 - 0.35, front - 0.04, gz, w / 2 + 0.35, front + 0.02, gz + 0.9, DARK)
+        else:
+            lancet(b, frame((w / 2, front), (1, 0), (0, -1)), 0.28, gz, gz + 1.2, DARK)
+        ridge_top = top + rise
+    else:
+        depth = d - front
+        rise = (depth / 2 + 0.3) * math.tan(math.radians(SLATE_PITCH))
+        for x in (0.0, w):
+            b.hull([V(xx, y, z) for xx in (x, x + (0.15 if x == 0 else -0.15))
+                    for y, z in ((front, top), (d, top), (front + depth / 2, top + rise * depth / (depth + 0.6)))], wall_m)
+        b.gable_roof(0, w, front, d, top, rise, ROOF, along="x", over=0.3)
+        ridge_top = top + rise
+    door_x = xs[0] if nw > 1 else w * 0.3
+    doorway(b, frame((min(door_x, w - 0.9), 0.0), (1, 0), (0, -1)), 0.5, 2.2)
+    if w > 3.2:
+        lancet(b, frame((max(w - 1.0, door_x + 1.4), 0.0), (1, 0), (0, -1)), 0.28, 0.9, 1.9, DARK)
+    if chimney:
+        b.box(w - 0.9, d - 1.4, 0, w - 0.1, d - 0.6, ridge_top + 0.4, PALE)
+        b.box(w - 1.0, d - 1.5, ridge_top + 0.2, w, d - 0.5, ridge_top + 0.5, PALE)
+
+
 # ---------------------------------------------------------------- the showcase
 
 def piece(name, fn, *args, **kw):
     b = Build()
     fn(b, *args, **kw)
     A.finish(b.bm)
-    return A.mesh_from(name, b.bm, MATS, coll="CruorKit", smooth_angle=50)
+    return A.mesh_from(name, b.bm, KIT_MATS, coll="CruorKit", smooth_angle=50)
+
+
+def street(x0, y_north, y_south, houses):
+    """Two terraced rows facing each other across a street running along x: houses =
+    [(w, d, kwargs), ...], alternating north and south. y_north and y_south are the two rows'
+    front lines. A house faces -y as made, so the north row stands as made and the south row
+    is turned round."""
+    objs = []
+    xn = xs = x0
+    for i, (w, d, kw) in enumerate(houses):
+        o = piece(f"House{i}", townhouse, w, d, **kw)
+        if i % 2 == 0:
+            o.location = (xn, y_north, 0)
+            xn += w
+        else:
+            o.rotation_euler.z = math.pi
+            o.location = (xs + w, y_south, 0)
+            xs += w
+        objs.append(o)
+    b = Build()                                                   # the street's paving
+    b.box(x0 - 1, y_south, 0, max(xn, xs) + 1, y_north, 0.03, M.FLOOR)
+    A.finish(b.bm)
+    objs.append(A.mesh_from("Street", b.bm, KIT_MATS, coll="CruorKit"))
+    return objs
 
 
 def build():
@@ -300,6 +405,14 @@ def build():
     objs.append(piece("ChapterHouse", hall, 18, -38, 12, 8, 8.0, bay=3.0, win_w=0.55, glass=GLASS, gable_window=1.1))
     objs.append(piece("Armoury", hall, -22, -38, 9, 8, 6.0, bay=3.0, corner_towers=True))
     objs.append(piece("PalaceTower", tower, 38, -31, 3.6, 13.0, top="belfry", spire_h=6.0))
+    # A street of town houses south of the wall: plaster and stone, 2 and 3 storeys, terraced.
+    P, Sn = dict(plaster=True), dict(plaster=False)
+    houses = [(5, 8, dict(P, storeys=3)), (4.5, 8, dict(P, storeys=3)), (6, 8, dict(Sn, storeys=3)),
+              (5, 8, dict(P, storeys=2, gable_front=False)), (4, 7, dict(P, storeys=3)), (6, 8, dict(Sn, storeys=2)),
+              (5.5, 8, dict(Sn, storeys=3, gable_front=False)), (5, 8, dict(P, storeys=3, chimney=False)),
+              (4.5, 7, dict(P, storeys=2)), (5, 8, dict(P, storeys=3)), (6, 8, dict(Sn, storeys=3)),
+              (4.5, 8, dict(P, storeys=2, gable_front=False))]
+    objs += street(-14, -55.0, -65.0, houses)
     M.paint(objs, PAINT)
     return {"triangles": A.report(objs)}
 
