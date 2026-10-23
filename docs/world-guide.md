@@ -37,6 +37,13 @@ Started 2026-10-23.
 - **Sparse, at RuneScape's scale.** *Decided.* A huge city may have about 30 buildings; a large
   forest about 30 trees. Trees and rocks are placed deliberately (most are resources), in small
   groups, not as scatter. Dense forest only where the owner asks for it.
+  - **The yardstick:** Varrock, a Paris- or London-sized capital in its lore, has about 30
+    buildings and 100 people.
+  - **Every building earns its place** with a shop, a service, a quest or a landmark. Homes are
+    a handful, and most are a single storey.
+  - **Open space is what makes a place feel big:** wide streets, plazas, gardens and views. A
+    dense grid of houses makes a place tedious to cross and impossible to fill with content.
+  - **Not rectangles:** a walled city's wall follows the ground and the water, not a rectangle.
 - **Everywhere has features.** *Decided* ([world-map.md](world-map.md)). There is no generic
   lowland: every stretch of country has its own landmarks and points of interest.
 - **Uneven on purpose.** *Decided* ([areas/rules.md](areas/rules.md)). Targets (banks, quests,

@@ -296,7 +296,15 @@ def townhouse(b, w, d, storeys=3, plaster=True, gable_front=True, jetty=0.35, ch
     top = S * storeys
     nw = windows or max(1, int(w // 2.2))
     xs = [w * (i + 0.5) / nw for i in range(nw)]
-    b.box(0, 0, 0, w, d, S, PALE)                                  # the stone ground floor
+    if plaster and storeys == 1:                                  # a cottage: a stone footing, framed plaster above
+        b.box(0, 0, 0, w, d, 0.9, PALE)
+        b.box(0, 0, 0.9, w, d, S, PLASTER)
+        for x in (0.0, w):
+            for y in (0.0, d):
+                b.box(x - 0.09, y - 0.09, 0.9, x + 0.09, y + 0.09, S, TIMBER)
+        b.box(-0.06, -0.06, S - 0.14, w + 0.06, d + 0.06, S + 0.04, TIMBER)
+    else:
+        b.box(0, 0, 0, w, d, S, PALE)                              # the stone ground floor
     b.box(-0.1, -0.1, 0, w + 0.1, d + 0.1, 0.4, PALE)
     front = 0.0
     for k in range(1, storeys):
@@ -405,13 +413,10 @@ def build():
     objs.append(piece("ChapterHouse", hall, 18, -38, 12, 8, 8.0, bay=3.0, win_w=0.55, glass=GLASS, gable_window=1.1))
     objs.append(piece("Armoury", hall, -22, -38, 9, 8, 6.0, bay=3.0, corner_towers=True))
     objs.append(piece("PalaceTower", tower, 38, -31, 3.6, 13.0, top="belfry", spire_h=6.0))
-    # A street of town houses south of the wall: plaster and stone, 2 and 3 storeys, terraced.
+    # A short street of houses south of the wall: few, and mostly a single storey (docs/regions/cruor.md).
     P, Sn = dict(plaster=True), dict(plaster=False)
-    houses = [(5, 8, dict(P, storeys=3)), (4.5, 8, dict(P, storeys=3)), (6, 8, dict(Sn, storeys=3)),
-              (5, 8, dict(P, storeys=2, gable_front=False)), (4, 7, dict(P, storeys=3)), (6, 8, dict(Sn, storeys=2)),
-              (5.5, 8, dict(Sn, storeys=3, gable_front=False)), (5, 8, dict(P, storeys=3, chimney=False)),
-              (4.5, 7, dict(P, storeys=2)), (5, 8, dict(P, storeys=3)), (6, 8, dict(Sn, storeys=3)),
-              (4.5, 8, dict(P, storeys=2, gable_front=False))]
+    houses = [(6, 7, dict(Sn, storeys=1)), (5, 7, dict(P, storeys=2)), (7, 6, dict(P, storeys=1, gable_front=False)),
+              (5, 7, dict(Sn, storeys=2)), (6, 7, dict(P, storeys=1)), (6, 6, dict(Sn, storeys=1, gable_front=False))]
     objs += street(-14, -55.0, -65.0, houses)
     M.paint(objs, PAINT)
     return {"triangles": A.report(objs)}

@@ -1,7 +1,38 @@
 # Cruor
 
+> **Superseded (2026-10-23).** The owner judged this blockout far too dense: unpleasant to cross,
+> and impossible to fill with content. Its layout and the counts in its asset list (28 town
+> houses, 15 more stone ones, 12 stalls...) are not to be built. Cruor will be laid out again to
+> the direction below, with the kit and style in [cruor-architecture.md](cruor-architecture.md).
+> The rest of this page describes the old blockout.
+
+## Direction for the new layout
+
+Decided by the owner:
+- **The whole city is walled, and the wall is not a rectangle.** It follows the ground, the river
+  and the bay.
+- **The plaza and the cathedral are the centre.** The cathedral is massive and stands in open
+  ground of its own; the city is arranged round it.
+- **Lots of open space** gives the impression of a large place: wide streets, plazas, gardens, the
+  quays and the Watch.
+- **About 25–30 buildings and 80–100 people**, at Varrock's scale (the biggest city in the game,
+  but not hundreds of homes). Homes are a handful, and not all of them are more than one storey.
+
+The building budget, a working list:
+
+| Kind | Count | Examples |
+| --- | --- | --- |
+| The cathedral | 1 | In its own open precinct |
+| Faith and state | 3–4 | Chapter house, letting house, the Pontiff's palace |
+| Military | 3–4 | Gatehouse, barracks, armoury (wall towers are part of the wall, not counted) |
+| Services and shops | 8–10 | The Tithe counting-house (bank), tavern, a few shops, a smithy, the market (counted as one) |
+| Harbour | 2–3 | A warehouse, the quay, the Watch |
+| Homes | 6–8 | In two or three short rows, each able to hold a quest-giver or shop later |
+
+## The old blockout
+
 The first see of Blood, the richest and most populous city in the basin (`docs/lore.md`). This
-is the blockout: every building, street and landmark is in place at its final size, with
+was the blockout: every building, street and landmark is in place at its final size, with
 placeholder geometry tagged by the asset it stands for. It is built by
 `client/Assets/Editor/CruorBuilder.cs` (**R'th > Dev > Rebuild Cruor Scene**), which also
 exports the map and writes [cruor-assets.md](cruor-assets.md), the list of assets to make.

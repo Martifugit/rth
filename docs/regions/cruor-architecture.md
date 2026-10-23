@@ -76,5 +76,10 @@ The parts B is built from, to be made reusable at any length and height:
 | City wall (thick, walkable, merlons on both sides) | Curtain wall, yard wall, water gate |
 | Slate roof (pitched or lean-to) | Everything roofed |
 
-Townhouses, the tavern and the stables keep the village kit's plaster and timber, with the same
-limestone and slate, so the city still reads as one place.
+Houses (`townhouse` in `lab/cruor_kit.py`) come in two kinds:
+- a stone ground floor under jettied plaster storeys framed in dark timber;
+- all stone, with small dark lancets.
+
+Both have steep slate roofs and pointed stone doorways, and the same stone and slate as the rest,
+so the city reads as one place. The tavern and the stables follow the plaster kind. Houses are
+few, and most are a single storey (see the direction in [cruor.md](cruor.md)).
