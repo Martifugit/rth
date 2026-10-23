@@ -29,6 +29,9 @@ namespace Rth.Shared.World.Data
         /// <summary>Files that couldn't be read at all.</summary>
         public List<string> LoadErrors { get; } = new List<string>();
 
+        /// <summary>Where the generated land's scenes live: local to each machine, ignored by git.</summary>
+        public const string GeneratedScenes = "Assets/Scenes/Land/";
+
         private WorldWorkspace(string root) => Root = root;
 
         /// <summary>
@@ -109,6 +112,13 @@ namespace Rth.Shared.World.Data
                     if (npcIds.Count > 0 && !npcIds.Contains(n.Npc)) errors.Add($"{name}: npc '{n.Npc}' at ({n.X}, {n.Y}) isn't in npcs.json.");
                 if (e.Compiled.Errors.Count == 0) errors.AddRange(Stale(e));
             }
+            // Generated land's scenes are local (git ignores Assets/Scenes/Land/, since Sync World
+            // rebuilds them); a region taken over keeps hand work in its scene, so it moves out.
+            if (warnings != null)
+                foreach (Entry e in Regions)
+                    if (e.Region.Generated == null && e.Region.Scene != null && e.Region.Scene.StartsWith(GeneratedScenes, StringComparison.Ordinal))
+                        warnings.Add($"{e.Region.Id}: taken over, but its scene is still in {GeneratedScenes}, which git ignores: " +
+                                     "set its scene to its area's folder (Assets/Scenes/<Area>/), and Sync World moves it there.");
             // Maps without data were exported straight from a scene the old way (or are left over).
             if (warnings != null && Directory.Exists(MapsDirectory))
                 foreach (string map in Directory.GetFiles(MapsDirectory, "*.rthmap"))

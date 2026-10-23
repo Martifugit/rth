@@ -51,6 +51,13 @@ rectangles are `[x0, y0, x1, y1]` with the far edges excluded. The kinds
 open land between places is `land_*.json`, from the continent layout (`tools/world blockout`,
 `docs/layout.md` section 8). Delete the `generated` line to take one over by hand.
 
+**Generated scenes are local.** Their scenes (`Assets/Scenes/Land/`) are ignored by git: Sync World
+builds them on each machine from the data, and every change to how ground is drawn would rewrite
+them all. A region taken over keeps hand work in its scene, so give it its area's folder
+(`"scene": "Assets/Scenes/<Area>/Land_x_y.unity"`; `tools/world check` warns until you do), and the
+next Sync World moves the scene there, where it is committed. The `Land*` materials and every
+region's snapshot are committed as usual.
+
 **Terrain** is the region's `terrain`: its corner heights, one row of text per row of tile corners
 from the north, in hundredths of a tile (`125` is 1.25 tiles up; `0*40` is forty corners at 0), and
 a `cliffStep`. A tile rising more than `cliffStep` across is a cliff and blocked, in the compiler

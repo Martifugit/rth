@@ -24,6 +24,10 @@ obj/
 /client/.vsconfig
 /client/Assets/Plugins/Rth/
 /client/Assets/Plugins/Rth.meta
+# The generated land's scenes: Sync World builds them from world/regions on each machine.
+# A region taken over moves its scene to its area's folder (tools/world check warns).
+/client/Assets/Scenes/Land/
+/client/Assets/Scenes/Land.meta
 
 /client/.vscode/
 

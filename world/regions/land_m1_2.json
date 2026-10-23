@@ -1,7 +1,7 @@
 {
   "id": "land_m1_2",
   "title": "Cruor's empire",
-  "scene": "Assets/Scenes/Land/Land_m1_2.unity",
+  "scene": "Assets/Scenes/Selenfall/Land_m1_2.unity",
   "origin": [-96, 192],
   "size": [96, 96],
   "plane": 0,

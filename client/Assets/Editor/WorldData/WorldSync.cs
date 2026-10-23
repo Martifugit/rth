@@ -176,6 +176,7 @@ namespace Rth.Client.Editor
                 return;
             }
 
+            MoveSceneIfMoved(region, report);
             // An open scene is used as it is (it may hold edits not yet saved, such as a conversion's).
             Scene scene = SceneManager.GetSceneByPath(region.Scene);
             if (!scene.IsValid() || !scene.isLoaded)
@@ -206,6 +207,28 @@ namespace Rth.Client.Editor
             // Generated regions (the blockout) are pictured by `tools/world render`; three screenshots each would only bloat the repository.
             WorldSnapshot.Write(region, area, data, handmade, screenshots && region.Generated == null, report);
             report.Info($"synced {region.Id}: {region.Pieces.Count} pieces, scene {region.Scene}");
+        }
+
+        /// <summary>
+        /// The data names a scene path that doesn't exist yet, but a scene of the same name exists
+        /// elsewhere (a region taken over from the generated land moves to its area's folder):
+        /// move that scene, so its hand work comes along and it keeps its place in the build.
+        /// </summary>
+        private static void MoveSceneIfMoved(RegionData region, Report report)
+        {
+            if (File.Exists(Path.Combine(Application.dataPath, "..", region.Scene))) return;
+            string name = Path.GetFileNameWithoutExtension(region.Scene);
+            string from = AssetDatabase.FindAssets(name + " t:Scene").Select(AssetDatabase.GUIDToAssetPath)
+                .FirstOrDefault(p => Path.GetFileNameWithoutExtension(p) == name);
+            if (from == null) return;
+            Scene open = SceneManager.GetSceneByPath(from);
+            if (open.IsValid() && open.isLoaded && SceneManager.sceneCount > 1) EditorSceneManager.CloseScene(open, true);
+            string folder = Path.GetDirectoryName(region.Scene).Replace('\\', '/');
+            Directory.CreateDirectory(Path.Combine(Application.dataPath, "..", folder));
+            AssetDatabase.Refresh();
+            string error = AssetDatabase.MoveAsset(from, region.Scene);
+            if (string.IsNullOrEmpty(error)) report.Info($"{region.Id}: moved {from} to {region.Scene}");
+            else report.Error($"{region.Id}: couldn't move {from} to {region.Scene}: {error}");
         }
 
         private static Scene NewRegionScene(RegionData region, Report report)

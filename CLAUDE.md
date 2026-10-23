@@ -458,7 +458,8 @@ The draggable Character panel is gone. A general client question, `QueryMessage`
 
 **L2, the walkable blockout (on `claude/l2-blockout`):** the whole core of the continent as rough,
 walkable land, generated from the layout by `tools/world blockout` into 256 regions
-`world/regions/land_*.json` (`"generated": "blockout"`; delete that line to take one over): each is
+`world/regions/land_*.json` (`"generated": "blockout"`; delete that line to take one over, and move its
+scene out of `Assets/Scenes/Land/`, which git ignores, into its area's folder): each is
 one `tiles` piece (ground tile by tile, drawn by the client's `TileGround`) with the layout's ground,
 water, rivers, the spine's rock, passes, roads and a plain square per place. Flat, no assets.
 `BlockoutTests` walk from Tolling to Cruor, over every pass and into every power. See
