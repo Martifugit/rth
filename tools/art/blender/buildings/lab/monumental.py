@@ -25,8 +25,8 @@ sys.path.insert(0, os.path.join(HERE, "..", ".."))
 import rth_art as A  # noqa: E402
 
 # Flat colours for judging shapes (none of these wear a texture).
-MATS = ["Gravestone", "Ashgrey", "Sable", "SynodRed", "Shingle", "Iron"]
-PALE, ROOF, DARK, RED, CASTLE, METAL = range(len(MATS))
+MATS = ["Gravestone", "Ashgrey", "Sable", "SynodRed", "Shingle", "Iron", "CryptFloor"]
+PALE, ROOF, DARK, RED, CASTLE, METAL, FLOOR = range(len(MATS))
 
 
 class Build:
@@ -102,92 +102,156 @@ class Build:
 
 # ---------------------------------------------------------------- the great church
 
-BAY = 3.0                 # one bay of the nave, in tiles
-BAYS = 7
-NAVE_W = 8.0              # nave width (y)
-NAVE_H = 9.0              # nave wall height
-AISLE_W = 4.0
-AISLE_H = 4.6
-TOWER = 5.0               # west towers' side
-TOWER_H = 18.0
-SPIRE_H = 11.0
+# Planned from the inside: clear floor in tiles (the player is about 2 tall), then heights from
+# Gothic ratios, compressed for the camera (real naves are nearer 3x their width).
+NAVE_W = 12.0             # clear width between the arcade piers
+AISLE_W = 6.0             # clear width of each aisle
+BAY = 6.0                 # one bay: about the aisle's width
+BAYS = 6
+WALL = 1.0                # wall thickness
+NAVE_H = 18.0             # nave walls: 1.5 x the nave's width
+AISLE_H = 9.0             # aisles: half the nave
+ARCADE_H = 7.0            # where the arcade's arches spring
+TOWER = 10.0              # west towers' side
+TOWER_H = 34.0            # about twice the nave walls
+SPIRE_H = 16.0
+PORTAL_W, PORTAL_H = 5.0, 9.0
+PITCH = 55.0
 
 
 def great_church(ox, oy):
-    """West front at x = ox, the nave running east (+x); the nave's south wall at y = oy."""
-    b = Build()
+    """West front at x = ox, the nave running east (+x), centred on y = oy. Returns (shell, roofs):
+    the roofs are their own object, so a cutaway can hide them."""
+    b, r = Build(), Build()
     L = BAY * BAYS
-    y0, y1 = oy, oy + NAVE_W
-    rise = (NAVE_W / 2) * math.tan(math.radians(55))
-    # Nave and its roof.
-    b.box(ox, y0, 0, ox + L, y1, NAVE_H, PALE)
-    b.gable_roof(ox, ox + L, y0, y1, NAVE_H, rise, ROOF)
-    for side, ya, yb, face, out in ((-1, y0 - AISLE_W, y0, y0 - AISLE_W, -1), (1, y1, y1 + AISLE_W, y1 + AISLE_W, 1)):
-        # Aisle: a lower block with a lean-to roof up against the nave.
-        b.box(ox, ya, 0, ox + L, yb, AISLE_H, PALE)
-        inner = y0 if side < 0 else y1
-        b.hull([(x, face - out * -0.3, AISLE_H) for x in (ox - 0.2, ox + L + 0.2)] +
-               [(x, inner, AISLE_H + 2.0) for x in (ox - 0.2, ox + L + 0.2)] +
-               [(x, face - out * -0.3, AISLE_H + 0.15) for x in (ox - 0.2, ox + L + 0.2)], ROOF)
+    hn = NAVE_W / 2                                               # pier line
+    ha = hn + AISLE_W                                             # aisle wall's inner face
+    rise = (hn + WALL) * math.tan(math.radians(PITCH))
+    x0, x1 = ox, ox + L
+    # Floor.
+    b.box(x0 - TOWER, oy - ha - WALL, 0, x1 + hn + WALL, oy + ha + WALL, 0.05, FLOOR)
+
+    for side in (-1, 1):
+        y_pier, y_wall = oy + side * hn, oy + side * (ha + WALL / 2)
+        # Aisle wall, with its windows (glass on both faces).
+        b.box(x0, y_wall - WALL / 2, 0, x1, y_wall + WALL / 2, AISLE_H, PALE)
         for i in range(BAYS):
-            xm = ox + BAY * (i + 0.5)
-            # Aisle windows and clerestory lancets in church glass.
-            b.panel((ox, face, 0), (1, 0, 0), (0, out, 0), xm - ox - 0.45, xm - ox + 0.45, 1.2, 3.2, RED, apex=3.8)
-            b.panel((ox, inner, 0), (1, 0, 0), (0, out, 0), xm - ox - 0.5, xm - ox + 0.5, AISLE_H + 2.4, NAVE_H - 1.6,
-                    RED, apex=NAVE_H - 0.6)
+            xm = x0 + BAY * (i + 0.5)
+            for face, out in ((y_wall + side * WALL / 2, side), (y_wall - side * WALL / 2, -side)):
+                b.panel((x0, face, 0), (1, 0, 0), (0, out, 0), xm - x0 - 1.0, xm - x0 + 1.0, 2.2, 6.0, RED,
+                        apex=7.6, depth=0.04)
+        # The arcade: piers, pointed arches between them, the clerestory wall above.
         for i in range(BAYS + 1):
-            x = ox + BAY * i
-            # Buttress pier on the aisle wall, its pinnacle, and the flying buttress to the nave.
-            far = face + out * 1.1
-            b.box(x - 0.35, face, 0, x + 0.35, far, AISLE_H + 1.4, PALE)
-            b.cone(x, (face + far) / 2, 0.42, AISLE_H + 1.4, AISLE_H + 3.4, PALE, sides=4)
-            b.hull([(x + dx, face + out * 0.2, AISLE_H + 0.9 + dz) for dx in (-0.2, 0.2) for dz in (0, 0.5)] +
-                   [(x + dx, inner, NAVE_H - 1.8 + dz) for dx in (-0.2, 0.2) for dz in (0, 0.6)], PALE)
-    # The apse: a round east end with its own cone roof.
-    ax, ay, r = ox + L, oy + NAVE_W / 2, NAVE_W / 2 + 0.6
-    b.cyl(ax, ay, r, 0, NAVE_H, PALE, sides=10)
-    b.cone(ax, ay, r + 0.3, NAVE_H, NAVE_H + rise, ROOF, sides=10)
-    for k in range(5):                                            # tall lancets round the apse
-        a = math.radians(-60 + 30 * k)
-        p = Vector((ax + r * math.cos(a), ay + r * math.sin(a), 0))
-        along = Vector((-math.sin(a), math.cos(a), 0))
-        b.panel(p, along, (math.cos(a), math.sin(a), 0), -0.4, 0.4, 2.0, NAVE_H - 2.0, RED, apex=NAVE_H - 1.2)
-    # A slender spire (flèche) over the crossing.
-    fx = ox + BAY * 4
-    b.cyl(fx, ay, 0.9, NAVE_H + rise - 1.0, NAVE_H + rise + 2.0, PALE, sides=8)
-    b.cone(fx, ay, 1.0, NAVE_H + rise + 2.0, NAVE_H + rise + 8.0, ROOF, sides=8)
-    # The west front: two towers, the gable wall between them with a rose window and a portal.
-    for ty in (y0 - AISLE_W - 0.5, y1 + AISLE_W + 0.5 - TOWER):
-        tx = ox - TOWER + 1.0
-        b.box(tx, ty, 0, tx + TOWER, ty + TOWER, TOWER_H, PALE)
-        cx, cy = tx + TOWER / 2, ty + TOWER / 2
-        for zz in (NAVE_H + 0.5, TOWER_H - 4.2):
-            b.panel((tx, ty, 0), (0, 1, 0), (-1, 0, 0), 1.6, TOWER - 1.6, zz, zz + 2.6, DARK, apex=zz + 3.4)
-        b.merlons((tx, ty), (tx, ty + TOWER), TOWER_H, 0.6, 0.4, PALE, outward=(1, 0, 0))
-        for px, py in ((tx, ty), (tx + TOWER, ty), (tx, ty + TOWER), (tx + TOWER, ty + TOWER)):
-            b.cone(px, py, 0.45, TOWER_H, TOWER_H + 2.5, PALE, sides=4)       # corner pinnacles
-        b.cone(cx, cy, TOWER / 2 - 0.3, TOWER_H, TOWER_H + SPIRE_H, ROOF, sides=8)
-    fx0 = ox - TOWER + 1.0                                        # the front, flush with the towers
-    b.box(fx0, y0 - 0.5, 0, ox, y1 + 0.5, NAVE_H, PALE)
-    b.hull([(x, y, NAVE_H) for x in (fx0, ox) for y in (y0 - 0.5, y1 + 0.5)] +
-           [(x, oy + NAVE_W / 2, NAVE_H + rise + 0.6) for x in (fx0, ox)], PALE)
-    rose = Vector((fx0, oy + NAVE_W / 2, NAVE_H + 1.4))
+            xp = x0 + BAY * i
+            b.box(xp - 0.6, y_pier - 0.6, 0, xp + 0.6, y_pier + 0.6, AISLE_H, PALE)
+        for i in range(BAYS):
+            xa, xb = x0 + BAY * i + 0.6, x0 + BAY * (i + 1) - 0.6
+            xm = (xa + xb) / 2
+            for xs, xe in ((xa, xm), (xb, xm)):                    # spandrels make the pointed arch
+                b.hull([(x, y_pier + dy, z) for x, z in ((xs, ARCADE_H), (xs, AISLE_H), (xe, AISLE_H))
+                        for dy in (-WALL / 2, WALL / 2)], PALE)
+        b.box(x0, y_pier - WALL / 2, AISLE_H, x1, y_pier + WALL / 2, NAVE_H, PALE)
+        for i in range(BAYS):                                     # clerestory lancets, both faces
+            xm = x0 + BAY * (i + 0.5)
+            for face, out in ((y_pier + side * WALL / 2, side), (y_pier - side * WALL / 2, -side)):
+                b.panel((x0, face, 0), (1, 0, 0), (0, out, 0), xm - x0 - 1.1, xm - x0 + 1.1, AISLE_H + 3.8,
+                        NAVE_H - 3.0, RED, apex=NAVE_H - 1.2, depth=0.04)
+        # Aisle roof: a lean-to from the aisle wall up to the clerestory.
+        r.hull([(x, y_wall + side * (WALL / 2 + 0.4), z) for x in (x0, x1) for z in (AISLE_H, AISLE_H + 0.3)] +
+               [(x, y_pier + side * WALL / 2, z) for x in (x0, x1) for z in (AISLE_H + 3.0, AISLE_H + 3.3)], ROOF)
+        # Buttresses: piers on the aisle wall with tall pinnacles, flying across to the clerestory.
+        for i in range(BAYS + 1):
+            xp = x0 + BAY * i
+            far = y_wall + side * (WALL / 2 + 2.2)
+            b.box(xp - 0.6, y_wall, 0, xp + 0.6, far, AISLE_H + 3.5, PALE)
+            b.hull([(xp + dx, y, AISLE_H + 3.5) for dx in (-0.6, 0.6) for y in (y_wall, far)] +
+                   [(xp + dx, y_wall + side * 0.4, AISLE_H + 4.4) for dx in (-0.6, 0.6)], PALE)
+            pc = (y_wall + far) / 2 + side * 0.4
+            b.cone(xp, pc, 0.55, AISLE_H + 4.0, AISLE_H + 9.0, PALE, sides=4)
+            for zf, zt in ((AISLE_H + 2.6, NAVE_H - 3.0),):        # the flying arm
+                b.hull([(xp + dx, far - side * 0.6, zf + dz) for dx in (-0.35, 0.35) for dz in (0, 0.8)] +
+                       [(xp + dx, y_pier + side * WALL / 2, zt + dz) for dx in (-0.35, 0.35) for dz in (0, 0.8)], PALE)
+            b.cone(xp, y_pier + side * (WALL / 2 + 0.3), 0.4, NAVE_H, NAVE_H + 3.5, PALE, sides=4)
+    # Nave roof.
+    r.gable_roof(x0, x1, oy - hn - WALL / 2, oy + hn + WALL / 2, NAVE_H, rise, ROOF, over=0.4)
+    # East: the aisles close; the nave ends in a round apse.
+    for side in (-1, 1):
+        b.box(x1, oy + side * hn, 0, x1 + WALL, oy + side * (ha + WALL), AISLE_H, PALE)
+    segs = 9
+    for k in range(segs):
+        a0, a1 = math.pi * (-0.5 + k / segs), math.pi * (-0.5 + (k + 1) / segs)
+        pts = []
+        for a in (a0, a1):
+            for rr in (hn + WALL / 2 - WALL / 2, hn + WALL):
+                for z in (0, NAVE_H):
+                    pts.append((x1 + rr * math.cos(a), oy + rr * math.sin(a), z))
+        b.hull(pts, PALE)
+        am = (a0 + a1) / 2
+        p = Vector((x1 + (hn + WALL) * math.cos(am), oy + (hn + WALL) * math.sin(am), 0))
+        along = Vector((-math.sin(am), math.cos(am), 0))
+        b.panel(p, along, (math.cos(am), math.sin(am), 0), -0.9, 0.9, 3.0, NAVE_H - 3.0, RED, apex=NAVE_H - 1.4, depth=0.04)
+        if k % 2 == 0:                                            # buttresses round the apse
+            pb = Vector((x1 + (hn + WALL) * math.cos(a0), oy + (hn + WALL) * math.sin(a0), 0))
+            n = Vector((math.cos(a0), math.sin(a0), 0))
+            t = Vector((-math.sin(a0), math.cos(a0), 0))
+            b.hull([pb + t * dt + n * dn + Vector((0, 0, z)) for dt in (-0.6, 0.6) for dn in (0, 2.0)
+                    for z in (0, NAVE_H - 4)], PALE)
+            c = pb + n * 1.2
+            b.cone(c.x, c.y, 0.55, NAVE_H - 4, NAVE_H + 1, PALE, sides=4)
+    r.cone(x1, oy, hn + WALL + 0.4, NAVE_H, NAVE_H + rise, ROOF, sides=18)
+    # A slender spire over the crossing (two bays in from the apse).
+    fx = x0 + BAY * (BAYS - 2)
+    r.cyl(fx, oy, 1.4, NAVE_H + rise - 2, NAVE_H + rise + 4, PALE, sides=8)
+    r.cone(fx, oy, 1.6, NAVE_H + rise + 4, NAVE_H + rise + 16, ROOF, sides=8)
+
+    # The west front: two towers flanking a porch hall, a gable wall with the rose and the portal.
+    fx0 = ox - TOWER                                              # the front face
+    for side in (-1, 1):
+        ty0 = oy + side * hn
+        ty1 = oy + side * (hn + TOWER)
+        ya, yb = min(ty0, ty1), max(ty0, ty1)
+        b.box(fx0, ya, 0, ox, yb, TOWER_H, PALE)
+        for zz in (NAVE_H * 0.5, NAVE_H, TOWER_H - 1.0):          # ledges marking the tiers
+            b.box(fx0 - 0.3, ya - 0.3, zz - 0.4, ox + 0.3, yb + 0.3, zz, PALE)
+        for cx_ in (fx0, ox):                                     # stepped corner buttresses
+            for cy_ in (ya, yb):
+                for k, (h, w) in enumerate(((NAVE_H * 0.5, 1.6), (NAVE_H, 1.1), (TOWER_H - 4, 0.7))):
+                    b.box(cx_ - w, cy_ - w, 0, cx_ + w, cy_ + w, h, PALE)
+                b.cone(cx_, cy_, 0.8, TOWER_H - 4, TOWER_H + 4, PALE, sides=4)
+        for zz, h in ((NAVE_H + 1.5, 6.0), (NAVE_H * 0.5 + 1.5, 4.5)):   # tiers of openings on the front
+            for s0 in (1.8, TOWER - 3.6):
+                b.panel((fx0, ya, 0), (0, 1, 0), (-1, 0, 0), s0, s0 + 1.8, zz, zz + h, DARK, apex=zz + h + 1.2)
+        b.panel((fx0, ya, 0), (0, 1, 0), (-1, 0, 0), TOWER / 2 - 1.0, TOWER / 2 + 1.0, 2.5, 6.5, RED, apex=8.0)
+        b.cone((fx0 + ox) / 2, (ya + yb) / 2, TOWER / 2 - 0.6, TOWER_H, TOWER_H + SPIRE_H, ROOF, sides=8)
+    # Porch hall between the towers: its side walls are the towers; the front wall has the portal.
+    pw = PORTAL_W / 2
+    b.box(fx0, oy - hn, 0, fx0 + WALL, oy - pw, NAVE_H, PALE)
+    b.box(fx0, oy + pw, 0, fx0 + WALL, oy + hn, NAVE_H, PALE)
+    b.box(fx0, oy - pw, PORTAL_H, fx0 + WALL, oy + pw, NAVE_H, PALE)
+    b.hull([(x, y, z) for x in (fx0, fx0 + WALL) for y, z in ((oy - hn, NAVE_H), (oy + hn, NAVE_H), (oy, NAVE_H + rise))], PALE)
+    r.gable_roof(fx0 + WALL, ox, oy - hn, oy + hn, NAVE_H, rise, ROOF, over=0.0)
+    rose = Vector((fx0, oy, NAVE_H + 1.5))
     ex = Vector((1, 0, 0))
-    A.loft(b.bm, [(tuple(rose - ex * 0.2), 2.4, 2.4), (tuple(rose + ex * 0.1), 2.4, 2.4)],
-           sides=16, ref=(0, 0, 1), mats=PALE)                        # the rose's stone ring
-    A.loft(b.bm, [(tuple(rose - ex * 0.26), 0, 0), (tuple(rose - ex * 0.25), 2.0, 2.0), (tuple(rose), 2.0, 2.0)],
-           sides=16, ref=(0, 0, 1), mats=RED)                         # its glass
-    # A deep portal: stepped arches round a dark doorway.
-    out = 0.0
-    for w, h, depth, m in ((2.4, 4.6, 0.5, PALE), (1.9, 4.1, 0.2, ROOF), (1.4, 3.6, 0.08, DARK)):
-        b.panel((fx0 - out, oy + NAVE_W / 2, 0), (0, 1, 0), (-1, 0, 0), -w, w, 0, h, m, apex=h + w * 0.9, depth=depth)
-        out += depth                                              # each arch stands on the one behind
-    b.box(fx0 - 1.2, oy - 0.5, 0, fx0 - 0.3, y1 + 0.5, 0.3, PALE)  # the steps
-    # Banners down the towers' fronts.
-    for ty in (y0 - AISLE_W - 0.5 + TOWER / 2, y1 + AISLE_W + 0.5 - TOWER / 2):
-        b.box(ox - TOWER + 0.95, ty - 0.45, NAVE_H - 4.5, ox - TOWER + 0.9, ty + 0.45, NAVE_H - 0.2, RED)
+    A.loft(b.bm, [(tuple(rose - ex * 0.4), 4.4, 4.4), (tuple(rose + ex * 0.1), 4.4, 4.4)], sides=20, ref=(0, 0, 1), mats=PALE)
+    A.loft(b.bm, [(tuple(rose - ex * 0.46), 0, 0), (tuple(rose - ex * 0.45), 3.8, 3.8), (tuple(rose), 3.8, 3.8)],
+           sides=20, ref=(0, 0, 1), mats=RED)
+    # The portal, open: stepped jambs either side and pointed hoods over it.
+    for k, (w, d) in enumerate(((pw + 1.4, 1.2), (pw + 0.8, 0.8), (pw + 0.3, 0.4))):
+        for sy in (-1, 1):
+            b.box(fx0 - d, oy + sy * (pw + (w - pw)), 0, fx0, oy + sy * pw, PORTAL_H, PALE if k != 1 else ROOF)
+        apex = PORTAL_H + w * 1.1
+        for sy in (-1, 1):
+            b.hull([(x, y, z) for x in (fx0 - d, fx0) for y, z in ((oy + sy * w, PORTAL_H), (oy + sy * (w - 0.6), PORTAL_H),
+                                                                     (oy, apex), (oy, apex - 0.8))], PALE if k != 1 else ROOF)
+    b.box(fx0 - 4.0, oy - hn - 1, 0, fx0 - 1.2, oy + hn + 1, 0.4, PALE)  # steps
+    b.box(fx0 - 2.6, oy - hn - 1, 0, fx0 - 1.2, oy + hn + 1, 0.8, PALE)
+    for sy in (-1, 1):                                            # banners on the towers' fronts
+        y = oy + sy * (hn + TOWER / 2)
+        b.box(fx0 - 0.4, y - 1.0, NAVE_H * 0.5 - 7, fx0 - 0.35, y + 1.0, NAVE_H * 0.5 - 0.8, RED)
     A.finish(b.bm)
-    return A.mesh_from("GreatChurch", b.bm, MATS, coll="Monumental")
+    A.finish(r.bm)
+    return (A.mesh_from("GreatChurch", b.bm, MATS, coll="Monumental"),
+            A.mesh_from("GreatChurch_Roofs", r.bm, MATS, coll="Monumental"))
 
 
 # ---------------------------------------------------------------- the castle
@@ -249,13 +313,37 @@ def castle(ox, oy, w=26.0, d=20.0):
     return A.mesh_from("Castle", b.bm, MATS, coll="Monumental")
 
 
+def scale_figures(spots):
+    """Copies of the player (the preview rig's) standing at each (x, y, z)."""
+    import bpy
+    rig = bpy.data.objects.get("Rig")
+    if rig is None:
+        return
+    parts = [o for o in bpy.data.objects if o.parent is rig]
+    coll = A.collection("Preview")
+    for x, y, z in spots:
+        new_rig = rig.copy()
+        coll.objects.link(new_rig)
+        new_rig.location = (x, y, z)
+        for p in parts:
+            c = p.copy()
+            coll.objects.link(c)
+            c.parent = new_rig
+            for md in c.modifiers:
+                if md.type == "ARMATURE":
+                    md.object = new_rig
+
+
 def build():
     A.reset()
-    church = great_church(0, 0)
-    keep = castle(-12, -48)
-    return {"GreatChurch": A.report([church]), "Castle": A.report([keep])}
+    church, roofs = great_church(0, 0)
+    keep = castle(-20, -70)
+    return {"GreatChurch": A.report([church, roofs]), "Castle": A.report([keep])}
 
 
 if __name__ == "__main__":
     result = build()
-    cam = A.preview_rig(focus=(4, -14, 6), distance=75, pitch=32, yaw=-120, ground=56, human_at=(-9, 4))
+    cam = A.preview_rig(focus=(6, 0, 12), distance=95, pitch=28, yaw=-120, ground=80, human_at=(-16, 0))
+    cam.data.clip_end = 1000
+    # Players for scale: in the portal, in the nave, in an aisle, in the apse.
+    scale_figures([(-9.5, 0, 0), (12, 2, 0), (20, -9, 0), (38, 0, 0)])
