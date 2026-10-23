@@ -9,6 +9,7 @@ palette colours, richness from the contrast between materials rather than from g
   ChurchSlate    dark slate in neat rows for the roofs and spires (2 x 1)
   ChurchGlass    red glass in diamond quarries, dark leads (1 x 1)
   ChurchFloor    big dark flagstones (4 x 4)
+  ChurchBrick    the plain church's one stone: small high-contrast bricks (2 x 2)
 
     python3 tools/art/blender/buildings/lab/church_textures.py
 
@@ -25,14 +26,15 @@ from paint_textures import Image, col, mix, roof_rows, shade  # noqa: E402
 W = 128
 
 
-def ashlar(seed, ramp, courses, blocks, joint=0.72, lit=1.06):
+def ashlar(seed, ramp, courses, blocks, joint=0.72, lit=1.06, spread=0.4):
     """Square tile of dressed stone: `courses` rows of `blocks` blocks, every other row offset by
-    half a block (so it repeats), thin joints, each block a close shade of the ramp's middle."""
+    half a block (so it repeats), thin joints, each block a shade of the ramp: close to its
+    middle (spread 0.4), or anywhere along it (spread 1.0, for strong contrast)."""
     base = [col(n) for n in ramp]
     r = random.Random(seed)
     img = Image(W, W)
     ch, bw = W / courses, W / blocks
-    shades = {(c, b): mix(base[1], r.choice(base), r.uniform(0.0, 0.4)) for c in range(courses) for b in range(blocks)}
+    shades = {(c, b): mix(base[1], r.choice(base), r.uniform(0.0, spread)) for c in range(courses) for b in range(blocks)}
     mortar = shade(mix(base[0], base[-1], 0.5), joint)
     for y in range(W):
         c = int(y / ch)
@@ -81,6 +83,9 @@ def main():
     roof_rows(33, ["Iron", "Slate", "Ashgrey"], run0=0.0, run1=1.0, rows_per_tile=6, unit_w=(14, 22)).save("ChurchSlate")
     glass(34, ["FountBlood", "SynodRed", "Blood"], "CryptIron").save("ChurchGlass")
     ashlar(35, ["CryptFlagstone", "CryptFloor", "CryptDais"], courses=2, blocks=2, joint=0.65, lit=1.03).save("ChurchFloor")
+    # The plain church's one stone, after Varrock castle's wall: small bricks (a quarter tile tall,
+    # half a tile long over a 2 x 2 repeat), dark mortar outlines, light edges, strong contrast.
+    ashlar(36, ["Granite", "Stone", "Gravestone"], courses=8, blocks=4, joint=0.5, lit=1.15, spread=1.0).save("ChurchBrick")
     print("wrote church textures")
 
 
