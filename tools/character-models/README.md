@@ -2,11 +2,29 @@
 
 `build_humanoid.py` turns `source/human.blend` (Clint Bellanger's base human, CC BY 3.0; see
 `CREDITS.md`) into the game's modular player body and exports it to
-`client/Assets/Resources/Characters/HumanMale.fbx`. It also saves `HumanMale.blend` here
-(git-ignored) to look at or hand-edit.
+`client/Assets/Resources/Characters/HumanMale.fbx` (or `HumanFemale.fbx`). It also saves
+`HumanMale.blend` / `HumanFemale.blend` here (git-ignored) to look at or hand-edit.
 
 Run it in Blender 5.x: through the Blender MCP (exec the file), or
-`blender --background --python tools/character-models/build_humanoid.py`.
+`blender --background --python tools/character-models/build_humanoid.py`. Set `SEX` (`"male"`,
+the default, or `"female"`) and `PREVIEW` (build without exporting or saving) as globals before
+running it; build both sexes after any change.
+
+## The head
+
+The source's head is not used: `make_head` lofts our own from `HEAD_GRID`, rows of points from
+the neck's base to the top of the skull, each ten points from the front midline round to the
+back, as shares of the head's height (chin 0, crown 1), mirrored to the left. Every column means
+the same thing on every row (midline, side of the nose, eye, cheek, side, ear, back...), so a
+feature is a few numbers: the jaw's edge rising from a flat chin to its corner, the nose pushed
+forward between its base and bridge, eyes set back under a brow. `HEAD_SHARP` names the edges
+the mesh is split along so the shading breaks there (the jaw line, the brow, the nose); `EAR` is
+a wedge each side; `HEAD_EYES` places the dark almonds. `female_head` derives the female from
+the male grid (smaller, a slimmer neck, a narrower jaw, a smaller nose, no brow ridge, larger
+eyes). Short hair (`make_hair`) is the same grid above `HAIRLINE`, cut to a clean ring along it
+and stood off the skull. Change the numbers, rebuild, look at it from the front, the side and
+three-quarters: the proportions follow the 2004 game's head (about 13 % of the body, nearly as
+deep as wide, a square jaw), the shape is ours.
 
 ## The contract with the client
 

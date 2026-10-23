@@ -34,6 +34,7 @@ obj/
 
 # Built by tools/character-models/build_humanoid.py (regenerate rather than commit)
 tools/character-models/HumanMale.blend
+tools/character-models/HumanFemale.blend
 *.blend1
 
 # Python
