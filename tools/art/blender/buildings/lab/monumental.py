@@ -137,6 +137,8 @@ NAVE_W = 18.0             # clear width between the arcade piers
 AISLE_W = 10.0            # clear width of each aisle
 BAY = 8.0                 # one bay: about the aisle's width
 BAYS = 6
+PIERS = range(1, BAYS - 1)  # which bay lines have a pier (not at the towers, not in the last bays)
+FLOOR_Z = 0.6             # the floor stands on a plinth, three steps up
 WALL = 1.0                # wall thickness
 AISLE_H = 10.0            # the outer walls: the one storey you see from inside
 ARCADE_H = 8.0            # the piers' capitals; the arches above hide inside
@@ -223,7 +225,7 @@ def great_church(ox, oy, prefix="GreatChurch"):
     rise = (hn + WALL) * math.tan(math.radians(PITCH))
     x0, x1 = ox, ox + L
     fx0 = ox - TOWER                                              # the west front's face
-    c.base.box(fx0, oy - ha - WALL, 0, x1 + WALL, oy + ha + WALL, 0.05, FLOOR)
+    c.base.box(fx0 - 1.5, oy - ha - WALL, 0, x1 + WALL, oy + ha + WALL, FLOOR_Z, FLOOR)
     c.base.hull([(x1 + (hn + WALL) * math.cos(a), oy + (hn + WALL) * math.sin(a), z)
                  for a in (math.pi * (-0.5 + k / 18) for k in range(19)) for z in (0, 0.05)], FLOOR)
 
@@ -241,12 +243,15 @@ def great_church(ox, oy, prefix="GreatChurch"):
             c.box(key, xp - 0.4, y_in, 0, xp + 0.4, y_in - side * 0.4, AISLE_H, PALE)
         c.crown_run(key, (x0, y_wall), (x1, y_wall), (0, side), pier_every=BAY)
         # The arcade: piers with capitals (always), pointed arches between them (outside only).
-        for i in range(BAYS + 1):
-            xp = x0 + BAY * i
+        # No pier against the towers, and none in the last bays: the east end stays open for the
+        # altar and what goes round it. Arches run between neighbouring supports.
+        supports = [x0] + [x0 + BAY * i for i in PIERS] + [x1]
+        for xp in supports[1:-1]:
             c.base.box(xp - 0.7, y_pier - 0.7, 0, xp + 0.7, y_pier + 0.7, ARCADE_H - 0.5, PALE)
             c.base.box(xp - 0.9, y_pier - 0.9, ARCADE_H - 0.5, xp + 0.9, y_pier + 0.9, ARCADE_H, PALE)
-        for i in range(BAYS):
-            xa, xb = x0 + BAY * i + 0.7, x0 + BAY * (i + 1) - 0.7
+        for k, (sa, sb) in enumerate(zip(supports, supports[1:])):
+            xa = sa + (0.7 if k > 0 else 0.0)
+            xb = sb - (0.7 if k < len(supports) - 2 else 0.0)
             xm = (xa + xb) / 2
             for xs, xe in ((xa, xm), (xb, xm)):                    # spandrels make the pointed arch
                 c.upper.hull([(x, y_pier + dy, z) for x, z in ((xs, ARCADE_H), (xs, AISLE_H + 1), (xe, AISLE_H + 1))
@@ -269,7 +274,6 @@ def great_church(ox, oy, prefix="GreatChurch"):
                    [(xp + dx, y_out + side * 0.4, AISLE_H + 4.6) for dx in (-0.7, 0.7)], PALE)
             pc = (y_out + far) / 2 + side * 0.4
             c.cone(key, xp, pc, 0.75, AISLE_H + 4.0, AISLE_H + 10.0, PALE)
-            c.crown[key].cone(xp, (y_out + far) / 2, 0.9, CUT, CUT + 1.2, PALE, sides=4)
             c.upper.hull([(xp + dx, far - side * 0.6, z) for dx in (-0.4, 0.4) for z in (AISLE_H + 2.6, AISLE_H + 3.4)] +
                          [(xp + dx, y_pier + side * WALL / 2, z) for dx in (-0.4, 0.4) for z in (NAVE_H - 3.5, NAVE_H - 2.7)], PALE)
             c.upper.cone(xp, y_pier + side * (WALL / 2 + 0.3), 0.45, NAVE_H, NAVE_H + 4.0, PALE, sides=4)
@@ -303,10 +307,9 @@ def great_church(ox, oy, prefix="GreatChurch"):
                          for z in (0, NAVE_H - 4)], PALE)
             q = pb + n * 1.2
             c.cone("E", q.x, q.y, 0.75, NAVE_H - 4, NAVE_H + 1.5, PALE)
-            c.crown["E"].cone(q.x, q.y, 0.9, CUT, CUT + 1.2, PALE, sides=4)
     c.roofs.cone(x1, oy, ro + 0.4, NAVE_H, NAVE_H + rise, ROOF, sides=18)
-    # A slender spire over the crossing (two bays in from the apse).
-    fx = x0 + BAY * (BAYS - 2)
+    # A slender spire where the apse roof meets the nave roof.
+    fx = x1
     c.roofs.cyl(fx, oy, 1.6, NAVE_H + rise - 2, NAVE_H + rise + 5, PALE, sides=8)
     c.roofs.cone(fx, oy, 1.9, NAVE_H + rise + 5, NAVE_H + rise + 19, ROOF, sides=8)
 
@@ -362,8 +365,8 @@ def great_church(ox, oy, prefix="GreatChurch"):
         y = oy + sy * (gw + 0.5)
         c.box("W", fx0 - 1.3, y - 0.5, 0, fx0, y + 0.5, PORTAL_H + gw * 1.3, PALE)
         c.cone("W", fx0 - 0.65, y, 0.75, PORTAL_H + gw * 1.3, PORTAL_H + gw * 1.3 + 3.5, PALE)
-    c.base.box(fx0 - 4.4, oy - hn - 1, 0, fx0 - 1.5, oy + hn + 1, 0.4, PALE)   # steps
-    c.base.box(fx0 - 3.0, oy - hn - 1, 0, fx0 - 1.5, oy + hn + 1, 0.8, PALE)
+    c.base.box(fx0 - 4.5, oy - hn - 1, 0, fx0 - 1.5, oy + hn + 1, FLOOR_Z / 3, PALE)   # steps up to the floor
+    c.base.box(fx0 - 3.0, oy - hn - 1, 0, fx0 - 1.5, oy + hn + 1, FLOOR_Z * 2 / 3, PALE)
     for sy in (-1, 1):                                            # banners on the towers' fronts
         y = oy + sy * (hn + TOWER / 2)
         c.box("W", fx0 - 0.4, y - 1.2, NAVE_H * 0.5 - 8, fx0 - 0.35, y + 1.2, NAVE_H * 0.5 - 0.8, RED)
@@ -507,4 +510,4 @@ if __name__ == "__main__":
     bpy.data.objects["PreviewGround"].location.x = SPACING          # under all three
     # Players for scale, in each copy: on the steps, in the nave, in both aisles, in the apse.
     scale_figures([(SPACING * i + x, y, z) for i in range(len(STATES))
-                   for x, y, z in ((-16, 2, 0.8), (20, 2, 0), (28, 15, 0), (12, -15, 0), (52, 0, 0))])
+                   for x, y, z in ((-16, 2, 0.4), (20, 2, FLOOR_Z), (28, 15, FLOOR_Z), (12, -15, FLOOR_Z), (52, 0, FLOOR_Z))])
