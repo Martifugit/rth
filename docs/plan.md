@@ -58,7 +58,7 @@ owns, and when it is done. Update the status column as work lands.
 | Track | Workstreams | Runs | Starts |
 | --- | --- | --- | --- |
 | **A. Lore and world design** | A1 canon, A2 names, A3 sheets, A4 area plan | cloud, owner in the loop | now |
-| **L. Continent layout** | L1 rough layout at tile scale, L2 walkable blockout, L3 maps from the layout, L4 the first area by hand (Selenfall) | cloud, then local | now |
+| **L. Continent layout** | L1 rough layout at tile scale, L2 walkable blockout, L3 maps from the layout, L4 the first area by hand (Selenfall), L5 the spine's first terrain | cloud, then local | now |
 | **B. Text pass** | B1 now, B2 after names | cloud | now / after A2 |
 | **C. Workflow** | C0 merge art branch, C1 audit, C2 snapshots, C3 world as data, C4 migrate regions, C5 terrain and incremental sync, C6 the guide's tooling | local (Unity MCP) | now |
 | **D. Death v1** | D1 server, D2 region and client, D3 the long way back | cloud, then local | now / after C3 |
@@ -226,6 +226,18 @@ readability), not its geography.
   decisions D1-D4 in `docs/world-scale.md`.
 - **Done when** the owner can walk from Tolling to Cruor, over a pass of the spine, and into
   every power's land.
+
+### L5. The spine's first terrain
+
+| | |
+| --- | --- |
+| **Runs** | cloud (generator, data), local (sync and walk) |
+| **Depends on** | L2, C5 |
+| **Status** | **done in data, synced** (2026-10-23): `LandHeights` raises the generated land from continent.json's `terrain` (`docs/layout.md` section 8). The spine has foothills, a ridged crest and passes cut as climbs to a saddle, falling to 0 at flat built regions; Selenfall was refitted to meet it. To walk and judge: the salt pass west of Tolling (about x -144, y 40), Meridian's pass (about -131, 445). |
+
+- The numbers (heights per ground, smoothing, ridge, saddle) are data, so tuning is a change to
+  continent.json and `tools/world blockout`.
+- Other land (volcanic Gall, the northern moors) could rise the same way, by listing its grounds.
 
 ### L4. The first area by hand: Selenfall's breach
 
