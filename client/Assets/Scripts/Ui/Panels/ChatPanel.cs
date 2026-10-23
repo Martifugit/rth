@@ -8,8 +8,8 @@ namespace Rth.Client.Ui.Panels
     /// <summary>
     /// The chatbox, a fixed size: filter tabs (all, game, public), game messages and chat, and the
     /// line you type on. Enter starts typing (keys stop being hotkeys), Enter sends, Escape stops.
-    /// The line can't take the keyboard any other way (a click, the UI's key navigation): until
-    /// Enter, every key belongs to the game.
+    /// Clicking the line starts typing too; nothing else (the UI's key navigation, a click elsewhere
+    /// in the window) gives it the keyboard, so until then every key belongs to the game.
     /// New channels (private, group) become more filters.
     /// </summary>
     public sealed class ChatPanel : UiPanel
@@ -63,6 +63,11 @@ namespace Rth.Client.Ui.Panels
             _hint = UiKit.Text(_input, "Enter to chat", "muted", "chat-hint");
             _hint.pickingMode = PickingMode.Ignore;
             _input.RegisterCallback<KeyDownEvent>(OnKey, TrickleDown.TrickleDown);
+            // A click on the line starts typing, as Enter does.
+            _input.RegisterCallback<PointerDownEvent>(_ =>
+            {
+                if (!_typing) Focus();
+            }, TrickleDown.TrickleDown);
             // Losing the keyboard some other way (a click into another window) ends typing too.
             _input.RegisterCallback<FocusOutEvent>(e =>
             {
@@ -100,7 +105,7 @@ namespace Rth.Client.Ui.Panels
             }
         }
 
-        /// <summary>Starts typing (Enter in the game): the only way the line gets the keyboard.</summary>
+        /// <summary>Starts typing (Enter in the game, or a click on the line): the only way the line gets the keyboard.</summary>
         public void Focus()
         {
             if (Window == null) Ui.Open(this);
