@@ -10,6 +10,7 @@ namespace Rth.Server.Game
     /// Building and testing commands, typed in chat after "::" (only when
     /// <see cref="ServerConfig.DevCommands"/> is on, as it is for the Editor's server):
     /// <c>::tele x y</c>, <c>::tele region</c> (a region's middle, instanced ones too),
+    /// <c>::pass name</c> (a pass over the spine, from the layout),
     /// <c>::level skill n</c>, <c>::give item [count]</c>, <c>::devotion</c>,
     /// <c>::boss id|win|fail</c>, <c>::fx type effect [key=value...]</c> (any object effect on
     /// the objects of a type near you), and each boss's previews under its own word
@@ -36,6 +37,9 @@ namespace Rth.Server.Game
             {
                 case "tele":
                     Teleport(player, args);
+                    break;
+                case "pass":
+                    Pass(player, args);
                     break;
                 case "level" when args.Length >= 3 && int.TryParse(args[2], out int level):
                     SkillSystem skills = World.Get<SkillSystem>();
@@ -87,6 +91,60 @@ namespace Rth.Server.Game
                 Say(player, "::tele x y, or ::tele <region name>.");
                 return;
             }
+            MoveTo(player, tile);
+        }
+
+        /// <summary>
+        /// <c>::pass salt</c>: the middle of a pass over the spine (its id in the continent layout,
+        /// with or without "pass-"); <c>::pass</c> lists them. Read from the world map's chart, so
+        /// it follows the layout.
+        /// </summary>
+        private void Pass(Player player, string[] args)
+        {
+            List<Rth.Shared.World.Layout.ChartLine> passes = World.Chart?.Roads.Where(r => r.Kind == "pass" && r.Points.Length >= 4).ToList()
+                ?? new List<Rth.Shared.World.Layout.ChartLine>();
+            if (passes.Count == 0)
+            {
+                Say(player, "No passes: the continent layout isn't loaded.");
+                return;
+            }
+            string want = args.Length >= 2 ? string.Join("-", args.Skip(1)).ToLowerInvariant() : "";
+            Rth.Shared.World.Layout.ChartLine? pass = passes.FirstOrDefault(p => p.Id == want || p.Id == "pass-" + want);
+            if (pass == null)
+            {
+                Say(player, "::pass <name>, one of: " + string.Join(", ", passes.Select(ShortName)) + ".");
+                return;
+            }
+            MoveTo(player, Halfway(pass.Points));
+        }
+
+        private static string ShortName(Rth.Shared.World.Layout.ChartLine pass) =>
+            pass.Id.StartsWith("pass-", StringComparison.Ordinal) ? pass.Id.Substring(5) : pass.Id;
+
+        /// <summary>The tile halfway along a line (flattened x, y pairs) by length: a pass's saddle.</summary>
+        private static TileCoord Halfway(float[] points)
+        {
+            double total = 0;
+            for (int i = 2; i < points.Length; i += 2) total += Segment(points, i);
+            double left = total / 2;
+            for (int i = 2; i < points.Length; i += 2)
+            {
+                double length = Segment(points, i);
+                if (left <= length && length > 0)
+                {
+                    double t = left / length;
+                    return new TileCoord((int)Math.Floor(points[i - 2] + (points[i] - points[i - 2]) * t),
+                                         (int)Math.Floor(points[i - 1] + (points[i + 1] - points[i - 1]) * t));
+                }
+                left -= length;
+            }
+            return new TileCoord((int)Math.Floor(points[points.Length - 2]), (int)Math.Floor(points[points.Length - 1]));
+        }
+
+        private static double Segment(float[] p, int i) => Math.Sqrt(Math.Pow(p[i] - p[i - 2], 2) + Math.Pow(p[i + 1] - p[i - 1], 2));
+
+        private void MoveTo(Player player, TileCoord tile)
+        {
             if (World.Map.IsBlocked(player.Plane, tile.X, tile.Y))
             {
                 // The middle of an arena may be furniture: take the nearest open tile.
@@ -110,6 +168,7 @@ namespace Rth.Server.Game
         {
             "::tele <region>  -  go to a region (e.g. ::tele saints_crypt)",
             "::tele <x> <y>  -  go to a tile",
+            "::pass <name>  -  the middle of a pass over the spine (::pass lists them)",
             "::level <skill> <level>  -  set a skill's level",
             "::give <item> <count>  -  items in your pack",
             "::devotion  -  refill devotion",

@@ -82,6 +82,21 @@ public class WorldTests
     }
 
     [Fact]
+    public void DevPassCommandGoesHalfwayAlongAPassFromTheChart()
+    {
+        var fx = OpenWorld(new ServerConfig { DevCommands = true });
+        fx.World.Chart = new Rth.Shared.World.Layout.WorldChart();
+        fx.World.Chart.Roads.Add(new Rth.Shared.World.Layout.ChartLine { Id = "pass-salt", Kind = "pass", Points = new float[] { 4, 20, 20, 20, 20, 36 } });
+        FakeConnection a = fx.Login("Alice");
+        a.FromClient(new ChatMessage { Channel = ChatChannel.Public, Text = "::pass salt" });
+        fx.Ticks(1);
+        Assert.Equal(new TileCoord(20, 20), fx.Player("Alice").Position);
+        a.FromClient(new ChatMessage { Channel = ChatChannel.Public, Text = "::pass nowhere" });
+        fx.Ticks(1);
+        Assert.Equal(new TileCoord(20, 20), fx.Player("Alice").Position);
+    }
+
+    [Fact]
     public void ObjectEffectsReachViewersFurtherThanTheViewRadius()
     {
         var symbols = new[] { new PlacedObject { Type = "holy_symbol", X = 5, Y = 30 }, new PlacedObject { Type = "holy_symbol", X = 8, Y = 30 } };
