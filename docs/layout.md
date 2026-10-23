@@ -242,6 +242,13 @@ generated regions meet at their borders. A region taken over keeps its heights, 
 go on meeting the generated land: `tools/world terrain <region> layout` gives it these heights to
 start from, and `check` warns about steps. The server stays flat; tiles too steep to walk are
 blocked as cliffs.
+
+**Sculpted heights (2026-10-23).** The owner shapes the land by hand in Unity (**Edit Terrain**,
+`docs/workflow.md`). On generated land that doesn't take a region over: what was sculpted is kept
+in `world/layout/sculpt/<id>.json` as a raise over these heights (corner by corner, hundredths of
+a tile, rows from the north like `terrain`; a region with nothing sculpted has no file), and the
+blockout adds it on top after rounding (`HeightEdits`, `LandHeights.Compute`). Snow follows the
+sculpted heights. Changing the layout's own terrain moves the sculpted land with it.
 Each region's title is the biggest place in it with a real name, or the power that holds most of
 it ("Cruor's empire", "Sere"); `p-` and hidden names never reach players, and the client announces a
 title only when it changes.

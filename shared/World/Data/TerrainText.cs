@@ -19,10 +19,14 @@ namespace Rth.Shared.World.Data
         public static Heightfield? Read(RegionData region)
         {
             if (region.Terrain == null) return null;
-            int w = region.Width, h = region.Height;
-            if (w <= 0 || h <= 0) throw new FormatException("terrain needs a region with a size.");
+            if (region.Width <= 0 || region.Height <= 0) throw new FormatException("terrain needs a region with a size.");
+            return ReadRows(region.Terrain.Rows ?? new List<string>(), region.OriginX, region.OriginY, region.Width, region.Height);
+        }
+
+        /// <summary>Heights written as rows (from the north, hundredths, <c>h*n</c> runs) over w × h tiles from (x0, y0).</summary>
+        public static Heightfield ReadRows(IList<string> rows, int x0, int y0, int w, int h)
+        {
             var corners = new float[(w + 1) * (h + 1)];
-            List<string> rows = region.Terrain.Rows ?? new List<string>();
             if (rows.Count != h + 1) throw new FormatException($"terrain has {rows.Count} rows; a region {h} tiles tall needs {h + 1} (one per row of corners).");
             for (int r = 0; r < rows.Count; r++)
             {
@@ -41,7 +45,7 @@ namespace Rth.Shared.World.Data
                 }
                 if (i != w + 1) throw new FormatException($"terrain row {r} from the north has {i} corners; a region {w} tiles wide needs {w + 1}.");
             }
-            return new Heightfield(region.OriginX, region.OriginY, w, h, corners);
+            return new Heightfield(x0, y0, w, h, corners);
         }
 
         /// <summary>The heights the region stands on: its terrain, or flat ground at 0.</summary>
@@ -52,6 +56,14 @@ namespace Rth.Shared.World.Data
         public static RegionTerrain Write(Heightfield field, float cliffStep = 1f)
         {
             var terrain = new RegionTerrain { CliffStep = cliffStep };
+            terrain.Rows.AddRange(WriteRows(field));
+            return terrain;
+        }
+
+        /// <summary>A heightfield's corners as rows of text, from the north.</summary>
+        public static List<string> WriteRows(Heightfield field)
+        {
+            var rows = new List<string>();
             for (int j = field.Depth; j >= 0; j--)
             {
                 var row = new StringBuilder();
@@ -76,9 +88,9 @@ namespace Rth.Shared.World.Data
                     run = 1;
                 }
                 Flush();
-                terrain.Rows.Add(row.ToString());
+                rows.Add(row.ToString());
             }
-            return terrain;
+            return rows;
         }
 
         public static int Hundredths(float height) => (int)Math.Round(height / Step, MidpointRounding.AwayFromZero);

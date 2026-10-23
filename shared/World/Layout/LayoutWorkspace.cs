@@ -19,6 +19,8 @@ namespace Rth.Shared.World.Layout
         public ContinentMap Map = new ContinentMap();
         public LayoutReport Report = new LayoutReport();
         public List<BuiltRegion> Built = new List<BuiltRegion>();
+        /// <summary>Heights sculpted onto the generated land (world/layout/sculpt), which the blockout adds on top.</summary>
+        public HeightEdits Edits = new HeightEdits();
 
         public string Directory => Path.Combine(Root, "world", "layout");
         public string ContinentPath => Path.Combine(Directory, "continent.json");
@@ -31,6 +33,7 @@ namespace Rth.Shared.World.Layout
             ws.Data = ContinentData.Parse(File.ReadAllText(ws.ContinentPath));
             ApplyAreaTargets(ws.Data, Path.Combine(root, "docs", "areas", "targets.json"));
             ws.Built = BuiltRegions(Path.Combine(root, "world", "regions"));
+            ws.Edits = HeightEdits.Load(root);
             ws.Map = ContinentCompiler.Compile(ws.Data);
             ws.Report = LayoutReport.Run(ws.Map, ws.Built);
             CheckPalette(ws, Path.Combine(root, "client", "Assets", "Resources", "Art", "palette.json"));

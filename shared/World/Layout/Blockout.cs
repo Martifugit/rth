@@ -34,10 +34,10 @@ namespace Rth.Shared.World.Layout
         public static string RegionId(int rx, int ry) => $"land_{Key(rx)}_{Key(ry)}";
         private static string Key(int v) => v < 0 ? "m" + -v : v.ToString();
 
-        public static Result Generate(ContinentMap map, IReadOnlyList<BuiltRegion> built)
+        public static Result Generate(ContinentMap map, IReadOnlyList<BuiltRegion> built, HeightEdits? edits = null)
         {
             var result = new Result();
-            Land land = Lay(map, built, result.Warnings);
+            Land land = Lay(map, built, result.Warnings, edits);
             int size = map.Data.RegionTiles;
             foreach ((int cx, int cy) in land.Generated)
             {
@@ -72,7 +72,7 @@ namespace Rth.Shared.World.Layout
         /// The generated land's first terrain over the whole layout (<see cref="LandHeights"/>): what a
         /// generated region carries, and where a region taken over starts (`tools/world terrain ... layout`).
         /// </summary>
-        public static LandHeights Heights(ContinentMap map, IReadOnlyList<BuiltRegion> built) => Lay(map, built, new List<string>()).Heights;
+        public static LandHeights Heights(ContinentMap map, IReadOnlyList<BuiltRegion> built, HeightEdits? edits = null) => Lay(map, built, new List<string>(), edits).Heights;
 
         private sealed class Land
         {
@@ -82,7 +82,7 @@ namespace Rth.Shared.World.Layout
             public LandHeights Heights = null!;
         }
 
-        private static Land Lay(ContinentMap map, IReadOnlyList<BuiltRegion> built, List<string> warnings)
+        private static Land Lay(ContinentMap map, IReadOnlyList<BuiltRegion> built, List<string> warnings, HeightEdits? edits)
         {
             var land = new Land();
             int size = map.Data.RegionTiles;
@@ -125,7 +125,7 @@ namespace Rth.Shared.World.Layout
                 int cx = (int)Math.Floor((x - map.OriginX) / (double)size), cy = (int)Math.Floor((y - map.OriginY) / (double)size);
                 return land.Tiles.TryGetValue((cx, cy), out char[,] t) ? t[x - map.OriginX - cx * size, y - map.OriginY - cy * size] : sea;
             }
-            land.Heights = LandHeights.Compute(map.Data, map.OriginX, map.OriginY, cols * size, rows * size, TileAt, built);
+            land.Heights = LandHeights.Compute(map.Data, map.OriginX, map.OriginY, cols * size, rows * size, TileAt, built, edits);
             return land;
         }
 

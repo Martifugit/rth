@@ -14,7 +14,7 @@ public class BlockoutTests
     public void TheGeneratedRegionsAreUpToDateWithTheLayout()
     {
         LayoutWorkspace lw = LayoutWorkspace.Load(Root);
-        Blockout.Result result = Blockout.Generate(lw.Map, lw.Built);
+        Blockout.Result result = Blockout.Generate(lw.Map, lw.Built, lw.Edits);
         (Dictionary<string, string> write, List<string> delete) = Blockout.Changes(Path.Combine(Root, "world", "regions"), result);
         Assert.True(write.Count + delete.Count == 0,
             "Out of date with world/layout/continent.json (run `dotnet run --project tools/world -- blockout`): " +
@@ -67,7 +67,7 @@ public class BlockoutTests
     public void TheSpineRisesAndItsPassesClimbToTheirSaddles()
     {
         LayoutWorkspace lw = LayoutWorkspace.Load(Root);
-        LandHeights land = Blockout.Heights(lw.Map, lw.Built);
+        LandHeights land = Blockout.Heights(lw.Map, lw.Built, lw.Edits);
         TerrainDef terrain = lw.Data.Terrain!;
 
         // Flat built regions (Tolling) are met at 0 all round their edge.

@@ -23,6 +23,21 @@ namespace Rth.Client
         /// <summary>Every enabled tile ground, for height lookups (the camera's terrain lift).</summary>
         public static readonly List<TileGround> Active = new List<TileGround>();
 
+        private static bool _showSurface = true;
+
+        /// <summary>False while the Editor's terrain editor stands in for the ground (it draws the same heights).</summary>
+        public static bool ShowSurface
+        {
+            get => _showSurface;
+            set
+            {
+                if (_showSurface == value) return;
+                _showSurface = value;
+                foreach (TileGround g in Active)
+                    if (g != null && g._surface != null) g._surface.GetComponent<MeshRenderer>().enabled = value;
+            }
+        }
+
         [Tooltip("Absolute tile of the south-west corner.")]
         public int originX, originY;
         public int width, height;
@@ -222,7 +237,9 @@ namespace Rth.Client
             _surfaceMesh.RecalculateBounds();
             _surface = Child("Surface");
             _surface.AddComponent<MeshFilter>().sharedMesh = _surfaceMesh;
-            _surface.AddComponent<MeshRenderer>().sharedMaterials = mats.ToArray();
+            MeshRenderer surface = _surface.AddComponent<MeshRenderer>();
+            surface.sharedMaterials = mats.ToArray();
+            surface.enabled = _showSurface;
 
             if (colliderTris.Count > 0)
             {

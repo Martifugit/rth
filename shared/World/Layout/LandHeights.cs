@@ -49,12 +49,17 @@ namespace Rth.Shared.World.Layout
         }
 
         /// <param name="tileAt">The blockout's character for a tile (its ground's letter, or a road, a place or the frontier).</param>
+        /// <param name="edits">Heights sculpted by hand, added on top (null: none).</param>
         public static LandHeights Compute(ContinentData data, int x0, int y0, int width, int height,
-                                          Func<int, int, char> tileAt, IReadOnlyList<BuiltRegion> built)
+                                          Func<int, int, char> tileAt, IReadOnlyList<BuiltRegion> built, HeightEdits? edits = null)
         {
             var land = new LandHeights(x0, y0, width, height);
             TerrainDef? t = data.Terrain;
-            if (t == null) return land;
+            if (t == null)
+            {
+                if (edits != null) land.Raise(edits);
+                return land;
+            }
 
             // What each tile asks for: its ground's height. Roads, places, rivers, bridges and passes
             // ask nothing and follow the land around them; open water and the frontier lie at 0.
@@ -119,9 +124,35 @@ namespace Rth.Shared.World.Layout
 
             foreach (PassDef pass in data.Spine.Passes) land.Cut(pass, t);
             land.Settle(built, t.BuiltBlend);
-            for (int i = 0; i < land._corners.Length; i++)
-                land._corners[i] = (float)Math.Round(Math.Max(-4f, Math.Min(16f, land._corners[i])) * 100f) / 100f;
+            land.Round();
+            if (edits != null) land.Raise(edits);
             return land;
+        }
+
+        /// <summary>Heights to the hundredth of a tile, within the world's -4 to 16 (world-scale.md 3).</summary>
+        private void Round()
+        {
+            for (int i = 0; i < _corners.Length; i++)
+                _corners[i] = (float)Math.Round(Math.Max(-4f, Math.Min(16f, _corners[i])) * 100f) / 100f;
+        }
+
+        /// <summary>
+        /// Adds what was sculpted by hand, after rounding, so a height sculpted is the height drawn;
+        /// a corner two regions share is raised once.
+        /// </summary>
+        private void Raise(HeightEdits edits)
+        {
+            var before = (float[])_corners.Clone();
+            foreach (Heightfield raise in edits.Regions.Values)
+                for (int y = raise.OriginY; y <= raise.OriginY + raise.Depth; y++)
+                    for (int x = raise.OriginX; x <= raise.OriginX + raise.Width; x++)
+                    {
+                        int i = x - X0, j = y - Y0;
+                        if (i < 0 || j < 0 || i > Width || j > Height) continue;
+                        int c = j * (Width + 1) + i;
+                        _corners[c] = before[c] + raise.Corner(x, y);
+                    }
+            Round();
         }
 
         /// <summary>A pass climbs evenly from each end to its saddle (the middle point of its line).</summary>

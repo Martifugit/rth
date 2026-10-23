@@ -472,6 +472,14 @@ heights as text; the compiler blocks cliffs, `TileGround` drapes over it, and **
 Scene view edits it, written back on saving (which takes a generated region over). See
 `docs/world-guide.md` and `docs/workflow.md`.
 
+**Edit Terrain (on `claude/terrain-editor`):** **R'th > World > Edit Terrain** stands one editor-only
+Unity Terrain over the whole surface world (a heightmap sample per tile corner, exactly the data's
+heights), so Unity's terrain tools shape it across regions; Ctrl+S writes it back through
+`tools/world terrain-save` (`WorldTerrain`): built regions' `terrain`, and generated land's raise in
+`world/layout/sculpt/<id>.json` (`HeightEdits`), which the blockout adds on top so the land stays
+generated. World-data generation runs on .NET, not in Unity: Mono's float maths draws a slightly
+different blockout.
+
 **Next: not chosen yet.** Candidates: ranged, an art pass on Tolling, more quests and
 achievements.
 
@@ -533,6 +541,7 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | A new region of the world | A file `world/regions/<id>.json` (id, title, scene path, zone-aligned origin and size, ground, materials, pieces); `tools/world export`, then Sync World creates its scene. No server code. Over the open land, it replaces the generated `land_*` region there at the next `tools/world blockout`. |
 | The open land between places (the blockout) | Change `world/layout/continent.json` and run `tools/world blockout` (`docs/layout.md` section 8); what each layout ground looks like is in `Blockout.Kind`, how high it rises is continent.json's `terrain` (`LandHeights`). Never edit a `land_*.json` that still says `"generated"`. |
 | Ground tile by tile (a whole region's land) | A `tiles` piece: `rect`, `rows` from the north, a `legend` of characters (`material`, `blocks`, `water`, `height`, `cliff`: its own colour for its cliff faces). The compiler gives ground or blocks; `TileGround` draws it. |
+| Shaping the land over many regions at once | **R'th > World > Edit Terrain** in Unity, then Ctrl+S (`TerrainEditor`, `WorldTerrain`); generated land's sculpting is kept in `world/layout/sculpt` (`HeightEdits`), never in its `land_*.json`. Without Unity: `WorldTerrain.WriteHeights` a field and run `tools/world terrain-save`. |
 | Terrain (hills, valleys, cliffs) in a data region | The region's `terrain` (corner heights as text rows, hundredths of a tile; `TerrainText`). The compiler blocks tiles steeper than `cliffStep`; `TileGround` drapes over it; placed pieces stand on it; `GroundHeight.TerrainAt` lifts the camera. Sculpt in Unity (**Sculpt Ground** on a tile ground, written back on save) or start one with `tools/world terrain <region> flat` (or `layout`: the generated land's heights, which meet the neighbours). `check` warns about steps at region borders. |
 | Something in a region (a house, a fence, a rock to mine, a creature) | A piece in `world/regions/<id>.json` (`docs/workflow.md` lists the kinds); `tools/world check`, `export`, `render`. Interactive with `"object"`. |
 | A new kind of piece | A constant in `PieceKind`, its collision in `RegionCompiler.AddPiece`, its look in the client's `PieceBuilder`; Sync World checks the two agree. |

@@ -90,6 +90,7 @@ dotnet run --project tools/world -- render    # draw every region to world/rende
 dotnet run --project tools/world -- format    # put region files in the standard layout
 dotnet run --project tools/world -- blockout  # regenerate the open land (land_*.json) from the layout
 dotnet run --project tools/world -- terrain <region> flat|layout   # give a region terrain to sculpt
+dotnet run --project tools/world -- terrain-save <file>   # what Edit Terrain's save runs (WorldTerrain)
 dotnet test                                   # includes the same check (WorldDataTests)
 ```
 
@@ -107,6 +108,20 @@ With Unity (the owner, or the agent with Unity):
   data, its hand-made file, its scene or the code that draws data changed, or its server maps are
   out of date (the record is `client/Library/RthSync.json`, per machine). **Sync World (no
   screenshots)** is quicker; **Sync World (everything)** redoes every region.
+- **Editing the whole world's terrain:** **R'th > World > Edit Terrain** puts one Unity Terrain
+  over every surface region, holding exactly the data's heights (a heightmap sample on every tile
+  corner, coloured like the ground), and hides the tile ground while it is on. Shape it with
+  Unity's own terrain tools (select it, then raise or lower, set height, smooth, stamp; the Terrain
+  Tools package adds more), across region borders. **Ctrl+S** (or **R'th > World > Save Terrain**)
+  writes it back to the data through `tools/world terrain-save`: a built region's heights go into
+  its `terrain`; a generated region's go into `world/layout/sculpt/<id>.json` as a raise over the
+  layout's heights, so it stays generated and `blockout` keeps your hills; then the blockout and
+  the maps are redone. Open region scenes are redrawn at once, the rest at the next Sync World.
+  The terrain is never saved into a scene or a build. Ground without a `tiles` piece (Tolling,
+  Palmerway) is a hole in it and keeps its heights, and so do the corners on its edge. Turn it
+  off from the same menu item (it asks about unsaved changes); opening other scenes or pressing
+  Play keeps your unsaved heights and puts the terrain back afterwards. Saving takes a few seconds
+  (it runs on .NET: the blockout drawn by Unity's Mono would differ by a tile here and there).
 - **Sculpting terrain:** select a region's tile ground (`Data > ground`) and pick **Sculpt Ground**
   in the Scene view's tools: raise, lower, flatten or smooth with a round brush (`[` and `]` change
   its size); tiles too steep to walk show red. Saving the scene writes the heights into the region's

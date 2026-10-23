@@ -141,8 +141,10 @@ Unity is written back to text.
   other region, and the generator leaves it alone.
 - **Terrain belongs in the region's data.** *Decided* (2026-10-23), *built.* Heights per tile
   corner, as rows of text in the region file (`terrain`), so an agent without Unity can read and
-  change them and git can merge them. The owner sculpts in Unity with **Sculpt Ground**; saving
-  writes the heights back. Regions drawn with `tiles` pieces follow it; the older `MapTerrain`
+  change them and git can merge them. The owner sculpts in Unity with **Edit Terrain** (the whole
+  world as one Unity Terrain, Unity's own tools; generated land keeps its raise in
+  `world/layout/sculpt` and stays generated) or **Sculpt Ground** (one region); saving writes the
+  heights back. Regions drawn with `tiles` pieces follow it; the older `MapTerrain`
   (the scale test region) still keeps its heights in its scene. How: [workflow.md](workflow.md).
 
 ## 5. How a place gets made

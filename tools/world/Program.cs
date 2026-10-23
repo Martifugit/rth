@@ -85,6 +85,21 @@ switch (command)
     case "terrain":
         return TerrainCommand(root, ws, rest);
 
+    case "terrain-save":
+    {
+        // The Editor's terrain editor saves through here, so the blockout is drawn by .NET as always.
+        if (rest.Length != 1 || !File.Exists(rest[0]))
+        {
+            Console.Error.WriteLine("Usage: terrain-save <heights file written by WorldTerrain.WriteHeights>");
+            return 2;
+        }
+        WorldTerrain.Result saved = WorldTerrain.Save(root, WorldTerrain.ReadHeights(rest[0]));
+        foreach (string m in saved.Messages) Console.WriteLine(m);
+        foreach (string e in saved.Errors) Console.Error.WriteLine("error: " + e);
+        Console.WriteLine("regions: " + string.Join(",", saved.Regions));
+        return saved.Errors.Count > 0 ? 1 : 0;
+    }
+
     default:
         Console.WriteLine("""
             R'th world data (docs/workflow.md). Commands:
@@ -99,6 +114,9 @@ switch (command)
                                  give a region terrain to sculpt: flat, or the generated land's heights
                                  (continent.json "terrain", as the blockout draws them); --force replaces
                                  terrain it already has
+              terrain-save <file> write heights edited over the whole world (the Editor's Edit Terrain) into
+                                 the data: built regions' terrain, generated land's raise (world/layout/sculpt),
+                                 then the blockout and the maps
               blockout [check]   generate the walkable blockout from the layout: world/regions/land_*.json for
                                  every region with core land and the ring around it, then export their maps
                                  (check: only check that the generated regions are up to date)
@@ -168,7 +186,7 @@ static int TerrainCommand(string root, WorldWorkspace ws, string[] args)
     {
         // The generated land's heights (continent.json "terrain"), as the blockout gives them.
         LayoutWorkspace lw = LayoutWorkspace.Load(root);
-        field = Blockout.Heights(lw.Map, lw.Built).Field(region.OriginX, region.OriginY, region.Width, region.Height)
+        field = Blockout.Heights(lw.Map, lw.Built, lw.Edits).Field(region.OriginX, region.OriginY, region.Width, region.Height)
                 ?? new Heightfield(region.OriginX, region.OriginY, region.Width, region.Height);
     }
     region.Terrain = TerrainText.Write(field, region.Terrain?.CliffStep ?? 1f);
@@ -187,7 +205,7 @@ static int BlockoutCommand(string root, string[] args)
         return 1;
     }
     var timer = System.Diagnostics.Stopwatch.StartNew();
-    Blockout.Result result = Blockout.Generate(lw.Map, lw.Built);
+    Blockout.Result result = Blockout.Generate(lw.Map, lw.Built, lw.Edits);
     string regions = Path.Combine(root, "world", "regions");
     (Dictionary<string, string> write, List<string> delete) = Blockout.Changes(regions, result);
     foreach (string w in result.Warnings) Console.WriteLine("warning: " + w);
