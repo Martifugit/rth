@@ -702,5 +702,6 @@ def build():
     return kit, result
 
 
-kit, result = build()
-cam = A.preview_rig(focus=(12.0, 3.0, 2.0), distance=28, pitch=35, yaw=-20, ground=18, human_at=(5.5, -1.5))
+if __name__ == "__main__":                                       # run as a script: the reference village
+    kit, result = build()
+    cam = A.preview_rig(focus=(12.0, 3.0, 2.0), distance=28, pitch=35, yaw=-20, ground=18, human_at=(5.5, -1.5))
