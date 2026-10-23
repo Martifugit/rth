@@ -19,7 +19,7 @@ Both are built from repeating parts (a bay, a wall run, a tower), so they are ki
 nave is more bays, a bigger castle more runs and towers. 1 unit = 1 tile; Z up.
 
 Run in Blender (MCP): runpy.run_path(".../lab/monumental.py", run_name="__main__").
-Then show_church("inside", cut=("S",)) (or "outside") switches the church's layers."""
+It builds the church three times in a row (outside, inside, inside with the near walls cut)."""
 import itertools
 import math
 import os
@@ -203,17 +203,17 @@ class Church:
             pts += [q + Vector((0, 0, top))]
             c.hull(pts, PALE)
 
-    def finish(self):
+    def finish(self, prefix="GreatChurch"):
         objs = {}
         parts = [("Base", self.base), ("Upper", self.upper), ("Roofs", self.roofs)]
         parts += [(f"Top_{s}", self.top[s]) for s in SIDES] + [(f"Crown_{s}", self.crown[s]) for s in SIDES]
         for name, b in parts:
             A.finish(b.bm)
-            objs[name] = A.mesh_from(f"GreatChurch_{name}", b.bm, MATS, coll="Monumental")
+            objs[name] = A.mesh_from(f"{prefix}_{name}", b.bm, MATS, coll="Monumental")
         return objs
 
 
-def great_church(ox, oy):
+def great_church(ox, oy, prefix="GreatChurch"):
     """West front at x = ox, the nave running east (+x), centred on y = oy. Returns the layers'
     objects by name (Base, Upper, Roofs, Top_N.., Crown_N..)."""
     c = Church()
@@ -367,27 +367,48 @@ def great_church(ox, oy):
     for sy in (-1, 1):                                            # banners on the towers' fronts
         y = oy + sy * (hn + TOWER / 2)
         c.box("W", fx0 - 0.4, y - 1.2, NAVE_H * 0.5 - 8, fx0 - 0.35, y + 1.2, NAVE_H * 0.5 - 0.8, RED)
-    return c.finish()
+    return c.finish(prefix)
 
 
-def show_church(state="outside", cut=()):
-    """Switch the church's layers: "outside" shows everything; "inside" hides the roofs and
-    upper parts, and on each side in `cut` (the camera's side) swaps its wall top for its crown."""
-    import bpy
+def shows(part, state="outside", cut=()):
+    """Whether a church layer shows: "outside" shows everything but the crowns; "inside" hides
+    the roofs and upper parts, and on each side in `cut` (the camera's side) swaps its wall top
+    for its crown."""
     inside = state == "inside"
+    if part in ("Upper", "Roofs"):
+        return not inside
+    if part.startswith("Top_"):
+        return not (inside and part[4:] in cut)
+    if part.startswith("Crown_"):
+        return inside and part[6:] in cut
+    return True
+
+
+def show_church(state="outside", cut=(), prefix="GreatChurch"):
+    import bpy
     for o in bpy.data.objects:
-        if not o.name.startswith("GreatChurch_"):
-            continue
-        part = o.name[len("GreatChurch_"):]
-        if part in ("Upper", "Roofs"):
-            hide = inside
-        elif part.startswith("Top_"):
-            hide = inside and part[4:] in cut
-        elif part.startswith("Crown_"):
-            hide = not (inside and part[6:] in cut)
-        else:
-            hide = False
-        o.hide_viewport = o.hide_render = hide
+        if o.name.startswith(prefix + "_"):
+            o.hide_viewport = o.hide_render = not shows(o.name[len(prefix) + 1:], state, cut)
+
+
+# The church three times in a row, west to east, its south side toward the viewer: outside;
+# inside with every wall standing (the camera is inside the walls); inside with the south and
+# west walls cut (the camera beyond them). Each copy keeps only the layers it shows.
+STATES = [("Outside", "outside", ()), ("Inside", "inside", ()), ("InsideCut", "inside", ("S", "W"))]
+SPACING = 95.0
+
+
+def church_states(oy=0.0):
+    import bpy
+    objs = []
+    for i, (name, state, cut) in enumerate(STATES):
+        layers = great_church(SPACING * i, oy, prefix=f"Church{name}")
+        for part, o in layers.items():
+            if shows(part, state, cut):
+                objs.append(o)
+            else:
+                bpy.data.objects.remove(o)
+    return objs
 
 
 # ---------------------------------------------------------------- the castle
@@ -472,14 +493,18 @@ def scale_figures(spots):
 
 def build():
     A.reset()
-    church = great_church(0, 0)
-    keep = castle(-30, -90)
-    return {"GreatChurch": A.report(list(church.values())), "Castle": A.report([keep])}
+    church = church_states()
+    keep = castle(SPACING - 13, 60)
+    return {"GreatChurch": A.report(church), "Castle": A.report([keep])}
 
 
 if __name__ == "__main__":
     result = build()
-    cam = A.preview_rig(focus=(8, 0, 14), distance=125, pitch=28, yaw=-120, ground=100, human_at=(-20, 0))
-    cam.data.clip_end = 1000
-    # Players for scale: on the steps, in the nave, in both aisles, in the apse.
-    scale_figures([(-16, 2, 0.8), (20, 2, 0), (28, 15, 0), (12, -15, 0), (52, 0, 0)])
+    cam = A.preview_rig(focus=(SPACING + 21, 0, 10), distance=330, pitch=34, yaw=-10, ground=170, human_at=(-20, 0))
+    cam.data.lens = 32
+    cam.data.clip_end = 2000
+    import bpy
+    bpy.data.objects["PreviewGround"].location.x = SPACING          # under all three
+    # Players for scale, in each copy: on the steps, in the nave, in both aisles, in the apse.
+    scale_figures([(SPACING * i + x, y, z) for i in range(len(STATES))
+                   for x, y, z in ((-16, 2, 0.8), (20, 2, 0), (28, 15, 0), (12, -15, 0), (52, 0, 0))])
