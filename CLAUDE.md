@@ -184,8 +184,9 @@ How it works, briefly:
   (those builders are gone). `WorldKit` (houses with hideable roofs, water from tile sets, roads,
   fences, trees) draws the data's pieces. Pressing Play in a region scene loads the Game scene
   beside it (`GameBootstrap`).
-  **R'th > World > Open Whole World** opens every exported region (plus the Game scene's sun and
-  fog) side by side for editing across borders; each scene still saves to its own file, and
+  **R'th > World > Open Regions Around This One** opens the active region's neighbours (plus the
+  Game scene's sun and fog) side by side for editing across borders; **Open Whole World** opens all
+  of them (hundreds, so it asks first). Each scene still saves to its own file, and
   Play and Export Map handle every open region. Exporting a
   region writes `<name>.rthmap`, `.region.json` (scene, title, spawn), `.spawns.json` and
   `.objects.json`, and adds the scene to the build so the client can stream it. Saves hold

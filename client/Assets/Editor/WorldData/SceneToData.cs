@@ -115,11 +115,11 @@ namespace Rth.Client.Editor
             RegionFiles.SaveRegion(region, path);
             report.Info($"{region.Id}: {region.Pieces.Count} pieces lifted into world/regions/{region.Id}.json; everything else is hand-made");
 
-            WorldWorkspace.Entry entry = WorldWorkspace.Load(WorldSync.RepoRoot).Find(region.Id);
+            WorldWorkspace.Entry entry = WorldWorkspace.Load(WorldSync.RepoRoot, region.Id).Find(region.Id);
             WorldSync.SyncRegion(entry, report, screenshots: true);
 
             // The same map, objects and creatures as before.
-            WorldWorkspace.Entry after = WorldWorkspace.Load(WorldSync.RepoRoot).Find(region.Id);
+            WorldWorkspace.Entry after = WorldWorkspace.Load(WorldSync.RepoRoot, region.Id).Find(region.Id);
             var diffs = new List<string>();
             for (int p = 0; p < before.Planes; p++)
                 for (int y = before.OriginY; y < before.OriginY + before.Height; y++)

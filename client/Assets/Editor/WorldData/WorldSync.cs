@@ -309,7 +309,7 @@ namespace Rth.Client.Editor
         /// </summary>
         public static void ExportAndVerify(string id, MapArea area, Report report)
         {
-            WorldWorkspace ws = WorldWorkspace.Load(RepoRoot);
+            WorldWorkspace ws = WorldWorkspace.Load(RepoRoot, id); // this region alone: the whole world takes seconds
             WorldWorkspace.Entry entry = ws.Find(id);
             if (entry == null || entry.Compiled.Errors.Count > 0)
             {

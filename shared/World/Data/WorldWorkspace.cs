@@ -31,12 +31,17 @@ namespace Rth.Shared.World.Data
 
         private WorldWorkspace(string root) => Root = root;
 
-        /// <summary>Loads and compiles every region under <paramref name="root"/>/world/regions.</summary>
-        public static WorldWorkspace Load(string root)
+        /// <summary>
+        /// Loads and compiles every region under <paramref name="root"/>/world/regions, or only the
+        /// one called <paramref name="only"/> (saving or exporting one region in the Editor needn't
+        /// compile the whole world).
+        /// </summary>
+        public static WorldWorkspace Load(string root, string? only = null)
         {
             var ws = new WorldWorkspace(System.IO.Path.GetFullPath(root));
             foreach (string path in RegionFiles.RegionPaths(ws.RegionsDirectory))
             {
+                if (only != null && !string.Equals(System.IO.Path.GetFileNameWithoutExtension(path), only, StringComparison.OrdinalIgnoreCase)) continue;
                 try
                 {
                     var entry = new Entry { Path = path, Region = RegionFiles.LoadRegion(path), Handmade = RegionFiles.LoadHandmade(path) };
