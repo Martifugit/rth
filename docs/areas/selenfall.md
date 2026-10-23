@@ -231,3 +231,9 @@ The colours were wrong:
 - **Dark blue ground:** the shelf's `Slate` is now a pale `Stone`, so the blue in the hole stands
   out.
 
+**Fifth pass, the spine (2026-10-23).** The generated land got a first terrain (`docs/layout.md`
+section 8), so the spine around Selenfall now rises. The five regions were refitted: their base is
+now the generated land's heights (`tools/world terrain <region> layout`) instead of a taper to 0,
+with the crater, the shelf, the shaft and the gate laid on top as before. Their edges meet the spine
+(`check`: no seam warnings), and the walk checks hold.
+

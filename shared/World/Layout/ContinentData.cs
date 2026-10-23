@@ -57,6 +57,8 @@ namespace Rth.Shared.World.Layout
         /// <summary>Size tiers: the tiles a settlement of each tier covers, roughly (built area).</summary>
         public Dictionary<string, TierDef> Tiers = new Dictionary<string, TierDef>();
         public LayoutTargets Targets = new LayoutTargets();
+        /// <summary>The generated land's first terrain (<see cref="LandHeights"/>); none: flat.</summary>
+        public TerrainDef? Terrain;
 
         public static ContinentData Parse(string json) =>
             JsonConvert.DeserializeObject<ContinentData>(json) ?? throw new FormatException("Empty layout.");
@@ -130,6 +132,24 @@ namespace Rth.Shared.World.Layout
         public string? Ground;
         /// <summary>Land: "ship" for land reached only by boat (islands); exempt from the reach check.</summary>
         public string? By;
+    }
+
+    /// <summary>How the blockout raises its land (<see cref="LandHeights"/>), in tiles.</summary>
+    public sealed class TerrainDef
+    {
+        /// <summary>The height each ground rises to, by ground id; grounds not listed lie at 0.</summary>
+        public Dictionary<string, float> Heights = new Dictionary<string, float>();
+        /// <summary>Radius of the smoothing (a box blur run three times): how far hills spread into foothills.</summary>
+        public int Smooth = 6;
+        /// <summary>Added, sharply, over <see cref="RidgeGrounds"/>, so the crest stands as a ridge.</summary>
+        public float Ridge = 2.5f;
+        public List<string> RidgeGrounds = new List<string>();
+        /// <summary>A pass's highest point, at the middle of its line; it climbs evenly from each end.</summary>
+        public float PassSaddle = 3.5f;
+        /// <summary>Tiles beyond a pass's half width over which the land returns to its own height.</summary>
+        public float PassBlend = 8f;
+        /// <summary>Tiles over which land falls to 0 at the edge of a flat built region (Tolling).</summary>
+        public float BuiltBlend = 16f;
     }
 
     public sealed class SpineDef

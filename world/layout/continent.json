@@ -112,6 +112,16 @@
     { "id": "p-mere",         "name": "p-mere",             "ground": "lake",    "ellipse": [700, 560, 35, 22] }
   ],
 
+  "terrain": {
+    "about": "The generated land's first terrain, in tiles (LandHeights, docs/layout.md section 8). Grounds not listed lie at 0.",
+    "heights": { "highland": 4, "crest": 6, "glacier": 6.5, "scar": 5 },
+    "smooth": 6,
+    "ridge": 2.5,
+    "ridgeGrounds": ["crest", "glacier"],
+    "passSaddle": 3.5,
+    "passBlend": 8,
+    "builtBlend": 16
+  },
   "spine": {
     "name": "the spine",
     "line": [[-216, -683], [-164, -462], [-216, -241], [-139, 14], [-182, 252], [-114, 490], [-164, 711], [-110, 1000]],

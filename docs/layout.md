@@ -230,7 +230,15 @@ dotnet run --project tools/world -- render           # world/renders/world.png a
 | Places | A plain square where each will be built: city 16, town 12, village 8, hamlet 6, landmark 4 tiles. Nothing else: no trees, rocks, props or buildings. |
 | Frontier land | Drawn (a low dark shelf) but blocked: the edge of the first build. |
 
-Ground is flat (the server always is; height waits on the scale decisions in `world-scale.md`).
+**Terrain (2026-10-23).** The spine has a first terrain (`LandHeights`, from continent.json's
+`terrain`): each ground's height in tiles (highland 4, crest 6, glacier 6.5, scar 5; the rest lie at
+0), smoothed so the highland spreads into foothills, a sharp extra ridge of 2.5 on the crest and
+glaciers, each pass cut as an even climb to a saddle of 3.5 at its middle, and the land falling to
+0 within 16 tiles of a flat built region (Tolling). It is one field over the whole layout, so
+generated regions meet at their borders. A region taken over keeps its heights, and its edges must
+go on meeting the generated land: `tools/world terrain <region> layout` gives it these heights to
+start from, and `check` warns about steps. The server stays flat; tiles too steep to walk are
+blocked as cliffs.
 Each region's title is the biggest place in it with a real name, or the power that holds most of
 it ("Cruor's empire", "Sere"); `p-` and hidden names never reach players, and the client announces a
 title only when it changes.

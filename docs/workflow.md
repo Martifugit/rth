@@ -64,8 +64,9 @@ a `cliffStep`. A tile rising more than `cliffStep` across is a cliff and blocked
 and in Unity alike. It is drawn by the region's `tiles` pieces and stood on by everything placed;
 other area kinds (patches, roads, houses) are still drawn flat and get a warning on terrain.
 `check` warns where two regions side by side disagree on the heights along their border. The
-`layout` start (`tools/world terrain <region> layout`) takes the continent layout's rough heights,
-which still need sculpting (they can cut cliffs across a pass) and step against flat neighbours.
+`layout` start (`tools/world terrain <region> layout`) takes the heights the blockout gives the
+generated land (`docs/layout.md` section 8: the spine's foothills, crest and passes), so a region
+taken over starts where its neighbours are and meets them at its borders.
 
 Any piece placed on a tile becomes **interactive** with `"object": "<id in objects.json>"` (a rock
 you mine, a tree you cut, a counter that is a bank), and a stair or ladder adds `climbTo`.

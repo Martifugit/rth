@@ -11,8 +11,9 @@ namespace Rth.Shared.World.Layout
     /// land, and the ring of sea and frontier around them, as region data drawn from the layout. Each
     /// is one <see cref="PieceKind.Tiles"/> piece: the zone grid's ground with its edges wandered so
     /// coasts and borders don't step by whole zones, the rivers, passes and roads at their real widths
-    /// in tiles, and a plain square where each place will stand. No trees, rocks or props. Frontier
-    /// land is drawn but blocked; the built regions (Tolling, Palmerway) are left alone.
+    /// in tiles, and a plain square where each place will stand, with a first terrain where the layout
+    /// raises its land (<see cref="LandHeights"/>: the spine). No trees, rocks or props. Frontier land
+    /// is drawn but blocked; the built regions (Tolling, Palmerway) are left alone.
     /// </summary>
     public static class Blockout
     {
@@ -36,6 +37,36 @@ namespace Rth.Shared.World.Layout
         public static Result Generate(ContinentMap map, IReadOnlyList<BuiltRegion> built)
         {
             var result = new Result();
+            Land land = Lay(map, built, result.Warnings);
+            int size = map.Data.RegionTiles;
+            foreach ((int cx, int cy) in land.Generated)
+            {
+                int x0 = map.OriginX + cx * size, y0 = map.OriginY + cy * size;
+                RegionData region = Region(map, land.Tiles[(cx, cy)], map.OriginX / size + cx, map.OriginY / size + cy, x0, y0, size);
+                Heightfield? field = land.Heights.Field(x0, y0, size, size);
+                if (field != null) region.Terrain = TerrainText.Write(field);
+                result.Regions.Add(region);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// The generated land's first terrain over the whole layout (<see cref="LandHeights"/>): what a
+        /// generated region carries, and where a region taken over starts (`tools/world terrain ... layout`).
+        /// </summary>
+        public static LandHeights Heights(ContinentMap map, IReadOnlyList<BuiltRegion> built) => Lay(map, built, new List<string>()).Heights;
+
+        private sealed class Land
+        {
+            /// <summary>Every cell's tiles, built regions' cells included (their ground still shapes the hills).</summary>
+            public Dictionary<(int, int), char[,]> Tiles = new Dictionary<(int, int), char[,]>();
+            public List<(int, int)> Generated = new List<(int, int)>();
+            public LandHeights Heights = null!;
+        }
+
+        private static Land Lay(ContinentMap map, IReadOnlyList<BuiltRegion> built, List<string> warnings)
+        {
+            var land = new Land();
             int size = map.Data.RegionTiles;
             byte[] ground = BaseGround(map);
             int cols = (map.Cols * map.ZoneTiles) / size, rows = (map.Rows * map.ZoneTiles) / size;
@@ -59,16 +90,25 @@ namespace Rth.Shared.World.Layout
                             wanted = cx + dx >= 0 && cy + dy >= 0 && cx + dx < cols && cy + dy < rows && core[cx + dx, cy + dy];
                     if (!wanted) continue;
                     int x0 = map.OriginX + cx * size, y0 = map.OriginY + cy * size;
+                    land.Tiles[(cx, cy)] = Tiles(map, ground, x0, y0, size);
                     BuiltRegion? over = built.FirstOrDefault(b => b.X0 < x0 + size && x0 < b.X1 && b.Y0 < y0 + size && y0 < b.Y1);
                     if (over != null)
                     {
                         if (over.X0 != x0 || over.Y0 != y0 || over.X1 != x0 + size || over.Y1 != y0 + size)
-                            result.Warnings.Add($"region {rx0 + cx},{ry0 + cy} is left out: '{over.Id}' covers part of it (built regions should fill whole 96-tile cells).");
+                            warnings.Add($"region {rx0 + cx},{ry0 + cy} is left out: '{over.Id}' covers part of it (built regions should fill whole 96-tile cells).");
                         continue;
                     }
-                    result.Regions.Add(Cell(map, ground, rx0 + cx, ry0 + cy, x0, y0, size));
+                    land.Generated.Add((cx, cy));
                 }
-            return result;
+
+            char sea = map.Data.Grounds[map.Data.SeaGround].Letter[0];
+            char TileAt(int x, int y)
+            {
+                int cx = (int)Math.Floor((x - map.OriginX) / (double)size), cy = (int)Math.Floor((y - map.OriginY) / (double)size);
+                return land.Tiles.TryGetValue((cx, cy), out char[,] t) ? t[x - map.OriginX - cx * size, y - map.OriginY - cy * size] : sea;
+            }
+            land.Heights = LandHeights.Compute(map.Data, map.OriginX, map.OriginY, cols * size, rows * size, TileAt, built);
+            return land;
         }
 
         /// <summary>
@@ -100,9 +140,10 @@ namespace Rth.Shared.World.Layout
             return ground;
         }
 
-        private static RegionData Cell(ContinentMap map, byte[] ground, int rx, int ry, int x0, int y0, int size)
+        /// <summary>A cell's tiles, [x, y] from the south-west: its ground, then rivers, passes, roads and places.</summary>
+        private static char[,] Tiles(ContinentMap map, byte[] ground, int x0, int y0, int size)
         {
-            var tiles = new char[size, size]; // [x, y] from the south-west
+            var tiles = new char[size, size];
             for (int ty = 0; ty < size; ty++)
                 for (int tx = 0; tx < size; tx++)
                 {
@@ -154,7 +195,11 @@ namespace Rth.Shared.World.Layout
                 char mark = place.IsSettlement ? Settlement : Landmark;
                 Paint(square, c => c == Frontier ? (char?)null : mark);
             }
+            return tiles;
+        }
 
+        private static RegionData Region(ContinentMap map, char[,] tiles, int rx, int ry, int x0, int y0, int size)
+        {
             var region = new RegionData
             {
                 Id = RegionId(rx, ry),

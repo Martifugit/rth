@@ -96,8 +96,9 @@ switch (command)
                                  regions.txt, and draw docs/images/layout-*.png (check: only check, and that
                                  the generated files are up to date)
               terrain <region> flat|layout [--force]
-                                 give a region terrain to sculpt: flat, or the continent layout's heights
-                                 (world/layout/zones.json); --force replaces terrain it already has
+                                 give a region terrain to sculpt: flat, or the generated land's heights
+                                 (continent.json "terrain", as the blockout draws them); --force replaces
+                                 terrain it already has
               blockout [check]   generate the walkable blockout from the layout: world/regions/land_*.json for
                                  every region with core land and the ring around it, then export their maps
                                  (check: only check that the generated regions are up to date)
@@ -165,8 +166,10 @@ static int TerrainCommand(string root, WorldWorkspace ws, string[] args)
     if (args[1] == "flat") field = new Heightfield(region.OriginX, region.OriginY, region.Width, region.Height);
     else
     {
-        WorldLayout layout = WorldLayout.Parse(File.ReadAllText(Path.Combine(root, "world", "layout", "zones.json")));
-        field = layout.Bake(region.OriginX, region.OriginY, region.Width, region.Height, layout.Seed);
+        // The generated land's heights (continent.json "terrain"), as the blockout gives them.
+        LayoutWorkspace lw = LayoutWorkspace.Load(root);
+        field = Blockout.Heights(lw.Map, lw.Built).Field(region.OriginX, region.OriginY, region.Width, region.Height)
+                ?? new Heightfield(region.OriginX, region.OriginY, region.Width, region.Height);
     }
     region.Terrain = TerrainText.Write(field, region.Terrain?.CliffStep ?? 1f);
     RegionFiles.SaveRegion(region, e.Path);

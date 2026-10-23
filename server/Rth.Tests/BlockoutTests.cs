@@ -64,6 +64,38 @@ public class BlockoutTests
     }
 
     [Fact]
+    public void TheSpineRisesAndItsPassesClimbToTheirSaddles()
+    {
+        LayoutWorkspace lw = LayoutWorkspace.Load(Root);
+        LandHeights land = Blockout.Heights(lw.Map, lw.Built);
+        TerrainDef terrain = lw.Data.Terrain!;
+
+        // Flat built regions (Tolling) are met at 0 all round their edge.
+        BuiltRegion tolling = lw.Built.Single(b => b.Id == "tolling");
+        for (int x = tolling.X0; x <= tolling.X1; x++)
+        {
+            Assert.Equal(0f, land.Corner(x, tolling.Y0));
+            Assert.Equal(0f, land.Corner(x, tolling.Y1));
+        }
+        foreach (PassDef pass in lw.Data.Spine.Passes)
+        {
+            float[] saddle = pass.Line[pass.Line.Count / 2];
+            Assert.Equal(terrain.PassSaddle, land.Corner((int)saddle[0], (int)saddle[1]), 1);
+        }
+        // The crest stands above its passes.
+        float[] crest = lw.Data.Spine.Line[2];
+        Assert.True(land.Corner((int)crest[0], (int)crest[1]) > terrain.PassSaddle + 2f, "the crest should stand well above the passes");
+    }
+
+    [Fact]
+    public void TheGroundMeetsAtEveryRegionBorder()
+    {
+        var warnings = new List<string>();
+        WorldWorkspace.Load(Root).Check(warnings);
+        Assert.DoesNotContain(warnings, w => w.Contains("The ground steps", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void GeneratedRegionsAreLeftOutOfTheLayoutsBuiltRegions()
     {
         LayoutWorkspace lw = LayoutWorkspace.Load(Root);
