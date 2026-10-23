@@ -106,7 +106,7 @@
     { "id": "cold-slopes",    "ground": "snow",     "along": "spine", "halfWidth": 75, "minY": 560 },
     { "id": "crest",          "name": "the spine's crest",  "ground": "crest",   "along": "spine", "halfWidth": 20, "maxY": 560 },
     { "id": "crest-cold",     "name": "the frozen crest",   "ground": "glacier", "along": "spine", "halfWidth": 24, "minY": 560 },
-    { "id": "selenfall",      "name": "Selenfall",          "ground": "scar",    "ellipse": [-172, 286, 32, 26] },
+    { "id": "selenfall",      "name": "Selenfall",          "ground": "scar",    "ellipse": [-172, 286, 48, 38] },
     { "id": "p-lake",         "name": "p-lake",             "ground": "lake",    "ellipse": [300, 45, 60, 38] },
     { "id": "wennow",         "name": "Wennow",             "ground": "lake",    "ellipse": [108, -8, 34, 26] },
     { "id": "p-mere",         "name": "p-mere",             "ground": "lake",    "ellipse": [700, 560, 35, 22] }
@@ -118,7 +118,7 @@
     "passes": [
       { "id": "pass-south",     "name": "p-dwarves'-pass",   "line": [[-130, -250], [-214, -250], [-300, -245]] },
       { "id": "pass-salt",      "name": "p-salt-pass",       "line": [[-80, 40], [-144, 40], [-220, 45]] },
-      { "id": "pass-selenfall", "name": "Selenfall's breach","line": [[-120, 290], [-172, 286], [-240, 280]] },
+      { "id": "pass-selenfall", "name": "Selenfall's breach","line": [[-120, 290], [-179, 256], [-240, 280]] },
       { "id": "pass-meridian",  "name": "p-meridian-pass",   "line": [[-100, 440], [-131, 445], [-215, 450]] },
       { "id": "pass-frost",     "name": "p-frost-pass",      "line": [[-93, 770], [-155, 765], [-240, 760]] }
     ]
@@ -183,7 +183,7 @@
     { "id": "p-high-valley",    "name": "p-high-valley",      "tier": "village", "at": [-105, -60] },
     { "id": "p-west-toll",      "name": "p-west-toll",        "tier": "hamlet",  "at": [-215, 45] },
     { "id": "p-south-observatory", "name": "p-south-observatory", "tier": "hamlet", "at": [-130, -460] },
-    { "id": "selenfall",        "name": "Selenfall",          "tier": "landmark","at": [-172, 286], "note": "the first moonfall's scar, and a way over the crest" },
+    { "id": "selenfall",        "name": "Selenfall",          "tier": "landmark","at": [-172, 286], "note": "the first moonfall's scar: a shaft down to the fragment, and a guarded way over the crest" },
     { "id": "p-demigod-north",  "name": "a demigod's site",   "tier": "landmark","at": [5, 507] },
 
     { "id": "p-gall-seat",      "name": "p-gall-seat",        "tier": "city",    "at": [720, -292], "capital": true, "note": "House Gall's seat" },
