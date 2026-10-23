@@ -866,8 +866,9 @@ def church_states(oy=0.0, painted=True, make=None, label="", table=None):
 # The plain church wears one strong brick on all its stone (Varrock's way), the same roofs and glass.
 PAINT_PLAIN = {"Gravestone": ("ChurchBrick", 2, 2), "Ashgrey": ("ChurchSlate", 2, 1),
                "Blood": ("ChurchGlass", 1, 1), "CryptFloor": ("ChurchFloor", 4, 4)}
+PAINT_B = dict(PAINT_PLAIN, Gravestone=("CruorLimestone", 2, 2))   # Cruor's pale stone; red only in the glass
 ROWS = [("", None, PAINT, 0.0),                                     # A: the great church as polished
-        ("B", PLAIN_B, PAINT_PLAIN, -130.0),                        # B: Varrock rules, same heights
+        ("B", PLAIN_B, PAINT_B, -130.0),                            # B: Varrock rules, same heights, pale stone
         ("C", PLAIN_C, PAINT_PLAIN, -260.0)]                        # C: Varrock rules, lower
 
 

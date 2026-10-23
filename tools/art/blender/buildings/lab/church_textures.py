@@ -10,6 +10,7 @@ palette colours, richness from the contrast between materials rather than from g
   ChurchGlass    red glass in diamond quarries, dark leads (1 x 1)
   ChurchFloor    big dark flagstones (4 x 4)
   ChurchBrick    the plain church's one stone: small high-contrast bricks (2 x 2)
+  CruorLimestone the same bricks in pale limestone: Cruor's stone (2 x 2)
 
     python3 tools/art/blender/buildings/lab/church_textures.py
 
@@ -86,6 +87,9 @@ def main():
     # The plain church's one stone, after Varrock castle's wall: small bricks (a quarter tile tall,
     # half a tile long over a 2 x 2 repeat), dark mortar outlines, light edges, strong contrast.
     ashlar(36, ["Granite", "Stone", "Gravestone"], courses=8, blocks=4, joint=0.5, lit=1.15, spread=1.0).save("ChurchBrick")
+    # The same bricks in Cruor's pale limestone (the owner's choice for the city): red stays for
+    # the faith (glass, banners, the runner), so the stone and the roofs keep out of it.
+    ashlar(37, ["Driftwood", "Wool", "SaltFlat"], courses=8, blocks=4, joint=0.55, lit=1.1, spread=1.0).save("CruorLimestone")
     print("wrote church textures")
 
 
