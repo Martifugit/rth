@@ -304,10 +304,14 @@ def great_church(ox, oy, prefix="GreatChurch"):
         y_out, y_in = y_wall + side * WALL / 2, y_wall - side * WALL / 2
         # The outer wall, its lancets on both faces, a shaft inside at every pier.
         c.box(key, x0, y_wall - WALL / 2, 0, x1, y_wall + WALL / 2, AISLE_H, PALE)
+        c.box(key, x0, y_out, 0, x1, y_out + side * 0.3, 0.9, PALE)                             # plinth
+        c.box(key, x0, y_out, AISLE_H - 0.45, x1, y_out + side * 0.25, AISLE_H - 0.1, PALE)    # drip course under the parapet
         for i in range(BAYS):
             xm = x0 + BAY * (i + 0.5)
             for face, out in ((y_out, side), (y_in, -side)):
-                c.panel(key, (xm, face, 0), (1, 0, 0), (0, out, 0), -1.2, 1.2, 1.8, 6.6, RED, apex=8.4, depth=0.04)
+                f = ((xm, face, 0), (1, 0, 0), (0, out, 0))
+                c.arch_frame(key, f, 1.2, 1.6, 6.6, 0.0, 0.25, PALE, base=1.8)
+                c.arch_panel(key, f, 1.2, 6.6, 1.8, RED)
         for i in range(BAYS + 1):
             xp = x0 + BAY * i
             c.box(key, xp - 0.4, y_in, 0, xp + 0.4, y_in - side * 0.4, AISLE_H, PALE)
@@ -328,11 +332,13 @@ def great_church(ox, oy, prefix="GreatChurch"):
                 c.upper.hull([(x, y_pier + dy, z) for x, z in ((xs, ARCADE_H), (xs, AISLE_H + 1), (xe, AISLE_H + 1))
                               for dy in (-WALL / 2, WALL / 2)], PALE)
         c.upper.box(x0, y_pier - WALL / 2, AISLE_H + 1, x1, y_pier + WALL / 2, NAVE_H, PALE)
+        c.upper.box(x0, y_pier + side * WALL / 2, NAVE_H - 0.45, x1, y_pier + side * (WALL / 2 + 0.25), NAVE_H - 0.1, PALE)   # drip course
         for i in range(BAYS):                                     # clerestory lancets, both faces
             xm = x0 + BAY * (i + 0.5)
             for face, out in ((y_pier + side * WALL / 2, side), (y_pier - side * WALL / 2, -side)):
-                c.upper.panel((xm, face, 0), (1, 0, 0), (0, out, 0), -1.4, 1.4, AISLE_H + 4.5,
-                              NAVE_H - 3.0, RED, apex=NAVE_H - 1.0, depth=0.04)
+                f = ((xm, face, 0), (1, 0, 0), (0, out, 0))
+                c.arch_frame(key, f, 1.4, 1.8, NAVE_H - 3.0, 0.0, 0.25, PALE, base=AISLE_H + 4.5)
+                c.arch_panel(key, f, 1.4, NAVE_H - 3.0, AISLE_H + 4.5, RED)
         # Aisle roof: a lean-to from the aisle wall up to the clerestory, behind a pierced parapet
         # on the wall's outer half; another parapet runs along the clerestory's head.
         c.roofs.hull([(x, y_wall, z) for x in (x0, x1) for z in (AISLE_H, AISLE_H + 0.3)] +
@@ -367,13 +373,15 @@ def great_church(ox, oy, prefix="GreatChurch"):
         a0, a1 = math.pi * (-0.5 + k / segs), math.pi * (-0.5 + (k + 1) / segs)
         pts = [(x1 + rr * math.cos(a), oy + rr * math.sin(a), z) for a in (a0, a1) for rr in (hn, ro) for z in (0, NAVE_H)]
         c.hull("E", pts, PALE)
+        c.hull("E", [(x1 + rr * math.cos(a), oy + rr * math.sin(a), z) for a in (a0, a1) for rr in (hn, ro + 0.3) for z in (0, 0.9)], PALE)   # plinth
         am = (a0 + a1) / 2
         nrm = Vector((math.cos(am), math.sin(am), 0))
         along = Vector((-math.sin(am), math.cos(am), 0))
         rc = ro * math.cos((a1 - a0) / 2)                          # the segment's flat face
         for face, out in ((rc, nrm), (hn * math.cos((a1 - a0) / 2), -nrm)):
             p = Vector((x1, oy, 0)) + nrm * face
-            c.panel("E", p, along, out, -0.9, 0.9, 1.8, NAVE_H - 3.0, RED, apex=NAVE_H - 1.4, depth=0.04)
+            c.arch_frame("E", (tuple(p), tuple(along), tuple(out)), 0.9, 1.25, NAVE_H - 3.0, 0.0, 0.25, PALE, base=1.8)
+            c.arch_panel("E", (tuple(p), tuple(along), tuple(out)), 0.9, NAVE_H - 3.0, 1.8, RED)
         mid = lambda a, r_: (x1 + r_ * math.cos(a), oy + r_ * math.sin(a))
         c.crown_run("E", mid(a0, hn + WALL / 2), mid(a1, hn + WALL / 2), tuple(nrm))
         if k % 2 == 0:                                            # buttresses round the apse
@@ -409,6 +417,8 @@ def great_church(ox, oy, prefix="GreatChurch"):
         yc, xc = (ya + yb) / 2, (fx0 + ox) / 2
         yo = oy + side * (hn + TOWER)                             # the outer side
         c.box("W", fx0, ya, 0, ox, yb, TOWER_H, PALE)
+        c.box("W", fx0 - 0.3, ya, 0, fx0, yb, 0.9, PALE)                 # plinth, front and outer side
+        c.box("W", fx0, yo, 0, ox, yo + side * 0.3, 0.9, PALE)
         for cx_, cy_ in ((fx0, ya), (fx0, yb), (ox, ya), (ox, yb)):   # corner shafts and pinnacles
             c.box("W", cx_ - 0.9, cy_ - 0.9, 0, cx_ + 0.9, cy_ + 0.9, TOWER_H + 1.0, PALE)
             c.cone("W", cx_, cy_, 1.1, TOWER_H + 1.0, TOWER_H + 10.0, PALE)
@@ -479,7 +489,9 @@ def great_church(ox, oy, prefix="GreatChurch"):
     c.arch_panel("W", face, ww, ws, wb, RED)
     for s in (-2.8, 0.0, 2.8):
         c.box("W", fx0 - 0.15, oy + s - 0.13, wb, fx0, oy + s + 0.13, ws + 0.4, PALE)
-    rz, rr = ws + 3.4, 3.0
+    for s in (-2.8, 2.8):                                         # two sub-arches, two lights each
+        c.arch_frame("W", shift(face, s), 2.55, 2.8, ws + 0.4, 0.0, 0.15, PALE, base=ws + 0.4)
+    rz, rr = ws + 6.0, 2.0                                      # the rose over the two sub-arches
     for k in range(12):                                          # the rose: a ring and its spokes
         a0, a1 = 2 * math.pi * k / 12, 2 * math.pi * (k + 1) / 12
         c.hull("W", [(fx0 - d, oy + r * math.cos(a), rz + r * math.sin(a)) for a in (a0, a1) for r in (rr - 0.3, rr)
