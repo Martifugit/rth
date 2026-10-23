@@ -12,14 +12,14 @@ civic and military buildings (the list in [cruor-assets.md](cruor-assets.md)) fo
   breaks the usual height limits on purpose (nave walls about 22 tiles, towers about 42 with their
   spires above). Civic buildings keep **ordinary sizes**: the halls, palace, towers and gates in
   the asset list. The city plan makes room for the cathedral, not the reverse.
-- **Pale stone, red for the faith.** Walls are pale limestone. Red is kept for what must stand
+- **Pale stone, red for the faith.** Walls are pale grey stone (the first church's shade on the small bricks). Red is kept for what must stand
   out and belongs to the empire's religion and to blood: the cathedral's glass first (the great
   window, every lancet), then banners and the red runner. Red is not used on structure, trims or
   roofs.
 
 ## The rules (from B)
 
-1. **One stone.** Every stone surface wears the same texture (`CruorLimestone`, from
+1. **One stone.** Every stone surface wears the same texture (`CruorStone`, from
    `lab/church_textures.py`):
    - small bricks, about a quarter tile tall and half a tile long;
    - dark mortar outlines, light edges, strong contrast between bricks;
