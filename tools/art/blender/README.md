@@ -1,14 +1,27 @@
-# Blender props
+# Blender art
 
-Props for R'th built as Python scripts in Blender 5.x (through the Blender MCP or
-`blender --python`). Each prop is a script in `props/`, so it can be re-run, tweaked by a number
-and reviewed in a diff. The rules the art must follow are in [docs/assets.md](../../../docs/assets.md).
+R'th's models built as Python scripts in Blender 5.x (through the Blender MCP or
+`blender --python`), so each can be re-run, tweaked by a number and reviewed in a diff. The rules
+the art must follow are in [docs/assets.md](../../../docs/assets.md). **Read the dos and don'ts
+below before making anything**: they are what the owner has passed and rejected so far.
 
-- `rth_art.py`: shared helpers. Palette materials (`mat("Stone")`, colours from
-  `client/Assets/Resources/Art/palette.json`), geometry (`prism`, `box`, `finish`), a preview rig
-  (tiled ground, the game's sun, a camera at the game's pitch, the player model for scale) and
-  `report` (triangles and colours, to check against `client/Assets/Art/art-budgets.json`).
+- `rth_art.py`: shared helpers.
+  - **Materials:** palette colours (`mat("Stone")`, from `client/Assets/Resources/Art/palette.json`).
+  - **Geometry:** `prism`, `box`, `loft`, `hull`, `decal`, `finish`.
+  - **Preview:** a rig with tiled ground, the game's sun, a camera at the game's pitch and the
+    player for scale; `figures` adds more players.
+  - **Checks:** `report` (triangles and colours, against `client/Assets/Art/art-budgets.json`) and
+    `floating_parts` (pieces hanging in the air).
 - `props/well.py`: the first test prop, a village well (172 triangles, 4 colours).
+- `buildings/venaria.py`: the village kit, the plain reference (cottage, longhouse, village chapel,
+  townhouse).
+- `buildings/cruor/`: **Cruor's architecture, the chosen style for the empire's capital.** The kit
+  (`kit.py`), the cathedral built from it (`cathedral.py`), a scene with every part
+  (`showcase.py`) and its textures (`textures.py`). Its rules are in
+  [docs/regions/cruor-architecture.md](../../../docs/regions/cruor-architecture.md).
+- `buildings/painting.py`: the pixel painters every building texture script uses.
+- `buildings/lab/`: experiments and history (the paint lab, the first monumental passes). Not
+  the chosen style; see its README for what each round taught and where it went.
 - `creatures/fen_rat.py`: the fen rat (136 triangles, 3 colours), in the game.
 - `items/held.py`: held weapons and tools. The smithed roster (all tier-1 copper, one metal
   material): knife, sword (a gladius), falcata, longsword (a claymore with a church hilt),
@@ -96,36 +109,91 @@ Learned by making the well with the owner. Add to this list as more props are ma
 - **Do** expect special weapons to need their own triangle budget (Sealbreaker is about 1 150);
   chains and rings are where triangles go.
 
-**Buildings (learned on Venaria's village kit, `buildings/venaria.py`)**
+**Buildings: what has passed**
+
+Two kits so far. Start from the one that fits, and read its rules before adding to it:
+- the village kit (`buildings/venaria.py`), for humble country buildings;
+- Cruor's kit (`buildings/cruor/`, rules in `docs/regions/cruor-architecture.md`), for the
+  capital's civic, military and religious buildings and its houses.
+
+*Shape* (learned on both kits):
 - **Do** split a realm's architecture into layers: the realm's shared language, each city's own
-  twist, and the common village buildings. A village is low, thatched and humble; two storeys,
-  cut stone and much leaded glass belong to towns.
-- **Do** let the faith show in rationed signatures, not everywhere: in the empire, red only where
-  the faith or the regime is (church glass, banners, the blood in a font); leaded glass in
-  growing amounts from poor house to chapel; the lancet (the wound's shape).
-- **Do** give dressing rules for where it may go (a flower box under a window, a lantern by a
-  door, firewood and benches on plain walls), so nothing covers a door or window.
+  twist, and the common village buildings. A village is low, thatched and humble; cut stone,
+  storeys and leaded glass belong to towns.
+- **Do** make the detail out of one repeated element and one ornament shape, not many kinds of
+  small parts:
+  - Cruor's are the merlon (one a tile, on every wall top) and one pinnacle.
+  - The first great church's crockets, gablets, belfry spikes and spikes of several sizes read
+    as noise.
+- **Do** keep walls thin (a quarter tile): mass comes from height, buttresses and towers, not
+  thickness.
+- **Do** make a gable the end of its own roof (same eaves, same pitch). A screen standing taller
+  and steeper than the roof behind it looks wrong.
+- **Do** rest roofs on the walls, close every eave and corner, and look at a building from every
+  side for gaps.
+- **Do** seat every detail on what it stands on: a spike on a slope is cut to the slope, a
+  pinnacle stands on a foot. Floating and half-sunk details were the commonest fault on the
+  monumental pieces. Run `rth_art.floating_parts` on anything with many small parts.
 - **Don't** add a chimney for looks: build it where the hearth is, and only when there is one.
-- **Do** rest roofs on the walls' outer edge, and close every eave and corner (wall plates,
-  fillers where a jetty opens). Look at a building from every side for gaps.
-- **Do** keep buildings simple and paint the detail: a few clean lines of timber on the walls,
-  plain roof slabs, and the texture carrying the thatch courses, slates, stones and weathering
-  (damp along the foot of walls, moss on slate). Modelled thatch rolls, scalloped ridges and
-  dense framing made the buildings messy, not richer.
+- **Do** keep windows small, with at most one big statement per building (the cathedral's great
+  window).
+
+*Colour and painting*:
+- **Do** paint the detail rather than model it: a few clean timber lines, plain roof slabs, and
+  the texture carrying courses, slates and stones. Modelled thatch rolls, scalloped ridges and
+  dense framing made buildings messy, not richer.
+- **Do** keep surfaces clean: no damp, moss or grime. The village kit's first textures had
+  weathering; the paint lab found that it reads as stains (`buildings/lab/README.md`).
+- **Do** use one material for a whole building's stone. Richness comes from contrast *between*
+  materials (pale stone, dark slate, red glass), not within one.
+  - Roofs and plaster want close shades: strong variation turns a roof into a checkerboard.
+  - A city's one stone can be a coarser, higher-contrast pattern (Cruor's small bricks, after
+    Varrock castle's wall), because it has to carry the whole building alone.
+- **Do** ration the faith's red: in the empire it is only for the faith and the regime (church
+  glass, banners, the runner, the blood in a font), never on structure, trims or roofs.
 - **Don't** colour doors, shutters and sills: plain wood and plaster read as one place.
-- **Don't** run ahead: plants growing on walls and similar extras come after the buildings
-  themselves are right.
-- **Do** make surface textures light grey patterns that the palette colour tints
-  (`tools/art/surface_textures.py`, `surfaces.json`), so recolours keep their pattern.
+- **Two texture systems.** The game today only has the first; the second waits on client work.
+  - In the game: `tools/art/surface_textures.py` and `surfaces.json` make light grey patterns
+    that the palette colour tints, so recolours keep their pattern.
+  - Approved in Blender only: painted full-colour textures in a kit's own `textures/`, mapped per
+    face by `paint()`.
+
+*Scale and walking in* (learned on Cruor's cathedral):
+- **Do** size a building from the floor a player walks on (nave and aisles about 40 tiles across
+  for the cathedral), then the heights.
+- **Do** keep ordinary buildings ordinary; only a centrepiece breaks the height limits, on
+  purpose.
+- **Do** build a walk-in building in layers (`Layered` in `cruor/kit.py`):
+  - inside, the roofs and upper parts hide, and the far walls stand as the backdrop;
+  - the walls toward the camera are cut at one storey under their merlons;
+  - transparency alone is not enough.
+- **Do** budget a big piece by surface, not just by count: Varrock castle's whole structure is
+  about 25k triangles, the same as the cathedral (`docs/research/osrs-varrock-castle.md`).
+  Fine detail and colour belong in dressing (banners, braziers, furniture), not in the shell.
+- **Don't** run ahead: dressing, plants and extras come after the buildings themselves are right.
 
 **Checking**
 - **Do** render two views every round: the game view (pitch about 40°) and a low side view
   (pitch about 8°). The game view hides gaps between parts; the side view shows them.
-- **Do** keep the player model in the preview. Size is only judged against the player.
+- **Do** keep the player model in the preview (`figures` for more). Size is only judged against
+  the player.
 - **Do** run `report` and stay under the kind's target triangles and 2–4 colours.
+- **Do** judge flat-coloured shapes with an outline-and-cavity render: Workbench, shading by
+  material, cavity and outlines on. In flat colours every face toward the sun is one colour, and
+  projecting parts vanish into the wall.
+- **Do** check the game camera from inside a walk-in building and right beside its walls.
+- **Do** leave the live viewport in Material Preview: the owner looks at it, not at your renders.
 
 **Process**
 - **Do** show the owner a first pass early, with your own critique, and ask concrete questions
   (size, style, what's wrong). The owner's eye catches what renders don't.
 - **Don't** fix more than was asked in a feedback round. Offer further changes separately so
   each round's change is easy to judge.
+- **Do** measure the reference like for like before restyling. Comparing the cathedral with
+  Varrock castle in the 2004scape data (`tools/research/castle_*.py`) showed what was actually
+  different (size, materials, where the detail goes) when guessing had not.
+- **Do** offer variants side by side when the direction is unclear (the cathedral's A, B, C). The
+  owner picks faster from a row than from descriptions.
+- **Do** write rules down only once the owner has passed the thing they come from, and keep one
+  canonical place for a style: the chosen kit, its rules doc, and saved reference renders
+  (`docs/regions/img/`).

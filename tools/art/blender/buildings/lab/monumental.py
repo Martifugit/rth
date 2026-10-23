@@ -1,27 +1,23 @@
-"""Monumental kits: Cruor's great church (third pass) and a castle (first pass), in flat colours.
+"""History: the lab's first monumental passes, kept for comparison. Not the chosen style.
 
-  - Cruor's great church: a nave of repeating bays (aisles, buttresses flying over the aisle
-    roofs, clerestory lancets), a twin-towered west front with spires, a rose window and a deep
-    portal, and a round apse at the east end. It is meant to tower over everything: it breaks the
-    usual height limits on purpose (docs/world-scale.md), and needs open ground round it.
-    You walk into it (like the arboretum in images/rs3-arboretum-*), so it is built in layers:
+  - Cruor's great church, polished pass ("A"): a nave of repeating bays (aisles, buttresses flying
+    over the aisle roofs, clerestory lancets), a twin-towered west front with spires and a screen
+    gable, a rose window and a deep portal, and a round apse. Built in layers for walking in:
       * outside, everything shows;
-      * inside, the roofs and everything above the outer walls (clerestory, arcade arches, the
-        towers' upper tiers, flying buttresses) hide, leaving one tall storey of wall round a
-        wide, open floor of piers;
+      * inside, the roofs and everything above the outer walls hide, leaving one tall storey of
+        wall round a wide, open floor of piers (the arboretum's way, images/rs3-arboretum-*);
       * on the side toward the camera, the wall above CUT hides too and a crown of points shows
-        on the cut instead (the Drakan trick, images/rs3-drakan-*), so a wall never stands
-        between the camera and the player.
-  - A castle: a curtain wall with a walk and crenels, round corner towers, an open gatehouse
-    between two drum towers (no roof over the gateway), and a tall keep with corner turrets.
+        on the cut instead (the Drakan trick, images/rs3-drakan-*).
+  - A castle, first pass: curtain walls with crenels, round corner towers, an open gatehouse and
+    a keep.
 
-Both are built from repeating parts (a bay, a wall run, a tower), so they are kits: a longer
-nave is more bays, a bigger castle more runs and towers. 1 unit = 1 tile; Z up.
+What came after: A was restyled after Varrock castle (docs/research/osrs-varrock-castle.md) into
+variants B (same heights) and C (lower). The owner chose B (2026-10-23). It now lives, rebuilt from
+a reusable kit, in ../cruor/ (cathedral.py, kit.py), with its rules in
+docs/regions/cruor-architecture.md. What A taught is in tools/art/blender/README.md.
 
-Run in Blender (MCP): runpy.run_path(".../lab/monumental.py", run_name="__main__").
-It builds the church in three rows: A as polished, B and C restyled after Varrock castle
-(docs/research/osrs-varrock-castle.md), B at A's heights and C lower. Each row shows it three
-times: outside, inside, and inside with the near walls cut."""
+Run in Blender (MCP): runpy.run_path(".../lab/monumental.py", run_name="__main__"): A three times
+(outside, inside, inside with the near walls cut) and the castle. Textures: church_textures.py."""
 import itertools
 import math
 import os
@@ -183,12 +179,11 @@ class Church:
     inside; `top[side]` (that side's walls from CUT to AISLE_H) swaps for `crown[side]` when the
     camera is on that side."""
 
-    def __init__(self, aisle_h=None, crown_style="fins"):
+    def __init__(self, aisle_h=None):
         self.base, self.upper, self.roofs = Build(), Build(), Build()
         self.top = {s: Build() for s in SIDES}
         self.crown = {s: Build() for s in SIDES}
         self.aisle_h = aisle_h or AISLE_H                        # where the inside view stops
-        self.crown_style = crown_style                           # "fins", or "merlons" (the plain church)
 
     def hull(self, side, pts, m):
         """A solid belonging to a side's walls, split by height into the layers."""
@@ -211,13 +206,8 @@ class Church:
 
     def crown_run(self, side, p0, p1, outward, thick=WALL, pier_every=None):
         """The crown on a cut wall from p0 to p1 (x, y; the wall's centre line): a coping, then a
-        row of pointed fins, taller ones where the bays' piers are. The plain church crowns its cut
-        walls with the same merlons as its parapets."""
+        row of pointed fins, taller ones where the bays' piers are."""
         c = self.crown[side]
-        if self.crown_style == "merlons":
-            for pts in merlon_parts(p0, p1, thick, CUT):
-                c.hull(pts, PALE)
-            return
         p0, p1 = Vector((*p0, 0)), Vector((*p1, 0))
         d = p1 - p0
         length = d.length
@@ -303,25 +293,6 @@ class Church:
             A.finish(b.bm)
             objs[name] = A.mesh_from(f"{prefix}_{name}", b.bm, MATS, coll="Monumental", smooth_angle=smooth)
         return objs
-
-
-def merlon_parts(p0, p1, thick, z, h=0.6, every=1.0, size=0.5, coping=0.3):
-    """The battlement along a wall top from p0 to p1 (x, y; the wall's centre line), standing on z:
-    a coping, then one merlon a tile, `size` long and `h` tall, as wide as the wall (Varrock's
-    rhythm: docs/research/osrs-varrock-castle.md). Returns point lists, one per convex piece."""
-    p0, p1 = Vector((*p0[:2], 0)), Vector((*p1[:2], 0))
-    d = p1 - p0
-    length = d.length
-    d.normalize()
-    n = Vector((-d.y, d.x, 0))
-    t = thick / 2
-    parts = [[p + n * k + Vector((0, 0, zz)) for p in (p0, p1) for k in (-t, t) for zz in (z, z + coping)]]
-    count = max(1, round(length / every))
-    for i in range(count):
-        q = p0 + d * (length * (i + 0.5) / count)
-        parts.append([q + d * a + n * k + Vector((0, 0, zz)) for a in (-size / 2, size / 2) for k in (-t, t)
-                      for zz in (z + coping - 0.05, z + coping + h)])
-    return parts
 
 
 def great_church(ox, oy, prefix="GreatChurch"):
@@ -579,244 +550,6 @@ def great_church(ox, oy, prefix="GreatChurch"):
     return c.finish(prefix)
 
 
-# ---------------------------------------------------------------- the plain church (Varrock rules)
-
-# The same plan as great_church, restyled after docs/research/osrs-varrock-castle.md:
-#   - walls are skins a quarter tile thick, all in one stone (one brick texture);
-#   - one repeated silhouette element: merlons, one a tile, along every wall top, and one pinnacle
-#     shape on every buttress and tower corner (no crockets, gablets or spikes of other sizes);
-#   - small windows (a tile wide), red only in the glass; the great window and its rose stay as
-#     the one big statement;
-#   - towers chamfered on their outer corners (rounder, as the reference's octagonal towers);
-#   - smooth lighting across shallow edges.
-# PLAIN_B keeps the great church's heights; PLAIN_C is lower and wider in feel.
-PLAIN_B = dict(aisle_h=10.0, arcade_h=8.0, nave_h=22.0, aisle_rise=4.0, pitch=55.0, tower_h=42.0, belfry_h=11.0,
-               spire_h=26.0, portal_w=7.0, portal_h=9.0, window_w=5.0)   # the screen is the nave roof's gable
-PLAIN_C = dict(aisle_h=7.0, arcade_h=5.6, nave_h=13.0, aisle_rise=2.5, pitch=45.0, tower_h=22.0, belfry_h=7.0,
-               spire_h=13.0, screen_h=15.0, screen_pitch=55.0, portal_w=5.0, portal_h=6.0, window_w=4.0)
-WT = 0.25                 # a wall is a skin
-CW = 0.5                  # the clerestory, standing on the arcade
-CHAMFER = 3.0             # the towers' outer corners cut off
-
-
-def plain_church(ox, oy, P, prefix="PlainChurch"):
-    AH, ARH, NH, AR = P["aisle_h"], P["arcade_h"], P["nave_h"], P["aisle_rise"]
-    TH, BH, SH = P["tower_h"], P["belfry_h"], P["spire_h"]
-    SCH = P.get("screen_h", NH)                                   # by default the screen is the end of the nave roof:
-    screen_pitch = P.get("screen_pitch", P["pitch"])             # its eaves and its pitch
-    c = Church(aisle_h=AH, crown_style="merlons")
-    L = BAY * BAYS
-    hn = NAVE_W / 2
-    ha = hn + AISLE_W
-    rise = hn * math.tan(math.radians(P["pitch"]))
-    x0, x1 = ox, ox + L
-    fx0 = ox - TOWER
-    zf = FLOOR_Z
-
-    def pinnacle(side, cx, cy, z, half=0.6):
-        """The one pinnacle: a square pyramid, as tall as five of its half-widths."""
-        c.cone(side, cx, cy, half * math.sqrt(2), z, z + 5 * half, PALE)
-
-    def battlement(side, p0, p1, thick, z, layer=None):
-        for pts in merlon_parts(p0, p1, thick, z):
-            (layer.hull(pts, PALE) if layer else c.hull(side, pts, PALE))
-
-    def lancet(side, face, w, base, spring, m=GLASS, frame=0.2):
-        c.arch_frame(side, face, w, w + frame, spring, 0.0, 0.12, PALE, base=base)
-        c.arch_panel(side, face, w, spring, base, m)
-
-    # Floor, bands, the runner and the dais, as in the great church.
-    c.base.box(fx0, oy - ha - WT, 0, x1 + WT, oy + ha + WT, zf, FLOOR)
-    c.base.hull([(x1 + (hn + CW) * math.cos(a), oy + (hn + CW) * math.sin(a), z)
-                 for a in (math.pi * (-0.5 + k / 18) for k in range(19)) for z in (0, zf)], FLOOR)
-    dais_x = x0 + BAY * (BAYS - 2) + 2.0
-    for i in PIERS:
-        c.base.box(x0 + BAY * i - 0.3, oy - ha, zf, x0 + BAY * i + 0.3, oy + ha, zf + 0.02, PALE)
-    for k in range(3):
-        c.base.box(dais_x - 0.9 + 0.3 * k, oy - hn, zf, x1, oy + hn, zf + 0.2 * (k + 1), PALE)
-    c.base.hull([(x1 + hn * math.cos(a), oy + hn * math.sin(a), z)
-                 for a in (math.pi * (-0.5 + k / 18) for k in range(19)) for z in (zf, zf + 0.6)], PALE)
-    c.base.box(fx0 - 3.0, oy - 1.6, zf, dais_x - 0.9, oy + 1.6, zf + 0.03, RUNNER)
-
-    wb = zf + 1.6                                                 # aisle windows: a tile wide
-    wsp = wb + (AH - wb) * 0.45
-    cb, csp = AH + AR + 0.4, NH - 1.4                             # clerestory windows
-    for side, key in ((-1, "S"), (1, "N")):
-        y_pier, y_wall = oy + side * hn, oy + side * (ha + WT / 2)
-        y_out, y_in = y_wall + side * WT / 2, y_wall - side * WT / 2
-        c.box(key, x0, y_wall - WT / 2, 0, x1, y_wall + WT / 2, AH, PALE)
-        battlement(key, (x0, y_wall), (x1, y_wall), WT, AH)
-        c.crown_run(key, (x0, y_wall), (x1, y_wall), (0, side), thick=WT)
-        c.box(key, x0, y_in, 0, x1, y_in - side * 0.6, zf + 0.5, PALE)            # a bench along the wall
-        for i in range(BAYS):
-            xm = x0 + BAY * (i + 0.5)
-            for face, out in ((y_out, side), (y_in, -side)):
-                lancet(key, ((xm, face, 0), (1, 0, 0), (0, out, 0)), 0.5, wb, wsp)
-        # The arcade.
-        supports = [x0] + [x0 + BAY * i for i in PIERS] + [x1]
-        for xp in supports[1:-1]:
-            c.upper.box(xp - 0.7, y_pier - CW / 2, ARH, xp + 0.7, y_pier + CW / 2, AH + 1, PALE)
-            c.base.box(xp - 1.0, y_pier - 1.0, 0, xp + 1.0, y_pier + 1.0, zf + 0.5, PALE)
-            c.base.box(xp - 0.6, y_pier - 0.6, zf + 0.5, xp + 0.6, y_pier + 0.6, ARH - 0.8, PALE)
-            for dx, dy in ((0.6, 0), (-0.6, 0), (0, 0.6), (0, -0.6)):
-                c.base.cyl(xp + dx, y_pier + dy, 0.38, zf + 0.5, ARH - 0.8, PALE, sides=8)
-            c.base.box(xp - 1.0, y_pier - 1.0, ARH - 0.8, xp + 1.0, y_pier + 1.0, ARH, PALE)
-        for k, (sa, sb) in enumerate(zip(supports, supports[1:])):
-            xa = sa + (0.7 if k > 0 else 0.0)
-            xb = sb - (0.7 if k < len(supports) - 2 else 0.0)
-            xm = (xa + xb) / 2
-            for xs, xe in ((xa, xm), (xb, xm)):
-                c.upper.hull([(x, y_pier + dy, z) for x, z in ((xs, ARH), (xs, AH + 1), (xe, AH + 1))
-                              for dy in (-CW / 2, CW / 2)], PALE)
-        # The clerestory: a skin on the arcade, small lancets, a battlement.
-        c.upper.box(x0, y_pier - CW / 2, AH + 1, x1, y_pier + CW / 2, NH, PALE)
-        for pts in merlon_parts((x0, y_pier), (x1, y_pier), CW, NH):
-            c.upper.hull(pts, PALE)
-        for i in range(BAYS):
-            f = ((x0 + BAY * (i + 0.5), y_pier + side * CW / 2, 0), (1, 0, 0), (0, side, 0))
-            c.arch_frame(key, f, 0.5, 0.7, csp, 0.0, 0.12, PALE, base=cb)
-            c.arch_panel(key, f, 0.5, csp, cb, GLASS)
-        c.roofs.hull([(x, y_in, z) for x in (x0, x1) for z in (AH, AH + 0.3)] +
-                     [(x, y_pier + side * CW / 2, z) for x in (x0, x1) for z in (AH + AR, AH + AR + 0.3)], ROOF)
-        # Buttresses: chunky, the one pinnacle on each, flying across to the clerestory.
-        for i in range(BAYS + 1):
-            xp = x0 + BAY * i
-            far = y_out + side * 1.6
-            zb = AH + 0.25 * (NH - AH)                            # above the wall, so the arm can climb
-            za = NH - 0.35 * (NH - AH - AR)                       # where the arm meets the clerestory
-            c.box(key, xp - 0.6, y_out, 0, xp + 0.6, far, zb, PALE)
-            pinnacle(key, xp, y_out + side * 0.8, zb)
-            c.upper.hull([(xp + dx, y_out + side * 1.0, z) for dx in (-0.35, 0.35) for z in (zb - 0.9, zb - 0.3)] +
-                         [(xp + dx, y_pier + side * CW / 2, z) for dx in (-0.35, 0.35) for z in (za, za + 0.6)], PALE)
-    c.roofs.gable_roof(x0, x1, oy - hn, oy + hn, NH, rise, ROOF, over=0.0)
-
-    # East: the aisles close, the apse (a skin, small lancets, a battlement; blade buttresses).
-    for side in (-1, 1):
-        y_end = oy + side * (ha + WT)
-        c.box("E", x1, oy + side * hn, 0, x1 + WT, y_end, AH, PALE)
-        battlement("E", (x1 + WT / 2, oy + side * hn), (x1 + WT / 2, y_end), WT, AH)
-        c.crown_run("E", (x1 + WT / 2, oy + side * hn), (x1 + WT / 2, y_end), (1, 0), thick=WT)
-        c.hull("E", [(x, oy + side * y, z) for x in (x1, x1 + WT)
-                     for y, z in ((ha + WT, AH), (hn, AH), (hn, AH + AR + 0.3))], PALE)
-    segs, ri, ro = 9, hn, hn + CW
-    for k in range(segs):
-        a0, a1 = math.pi * (-0.5 + k / segs), math.pi * (-0.5 + (k + 1) / segs)
-        c.hull("E", [(x1 + rr * math.cos(a), oy + rr * math.sin(a), z) for a in (a0, a1) for rr in (ri, ro) for z in (0, NH)], PALE)
-        am = (a0 + a1) / 2
-        nrm = Vector((math.cos(am), math.sin(am), 0))
-        along = Vector((-math.sin(am), math.cos(am), 0))
-        for face, out in ((ro * math.cos((a1 - a0) / 2), nrm), (ri * math.cos((a1 - a0) / 2), -nrm)):
-            p = Vector((x1, oy, 0)) + nrm * face
-            lancet("E", (tuple(p), tuple(along), tuple(out)), 0.5, wb, wsp)
-        mid = lambda a, r_: (x1 + r_ * math.cos(a), oy + r_ * math.sin(a))
-        for pts in merlon_parts(mid(a0, (ri + ro) / 2), mid(a1, (ri + ro) / 2), CW, NH):
-            c.hull("E", pts, PALE)
-        c.crown_run("E", mid(a0, (ri + ro) / 2), mid(a1, (ri + ro) / 2), tuple(nrm), thick=CW)
-        if k % 2 == 0:                                            # blade buttresses round the apse
-            pb = Vector((x1 + ro * math.cos(a0), oy + ro * math.sin(a0), 0))
-            n = Vector((math.cos(a0), math.sin(a0), 0))
-            t = Vector((-math.sin(a0), math.cos(a0), 0))
-            zb = 0.68 * NH
-            c.hull("E", [pb + t * dt + n * dn + Vector((0, 0, z)) for dt in (-0.6, 0.6) for dn in (-0.3, 2.0)
-                         for z in (0, zb)], PALE)
-            blade = [(-0.3, zb, 0.6), (2.0, zb, 0.6), (2.4, zb + 0.15 * NH, 0.25), (-0.3, NH + 0.4, 0.25)]
-            c.hull("E", [pb + n * dn + t * (sg * w) + Vector((0, 0, z)) for dn, z, w in blade for sg in (-1, 1)], PALE)
-    c.roofs.cone(x1, oy, ro + 0.2, NH, NH + rise, ROOF, sides=18)
-    c.roofs.cyl(x1, oy, 1.4, NH + rise - 3, NH + rise + 0.2 * SH, PALE, sides=8)
-    c.roofs.cone(x1, oy, 1.7, NH + rise + 0.2 * SH, NH + rise + 0.75 * SH, ROOF, sides=8)
-
-    # West: two towers, square on the nave side and chamfered outside, battlemented, a pinnacle
-    # at each corner, an octagonal belfry and a spire; between them the screen wall.
-    def shift(face, s):
-        o, al, out = face
-        return (tuple(Vector(o) + Vector(al) * s), al, out)
-
-    for side in (-1, 1):
-        yi, yo = oy + side * hn, oy + side * (hn + TOWER)
-        yc, xc = (yi + yo) / 2, (fx0 + ox) / 2
-        plan = [(fx0, yi), (ox, yi), (ox, yo - side * CHAMFER), (ox - CHAMFER, yo), (fx0 + CHAMFER, yo), (fx0, yo - side * CHAMFER)]
-        c.hull("W", [(x, y, z) for x, y in plan for z in (0, TH)], PALE)
-        for p, q in zip(plan, plan[1:] + plan[:1]):
-            if p[1] == yi and q[1] == yi:
-                continue                                          # the nave side: under the roof
-            mx, my = (p[0] + q[0]) / 2, (p[1] + q[1]) / 2
-            inward = Vector((xc - mx, yc - my, 0)).normalized() * 0.25
-            battlement("W", (p[0] + inward.x, p[1] + inward.y), (q[0] + inward.x, q[1] + inward.y), 0.5, TH)
-        corners = [(fx0, yi), (ox, yi), (ox - CHAMFER / 2, yo - side * CHAMFER / 2), (fx0 + CHAMFER / 2, yo - side * CHAMFER / 2)]
-        for px, py in corners:                                    # the inner corners and the chamfers' middles
-            q = Vector((px, py, 0)) + (Vector((xc, yc, 0)) - Vector((px, py, 0))).normalized() * 0.85
-            c.box("W", q.x - 0.6, q.y - 0.6, TH, q.x + 0.6, q.y + 0.6, TH + 0.9, PALE)   # its foot, merlon high
-            pinnacle("W", q.x, q.y, TH + 0.9)
-        front = ((fx0, oy + side * (hn + (TOWER - CHAMFER) / 2), 0), (0, 1, 0), (-1, 0, 0))
-        outer = ((xc, yo, 0), (1, 0, 0), (0, side, 0))
-        c.arch_frame("W", front, 1.4, 1.9, 4.0, 0.0, 0.3, PALE)  # a door in the base
-        c.arch_panel("W", front, 1.4, 4.0, 0.0, DOOR)
-        for tier in (0.36, 0.66):                                 # dark slits, two tiers
-            for face in (front, outer):
-                for s in (-1.4, 1.4):
-                    f = shift(face, s)
-                    c.arch_panel("W", f, 0.4, TH * tier + 2.6, TH * tier, DARK)
-        ring = lambda r, z: [Vector((xc + r * math.cos(2 * math.pi * (k + 0.5) / 8), yc + r * math.sin(2 * math.pi * (k + 0.5) / 8), z))
-                             for k in range(8)]
-        br = 0.4 * TOWER
-        top = TH + BH
-        c.hull("W", ring(br, TH) + ring(br, top), PALE)
-        rf = br * math.cos(math.pi / 8)
-        for k in range(8):
-            phi = 2 * math.pi * k / 8
-            n = Vector((math.cos(phi), math.sin(phi), 0))
-            al = Vector((-math.sin(phi), math.cos(phi), 0))
-            c.arch_panel("W", (tuple(Vector((xc, yc, 0)) + n * rf), tuple(al), tuple(n)), 0.5, top - 2.2, top - 0.55 * BH, DARK)
-        c.hull("W", ring(br + 0.3, top) + ring(br + 0.3, top + 0.5), PALE)
-        c.hull("W", ring(br + 0.1, top + 0.5) + [Vector((xc, yc, top + SH))], ROOF)
-        c.crown_run("W", (fx0, oy + side * (hn + 0.25)), (ox, oy + side * (hn + 0.25)), (0, -side), thick=0.5)
-
-    # The screen wall, its gable, the great window with the rose, and the portal.
-    face = ((fx0, oy, 0), (0, 1, 0), (-1, 0, 0))
-    pw = P["portal_w"] / 2
-    PH = pw + 2.1
-    T = arch_apex(pw + 1.5, P["portal_h"]) + 0.8
-    srise = hn * math.tan(math.radians(screen_pitch))
-    c.box("W", fx0, oy - hn, 0, fx0 + WT * 2, oy - PH, SCH, PALE)
-    c.box("W", fx0, oy + PH, 0, fx0 + WT * 2, oy + hn, SCH, PALE)
-    c.box("W", fx0, oy - PH, T, fx0 + WT * 2, oy + PH, SCH, PALE)
-    c.hull("W", [(x, y, z) for x in (fx0, fx0 + WT * 2) for y, z in ((oy - hn, SCH), (oy + hn, SCH), (oy, SCH + srise))], PALE)
-    pinnacle("W", fx0 + 0.25, oy, SCH + srise - 0.8, half=0.5)
-    for sy in (-1, 1):
-        c.crown_run("W", (fx0 + WT, oy + sy * hn), (fx0 + WT, oy + sy * PH), (-1, 0), thick=WT * 2)
-    c.roofs.gable_roof(fx0 + WT * 2, ox, oy - hn, oy + hn, NH, rise, ROOF, over=0.0)
-    ww = P["window_w"]
-    wb2 = T + 3.8                                                 # just over the portal's gable
-    ws2 = max(SCH + 2.0, wb2 + 2.2)
-    c.arch_frame("W", face, ww, ww + 0.4, ws2, 0.0, 0.3, PALE, base=wb2)
-    c.arch_panel("W", face, ww, ws2, wb2, GLASS)
-    for s in (-ww / 2, 0.0, ww / 2):
-        c.box("W", fx0 - 0.15, oy + s - 0.13, wb2, fx0, oy + s + 0.13, ws2 + 0.4, PALE)
-    for s in (-ww / 2, ww / 2):
-        c.arch_frame("W", shift(face, s), ww / 2 - 0.25, ww / 2, ws2 + 0.4, 0.0, 0.15, PALE, base=ws2 + 0.4)
-    rz, rr = ws2 + 1.07 * ww, 0.36 * ww
-    for k in range(12):
-        a0, a1 = 2 * math.pi * k / 12, 2 * math.pi * (k + 1) / 12
-        c.hull("W", [(fx0 - d, oy + r * math.cos(a), rz + r * math.sin(a)) for a in (a0, a1) for r in (rr - 0.3, rr)
-                     for d in (0.0, 0.2)], PALE)
-    for k in range(6):
-        a = math.pi * k / 6
-        c.hull("W", [(fx0 - d, oy + r * math.cos(a) + e * math.sin(a), rz + r * math.sin(a) - e * math.cos(a))
-                     for r in (-rr, rr) for e in (-0.1, 0.1) for d in (0.0, 0.15)], PALE)
-    c.arch_spandrel("W", face, pw + 1.5, P["portal_h"], T, PH, -WT * 2, 2.0, PALE)
-    for k in range(3):
-        c.arch_frame("W", face, pw + 0.5 * k, pw + 0.5 * (k + 1), P["portal_h"], -WT * 2, 0.7 + 0.6 * k, PALE)
-    c.hull("W", [(fx0 - d, oy + y, z) for d in (-WT * 2, 2.0) for y, z in ((-PH, T), (PH, T), (0, T + 3.5))], PALE)
-    for sy in (-1, 1):
-        y = oy + sy * (PH + 0.5)
-        c.box("W", fx0 - 1.9, y - 0.5, 0, fx0 - 0.9, y + 0.5, T + 0.5, PALE)
-        pinnacle("W", fx0 - 1.4, y, T + 0.5, half=0.5)
-    c.base.box(fx0 - 2.0, oy - PH, 0, fx0, oy + PH, zf, FLOOR)
-    c.base.box(fx0 - 5.0, oy - PH - 2, 0, fx0 - 2.0, oy + PH + 2, zf / 3, PALE)
-    c.base.box(fx0 - 3.5, oy - PH - 2, 0, fx0 - 2.0, oy + PH + 2, zf * 2 / 3, PALE)
-    return c.finish(prefix, smooth=50)
-
-
 def shows(part, state="outside", cut=()):
     """Whether a church layer shows: "outside" shows everything but the crowns; "inside" hides
     the roofs and upper parts, and on each side in `cut` (the camera's side) swaps its wall top
@@ -861,15 +594,6 @@ def church_states(oy=0.0, painted=True, make=None, label="", table=None):
     if painted:
         paint(objs, table or PAINT)
     return objs
-
-
-# The plain church wears one strong brick on all its stone (Varrock's way), the same roofs and glass.
-PAINT_PLAIN = {"Gravestone": ("ChurchBrick", 2, 2), "Ashgrey": ("ChurchSlate", 2, 1),
-               "Blood": ("ChurchGlass", 1, 1), "CryptFloor": ("ChurchFloor", 4, 4)}
-PAINT_B = dict(PAINT_PLAIN, Gravestone=("CruorStone", 2, 2))   # Cruor's pale stone; red only in the glass
-ROWS = [("", None, PAINT, 0.0),                                     # A: the great church as polished
-        ("B", PLAIN_B, PAINT_B, -130.0),                            # B: Varrock rules, same heights, pale stone
-        ("C", PLAIN_C, PAINT_PLAIN, -260.0)]                        # C: Varrock rules, lower
 
 
 def paint(objs, table=None):
@@ -969,44 +693,19 @@ def castle(ox, oy, w=26.0, d=20.0):
     return A.mesh_from("Castle", b.bm, MATS, coll="Monumental")
 
 
-def scale_figures(spots):
-    """Copies of the player (the preview rig's) standing at each (x, y, z)."""
-    import bpy
-    rig = bpy.data.objects.get("Rig")
-    if rig is None:
-        return
-    parts = [o for o in bpy.data.objects if o.parent is rig]
-    coll = A.collection("Preview")
-    for x, y, z in spots:
-        new_rig = rig.copy()
-        coll.objects.link(new_rig)
-        new_rig.location = (x, y, z)
-        for p in parts:
-            c = p.copy()
-            coll.objects.link(c)
-            c.parent = new_rig
-            for md in c.modifiers:
-                if md.type == "ARMATURE":
-                    md.object = new_rig
-
-
 def build():
     A.reset()
-    church = []
-    for label, params, table, oy in ROWS:
-        make = None if params is None else (lambda ox, oy_, prefix, P=params: plain_church(ox, oy_, P, prefix=prefix))
-        church += church_states(oy, make=make, label=label, table=table)
+    church = church_states()
     keep = castle(SPACING - 13, 60)
     return {"GreatChurch": A.report(church), "Castle": A.report([keep])}
 
 
 if __name__ == "__main__":
     result = build()
-    cam = A.preview_rig(focus=(SPACING + 21, -130, 10), distance=420, pitch=40, yaw=-10, ground=200, human_at=(-20, 0))
+    cam = A.preview_rig(focus=(SPACING + 21, 0, 10), distance=330, pitch=34, yaw=-10, ground=170, human_at=(-20, 0))
     cam.data.lens = 32
     cam.data.clip_end = 3000
     import bpy
-    bpy.data.objects["PreviewGround"].location = (SPACING, -130, 0)   # under all the rows
-    # Players for scale, in each copy: on the steps, in the nave, in both aisles, on the dais.
-    scale_figures([(SPACING * i + x, oy + y, z) for _, _, _, oy in ROWS for i in range(len(STATES))
-                   for x, y, z in ((-16, 2, 0.4), (20, 2, FLOOR_Z), (28, 15, FLOOR_Z), (12, -15, FLOOR_Z), (52, 0, FLOOR_Z + 0.6))])
+    bpy.data.objects["PreviewGround"].location.x = SPACING
+    A.figures([(SPACING * i + x, y, z) for i in range(len(STATES))
+               for x, y, z in ((-16, 2, 0.4), (20, 2, FLOOR_Z), (28, 15, FLOOR_Z), (12, -15, FLOOR_Z), (52, 0, FLOOR_Z + 0.6))])

@@ -586,3 +586,23 @@ def floating_parts(objs, touch=0.06):
             hanging.append(tag)
     bm.free()
     return floating, hanging
+
+
+def figures(spots):
+    """Copies of the preview rig's player standing at each (x, y, z), for scale."""
+    rig = bpy.data.objects.get("Rig")
+    if rig is None:
+        return
+    parts = [o for o in bpy.data.objects if o.parent is rig]
+    coll = collection("Preview")
+    for x, y, z in spots:
+        new_rig = rig.copy()
+        coll.objects.link(new_rig)
+        new_rig.location = (x, y, z)
+        for p in parts:
+            c = p.copy()
+            coll.objects.link(c)
+            c.parent = new_rig
+            for md in c.modifiers:
+                if md.type == "ARMATURE":
+                    md.object = new_rig

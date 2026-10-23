@@ -6,6 +6,9 @@ using UnityEngine;
 namespace Rth.Client.Editor
 {
     /// <summary>
+    /// SUPERSEDED (2026-10-23): the owner judged this layout far too dense. Cruor is to be laid out
+    /// again (docs/regions/cruor.md, docs/regions/cruor-architecture.md); don't extend this builder,
+    /// and note that rebuilding rewrites docs/regions/cruor-assets.md without its superseded banner.
     /// Cruor, the first see of Blood and the richest city in the basin (docs/regions/cruor.md).
     /// A walled river city on the Cradle's northern rim, facing the bay and what lies in it: a
     /// late golden haze, pale limestone and red tile, banners and braziers everywhere, and every
