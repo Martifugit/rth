@@ -87,7 +87,7 @@ namespace Rth.Client.Ui.Panels
             if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter)
             {
                 // The Enter that opened the chat arrives here too; it isn't a send.
-                if (Time.frameCount - _focusedFrame <= 1)
+                if (UiRoot.WithinAFrame(_focusedFrame))
                 {
                     e.StopImmediatePropagation();
                     return;

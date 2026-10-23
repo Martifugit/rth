@@ -249,11 +249,25 @@ namespace Rth.Client.Ui
         public void ReleaseKeyboard() => (_root?.panel?.focusController?.focusedElement as VisualElement)?.Blur();
 
         /// <summary>Whether a text field has focus, so keys are typing rather than hotkeys.</summary>
-        public static bool IsTyping => InTextField || Time.frameCount - _typedFrame <= 1;
+        public static bool IsTyping => InTextField || WithinAFrame(_typedFrame);
 
         // The frame a text field last had focus: the key that ends typing (Enter, Escape) must not
         // also work as a hotkey in the frame the field lets go.
         private static int _typedFrame = -10;
+
+        /// <summary>
+        /// Whether a frame is this one or the one before. A frame from the future is not: with domain
+        /// reload off, statics outlive Play while <see cref="Time.frameCount"/> starts again, and an old
+        /// session's late frame must not read as "just now" (it held IsTyping on and swallowed keys).
+        /// </summary>
+        public static bool WithinAFrame(int frame)
+        {
+            int age = Time.frameCount - frame;
+            return age >= 0 && age <= 1;
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => _typedFrame = -10;
 
         private static bool InTextField
         {
