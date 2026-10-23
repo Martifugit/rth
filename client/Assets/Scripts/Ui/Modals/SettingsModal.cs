@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 
 namespace Rth.Client.Ui.Modals
 {
-    /// <summary>Settings: the game and interface, and the controls.</summary>
+    /// <summary>Settings: the game and interface, graphics, and the controls.</summary>
     public sealed class SettingsModal : UiModal
     {
         public override string Id => "settings";
@@ -13,7 +13,7 @@ namespace Rth.Client.Ui.Modals
         public override string Icon => "settings";
         public override Vector2 Size => new Vector2(640f, 480f);
 
-        protected override IEnumerable<ModalTab> CreateTabs() => new ModalTab[] { new GeneralSettingsTab(), new ControlsTab() };
+        protected override IEnumerable<ModalTab> CreateTabs() => new ModalTab[] { new GeneralSettingsTab(), new GraphicsSettingsTab(), new ControlsTab() };
     }
 
     public sealed class GeneralSettingsTab : ModalTab
@@ -144,6 +144,68 @@ namespace Rth.Client.Ui.Modals
             Revolution = CombatOptions.RevolutionFrom(Session.ClientState.TryGetValue(CombatOptions.RevolutionKey, out string r) ? r : null),
             TrainDefence = CombatOptions.TrainDefenceFrom(Session.ClientState.TryGetValue(CombatOptions.TrainDefenceKey, out string t) ? t : null),
         };
+    }
+
+    /// <summary>Graphics: how far the world is drawn, shadows, smoothing and frame rate (<see cref="GraphicsOptions"/>, kept on this machine).</summary>
+    public sealed class GraphicsSettingsTab : ModalTab
+    {
+        public override string Id => "graphics";
+        public override string Title => "Graphics";
+        public override string Icon => "eye";
+
+        private Label _drawDistance, _shadows, _antiAliasing, _renderScale, _frameLimit;
+        private UiKit.Check _post, _fullscreen;
+
+        protected override void Build(VisualElement root)
+        {
+            ScrollView scroll = UiKit.Scroll(root);
+
+            UiKit.Heading(scroll, "View");
+            VisualElement view = UiKit.El(scroll, "card");
+            _drawDistance = Stepper(view, "Draw distance", d => GraphicsOptions.DrawDistance += d);
+            UiKit.Text(view, "How far you see before the fog. Further loads more of the world around you.", "muted", "small");
+            _shadows = Stepper(view, "Shadows", d => GraphicsOptions.Shadows += d);
+            UiKit.Text(view, "Higher draws sharper shadows further from the camera.", "muted", "small");
+
+            UiKit.Heading(scroll, "Quality").style.marginTop = 12f;
+            VisualElement quality = UiKit.El(scroll, "card");
+            _antiAliasing = Stepper(quality, "Anti-aliasing", d => GraphicsOptions.AntiAliasing += d);
+            UiKit.Text(quality, "Smooths jagged edges (MSAA).", "muted", "small");
+            _renderScale = Stepper(quality, "Render scale", d => GraphicsOptions.RenderScale += d);
+            UiKit.Text(quality, "Below 100% is faster and softer; above is sharper and slower. The interface is unaffected.", "muted", "small");
+            _post = new UiKit.Check(quality, "Post-processing: the glow and darkened edges some places have", () => GraphicsOptions.PostProcessing = !GraphicsOptions.PostProcessing);
+
+            UiKit.Heading(scroll, "Screen").style.marginTop = 12f;
+            VisualElement screen = UiKit.El(scroll, "card");
+            _frameLimit = Stepper(screen, "Frame rate limit", d => GraphicsOptions.FrameLimit += d);
+            _fullscreen = new UiKit.Check(screen, "Fullscreen (not in the Editor)", () => GraphicsOptions.Fullscreen = !GraphicsOptions.Fullscreen);
+        }
+
+        public override void Refresh()
+        {
+            _drawDistance.text = GraphicsOptions.DrawDistanceNames[GraphicsOptions.DrawDistance];
+            _shadows.text = GraphicsOptions.ShadowNames[GraphicsOptions.Shadows];
+            _antiAliasing.text = GraphicsOptions.AntiAliasingNames[GraphicsOptions.AntiAliasing];
+            _renderScale.text = GraphicsOptions.RenderScaleNames[GraphicsOptions.RenderScale];
+            _frameLimit.text = GraphicsOptions.FrameLimitNames[GraphicsOptions.FrameLimit];
+            _post.Set(GraphicsOptions.PostProcessing);
+            _fullscreen.Set(GraphicsOptions.Fullscreen);
+        }
+
+        /// <summary>A row "Label   -  value  +"; the buttons step the choice down or up.</summary>
+        private static Label Stepper(VisualElement parent, string label, System.Action<int> step)
+        {
+            VisualElement row = UiKit.El(parent, "row");
+            row.style.marginTop = 4f;
+            UiKit.Text(row, label);
+            UiKit.El(row, "spacer");
+            UiKit.Button(row, "-", () => step(-1));
+            Label value = UiKit.Text(row, "", "value", "bold");
+            value.style.width = 120f;
+            value.style.unityTextAlign = TextAnchor.MiddleCenter;
+            UiKit.Button(row, "+", () => step(1));
+            return value;
+        }
     }
 
     /// <summary>Every key and click, in one place.</summary>

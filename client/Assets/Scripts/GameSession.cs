@@ -176,6 +176,8 @@ namespace Rth.Client
         {
             if (GetComponent<PopupMenu>() == null) gameObject.AddComponent<PopupMenu>();
             if (cameraRig != null && cameraRig.GetComponent<CameraOcclusion>() == null) cameraRig.gameObject.AddComponent<CameraOcclusion>().world = world;
+            if (cameraRig != null && cameraRig.GetComponent<FlyCamera>() == null) cameraRig.gameObject.AddComponent<FlyCamera>().session = this;
+            GraphicsOptions.Apply();
             if (regions == null) regions = GetComponent<RegionStreamer>();
             if (regions == null) regions = gameObject.AddComponent<RegionStreamer>();
             regions.world = world;
@@ -426,6 +428,16 @@ namespace Rth.Client
         {
             Keyboard keyboard = Keyboard.current;
             Mouse mouse = Mouse.current;
+
+            if (FlyCamera.Active)
+            {
+                // The fly camera owns the keys and clicks; Enter still opens the chat (for ::fly).
+                if (keyboard != null && !Ui.UiRoot.IsTyping && (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame))
+                    Ui.UiRoot.Instance?.Panel<Ui.Panels.ChatPanel>()?.Focus();
+                HoverText = "";
+                world.HoveredId = 0;
+                return;
+            }
 
             if (keyboard != null && !Ui.UiRoot.IsTyping)
             {

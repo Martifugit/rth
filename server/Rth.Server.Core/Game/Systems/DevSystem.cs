@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Rth.Server.Persistence;
 using Rth.Shared.Net;
 using Rth.Shared.World;
 
@@ -10,7 +11,8 @@ namespace Rth.Server.Game
     /// Building and testing commands, typed in chat after "::" (only when
     /// <see cref="ServerConfig.DevCommands"/> is on, as it is for the Editor's server):
     /// <c>::tele x y</c>, <c>::tele region</c> (a region's middle, instanced ones too),
-    /// <c>::pass name</c> (a pass over the spine, from the layout),
+    /// <c>::pass name</c> (a pass over the spine, from the layout), <c>::fly</c> (a free camera,
+    /// <c>::land x y</c> ends it there),
     /// <c>::level skill n</c>, <c>::give item [count]</c>, <c>::devotion</c>,
     /// <c>::boss id|win|fail</c>, <c>::fx type effect [key=value...]</c> (any object effect on
     /// the objects of a type near you), and each boss's previews under its own word
@@ -19,6 +21,12 @@ namespace Rth.Server.Game
     public sealed class DevSystem : GameSystem
     {
         public const string Prefix = "::";
+
+        /// <summary>Whether a player's client is flying its camera (not saved: logging in walks).</summary>
+        private sealed class Flying
+        {
+            public bool On;
+        }
 
         public bool Enabled => World.Config.DevCommands;
 
@@ -40,6 +48,15 @@ namespace Rth.Server.Game
                     break;
                 case "pass":
                     Pass(player, args);
+                    break;
+                case "fly":
+                    SetFlying(player, !player.Component<Flying>().On);
+                    break;
+                case "land" when args.Length >= 3 && int.TryParse(args[1], out int lx) && int.TryParse(args[2], out int ly):
+                    // Sent by the client's fly camera for a click on the ground: stand there, on the surface.
+                    SetFlying(player, false);
+                    player.Plane = 0;
+                    MoveTo(player, new TileCoord(lx, ly));
                     break;
                 case "level" when args.Length >= 3 && int.TryParse(args[2], out int level):
                     SkillSystem skills = World.Get<SkillSystem>();
@@ -78,6 +95,20 @@ namespace Rth.Server.Game
                         Say(player, "::" + p.Key + "  -  " + p.Value.About);
                     break;
             }
+        }
+
+        public override void OnLogin(Player player, PlayerSave? save)
+        {
+            if (Enabled) player.Connection.Send(JsonStateMessage.Of(FlyState.Key, new FlyState()));
+        }
+
+        private void SetFlying(Player player, bool on)
+        {
+            player.Component<Flying>().On = on;
+            player.Connection.Send(JsonStateMessage.Of(FlyState.Key, new FlyState { On = on }));
+            Say(player, on
+                ? "Flying: WASD to move, Space and Ctrl to rise and sink, Shift for speed, the wheel sets it, right-drag to look. Click the ground to land there; Escape or ::fly to stop."
+                : "Back on your feet.");
         }
 
         private void Teleport(Player player, string[] args)
@@ -169,6 +200,8 @@ namespace Rth.Server.Game
             "::tele <region>  -  go to a region (e.g. ::tele saints_crypt)",
             "::tele <x> <y>  -  go to a tile",
             "::pass <name>  -  the middle of a pass over the spine (::pass lists them)",
+            "::fly  -  fly the camera free of your body; click the ground to land there",
+            "::land <x> <y>  -  stop flying and stand on a surface tile",
             "::level <skill> <level>  -  set a skill's level",
             "::give <item> <count>  -  items in your pack",
             "::devotion  -  refill devotion",

@@ -1,6 +1,5 @@
 using Rth.Shared.World;
 using UnityEngine;
-using UnityEngine.Rendering.Universal;
 
 namespace Rth.Client
 {
@@ -37,19 +36,21 @@ namespace Rth.Client
         private Look _world, _now;
         private Light _sun;
         private bool _captured;
+        private float _farClip = 120f;
 
         private void Start()
         {
             Capture();
-            // Regions may carry post-processing volumes (a crypt's bloom and vignette); the camera must render them.
-            Camera cam = Camera.main;
-            if (cam != null) cam.GetUniversalAdditionalCameraData().renderPostProcessing = true;
+            // Regions may carry post-processing volumes (a crypt's bloom and vignette); the camera
+            // renders them unless Settings > Graphics turns post-processing off.
+            GraphicsOptions.Apply();
         }
 
         private void Capture()
         {
             _sun = RenderSettings.sun;
             Camera cam = Camera.main;
+            if (cam != null) _farClip = cam.farClipPlane;
             _world = new Look
             {
                 Sun = _sun != null ? _sun.intensity : 1f,
@@ -80,7 +81,15 @@ namespace Rth.Client
 
         private Look For(RegionAtmosphere a)
         {
-            if (a == null) return _world;
+            if (a == null)
+            {
+                // The open world's fog moves out with the draw distance; a region's own (a crypt's dark) stays as built.
+                Look world = _world;
+                float factor = GraphicsOptions.DrawDistanceFactor;
+                world.FogStart *= factor;
+                world.FogEnd *= factor;
+                return world;
+            }
             return new Look
             {
                 Sun = a.SunIntensity,
@@ -110,7 +119,12 @@ namespace Rth.Client
             RenderSettings.fogStartDistance = look.FogStart;
             RenderSettings.fogEndDistance = look.FogEnd;
             Camera cam = Camera.main;
-            if (cam != null) cam.backgroundColor = look.Fog;
+            if (cam != null)
+            {
+                cam.backgroundColor = look.Fog;
+                // Nothing past the fog needs drawing, but nothing short of it may be cut off.
+                cam.farClipPlane = Mathf.Max(_farClip, look.FogEnd + 35f);
+            }
         }
     }
 }

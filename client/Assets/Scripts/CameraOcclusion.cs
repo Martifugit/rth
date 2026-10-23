@@ -18,7 +18,8 @@ namespace Rth.Client
         private void LateUpdate()
         {
             if (world == null) world = FindAnyObjectByType<WorldView>();
-            EntityView local = world != null ? world.Local : null;
+            // A flying camera is nowhere near the player: nothing is in the way.
+            EntityView local = world != null && !FlyCamera.Active ? world.Local : null;
             Vector3 eye = transform.position;
 
             foreach (Occluder o in Occluder.All)

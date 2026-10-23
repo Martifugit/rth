@@ -218,6 +218,7 @@ namespace Rth.Client.Ui
             Keyboard keyboard = Keyboard.current;
             if (keyboard == null || IsTyping) return;
             if (keyboard.escapeKey.wasPressedThisFrame && _openModal != null) CloseModal();
+            if (FlyCamera.Active) return; // its WASD, Q and E would open windows
             foreach (UiPanel panel in _panels)
                 if (panel.Hotkey != Key.None && keyboard[panel.Hotkey].wasPressedThisFrame) Toggle(panel);
             foreach (UiModal modal in _modals)

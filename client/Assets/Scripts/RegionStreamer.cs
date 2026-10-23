@@ -102,6 +102,14 @@ namespace Rth.Client
 
         private bool TryGetFocus(out TileCoord tile)
         {
+            Camera cam = Camera.main;
+            if (FlyCamera.Active && cam != null)
+            {
+                // Flying: the world streams around the camera instead of the player.
+                Vector3 p = cam.transform.position;
+                tile = new TileCoord(Mathf.FloorToInt(p.x), Mathf.FloorToInt(p.z));
+                return true;
+            }
             EntityView local = world != null ? world.Local : null;
             if (local == null)
             {
@@ -123,12 +131,15 @@ namespace Rth.Client
 
             if (!TryGetFocus(out TileCoord focus)) return;
 
+            // Further draw distances see further, so they load further (Settings > Graphics).
+            float factor = GraphicsOptions.DrawDistanceFactor;
+            int load = Mathf.RoundToInt(loadDistance * factor), unload = Mathf.RoundToInt(unloadDistance * factor);
             foreach (Entry e in _regions)
             {
                 if (e.Operation != null) continue; // finish what's in flight first
                 int distance = e.Region.DistanceTo(focus.X, focus.Y);
-                if (e.Status == Status.Unloaded && distance <= loadDistance) Load(e);
-                else if (e.Status == Status.Loaded && distance > unloadDistance) Unload(e);
+                if (e.Status == Status.Unloaded && distance <= load) Load(e);
+                else if (e.Status == Status.Loaded && distance > unload) Unload(e);
             }
 
             WorldRegion here = null;
@@ -164,7 +175,7 @@ namespace Rth.Client
         private void OnGUI()
         {
             EnsureStyles();
-            if (TryGetFocus(out TileCoord focus) && !IsReady(focus))
+            if (!FlyCamera.Active && TryGetFocus(out TileCoord focus) && !IsReady(focus))
             {
                 GUI.depth = -100;
                 GUI.color = new Color(0f, 0f, 0f, 0.85f);

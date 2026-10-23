@@ -122,6 +122,7 @@ namespace Rth.Client
         private void LateUpdate()
         {
             if (Profile != _applied) Apply(Profile);
+            if (FlyCamera.Active) return; // flying free; the focus eases back to the player afterwards
             ReadInput();
 
             Vector3 ground = target != null ? target.position : idleFocus;
