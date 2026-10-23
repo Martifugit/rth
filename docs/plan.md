@@ -59,7 +59,7 @@ owns, and when it is done. Update the status column as work lands.
 | Track | Workstreams | Runs | Starts |
 | --- | --- | --- | --- |
 | **A. Lore and world design** | A1 canon, A2 names, A3 sheets, A4 area plan | cloud, owner in the loop | now |
-| **L. Continent layout** | L1 rough layout at tile scale, L2 walkable blockout, L3 maps from the layout | cloud, then local | now |
+| **L. Continent layout** | L1 rough layout at tile scale, L2 walkable blockout, L3 maps from the layout, L4 the first area by hand (Selenfall) | cloud, then local | now |
 | **B. Text pass** | B1 now, B2 after names | cloud | now / after A2 |
 | **C. Workflow** | C0 merge art branch, C1 audit, C2 snapshots, C3 world as data, C4 migrate regions, C5 terrain and incremental sync, C6 the guide's tooling | local (Unity MCP) | now |
 | **D. Death v1** | D1 server, D2 region and client, D3 the long way back | cloud, then local | now / after C3 |
@@ -233,6 +233,21 @@ readability), not its geography.
   decisions D1-D4 in `docs/world-scale.md`.
 - **Done when** the owner can walk from Tolling to Cruor, over a pass of the spine, and into
   every power's land.
+
+### L4. The first area by hand: Selenfall's breach
+
+| | |
+| --- | --- |
+| **Runs** | cloud (data, terrain text), local (sculpting, walking, Sync World) |
+| **Depends on** | L2, C5; C6's exits and seam checks as it needs them |
+| **Owns** | `land_m2_2`, `land_m2_3`, `land_m3_2`, `land_m3_3`, `land_m1_2` (claimed 2026-10-23; margin `land_m1_3`, `land_m1_1`, `land_m2_1`, `land_m3_1` read-only), `docs/areas/selenfall*` |
+| **Status** | **brief drafted, waiting on the owner** (2026-10-23): `docs/areas/selenfall.md` and its sketch. |
+
+- The test of the whole process in `docs/world-guide.md`, terrain included: brief, sketch, then
+  stage 1 (geography: the crater, its rim and breaches, the approach from p-dry-north), walked at
+  player height, before any structure or life.
+- **Done when** stage 1 is walked and approved, and what the process got wrong is written back into
+  the guide.
 
 ### L3. Maps from the layout
 
