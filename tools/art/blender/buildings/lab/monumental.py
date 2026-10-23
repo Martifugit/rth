@@ -32,9 +32,15 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", ".."))
 import rth_art as A  # noqa: E402
 
-# Flat colours for judging shapes (none of these wear a texture).
-MATS = ["Gravestone", "Ashgrey", "Sable", "SynodRed", "Shingle", "Iron", "CryptFloor"]
-PALE, ROOF, DARK, RED, CASTLE, METAL, FLOOR = range(len(MATS))
+# Flat colours for judging shapes; the church then wears painted textures over some of them.
+MATS = ["Gravestone", "Ashgrey", "Sable", "SynodRed", "Shingle", "Iron", "CryptFloor", "Blood", "Yew"]
+PALE, ROOF, DARK, RED, CASTLE, METAL, FLOOR, GLASS, DOOR = range(len(MATS))
+
+# The church's painted textures (lab/church_textures.py, the paint lab's style) by the flat colour
+# they replace, with the tiles one repeat covers (along, up). The glass also glows a little.
+PAINT = {"Gravestone": ("ChurchAshlar", 2, 2), "SynodRed": ("ChurchTrim", 1, 1), "Ashgrey": ("ChurchSlate", 2, 1),
+         "Blood": ("ChurchGlass", 1, 1), "CryptFloor": ("ChurchFloor", 4, 4)}
+GLOW = {"Blood": 0.22}
 
 
 class Build:
@@ -238,7 +244,7 @@ class Church:
     def parapet(self, side, x0, x1, y0, y1, z, every=1.0):
         """A pierced parapet along x from x0 to x1, y0..y1 thick, standing on z: a rail on posts,
         open between them."""
-        self.box(side, x0, y0, z + 0.85, x1, y1, z + 1.15, PALE)
+        self.box(side, x0, y0, z + 0.85, x1, y1, z + 1.15, RED)
         count = max(1, round((x1 - x0) / every))
         for i in range(count + 1):
             x = x0 + (x1 - x0) * i / count
@@ -305,13 +311,13 @@ def great_church(ox, oy, prefix="GreatChurch"):
         # The outer wall, its lancets on both faces, a shaft inside at every pier.
         c.box(key, x0, y_wall - WALL / 2, 0, x1, y_wall + WALL / 2, AISLE_H, PALE)
         c.box(key, x0, y_out, 0, x1, y_out + side * 0.3, 0.9, PALE)                             # plinth
-        c.box(key, x0, y_out, AISLE_H - 0.45, x1, y_out + side * 0.25, AISLE_H - 0.1, PALE)    # drip course under the parapet
+        c.box(key, x0, y_out, AISLE_H - 0.45, x1, y_out + side * 0.25, AISLE_H - 0.1, RED)    # drip course under the parapet
         for i in range(BAYS):
             xm = x0 + BAY * (i + 0.5)
             for face, out in ((y_out, side), (y_in, -side)):
                 f = ((xm, face, 0), (1, 0, 0), (0, out, 0))
                 c.arch_frame(key, f, 1.2, 1.6, 6.6, 0.0, 0.25, PALE, base=1.8)
-                c.arch_panel(key, f, 1.2, 6.6, 1.8, RED)
+                c.arch_panel(key, f, 1.2, 6.6, 1.8, GLASS)
         for i in range(BAYS + 1):
             xp = x0 + BAY * i
             c.box(key, xp - 0.4, y_in, 0, xp + 0.4, y_in - side * 0.4, AISLE_H, PALE)
@@ -332,13 +338,13 @@ def great_church(ox, oy, prefix="GreatChurch"):
                 c.upper.hull([(x, y_pier + dy, z) for x, z in ((xs, ARCADE_H), (xs, AISLE_H + 1), (xe, AISLE_H + 1))
                               for dy in (-WALL / 2, WALL / 2)], PALE)
         c.upper.box(x0, y_pier - WALL / 2, AISLE_H + 1, x1, y_pier + WALL / 2, NAVE_H, PALE)
-        c.upper.box(x0, y_pier + side * WALL / 2, NAVE_H - 0.45, x1, y_pier + side * (WALL / 2 + 0.25), NAVE_H - 0.1, PALE)   # drip course
+        c.upper.box(x0, y_pier + side * WALL / 2, NAVE_H - 0.45, x1, y_pier + side * (WALL / 2 + 0.25), NAVE_H - 0.1, RED)   # drip course
         for i in range(BAYS):                                     # clerestory lancets, both faces
             xm = x0 + BAY * (i + 0.5)
             for face, out in ((y_pier + side * WALL / 2, side), (y_pier - side * WALL / 2, -side)):
                 f = ((xm, face, 0), (1, 0, 0), (0, out, 0))
                 c.arch_frame(key, f, 1.4, 1.8, NAVE_H - 3.0, 0.0, 0.25, PALE, base=AISLE_H + 4.5)
-                c.arch_panel(key, f, 1.4, NAVE_H - 3.0, AISLE_H + 4.5, RED)
+                c.arch_panel(key, f, 1.4, NAVE_H - 3.0, AISLE_H + 4.5, GLASS)
         # Aisle roof: a lean-to from the aisle wall up to the clerestory, behind a pierced parapet
         # on the wall's outer half; another parapet runs along the clerestory's head.
         c.roofs.hull([(x, y_wall, z) for x in (x0, x1) for z in (AISLE_H, AISLE_H + 0.3)] +
@@ -381,7 +387,7 @@ def great_church(ox, oy, prefix="GreatChurch"):
         for face, out in ((rc, nrm), (hn * math.cos((a1 - a0) / 2), -nrm)):
             p = Vector((x1, oy, 0)) + nrm * face
             c.arch_frame("E", (tuple(p), tuple(along), tuple(out)), 0.9, 1.25, NAVE_H - 3.0, 0.0, 0.25, PALE, base=1.8)
-            c.arch_panel("E", (tuple(p), tuple(along), tuple(out)), 0.9, NAVE_H - 3.0, 1.8, RED)
+            c.arch_panel("E", (tuple(p), tuple(along), tuple(out)), 0.9, NAVE_H - 3.0, 1.8, GLASS)
         mid = lambda a, r_: (x1 + r_ * math.cos(a), oy + r_ * math.sin(a))
         c.crown_run("E", mid(a0, hn + WALL / 2), mid(a1, hn + WALL / 2), tuple(nrm))
         if k % 2 == 0:                                            # buttresses round the apse
@@ -428,12 +434,12 @@ def great_church(ox, oy, prefix="GreatChurch"):
         front = ((fx0, yc, 0), (0, 1, 0), (-1, 0, 0))
         outer = ((xc, yo, 0), (1, 0, 0), (0, side, 0))
         c.arch_frame("W", front, 1.7, 2.4, 4.6, 0.0, 0.5, PALE)   # a red door in the base
-        c.arch_panel("W", front, 1.7, 4.6, 0.0, RED)
+        c.arch_panel("W", front, 1.7, 4.6, 0.0, DOOR)
         for face in (front, outer):
             for s in (-2.6, 2.6):                                 # two tall red lancets
                 f = shift(face, s)
                 c.arch_frame("W", f, 1.0, 1.4, 21.0, 0.0, 0.3, PALE, base=12.5)
-                c.arch_panel("W", f, 1.0, 21.0, 12.5, RED)
+                c.arch_panel("W", f, 1.0, 21.0, 12.5, GLASS)
             for s in (-2.6, 2.6):                                 # a tall dark pair in the top tier
                 f = shift(face, s)
                 c.arch_frame("W", f, 0.9, 1.3, 36.5, 0.0, 0.3, PALE, base=28.5)
@@ -458,7 +464,7 @@ def great_church(ox, oy, prefix="GreatChurch"):
             c.hull("W", [g0 + al * s + n * d + Vector((0, 0, z)) for s, z in ((-1.1, top - 1.6), (1.1, top - 1.6), (0.0, top + 2.6))
                          for d in (0.0, 0.45)], PALE)
             c.cone("W", *(g0 + n * 0.22)[:2], 0.3, top + 1.7, top + 3.8, PALE)
-        c.hull("W", ring(BELFRY_R + 0.4, top) + ring(BELFRY_R + 0.4, top + 0.6), PALE)
+        c.hull("W", ring(BELFRY_R + 0.4, top) + ring(BELFRY_R + 0.4, top + 0.6), RED)
         c.hull("W", ring(BELFRY_R + 0.1, top + 0.6) + [Vector((xc, yc, top + SPIRE_H))], ROOF)
         for k in range(8):                                       # small pinnacles round the spire's foot
             p = ring(BELFRY_R + 0.1, 0)[k]
@@ -486,7 +492,7 @@ def great_church(ox, oy, prefix="GreatChurch"):
     # The great window: red, pale mullions, the rose in its head.
     wb, ws, ww = T + 6.0, SCREEN_H + 2.0, 5.6                # clear of the gable's edges and their crockets
     c.arch_frame("W", face, ww, ww + 0.45, ws, 0.0, 0.3, PALE, base=wb)
-    c.arch_panel("W", face, ww, ws, wb, RED)
+    c.arch_panel("W", face, ww, ws, wb, GLASS)
     for s in (-2.8, 0.0, 2.8):
         c.box("W", fx0 - 0.15, oy + s - 0.13, wb, fx0, oy + s + 0.13, ws + 0.4, PALE)
     for s in (-2.8, 2.8):                                         # two sub-arches, two lights each
@@ -506,7 +512,7 @@ def great_church(ox, oy, prefix="GreatChurch"):
     pw = PORTAL_W / 2
     c.arch_spandrel("W", face, pw + 1.5, PORTAL_H, T, PH, -WALL, 3.0, PALE)
     for k in range(3):
-        c.arch_frame("W", face, pw + 0.5 * k, pw + 0.5 * (k + 1), PORTAL_H, -WALL, 1.0 + k, PALE if k != 1 else ROOF)
+        c.arch_frame("W", face, pw + 0.5 * k, pw + 0.5 * (k + 1), PORTAL_H, -WALL, 1.0 + k, PALE if k != 1 else RED)
     c.hull("W", [(fx0 - d, oy + y, z) for d in (-WALL, 3.0) for y, z in ((-PH, T), (PH, T), (0, T + 5.0))], PALE)
     for sy in (-1, 1):
         c.spikes("W", (fx0 - 2.8, oy + sy * (PH - 0.6)), (fx0 - 2.8, oy + sy * 0.9), size=0.22, height=1.1, every=1.2,
@@ -549,7 +555,7 @@ STATES = [("Outside", "outside", ()), ("Inside", "inside", ()), ("InsideCut", "i
 SPACING = 95.0
 
 
-def church_states(oy=0.0):
+def church_states(oy=0.0, painted=True):
     import bpy
     objs = []
     for i, (name, state, cut) in enumerate(STATES):
@@ -559,7 +565,47 @@ def church_states(oy=0.0):
                 objs.append(o)
             else:
                 bpy.data.objects.remove(o)
+    if painted:
+        paint(objs)
     return objs
+
+
+def paint(objs):
+    """Swap the flat colours in PAINT for their painted textures (shown as they are, point
+    filtered), scaling each face's texture coordinates (in tiles, from rth_art.box_uvs) to the
+    texture's repeat."""
+    import bpy
+    mats = {}
+    for name, (image, ru, rv) in PAINT.items():
+        m = bpy.data.materials.get(image) or bpy.data.materials.new(image)
+        m.use_nodes = True
+        nodes, links = m.node_tree.nodes, m.node_tree.links
+        bsdf = nodes.get("Principled BSDF")
+        bsdf.inputs["Roughness"].default_value = 1.0
+        bsdf.inputs["Specular IOR Level"].default_value = 0.0
+        tex = nodes.get("Painted") or nodes.new("ShaderNodeTexImage")
+        tex.name = "Painted"
+        tex.image = bpy.data.images.load(os.path.join(HERE, "textures", image + ".png"), check_existing=True)
+        tex.image.reload()
+        tex.interpolation = "Closest"
+        links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+        if name in GLOW:
+            links.new(tex.outputs["Color"], bsdf.inputs["Emission Color"])
+            bsdf.inputs["Emission Strength"].default_value = GLOW[name]
+        mats[name] = (m, ru, rv)
+    for o in objs:
+        me = o.data
+        uv = me.uv_layers[0]
+        for i, slot in enumerate(list(me.materials)):
+            if slot is None or slot.name not in mats:
+                continue
+            m, ru, rv = mats[slot.name]
+            me.materials[i] = m
+            for p in me.polygons:
+                if p.material_index == i:
+                    for li in p.loop_indices:
+                        u, v = uv.data[li].uv
+                        uv.data[li].uv = (u / ru, v / rv)
 
 
 # ---------------------------------------------------------------- the castle

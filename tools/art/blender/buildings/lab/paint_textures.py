@@ -84,7 +84,8 @@ def roof_rows(seed, ramp, run0, run1, rows_per_tile=5, unit_w=(16, 22), joint=0.
                 widths.append(r.randint(*unit_w))
             widths[-1] -= sum(widths) - W                       # rows tile across the piece
             if widths[-1] < unit_w[0] // 2:
-                widths[-2] += widths.pop()
+                last = widths.pop()                             # (pop first: the index is read before it)
+                widths[-1] += last
             tiles = [mix(base[1], r.choice(base), r.uniform(0.0, 0.35)) for _ in widths]   # close to the middle
             rows[row] = (r.randint(0, W - 1), widths, tiles)
         x0, widths, tiles = rows[row]
