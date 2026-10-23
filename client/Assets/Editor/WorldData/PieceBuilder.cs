@@ -141,6 +141,7 @@ namespace Rth.Client.Editor
                         ground.corners = corners;
                         ground.cliffStep = region.Terrain.CliffStep;
                         ground.cliffMaterial = kit.Mat("LandCliff", Palette.TryParse("CliffRock", out Color cliff) ? cliff : new Color(0.42f, 0.4f, 0.36f));
+                        ground.cliffMaterials = keys.Select(k => piece.Legend[k].Cliff is string own ? Material(kit, region, own) : null).ToArray();
                     }
                     ground.Rebuild();
                     break;

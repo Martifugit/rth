@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Rth.Shared.World;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -42,6 +43,8 @@ namespace Rth.Client
         public float cliffStep = 1f;
         [Tooltip("Drawn over cliff faces; none: their own kind's material.")]
         public Material cliffMaterial;
+        [Tooltip("Per kind, its own cliff faces (none: the shared cliff material).")]
+        public Material[] cliffMaterials = new Material[0];
         [Tooltip("Set by sculpting in the Editor: saving writes the heights back to the region's data.")]
         [HideInInspector] public bool sculpted;
 
@@ -113,8 +116,18 @@ namespace Rth.Client
             int k = kinds.Length;
             if (width <= 0 || height <= 0 || k == 0 || materials.Length < k || lifts.Length < k || walkable.Length < k) return;
             Heightfield f = _field;
-            int cliffSub = cliffMaterial != null ? k : -1;
-            int subs = cliffSub >= 0 ? k + 1 : k;
+            // Submeshes: one per kind, then the shared cliff, then each kind's own cliff.
+            var mats = new List<Material>(materials.Take(k));
+            int cliffSub = -1;
+            if (cliffMaterial != null) { cliffSub = mats.Count; mats.Add(cliffMaterial); }
+            var cliffOf = new int[k];
+            for (int i = 0; i < k; i++)
+            {
+                Material own = i < cliffMaterials.Length ? cliffMaterials[i] : null;
+                if (own != null) { cliffOf[i] = mats.Count; mats.Add(own); }
+                else cliffOf[i] = cliffSub;
+            }
+            int subs = mats.Count;
 
             var kind = new int[width, height];
             for (int x = 0; x < width; x++)
@@ -157,7 +170,7 @@ namespace Rth.Client
                     if (c < 0) continue;
                     float lift = lifts[c];
                     bool steep = f.IsSteep(originX + x, originY + y, cliffStep);
-                    int sub = steep && cliffSub >= 0 ? cliffSub : c;
+                    int sub = steep && cliffOf[c] >= 0 ? cliffOf[c] : c;
                     float ax = originX + x, az = originY + y;
                     Vector3 sw = new Vector3(ax, H(x, y) + lift, az), nw = new Vector3(ax, H(x, y + 1) + lift, az + 1);
                     Vector3 ne = new Vector3(ax + 1, H(x + 1, y + 1) + lift, az + 1), se = new Vector3(ax + 1, H(x + 1, y) + lift, az);
@@ -209,10 +222,7 @@ namespace Rth.Client
             _surfaceMesh.RecalculateBounds();
             _surface = Child("Surface");
             _surface.AddComponent<MeshFilter>().sharedMesh = _surfaceMesh;
-            var mats = new Material[subs];
-            for (int i = 0; i < k; i++) mats[i] = materials[i];
-            if (cliffSub >= 0) mats[cliffSub] = cliffMaterial;
-            _surface.AddComponent<MeshRenderer>().sharedMaterials = mats;
+            _surface.AddComponent<MeshRenderer>().sharedMaterials = mats.ToArray();
 
             if (colliderTris.Count > 0)
             {

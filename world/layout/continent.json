@@ -118,7 +118,7 @@
     "passes": [
       { "id": "pass-south",     "name": "p-dwarves'-pass",   "line": [[-130, -250], [-214, -250], [-300, -245]] },
       { "id": "pass-salt",      "name": "p-salt-pass",       "line": [[-80, 40], [-144, 40], [-220, 45]] },
-      { "id": "pass-selenfall", "name": "Selenfall's breach","line": [[-120, 290], [-179, 256], [-240, 280]] },
+      { "id": "pass-selenfall", "name": "Selenfall's breach","line": [[-120, 290], [-179, 253], [-240, 280]] },
       { "id": "pass-meridian",  "name": "p-meridian-pass",   "line": [[-100, 440], [-131, 445], [-215, 450]] },
       { "id": "pass-frost",     "name": "p-frost-pass",      "line": [[-93, 770], [-155, 765], [-240, 760]] }
     ]

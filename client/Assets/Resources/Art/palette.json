@@ -23,6 +23,7 @@
   { "name": "MossyStone", "hex": "#73806b", "group": "stone" },
   { "name": "Gravestone", "hex": "#999994", "group": "stone" },
   { "name": "Slate", "hex": "#4c5261", "group": "stone" },
+  { "name": "Moonlight", "hex": "#8fb0dc", "group": "stone" },
   { "name": "CryptDais", "hex": "#665c54", "group": "stone" },
   { "name": "CryptDarkStone", "hex": "#2b2626", "group": "stone" },
   { "name": "CryptFlagstone", "hex": "#3d3633", "group": "stone" },

@@ -210,6 +210,8 @@ namespace Rth.Shared.World.Data
         public bool? Water;
         /// <summary>Where its top is drawn, in metres (a rock shelf above, water below); the server is flat.</summary>
         public float? Height;
+        /// <summary>A material name for this kind's cliff faces (its tiles too steep to walk); none: the ground's rock.</summary>
+        public string? Cliff;
 
         [JsonIgnore] public bool Walkable => Blocks != true && Water != true;
     }

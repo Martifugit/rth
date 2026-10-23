@@ -70,14 +70,17 @@ stranger, lit by the glow from beneath and what people brought (the lift's lamps
 - **The crater** is wide, about 96 × 76 tiles inside its rim, cut straight through the crest:
   - **The rim** is a ridge of thrown-up rock, higher than the crest it broke (9-10 tiles), lower
     only at the two breaches (8 east, 8.5 west).
-  - **The shelf** is a broad ring inside the rim, 12-16 tiles wide, sloping gently from the rim
-    down to the mouth's lip (about 5). It is the surface's room for content: the lift and its
-    winch house, the guards' post, a camp, moon rock breaking through.
+  - **The shelf** is a ring inside the rim, about 8 tiles wide (halved on the owner's walk, so the
+    hole is the bigger thing), sloping from the rim down to the mouth's lip (about 7). It holds
+    the lift and its winch house, the guards' post, a camp and moon rock breaking through.
+    Further content goes down the shaft.
   - **The crest's line goes on across the shelf**, splitting it into the empire's side (east,
     with the lift) and the frontier's (west): on the north a wall of thrown rock, on the south a
     ridge with one gap, the guarded gate.
-  - **The mouth** of the shaft is about 64 × 48 tiles. Its lip falls away in a cliff into
-    darkness, with no ground below what you can see; the glow and the mist cover it (stage 4).
+  - **The mouth** of the shaft is about 80 × 62 tiles. Its lip falls away in a cliff into
+    darkness, with no ground below what you can see. The faces in the hole are moonlight blue
+    (`Moonlight`, given as the lip's and the shaft's `cliff` material), and the glow and the mist
+    come later (stage 4).
 - **Heights** (in tiles; the whole world stays within about 16, and a tile steeper than 1 is a
   cliff):
 
@@ -88,7 +91,7 @@ stranger, lit by the glow from beneath and what people brought (the lift's lamps
   | the crest's rock tops | about 6-7 |
   | the rim | 9-10 |
   | the breaches | 8 (east), 8.5 (west) |
-  | the shelf | from the rim down to about 5 at the lip |
+  | the shelf | from the rim down to about 7 at the lip |
   | the mouth's wall | from the lip down to -4, then nothing |
   | the frontier side, below the west breach | about 2 |
 
@@ -202,3 +205,15 @@ the bottom. This revision followed.
 - the shelf's width and slope;
 - whether the mouth reads as a hole without a bottom, even before the glow;
 - the two rock lines across the shelf.
+
+**Third pass, data (2026-10-23), after the owner's second walk.**
+- **The shelf** is halved to about 8 tiles, and the mouth grows to 80 × 62.
+- **The lip** stands at 7, so the narrower shelf stays gently walkable, and falls 11 tiles to the
+  shaft.
+- **A new kind `l`** (the lip): scar ground whose cliff faces are moonlight blue. The shaft `v`
+  has the same faces. This uses the new `cliff` field on a legend entry: a kind's own colour for
+  its cliff faces, where the default is the ground's rock.
+- **The gate** moves to (-179, 253).
+- **Walked by a script** again: everything can be reached, and the gate shut still cuts off the
+  frontier side.
+

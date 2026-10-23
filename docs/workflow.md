@@ -45,7 +45,7 @@ rectangles are `[x0, y0, x1, y1]` with the far edges excluded. The kinds
 | `prop` | Anything on `at`: `parts` (boxes, cylinders) or a `model` prefab | `footprint` (objects: own tile) |
 | `npc` | A creature or person (`npc`, `wander`) living at `at` | none |
 | `spawn` | Where new players appear | none |
-| `tiles` | Ground tile by tile over `rect`: `rows` of characters from the north, each one a `legend` entry (`material`, `blocks`, `water`, a drawn `height`); a space is no ground. Drawn by `TileGround` | ground; blocks where the legend says |
+| `tiles` | Ground tile by tile over `rect`: `rows` of characters from the north, each one a `legend` entry (`material`, `blocks`, `water`, a drawn `height`, a `cliff` material for its steep faces); a space is no ground. Drawn by `TileGround` | ground; blocks where the legend says |
 
 **Generated regions** carry `"generated": "<generator>"` and are rewritten by that generator: the
 open land between places is `land_*.json`, from the continent layout (`tools/world blockout`,
