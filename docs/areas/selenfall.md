@@ -13,7 +13,7 @@ terrain included; [world-example.md](../world-example.md) is the template.
 | --- | --- | --- |
 | `land_m2_2` | x -192..-97, y 192..287 | the crater's south half, the shaft's mouth; the east breach and the lift |
 | `land_m2_3` | x -192..-97, y 288..383 | the crater's north half and rim |
-| `land_m3_2` | x -288..-193, y 192..287 | the west breach, the guarded crossing, the way down into the frontier |
+| `land_m3_2` | x -288..-193, y 192..287 | the west breach and the way down into the frontier |
 | `land_m3_3` | x -288..-193, y 288..383 | the crater's north-west rim; mostly edge |
 | `land_m1_2` | x -96..-1, y 192..287 | the approach: from p-dry-north up the road to the east breach |
 
@@ -73,6 +73,9 @@ stranger, lit by the glow from beneath and what people brought (the lift's lamps
   - **The shelf** is a broad ring inside the rim, 12-16 tiles wide, sloping gently from the rim
     down to the mouth's lip (about 5). It is the surface's room for content: the lift and its
     winch house, the guards' post, a camp, moon rock breaking through.
+  - **The crest's line goes on across the shelf**, splitting it into the empire's side (east,
+    with the lift) and the frontier's (west): on the north a wall of thrown rock, on the south a
+    ridge with one gap, the guarded gate.
   - **The mouth** of the shaft is about 64 × 48 tiles. Its lip falls away in a cliff into
     darkness, with no ground below what you can see; the glow and the mist cover it (stage 4).
 - **Heights** (in tiles; the whole world stays within about 16, and a tile steeper than 1 is a
@@ -115,10 +118,10 @@ stranger, lit by the glow from beneath and what people brought (the lift's lamps
   foothills to the east breach. It passes a spring where Tolling's river rises: a small pool beside
   the road (decided; no lore claim beyond "the river rises here").
 - **Onto the shelf** through the east breach; the lift is just inside.
-- **Round the shelf** to the west breach, where the surface people guard the crossing.
-- **The guarded crossing (decided):** a gate at the west breach, opened only after a quest (a
-  `requiresFlag` gate with a locked message, stage 2); beyond it, down into the frontier (about
-  x -240). Until then Selenfall is a place you go down into, not through.
+- **The guarded crossing (decided):** round the south shelf to the gate in the ridge (about
+  -179, 256), kept by the surface people and opened only after a quest (a `requiresFlag` gate with
+  a locked message, stage 2). Beyond it, the west shelf, the west breach and down into the frontier
+  (about x -240). Until then Selenfall is a place you go down into, not through.
 - The road on south from p-dry-north to p-observatory, Magister Varrow's country, is the margin's,
   not this area's. It is the reason for a later link: she forecasts falls.
 
@@ -152,8 +155,7 @@ after stage 1 is walked.*
 **History in the ground:**
 - Before the fall there was no way over the crest here; the fall made one.
 - Old cairns mark the first crossings along the shelf, older than the road.
-- The surface people's post at the west breach is newer, and the empire's road ends at the east
-  breach.
+- The surface people's post at the gate is newer, and the empire's road ends at the east breach.
 - The lift's gantry stands on older foundations: they have been going down for a long time.
 
 **Danger:**
@@ -182,4 +184,21 @@ wall and the scree. The owner's walk: you understand the place at once, and scul
 but it felt small and not dramatic, with no room for content down there and one walkable path to
 the bottom. This revision followed.
 
-**Second pass, data (2026-10-23).** The wider crater, the shelf and the mouth (below).
+**Second pass, data (2026-10-23).** Drawn again from the generated ground by a one-off script.
+- **The rim:** 96 × 76 at 9-10, with the breaches at 8 (east) and 8.5 (west).
+- **The shelf:** 16-20 tiles wide all round, sloping from the rim to the lip at 5.
+- **The mouth:** 64 × 48, the lip falling in a cliff to -4. Tiles `v` (`LandShaft`, dark, blocked)
+  stand in for the glow and the mist.
+- **The crest's line across the shelf:** the north wall, and the south ridge with the gate's gap
+  at (-179, 256).
+- **Kept:** the south rim as rock, the outside falling to 0 at the area's edges, and the spring.
+- **The layout follows** (`continent.json`): the scar's ellipse is now 48 × 38, and the pass line
+  runs through the gate, so `BlockoutTests` walk through it.
+- **Walked by a script:** every walkable tile in the five regions can be reached from p-dry-north.
+  With the gate shut, the west shelf, the west breach and the frontier side can't.
+
+**What to judge in the Editor:**
+- the size from the east breach;
+- the shelf's width and slope;
+- whether the mouth reads as a hole without a bottom, even before the glow;
+- the two rock lines across the shelf.

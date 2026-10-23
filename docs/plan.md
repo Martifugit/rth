@@ -240,8 +240,8 @@ readability), not its geography.
 | --- | --- |
 | **Runs** | cloud (data, terrain text), local (sculpting, walking, Sync World) |
 | **Depends on** | L2, C5; C6's exits and seam checks as it needs them |
-| **Owns** | `land_m2_2`, `land_m2_3`, `land_m3_2`, `land_m3_3`, `land_m1_2` (claimed 2026-10-23; margin `land_m1_3`, `land_m1_1`, `land_m2_1`, `land_m3_1` read-only), `docs/areas/selenfall*` |
-| **Status** | **stage 1, first pass in data** (2026-10-23): the five regions taken over, with terrain and ground from the brief (its "Stage 1 log"); next, Sync World, walking it and sculpting. |
+| **Owns** | `land_m2_2`, `land_m2_3`, `land_m3_2`, `land_m3_3`, `land_m1_2` and the levels below, `selenfall_*` (claimed 2026-10-23; margin `land_m1_3`, `land_m1_1`, `land_m2_1`, `land_m3_1` read-only), `docs/areas/selenfall*` |
+| **Status** | **stage 1, second pass in data** (2026-10-23): after the owner's walk, a wider crater with a shelf round a bottomless shaft, a cage lift down three levels to the heart (each a region of its own), and a guarded gate across the shelf (the brief's "Stage 1 log"). Next: walking the surface, then the lift and the first level. |
 
 - The test of the whole process in `docs/world-guide.md`, terrain included: brief, sketch, then
   stage 1 (geography: the crater, its rim and breaches, the approach from p-dry-north), walked at
