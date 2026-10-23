@@ -118,9 +118,11 @@ def panel_points(origin, along, outward, s0, s1, z0, z1, apex=None, depth=0.06):
     return [o + a * s + up * z + n * d for s, z in outline for d in (0.0, depth)]
 
 
-def arch(w, spring, n=6):
+def arch(w, spring, n=None):
     """The right half of a pointed arch of half-width w springing at z = spring, as (s, z) points
-    from (w, spring) up to the apex at s = 0 (radius 1.6 w: a little sharper than equilateral)."""
+    from (w, spring) up to the apex at s = 0 (radius 1.6 w: a little sharper than equilateral), in
+    n segments: 3 for small openings, 5 for big ones."""
+    n = n or (3 if w < 2.0 else 5)
     r = 1.6 * w
     c = w - r
     top = math.acos((r - w) / r)
@@ -254,7 +256,8 @@ class Church:
         """A pointed-arch band (an archivolt and its jambs) between two arches, in depth d0..d1 out
         from the face. face = (origin, along, outward); s = 0 is the arch's centre."""
         o, al, out = face
-        pi, po = arch(w_in, spring), arch(w_out, spring)
+        n = 3 if w_out < 2.0 else 5                              # both arches in step
+        pi, po = arch(w_in, spring, n), arch(w_out, spring, n)
         for sg in (-1, 1):
             at = lambda s, z, d: Vector(o) + Vector(al) * (sg * s) + Vector((0, 0, z)) + Vector(out) * d
             self.hull(side, [at(s, z, d) for s in (w_in, w_out) for z in (base, spring) for d in (d0, d1)], m)
@@ -358,9 +361,9 @@ def great_church(ox, oy, prefix="GreatChurch"):
                               for dy in (-WALL / 2, WALL / 2)], PALE)
         c.upper.box(x0, y_pier - WALL / 2, AISLE_H + 1, x1, y_pier + WALL / 2, NAVE_H, PALE)
         c.upper.box(x0, y_pier + side * WALL / 2, NAVE_H - 0.45, x1, y_pier + side * (WALL / 2 + 0.25), NAVE_H - 0.1, RED)   # drip course
-        for i in range(BAYS):                                     # clerestory lancets, both faces
+        for i in range(BAYS):                                     # clerestory lancets, outside only (never seen inside)
             xm = x0 + BAY * (i + 0.5)
-            for face, out in ((y_pier + side * WALL / 2, side), (y_pier - side * WALL / 2, -side)):
+            for face, out in ((y_pier + side * WALL / 2, side),):
                 f = ((xm, face, 0), (1, 0, 0), (0, out, 0))
                 c.arch_frame(key, f, 1.4, 1.8, NAVE_H - 3.0, 0.0, 0.25, PALE, base=AISLE_H + 4.5)
                 c.arch_panel(key, f, 1.4, NAVE_H - 3.0, AISLE_H + 4.5, GLASS)
