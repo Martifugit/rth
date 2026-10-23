@@ -104,13 +104,17 @@ Learned by making the well with the owner. Add to this list as more props are ma
   the faith or the regime is (church glass, banners, the blood in a font); leaded glass in
   growing amounts from poor house to chapel; the lancet (the wound's shape).
 - **Do** give dressing rules for where it may go (a flower box under a window, a lantern by a
-  door, firewood, benches and ivy on plain walls), so nothing covers a door or window.
+  door, firewood and benches on plain walls), so nothing covers a door or window.
 - **Don't** add a chimney for looks: build it where the hearth is, and only when there is one.
 - **Do** rest roofs on the walls' outer edge, and close every eave and corner (wall plates,
   fillers where a jetty opens). Look at a building from every side for gaps.
-- **Do** bring buildings to life with weathering in the textures (damp along the foot of walls,
-  moss on slate, worn thatch), thick rolled thatch, and dressing round every building.
-  Clean, flat surfaces look raw.
+- **Do** make the walls and roofs themselves rich before adding things around them: dense
+  timber framing (studs, a mid-rail, braces) in strong contrast (dark timber, bright plaster),
+  grain in the timber, bold thatch courses in mixed straw colours, rolled thatch at eaves and
+  verges, a scalloped ridge, barge boards on slate, and weathering in the textures (damp along
+  the foot of walls, moss on slate). Clean, flat surfaces look raw.
+- **Don't** run ahead: plants growing on walls and similar extras come after the buildings
+  themselves are right.
 - **Do** make surface textures light grey patterns that the palette colour tints
   (`tools/art/surface_textures.py`, `surfaces.json`), so recolours keep their pattern.
 

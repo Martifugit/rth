@@ -100,25 +100,37 @@ def blob(rnd, cx, cy, r, fn):
 
 
 def thatch(rnd):
-    """Rows of reed bundles: strands run down the slope, each row's ragged lower edge shading the
-    row below. v grows down the slope here (rows are horizontal)."""
-    c = Canvas(5)
-    row_h = 16
+    """Bold courses of reed: each course a band of strands with a ragged, shadowed lower edge,
+    strands in a few straw colours (golden, pale, grey-brown), older darker patches."""
+    straws = [(1.0, 0.97, 0.88), (1.0, 1.0, 1.0), (0.86, 0.82, 0.78), (0.94, 0.90, 0.80)]
+    px = [None] * (SIZE * SIZE)
+    row_h = 32
     for row in range(SIZE // row_h):
         y0 = row * row_h
-        shift = rnd.randint(0, 7)
-        for x in range(SIZE):
-            strand = rnd.choice((4, 5, 5, 6, 6, 7)) if (x + shift) % 3 else rnd.choice((3, 4, 5))
-            drop = rnd.randint(1, 4)                               # this strand's ragged end
-            for dy in range(row_h):
-                level = strand
-                if dy < 2:
-                    level -= 2                                     # tucked under the row above
-                if dy >= row_h - drop:
-                    level = 2 if dy == row_h - 1 else 3            # the shadow under the overhang
-                c.set(x, y0 + dy, level)
-    for _ in range(9):                                             # older, darker patches
-        blob(rnd, rnd.randrange(SIZE), rnd.randrange(SIZE), rnd.randint(6, 13), lambda x, y: c.darken(x, y, 1))
+        x = 0
+        while x < SIZE:
+            w = rnd.randint(1, 3)                                  # a strand bundle's width
+            colour = rnd.choice(straws)
+            level = rnd.choice((4, 5, 5, 6, 6, 7, 7))
+            drop = rnd.randint(2, 8)                               # how far its end hangs
+            for dx in range(w):
+                for dy in range(row_h):
+                    lv = level
+                    if dy < 3:
+                        lv -= 3                                    # tucked under the course above
+                    elif dy < 6:
+                        lv -= 1
+                    if dy >= row_h - drop:
+                        lv = 1 if dy >= row_h - 2 else 2           # the shadow under this course's edge
+                    if dy % 7 == (x + dx) % 3:
+                        lv -= 1                                    # strand texture
+                    v = LEVELS[max(0, min(7, lv))]
+                    px[(y0 + dy) * SIZE + (x + dx) % SIZE] = tuple(v * c for c in colour)
+            x += w
+    c = Canvas(5)
+    c.px = px
+    for _ in range(6):                                             # older, darker patches
+        blob(rnd, rnd.randrange(SIZE), rnd.randrange(SIZE), rnd.randint(8, 16), lambda x, y: c.darken(x, y, 1))
     return c
 
 
@@ -130,14 +142,14 @@ def slate(rnd):
         y0 = row * row_h
         x = rnd.randint(0, 20)
         for w in split(SIZE, 18, 30, rnd):
-            shade = rnd.choice((4, 5, 5, 6, 6, 7))
+            shade = rnd.choice((3, 4, 5, 5, 6, 6, 7))
             for dx in range(w):
                 for dy in range(row_h):
                     level = shade
                     if dx == 0:
-                        level = 1                                  # the gap between slates
-                    elif dy >= row_h - 2:
-                        level = 2                                  # the next row's shadow
+                        level = 0                                  # the gap between slates
+                    elif dy >= row_h - 3:
+                        level = 1 if dy == row_h - 1 else 2        # the next row's shadow
                     elif dy == 0:
                         level = min(7, shade + 1)
                     elif rnd.random() < 0.04:
@@ -224,6 +236,28 @@ def planks(rnd):
     return c
 
 
+def beam(rnd):
+    """Old oak: streaky grain, a few splits (checks) and knots. Beams run both ways, so the
+    grain is short streaks rather than long lines."""
+    c = Canvas(5)
+    for _ in range(420):                                           # streaks of grain
+        x, y = rnd.randrange(SIZE), rnd.randrange(SIZE)
+        level = rnd.choice((3, 4, 4, 6, 6, 7))
+        horizontal = rnd.random() < 0.5
+        for k in range(rnd.randint(4, 14)):
+            c.set(x + (k if horizontal else 0), y + (0 if horizontal else k), level)
+    for _ in range(10):                                            # splits
+        x, y = rnd.randrange(SIZE), rnd.randrange(SIZE)
+        horizontal = rnd.random() < 0.5
+        for k in range(rnd.randint(8, 22)):
+            c.set(x + (k if horizontal else rnd.randint(0, 1)), y + (rnd.randint(0, 1) if horizontal else k), 1)
+    for _ in range(4):                                             # knots
+        x, y = rnd.randrange(SIZE), rnd.randrange(SIZE)
+        for dx, dy in ((0, 0), (1, 0), (0, 1), (1, 1), (-1, 0), (0, -1), (2, 1), (1, 2)):
+            c.set(x + dx, y + dy, 2 if (dx, dy) in ((0, 0), (1, 1)) else 3)
+    return c
+
+
 TEXTURES = {
     "Thatch": lambda r: thatch(r),
     "Slate": lambda r: slate(r),
@@ -231,6 +265,7 @@ TEXTURES = {
     "Ashlar": lambda r: stones(r, 16, 16, 28, 36, rough=False),
     "Planks": lambda r: planks(r),
     "Plaster": lambda r: plaster(r),
+    "Beam": lambda r: beam(r),
 }
 
 

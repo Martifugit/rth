@@ -38,6 +38,35 @@
    "texture": "Plaster",
    "tiles": 1,
    "tilesV": 2.3
+  },
+  "Timber": {
+   "texture": "Beam",
+   "tiles": 1
+  },
+  "Umber": {
+   "texture": "Beam",
+   "tiles": 1
+  },
+  "DarkRock": {
+   "texture": "Beam",
+   "tiles": 1
+  },
+  "Oak": {
+   "texture": "Beam",
+   "tiles": 1
+  },
+  "Yew": {
+   "texture": "Beam",
+   "tiles": 1
+  },
+  "SaltFlat": {
+   "texture": "Plaster",
+   "tiles": 1,
+   "tilesV": 2.3
+  },
+  "Charcoal": {
+   "texture": "Beam",
+   "tiles": 1
   }
  }
 }
