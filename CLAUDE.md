@@ -25,8 +25,8 @@ See `README.md` for how to build, run and test.
 Design docs:
 - `docs/lore.md`: **the canon** for the world, its powers, death and characters (rewritten
   2026-10-22 from `docs/lore-rework/`). Place names are listed in `docs/world-map.md`. The game
-  still carries some old lore (Tithe's hymns, the Assayer, Scalth); `docs/plan.md` says what
-  replaces it and when.
+  still carries a few old names (the Sanguine Synod, the Rationalists, Scalth) until new ones are
+  picked (`docs/lore-rework/names.md`; the B2 text pass in `docs/plan.md`).
 - `docs/systems.md`: combat resources and the rules of a fight.
 - `docs/skills.md`: the v1 skill roster, the rules every skill follows, and each skill in full.
 - `docs/world-scale.md`: sizes, terrain, town and camera rules from the measured 2004 game
@@ -335,8 +335,7 @@ the world map, item art, world labels and the login box (still IMGUI).
 The design pass on every v1 skill (`docs/skills.md`), and the code changes it called for.
 
 - [x] Breath, focuses and breath-based deflection removed. **Religion's hymns** (hymns.json,
-      prayers for every style, still "Tithe's" in flavour text until the text pass; in the canon
-      they are sung by p-sworn's church) drain **devotion**: 10 a Religion level, no natural
+      prayers for every style, sung by p-sworn's church) drain **devotion**: 10 a Religion level, no natural
       regeneration; altars (the "pray" object action, on the waystone for now), devotion
       draughts (`restoreDevotion`, `restoreDevotionPercent`) and respawning restore it.
 - [x] A hymn is only stats, so deflection, per-style boosts and life steal became stats that

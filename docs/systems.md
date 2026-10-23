@@ -68,8 +68,8 @@ live in `server/data/content/` and hot-reload, so they're meant to be tuned by p
     and the main bar from `bars`.
 - **Hymns (Milestone 9):** deflection is three overhead hymns (Bulwark, Glare, Salt Ward), each
   halving one style's damage while sung; breath is gone.
-- **Death (today):** the Assayer resets bile to 0 on respawn, and items are kept. That is the
-  prototype's stand-in; death v1 replaces it (see Death, below).
+- **Death:** everything carried and worn goes to the ferryman's hold, and the player wakes on
+  the landing in the realm of the dead with bile at 0 (see Death, below).
 - **Abilities:** Gall Spark (+10), Black Draught (−10, heals 25% of damage), Still the Humours
   (25 towards zero), Bitter Salt (needs +20), Choleric Flare (spender, needs +30), Melancholy
   Shroud (spender, needs −30, 30% ward), Vitriol Rain (ultimate, needs +60), Black Sun
@@ -141,9 +141,8 @@ or with an obol you carried; with nothing to pay, he keeps it about a day; and t
 gets it free. The details are in `docs/lore-rework/death.md`, and the build is workstream D
 (D1 server, D2 region and client, D3 the long way back) in `docs/plan.md`.
 
-**In the game today** players still meet **the Assayer**, the prototype's stand-in: it comments
-on the player's humour balance and respawns them with bile at 0, and nothing is lost. D1
-replaces it.
+**In the game today** D1 and D2 are built (`FerrySystem`, death.json, the landing region
+`realm_of_the_dead`); the long way back (D3) is not.
 
 ## Open questions
 

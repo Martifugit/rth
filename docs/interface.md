@@ -49,8 +49,7 @@ every piece and how they are organised.
   death or a price check): **combat stats** and **inspect**, both opening the character modal.
   The draggable Character panel is gone (a saved layout that names it just skips it).
 - **Ability books:** one per combat style (Occultism first); drag onto a bar. ✓
-- **Religion** (F): devotion at the top, then the **hymns** (prayers; the panel still calls them
-  Tithe's until the text pass, and in the canon they belong to p-sworn's church) as a book of icons
+- **Religion** (F): devotion at the top, then the **hymns** (prayers, sung by p-sworn's church) as a book of icons
   in level order: click to sing or stop, drag onto an action bar; a sung one glows, a locked one
   shows its level. Below them, **verses** (the church's, for melee) when melee exists. ✓
 - **Skills:** tiles, the combat and total levels on a footer row; click for the guide, right-click to

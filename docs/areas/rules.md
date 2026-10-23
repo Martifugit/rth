@@ -45,7 +45,7 @@ are in [`decisions.md`](decisions.md).
 
 | Term | Meaning |
 | --- | --- |
-| **Realm** | A large region with its own identity: Venaria, Slough, Sere, Calcinia, Concordia and Candora, Nivil, the Cradle. Undermost and other underground layers are realms of their own, below the surface. |
+| **Realm** | A large region with its own identity: Cruor's empire (Venaria at its heart), House Gall, the lesser houses' fens, Sere, the spine, the cold north (see `docs/lore.md` IV). Undermost and other underground layers are realms of their own, below the surface. |
 | **Area** | The unit the plan is built from: a named stretch of world, about 1 to 6 regions of 96 tiles (2 to 5 minutes of running across). Cruor and the Candora range are larger. |
 | **Place** | A named spot inside an area: a settlement, a landmark, a dungeon, a boss site, a resource ground. |
 | **Site** | One instance of a service or resource, however many pieces it has. Six bank booths are one bank. |

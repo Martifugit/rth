@@ -56,6 +56,8 @@ the game keeps its current wording.
 | **Widdermill** | The mill north of Tolling whose wheel turns against the river. *Widdershins*: against the way of the sun. |
 | **Wennow** | The broad mere where Tolling's river widens before running on east. |
 | **Palmerway** | The road east from Tolling along Wennow's north shore, towards Cruor. A palmer is a pilgrim. |
+| **Lowe** | The realm of the dead. An old word for a burial mound. (Picked 2026-10-23.) |
+| **Pennick** | The ferryman, who holds what you die with until you pay. From *penny*. (Picked 2026-10-23.) |
 
 ### To be renamed
 
@@ -81,8 +83,7 @@ name yet).
 
 ### Placeholders in use
 
-p-sworn, p-betrayers, p-scattered, p-head, p-constants, p-spoil; the realm of the dead, the
-ferryman and the walker; the concept map's p-forest, p-lake, p-gall-seat, p-houses,
+p-sworn, p-betrayers, p-scattered, p-head, p-constants, p-spoil; the walker; the concept map's p-forest, p-lake, p-gall-seat, p-houses,
 p-dwarf-hold and p-demigod sites.
 
 ## Where Tolling sits

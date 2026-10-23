@@ -98,7 +98,7 @@ walkable point.
 
 **Water** has **one sea level** for the whole world (proposed: height 0, so land is 0 and up).
 Lakes and rivers sit at their own level, which steps down only at falls and weirs, and every
-river runs downhill to the Cradle.
+river runs downhill to the sea.
 
 ## 4. Towns and buildings
 

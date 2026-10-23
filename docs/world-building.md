@@ -1,5 +1,9 @@
 # Building a coherent world
 
+> **Partly superseded** (2026-10-23): drawn on the old map (the bay, the Cradle, Calcinia). The
+> continent's layout is now `world/layout/continent.json` (`docs/layout.md`), which answers W1 and
+> W2; the canon is `docs/lore.md`.
+
 Status: **proposed, with a working prototype of the layout step** (2026-10-22). How the world
 sketched in `images/map.png` becomes one piece of geography instead of separate scenes. Sizes and
 terrain rules are in [world-scale.md](world-scale.md); art rules in [assets.md](assets.md).

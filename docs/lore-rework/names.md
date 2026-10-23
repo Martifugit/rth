@@ -1,8 +1,28 @@
 # Names (A2): proposals
 
-*Proposed 2026-10-22, waiting on the owner. Nothing here is canon until it is picked; until then
-the game keeps its current wording and the docs keep their `p-` placeholders. Once names are
-picked, they go into `docs/world-map.md` ("Kept"), `docs/lore.md`, and the B2 text pass.*
+*Proposed 2026-10-22, being picked with the owner from 2026-10-23. Nothing here is canon until it
+is picked; until then the game keeps its current wording and the docs keep their `p-` placeholders.
+Once names are picked, they go into `docs/world-map.md` ("Kept"), `docs/lore.md`, and the B2 text
+pass.*
+
+## What needs a name
+
+Groups 1-5 shape how the world feels and are named first, one at a time. Groups 6-7 are named as
+their areas are designed; a `p-` place shows on the world map as an unnamed mark until then.
+
+| # | Group | To name | Picked |
+| --- | --- | --- | --- |
+| 1 | **In the game now** | p-sworn's church (the Sanguine Synod); the spine's surface people (the Rationalists); where Scalth's mites and salts come from | |
+| 2 | **Death** | the realm of the dead; the ferryman; the walker; the obol (keep the word?) | **Lowe**; **Pennick** |
+| 3 | **Gods and great beings** | p-sworn; p-betrayers (followers stay the Faceless); p-scattered and its demigods; p-head; p-constants and each of the three (the dreamer, the keeper of the dead, the keeper of p-spoil); the rest of the 6-10 major gods (not designed) | |
+| 4 | **Cosmology and threads** | p-spoil; the revisions (what people call them); the Dreaming (keep?); the two moons and the cracked one; the nightmare; the bound thing in the deep; the occultists' source | |
+| 5 | **Powers and peoples** | the empire itself (or "Cruor's empire"); the lesser houses' land; Undermost's older peoples; the frontier peoples; the village on p-head's brow (p-brow); the demigods' followers | |
+| 6 | **Areas and features** | areas: p-forest, p-lake, p-lake-fens, p-mere, p-downs, p-wolds, p-cinder-mount, p-ember-mount, p-slag-mount; passes: p-meridian-pass, p-dwarves'-pass, p-salt-pass, p-frost-pass; rivers: p-fen-river, p-frontier-river, p-outflow (and the great river and Sere's river); seas: p-southern-gulf, p-western-sound; islands: p-east-isle, p-far-isle, p-south-isle, p-tern-isle, p-skerry | |
+| 7 | **Settlements** (`world/layout/continent.json`) | city: p-gall-seat; towns: p-houses, p-dwarf-hold, p-enclave, p-riverhold, p-frontline, p-gall-front, p-lakeport, p-forestgate, p-oasis, p-cinderport; 27 villages and 21 hamlets; hidden: p-cell-north/south/west and the five demigod sites | |
+| 8 | **Old names to confirm or drop** | Venaria, Candora, Slough, Nivil, Concordia, Dunstair, Lucern Pass, the Orrery, the Veilwood, Sodden, Knellmere, Causeholm, Mereling, Swallow, Skerrin | |
+
+Rejected so far: for the church, the Lien, the Surety, the Earnest and keeping the Sanguine Synod;
+for the surface people, the Reckoners, the Unsworn, the Plumb and Meridians.
 
 For each subject: three or four candidates, each with its meaning, how it sounds aloud, and notes.
 The **recommended** one is first and in bold. Pronunciations are rough respellings; the stressed

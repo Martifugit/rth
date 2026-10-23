@@ -12,9 +12,8 @@ owns, and when it is done. Update the status column as work lands.
 - **The lore has been rebuilt** in `docs/lore-rework/`. Decided so far: an unfinished world revised
   in ages (a thousand-year stillness, now stirring), p-spoil, death through the ferryman, the first
   gods (p-sworn, the betrayers, p-scattered, p-head, the three constants), the powers and a
-  concept map. `docs/lore.md` and `docs/world-map.md` are now canon, rewritten from the rework. The
-  lore notes in other docs (`skills.md`, `systems.md`, `CLAUDE.md`, the Saint spec) still mention
-  Tithe and the Assayer until A1 finishes.
+  concept map. `docs/lore.md` and `docs/world-map.md` are now canon, rewritten from the rework, and the
+  other docs follow them (A1). Names are being picked (A2): Lowe and Pennick so far.
 - **The old area plan** (`docs/areas/skeleton.*`) is drawn on the old map and is superseded. Its
   rulebook (`docs/areas/rules.md`, `targets.json`) and research still apply.
 - **Everything is on local `main`** (2026-10-23), not yet pushed: this plan and the new canon, the
@@ -107,18 +106,12 @@ Wave 3
 - `docs/world-map.md` rewritten around the concept map, with every name sorted: kept, to be
   renamed, under review, retired, placeholders.
 
-**Remaining** (old-lore mentions counted on 2026-10-22):
-- `docs/skills.md` (about 64): Religion's hymns "of Tithe" (4.1), the Dreaming in the Veilwood, the
-  Rationalists, the Synod. Fix the *lore* wording only. The skill tiers placed in old regions
-  (the Veilwood, Candora, Slough...) are not lore fixes: they move in A4's resources pass.
-- `docs/systems.md` (6): the Assayer as current death design; point at `docs/lore.md` III and the
-  coming D1.
-- `CLAUDE.md` (6), `README.md` (2), `docs/interface.md` (2): Tithe's hymns, the Assayer, the
-  Dreamweaver. Describe what the game does today and note the planned change.
-- The Unquiet Saint spec (5): a martyr of p-sworn's church, not "of the Keeping"; no bay.
-- Mark `docs/areas/skeleton.md` superseded (one line at the top).
-- **Done when** no doc describes Tithe as a power, the bay, the Assayer as the design, the
-  Physician or the Dreamweaver, and the docs link `docs/lore.md` as canon.
+- The lore notes in the other docs (2026-10-23): `systems.md` (death as built), `skills.md`,
+  `interface.md`, `CLAUDE.md` (the stale Tithe notes), `world-scale.md` and `areas/rules.md` (old
+  realms), `world-building.md` marked partly superseded. The Unquiet Saint spec needed nothing.
+- Left on purpose: the skill tiers placed in old regions in `skills.md` (the Veilwood, Candora,
+  Slough...) move in A4's resources pass; `docs/regions/` and `docs/areas/decisions.md` are
+  history (see Handoffs).
 
 ### A2. Names
 
@@ -127,7 +120,7 @@ Wave 3
 | **Runs** | cloud proposes, owner decides |
 | **Depends on** | nothing |
 | **Owns** | `docs/lore-rework/names.md` (new) |
-| **Status** | **proposed, waiting on the owner** (2026-10-22): candidates and recommendations in `docs/lore-rework/names.md`. |
+| **Status** | **in progress with the owner** (2026-10-23): the full list to name is at the top of `docs/lore-rework/names.md`; picked so far: Lowe (the realm of the dead), Pennick (the ferryman). |
 
 - **Input:** `docs/world-map.md`'s lists (to be renamed, under review, placeholders in use).
 - Propose three or four names each for: p-sworn's church; the spine's surface people; the

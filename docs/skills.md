@@ -372,9 +372,6 @@ Sanguine Synod in the game until it is renamed; `docs/lore.md` II and IV). One c
 practices: its choirs sing **hymns** and its blood-knights read **verses**. It replaces the
 breath skill: focuses become its hymns.
 
-*In the game today, hymns are still called "Tithe's prayers" in a few flavour strings; Tithe is
-no longer a power, and the text pass (B1 in `docs/plan.md`) changes them.*
-
 | Half | Practised by | What it is | Who it serves | Paid with |
 |---|---|---|---|---|
 | **Hymns** | the church's choirs | Prayers, our equivalent of RuneScape's | Every style | **Devotion** |
