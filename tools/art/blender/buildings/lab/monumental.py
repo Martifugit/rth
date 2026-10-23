@@ -220,16 +220,19 @@ class Church:
             pts += [q + Vector((0, 0, top))]
             c.hull(pts, PALE)
 
-    def spikes(self, side, a, b, size=0.3, height=1.1, every=1.6, m=PALE):
-        """Small pointed spikes standing along the line a -> b (x, y, z), e.g. crockets up a gable's
-        rake or a parapet of points round a tower top."""
-        a, b = Vector(a), Vector(b)
+    def spikes(self, side, a, b, size=0.3, height=1.1, every=1.6, m=PALE, surface=None):
+        """Small pointed spikes standing along the line a -> b (x, y), e.g. crockets up a gable's
+        rake or a parapet of points round a tower top. surface(x, y) is the height of what they
+        stand on (a number for a flat top); each base corner sits a little into it, so a spike
+        on a slope is flush all round."""
+        a, b = Vector((*a[:2], 0)), Vector((*b[:2], 0))
+        z_at = surface if callable(surface) else (lambda x, y: surface)
         count = max(1, round((b - a).length / every))
         for i in range(count + 1):
             q = a.lerp(b, i / count)
             h = height * (1.0 if i % 2 else 0.6)
-            pts = [q + Vector((dx, dy, 0)) for dx in (-size, size) for dy in (-size, size)]
-            self.hull(side, pts + [q + Vector((0, 0, h))], m)
+            pts = [Vector((q.x + dx, q.y + dy, z_at(q.x + dx, q.y + dy) - 0.08)) for dx in (-size, size) for dy in (-size, size)]
+            self.hull(side, pts + [Vector((q.x, q.y, z_at(q.x, q.y) + h))], m)
 
     def arch_frame(self, side, face, w_in, w_out, spring, d0, d1, m, base=0.0):
         """A pointed-arch band (an archivolt and its jambs) between two arches, in depth d0..d1 out
@@ -304,6 +307,7 @@ def great_church(ox, oy, prefix="GreatChurch"):
         # altar and what goes round it. Arches run between neighbouring supports.
         supports = [x0] + [x0 + BAY * i for i in PIERS] + [x1]
         for xp in supports[1:-1]:
+            c.upper.box(xp - 0.7, y_pier - WALL / 2, ARCADE_H, xp + 0.7, y_pier + WALL / 2, AISLE_H + 1, PALE)   # over the capital
             c.base.box(xp - 0.7, y_pier - 0.7, 0, xp + 0.7, y_pier + 0.7, ARCADE_H - 0.5, PALE)
             c.base.box(xp - 0.9, y_pier - 0.9, ARCADE_H - 0.5, xp + 0.9, y_pier + 0.9, ARCADE_H, PALE)
         for k, (sa, sb) in enumerate(zip(supports, supports[1:])):
@@ -326,14 +330,17 @@ def great_church(ox, oy, prefix="GreatChurch"):
         for i in range(BAYS + 1):
             xp = x0 + BAY * i
             far = y_out + side * 2.4
-            c.box(key, xp - 0.7, y_out, 0, xp + 0.7, far, AISLE_H + 3.5, PALE)
-            c.hull(key, [(xp + dx, y, AISLE_H + 3.5) for dx in (-0.7, 0.7) for y in (y_out, far)] +
-                   [(xp + dx, y_out + side * 0.4, AISLE_H + 4.6) for dx in (-0.7, 0.7)], PALE)
-            pc = (y_out + far) / 2 + side * 0.4
-            c.cone(key, xp, pc, 0.75, AISLE_H + 4.0, AISLE_H + 10.0, PALE)
+            zb = AISLE_H + 3.5
+            c.box(key, xp - 0.7, y_out, 0, xp + 0.7, far, zb, PALE)
+            # A pinnacle as wide as the buttress on its outer end; between it and the wall the
+            # top slopes up to the wall.
+            pc = far - side * 0.7
+            c.cone(key, xp, pc, 0.7 * math.sqrt(2), zb, zb + 6.5, PALE)
+            c.hull(key, [(xp + dx, y, zb) for dx in (-0.7, 0.7) for y in (y_out, pc)] +
+                   [(xp + dx, y_out, zb + 1.2) for dx in (-0.7, 0.7)], PALE)
             c.upper.hull([(xp + dx, far - side * 0.6, z) for dx in (-0.4, 0.4) for z in (AISLE_H + 2.6, AISLE_H + 3.4)] +
                          [(xp + dx, y_pier + side * WALL / 2, z) for dx in (-0.4, 0.4) for z in (NAVE_H - 3.5, NAVE_H - 2.7)], PALE)
-            c.upper.cone(xp, y_pier + side * (WALL / 2 + 0.3), 0.45, NAVE_H, NAVE_H + 4.0, PALE, sides=4)
+            c.cone(key, xp, y_pier, 0.45 * math.sqrt(2), NAVE_H - 0.5, NAVE_H + 4.0, PALE)   # on the clerestory wall head
     # Nave roof.
     c.roofs.gable_roof(x0, x1, oy - hn - WALL / 2, oy + hn + WALL / 2, NAVE_H, rise, ROOF, over=0.4)
 
@@ -373,7 +380,7 @@ def great_church(ox, oy, prefix="GreatChurch"):
     c.roofs.cone(x1, oy, ro + 0.4, NAVE_H, NAVE_H + rise, ROOF, sides=18)
     # A slender spire where the apse roof meets the nave roof.
     fx = x1
-    c.roofs.cyl(fx, oy, 1.6, NAVE_H + rise - 2, NAVE_H + rise + 5, PALE, sides=8)
+    c.roofs.cyl(fx, oy, 1.6, NAVE_H + rise - 3, NAVE_H + rise + 5, PALE, sides=8)   # its foot down in both roofs
     c.roofs.cone(fx, oy, 1.9, NAVE_H + rise + 5, NAVE_H + rise + 19, ROOF, sides=8)
 
     # The west front (after images/cruor_chapel.png): one tall facade. Two square towers stand
@@ -406,13 +413,11 @@ def great_church(ox, oy, prefix="GreatChurch"):
                 c.arch_panel("W", f, 1.0, 21.0, 12.5, RED)
             for s in (-3.2, 0.0, 3.2):                            # a row of dark slits
                 c.arch_panel("W", shift(face, s), 0.55, 31.5, 28.5, DARK)
-        c.box("W", fx0 - 0.4, yc - 0.8, 13.0, fx0 - 0.3, yc + 0.8, 27.0, RED)   # a banner between the lancets
-        c.box("W", fx0 - 0.5, yc - 0.95, 26.6, fx0 - 0.3, yc + 0.95, 27.0, METAL)
         for (p0, p1) in (((fx0 + 1.2, ya), (fx0 + 1.2, yb)), ((ox - 1.2, ya), (ox - 1.2, yb)),
                          ((fx0, ya + side * 0 + 1.2), (ox, ya + 1.2)), ((fx0, yb - 1.2), (ox, yb - 1.2))):
             q0, q1 = Vector((*p0, TOWER_H)), Vector((*p1, TOWER_H))
             d = (q1 - q0).normalized()
-            c.spikes("W", q0 + d * 1.6, q1 - d * 1.6, size=0.25, height=1.4, every=1.4)
+            c.spikes("W", q0 + d * 1.6, q1 - d * 1.6, size=0.25, height=1.4, every=1.4, surface=TOWER_H)
         # The octagonal belfry, its cornice and spire.
         ring = lambda r, z: [Vector((xc + r * math.cos(2 * math.pi * (k + 0.5) / 8), yc + r * math.sin(2 * math.pi * (k + 0.5) / 8), z))
                              for k in range(8)]
@@ -441,17 +446,17 @@ def great_church(ox, oy, prefix="GreatChurch"):
     c.box("W", fx0, oy - PH, T, fx0 + WALL, oy + PH, NAVE_H, PALE)
     c.hull("W", [(x, y, z) for x in (fx0, fx0 + WALL) for y, z in ((oy - hn, NAVE_H), (oy + hn, NAVE_H), (oy, NAVE_H + rise))], PALE)
     for sy in (-1, 1):
-        c.spikes("W", (fx0 + 0.5, oy + sy * (hn - 0.8), NAVE_H + 1.0), (fx0 + 0.5, oy + sy * 1.2, NAVE_H + rise - 1.0),
+        c.spikes("W", (fx0 + 0.5, oy + sy * (hn - 0.8)), (fx0 + 0.5, oy + sy * 1.2), surface=lambda x, y: NAVE_H + rise * (1 - abs(y - oy) / hn),
                  size=0.28, height=1.5, every=1.5)
         c.crown_run("W", (fx0 + WALL / 2, oy + sy * hn), (fx0 + WALL / 2, oy + sy * PH), (-1, 0))
-    c.cone("W", fx0 + 0.5, oy, 0.9, NAVE_H + rise - 0.5, NAVE_H + rise + 4.5, PALE)
+    c.cone("W", fx0 + 0.5, oy, 0.9, NAVE_H + rise - 1.4, NAVE_H + rise + 4.5, PALE)   # foot down in the gable
     c.roofs.gable_roof(fx0 + WALL, ox, oy - hn, oy + hn, NAVE_H, rise, ROOF, over=0.0)
 
     # The great window: red, pale mullions, the rose in its head.
-    wb, ws, ww = T + 6.0, T + 9.0, 4.4
+    wb, ws, ww = T + 6.0, T + 9.0, 3.9                     # clear of the gable's edges and their crockets
     c.arch_frame("W", face, ww, ww + 0.45, ws, 0.0, 0.3, PALE, base=wb)
     c.arch_panel("W", face, ww, ws, wb, RED)
-    for s in (-2.2, 0.0, 2.2):
+    for s in (-1.95, 0.0, 1.95):
         c.box("W", fx0 - 0.15, oy + s - 0.13, wb, fx0, oy + s + 0.13, ws + 0.4, PALE)
     rz, rr = ws + 2.4, 2.0
     for k in range(12):                                          # the rose: a ring and its spokes
@@ -471,7 +476,8 @@ def great_church(ox, oy, prefix="GreatChurch"):
         c.arch_frame("W", face, pw + 0.5 * k, pw + 0.5 * (k + 1), PORTAL_H, -WALL, 1.0 + k, PALE if k != 1 else ROOF)
     c.hull("W", [(fx0 - d, oy + y, z) for d in (-WALL, 3.0) for y, z in ((-PH, T), (PH, T), (0, T + 5.0))], PALE)
     for sy in (-1, 1):
-        c.spikes("W", (fx0 - 2.8, oy + sy * (PH - 0.6), T + 0.9), (fx0 - 2.8, oy + sy * 0.9, T + 4.2), size=0.22, height=1.1, every=1.2)
+        c.spikes("W", (fx0 - 2.8, oy + sy * (PH - 0.6)), (fx0 - 2.8, oy + sy * 0.9), size=0.22, height=1.1, every=1.2,
+                 surface=lambda x, y: T + 5.0 * (1 - abs(y - oy) / PH))
         y = oy + sy * (PH + 0.6)
         c.box("W", fx0 - 2.9, y - 0.55, 0, fx0 - 1.8, y + 0.55, T + 1.5, PALE)
         c.cone("W", fx0 - 2.35, y, 0.75, T + 1.5, T + 6.5, PALE)

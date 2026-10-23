@@ -520,3 +520,69 @@ def report(objs):
         used = {p.material_index for p in me.polygons}
         colours |= {me.materials[i].name for i in used}
     return {"triangles": tris, "colours": sorted(colours)}
+
+
+def floating_parts(objs, touch=0.06):
+    """Find pieces that hang in the air. Each connected piece of the objects' meshes (in their
+    own coordinates; give objects at the origin) is tested at its base, the vertices at its
+    lowest height: a base point is held if it lies on the ground, within `touch` of another
+    piece's surface, or inside another piece. Returns two lists of (centre x, y, lowest z):
+    floating (no base point held) and hanging (some held, but not the base's middle, on a piece
+    with a small base: a spike half off its perch). Overhangs (a capital wider than its pier, a
+    cornice), roofs over hollow halls and strips on a wall's face also show as hanging, so read
+    the list rather than trusting it blindly."""
+    from mathutils.bvhtree import BVHTree
+    bm = bmesh.new()
+    for o in objs:
+        bm.from_mesh(o.data)
+    part, pid = {}, 0
+    for f in bm.faces:
+        if f in part:
+            continue
+        stack = [f]
+        part[f] = pid
+        while stack:
+            for e in stack.pop().edges:
+                for nf in e.link_faces:
+                    if nf not in part:
+                        part[nf] = pid
+                        stack.append(nf)
+        pid += 1
+    tris = bm.calc_loop_triangles()
+    index = {v: i for i, v in enumerate(bm.verts)}
+    bvh = BVHTree.FromPolygons([v.co.copy() for v in bm.verts], [[index[l.vert] for l in t] for t in tris])
+    owner = [part[t[0].face] for t in tris]
+
+    def held(co, p):
+        if co.z < 0.05:
+            return True
+        if any(owner[i] != p for _, _, i, _ in bvh.find_nearest_range(co, touch)):
+            return True
+        crossings, start = 0, co + Vector((0, 0, 1e-4))
+        for _ in range(64):                                     # inside another piece: odd crossings above
+            loc, _, i, _ = bvh.ray_cast(start, Vector((0, 0, 1)))
+            if loc is None:
+                break
+            crossings += owner[i] != p
+            start = loc + Vector((0, 0, 1e-4))
+        return crossings % 2 == 1
+
+    pieces = {}
+    for f, p in part.items():
+        pieces.setdefault(p, []).append(f)
+    floating, hanging = [], []
+    for p, faces in pieces.items():
+        vs = {v.co.copy() for f in faces for v in f.verts}
+        low = min(v.z for v in vs)
+        if low < 0.05:
+            continue
+        base = [v for v in vs if v.z < low + 0.05]
+        holds = [held(v, p) for v in base]
+        mid = sum(base, Vector()) / len(base)
+        tag = (round(mid.x, 2), round(mid.y, 2), round(low, 2))
+        if not any(holds):
+            floating.append(tag)
+        elif len(base) <= 8 and not held(mid, p):
+            hanging.append(tag)
+    bm.free()
+    return floating, hanging
