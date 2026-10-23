@@ -122,6 +122,14 @@ namespace Rth.Client.Ui
             _root.RegisterCallback<PointerDownEvent>(GuardImgui, TrickleDown.TrickleDown);
             _root.RegisterCallback<PointerUpEvent>(GuardImgui, TrickleDown.TrickleDown);
             _root.RegisterCallback<ClickEvent>(GuardImgui, TrickleDown.TrickleDown);
+            // The UI input binds WASD and the arrows to "navigate", which walks the keyboard focus
+            // from window to window and into the chat box. Those keys belong to the game (the
+            // camera, ::fly), and no window is driven from the keyboard, so focus never moves that way.
+            _root.RegisterCallback<NavigationMoveEvent>(e =>
+            {
+                _root.focusController?.IgnoreEvent(e);
+                e.StopPropagation();
+            }, TrickleDown.TrickleDown);
 
             _windowLayer = Layer();
             _floatLayer = Layer();
@@ -236,6 +244,9 @@ namespace Rth.Client.Ui
             Vector2 p = RuntimePanelUtils.ScreenToPanel(ui._root.panel, new Vector2(screenPosition.x, Screen.height - screenPosition.y));
             return ui._root.panel.Pick(p) != null;
         }
+
+        /// <summary>Takes the keyboard away from whatever window element has it (a text field), so keys reach the game.</summary>
+        public void ReleaseKeyboard() => (_root?.panel?.focusController?.focusedElement as VisualElement)?.Blur();
 
         /// <summary>Whether a text field has focus, so keys are typing rather than hotkeys.</summary>
         public static bool IsTyping => InTextField || Time.frameCount - _typedFrame <= 1;

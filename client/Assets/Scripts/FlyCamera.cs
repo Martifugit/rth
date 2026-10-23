@@ -102,6 +102,8 @@ namespace Rth.Client
             _yaw = e.y;
             _pitch = e.x > 180f ? e.x - 360f : e.x;
             _speed = PlayerPrefs.GetFloat(SpeedPref, 20f);
+            // Whatever had the keyboard (the chat box ::fly was typed in) lets go, so WASD flies.
+            Ui.UiRoot.Instance?.ReleaseKeyboard();
         }
 
         /// <summary>A click on the ground: the player stands there and flying stops.</summary>
