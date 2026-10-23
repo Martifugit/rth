@@ -1,6 +1,7 @@
 # Selenfall's breach: the brief
 
-**Status:** draft for the owner (2026-10-23). The first area built by hand through the process in
+**Status:** approved by the owner (2026-10-23), with a deeper crater and built ways down into
+it; the owner's notes are worked in below. The first area built by hand through the process in
 [world-guide.md](../world-guide.md), terrain included; [world-example.md](../world-example.md) is the
 template. Nothing in the world changes until the owner approves this page.
 
@@ -42,29 +43,54 @@ place where the land itself feels wrong, and its creatures are a step up from th
 - the crest's rock (`LandCrest`);
 - the scar itself: pale, cold, glassy slate (`LandScar`, today `Slate`).
 
-The farmland belongs to the margin. Light could be the place's own: a cooler, paler sun in the bowl
-(`ownAtmosphere` on the region).
+The farmland belongs to the margin.
+
+**Light (decided):** the bowl has its own, cold and pale: a cooler, weaker sun, a cold ambient and a
+faint bluish fog on the crater regions (`ownAtmosphere`), blended in as you go down. The depth earns
+it: the floor lies in the rim's shadow, and the only warm light down there is what people brought
+(the lanterns of the way down). The fragment and the moon rock give a faint glow of their own
+(stage 4).
 
 **The shape (geography, stage 1):**
 - **The crest** is the wall north and south: blocked rock standing about a storey above the
   highland, as the guide says.
-- **The crater** is a round bowl about 64 × 52 tiles, cut straight through the crest.
-  - Its **rim** is a raised ridge, highest where it meets the crest, lower and broken on the east
-    and west where the breaches are.
-  - Its **floor** sits below the highland on either side, so you walk *down* into it.
-  - Its inner walls are cliffs (1-3 tiles, blocked), except on the two slopes the breaches make.
-- **The breaches** are the only ways in: the east one from the empire's side (the road), the west
-  one down to the frontier. Each is a narrow ramp through the rim, a few tiles wide, climbing at
-  most what the guide allows.
-- **Heights, roughly** (in tiles; the whole world stays within about 16):
+- **The crater** is a deep, round pit about 64 × 52 tiles, cut straight through the crest.
+  - Its **rim** is a ridge of thrown-up rock, higher than the crest it broke (9-10 tiles), lower
+    only where the breaches cut it.
+  - Its **inner wall** is a band about 12 tiles wide falling 10 tiles: cliffs (blocked), except
+    where a way down is cut or has fallen.
+  - Its **floor** is flat and broad, about 40 × 28 tiles at height 0, with the fragment in the
+    middle and room around it for creatures, seams and a fight. A slight hollow round the fragment
+    is the only unevenness.
+- **Heights** (in tiles; the whole world stays within about 16, and a tile steeper than 1 is a
+  cliff):
 
   | Where | Height |
   | --- | --- |
   | the approach and the village | 0-1 |
-  | the highland foothills | 2-4 |
-  | the crest's rock tops | about 6 |
-  | the rim | 6-8, highest at the crest |
-  | the bowl's floor | about 2, with a lowest point near the fragment |
+  | the highland foothills | 2-5, rising west |
+  | the crest's rock tops | about 6-7 |
+  | the rim | 9-10 |
+  | the breach notches in the rim | about 8 |
+  | the floor | 0 |
+  | the frontier side, below the west breach | about 2 |
+
+**The ways down (decided: people built them).** Ten tiles is too deep to walk straight down: at the
+guide's 1 in 3, a way down is about 30 tiles long. So each way in is a route along the wall, not a
+gap in it.
+
+- **The Descent (east), built.** The spine's surface people cut a road into the inner wall. It
+  starts from their post at the east breach and runs down along the wall as a ledge, three tiles
+  wide, through a quarter of the crater. A turn halfway down is a landing with a view. A low wall
+  stands on the drop side and lanterns line the way. It is the easy way, and the one the empire's
+  road leads to.
+- **The scree (west), natural.** Where the fall threw its rock out west, the wall collapsed into a
+  long, broken slope of rubble. It is walkable but narrow between boulders, longer and rougher than
+  the Descent, and leads up to the west breach and down to the frontier.
+- **The rope (north), a shortcut.** A rope ladder hangs down the north wall where the rim is
+  highest: a skill shortcut (a `climb` with requirements) from the rim path to the floor.
+- **Along the rim:** a path follows the rim's top between the two breaches on the north side, for
+  the view and to reach the rope.
 
 **Landmarks and views:**
 - **The bite in the crest,** seen from the road above p-dry-north: the one skyline of the area.
@@ -72,26 +98,31 @@ The farmland belongs to the margin. Light could be the place's own: a cooler, pa
   of moon rock on open floor, at least as wide around it as it is tall. It is the only thing in the
   bowl taller than a person. The moon materials already started under `Assets/Art/Fx` (`MoonFragment`,
   `MoonGlow`) are for it.
-- **The rim at the east breach,** the first view into the bowl: the whole crater at once, the
-  fragment in the middle, the west breach opposite.
+- **The rim at the east breach,** the first view into the bowl: the whole crater at once, ten
+  tiles down, with the fragment in the middle, the Descent's lanterns curving away below and the
+  scree opposite.
+- **The landing halfway down the Descent:** the floor close enough to see what moves on it.
 - **Back east from the breach:** the empire's farmland and Tolling's river below.
 
 **Routes:**
 - **In from the east:** the road from p-dry-north (`selenfall-road` in the layout) climbs the
-  foothills to the east breach. It passes the spring where Tolling's river rises, so the river the
-  player knows from home starts here.
-- **Through:** down into the bowl, past the fragment, up the west breach.
+  foothills to the east breach. It passes a spring where Tolling's river rises: a small pool beside
+  the road, a landmark of the approach (decided; no lore claim beyond "the river rises here").
+- **Through:** down the Descent, across the floor past the fragment, up the scree to the west
+  breach.
 - **Out:** down into the frontier (the pass's west end, about x -240).
 - The road on south from p-dry-north to p-observatory, Magister Varrow's country, is the margin's,
   not this area's. It is the reason for a later link: she forecasts falls.
 
-**Wide and narrow:** wide on the approach, narrow at each breach (the chokepoints), wide again on
-the bowl's floor: an open arena between two gates.
+**Wide and narrow:** wide on the approach; narrow at each breach and along the Descent and the
+scree (the chokepoints); wide on the floor, an open arena below two ways down.
 
 **Edges:**
 - the crest's rock north and south, and the crater's inner cliffs;
 - to the west, the frontier beyond the foothills is fenced by rough ground and rock;
 - never an invisible line in open ground.
+
+*Stages 2-3 below are approved as written (2026-10-23) and revisited after stage 1 is walked.*
 
 **Something to find:** a second, small fragment hidden in a fold of the south rim, reached by a
 scramble (later a skill shortcut: a `climb` with requirements), with something growing around it.
@@ -107,11 +138,13 @@ scramble (later a skill shortcut: a `climb` with requirements), with something g
 - Before the fall there was no way over the crest here; the fall made one.
 - Old cairns mark the first crossings along the breach's line, older than the road.
 - The surface people's post at the east breach is newer, and the empire's road ends at it.
+- The Descent is their work: older stretches of it, worn and fallen, show below the newer wall.
 
 **Danger:**
 - the approach is gentle;
 - the highland is emptier and harsher;
-- the bowl is cold and pale, quiet before it is dangerous.
+- the Descent is safe while its lanterns last;
+- the floor is cold and pale, quiet before it is dangerous.
 
 ## How we build it
 
@@ -132,7 +165,14 @@ The steps in [world-example.md](../world-example.md), adjusted for this area:
 5. **Stages 2-4:** structure (the post, the cairns, the village's edge), life (seams, creatures),
    finish (the fragment's art, the light).
 
-Decisions this area raises for the owner:
-- the heights above;
-- whether the bowl has its own light;
-- the D4 camera profile, since walking the bowl is the first real test of looking across height.
+What stage 1 needs that the tools can't do yet:
+- **Terrain** writes the pit, the rim and the scree; the ledge of the Descent is terrain too (tiles
+  stepping down gently beside steep ones).
+- **The Descent's low wall and the landing** are built structure (stage 2), but its line is fixed
+  in stage 1.
+- **The rope** is an object (stage 2).
+- **Entrances and exits as data** and the seam check for walking (C6) come when the margin is
+  joined.
+
+Still open: the camera profile (D4). Compare both profiles in Settings while walking the bowl, and
+decide then.
