@@ -1,6 +1,8 @@
 # Selenfall's breach: the brief
 
-**Status:** approved by the owner (2026-10-23), revised the same day after the first walk: the
+**Status:** stage 1 of the surface approved by the owner (2026-10-23): "a good foundation for
+what it'll become". Next: the lift and the first level. The brief was approved and then revised
+the same day after the first walk: the
 crater is a shaft you descend by lift through three levels to the heart, not a pit walked to the
 bottom. The first area built by hand through the process in [world-guide.md](../world-guide.md),
 terrain included; [world-example.md](../world-example.md) is the template.

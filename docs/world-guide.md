@@ -180,6 +180,24 @@ before any corner is polished.
 **Layout before content.** *Decided.* Don't fill a region with readables and flavour objects while
 its layout, look and assets are unsettled: they get thrown away when the layout moves.
 
+**What the first area taught us** (Selenfall's breach, stage 1, four passes in a day;
+[areas/selenfall.md](areas/selenfall.md)):
+- **Start the terrain from the brief, then walk it at once.** A one-off script turned the brief's
+  numbers into heights and ground in minutes, and a script checked the routes before anyone
+  walked them. The owner's walk then changed the design, which no amount of planning had. Keep
+  such scripts as scaffolding: the region files are the work.
+- **Real depth doesn't fit; fake it.** The world holds about 16 tiles of height, so a pit you can
+  see across never feels deep or roomy. Something deep is a hole you can't see the bottom of, and
+  separate regions below it, each with its own height budget, joined by a transport (a fade to
+  black) and walled with cut-off edges so the camera sees in.
+- **One walkable path is dull.** Give a place several ways and levels, each with room for content.
+- **Check what the Editor made, not only the data.** A colour missing from a region's materials is
+  drawn magenta. The compiler now catches it for `material` and `cliff`, but look at the walk all
+  the same.
+- **Nothing below -0.3 shows** (section 2): the unbuilt land covers it.
+- **Edges fall to 0** where an area meets flat neighbours, so `check` finds no seams. It reads as a
+  hill in flat land until the neighbours get terrain of their own.
+
 ## 6. Design checklist
 
 Use it in every brief and every review.
