@@ -5,8 +5,9 @@ road, terrain. It collects what has been decided, what is proposed, and how we w
 and points to the documents that hold the detail. Keep it short: when a rule needs more than a
 few lines, it belongs in the detailed document and gets a line here.
 
-Each rule is marked **Decided** (by the owner), **Proposed** (agreed in discussion, not built
-yet) or **Open** (waiting on a decision). Started 2026-10-23.
+Each rule is marked **Decided** (by the owner; "not built" when the tools for it don't exist
+yet), **Proposed** (suggested, waiting on the owner) or **Open** (a decision still to make).
+Started 2026-10-23.
 
 | Detail | Where |
 | --- | --- |
@@ -41,9 +42,10 @@ yet) or **Open** (waiting on a decision). Started 2026-10-23.
 - **Uneven on purpose.** *Decided* ([areas/rules.md](areas/rules.md)). Targets (banks, quests,
   dungeons) describe the whole world or a realm, never one place. A village with nothing is fine;
   a world where every village has the same four services is not.
-- **The camera never loses the player.** *Decided.* Nothing fully blocks the view: roofs hide,
-  tall things fade smoothly. Build squat and wide rather than tall
-  ([world-scale.md](world-scale.md) sections 1, 4, 5).
+- **The camera never loses the player.** *Decided.* Anything that can come between the camera
+  and the player must be able to turn transparent when it does: roofs hide, trees, walls and
+  landmarks fade smoothly (not popping). Build squat and wide rather than tall, so it happens
+  rarely ([world-scale.md](world-scale.md) sections 1, 4, 5).
 
 ## 2. Scale
 
@@ -135,8 +137,9 @@ Unity is written back to text.
 
 ## 5. How a place gets made
 
-Modelled on Albion Online's map pipeline (a Unity MMO) and Blizzard's zone workflow (section 10).
-*Proposed.*
+Modelled on Albion Online's map pipeline (a Unity MMO) and Blizzard's zone workflow (section 11).
+*Decided* (2026-10-23); the stage field and the coverage map are not built yet. A worked example
+of the whole flow: [world-example.md](world-example.md).
 
 **Stages.** Every region records how far it has come, and a map of the world coloured by stage
 shows where we stand. Work raises an area one stage at a time, so the whole world gets a stage
@@ -193,10 +196,10 @@ Use it in every brief and every review.
 
 ## 7. Where places meet
 
-- **Entrances and exits as data.** *Proposed.* A detailed place declares where its roads, rivers
+- **Entrances and exits as data.** *Decided, not built.* A detailed place declares where its roads, rivers
   and paths leave it, and at what height. Its neighbours are built (or generated) to meet those
   points, as Albion joins its maps at their entrances.
-- **The seam check.** *Proposed.* A test that heights, walkability, roads and rivers agree across
+- **The seam check.** *Decided, not built.* A test that heights, walkability, roads and rivers agree across
   every region border. A cliff seam or a road that stops dead fails it.
 - **A busy place next to quiet land.** The busy region settles down near its own edges (the last
   few tiles close to its neighbour's ground and height), so it meets a neighbour at a lower stage
@@ -207,11 +210,11 @@ Use it in every brief and every review.
 
 ## 8. Working together
 
-*Decided* ([workflow.md](workflow.md)), with additions *proposed*.
+*Decided* ([workflow.md](workflow.md)).
 
 - **One area per branch**, `claude/<workstream>-<name>`; the regions around it are read-only for
   that branch. A change needed outside goes in [plan.md](plan.md)'s Handoffs.
-- **Claims** *(proposed):* who holds which regions is recorded in one file the tools check, as
+- **Claims** *(decided, not built):* who holds which regions is recorded in one file the tools check, as
   Blizzard's editor locks the chunks a designer has claimed.
 - **Agents without Unity** change data (`world/regions`, content JSON) and C#, and check with
   `tools/world check`, `export`, `render` and `dotnet test`. They never write `.unity`, `.prefab`,
@@ -243,12 +246,12 @@ Use it in every brief and every review.
 | Sizes and camera, D1-D4: [world-scale.md](world-scale.md) | Open |
 | Incremental Sync World | Decided, to build |
 | Terrain heights in region data, sculpted in Unity and written back | Decided, to build |
-| Stages per region and the coverage map | Proposed |
-| Entrances and exits as data; the seam check | Proposed |
-| Claims checked by the tools | Proposed |
-| A slope overlay while sculpting (tiles too steep to walk shown red) | Proposed |
-| Combining static pieces at build time | Proposed, after measuring |
-| The first area brief (Tolling's neighbourhood) | Proposed |
+| Stages per region and the coverage map | Decided, to build |
+| Entrances and exits as data; the seam check | Decided, to build |
+| Claims checked by the tools | Decided, to build |
+| A slope overlay while sculpting (tiles too steep to walk shown red) | Decided, to build |
+| Combining static pieces at build time | Decided, after measuring |
+| The first area brief (Tolling's neighbourhood) | Next |
 
 `world-building.md` (the three layers: layout, bake, detail) predates the layout and the world as
 data; where they disagree, this guide and [layout.md](layout.md) win.
