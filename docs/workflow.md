@@ -117,8 +117,11 @@ With Unity (the owner, or the agent with Unity):
   its `terrain`; a generated region's go into `world/layout/sculpt/<id>.json` as a raise over the
   layout's heights, so it stays generated and `blockout` keeps your hills; then the blockout and
   the maps are redone. Open region scenes are redrawn at once, the rest at the next Sync World.
-  The terrain is never saved into a scene or a build. Ground without a `tiles` piece (Tolling,
-  Palmerway) is a hole in it and keeps its heights, and so do the corners on its edge. Turn it
+  The terrain is never saved into a scene or a build. It is drawn see-through (flat-shaded facets,
+  a faint tile grid, region borders in yellow, tiles too steep to walk in red); its opacity is the
+  Opacity slider on its material (the terrain's Settings tab), kept between sessions. Ground
+  without a `tiles` piece (Tolling, Palmerway) is drawn hatched and keeps its heights, and so do
+  the corners on its edge. Turn it
   off from the same menu item (it asks about unsaved changes); opening other scenes or pressing
   Play keeps your unsaved heights and puts the terrain back afterwards. Saving takes a few seconds
   (it runs on .NET: the blockout drawn by Unity's Mono would differ by a tile here and there).

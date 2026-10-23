@@ -14,12 +14,13 @@ namespace Rth.Client.Editor
     /// Edit Terrain (docs/workflow.md): the whole surface world's ground as one Unity Terrain, so
     /// Unity's own terrain tools (raise and lower, set height, smooth, stamp...) shape it. It stands
     /// in for the tile ground while it is on (the tile ground is hidden), is never saved into a scene
-    /// or a build, and holds exactly the data's heights: one heightmap sample per tile corner.
+    /// or a build, and holds exactly the data's heights: one heightmap sample per tile corner. It is
+    /// drawn see-through (TerrainEditor.shader: ground colours, facets, tile grid, region borders, cliffs red).
     /// Saving (Ctrl+S, or R'th > World > Save Terrain) writes the heights back to the data through
     /// <see cref="WorldTerrain.Save"/>: built regions' terrain, generated regions' raise
     /// (world/layout/sculpt), then the blockout and the server's maps; open region scenes are
     /// redrawn at once, the rest at the next Sync World. Ground without tiles (Tolling, Palmerway)
-    /// shows as a hole and keeps its heights.
+    /// is drawn hatched and keeps its heights.
     /// </summary>
     [InitializeOnLoad]
     public static class TerrainEditor
@@ -172,28 +173,13 @@ namespace Rth.Client.Editor
                 data.SetHeights(0, 0, heights);
                 _unsaved = null;
 
-                // Tiles with no tile ground (between regions, or ground drawn another way) are holes.
+                // Tiles in no region are holes; ground drawn another way (Tolling) stands, locked.
                 var solid = new bool[Resolution - 1, Resolution - 1];
                 for (int j = 0; j < Resolution - 1; j++)
                     for (int i = 0; i < Resolution - 1; i++)
-                        solid[j, i] = world.Tile(f.OriginX + i, f.OriginY + j) != null;
+                        solid[j, i] = world.AreaAt(f.OriginX + i, f.OriginY + j) != null;
                 data.SetHoles(0, 0, solid);
                 _applying = false;
-
-                var layer = new TerrainLayer
-                {
-                    hideFlags = HideFlags.DontSave,
-                    diffuseTexture = MapTexture(world),
-                    tileSize = new Vector2(Resolution - 1, Resolution - 1),
-                    tileOffset = Vector2.zero,
-                };
-                data.terrainLayers = new[] { layer };
-                data.alphamapResolution = 16;
-                var alpha = new float[16, 16, 1];
-                for (int j = 0; j < 16; j++)
-                    for (int i = 0; i < 16; i++)
-                        alpha[j, i, 0] = 1f;
-                data.SetAlphamaps(0, 0, alpha);
 
                 GameObject go = Terrain.CreateTerrainGameObject(data);
                 go.name = ObjectName;
@@ -203,7 +189,8 @@ namespace Rth.Client.Editor
                 _terrain = go.GetComponent<Terrain>();
                 _terrain.hideFlags = HideFlags.DontSave;
                 go.GetComponent<TerrainCollider>().hideFlags = HideFlags.DontSave;
-                _terrain.materialTemplate = new Material(Shader.Find("Universal Render Pipeline/Terrain/Lit")) { hideFlags = HideFlags.DontSave, name = "World terrain" };
+                _terrain.materialTemplate = TerrainMaterial(world);
+                _terrain.drawInstanced = false; // the shader reads the mesh's own positions and UVs
                 _terrain.heightmapPixelError = 1f;
                 _terrain.basemapDistance = 4000f;
                 _terrain.drawTreesAndFoliage = false;
@@ -216,7 +203,27 @@ namespace Rth.Client.Editor
             }
         }
 
-        /// <summary>The ground's colours, a pixel a tile: each tile's kind in its region's material colour.</summary>
+        /// <summary>
+        /// The see-through look (TerrainEditor.shader). Its opacity is kept between sessions: change it
+        /// on the material (the terrain's Settings tab, Material).
+        /// </summary>
+        private static Material TerrainMaterial(WorldTerrain world)
+        {
+            Shader shader = Shader.Find("Hidden/Rth/TerrainEditor");
+            if (shader == null)
+            {
+                Debug.LogError("[R'th] Edit Terrain: Hidden/Rth/TerrainEditor is missing; drawn plain.");
+                shader = Shader.Find("Universal Render Pipeline/Terrain/Lit");
+            }
+            var material = new Material(shader) { hideFlags = HideFlags.DontSave, name = "World terrain" };
+            material.mainTexture = MapTexture(world);
+            if (material.HasProperty("_Opacity")) material.SetFloat("_Opacity", EditorPrefs.GetFloat(OpacityPref, 0.85f));
+            return material;
+        }
+
+        private const string OpacityPref = "RthTerrainOpacity";
+
+        /// <summary>The ground's colours, a pixel a tile: each tile's kind in its region's material colour; locked ground grey.</summary>
         private static Texture2D MapTexture(WorldTerrain world)
         {
             Heightfield f = world.Field;
@@ -230,7 +237,11 @@ namespace Rth.Client.Editor
                 for (int i = 0; i < Resolution - 1; i++)
                 {
                     var tile = world.Tile(f.OriginX + i, f.OriginY + j);
-                    if (tile == null) continue;
+                    if (tile == null)
+                    {
+                        if (world.AreaAt(f.OriginX + i, f.OriginY + j) != null) pixels[j * (Resolution - 1) + i] = new Color32(150, 146, 136, 191);
+                        continue;
+                    }
                     (TileKind kind, WorldTerrain.Area area) = tile.Value;
                     if (!colours.TryGetValue((area.Region, kind.Material), out Color32 c))
                     {
@@ -252,17 +263,13 @@ namespace Rth.Client.Editor
             {
                 TerrainData data = t.terrainData;
                 Material material = t.materialTemplate;
-                if (data != null)
+                if (data != null) Object.DestroyImmediate(data);
+                if (material != null)
                 {
-                    foreach (TerrainLayer layer in data.terrainLayers)
-                        if (layer != null)
-                        {
-                            if (layer.diffuseTexture != null) Object.DestroyImmediate(layer.diffuseTexture);
-                            Object.DestroyImmediate(layer);
-                        }
-                    Object.DestroyImmediate(data);
+                    if (material.HasProperty("_Opacity")) EditorPrefs.SetFloat(OpacityPref, material.GetFloat("_Opacity"));
+                    if (material.mainTexture != null) Object.DestroyImmediate(material.mainTexture);
+                    Object.DestroyImmediate(material);
                 }
-                if (material != null) Object.DestroyImmediate(material);
                 Object.DestroyImmediate(t.gameObject);
             }
             _terrain = null;

@@ -49,8 +49,11 @@ namespace Rth.Shared.World.Data
             int i = (y - Field.OriginY) * Field.Width + (x - Field.OriginX);
             TileKind? kind = _kinds[i];
             Area? owner = _owners[i];
-            return kind == null || owner == null ? ((TileKind, Area)?)null : (kind, owner);
+            return kind == null || owner == null || !owner.Editable ? ((TileKind, Area)?)null : (kind, owner);
         }
+
+        /// <summary>The region a tile is in, with tile ground or not (null between regions).</summary>
+        public Area? AreaAt(int x, int y) => Field.ContainsTile(x, y) ? _owners[(y - Field.OriginY) * Field.Width + (x - Field.OriginX)] : null;
 
         /// <summary>A corner that saving leaves as it is: on or in a region without tile ground, or in no region.</summary>
         public bool Pinned(int x, int y) => !Field.Contains(x, y) || _pinned[(y - Field.OriginY) * (Field.Width + 1) + (x - Field.OriginX)];
@@ -104,6 +107,9 @@ namespace Rth.Shared.World.Data
             {
                 RegionData r = a.Region;
                 Heightfield own = TerrainText.ReadOrFlat(r);
+                for (int y = r.OriginY; y < r.OriginY + r.Height; y++)
+                    for (int x = r.OriginX; x < r.OriginX + r.Width; x++)
+                        world._owners[(y - y0) * w + (x - x0)] = a;
                 for (int y = r.OriginY; y <= r.OriginY + r.Height; y++)
                     for (int x = r.OriginX; x <= r.OriginX + r.Width; x++)
                     {
