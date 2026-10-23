@@ -68,7 +68,11 @@ public class BlockoutTests
     {
         LayoutWorkspace lw = LayoutWorkspace.Load(Root);
         Assert.Contains(lw.Built, b => b.Id == "tolling");
-        Assert.DoesNotContain(lw.Built, b => b.Id.StartsWith("land_", StringComparison.Ordinal));
+        // A land region still marked generated is the generator's; one taken over by hand is built.
+        HashSet<string> generated = RegionFiles.RegionPaths(Path.Combine(Root, "world", "regions"))
+            .Select(RegionFiles.LoadRegion).Where(r => r.Generated != null).Select(r => r.Id).ToHashSet();
+        Assert.NotEmpty(generated);
+        Assert.DoesNotContain(lw.Built, b => generated.Contains(b.Id));
     }
 
     [Fact]
@@ -105,6 +109,18 @@ public class BlockoutTests
         RegionData again = RegionFiles.ParseRegion(text);
         Assert.Equal(region.Pieces[0].Rows, again.Pieces[0].Rows);
         Assert.True(again.Pieces[0].Legend!["~"].Water);
+    }
+
+    [Fact]
+    public void LegendsAreFormattedInCharacterOrderOnEveryMachine()
+    {
+        // The JSON parser sorts by the machine's culture, which can put '-' after '+'.
+        string json = "{ \"id\": \"t\", \"origin\": [0, 0], \"size\": [8, 8], \"pieces\": [ { \"id\": \"ground\", \"kind\": \"tiles\", " +
+                      "\"legend\": { \"+\": { \"material\": \"A\" }, \"-\": { \"material\": \"B\" }, \"g\": { \"material\": \"C\" } } } ] }";
+        RegionData region = RegionFiles.ParseRegion(json);
+        Assert.Equal(new[] { "+", "-", "g" }, region.Pieces[0].Legend!.Keys);
+        string text = RegionFiles.Format(region);
+        Assert.True(text.IndexOf("\"+\"", StringComparison.Ordinal) < text.IndexOf("\"-\"", StringComparison.Ordinal));
     }
 
     [Fact]

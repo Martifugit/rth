@@ -104,8 +104,8 @@
 -6,3    x  -576.. -481  y   288..  383  land 100%  core   0%  frontier  open heath
 -5,3    x  -480.. -385  y   288..  383  land 100%  core   0%  frontier  open heath
 -4,3    x  -384.. -289  y   288..  383  land 100%  core   0%  frontier  open heath
--3,3    x  -288.. -193  y   288..  383  land 100%  core  46%  frontier  open heath
--2,3    x  -192..  -97  y   288..  383  land 100%  core 100%  range     pass Selenfall's breach; open highland (road)
+-3,3    x  -288.. -193  y   288..  383  land 100%  core  46%  frontier  built: land_m3_3
+-2,3    x  -192..  -97  y   288..  383  land 100%  core 100%  range     built: land_m2_3; pass Selenfall's breach (road)
 -1,3    x   -96..   -1  y   288..  383  land 100%  core 100%  empire    village p-foothold (road, river)
 0,3     x     0..   95  y   288..  383  land 100%  core 100%  empire    open farmland (road, river)
 1,3     x    96..  191  y   288..  383  land 100%  core 100%  empire    landmark a hidden occult cell (road, river)
@@ -123,9 +123,9 @@
 -6,2    x  -576.. -481  y   192..  287  land 100%  core   0%  frontier  open heath
 -5,2    x  -480.. -385  y   192..  287  land 100%  core   0%  frontier  open heath
 -4,2    x  -384.. -289  y   192..  287  land 100%  core   0%  frontier  open heath
--3,2    x  -288.. -193  y   192..  287  land 100%  core  63%  range     pass Selenfall's breach; open highland (road)
--2,2    x  -192..  -97  y   192..  287  land 100%  core 100%  range     landmark Selenfall; pass Selenfall's breach (road)
--1,2    x   -96..   -1  y   192..  287  land 100%  core 100%  empire    village p-dry-north (road, river)
+-3,2    x  -288.. -193  y   192..  287  land 100%  core  63%  range     built: land_m3_2; pass Selenfall's breach (road)
+-2,2    x  -192..  -97  y   192..  287  land 100%  core 100%  range     built: land_m2_2; landmark Selenfall; pass Selenfall's breach (road)
+-1,2    x   -96..   -1  y   192..  287  land 100%  core 100%  empire    built: land_m1_2; village p-dry-north (road, river)
 0,2     x     0..   95  y   192..  287  land 100%  core 100%  empire    open farmland
 1,2     x    96..  191  y   192..  287  land 100%  core 100%  empire    hamlet p-hollow (road)
 2,2     x   192..  287  y   192..  287  land 100%  core 100%  empire    open farmland (road, river)

@@ -69,7 +69,13 @@ namespace Rth.Client.Editor
             }
         }
 
-        /// <summary>The code and colours that decide how data is drawn: a change to them redraws every region.</summary>
+        /// <summary>
+        /// The code and colours that decide how data is drawn: a change to them redraws every region.
+        /// Only what draws counts (the piece builder, the kit, the ground, the map components and the
+        /// exporter); the sync's own tooling (menus, the save hook, this record, the sculpt tool,
+        /// snapshots) can change without redoing the world. After a change to how syncing itself
+        /// works, use Sync World (everything).
+        /// </summary>
         private string Code()
         {
             if (_code != null) return _code;
@@ -79,12 +85,13 @@ namespace Rth.Client.Editor
             {
                 if (Directory.Exists(dir)) files.AddRange(Directory.GetFiles(dir, pattern, depth));
             }
-            Add(Path.Combine(assets, "Editor", "WorldData"), "*.cs", SearchOption.AllDirectories);
+            Add(Path.Combine(assets, "Editor", "WorldData"), "PieceBuilder.cs", SearchOption.TopDirectoryOnly);
             Add(Path.Combine(assets, "Editor"), "WorldKit*.cs", SearchOption.TopDirectoryOnly);
             Add(Path.Combine(assets, "Editor"), "LeafyTree.cs", SearchOption.TopDirectoryOnly);
             Add(Path.Combine(assets, "Scripts", "View"), "TileGround.cs", SearchOption.TopDirectoryOnly);
             Add(Path.Combine(assets, "Resources", "Art"), "palette.json", SearchOption.TopDirectoryOnly);
-            Add(Path.Combine(WorldSync.RepoRoot, "tools", "unity-map-tools"), "*.cs", SearchOption.AllDirectories);
+            Add(Path.Combine(WorldSync.RepoRoot, "tools", "unity-map-tools", "Runtime"), "*.cs", SearchOption.AllDirectories);
+            Add(Path.Combine(WorldSync.RepoRoot, "tools", "unity-map-tools", "Editor"), "MapExporter.cs", SearchOption.TopDirectoryOnly);
             using (var sha = SHA1.Create())
             {
                 var all = new StringBuilder();

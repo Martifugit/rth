@@ -49,6 +49,10 @@ namespace Rth.Shared.World.Data
                 RegionData region = JsonConvert.DeserializeObject<RegionData>(json) ?? throw new FormatException("empty file");
                 region.Pieces ??= new List<Piece>();
                 region.Materials ??= new SortedDictionary<string, string>(StringComparer.Ordinal);
+                // The parser sorts a new dictionary by the machine's culture ('-' after '+' on some);
+                // sort legends by character, as the blockout writes them, so every machine formats alike.
+                foreach (Piece piece in region.Pieces)
+                    if (piece.Legend != null) piece.Legend = new SortedDictionary<string, TileKind>(piece.Legend, StringComparer.Ordinal);
                 return region;
             }
             catch (JsonException e)

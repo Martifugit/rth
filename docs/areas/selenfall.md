@@ -176,3 +176,34 @@ What stage 1 needs that the tools can't do yet:
 
 Still open: the camera profile (D4). Compare both profiles in Settings while walking the bowl, and
 decide then.
+
+## Stage 1 log
+
+**First pass, data (2026-10-23).** The five regions were taken over (no `"generated"`) and given
+a terrain and ground drawn from this brief by a one-off script, so the brief's numbers became heights.
+From here the region files are the work: sculpt them, edit them, never regenerate them.
+
+- **The pit:** the rim at 9-10 (8 at the east breach, 8.5 at the west), the inner cliff, a walkable
+  apron at its foot, and a flat floor at 0 with a hollow of -0.4 round the fragment. Scar ground
+  (`c`) inside the rim.
+- **The Descent** (`d`, cobbles): a ledge cut into the wall from the east breach (8) round the
+  south-east wall to the floor, with the landing halfway (4.4). Walkable about three tiles wide,
+  rock above and a drop below.
+- **The scree** (`u`, shingle, with boulders `o` that block): from the west breach down the
+  south-west wall to the floor, with a way left between the boulders.
+- **The south rim** is crest rock (blocked), so the hidden fragment will be a scramble.
+- **The outside:** the rim falls away gently all round. Heights from the old ground kinds were
+  blurred, highland about 4-5 and the crest about 7, then brought down to 0 at the area's edges so
+  every border meets its flat neighbour (`check`: no seam warnings).
+- **The spring:** a pool where Tolling's river rises, beside the road.
+- **Walked by a script:** the floor, both ways down, the landing, the north rim and the frontier
+  side can all be reached from p-dry-north. About 47 scattered tiles on the outer south cliff
+  are flat enough to stand on but can't be reached; sculpt them away.
+
+**What to judge in the Editor:**
+- the depth from the rim and from the floor;
+- whether the cliff reads as a cliff;
+- the Descent's width and how steep it looks;
+- whether the scree reads as rubble;
+- whether the land falling to 0 at the area's edges looks wrong (a hill in a flat world, until its
+  neighbours get terrain).
