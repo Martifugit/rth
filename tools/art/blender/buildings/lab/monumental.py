@@ -159,9 +159,10 @@ ARCADE_H = 8.0            # the piers' capitals; the arches above hide inside
 NAVE_H = 22.0             # nave walls, outside only
 CUT = 2.3                 # a wall cut toward the camera stops at one storey, under its crown
 TOWER = 12.0              # west towers' side
-TOWER_H = 34.0            # the towers' square stages, then a belfry and a spire
+TOWER_H = 42.0            # the towers' square stages, then a belfry and a spire
 BELFRY_R = 4.8
-SPIRE_H = 22.0
+SPIRE_H = 26.0
+SCREEN_H, SCREEN_PITCH = 28.0, 62.0   # the screen wall between the towers, and its gable
 PORTAL_W, PORTAL_H = 7.0, 9.0
 PITCH = 55.0
 SIDES = ("N", "S", "E", "W")
@@ -233,6 +234,15 @@ class Church:
             h = height * (1.0 if i % 2 else 0.6)
             pts = [Vector((q.x + dx, q.y + dy, z_at(q.x + dx, q.y + dy) - 0.08)) for dx in (-size, size) for dy in (-size, size)]
             self.hull(side, pts + [Vector((q.x, q.y, z_at(q.x, q.y) + h))], m)
+
+    def parapet(self, side, x0, x1, y0, y1, z, every=1.0):
+        """A pierced parapet along x from x0 to x1, y0..y1 thick, standing on z: a rail on posts,
+        open between them."""
+        self.box(side, x0, y0, z + 0.85, x1, y1, z + 1.15, PALE)
+        count = max(1, round((x1 - x0) / every))
+        for i in range(count + 1):
+            x = x0 + (x1 - x0) * i / count
+            self.box(side, x - 0.15, y0, z, x + 0.15, y1, z + 0.85, PALE)
 
     def arch_frame(self, side, face, w_in, w_out, spring, d0, d1, m, base=0.0):
         """A pointed-arch band (an archivolt and its jambs) between two arches, in depth d0..d1 out
@@ -323,9 +333,12 @@ def great_church(ox, oy, prefix="GreatChurch"):
             for face, out in ((y_pier + side * WALL / 2, side), (y_pier - side * WALL / 2, -side)):
                 c.upper.panel((xm, face, 0), (1, 0, 0), (0, out, 0), -1.4, 1.4, AISLE_H + 4.5,
                               NAVE_H - 3.0, RED, apex=NAVE_H - 1.0, depth=0.04)
-        # Aisle roof: a lean-to from the aisle wall up to the clerestory.
-        c.roofs.hull([(x, y_out + side * 0.4, z) for x in (x0, x1) for z in (AISLE_H, AISLE_H + 0.3)] +
+        # Aisle roof: a lean-to from the aisle wall up to the clerestory, behind a pierced parapet
+        # on the wall's outer half; another parapet runs along the clerestory's head.
+        c.roofs.hull([(x, y_wall, z) for x in (x0, x1) for z in (AISLE_H, AISLE_H + 0.3)] +
                      [(x, y_pier + side * WALL / 2, z) for x in (x0, x1) for z in (AISLE_H + 4.0, AISLE_H + 4.3)], ROOF)
+        c.parapet(key, x0, x1, y_wall, y_out, AISLE_H)
+        c.parapet(key, x0, x1, y_pier, y_pier + side * WALL / 2, NAVE_H)
         # Buttresses: piers on the outer wall with tall pinnacles, flying across to the clerestory.
         for i in range(BAYS + 1):
             xp = x0 + BAY * i
@@ -342,7 +355,7 @@ def great_church(ox, oy, prefix="GreatChurch"):
                          [(xp + dx, y_pier + side * WALL / 2, z) for dx in (-0.4, 0.4) for z in (NAVE_H - 3.5, NAVE_H - 2.7)], PALE)
             c.cone(key, xp, y_pier, 0.45 * math.sqrt(2), NAVE_H - 0.5, NAVE_H + 4.0, PALE)   # on the clerestory wall head
     # Nave roof.
-    c.roofs.gable_roof(x0, x1, oy - hn - WALL / 2, oy + hn + WALL / 2, NAVE_H, rise, ROOF, over=0.4)
+    c.roofs.gable_roof(x0, x1, oy - hn, oy + hn, NAVE_H, rise, ROOF, over=0.0)   # its eaves behind the parapets
 
     # East: the aisles close; the nave ends in a round apse (outer wall to AISLE_H, then upper).
     for side in (-1, 1):
@@ -398,7 +411,7 @@ def great_church(ox, oy, prefix="GreatChurch"):
         c.box("W", fx0, ya, 0, ox, yb, TOWER_H, PALE)
         for cx_, cy_ in ((fx0, ya), (fx0, yb), (ox, ya), (ox, yb)):   # corner shafts and pinnacles
             c.box("W", cx_ - 0.9, cy_ - 0.9, 0, cx_ + 0.9, cy_ + 0.9, TOWER_H + 1.0, PALE)
-            c.cone("W", cx_, cy_, 1.1, TOWER_H + 1.0, TOWER_H + 8.0, PALE)
+            c.cone("W", cx_, cy_, 1.1, TOWER_H + 1.0, TOWER_H + 10.0, PALE)
         for z in (11.0, 27.0):                                    # red string courses at the tiers
             c.box("W", fx0 - 0.3, ya, z, fx0, yb, z + 0.5, RED)
             c.box("W", fx0, yo, z, ox, yo + side * 0.3, z + 0.5, RED)
@@ -411,8 +424,10 @@ def great_church(ox, oy, prefix="GreatChurch"):
                 f = shift(face, s)
                 c.arch_frame("W", f, 1.0, 1.4, 21.0, 0.0, 0.3, PALE, base=12.5)
                 c.arch_panel("W", f, 1.0, 21.0, 12.5, RED)
-            for s in (-3.2, 0.0, 3.2):                            # a row of dark slits
-                c.arch_panel("W", shift(face, s), 0.55, 31.5, 28.5, DARK)
+            for s in (-2.6, 2.6):                                 # a tall dark pair in the top tier
+                f = shift(face, s)
+                c.arch_frame("W", f, 0.9, 1.3, 36.5, 0.0, 0.3, PALE, base=28.5)
+                c.arch_panel("W", f, 0.9, 36.5, 28.5, DARK)
         for (p0, p1) in (((fx0 + 1.2, ya), (fx0 + 1.2, yb)), ((ox - 1.2, ya), (ox - 1.2, yb)),
                          ((fx0, ya + side * 0 + 1.2), (ox, ya + 1.2)), ((fx0, yb - 1.2), (ox, yb - 1.2))):
             q0, q1 = Vector((*p0, TOWER_H)), Vector((*p1, TOWER_H))
@@ -429,6 +444,10 @@ def great_church(ox, oy, prefix="GreatChurch"):
             n = Vector((math.cos(phi), math.sin(phi), 0))
             al = Vector((-math.sin(phi), math.cos(phi), 0))
             c.arch_panel("W", (tuple(Vector((xc, yc, 0)) + n * rf), tuple(al), tuple(n)), 0.7, top - 3.5, TOWER_H + 2.0, DARK)
+            g0 = Vector((xc, yc, 0)) + n * rf                    # a small gable over the opening
+            c.hull("W", [g0 + al * s + n * d + Vector((0, 0, z)) for s, z in ((-1.1, top - 1.6), (1.1, top - 1.6), (0.0, top + 2.6))
+                         for d in (0.0, 0.45)], PALE)
+            c.cone("W", *(g0 + n * 0.22)[:2], 0.3, top + 1.7, top + 3.8, PALE)
         c.hull("W", ring(BELFRY_R + 0.4, top) + ring(BELFRY_R + 0.4, top + 0.6), PALE)
         c.hull("W", ring(BELFRY_R + 0.1, top + 0.6) + [Vector((xc, yc, top + SPIRE_H))], ROOF)
         for k in range(8):                                       # small pinnacles round the spire's foot
@@ -437,28 +456,30 @@ def great_church(ox, oy, prefix="GreatChurch"):
         # Inside, the towers' inner faces are the porch's walls: crown them when cut.
         c.crown_run("W", (fx0, oy + side * (hn + 0.5)), (ox, oy + side * (hn + 0.5)), (0, -side))
 
-    # The gable wall between the towers, spiky along its rakes.
+    # The screen wall between the towers: it rises above the nave roof into a steep gable, spiky
+    # along its rakes, with room for one great window.
     face = ((fx0, oy, 0), (0, 1, 0), (-1, 0, 0))
     PH = PORTAL_W / 2 + 2.1                                       # the portal block's half-width
     T = arch_apex(PORTAL_W / 2 + 1.5, PORTAL_H) + 0.8              # and its top
-    c.box("W", fx0, oy - hn, 0, fx0 + WALL, oy - PH, NAVE_H, PALE)
-    c.box("W", fx0, oy + PH, 0, fx0 + WALL, oy + hn, NAVE_H, PALE)
-    c.box("W", fx0, oy - PH, T, fx0 + WALL, oy + PH, NAVE_H, PALE)
-    c.hull("W", [(x, y, z) for x in (fx0, fx0 + WALL) for y, z in ((oy - hn, NAVE_H), (oy + hn, NAVE_H), (oy, NAVE_H + rise))], PALE)
+    srise = hn * math.tan(math.radians(SCREEN_PITCH))          # a screen gable, steeper and higher than the roof behind it
+    c.box("W", fx0, oy - hn, 0, fx0 + WALL, oy - PH, SCREEN_H, PALE)
+    c.box("W", fx0, oy + PH, 0, fx0 + WALL, oy + hn, SCREEN_H, PALE)
+    c.box("W", fx0, oy - PH, T, fx0 + WALL, oy + PH, SCREEN_H, PALE)
+    c.hull("W", [(x, y, z) for x in (fx0, fx0 + WALL) for y, z in ((oy - hn, SCREEN_H), (oy + hn, SCREEN_H), (oy, SCREEN_H + srise))], PALE)
     for sy in (-1, 1):
-        c.spikes("W", (fx0 + 0.5, oy + sy * (hn - 0.8)), (fx0 + 0.5, oy + sy * 1.2), surface=lambda x, y: NAVE_H + rise * (1 - abs(y - oy) / hn),
+        c.spikes("W", (fx0 + 0.5, oy + sy * (hn - 0.8)), (fx0 + 0.5, oy + sy * 1.2), surface=lambda x, y: SCREEN_H + srise * (1 - abs(y - oy) / hn),
                  size=0.28, height=1.5, every=1.5)
         c.crown_run("W", (fx0 + WALL / 2, oy + sy * hn), (fx0 + WALL / 2, oy + sy * PH), (-1, 0))
-    c.cone("W", fx0 + 0.5, oy, 0.9, NAVE_H + rise - 1.4, NAVE_H + rise + 4.5, PALE)   # foot down in the gable
+    c.cone("W", fx0 + 0.5, oy, 0.9, SCREEN_H + srise - 1.4, SCREEN_H + srise + 4.5, PALE)   # foot down in the gable
     c.roofs.gable_roof(fx0 + WALL, ox, oy - hn, oy + hn, NAVE_H, rise, ROOF, over=0.0)
 
     # The great window: red, pale mullions, the rose in its head.
-    wb, ws, ww = T + 6.0, T + 9.0, 3.9                     # clear of the gable's edges and their crockets
+    wb, ws, ww = T + 6.0, SCREEN_H + 2.0, 5.6                # clear of the gable's edges and their crockets
     c.arch_frame("W", face, ww, ww + 0.45, ws, 0.0, 0.3, PALE, base=wb)
     c.arch_panel("W", face, ww, ws, wb, RED)
-    for s in (-1.95, 0.0, 1.95):
+    for s in (-2.8, 0.0, 2.8):
         c.box("W", fx0 - 0.15, oy + s - 0.13, wb, fx0, oy + s + 0.13, ws + 0.4, PALE)
-    rz, rr = ws + 2.4, 2.0
+    rz, rr = ws + 3.4, 3.0
     for k in range(12):                                          # the rose: a ring and its spokes
         a0, a1 = 2 * math.pi * k / 12, 2 * math.pi * (k + 1) / 12
         c.hull("W", [(fx0 - d, oy + r * math.cos(a), rz + r * math.sin(a)) for a in (a0, a1) for r in (rr - 0.3, rr)
