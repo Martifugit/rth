@@ -241,7 +241,7 @@ readability), not its geography.
 | **Runs** | cloud (data, terrain text), local (sculpting, walking, Sync World) |
 | **Depends on** | L2, C5; C6's exits and seam checks as it needs them |
 | **Owns** | `land_m2_2`, `land_m2_3`, `land_m3_2`, `land_m3_3`, `land_m1_2` (claimed 2026-10-23; margin `land_m1_3`, `land_m1_1`, `land_m2_1`, `land_m3_1` read-only), `docs/areas/selenfall*` |
-| **Status** | **brief drafted, waiting on the owner** (2026-10-23): `docs/areas/selenfall.md` and its sketch. |
+| **Status** | **brief approved** (2026-10-23): `docs/areas/selenfall.md` and its sketch; stage 1 (geography) next. |
 
 - The test of the whole process in `docs/world-guide.md`, terrain included: brief, sketch, then
   stage 1 (geography: the crater, its rim and breaches, the approach from p-dry-north), walked at
