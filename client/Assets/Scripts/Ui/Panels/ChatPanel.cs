@@ -8,6 +8,8 @@ namespace Rth.Client.Ui.Panels
     /// <summary>
     /// The chatbox, a fixed size: filter tabs (all, game, public), game messages and chat, and the
     /// line you type on. Enter starts typing (keys stop being hotkeys), Enter sends, Escape stops.
+    /// The line can't take the keyboard any other way (a click, the UI's key navigation): until
+    /// Enter, every key belongs to the game.
     /// New channels (private, group) become more filters.
     /// </summary>
     public sealed class ChatPanel : UiPanel
@@ -32,6 +34,8 @@ namespace Rth.Client.Ui.Panels
         private Label _name;
         private Label _hint;
         private int _focusedFrame = -10;
+        private bool _typing;
+        private readonly List<VisualElement> _focusables = new List<VisualElement>();
         private readonly List<GameSession.LogLine> _lines = new List<GameSession.LogLine>();
         private readonly List<(Filter Filter, Label Button)> _filterButtons = new List<(Filter, Label)>();
         private Filter _filter = Filter.All;
@@ -59,6 +63,17 @@ namespace Rth.Client.Ui.Panels
             _hint = UiKit.Text(_input, "Enter to chat", "muted", "chat-hint");
             _hint.pickingMode = PickingMode.Ignore;
             _input.RegisterCallback<KeyDownEvent>(OnKey, TrickleDown.TrickleDown);
+            // Losing the keyboard some other way (a click into another window) ends typing too.
+            _input.RegisterCallback<FocusOutEvent>(e =>
+            {
+                if (!(e.relatedTarget is VisualElement next && _input.Contains(next))) StopTyping();
+            });
+            _focusables.Clear();
+            _input.Query<VisualElement>().ForEach(e =>
+            {
+                if (e.focusable) _focusables.Add(e);
+            });
+            SetTypable(false);
             SetFilter(Filter.All);
         }
 
@@ -75,23 +90,39 @@ namespace Rth.Client.Ui.Panels
                 string text = _input.value;
                 _input.value = "";
                 if (!string.IsNullOrWhiteSpace(text)) Session.Say(text);
-                _input.Blur();
+                StopTyping();
                 e.StopImmediatePropagation();
             }
             else if (e.keyCode == KeyCode.Escape)
             {
-                _input.Blur();
+                StopTyping();
                 e.StopImmediatePropagation();
             }
         }
 
-        /// <summary>Starts typing (Enter in the game).</summary>
+        /// <summary>Starts typing (Enter in the game): the only way the line gets the keyboard.</summary>
         public void Focus()
         {
             if (Window == null) Ui.Open(this);
             Window?.Activate(this);
             _focusedFrame = Time.frameCount;
+            _typing = true;
+            SetTypable(true);
             _input.Focus();
+        }
+
+        /// <summary>Gives the keyboard back to the game; Enter is needed to type again.</summary>
+        private void StopTyping()
+        {
+            if (!_typing) return;
+            _typing = false;
+            _input.Blur();
+            SetTypable(false);
+        }
+
+        private void SetTypable(bool on)
+        {
+            foreach (VisualElement e in _focusables) e.focusable = on;
         }
 
         private void SetFilter(Filter filter)
