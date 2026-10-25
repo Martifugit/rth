@@ -68,9 +68,11 @@ namespace Rth.Shared.World.Layout
             int size = map.Data.RegionTiles;
             int cols = (map.Cols * map.ZoneTiles) / size, rows = (map.Rows * map.ZoneTiles) / size;
             int rx0 = map.OriginX / size, ry0 = map.OriginY / size;
+            // Every cell with land (the frontier too: seen from the passes and coasts, it must be there
+            // rather than the unbuilt land under the world), and the ring of sea round them.
             var core = new bool[cols, rows];
             for (int i = 0; i < map.Count; i++)
-                if (map.IsCore(i))
+                if (map.IsLand(i))
                 {
                     int col = i % map.Cols, row = i / map.Cols;
                     core[col * map.ZoneTiles / size, row * map.ZoneTiles / size] = true;

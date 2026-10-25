@@ -435,7 +435,9 @@ namespace Rth.Client
                         }
                         else
                         {
-                            int nk = canvas.Kinds[(ny + margin) * cols + nx + margin];
+                            // Beyond the region: the margin's tile if it has one (none without a margin).
+                            int gx = nx + margin, gy = ny + margin;
+                            int nk = gx >= 0 && gy >= 0 && gx < cols && gy < canvas.Rows ? canvas.Kinds[gy * cols + gx] : -1;
                             low = nk >= 0 ? lifts[nk] : Mathf.Min(Lift(edge[side.mine]), 0f);
                         }
                         Face(edge[side.mine], (side.ax, side.ay), (side.bx, side.by), low, Lift(edge[side.mine]), side.n);

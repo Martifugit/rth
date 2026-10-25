@@ -102,6 +102,15 @@ namespace Rth.Shared.World.Layout
         public bool Detail;
         /// <summary>Open ground that settlements farm: fields are laid on it round villages and towns.</summary>
         public bool Farm;
+        /// <summary>What it gives way to higher up (mountain pasture to rock): each band's ground above its height, the line ragged.</summary>
+        public List<BandDef> Above = new List<BandDef>();
+    }
+
+    /// <summary>A ground drawn above a height (<see cref="GroundDef.Above"/>).</summary>
+    public sealed class BandDef
+    {
+        public float Height;
+        public string Ground = "";
     }
 
     /// <summary>A patch of another ground: where slow noise passes its threshold, so about <see cref="Share"/> of the land.</summary>
@@ -120,6 +129,8 @@ namespace Rth.Shared.World.Layout
     /// <item><c>cone</c>: a straight-sided cone, with a <see cref="Crater"/> at its top if given;</item>
     /// <item><c>mesa</c>: a flat top with steep sides <see cref="Edge"/> tiles wide (a negative height: a basin);</item>
     /// <item><c>ridge</c>: a band along its line, highest at the line;</item>
+    /// <item><c>range</c>: mountains along its line: a massif, the crest, spurs across it every
+    /// <see cref="Scale"/> tiles with valleys between, lesser ridges beside the crest;</item>
     /// <item><c>scarp</c>: a step along its line, the land on its <see cref="Side"/> raised by <see cref="Height"/>
     /// for <see cref="Reach"/> tiles, rising over <see cref="Edge"/> tiles (a cliff when narrow), except at its
     /// <see cref="Ramps"/>, where it climbs gently;</item>
@@ -153,6 +164,8 @@ namespace Rth.Shared.World.Layout
         public float Angle;
         /// <summary>terraces: the height of each shelf.</summary>
         public float Step = 1.2f;
+        /// <summary>range: how far it spreads to the left and right of its line's direction, in tiles (none: halfWidth both ways).</summary>
+        public float[]? Spread;
         public string Note = "";
     }
 
@@ -311,6 +324,11 @@ namespace Rth.Shared.World.Layout
         public float? SourceHalfWidth;
         /// <summary>How far, in tiles, it winds either side of its line.</summary>
         public float Meander = 6f;
+        /// <summary>
+        /// Where it rises: "spring" (a small pool, the default), "tarn" (a mountain lake), or "none"
+        /// (it leaves a lake or the layout's water already there). Rivers start as a stream and widen.
+        /// </summary>
+        public string Source = "spring";
     }
 
     public sealed class PlaceDef

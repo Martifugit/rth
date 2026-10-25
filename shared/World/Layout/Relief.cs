@@ -32,7 +32,7 @@ namespace Rth.Shared.World.Layout
                 var f = new Form { Def = d };
                 if (d.Poly != null) f.Poly = d.Rough > 0 ? Geometry.Roughen(d.Poly, d.Rough, data.Seed) : d.Poly;
                 if (d.Line != null) f.Line = d.Line;
-                float pad = d.Kind == "scarp" ? d.Reach + 60f : d.Kind == "ridge" ? d.HalfWidth : d.Kind == "crater" ? d.Edge * 4f : d.Kind == "hill" && d.Poly != null ? 0f : 0f;
+                float pad = d.Kind == "scarp" ? d.Reach + 60f : d.Kind == "range" ? Math.Max(d.Spread?[0] ?? d.HalfWidth, d.Spread?[1] ?? d.HalfWidth) : d.Kind == "ridge" ? d.HalfWidth : d.Kind == "crater" ? d.Edge * 4f : d.Kind == "hill" && d.Poly != null ? 0f : 0f;
                 if (f.Poly != null || f.Line != null)
                 {
                     List<float[]> pts = f.Poly ?? f.Line!;
@@ -56,11 +56,11 @@ namespace Rth.Shared.World.Layout
         public static List<string> Validate(ContinentData data)
         {
             var errors = new List<string>();
-            string[] kinds = { "hill", "cone", "mesa", "ridge", "scarp", "crater", "dunes", "tors", "canyons", "terraces", "cliffs" };
+            string[] kinds = { "hill", "cone", "mesa", "ridge", "range", "scarp", "crater", "dunes", "tors", "canyons", "terraces", "cliffs" };
             foreach (ReliefDef d in data.Relief)
             {
                 if (!kinds.Contains(d.Kind)) errors.Add($"relief {d.Id}: unknown kind '{d.Kind}' ({string.Join(", ", kinds)})");
-                bool line = d.Kind == "ridge" || d.Kind == "scarp";
+                bool line = d.Kind == "ridge" || d.Kind == "scarp" || d.Kind == "range";
                 if (line && (d.Line == null || d.Line.Count < 2)) errors.Add($"relief {d.Id}: a {d.Kind} needs a line");
                 if (!line && d.Poly == null && d.Ellipse == null) errors.Add($"relief {d.Id}: a {d.Kind} needs a poly or an ellipse");
                 if ((d.Kind == "cone" || d.Kind == "crater") && d.Ellipse == null) errors.Add($"relief {d.Id}: a {d.Kind} needs an ellipse");
@@ -192,6 +192,8 @@ namespace Rth.Shared.World.Layout
                 }
                 case "scarp":
                     return Scarp(f, x, y);
+                case "range":
+                    return Range(f, x, y);
                 case "crater":
                 {
                     float r = EllipseR(d.Ellipse!, x, y);
@@ -257,6 +259,56 @@ namespace Rth.Shared.World.Layout
             float rise = LandNoise.Smooth((signed + edge / 2f) / edge);
             if (signed > d.Reach) rise *= Math.Max(0f, 1f - (signed - d.Reach) / 60f);
             return d.Height * rise;
+        }
+
+        /// <summary>
+        /// A mountain range along its line (the crest): a massif falling away to its foot on each
+        /// side (<see cref="ReliefDef.Spread"/> tiles, left and right of the line's direction), the
+        /// main crest on top, and ridged noise stretched two ways: spurs running out across the
+        /// range every <see cref="ReliefDef.Scale"/> tiles or so, with valleys between them, and
+        /// lesser ridges running beside the crest. So the range has peaks, cols, side valleys and
+        /// shoulders, not one wall.
+        /// </summary>
+        private float Range(Form f, float x, float y)
+        {
+            ReliefDef d = f.Def;
+            (float dist, float side, float along) = Along(f.Line!, x, y);
+            float left = d.Spread?[0] ?? d.HalfWidth, right = d.Spread?[1] ?? d.HalfWidth;
+            float width = side < 0 ? left : right;
+            if (dist >= width) return 0f;
+            float t = dist / width;
+            float massif = LandNoise.Smooth(1f - t);
+            float crest = LandNoise.Smooth(1f - dist / Math.Max(4f, width * 0.22f));
+            // Spurs: ridges across the range (the noise stretched across it), bending a little.
+            float bend = 0.6f * LandNoise.Value(_seed + 81, along / 70f, dist / 70f);
+            float spur = LandNoise.Ridged(_seed + 82, along / d.Scale + bend, dist / (d.Scale * 3.5f));
+            // Lesser ridges beside the crest (stretched along it).
+            float flank = LandNoise.Ridged(_seed + 84, dist / (d.Scale * 0.7f), along / (d.Scale * 4f));
+            float peaks = 0.75f + 0.25f * LandNoise.Value(_seed + 86, along / 40f, 0.5f);
+            float h = d.Height * (0.32f * massif + 0.5f * crest * peaks + 0.45f * spur * spur * massif * (1f - 0.5f * crest) + 0.25f * flank * flank * massif * (1f - crest));
+            return h;
+        }
+
+        /// <summary>Distance to a polyline, which side of it (+1 right of its direction, -1 left) and how far along it the nearest point is.</summary>
+        private static (float dist, float side, float along) Along(List<float[]> line, float x, float y)
+        {
+            float best = float.MaxValue, side = 1f, at = 0f, total = 0f;
+            for (int k = 0; k + 1 < line.Count; k++)
+            {
+                float ax = line[k][0], ay = line[k][1], dx = line[k + 1][0] - ax, dy = line[k + 1][1] - ay;
+                float len2 = dx * dx + dy * dy, len = (float)Math.Sqrt(len2);
+                float u = len2 > 0 ? Math.Max(0f, Math.Min(1f, ((x - ax) * dx + (y - ay) * dy) / len2)) : 0f;
+                float qx = ax + u * dx, qy = ay + u * dy;
+                float dd = (float)Math.Sqrt((x - qx) * (x - qx) + (y - qy) * (y - qy));
+                if (dd < best)
+                {
+                    best = dd;
+                    side = dx * (y - ay) - dy * (x - ax) > 0 ? -1f : 1f;
+                    at = total + u * len;
+                }
+                total += len;
+            }
+            return (best, side, at);
         }
 
         /// <summary>Distance to a polyline, which side of it a point is (+1 right of its direction, -1 left) and the nearest point.</summary>

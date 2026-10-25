@@ -199,7 +199,8 @@
       "bank": "scree",
       "scree": "scree",
       "cliff": "CliffRock",
-      "mix": [{"ground": "scree", "share": 0.1, "scale": 14}, {"ground": "heath", "share": 0.18, "scale": 26}]
+      "mix": [{"ground": "scree", "share": 0.1, "scale": 14}, {"ground": "heath", "share": 0.18, "scale": 26}],
+      "above": [{"height": 8.2, "ground": "scree"}, {"height": 10.5, "ground": "crest"}]
     },
     "foothills": {
       "letter": "F",
@@ -212,11 +213,22 @@
       "shore": "shingle",
       "scree": "scree",
       "cliff": "CliffRock",
-      "mix": [{"ground": "heath", "share": 0.2, "scale": 24}, {"ground": "bracken", "share": 0.08, "scale": 16}]
+      "mix": [{"ground": "heath", "share": 0.2, "scale": 24}, {"ground": "bracken", "share": 0.08, "scale": 16}],
+      "above": [{"height": 6.5, "ground": "highland"}]
     },
     "scree": {"letter": "B", "name": "Scree", "palette": "Scree", "map": "#8b8679", "detail": true, "rough": 3, "height": 9},
-    "crest": {"letter": "C", "name": "Crest", "palette": "CliffRock", "map": "#5b564f", "walkable": false, "rough": 3, "height": 14, "cliff": "CliffRock"},
-    "glacier": {"letter": "I", "name": "Glacier", "palette": "Snow", "map": "#f0f4f8", "walkable": false, "rough": 2, "height": 15, "cliff": "Granite"},
+    "crest": {
+      "letter": "C",
+      "name": "Crest",
+      "palette": "CliffRock",
+      "map": "#5b564f",
+      "walkable": true,
+      "rough": 3,
+      "height": 14,
+      "cliff": "CliffRock",
+      "detail": true
+    },
+    "glacier": {"letter": "I", "name": "Glacier", "palette": "Snow", "map": "#f0f4f8", "walkable": true, "rough": 2, "height": 15, "cliff": "Granite"},
     "snowcap": {"letter": "S", "name": "Snow cap", "palette": "Snow", "map": "#f0f4f8", "detail": true, "rough": 2, "height": 14},
     "snow": {"letter": "n", "name": "Snowfield", "palette": "Snow", "map": "#d3dbe2", "rough": 2, "height": 6, "shore": "shingle", "cliff": "Granite"},
     "ice": {"letter": "Y", "name": "Frozen lake", "palette": "Ice", "map": "#c6d6de", "rough": 0, "height": 1},
@@ -648,7 +660,6 @@
     },
     {"id": "scalth", "name": "Scalth's pans", "ground": "saltflat", "ellipse": [810, 545, 12, 8]},
     {"id": "cold-slopes", "ground": "snow", "along": "spine", "halfWidth": 70, "minY": 640},
-    {"id": "crest", "name": "the spine's crest", "ground": "crest", "along": "spine", "halfWidth": 16, "maxY": 620},
     {"id": "crest-cold", "name": "the frozen crest", "ground": "glacier", "along": "spine", "halfWidth": 18, "minY": 620},
     {"id": "selenfall", "name": "Selenfall", "ground": "scar", "ellipse": [-172, 286, 48, 38]},
     {
@@ -714,6 +725,19 @@
         {"at": [-222, 55], "halfWidth": 5, "length": 22, "name": "the salt pass"},
         {"at": [-200, 468], "halfWidth": 5, "length": 22, "name": "the Meridian pass"},
         {"at": [-228, 704], "halfWidth": 5, "length": 22, "name": "the frost pass"}
+      ]
+    },
+    {
+      "id": "the-spine",
+      "name": "the spine",
+      "kind": "range",
+      "height": 7.5,
+      "scale": 28,
+      "spread": [60, 95],
+      "note": "the range itself: a massif, the crest, spurs running east with valleys between, lesser ridges beside the crest",
+      "line": [
+        [-255, -676], [-235, -506], [-212, -387], [-205, -285], [-190, -170], [-168, -40], [-162, 60], [-180, 180], [-172, 286], [-148, 383],
+        [-140, 470], [-158, 560], [-172, 642], [-160, 725], [-150, 845]
       ]
     },
     {"id": "observatory-spur", "kind": "ridge", "height": 2.2, "halfWidth": 14, "line": [[-112, 136], [-60, 126], [-30, 120]]},
@@ -964,46 +988,48 @@
       "ice": 1.6
     },
     "roll": {
-      "grass": 0.7,
-      "meadow": 0.7,
-      "heath": 0.9,
-      "downs": 1.3,
-      "forest": 1.0,
-      "deepwood": 1.0,
+      "grass": 1.3,
+      "meadow": 1.3,
+      "heath": 1.4,
+      "downs": 1.8,
+      "forest": 1.5,
+      "deepwood": 1.5,
       "fen": 0.06,
       "reeds": 0.06,
-      "gravel": 0.7,
+      "gravel": 1.0,
       "redrock": 0.8,
       "erg": 0.3,
       "saltflat": 0.02,
-      "olive": 0.4,
-      "ash": 0.8,
+      "olive": 0.6,
+      "ash": 1.0,
       "volcanic": 1.2,
       "lava": 0.6,
-      "highland": 1.7,
-      "foothills": 1.3,
+      "highland": 1.0,
+      "foothills": 1.8,
       "crest": 1.5,
       "glacier": 1.0,
       "snow": 1.0,
-      "tundra": 0.8,
-      "pine": 0.9,
-      "moor": 1.1,
+      "tundra": 1.1,
+      "pine": 1.2,
+      "moor": 1.6,
       "broken": 1.2,
       "unmade": 0,
-      "ice": 0
+      "ice": 0,
+      "bracken": 1.4,
+      "glade": 1.5
     },
     "rollDefault": 0.6,
-    "rollScale": 38,
+    "rollScale": 34,
     "smooth": 6,
     "ridge": 2,
-    "ridgeGrounds": ["crest", "glacier"],
+    "ridgeGrounds": [],
     "peaks": 5,
     "peakScale": 18,
     "rough": 0.8,
     "snowAbove": 12,
     "snowLine": 13,
-    "passSaddle": 7.5,
-    "passBlend": 8,
+    "passSaddle": 8,
+    "passBlend": 12,
     "builtBlend": 16,
     "coastBlend": 10,
     "valley": 10,
@@ -1031,22 +1057,22 @@
       "name": "the great river",
       "into": "sea",
       "halfWidth": 5,
-      "sourceHalfWidth": 2,
-      "meander": 6,
+      "meander": 14,
       "line": [
         [-62, 432], [-30, 426], [0, 416], [40, 396], [100, 352], [160, 302], [212, 258], [255, 226], [286, 204], [304, 218], [330, 224], [354, 212],
         [366, 186], [358, 160], [344, 140], [372, 124], [416, 122], [462, 138], [515, 165], [580, 190], [646, 206], [712, 218], [777, 236], [830, 250],
         [884, 254]
-      ]
+      ],
+      "source": "tarn"
     },
     {
       "id": "tolling-river",
       "name": "Tolling's river",
       "into": "lake:wennow",
       "halfWidth": 3,
-      "sourceHalfWidth": 1.5,
-      "meander": 5,
-      "line": [[-100, 212], [-62, 186], [-22, 152], [12, 122], [36, 102], [41, 90], [44, 60], [60, 30], [84, 10], [100, -2]]
+      "meander": 6,
+      "line": [[-100, 212], [-62, 186], [-22, 152], [12, 122], [36, 102], [41, 90], [44, 60], [60, 30], [84, 10], [100, -2]],
+      "source": "spring"
     },
     {
       "id": "wenn",
@@ -1054,7 +1080,8 @@
       "into": "lake:knellmere",
       "halfWidth": 3.5,
       "meander": 3,
-      "line": [[146, -12], [168, -22], [190, -14], [210, 8]]
+      "line": [[146, -12], [168, -22], [190, -14], [210, 8]],
+      "source": "none"
     },
     {
       "id": "lade",
@@ -1062,28 +1089,29 @@
       "into": "river:great-river",
       "halfWidth": 3,
       "meander": 3,
-      "line": [[334, 34], [336, 62], [342, 96], [344, 128]]
+      "line": [[334, 34], [336, 62], [342, 96], [344, 128]],
+      "source": "none"
     },
     {
       "id": "sere-river",
       "name": "Sere's river",
       "into": "sea",
       "halfWidth": 5,
-      "sourceHalfWidth": 2,
-      "meander": 7,
+      "meander": 10,
       "line": [
         [-132, 14], [-108, -12], [-80, -40], [-48, -70], [-12, -100], [22, -130], [50, -158], [58, -185], [72, -221], [94, -268], [112, -323],
         [128, -378], [144, -438], [156, -498], [164, -548], [172, -625]
-      ]
+      ],
+      "source": "tarn"
     },
     {
       "id": "yorewater",
       "name": "p-yorewater (the falls' river)",
       "into": "river:great-river",
       "halfWidth": 3,
-      "sourceHalfWidth": 2,
-      "meander": 4,
-      "line": [[554, -268], [564, -234], [574, -180], [585, -110], [594, -56], [597, -30], [598, 0], [594, 40], [589, 90], [587, 140], [584, 188]]
+      "meander": 7,
+      "line": [[554, -268], [564, -234], [574, -180], [585, -110], [594, -56], [597, -30], [598, 0], [594, 40], [589, 90], [587, 140], [584, 188]],
+      "source": "none"
     },
     {
       "id": "fen-river",
@@ -1091,25 +1119,26 @@
       "into": "lake:p-mere",
       "halfWidth": 3,
       "meander": 5,
-      "line": [[466, 614], [531, 598], [589, 576], [635, 566]]
+      "line": [[466, 614], [531, 598], [589, 576], [635, 566]],
+      "source": "spring"
     },
     {
       "id": "gall-river",
       "name": "p-cinder-river",
       "into": "sea",
       "halfWidth": 2.5,
-      "sourceHalfWidth": 1.5,
       "meander": 4,
-      "line": [[638, -346], [631, -401], [623, -455], [618, -540]]
+      "line": [[638, -346], [631, -401], [623, -455], [618, -540]],
+      "source": "spring"
     },
     {
       "id": "north-river",
       "name": "p-north-river",
       "into": "sea",
       "halfWidth": 3,
-      "sourceHalfWidth": 1.5,
-      "meander": 10,
-      "line": [[200, 642], [226, 682], [248, 725], [256, 762], [258, 797]]
+      "meander": 8,
+      "line": [[200, 642], [226, 682], [248, 725], [256, 762], [258, 797]],
+      "source": "tarn"
     },
     {
       "id": "frontier-river",
@@ -1117,7 +1146,8 @@
       "into": "sea",
       "halfWidth": 4,
       "meander": 8,
-      "line": [[-280, -100], [-400, -150], [-560, -180], [-760, -200]]
+      "line": [[-280, -100], [-400, -150], [-560, -180], [-760, -200]],
+      "source": "spring"
     },
     {
       "id": "fen-channel-west",
@@ -1125,7 +1155,8 @@
       "into": "lake:brack-mere-1",
       "halfWidth": 1.5,
       "meander": 5,
-      "line": [[575, 420], [604, 440], [634, 462]]
+      "line": [[575, 420], [604, 440], [634, 462]],
+      "source": "spring"
     },
     {
       "id": "fen-drain",
@@ -1133,7 +1164,8 @@
       "into": "sea",
       "halfWidth": 2,
       "meander": 6,
-      "line": [[706, 566], [750, 562], [790, 578], [826, 592], [870, 606]]
+      "line": [[706, 566], [750, 562], [790, 578], [826, 592], [870, 606]],
+      "source": "none"
     },
     {
       "id": "fen-channel-long",
@@ -1141,7 +1173,62 @@
       "into": "lake:brack-mere-2",
       "halfWidth": 1.5,
       "meander": 6,
-      "line": [[668, 480], [690, 496], [710, 512]]
+      "line": [[668, 480], [690, 496], [710, 512]],
+      "source": "none"
+    },
+    {
+      "id": "moor-burn",
+      "name": "p-moor-burn",
+      "into": "river:great-river",
+      "halfWidth": 1.6,
+      "source": "spring",
+      "meander": 5,
+      "line": [[120, 520], [112, 470], [104, 410], [100, 358]]
+    },
+    {
+      "id": "eller-brook",
+      "name": "p-eller-brook",
+      "into": "river:great-river",
+      "halfWidth": 1.8,
+      "source": "none",
+      "meander": 6,
+      "line": [[508, 372], [512, 330], [518, 260], [515, 172]]
+    },
+    {
+      "id": "spine-beck",
+      "name": "p-spine-beck",
+      "into": "river:sere-river",
+      "halfWidth": 1.4,
+      "source": "tarn",
+      "meander": 4,
+      "line": [[-150, -130], [-115, -112], [-80, -88], [-50, -73]]
+    },
+    {
+      "id": "downs-brook",
+      "name": "p-downs-brook",
+      "into": "lake:knellmere",
+      "halfWidth": 1.3,
+      "source": "spring",
+      "meander": 3,
+      "line": [[312, -92], [298, -50], [286, -14]]
+    },
+    {
+      "id": "wolds-water",
+      "name": "p-wolds-water",
+      "into": "river:great-river",
+      "halfWidth": 1.5,
+      "source": "spring",
+      "meander": 4,
+      "line": [[700, 110], [690, 150], [680, 210]]
+    },
+    {
+      "id": "pine-beck",
+      "name": "p-pine-beck",
+      "into": "river:north-river",
+      "halfWidth": 1.3,
+      "source": "spring",
+      "meander": 4,
+      "line": [[120, 640], [170, 650], [218, 676]]
     }
   ],
   "places": [

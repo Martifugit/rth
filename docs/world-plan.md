@@ -286,6 +286,28 @@ The rule: **every settlement is sited for a reason a player can see.** Tiers as 
 | p-oasis | A hollow in the erg with a spring | Sere's second town, the caravans' rest. |
 | p-sere-port | Sere's river delta | Sere's port, and the ferry south. |
 
+### In the mountains
+
+The spine is a `range` landform (`continent.json` relief `the-spine`): a massif about 150 tiles
+across, a crest of 11-14 tiles with snow on its high peaks (more of it the further north), spurs
+running out east every 30 tiles or so with valleys between them, a high shelf on the west above
+the sheer face, and five passes cut down to saddles. Its people live in the valleys, on the
+shoulders and at the passes:
+
+| Place | Where in the range | What it is |
+| --- | --- | --- |
+| **Meridian** (city) | A terraced shoulder on the eastern slopes, under the highest snow peaks, 40 tiles east of the Meridian pass's saddle; the great river rises in a tarn just below it | The surface people's capital: whoever holds it holds that crossing. |
+| **Frostpeak Forge** (town) | The range's north end, above the northern sea, under the frost pass | The dwarves' trading hall, cut into the last peak. |
+| **Adit** (p-dwarf-hold, town) | The range's eastern foot in the south, at the mouth of the dwarves' pass | Where the dwarves' caves open, facing Sere's badlands. |
+| p-high-valley (village) | A terraced high valley west of Tolling, below the tarn where Sere's river rises | Alpine farms; the way up to the salt pass. |
+| p-observatory (village) | The top of a spur above the western march | An observatory of the surface people. |
+| p-west-toll, p-frost-toll (hamlets) | On the saddles of the salt pass and the frost pass | The tolls: every crossing pays. |
+| p-south-observatory (hamlet) | High on the dry southern teeth | An observatory. |
+| Selenfall (landmark) | The crater that breaks the crest north-west of Tolling | Built by hand (L4). |
+
+Spur valleys between them are left for content: the sites `s-high-cave`, `s-observatory-vault`,
+`s-orrery-peak`, `s-glacier-boss`, `s-undermost` and the seals.
+
 ### Villages and hamlets
 
 Sited the same way: at bridges and fords (p-greatbridge, p-ford), weirs and mills (p-weir), coves
@@ -345,8 +367,9 @@ way RuneScape paints it: **two layers**.
 
 **Underlay: the land itself, blended.** Grass, meadow, heath, moor, sand, mud, scree, snow. Each
 tile has an underlay, and the colour drawn at any point is a weighted blend over the tiles around
-it (a radius of about 3 tiles), so grass shades into heath into scree over several tiles and no
-tile edge ever shows. Variety comes from **low-frequency patches** of two or three related
+it (a radius of about 2 tiles), weighted by how alike the colours are: close colours (grass and
+meadow) shade into each other over a few tiles and no tile edge ever shows, while very different
+ones (pasture and scree) meet at an edge half a tile wide instead of smearing into a stain. Variety comes from **low-frequency patches** of two or three related
 underlays (meadow in the grass, bracken in the heath), never from per-tile speckle. Height and
 slope shade it: slopes facing the sun are lighter, the high ground a little greyer.
 
@@ -368,7 +391,9 @@ they meet a settlement. Bridges are an overlay (planks) where a road crosses wat
 
 **Water** is a surface at its own level, and the ground under it is carved lower: the shore is where
 the land meets the water, so it runs smoothly at any angle instead of stepping tile by tile. Lakes
-are flat; rivers fall gently towards the sea and step only at falls. The band where land meets
+are flat; rivers fall gently towards the sea and step only at falls. Every river rises somewhere
+(a spring's pool, or a tarn in the mountains), starts as a stream and widens towards its mouth,
+and the big ones gather tributaries. The band where land meets
 water gets a shore underlay chosen by the ground (sand, shingle, mud, reeds), and a river's banks
 fall towards it.
 

@@ -40,6 +40,8 @@ public class BlockoutTests
         foreach (PassDef pass in layout.Data.Spine.Passes)
         {
             float[] crest = pass.Line[pass.Line.Count / 2];
+            // A pass through a region built by hand (Selenfall's breach) goes where that region's design takes it.
+            if (lw.Built.Any(b => crest[0] >= b.X0 && crest[0] <= b.X1 && crest[1] >= b.Y0 && crest[1] <= b.Y1)) continue;
             Assert.True(Reached(crest[0], crest[1]), $"The pass {pass.Id} can't be walked over at ({crest[0]}, {crest[1]}).");
         }
 

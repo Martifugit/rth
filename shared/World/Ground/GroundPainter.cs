@@ -119,20 +119,38 @@ namespace Rth.Shared.World.Ground
             return rgba;
         }
 
+        /// <summary>How far apart two colours (RGB, 0..1) can be and still blend fully; further apart, they keep an edge.</summary>
+        public const float BlendSimilarity = 0.11f;
+
         /// <summary>
         /// Each corner's underlay colour: a tent-weighted mean of the underlay tiles within
-        /// <see cref="BlendRadius"/> (overlays and water don't count; they lie on top), with a slow
-        /// drift of lightness over the land (the same at a corner whichever region paints it).
+        /// <see cref="BlendRadius"/> (overlays and water don't count; they lie on top), weighted
+        /// again by how alike each tile's colour is to the corner's own four tiles: grounds of close
+        /// colours (grass and meadow) shade into each other over a few tiles, while very different
+        /// ones (pasture and scree) meet at an edge half a tile wide instead of smearing into a
+        /// stain. A faint drift of lightness over the land (the same at a corner whichever region
+        /// paints it) keeps large areas from looking printed.
         /// </summary>
         private static float[] BlendCorners(GroundCanvas c)
         {
             int cw = c.Width + 1, ch = c.Height + 1, R = BlendRadius;
             var result = new float[cw * ch * 3];
+            float inv = 1f / (BlendSimilarity * BlendSimilarity);
             for (int cy = 0; cy < ch; cy++)
                 for (int cx = 0; cx < cw; cx++)
                 {
                     float r = 0, g = 0, b = 0, w = 0;
                     int ax = c.X0 + cx, ay = c.Y0 + cy;
+                    // The corner's own colour: the mean of the underlay tiles touching it.
+                    float rr = 0, rg = 0, rb = 0, rn = 0;
+                    for (int ty = ay - 1; ty <= ay; ty++)
+                        for (int tx = ax - 1; tx <= ax; tx++)
+                        {
+                            int k = c.KindAt(tx, ty);
+                            if (k < 0 || c.Looks[k].Layer != GroundLayer.Under || c.Looks[k].Shelf) continue;
+                            rr += c.Looks[k].R; rg += c.Looks[k].G; rb += c.Looks[k].B; rn++;
+                        }
+                    if (rn > 0) { rr /= rn; rg /= rn; rb /= rn; }
                     // Tiles whose centre lies within R of the corner on both axes.
                     for (int ty = ay - R; ty < ay + R; ty++)
                         for (int tx = ax - R; tx < ax + R; tx++)
@@ -143,6 +161,11 @@ namespace Rth.Shared.World.Ground
                             if (l.Layer != GroundLayer.Under || l.Shelf) continue;
                             float wx = R - Math.Abs(tx + 0.5f - ax), wy = R - Math.Abs(ty + 0.5f - ay);
                             float wt = wx * wy;
+                            if (rn > 0)
+                            {
+                                float d2 = (l.R - rr) * (l.R - rr) + (l.G - rg) * (l.G - rg) + (l.B - rb) * (l.B - rb);
+                                wt *= (float)Math.Exp(-d2 * inv);
+                            }
                             r += l.R * wt; g += l.G * wt; b += l.B * wt; w += wt;
                         }
                     if (w <= 0f)
@@ -153,7 +176,7 @@ namespace Rth.Shared.World.Ground
                         GroundLook l = k >= 0 ? c.Looks[k] : default;
                         r = l.R; g = l.G; b = l.B; w = 1f;
                     }
-                    float drift = 1f + 0.06f * Noise(ax / 17f, ay / 17f) + 0.03f * Noise(ax / 5.3f + 40f, ay / 5.3f);
+                    float drift = 1f + 0.03f * Noise(ax / 17f, ay / 17f) + 0.015f * Noise(ax / 5.3f + 40f, ay / 5.3f);
                     int o = (cy * cw + cx) * 3;
                     result[o] = r / w * drift;
                     result[o + 1] = g / w * drift;

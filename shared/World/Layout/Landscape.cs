@@ -318,6 +318,23 @@ namespace Rth.Shared.World.Layout
             for (int i = 0; i < _riverOf.Length; i++) _riverOf[i] = -1;
             var nearest = new float[W * H];
             for (int i = 0; i < nearest.Length; i++) nearest[i] = float.MaxValue;
+            // Each river rises somewhere: a spring's pool, or a tarn in the mountains.
+            foreach (RiverDef def in Data.Rivers)
+            {
+                if (def.Source == "none" || def.Line.Count == 0) continue;
+                float radius = def.Source == "tarn" ? 6.5f : 2.6f;
+                float[] at = def.Line[0];
+                for (int y = (int)Math.Floor(at[1] - radius); y <= (int)Math.Ceiling(at[1] + radius); y++)
+                    for (int x = (int)Math.Floor(at[0] - radius); x <= (int)Math.Ceiling(at[0] + radius); x++)
+                    {
+                        if (!InBounds(x, y)) continue;
+                        // A little irregular, so a tarn isn't a perfect circle.
+                        float wobble = 1f + 0.25f * LandNoise.Value(Data.Seed + 600, x / 3f, y / 3f);
+                        if (Sq(x + 0.5f - at[0]) + Sq(y + 0.5f - at[1]) > Sq(radius * wobble)) continue;
+                        int i = Index(x, y);
+                        if (!IsWater(i) && !Beyond[i]) Ground[i] = _lake;
+                    }
+            }
             for (int r = 0; r < Data.Rivers.Count; r++)
             {
                 RiverDef def = Data.Rivers[r];
@@ -335,12 +352,13 @@ namespace Rth.Shared.World.Layout
                     _riverAt[i] = s;
                 });
             }
+            // A pass is a valley through the range: it keeps the ground around it (its road shows
+            // the way), and only where it crosses water does it need a bridge.
             foreach (PassDef p in Passes)
                 foreach ((int x, int y) in Data_Along(p.Line, p.HalfWidth))
                 {
                     int i = Index(x, y);
-                    if (Beyond[i]) continue;
-                    Ground[i] = IsWater(i) ? _bridge : _pass;
+                    if (!Beyond[i] && IsWater(i)) Ground[i] = _bridge;
                 }
         }
 
@@ -396,7 +414,8 @@ namespace Rth.Shared.World.Layout
             for (int k = 1; k < pts.Count; k++) lengths.Add(total += Dist(pts[k - 1], pts[k]));
             const float step = 3f;
             int n = Math.Max(2, (int)Math.Ceiling(total / step));
-            float src = def.SourceHalfWidth ?? def.HalfWidth;
+            // A river starts as a stream and widens towards its mouth.
+            float src = def.SourceHalfWidth ?? Math.Min(def.HalfWidth, 0.9f);
             for (int j = 0; j <= n; j++)
             {
                 float s = total * j / n;
@@ -408,10 +427,11 @@ namespace Rth.Shared.World.Layout
                 float len = (float)Math.Sqrt(dx * dx + dy * dy);
                 // Winding grows away from the ends, which stay where the layout puts them.
                 float ends = Math.Min(1f, Math.Min(s, total - s) / 40f);
-                float wind = def.Meander * ends * (LandNoise.Value(Data.Seed + 300 + index, s / 55f, 0.5f) * 0.8f + LandNoise.Value(Data.Seed + 400 + index, s / 17f, 0.5f) * 0.35f);
+                // Long sweeping bends with smaller ones on them.
+                float wind = def.Meander * ends * (LandNoise.Value(Data.Seed + 300 + index, s / 85f, 0.5f) * 0.85f + LandNoise.Value(Data.Seed + 400 + index, s / 26f, 0.5f) * 0.35f);
                 if (len > 0) { x += -dy / len * wind; y += dx / len * wind; }
                 line.Points.Add(new[] { x, y });
-                line.HalfWidths.Add(src + (def.HalfWidth - src) * (s / Math.Max(1f, total)));
+                line.HalfWidths.Add(src + (def.HalfWidth - src) * (float)Math.Sqrt(s / Math.Max(1f, total)));
             }
             return line;
         }
@@ -895,6 +915,13 @@ namespace Rth.Shared.World.Layout
                         Ground[i] = G("snowcap", G("snow", Ground[i]));
                     else if (def.Scree != null && slope > t.ScreeSlope && slope <= 1f)
                         Ground[i] = G(def.Scree, Ground[i]);
+                    else
+                    {
+                        // Higher up, the ground gives way (pasture to rock), along a ragged line.
+                        float ragged = 0.8f * LandNoise.Fbm(Data.Seed + 950, x / 11f, y / 11f);
+                        for (int band = def.Above.Count - 1; band >= 0; band--)
+                            if (low + ragged > def.Above[band].Height) { Ground[i] = G(def.Above[band].Ground, Ground[i]); break; }
+                    }
                 }
 
             // Beaches along the sea, banks along lakes and rivers.
