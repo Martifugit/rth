@@ -6,7 +6,7 @@
       {"id": "1.2", "name": "Taken over", "done": "Its generated regions are frozen into their own data (\"generated\" removed) and their scenes moved to Assets/Scenes/<Area>/; tools/world check clean."},
       {"id": "1.3", "name": "Landforms", "done": "Terrain shaped to the brief (hills, valleys, cliffs where meant, nowhere else); no seams at its borders; no unreachable pockets."},
       {"id": "1.4", "name": "Water", "done": "Every river rises and ends somewhere visible, lakes sit level, shores and banks read right, falls where the river steps, a crossing wherever a route meets water."},
-      {"id": "1.5", "name": "Ground", "done": "Four or five underlays and one or two overlays at most; no stains or speckle; contrasting ground crisp; checked in tools/world paint and in the Editor."},
+      {"id": "1.5", "name": "Ground", "done": "Four or five underlays and one or two overlays at most; no stains or speckle; contrasting ground crisp; checked in the Editor."},
       {"id": "1.6", "name": "Walked", "done": "The owner has walked it at player height with both camera profiles, entering and leaving by every route, and signed it off."}
     ] },
     { "number": 2, "name": "Structure", "goal": "The layout is right: roads, settlements, landmarks and edges are where they will stay.", "packages": [

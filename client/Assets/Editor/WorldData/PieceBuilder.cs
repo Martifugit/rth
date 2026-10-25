@@ -126,18 +126,7 @@ namespace Rth.Client.Editor
                     ground.originY = r[1];
                     ground.width = r[2] - r[0];
                     ground.height = r[3] - r[1];
-                    ground.rows = piece.Rows.ToArray();
-                    ground.kinds = string.Concat(keys);
-                    ground.materials = keys.Select(k => Material(kit, region, piece.Legend[k].Material)).ToArray();
-                    ground.lifts = keys.Select(k => piece.Legend[k].Height ?? 0f).ToArray();
-                    ground.walkable = keys.Select(k => piece.Legend[k].Walkable).ToArray();
-                    // Painted the RuneScape way (docs/world-plan.md section 7): the kinds' layers and the neighbours' ring.
-                    ground.painted = piece.Paint == true;
-                    ground.margin = piece.Margin ?? 0;
-                    ground.surround = piece.Surround?.ToArray() ?? new string[0];
-                    ground.overlay = keys.Select(k => piece.Legend[k].IsOverlay).ToArray();
-                    ground.water = keys.Select(k => piece.Legend[k].Water == true).ToArray();
-                    ground.beyond = keys.Select(k => piece.Legend[k].Beyond == true).ToArray();
+                    SetTiles(ground, kit, region, piece);
                     if (terrain != null)
                     {
                         // The terrain's corners under this piece's rectangle, row by row from the south.
@@ -249,6 +238,27 @@ namespace Rth.Client.Editor
             f.transform.position = new Vector3((x0 + x1) / 2f, height / 2f, (y0 + y1) / 2f);
             f.AddComponent<BoxCollider>().size = new Vector3(x1 - x0 - 0.4f, height, y1 - y0 - 0.4f);
             if (owner.GetComponent<MapBlocker>() == null) owner.gameObject.AddComponent<MapBlocker>();
+        }
+
+        /// <summary>
+        /// A tile ground's rows and kinds from a tiles piece: what each kind looks like and does, and
+        /// for painted ground (docs/world-plan.md section 7) the kinds' layers and the neighbours'
+        /// ring. The ground brush (<see cref="GroundPaintTool"/>) sets them the same way.
+        /// </summary>
+        public static void SetTiles(TileGround ground, WorldKit kit, RegionData region, Piece piece)
+        {
+            List<string> keys = piece.Legend.Keys.ToList();
+            ground.rows = piece.Rows.ToArray();
+            ground.kinds = string.Concat(keys);
+            ground.materials = keys.Select(k => Material(kit, region, piece.Legend[k].Material)).ToArray();
+            ground.lifts = keys.Select(k => piece.Legend[k].Height ?? 0f).ToArray();
+            ground.walkable = keys.Select(k => piece.Legend[k].Walkable).ToArray();
+            ground.painted = piece.Paint == true;
+            ground.margin = piece.Margin ?? 0;
+            ground.surround = piece.Surround?.ToArray() ?? new string[0];
+            ground.overlay = keys.Select(k => piece.Legend[k].IsOverlay).ToArray();
+            ground.water = keys.Select(k => piece.Legend[k].Water == true).ToArray();
+            ground.beyond = keys.Select(k => piece.Legend[k].Beyond == true).ToArray();
         }
 
         /// <summary>A material the region names, created once under Assets/Art/Materials.</summary>

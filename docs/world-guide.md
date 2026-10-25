@@ -147,6 +147,14 @@ Unity is written back to text.
   `world/layout/sculpt` and stays generated) or **Sculpt Ground** (one region); saving writes the
   heights back. Regions drawn with `tiles` pieces follow it; the older `MapTerrain`
   (the scale test region) still keeps its heights in its scene. How: [workflow.md](workflow.md).
+- **Ground paint belongs in the region's data, and is painted in Unity.** *Decided* (2026-10-25),
+  *built.* What a tile is (grass, road, sand, water) is game meaning (water blocks, roads are
+  routed), so it stays one character a tile in the region's `tiles` piece, and the look (blends,
+  crisp roads, diagonal half tiles) is drawn from it. A Unity Terrain's splat map was weighed and
+  turned down: soft blends have no tile, the server would have to read them back, and agents
+  couldn't change them. The owner paints with **Paint Ground** (R'th > World > Paint Ground, G): a
+  brush, straight or 45-degree strokes for roads, fill and pick, over every open region at once,
+  drawn as the game draws it; saving writes the tiles back, and the neighbours' rings follow.
 
 ## 5. How a place gets made
 
@@ -285,6 +293,7 @@ Use it in every brief and every review.
 | Entrances and exits as data; the seam check for roads, rivers and walkability | Decided, to build (the height seam check is built) |
 | Claims checked by the tools | Decided, to build |
 | A slope overlay while sculpting (tiles too steep to walk shown red) | Built, in Sculpt Ground |
+| Painting ground in the Editor (brush, road strokes, fill, pick) | Built: Paint Ground |
 | Combining static pieces at build time | Decided, after measuring |
 | The first area brief (Tolling's neighbourhood) | Next |
 

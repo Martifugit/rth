@@ -12,16 +12,21 @@
     "LandBridge": "Planks",
     "LandCliffCliffRock": "CliffRock",
     "LandDirtroad": "Dirt",
+    "LandFarmland": "Grass",
     "LandFoothills": "Foothill",
     "LandFurrow": "Furrow",
     "LandGrass": "Grass",
     "LandHeath": "Heath",
+    "LandHighland": "MossyStone",
     "LandLey": "Ley",
     "LandMeadow": "Meadow",
     "LandPaving": "Paving",
     "LandRiver": "Water",
+    "LandRoad": "Furrow",
     "LandSand": "Sand",
     "LandScree": "Scree",
+    "LandScrub": "Dirt",
+    "LandSettlement": "Stone",
     "LandShingle": "Shingle",
     "LandSite": "BlockoutRing",
     "LandWheat": "Wheat",
@@ -129,7 +134,7 @@
     "287 278 272 265 257 247 237 226 216 206 198 192 187 184 182 180 177 173 169 163 157 151 145 140 136 134 133 134 136 139 143 146 149 152 153*3 152 150 149 148 147*3 148 149 150 151*3 150 148 147 145 143 142 140 138 137 134 131 127 124 120 117 116 114*4 113 111 109 105 100 93 90 89*2 85 79 75 70 64 57 50 43 36 30 24 18 13 9 5 2 1 0"
   ] },
   "pieces": [
-    { "id": "ground", "kind": "tiles", "rect": [-96, 96, 0, 192], "legend": { "!": { "material": "LandSite", "layer": "over" }, "+": { "material": "LandPaving", "layer": "over" }, "-": { "material": "LandDirtroad", "layer": "over" }, "B": { "material": "LandScree" }, "E": { "material": "LandLey", "layer": "over" }, "F": { "material": "LandFoothills", "cliff": "LandCliffCliffRock" }, "H": { "material": "LandWheat", "layer": "over" }, "J": { "material": "LandFurrow", "layer": "over" }, "U": { "material": "LandWorn" }, "b": { "material": "LandBridge", "height": 0.05, "layer": "over" }, "e": { "material": "LandMeadow" }, "g": { "material": "LandGrass", "cliff": "LandCliffCliffRock" }, "h": { "material": "LandHeath", "cliff": "LandCliffCliffRock" }, "k": { "material": "LandBracken" }, "q": { "material": "LandShingle" }, "r": { "material": "LandRiver", "water": true, "height": -0.15 }, "s": { "material": "LandSand" } }, "paint": true, "margin": 4, "rows": [
+    { "id": "ground", "kind": "tiles", "rect": [-96, 96, 0, 192], "legend": { "!": { "material": "LandSite", "layer": "over" }, "+": { "material": "LandPaving", "layer": "over" }, "-": { "material": "LandDirtroad", "layer": "over" }, "B": { "material": "LandScree" }, "E": { "material": "LandLey", "layer": "over" }, "F": { "material": "LandFoothills", "cliff": "LandCliffCliffRock" }, "H": { "material": "LandWheat", "layer": "over" }, "J": { "material": "LandFurrow", "layer": "over" }, "U": { "material": "LandWorn" }, "a": { "material": "LandScrub" }, "b": { "material": "LandBridge", "height": 0.05, "layer": "over" }, "c": { "material": "LandSettlement", "height": 0.02, "layer": "over" }, "d": { "material": "LandFarmland" }, "e": { "material": "LandMeadow" }, "f": { "material": "LandHighland" }, "g": { "material": "LandGrass", "cliff": "LandCliffCliffRock" }, "h": { "material": "LandHeath", "cliff": "LandCliffCliffRock" }, "i": { "material": "LandRoad", "height": 0.01, "layer": "over" }, "k": { "material": "LandBracken" }, "q": { "material": "LandShingle" }, "r": { "material": "LandRiver", "water": true, "height": -0.15 }, "s": { "material": "LandSand" } }, "paint": true, "margin": 4, "rows": [
       "hhBBBBhBBBBhhhhhhqqqrrrrrqqhhh---FFFFgggggggeeeeeeeeeeeeeegggggggeeeeeeeeeeeeeeggggggggggggggggg",
       "hhhhhhhhhhhhhhhhhhhqqrrrrrqqhh--FFFFFgggggggeeeeeeeeeeeeeegggggggeeeeeeeeeeeeeeggggggggggggggggg",
       "hhhhhhhhhhhhhhhhhhhhqqrrrrrqqq--FFFFFgggggggeeeeeeeeeeeeeggggggggeeeeeeeeeeeeeeggggggggggggggggg",
@@ -227,10 +232,10 @@
       "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFhhhFhhhhhhhhhhhhhhhhhhhhhhkkk--hhhhhgggggggggggggg",
       "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFhhhhhhhhhhhhhhhhhhhhhhhhhhhhkkh--hhhhgggggggggggggg"
     ], "surround": [
-      "hhhhhhhhhhhhhhhhqqqrrrrrqqhhhhhhhhh--FFFFFgeeeeeeeeeeeeeeeHHHHggeeeggeeeeeeeeeeeeegggggggggggggggggggggg",
-      "hhhhhhhhhhhhhhhhhhqqrrrrrqqhhhhhhhh--FFFFFggeeeeeeeeeeeeeeHHHgggggggggeeeeeeeeeeeegggggggggggggggggggggg",
-      "hhhhhhhhhhhhhhhhhhhqqrrrrrqqhhhhhhh--FFFFFggggeeeeeeeeeeeeeHHgggggggggeeeeeeeeeeeeeggggggggggggggggggggg",
-      "hhhhhhhhhhhhhhhhhhhhqqrrrrrqqqhhhh---FFFFFgggggeeeeeeeeeeeeeHegggggggeeeeeeeeeeeeeeggggggggggggggggggggg",
+      "aaaaaaaaaaaaaaaaccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaarrrrrrrrraaaddddddddddddddddddddddddddddgggg",
+      "faaaaaaaaaaaaaaaccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaarrrrrrrrraaddddddddddddddddddddddddddddgggg",
+      "faaaaaaaaaaaaaaaccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaarrrrrrrrrdddddddddddddddddddddddddddddgggg",
+      "faaaaaaaaaaaaaaacccccccciaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaarrrrrrrrrddddddddddddddddddddddddddddgggg",
       "hhhhgggg",
       "hhhhgggg",
       "hhhhgggg",

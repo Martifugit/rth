@@ -493,6 +493,12 @@ each, in five waves) and a held-back frontier, and holds the standard: four stag
 ticked per area. Read `docs/world-areas.md` before world work; `tools/world areas` checks it and draws
 the coverage map; **R'th > World > Open This Area** opens an area's regions together.
 
+**Paint Ground:** **R'th > World > Paint Ground** (G) paints the ground tile by tile in the Scene view
+over every open region (brush, road strokes straight or at 45 degrees, fill, pick), drawn as the game
+draws it; saving writes the tiles to the data, takes a generated region over (its scene to its area's
+folder, then the blockout), and the neighbours' rings of tiles follow. The paint stays data (one
+character a tile), not a Unity splat map: `docs/world-guide.md` section 4.
+
 **Next: not chosen yet.** Candidates: ranged, an art pass on Tolling, more quests and
 achievements.
 
@@ -557,6 +563,7 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | A landform (hill, scarp, mesa, crater, dunes, canyons) | An entry in continent.json's `relief`; a new kind is a case in `Relief.Contribution`. |
 | A spot kept for future content (a dungeon mouth, a boss arena) | An entry in continent.json's `sites` (kind, stage, note): marked in the blockout, never on the players' map. |
 | How a kind of ground is painted | Its ground in continent.json: `palette`, `layer` (`over` for made surfaces), `mix`, `shore`, `bank`, `scree`, `cliff`; a region's tiles piece with `"paint": true` is painted by `GroundPainter` (client and tools alike). |
+| Painting ground in the Editor (roads, paths, grass, water) | **R'th > World > Paint Ground** (`GroundPaintTool`): brush, road strokes, fill, pick over every open region; saving writes the tiles (`GroundPaintTool.WriteBack`) and the neighbours' rings (`GroundEdit.RefreshSurround`; the blockout refreshes them too). The kinds come from continent.json's grounds (`Blockout.KindOf`) and the regions' own legends. A new brush mode is a case in the tool; the edits on the data are `shared/World/Ground/GroundEdit.cs`. |
 | Ground tile by tile (a whole region's land) | A `tiles` piece: `rect`, `rows` from the north, a `legend` of characters (`material`, `blocks`, `water`, `height`, `cliff`: its own colour for its cliff faces). The compiler gives ground or blocks; `TileGround` draws it. |
 | Shaping the land over many regions at once | **R'th > World > Edit Terrain** in Unity, then Ctrl+S (`TerrainEditor`, `WorldTerrain`); generated land's sculpting is kept in `world/layout/sculpt` (`HeightEdits`), never in its `land_*.json`. Without Unity: `WorldTerrain.WriteHeights` a field and run `tools/world terrain-save`. |
 | Terrain (hills, valleys, cliffs) in a data region | The region's `terrain` (corner heights as text rows, hundredths of a tile; `TerrainText`). The compiler blocks tiles steeper than `cliffStep`; `TileGround` drapes over it; placed pieces stand on it; `GroundHeight.TerrainAt` lifts the camera. Sculpt in Unity (**Sculpt Ground** on a tile ground, written back on save) or start one with `tools/world terrain <region> flat` (or `layout`: the generated land's heights, which meet the neighbours). `check` warns about steps at region borders. |

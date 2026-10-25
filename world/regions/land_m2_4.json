@@ -14,6 +14,7 @@
     "LandGravelroad": "Gravel",
     "LandHeath": "Heath",
     "LandHighland": "Alpine",
+    "LandHighland2": "MossyStone",
     "LandLey": "Ley",
     "LandPaving": "Paving",
     "LandScree": "Scree",
@@ -121,7 +122,7 @@
     "470 475 479 483 486 489 491 493 494*2 495 496 498 500 503 507 511 516 522 530 538 547 565 601 654 731 836 950 1029 1075 1115 1151 1189 1226 1248 1257 1268 1285 1308 1331 1347 1358 1354 1323 1281 1247 1221 1203 1191 1184 1180 1178 1177 1179 1182 1186 1191 1197 1202 1208 1212 1215 1216 1211 1201 1190 1177 1156 1124 1077 1009 916 815 722 645 588 550 526 511 500 492 485 478 471 464 457 450 443 435 427 418 408 398 386 373 360 345"
   ] },
   "pieces": [
-    { "id": "ground", "kind": "tiles", "rect": [-192, 384, -96, 480], "legend": { "+": { "material": "LandPaving", "layer": "over" }, ";": { "material": "LandGravelroad", "layer": "over" }, "B": { "material": "LandScree" }, "C": { "material": "LandCrest", "cliff": "LandCliffCliffRock" }, "E": { "material": "LandLey", "layer": "over" }, "J": { "material": "LandFurrow", "layer": "over" }, "M": { "material": "LandHighland", "cliff": "LandCliffCliffRock" }, "S": { "material": "LandSnowcap" }, "h": { "material": "LandHeath", "cliff": "LandCliffCliffRock" } }, "paint": true, "margin": 4, "rows": [
+    { "id": "ground", "kind": "tiles", "rect": [-192, 384, -96, 480], "legend": { "+": { "material": "LandPaving", "layer": "over" }, ";": { "material": "LandGravelroad", "layer": "over" }, "B": { "material": "LandScree" }, "C": { "material": "LandCrest", "cliff": "LandCliffCliffRock" }, "E": { "material": "LandLey", "layer": "over" }, "J": { "material": "LandFurrow", "layer": "over" }, "M": { "material": "LandHighland", "cliff": "LandCliffCliffRock" }, "S": { "material": "LandSnowcap" }, "^": { "material": "LandSnowcap", "blocks": true }, "h": { "material": "LandHeath", "cliff": "LandCliffCliffRock" }, "k": { "material": "LandHighland2" }, "m": { "material": "LandCrest", "blocks": true } }, "paint": true, "margin": 4, "rows": [
       "MMMMMMMMMMMMMMMMMMMMMMMMMMBBBBBBBBBBBBBBBBBBBBBBBSSSSSSSBBCCCCCCCCBBBBBBBBBBBBBBBBBBh++++++++++M",
       "MMMMMMMMMMMMMMMMMMMMMMMMMMBBBMMBBBBBBBMBBBBBBBBBBBBBBBBBBCCCCCCCCBBBBBBBBBBBBBBBBBBB++++++++++++",
       "MMMMMMMMMMMMMMMMMMMMMMMMMMBBMMMMBBBBBBBMBBBBBBBBBBBBBBBBBBBBCCCCCBBBBBBBBBBBBBBBBBB+++++++++++++",
@@ -319,10 +320,10 @@
       "MMMMMMMM",
       "MMMMMMMM",
       "MMMMMMMM",
-      "MMMMMMMMMMMMMMMMMMMMMMMMMMMBBMBBBBCSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSBBCBBBMMMBBMMMMMMMMMMMMMMMMMMMMMMMM",
-      "hhhhhhhMMMMMMMMMMMMMMMMMMMMBBMBBBCCSSSSSSSSSSSSSSSSCCCCCCCSSSSSSSSBCCCBBBBMMMBBMMMMMMMMMMMMMMMMMMMMMMMMM",
-      "hhhhhhhhMMMMMMMMMMMMMMMMMMMBBBBBBBBCCCCCSSSSSSSSSSCCCCCCCCCSSSSSBCCBBBBBBMMMMBMMMMMMMMMMMMMMMMMMMMMMMMMM",
-      "hhhhhhhhhMMMMMMMMMMMMMMMMMMBBBBBBBCCCCCCCSSSSSSSSCCCCCCCCCCSSSSBBBBBBBMMMMMMBMMMMMMMMMMMMMMMMMMMMMMMMMMM"
+      "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkmmm^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^mmmkkkkkkkkkkkkkkkkkkkkkkkkkMMMM",
+      "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkmmm^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^mmmmmmkkkkkkkkkkkkkkkkkkkkkkkkkkMMMM",
+      "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkmmm^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^mmmmmmmmkkkkkkkkkkkkkkkkkkkkkkkkkkMMMM",
+      "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkmmmm^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^mmmmmmmkkkkkkkkkkkkkkkkkkkkkkkkkkkkMMMM"
     ] }
   ]
 }

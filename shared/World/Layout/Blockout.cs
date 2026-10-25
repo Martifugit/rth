@@ -165,9 +165,18 @@ namespace Rth.Shared.World.Layout
         /// <summary>What a character is, and the materials (with their palette colours) it uses.</summary>
         private static (TileKind kind, Dictionary<string, string> materials) Kind(ContinentMap map, Landscape land, char c)
         {
-            var materials = new Dictionary<string, string>();
             (string id, bool beyond) = land.Decode(c);
-            var g = new KeyValuePair<string, GroundDef>(id, map.Data.Grounds[id]);
+            return KindOf(map.Data, id, beyond);
+        }
+
+        /// <summary>
+        /// The tile kind a ground of the layout is drawn as, and the materials (with their palette
+        /// colours) it uses: what the blockout writes, and what the Editor's ground brush paints.
+        /// </summary>
+        public static (TileKind kind, Dictionary<string, string> materials) KindOf(ContinentData data, string id, bool beyond = false)
+        {
+            var materials = new Dictionary<string, string>();
+            var g = new KeyValuePair<string, GroundDef>(id, data.Grounds[id]);
             if (beyond)
             {
                 // Land beyond the first build: its own ground, hazed by the painter, and blocked.
@@ -183,7 +192,7 @@ namespace Rth.Shared.World.Layout
                 kind.Water = true;
                 kind.Height = -0.15f;
             }
-            else if (!g.Value.Walkable && map.Data.Terrain?.RidgeGrounds.Contains(g.Key) != true)
+            else if (!g.Value.Walkable && data.Terrain?.RidgeGrounds.Contains(g.Key) != true)
             {
                 // Ground the layout can't cross and the terrain doesn't raise (lava, a rock shelf):
                 // blocked, and standing a storey above the land (docs/world-scale.md 3). The crest and
@@ -191,7 +200,7 @@ namespace Rth.Shared.World.Layout
                 kind.Blocks = true;
                 kind.Height = 1.6f;
             }
-            else if (g.Key == map.Data.BridgeGround) kind.Height = 0.05f;
+            else if (g.Key == data.BridgeGround) kind.Height = 0.05f;
             if (g.Value.Layer == "over") kind.Layer = "over";
             if (g.Value.Cliff != null)
             {
@@ -202,7 +211,7 @@ namespace Rth.Shared.World.Layout
             return (kind, materials);
         }
 
-        private static string Pascal(string id) => string.Concat(id.Split('-', '_').Select(w => w.Length == 0 ? w : char.ToUpperInvariant(w[0]) + w.Substring(1)));
+        public static string Pascal(string id) => string.Concat(id.Split('-', '_').Select(w => w.Length == 0 ? w : char.ToUpperInvariant(w[0]) + w.Substring(1)));
 
         /// <summary>
         /// Shown on walking in: the biggest place in the region with a real name, or else the power
@@ -239,12 +248,38 @@ namespace Rth.Shared.World.Layout
 
         // ------------------------------------------------------------------ files
 
-        /// <summary>What writing the blockout would change in a regions folder: files to write (path, text) and to delete.</summary>
+        /// <summary>
+        /// What writing the blockout would change in a regions folder: files to write (path, text) and
+        /// to delete. Built regions are left alone but for their ring of the neighbours' tiles
+        /// (<see cref="Piece.Surround"/>), which follows the land round them.
+        /// </summary>
         public static (Dictionary<string, string> write, List<string> delete) Changes(string regionsDirectory, Result result)
         {
             var write = new Dictionary<string, string>(StringComparer.Ordinal);
             var delete = new List<string>();
             var wanted = new HashSet<string>(StringComparer.Ordinal);
+
+            // The rings of the neighbours' tiles, from what the world really holds: where the land
+            // meets a built region, its own painted ground, both ways (Ground.GroundEdit).
+            var built = new List<(RegionData region, string path)>();
+            if (Directory.Exists(regionsDirectory))
+                foreach (string path in RegionFiles.RegionPaths(regionsDirectory))
+                {
+                    RegionData r;
+                    try { r = RegionFiles.LoadRegion(path); }
+                    catch (FormatException) { continue; }
+                    if (r.Generated == null && !r.Instanced && Ground.GroundEdit.Tiles(r) != null) built.Add((r, path));
+                }
+            var world = result.Regions.Concat(built.Select(b => b.region)).ToList();
+            Ground.GroundEdit.RefreshSurrounds(world, new HashSet<string>(result.Regions.Select(r => r.Id), StringComparer.Ordinal));
+            var ringed = new HashSet<string>(Ground.GroundEdit.RefreshSurrounds(world, new HashSet<string>(built.Select(b => b.region.Id), StringComparer.Ordinal)), StringComparer.Ordinal);
+            foreach ((RegionData region, string path) in built)
+                if (ringed.Contains(region.Id))
+                {
+                    string text = RegionFiles.Format(region);
+                    if (File.ReadAllText(path).Replace("\r\n", "\n") != text) write[path] = text;
+                }
+
             foreach (RegionData region in result.Regions)
             {
                 string path = Path.Combine(regionsDirectory, region.Id + ".json");

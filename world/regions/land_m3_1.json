@@ -14,9 +14,12 @@
     "LandFarForest": "GraveTurf",
     "LandFarGrass": "Grass",
     "LandFarHeath": "Heath",
+    "LandFrontier": "Heath",
     "LandHeath": "Heath",
     "LandHighland": "Alpine",
-    "LandScree": "Scree"
+    "LandHighland2": "MossyStone",
+    "LandScree": "Scree",
+    "LandSnowcap": "Snow"
   },
   "seed": 203726284,
   "generated": "blockout",
@@ -120,7 +123,7 @@
     "138 134 127 119 110 101 91 83 75 68 62 57 53 49 46 44 43 42*4 43 46 49 55 62 71 82 93 103 112 120 124 127 129 130 132 134 136 140 145 148 152 154 157 160 162 165 168 171 173 175 177 178 180 181 182 183 185 192 285 477 615 651 659 669 681 693 706 717 727 735 743 751 758 765 773 780 788 795 802 809 814 817 820 821 820 818 813 807 801 796 791 788 787*2 789"
   ] },
   "pieces": [
-    { "id": "ground", "kind": "tiles", "rect": [-288, 96, -192, 192], "legend": { "0": { "material": "LandFarGrass", "blocks": true, "beyond": true }, "1": { "material": "LandFarHeath", "blocks": true, "beyond": true }, "2": { "material": "LandFarBracken", "blocks": true, "beyond": true }, "3": { "material": "LandFarForest", "blocks": true, "beyond": true }, "B": { "material": "LandScree" }, "C": { "material": "LandCrest", "cliff": "LandCliffCliffRock" }, "M": { "material": "LandHighland", "cliff": "LandCliffCliffRock" }, "h": { "material": "LandHeath", "cliff": "LandCliffCliffRock" } }, "paint": true, "margin": 4, "rows": [
+    { "id": "ground", "kind": "tiles", "rect": [-288, 96, -192, 192], "legend": { "%": { "material": "LandFrontier", "blocks": true, "beyond": true }, "0": { "material": "LandFarGrass", "blocks": true, "beyond": true }, "1": { "material": "LandFarHeath", "blocks": true, "beyond": true }, "2": { "material": "LandFarBracken", "blocks": true, "beyond": true }, "3": { "material": "LandFarForest", "blocks": true, "beyond": true }, "B": { "material": "LandScree" }, "C": { "material": "LandCrest", "cliff": "LandCliffCliffRock" }, "M": { "material": "LandHighland", "cliff": "LandCliffCliffRock" }, "^": { "material": "LandSnowcap", "blocks": true }, "h": { "material": "LandHeath", "cliff": "LandCliffCliffRock" }, "k": { "material": "LandHighland2" }, "m": { "material": "LandCrest", "blocks": true } }, "paint": true, "margin": 4, "rows": [
       "0000000000111111111111111111111111111111111111BBBhhhhhhhhhhhhhhhhhhMMMMMMMMMMMMMMMMMMMMMBBMMBBBC",
       "00000000001111111111111111111111111111111111111hhhhhhhhhhhhhhhhhhhhMMMMMMMMMMMMMMMMMMMMMBBMMBBBC",
       "00000000001111111111111111111111111111111111111hhhhhhhhhhhhhhhhhhhhMMMMMMMMMMMMMMMMMMMMBBBMMBBBC",
@@ -218,10 +221,10 @@
       "333333311111111111111111111112222221111222222222222222111111hhhhhMMMMMMMBBBBBBBBBBBBBhMMMMMMMMMM",
       "333333311111111111111111111112222221111222222222222222111111hhhhMMMMMMMMBBBBBBBBBBBBBhMMMMMMMMMM"
     ], "surround": [
-      "2222222222001111111111111111111111111111111111111BBBBBhhhhhhhhhhhhhBBBMMMMMMMMMMMMMMMMMMMMMMBBMBBBCCCCCC",
-      "2222222220001111111111111111111111111111111111111BBBBBBBBhhhhhhhhhhhBhMMMMMMMMMMMMMMMMMMMMMMBBMMBBBCCCCC",
-      "02222222000001111111111111111111111111111111111111BBBBBBBBhhhhhhhhhhhhMMMMMMMMMMMMMMMMMMMMMMBBMMBBBCCCCC",
-      "00222220000001111111111111111111111111111111111111BBBBBBBhhhhhhhhhhhhhMMMMMMMMMMMMMMMMMMMMMMBMMMMBBCCCCC",
+      "2222%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkmmm^^^^^^",
+      "2222%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkmmm^^^^^^",
+      "0222%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkmmmm^^^^^",
+      "0022%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkmmmm^^^^^",
       "0000CCCC",
       "0000CCCC",
       "0000CCCC",

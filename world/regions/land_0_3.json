@@ -11,6 +11,7 @@
     "LandCliffCliffRock": "CliffRock",
     "LandCobble": "Cobble",
     "LandDirtroad": "Dirt",
+    "LandFarmland": "Grass",
     "LandGrass": "Grass",
     "LandHeath": "Heath",
     "LandLey": "Ley",
@@ -124,7 +125,7 @@
     "0 1 4 8 14 21 28 36 43 48 52 54 55 53 51 47 44 39 35 32 28 26 23 21 20*2 21 22 23*2 22 19 15 11 8 6 5*35 6 11 18 29 41 52 63 73 82 91 98 106 113 120 126 131 135 139 143 146 149 151 154 155 154 151"
   ] },
   "pieces": [
-    { "id": "ground", "kind": "tiles", "rect": [0, 288, 96, 384], "legend": { "+": { "material": "LandPaving", "layer": "over" }, "-": { "material": "LandDirtroad", "layer": "over" }, "=": { "material": "LandCobble", "layer": "over" }, "E": { "material": "LandLey", "layer": "over" }, "H": { "material": "LandWheat", "layer": "over" }, "U": { "material": "LandWorn" }, "e": { "material": "LandMeadow" }, "g": { "material": "LandGrass", "cliff": "LandCliffCliffRock" }, "h": { "material": "LandHeath", "cliff": "LandCliffCliffRock" }, "q": { "material": "LandShingle" }, "r": { "material": "LandRiver", "water": true, "height": -0.15 }, "s": { "material": "LandSand" } }, "paint": true, "margin": 4, "rows": [
+    { "id": "ground", "kind": "tiles", "rect": [0, 288, 96, 384], "legend": { "+": { "material": "LandPaving", "layer": "over" }, "-": { "material": "LandDirtroad", "layer": "over" }, "=": { "material": "LandCobble", "layer": "over" }, "E": { "material": "LandLey", "layer": "over" }, "H": { "material": "LandWheat", "layer": "over" }, "U": { "material": "LandWorn" }, "a": { "material": "LandFarmland" }, "e": { "material": "LandMeadow" }, "g": { "material": "LandGrass", "cliff": "LandCliffCliffRock" }, "h": { "material": "LandHeath", "cliff": "LandCliffCliffRock" }, "q": { "material": "LandShingle" }, "r": { "material": "LandRiver", "water": true, "height": -0.15 }, "s": { "material": "LandSand" } }, "paint": true, "margin": 4, "rows": [
       "eeeUUUU====UUeeeeeeeeeeeeeeeeeeeeeeeeggggggggggggggggggggggggssssrrrrrrrrrrrsssggggggggggggggggg",
       "eeeeeUUU====UUeeeeeeeeeeeeeeeeeeeeeeegggggggggggggggggggggggggggsssrrrrrrrrrrrsssggggggggeeggggg",
       "eeeeeeeUU====UUeeeeeeeeeeeeeeeeeeeeeeeggggggggggggggggggggggggggggsssrrrrrrrrrrrsssggggggeeggggg",
@@ -322,10 +323,10 @@
       "eeeeeeee",
       "eeeeeeee",
       "eeeeeeee",
-      "eeeeeeeeeeeeeeeeeeeehhhhhggggggggggggggggggggggggggqqqqqqqqqqqqqqqqqqqqgggggggggggggggggggggggggggeeeeee",
-      "eeeeeeeeeeeeeeeeeeeehhhhhgggggggggggggggggggggggggggqqqqqqqqqqqqqqqqqqqqqgggggggggggggggggggggggggeeeeee",
-      "eeeeeeeeeeeeeeeeeeeehhhhgggggggggggggggggggggggggggggggqqqqqqqqqqqqqqqqqqqggggggggggggggggggggggggeeeeee",
-      "eeeeeeeeeeeeeeeeeeeehhhhgggggggggggggggggggggggggggggggggqqqqqqqggggqqqqqqqqggggggggggggggggggggggeeeeee"
+      "aaaaeeeeeeeeeeeeeeeehhhhhggggggggggggggggggggggggggqqqqqqqqqqqqqqqqqqqqgggggggggggggggggggggggggggeeeeee",
+      "aaaaeeeeeeeeeeeeeeeehhhhhgggggggggggggggggggggggggggqqqqqqqqqqqqqqqqqqqqqgggggggggggggggggggggggggeeeeee",
+      "aaaaeeeeeeeeeeeeeeeehhhhgggggggggggggggggggggggggggggggqqqqqqqqqqqqqqqqqqqggggggggggggggggggggggggeeeeee",
+      "aaaaeeeeeeeeeeeeeeeehhhhgggggggggggggggggggggggggggggggggqqqqqqqggggqqqqqqqqggggggggggggggggggggggeeeeee"
     ] }
   ]
 }

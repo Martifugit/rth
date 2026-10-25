@@ -133,6 +133,19 @@ With Unity (the owner, or the agent with Unity):
   its size); tiles too steep to walk show red. Saving the scene writes the heights into the region's
   `terrain`, and takes a generated region over. The next sync stands its trees, rocks and props on
   the new ground.
+- **Painting ground:** **R'th > World > Paint Ground** (or G) in the Scene view, over every open
+  region at once (open an area with **Open This Area**). Pick a ground from the list (the layout's
+  grounds by name, and any a region has of its own; type to filter), then:
+  **Brush** (a round brush, `[` and `]` for its size; radius 0 is one tile), **Line** (drag from end
+  to end: a road or path 1-8 tiles wide, straight or at 45 degrees), **Fill** (the patch of one
+  ground under the click) or **Pick** (Ctrl+click in any mode takes the ground under the cursor).
+  It is drawn as the game draws it while you paint: blended ground, crisp roads and water with
+  their diagonal edges, and the neighbours blend across the border. Ctrl+Z undoes a stroke. Saving
+  (Ctrl+S) writes the tiles into the regions' `tiles` pieces; painting a generated region takes it
+  over, gives its scene its area's folder (moved at the next Sync World) and runs the blockout so
+  the land round it follows; the neighbours' rings of tiles (`surround`) follow either way.
+  Water and blocked ground change what can be walked, so the maps are exported too. Ground drawn
+  another way (Tolling, Palmerway) isn't painted.
 - **Saving a region scene** writes back what you did to data pieces in the Editor: moving one by
   whole tiles, turning a placed one, deleting one. Then it captures `Handmade` and re-exports.
   Pressing Play and **R'th > Export Map** do the same capture and export.

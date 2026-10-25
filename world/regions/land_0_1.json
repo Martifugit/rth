@@ -11,6 +11,7 @@
     "LandBracken": "Bracken",
     "LandBridge": "Planks",
     "LandCliffCliffRock": "CliffRock",
+    "LandFarmland": "Grass",
     "LandGrass": "Grass",
     "LandHeath": "Heath",
     "LandMeadow": "Meadow",
@@ -120,7 +121,7 @@
     "0*97"
   ] },
   "pieces": [
-    { "id": "ground", "kind": "tiles", "rect": [0, 96, 96, 192], "legend": { "U": { "material": "LandWorn" }, "b": { "material": "LandBridge", "height": 0.05, "layer": "over" }, "e": { "material": "LandMeadow" }, "g": { "material": "LandGrass", "cliff": "LandCliffCliffRock" }, "h": { "material": "LandHeath", "cliff": "LandCliffCliffRock" }, "k": { "material": "LandBracken" }, "r": { "material": "LandRiver", "water": true, "height": -0.15 }, "s": { "material": "LandSand" } }, "paint": true, "margin": 4, "rows": [
+    { "id": "ground", "kind": "tiles", "rect": [0, 96, 96, 192], "legend": { "U": { "material": "LandWorn" }, "a": { "material": "LandFarmland" }, "b": { "material": "LandBridge", "height": 0.05, "layer": "over" }, "e": { "material": "LandMeadow" }, "g": { "material": "LandGrass", "cliff": "LandCliffCliffRock" }, "h": { "material": "LandHeath", "cliff": "LandCliffCliffRock" }, "k": { "material": "LandBracken" }, "r": { "material": "LandRiver", "water": true, "height": -0.15 }, "s": { "material": "LandSand" } }, "paint": true, "margin": 4, "rows": [
       "ggggggggggggggggggggggggggghhhhhhhhhhggggggggggggggggggggggggggggUUgggggggggggggggggggggeeeegggg",
       "gggggggggggggggggggggggggggghhhhhhhhhhggggggggggggggggggggggggggUUgggggggggggggggggggggggeeegggg",
       "ggggggggggggggggggggggggggggeehhhhhhhhgggggggggggggggggggggggggUUgggggggggggggggggggggggggggggge",
@@ -218,10 +219,10 @@
       "gggggggggggggggggggggeeeeeeeeUUegggsrrrrrssggggggggggggggggggggggggggggggggggggggggggggggggggggg",
       "gggggggggggggggggggggeeeeeeeeUUeeggsrrrrrrsggggggggggggggggggggggggggggggggggggggggggggggggggggg"
     ], "surround": [
-      "gggggggggggggggggggggggggghhhhhhhggggggggggggggggggggggggggggggggggggggggUUggggggggggeeeeeeeeeeeeeeeeeee",
-      "gggggggggggggggggggggggggghhhhhhhgggggggggggggggggggggggggggggggggggggggUUgggggggggggggeeeeeeeeeeeegggge",
-      "ggggggggggggggggggggggggggghhhhhhggggggggggggggggggggggggggggggggggggggUUgggggggggggggggggeeeeeeeggggggg",
-      "gggggggggggggggggggggggggggghhhhhhhhhhhhggggggggggggggggggggggggggggggUUgggggggggggggggggggeeeeeeggggggg",
+      "aaaagggggggggggggggggggggghhhhhhhggggggggggggggggggggggggggggggggggggggggUUggggggggggeeeeeeeeeeeeeeeeeee",
+      "aaaagggggggggggggggggggggghhhhhhhgggggggggggggggggggggggggggggggggggggggUUgggggggggggggeeeeeeeeeeeegggge",
+      "aaaaggggggggggggggggggggggghhhhhhggggggggggggggggggggggggggggggggggggggUUgggggggggggggggggeeeeeeeggggggg",
+      "aaaagggggggggggggggggggggggghhhhhhhhhhhhggggggggggggggggggggggggggggggUUgggggggggggggggggggeeeeeeggggggg",
       "gggggggg",
       "ggggggee",
       "ggggeeee",

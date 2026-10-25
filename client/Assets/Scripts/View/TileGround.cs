@@ -16,7 +16,8 @@ namespace Rth.Client
     /// too steep, which is all the map exporter and <see cref="GroundHeight"/> count as ground.
     /// The scene keeps only the rows and heights; the meshes are rebuilt whenever it loads, so they
     /// cost the scene file nothing. The Editor's ground sculpting tool changes <see cref="corners"/>
-    /// and marks it <see cref="sculpted"/>; saving the scene writes the heights back to the data.
+    /// and marks it <see cref="sculpted"/>; its ground brush changes the rows and kinds and keeps them
+    /// in <see cref="brushEdit"/>. Saving the scene writes both back to the data.
     /// </summary>
     [ExecuteAlways]
     public sealed class TileGround : MonoBehaviour
@@ -62,6 +63,8 @@ namespace Rth.Client
         public Material[] cliffMaterials = new Material[0];
         [Tooltip("Set by sculpting in the Editor: saving writes the heights back to the region's data.")]
         [HideInInspector] public bool sculpted;
+        [Tooltip("Set by the Editor's ground brush: the ground's tiles, kinds, ring and colours as JSON; saving writes them to the region's data.")]
+        [HideInInspector] public string brushEdit = "";
 
         [Header("Painted ground (docs/world-plan.md section 7)")]
         [Tooltip("Painted the RuneScape way: natural ground blended, made surfaces and water crisp with diagonal half tiles, in one texture.")]

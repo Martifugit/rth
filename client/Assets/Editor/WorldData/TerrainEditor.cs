@@ -363,7 +363,7 @@ namespace Rth.Client.Editor
         /// Runs <c>dotnet run --project tools/world -- &lt;args&gt;</c> from the repository root and waits for it:
         /// the world tool runs on .NET, as it does from the command line (see <see cref="WorldTerrain.Save"/>).
         /// </summary>
-        private static int RunWorldTool(string args, List<string> output, List<string> errors)
+        internal static int RunWorldTool(string args, List<string> output, List<string> errors)
         {
             var start = new System.Diagnostics.ProcessStartInfo("dotnet", $"run --project tools/world -- {args}")
             {
@@ -389,7 +389,7 @@ namespace Rth.Client.Editor
         }
 
         /// <summary>Redraws the changed regions whose scenes are open, as Sync World would.</summary>
-        private static void Redraw(List<string> regions)
+        internal static void Redraw(List<string> regions)
         {
             if (regions.Count == 0) return;
             var open = new HashSet<string>();
