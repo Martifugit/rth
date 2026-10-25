@@ -403,15 +403,23 @@ namespace Rth.Client.Editor
             if (open.Count == 0) return;
             var report = new WorldSync.Report();
             SyncState state = SyncState.Load();
-            foreach (string id in open)
+            try
             {
-                EditorUtility.DisplayProgressBar("Save Terrain", "Redrawing " + id, 0.8f);
-                WorldWorkspace.Entry entry = WorldWorkspace.Load(WorldSync.RepoRoot, id).Find(id);
-                if (entry == null) continue;
-                int errors = report.Lines.Count(l => l.StartsWith("ERROR"));
-                WorldSync.SyncRegion(entry, report, screenshots: false);
-                if (report.Lines.Count(l => l.StartsWith("ERROR")) == errors) state.Record(entry);
-                else state.Forget(id);
+                foreach (string id in open)
+                {
+                    EditorUtility.DisplayProgressBar("Redrawing", "Redrawing " + id, 0.8f);
+                    WorldWorkspace.Entry entry = WorldWorkspace.Load(WorldSync.RepoRoot, id).Find(id);
+                    if (entry == null) continue;
+                    int errors = report.Lines.Count(l => l.StartsWith("ERROR"));
+                    WorldSync.SyncRegion(entry, report, screenshots: false);
+                    if (report.Lines.Count(l => l.StartsWith("ERROR")) == errors) state.Record(entry);
+                    else state.Forget(id);
+                }
+            }
+            finally
+            {
+                // Its progress bar blocks the whole Editor until cleared.
+                EditorUtility.ClearProgressBar();
             }
             state.Save();
         }
