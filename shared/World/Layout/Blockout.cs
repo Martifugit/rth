@@ -258,6 +258,13 @@ namespace Rth.Shared.World.Layout
             if (Directory.Exists(regionsDirectory))
                 foreach (string path in RegionFiles.RegionPaths(regionsDirectory))
                     if (!wanted.Contains(Path.GetFullPath(path)) && IsGenerated(path)) delete.Add(path);
+            // Where the roads and rivers really run, for the world map, beside the layout.
+            if (result.Land != null)
+            {
+                string routes = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(regionsDirectory))!, "layout", LandRoutes.FileName);
+                string text = LandRoutes.From(result.Land).ToJson();
+                if (!File.Exists(routes) || File.ReadAllText(routes).Replace("\r\n", "\n") != text) write[routes] = text;
+            }
             return (write, delete);
         }
 

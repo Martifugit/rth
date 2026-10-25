@@ -14,6 +14,7 @@
     "LandDust": "Dust",
     "LandFarBracken": "Bracken",
     "LandFarHeath": "Heath",
+    "LandFurrow": "Furrow",
     "LandGravel": "Gravel",
     "LandGravelroad": "Gravel",
     "LandHeath": "Heath",
@@ -125,7 +126,7 @@
     "40 42 44 46 49 54 60 67 76 85 96 107 117 127 137 146 153 163 248 441 588 620 619 617 615 612 609 606 601 594 586 578 570 563 558 556 557 561 568 575 583 591 597 602 606 607 609 611 613 615 618 621 625 629 634 640 652 678 722 789 863 920 963 1002 1040 1073 1103 1135 1168 1201 1233 1261 1279 1288 1291 1299 1318 1319 1293 1268 1252 1246 1250 1259 1270 1279 1286 1285 1263 1214 1137 1035 923 822 740 681 646"
   ] },
   "pieces": [
-    { "id": "ground", "kind": "tiles", "rect": [-288, -384, -192, -288], "legend": { "1": { "material": "LandFarHeath", "blocks": true, "beyond": true }, "2": { "material": "LandFarBracken", "blocks": true, "beyond": true }, ";": { "material": "LandGravelroad", "layer": "over" }, "B": { "material": "LandScree" }, "C": { "material": "LandCrest", "cliff": "LandCliffCliffRock" }, "D": { "material": "LandDust" }, "M": { "material": "LandHighland", "cliff": "LandCliffCliffRock" }, "S": { "material": "LandSnowcap" }, "h": { "material": "LandHeath", "cliff": "LandCliffCliffRock" }, "o": { "material": "LandRedrock", "cliff": "LandCliffSandstone" }, "p": { "material": "LandPass", "cliff": "LandCliffCliffRock" }, "z": { "material": "LandGravel", "cliff": "LandCliffSandstone" } }, "paint": true, "margin": 4, "rows": [
+    { "id": "ground", "kind": "tiles", "rect": [-288, -384, -192, -288], "legend": { "1": { "material": "LandFarHeath", "blocks": true, "beyond": true }, "2": { "material": "LandFarBracken", "blocks": true, "beyond": true }, ";": { "material": "LandGravelroad", "layer": "over" }, "B": { "material": "LandScree" }, "C": { "material": "LandCrest", "cliff": "LandCliffCliffRock" }, "D": { "material": "LandDust" }, "J": { "material": "LandFurrow", "layer": "over" }, "M": { "material": "LandHighland", "cliff": "LandCliffCliffRock" }, "S": { "material": "LandSnowcap" }, "h": { "material": "LandHeath", "cliff": "LandCliffCliffRock" }, "o": { "material": "LandRedrock", "cliff": "LandCliffSandstone" }, "p": { "material": "LandPass", "cliff": "LandCliffCliffRock" }, "z": { "material": "LandGravel", "cliff": "LandCliffSandstone" } }, "paint": true, "margin": 4, "rows": [
       "1122222222222222111111DDDDBBBBBBBBBBMMMMMMMMMMMhhhhhhhhhhhhhhhhhhhBBCCCCCCCCCCCpppppppppppp;;;;;",
       "2222222222222222211111DDDooBBBBBBMMMMMMMMMMMMMMhhhhhhhhhhhhhhhhhhBBhCCCCCCCCCCCCCpppppppppppppp;",
       "222222222222222222111DDDDooBBBBMMMMMMMMMMMMMMMMMhhhhhhhhhhhhhhhhBBhCCCCCCCCCCCCCCCCCCCCppppppppp",
@@ -234,8 +235,8 @@
       "2222pppp",
       "2222pppp",
       "1221Cppp",
-      "1111CCCM",
-      "1111CCCM",
+      "1111CCCJ",
+      "1111CCCJ",
       "1111CCCM",
       "1111CCCB",
       "1111CCCM",

@@ -48,13 +48,13 @@
 -3,7    x  -288.. -193  y   672..  767  land 100%  core  30%  frontier  pass p-frost-pass; open heath (road)
 -2,7    x  -192..  -97  y   672..  767  land 100%  core 100%  range     town Frostpeak Forge; hamlet p-frost-toll; pass p-frost-pass (road)
 -1,7    x   -96..   -1  y   672..  767  land 100%  core 100%  wild      open foothills (road)
-0,7     x     0..   95  y   672..  767  land  93%  core  93%  wild      open tundra (coast)
-1,7     x    96..  191  y   672..  767  land  95%  core  95%  wild      open tundra (road, coast)
+0,7     x     0..   95  y   672..  767  land  83%  core  83%  wild      open tundra (coast)
+1,7     x    96..  191  y   672..  767  land  92%  core  92%  wild      open tundra (road, coast)
 2,7     x   192..  287  y   672..  767  land  91%  core  91%  wild      hamlet p-icemere (road, river, coast)
-3,7     x   288..  383  y   672..  767  land  96%  core  96%  wild      open snowfield (road, coast)
-4,7     x   384..  479  y   672..  767  land  71%  core  71%  wild      open tundra (road, coast)
-5,7     x   480..  575  y   672..  767  land  62%  core  62%  wild      open tundra (coast)
-6,7     x   576..  671  y   672..  767  land  36%  core  36%  houses    open fen (coast)
+3,7     x   288..  383  y   672..  767  land  88%  core  88%  wild      open tundra (road, coast)
+4,7     x   384..  479  y   672..  767  land  67%  core  67%  wild      open tundra (road, coast)
+5,7     x   480..  575  y   672..  767  land  61%  core  61%  wild      open tundra (coast)
+6,7     x   576..  671  y   672..  767  land  32%  core  32%  houses    open fen (coast)
 7,7     x   672..  767  y   672..  767  land   2%  core   2%  sea       sea, with a scrap of coast
 -8,6    x  -768.. -673  y   576..  671  land  49%  core   0%  frontier  open moor (coast)
 -7,6    x  -672.. -577  y   576..  671  land 100%  core   0%  frontier  open moor
@@ -67,19 +67,19 @@
 0,6     x     0..   95  y   576..  671  land 100%  core 100%  wild      open pine wood
 1,6     x    96..  191  y   576..  671  land 100%  core 100%  wild      hamlet p-trapper (road)
 2,6     x   192..  287  y   576..  671  land 100%  core 100%  wild      open pine wood (river)
-3,6     x   288..  383  y   576..  671  land 100%  core 100%  wild      open pine wood
+3,6     x   288..  383  y   576..  671  land 100%  core 100%  wild      open tundra
 4,6     x   384..  479  y   576..  671  land 100%  core 100%  wild      hamlet p-cold-camp (road, river)
 5,6     x   480..  575  y   576..  671  land 100%  core 100%  wild      open pine wood (river)
-6,6     x   576..  671  y   576..  671  land  90%  core  90%  houses    village House Umber's hold (road, river, lake)
+6,6     x   576..  671  y   576..  671  land  89%  core  89%  houses    village House Umber's hold (road, river, lake)
 7,6     x   672..  767  y   576..  671  land  77%  core  77%  houses    hamlet p-mere-hamlet (road, lake, coast)
-8,6     x   768..  863  y   576..  671  land  18%  core  18%  houses    open broken coast (coast)
+8,6     x   768..  863  y   576..  671  land  15%  core  15%  houses    open broken coast (river, lake, coast)
 -8,5    x  -768.. -673  y   480..  575  land  14%  core   0%  frontier  open heath (coast)
 -7,5    x  -672.. -577  y   480..  575  land  52%  core   0%  frontier  open moor (coast)
 -6,5    x  -576.. -481  y   480..  575  land  34%  core   0%  frontier  open moor (coast)
 -5,5    x  -480.. -385  y   480..  575  land  28%  core   0%  frontier  open moor (coast)
 -4,5    x  -384.. -289  y   480..  575  land  61%  core   0%  frontier  open heath (coast)
 -3,5    x  -288.. -193  y   480..  575  land 100%  core  20%  frontier  open heath
--2,5    x  -192..  -97  y   480..  575  land 100%  core 100%  range     open highland
+-2,5    x  -192..  -97  y   480..  575  land 100%  core 100%  range     open highland (road)
 -1,5    x   -96..   -1  y   480..  575  land 100%  core 100%  wild      open foothills (road)
 0,5     x     0..   95  y   480..  575  land 100%  core 100%  wild      open moor
 1,5     x    96..  191  y   480..  575  land 100%  core 100%  wild      village p-moorside (road)
@@ -88,8 +88,8 @@
 4,5     x   384..  479  y   480..  575  land 100%  core 100%  wild      open moor
 5,5     x   480..  575  y   480..  575  land 100%  core 100%  houses    open fen
 6,5     x   576..  671  y   480..  575  land  88%  core  88%  houses    village p-mereling; landmark Sallow's fallen house (road, river, lake)
-7,5     x   672..  767  y   480..  575  land  90%  core  90%  houses    open fen (road, lake)
-8,5     x   768..  863  y   480..  575  land  79%  core  79%  houses    hamlet p-scalth (road, coast)
+7,5     x   672..  767  y   480..  575  land  82%  core  82%  houses    open fen (road, river, lake)
+8,5     x   768..  863  y   480..  575  land  79%  core  79%  houses    hamlet p-scalth (road, river, coast)
 9,5     x   864..  959  y   480..  575  land   0%  core   0%  sea       sea, with a scrap of coast
 -8,4    x  -768.. -673  y   384..  479  land  23%  core   0%  frontier  open heath (coast)
 -7,4    x  -672.. -577  y   384..  479  land  70%  core   0%  frontier  open heath (coast)
@@ -97,15 +97,15 @@
 -5,4    x  -480.. -385  y   384..  479  land  72%  core   0%  frontier  open heath (coast)
 -4,4    x  -384.. -289  y   384..  479  land  69%  core   0%  frontier  open heath (coast)
 -3,4    x  -288.. -193  y   384..  479  land 100%  core  15%  frontier  pass p-meridian-pass; open heath (road)
--2,4    x  -192..  -97  y   384..  479  land 100%  core 100%  range     pass p-meridian-pass; open highland (road)
--1,4    x   -96..   -1  y   384..  479  land 100%  core 100%  empire    city Meridian; pass p-meridian-pass (road, river)
+-2,4    x  -192..  -97  y   384..  479  land 100%  core 100%  range     city Meridian; pass p-meridian-pass (road)
+-1,4    x   -96..   -1  y   384..  479  land 100%  core 100%  empire    pass p-meridian-pass; open foothills (road, river)
 0,4     x     0..   95  y   384..  479  land 100%  core 100%  empire    open grassland (road, river)
 1,4     x    96..  191  y   384..  479  land 100%  core 100%  empire    open grassland
 2,4     x   192..  287  y   384..  479  land 100%  core 100%  empire    village p-north-farms (road)
 3,4     x   288..  383  y   384..  479  land 100%  core 100%  empire    open forest (road)
 4,4     x   384..  479  y   384..  479  land 100%  core 100%  empire    hamlet p-forest-deep (road)
-5,4     x   480..  575  y   384..  479  land  97%  core  97%  empire    open forest (lake)
-6,4     x   576..  671  y   384..  479  land 100%  core 100%  houses    open fen (road)
+5,4     x   480..  575  y   384..  479  land  97%  core  97%  empire    open forest (river, lake)
+6,4     x   576..  671  y   384..  479  land  90%  core  90%  houses    open fen (road, river, lake)
 7,4     x   672..  767  y   384..  479  land 100%  core 100%  houses    village p-fen-village; hamlet p-holm (road)
 8,4     x   768..  863  y   384..  479  land  97%  core  97%  houses    town p-houses (Skerrin) (road, coast)
 9,4     x   864..  959  y   384..  479  land   9%  core   9%  sea       sea, with a scrap of coast

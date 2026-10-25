@@ -328,6 +328,8 @@ namespace Rth.Shared.World.Layout
         public string Note = "";
         /// <summary>Kept off the players' world map (a secret place), whatever its name.</summary>
         public bool Hidden;
+        /// <summary>The radius of the ground levelled for it, when it differs from its tier's (a terraced city levels less).</summary>
+        public float? Flat;
 
         public bool IsSettlement => Tier != "landmark";
     }

@@ -172,7 +172,7 @@
       "shore": "blacksand",
       "scree": "obsidian",
       "cliff": "DarkRock",
-      "mix": [{"ground": "ashworn", "share": 0.16, "scale": 30}, {"ground": "obsidian", "share": 0.03, "scale": 24}]
+      "mix": [{"ground": "ashworn", "share": 0.16, "scale": 30}, {"ground": "obsidian", "share": 0.012, "scale": 30}]
     },
     "ashworn": {"letter": "T", "name": "Scorched ground", "palette": "Ashworn", "map": "#45382b", "detail": true, "rough": 2.5, "height": 4},
     "volcanic": {
@@ -382,9 +382,15 @@
     {"id": "estuary", "name": "the great river's mouth", "rough": 6, "poly": [[925, 230], [884, 238], [858, 246], [872, 262], [925, 276]]},
     {"id": "cove-north", "name": "p-north-cove", "rough": 4, "poly": [[917, 166], [885, 168], [869, 182], [877, 202], [917, 206]]},
     {"id": "cove-south", "name": "p-south-cove", "rough": 4, "poly": [[900, 82], [872, 86], [861, 102], [871, 118], [900, 122]]},
-    {"id": "fjord-west", "name": "p-west-fjord", "rough": 5, "poly": [[64, 830], [72, 778], [86, 749], [104, 748], [100, 779], [116, 830]]},
-    {"id": "fjord-east", "name": "p-east-fjord", "rough": 5, "poly": [[372, 830], [366, 778], [380, 734], [400, 737], [396, 776], [410, 830]]},
-    {"id": "strait", "name": "the northern strait", "rough": 10, "poly": [[-900, 800], [1138, 800], [1138, 826], [-900, 826]]}
+    {"id": "fjord-west", "name": "p-west-fjord", "rough": 5, "poly": [[60, 830], [66, 760], [78, 712], [96, 700], [104, 730], [102, 780], [118, 830]]},
+    {
+      "id": "fjord-east",
+      "name": "p-east-fjord",
+      "rough": 5,
+      "poly": [[366, 830], [360, 772], [372, 712], [392, 700], [402, 730], [398, 780], [412, 830]]
+    },
+    {"id": "strait", "name": "the northern strait", "rough": 10, "poly": [[-900, 800], [1138, 800], [1138, 826], [-900, 826]]},
+    {"id": "fjord-mid", "name": "p-mid-fjord", "rough": 5, "poly": [[556, 830], [562, 738], [578, 702], [596, 704], [600, 742], [604, 830]]}
   ],
   "realms": [
     {
@@ -492,26 +498,48 @@
     {"id": "frontier-lake", "name": "a frontier lake", "ground": "lake", "ellipse": [-470, 330, 40, 26]},
     {"id": "far-north-snow", "name": "the far north", "ground": "snow", "rough": 30, "poly": [[-900, 800], [1300, 800], [1300, 1200], [-900, 1200]]},
     {
-      "id": "pines",
-      "name": "the pine belt",
-      "ground": "pine",
-      "rough": 24,
-      "poly": [[-80, 580], [200, 587], [416, 575], [597, 578], [621, 650], [400, 659], [100, 653], [-80, 659]]
-    },
-    {
-      "id": "north-snow",
-      "name": "the north's snowfields",
-      "ground": "snow",
-      "rough": 28,
-      "poly": [[-90, 730], [150, 734], [400, 725], [613, 702], [646, 800], [-90, 800]]
-    },
-    {
       "id": "moors",
       "name": "the moors",
       "ground": "moor",
-      "rough": 24,
-      "poly": [[-60, 470], [300, 480], [482, 474], [521, 515], [539, 584], [300, 580], [-60, 584]]
+      "rough": 10,
+      "poly": [
+        [-60, 470], [40, 478], [120, 470], [200, 486], [280, 478], [360, 490], [430, 476], [500, 480], [540, 520], [530, 560], [470, 572], [420, 600],
+        [360, 586], [300, 610], [240, 592], [180, 612], [120, 596], [60, 606], [0, 588], [-60, 600]
+      ]
     },
+    {
+      "id": "pine-west",
+      "name": "the western pinewood",
+      "ground": "pine",
+      "rough": 14,
+      "poly": [[-70, 590], [40, 600], [86, 640], [40, 690], [-60, 700]]
+    },
+    {
+      "id": "pine-mid",
+      "name": "the middle pinewood",
+      "ground": "pine",
+      "rough": 14,
+      "poly": [[130, 612], [250, 600], [300, 632], [272, 690], [170, 700], [120, 660]]
+    },
+    {
+      "id": "pine-east",
+      "name": "the eastern pinewood",
+      "ground": "pine",
+      "rough": 14,
+      "poly": [[360, 600], [480, 590], [560, 612], [600, 650], [540, 690], [420, 682], [370, 640]]
+    },
+    {"id": "copse-1", "ground": "pine", "ellipse": [90, 540, 18, 12]},
+    {"id": "copse-2", "ground": "pine", "ellipse": [330, 530, 14, 10]},
+    {"id": "copse-3", "ground": "pine", "ellipse": [200, 724, 16, 10]},
+    {"id": "copse-4", "ground": "pine", "ellipse": [500, 706, 20, 12]},
+    {
+      "id": "snow-spine-foot",
+      "name": "snow under the frozen spine",
+      "ground": "snow",
+      "rough": 16,
+      "poly": [[-110, 730], [20, 742], [60, 792], [-110, 800]]
+    },
+    {"id": "snow-east", "ground": "snow", "rough": 16, "poly": [[430, 722], [560, 718], [600, 752], [440, 772]]},
     {
       "id": "eller",
       "name": "p-forest (Eller)",
@@ -589,6 +617,18 @@
       "rough": 8,
       "poly": [[771, -219], [820, -212], [835, -253], [813, -271], [780, -244]]
     },
+    {"id": "lava-tongue-ne", "name": "a lava tongue", "ground": "lava", "halfWidth": 5, "line": [[672, -262], [696, -220], [712, -176]]},
+    {"id": "lava-tongue-sw", "name": "a lava tongue", "ground": "lava", "halfWidth": 6, "line": [[618, -310], [590, -338], [562, -366], [544, -398]]},
+    {"id": "lava-tongue-e", "name": "a lava tongue", "ground": "lava", "halfWidth": 4, "line": [[690, -292], [726, -302], [748, -330]]},
+    {
+      "id": "lava-ember-sea",
+      "name": "p-ember-mount's flow to the sea",
+      "ground": "lava",
+      "halfWidth": 5,
+      "line": [[770, -198], [800, -182], [828, -172], [860, -162]]
+    },
+    {"id": "fortress-ash", "ground": "ash", "poly": [[566, -231], [603, -229], [605, -263], [566, -263]]},
+    {"id": "fortress-rock", "name": "the fortress pocket's rock", "ground": "scree", "ellipse": [584, -244, 12, 10]},
     {"id": "cone-slopes", "name": "p-cinder-mount", "ground": "volcanic", "ellipse": [646, -285, 33, 32]},
     {"id": "ember-slopes", "name": "p-ember-mount", "ground": "volcanic", "ellipse": [757, -204, 20, 19]},
     {"id": "obsidian-flats", "name": "the obsidian flats", "ground": "obsidian", "ellipse": [605, -374, 21, 13]},
@@ -631,6 +671,16 @@
     {"id": "belfry-isle", "name": "the drowned belfry's isle", "ground": "heath", "ellipse": [284, 24, 7, 5]},
     {"id": "wennow", "name": "Wennow", "ground": "lake", "ellipse": [108, -8, 34, 26]},
     {"id": "eller-mere", "name": "Eller's mere", "ground": "lake", "ellipse": [500, 384, 11, 9]},
+    {
+      "id": "brack-mere-1",
+      "name": "p-mere-west",
+      "ground": "lake",
+      "rough": 6,
+      "poly": [[634, 470], [648, 482], [668, 480], [672, 464], [656, 456], [638, 458]]
+    },
+    {"id": "brack-mere-2", "name": "p-long-mere", "ground": "lake", "rough": 6, "poly": [[706, 516], [730, 530], [756, 524], [752, 508], [728, 504]]},
+    {"id": "brack-mere-3", "ground": "lake", "ellipse": [790, 604, 13, 8]},
+    {"id": "brack-mere-4", "ground": "lake", "ellipse": [600, 612, 11, 7]},
     {
       "id": "p-mere",
       "name": "p-mere",
@@ -681,9 +731,9 @@
       "id": "meridian-terraces",
       "name": "Meridian's terraces",
       "kind": "terraces",
-      "step": 1.0,
+      "step": 1.2,
       "edge": 6,
-      "poly": [[-112, 438], [-46, 440], [-42, 496], [-106, 502]]
+      "poly": [[-142, 440], [-70, 442], [-64, 502], [-136, 506]]
     },
     {"id": "cruor-hill", "name": "Cruor's hill", "kind": "hill", "height": 3.6, "ellipse": [322, 176, 48, 44]},
     {
@@ -734,7 +784,7 @@
       "height": 4,
       "edge": 1.5,
       "ellipse": [584, -244, 12, 10],
-      "ramps": [{"at": [594, -235], "halfWidth": 2, "length": 9}]
+      "ramps": [{"at": [594, -235], "halfWidth": 4, "length": 14}]
     },
     {"id": "kiln-terraces", "name": "Kiln's terraces", "kind": "terraces", "step": 0.9, "edge": 5, "ellipse": [646, -232, 25, 17]},
     {
@@ -849,7 +899,28 @@
     {"id": "frontier-hills-south", "kind": "hill", "height": 3, "ellipse": [-430, -300, 80, 60]},
     {"id": "frontier-hills-north", "kind": "hill", "height": 2.5, "ellipse": [-400, 620, 70, 50]},
     {"id": "frontier-hills-west", "kind": "hill", "height": 2, "ellipse": [-560, 100, 90, 70]},
-    {"id": "frontier-ridge", "kind": "ridge", "height": 2.5, "halfWidth": 26, "line": [[-640, -560], [-560, -420], [-520, -200]]}
+    {"id": "frontier-ridge", "kind": "ridge", "height": 2.5, "halfWidth": 26, "line": [[-640, -560], [-560, -420], [-520, -200]]},
+    {
+      "id": "north-ridge",
+      "name": "the granite ridge",
+      "kind": "ridge",
+      "height": 2.6,
+      "halfWidth": 14,
+      "line": [[60, 690], [180, 706], [300, 692], [420, 704]]
+    },
+    {
+      "id": "basalt-fissures",
+      "name": "the basalt fissures",
+      "kind": "canyons",
+      "height": 1.6,
+      "scale": 20,
+      "edge": 8,
+      "poly": [[420, -380], [510, -368], [514, -300], [436, -296]]
+    },
+    {"id": "cinder-cone-1", "kind": "cone", "height": 2.5, "crater": 3, "craterDepth": 1, "ellipse": [512, -176, 12, 12]},
+    {"id": "cinder-cone-2", "kind": "cone", "height": 2, "crater": 2.5, "craterDepth": 0.8, "ellipse": [700, -130, 10, 10]},
+    {"id": "cinder-cone-3", "kind": "cone", "height": 2, "crater": 2.5, "craterDepth": 0.8, "ellipse": [592, -414, 9, 9]},
+    {"id": "meridian-shoulder", "name": "Meridian's shoulder", "kind": "hill", "height": 2.6, "ellipse": [-102, 470, 44, 38]}
   ],
   "terrain": {
     "about": "The generated land's terrain, in tiles (Landscape, docs/world-plan.md). Each ground's height is smoothed into its neighbours'; then the land's rolling, the landforms (relief), the crest's peaks, the fall to the sea, lakes held level, rivers falling to their mouths in valleys of their own, passes, roads levelled across, settlement platforms.",
@@ -1037,7 +1108,7 @@
       "into": "sea",
       "halfWidth": 3,
       "sourceHalfWidth": 1.5,
-      "meander": 5,
+      "meander": 10,
       "line": [[200, 642], [226, 682], [248, 725], [256, 762], [258, 797]]
     },
     {
@@ -1047,6 +1118,30 @@
       "halfWidth": 4,
       "meander": 8,
       "line": [[-280, -100], [-400, -150], [-560, -180], [-760, -200]]
+    },
+    {
+      "id": "fen-channel-west",
+      "name": "p-west-channel",
+      "into": "lake:brack-mere-1",
+      "halfWidth": 1.5,
+      "meander": 5,
+      "line": [[575, 420], [604, 440], [634, 462]]
+    },
+    {
+      "id": "fen-drain",
+      "name": "p-mere's drain",
+      "into": "sea",
+      "halfWidth": 2,
+      "meander": 6,
+      "line": [[706, 566], [750, 562], [790, 578], [826, 592], [870, 606]]
+    },
+    {
+      "id": "fen-channel-long",
+      "name": "p-long-channel",
+      "into": "lake:brack-mere-2",
+      "halfWidth": 1.5,
+      "meander": 6,
+      "line": [[668, 480], [690, 496], [710, 512]]
     }
   ],
   "places": [
@@ -1157,10 +1252,11 @@
       "id": "meridian",
       "name": "Meridian",
       "tier": "city",
-      "at": [-76, 468],
+      "at": [-102, 470],
       "capital": true,
       "note": "the surface people's capital on a terraced shoulder of the spine, above the great river's source and the Meridian pass",
-      "across": 140
+      "across": 140,
+      "flat": 24
     },
     {
       "id": "frostpeak-forge",
@@ -1246,7 +1342,7 @@
     },
     {"id": "p-sulphur", "name": "p-sulphur", "tier": "village", "at": [626, -436], "note": "sulphur works above the flats"},
     {"id": "p-brow", "name": "p-brow", "tier": "village", "at": [608, -50], "note": "the village on p-head's brow, neutral ground"},
-    {"id": "p-obsidian", "name": "p-obsidian", "tier": "hamlet", "at": [582, -357]},
+    {"id": "p-obsidian", "name": "p-obsidian", "tier": "hamlet", "at": [586, -382]},
     {"id": "p-smoke", "name": "p-smoke", "tier": "hamlet", "at": [712, -160]},
     {"id": "p-springs", "name": "p-springs", "tier": "hamlet", "at": [703, -317], "note": "hot springs"},
     {

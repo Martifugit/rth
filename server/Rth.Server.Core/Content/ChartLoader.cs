@@ -32,6 +32,9 @@ namespace Rth.Server.Content
                     return null;
                 }
                 WorldChart chart = WorldChart.From(map);
+                // The roads and rivers as they really run on the ground, when the blockout has written them.
+                string routes = Path.Combine(directory, LandRoutes.FileName);
+                if (File.Exists(routes)) chart.UseRoutes(LandRoutes.Parse(File.ReadAllText(routes)));
                 log("World map: " + chart.WidthTiles + " x " + chart.HeightTiles + " tiles, " + chart.Places.Count + " places.");
                 return chart;
             }

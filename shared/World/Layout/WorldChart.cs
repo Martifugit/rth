@@ -69,6 +69,16 @@ namespace Rth.Shared.World.Layout
 
         // ------------------------------------------------------------------ building
 
+        /// <summary>Draws the roads, rivers and passes where they really run (<see cref="LandRoutes"/>) instead of along the layout's lines.</summary>
+        public void UseRoutes(LandRoutes routes)
+        {
+            var byId = new Dictionary<string, LandRoutes.Line>();
+            foreach (LandRoutes.Line l in routes.Lines) byId[l.Kind + ":" + l.Id] = l;
+            foreach (ChartLine line in Rivers.Concat(Roads))
+                if (byId.TryGetValue(line.Kind + ":" + line.Id, out LandRoutes.Line? real) && real.Points.Length >= 4)
+                    line.Points = real.Points.Select(v => (float)v).ToArray();
+        }
+
         /// <summary>The chart of a compiled layout. Placeholder names (p-...) never reach it.</summary>
         public static WorldChart From(ContinentMap map)
         {

@@ -113,18 +113,22 @@ switch (command)
         Landscape land = Landscape.Build(lw.Map, lw.Built, lw.Edits);
         foreach (string w in land.Warnings) Console.WriteLine("warning: " + w);
         Console.WriteLine($"landscape built in {timer.ElapsedMilliseconds} ms");
-        int x0 = land.X0, y0 = land.Y0, x1 = land.X0 + land.W, y1 = land.Y0 + land.H, ppt = 1;
-        string name = "paint";
-        if (rest.Length >= 4)
-        {
-            x0 = int.Parse(rest[0]); y0 = int.Parse(rest[1]); x1 = int.Parse(rest[2]); y1 = int.Parse(rest[3]);
-        }
-        if (rest.Length >= 5) ppt = int.Parse(rest[4]);
-        if (rest.Length >= 6) name = rest[5];
         string outDir = Path.Combine(root, "world", "renders");
         Directory.CreateDirectory(outDir);
-        File.WriteAllBytes(Path.Combine(outDir, name + ".png"), PaintRender.Landscape(land, x0, y0, x1, y1, ppt, true));
-        Console.WriteLine($"wrote world/renders/{name}.png ({(x1 - x0) * ppt} x {(y1 - y0) * ppt}) in {timer.ElapsedMilliseconds} ms");
+        // One picture, or several from one build: x0 y0 x1 y1 pixels name, repeated.
+        var jobs = new List<(int x0, int y0, int x1, int y1, int ppt, string name)>();
+        if (rest.Length >= 12 && rest.Length % 6 == 0)
+            for (int k = 0; k < rest.Length; k += 6)
+                jobs.Add((int.Parse(rest[k]), int.Parse(rest[k + 1]), int.Parse(rest[k + 2]), int.Parse(rest[k + 3]), int.Parse(rest[k + 4]), rest[k + 5]));
+        else
+            jobs.Add((rest.Length >= 4 ? int.Parse(rest[0]) : land.X0, rest.Length >= 4 ? int.Parse(rest[1]) : land.Y0,
+                      rest.Length >= 4 ? int.Parse(rest[2]) : land.X0 + land.W, rest.Length >= 4 ? int.Parse(rest[3]) : land.Y0 + land.H,
+                      rest.Length >= 5 ? int.Parse(rest[4]) : 1, rest.Length >= 6 ? rest[5] : "paint"));
+        foreach (var j in jobs)
+        {
+            File.WriteAllBytes(Path.Combine(outDir, j.name + ".png"), PaintRender.Landscape(land, j.x0, j.y0, j.x1, j.y1, j.ppt, true));
+            Console.WriteLine($"wrote world/renders/{j.name}.png ({(j.x1 - j.x0) * j.ppt} x {(j.y1 - j.y0) * j.ppt}) at {timer.ElapsedMilliseconds} ms");
+        }
         return 0;
     }
 

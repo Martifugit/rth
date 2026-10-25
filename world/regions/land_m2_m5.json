@@ -15,10 +15,10 @@
     "LandGravel": "Gravel",
     "LandHeath": "Heath",
     "LandHighland": "Alpine",
+    "LandOlive": "Olive",
     "LandPaving": "Paving",
     "LandRedrock": "RedRock",
-    "LandScree": "Scree",
-    "LandWheat": "Wheat"
+    "LandScree": "Scree"
   },
   "seed": 1593621676,
   "generated": "blockout",
@@ -122,7 +122,7 @@
     "498 489 479 469 458 446 434 422 410 398 387 377 368 359 351 343 335 327 318 307 296 284 271 259 246 235 225 216 209 204 199 196 194 191 189 187 185 186 189 191 194 197 200 202 205 208 210 212 213 214 215 216*4 217 219 222 225 228 231 234 237 239 242 245 248 251 254 257 261 264 266 268 269 270*5 269*2 267 266 263 261 258 255 253 250 248 245 243 241 240 238*2"
   ] },
   "pieces": [
-    { "id": "ground", "kind": "tiles", "rect": [-192, -480, -96, -384], "legend": { "+": { "material": "LandPaving", "layer": "over" }, "B": { "material": "LandScree" }, "C": { "material": "LandCrest", "cliff": "LandCliffCliffRock" }, "D": { "material": "LandDust" }, "H": { "material": "LandWheat", "layer": "over" }, "M": { "material": "LandHighland", "cliff": "LandCliffCliffRock" }, "h": { "material": "LandHeath", "cliff": "LandCliffCliffRock" }, "o": { "material": "LandRedrock", "cliff": "LandCliffSandstone" }, "z": { "material": "LandGravel", "cliff": "LandCliffSandstone" } }, "paint": true, "margin": 4, "rows": [
+    { "id": "ground", "kind": "tiles", "rect": [-192, -480, -96, -384], "legend": { "+": { "material": "LandPaving", "layer": "over" }, "B": { "material": "LandScree" }, "C": { "material": "LandCrest", "cliff": "LandCliffCliffRock" }, "D": { "material": "LandDust" }, "M": { "material": "LandHighland", "cliff": "LandCliffCliffRock" }, "h": { "material": "LandHeath", "cliff": "LandCliffCliffRock" }, "j": { "material": "LandOlive" }, "o": { "material": "LandRedrock", "cliff": "LandCliffSandstone" }, "z": { "material": "LandGravel", "cliff": "LandCliffSandstone" } }, "paint": true, "margin": 4, "rows": [
       "hhhhhhhhhhhhoooooooooooooooooooooooooooooooooooooooooooooooooooooooooDoooooooooooooooooooooooooo",
       "hhhhhhhhhhhhooooooooooooooooooooooooooooooooooooooooooooooooooooooooDDoooooooooooooooooooooooooo",
       "hhhhhhhhhhhhoooooooooooooooooooooooooooooooooooooooooooooooooooooooDDooooooooooooooooooooooooooo",
@@ -182,13 +182,13 @@
       "MhhhhhhhhhhhhhhhhhhMMooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooz",
       "MhhhhhhhhhhhhhhhhhhhMooooooooooooooooooooooooooooozooooooooooooooooooooooooooooooooooooooooooozz",
       "MhhhhhhhhhhhhhhhhhhhMooooooooooooooooooooooooooooozzzzoooooooooooooooooooooooooooooooooooooooozz",
-      "hhhhhhhhhhhhhhhhhhhhMoooooooooooooooooooMMoMMMooozzzzzzzoooooooooooooooooooooooooooooooooooooooz",
-      "hhhhhhhhhhhhhhhhhhhhhoooooooooooooooooMMMMMMMMzzzzzzzzzzzooooooooooozoozzzoooooooooooooooooooooz",
-      "hhhhhhhhhhhhhhhhhhhhhhhhhooooooooooooMMMMMMMMMzzzzzzzzzzzoooooooooozzzzzzzzzoooooooooooooooooooo",
-      "hhhhhhhhhhhhhhhhhhhhhhhhhhhooooooooMMMMMMMMMHHzzzzzzzzzzzooooooooozzzzzzzzzzzooooooooooooooooooo",
-      "MhhhhhhhhhhhhhhhhhhhhhhhhhhhhMMMMoMMMMMMMMMHHHHzzzzzzzzzzzzooooooozzzzzzzzzzzzzooooooooooooooooz",
-      "MhhhhhhhhhhhhhhhhhhhhhhhhhhhhMMMMMMMMMMMMMHHHHHzzzzzzzzzzzzzzzzoozzzzzzzzzzzzzzzoooozooooooooozz",
-      "MMhhhhhhhhhhhhhhhhhhhhhhhhhhMMMMMMMMMMMMMMMMHHHzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzozzzzzzzzzozz",
+      "hhhhhhhhhhhhhhhhhhhhMooooooooooooooooooojjoMjjooozzzzzzzoooooooooooooooooooooooooooooooooooooooz",
+      "hhhhhhhhhhhhhhhhhhhhhoooooooooooooooooMjjjjjMMzzzzzzzzzzzooooooooooozoozzzoooooooooooooooooooooz",
+      "hhhhhhhhhhhhhhhhhhhhhhhhhooooooooooooMMMMjjjMMzzzzzzzzzzzoooooooooozzzzzzzzzoooooooooooooooooooo",
+      "hhhhhhhhhhhhhhhhhhhhhhhhhhhooooooooMMMMMMMjMMMzzzzzzzzzzzooooooooozzzzzzzzzzzooooooooooooooooooo",
+      "MhhhhhhhhhhhhhhhhhhhhhhhhhhhhMMMMoMMMMMMMMMMMMMzzzzzzzzzzzzooooooozzzzzzzzzzzzzooooooooooooooooz",
+      "MhhhhhhhhhhhhhhhhhhhhhhhhhhhhMMMMMMMMMMMMMMMMMMzzzzzzzzzzzzzzzzoozzzzzzzzzzzzzzzoooozooooooooozz",
+      "MMhhhhhhhhhhhhhhhhhhhhhhhhhhMMMMMMMMMMMMMMMMMMMzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzozzzzzzzzzozz",
       "MMhhhhhhhhhhhhhhhhhhhhhhhhhhMMMMMMMMMMMMMMMMMzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
       "MMMhhhhhhhhhhhhhhhhhhhhhhhhhMMMMMMMMMMMMMMMMzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
       "MMMMhhhhhhhhhhhhhhhhhhhhhhhhhMMMMMMMMMMMMMMzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",

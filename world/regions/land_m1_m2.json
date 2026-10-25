@@ -20,8 +20,8 @@
     "LandGravel": "Gravel",
     "LandHeath": "Heath",
     "LandHighland": "Alpine",
+    "LandLey": "Ley",
     "LandMeadow": "Meadow",
-    "LandOlive": "Olive",
     "LandPaving": "Paving",
     "LandRedrock": "RedRock",
     "LandRiver": "Water",
@@ -129,7 +129,7 @@
     "251*2 252 253 254*2 255 254 253 252 249 245 241 238 234 230 227 224 222 220 218 216 215 214 213 212 211 212*2 213 215 217 218 220 221 222*2 221 220 218 216 213 212 210*3 211 213 214 216 218 219 220*2 221 222 224 225 227 228 229 231 232 233 234 235 236 237 238 239 240 241 242 243 245 246 248 250 252 255 257 259 261 263 265 267 269 272 275 277 279 281 283 284 285 286*2"
   ] },
   "pieces": [
-    { "id": "ground", "kind": "tiles", "rect": [-96, -192, 0, -96], "legend": { "+": { "material": "LandPaving", "layer": "over" }, ",": { "material": "LandDustroad", "layer": "over" }, "-": { "material": "LandDirtroad", "layer": "over" }, "D": { "material": "LandDust" }, "F": { "material": "LandFoothills", "cliff": "LandCliffCliffRock" }, "M": { "material": "LandHighland", "cliff": "LandCliffCliffRock" }, "b": { "material": "LandBridge", "height": 0.05, "layer": "over" }, "e": { "material": "LandMeadow" }, "g": { "material": "LandGrass", "cliff": "LandCliffCliffRock" }, "h": { "material": "LandHeath", "cliff": "LandCliffCliffRock" }, "j": { "material": "LandOlive" }, "k": { "material": "LandBracken" }, "o": { "material": "LandRedrock", "cliff": "LandCliffSandstone" }, "r": { "material": "LandRiver", "water": true, "height": -0.15 }, "s": { "material": "LandSand" }, "z": { "material": "LandGravel", "cliff": "LandCliffSandstone" } }, "paint": true, "margin": 4, "rows": [
+    { "id": "ground", "kind": "tiles", "rect": [-96, -192, 0, -96], "legend": { "+": { "material": "LandPaving", "layer": "over" }, ",": { "material": "LandDustroad", "layer": "over" }, "-": { "material": "LandDirtroad", "layer": "over" }, "D": { "material": "LandDust" }, "E": { "material": "LandLey", "layer": "over" }, "F": { "material": "LandFoothills", "cliff": "LandCliffCliffRock" }, "M": { "material": "LandHighland", "cliff": "LandCliffCliffRock" }, "b": { "material": "LandBridge", "height": 0.05, "layer": "over" }, "e": { "material": "LandMeadow" }, "g": { "material": "LandGrass", "cliff": "LandCliffCliffRock" }, "h": { "material": "LandHeath", "cliff": "LandCliffCliffRock" }, "k": { "material": "LandBracken" }, "o": { "material": "LandRedrock", "cliff": "LandCliffSandstone" }, "r": { "material": "LandRiver", "water": true, "height": -0.15 }, "s": { "material": "LandSand" }, "z": { "material": "LandGravel", "cliff": "LandCliffSandstone" } }, "paint": true, "margin": 4, "rows": [
       "hhhhhhhhhhhhhhhhFFFFFFFhhhhhhhh,,,zzzzzzzzzzzzzzzzzzggggggggggggggggggeeeeeeeeeeesssrrrrrrrrrsse",
       "hhhhhhhhhhhhhhhhFFFFFFFhhhhhhhhh,,,zzzzzzzzzzzzzzzzzzgggggggggggggggggeeeeeeeeeeeeessrrrrrrrrrss",
       "hhhhhhhhhhhhhhhhFFFFFFFhhhhhhhhhz,,,zzzzzzzzzzzzzzzzzzgggggggggggggggeeeeeeeeeeeeeeesssrrrrrrrrs",
@@ -152,13 +152,13 @@
       "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,,,zzzzzzzzzzzzzzzzzzzzzzzz,,,-ggggggggggggggggggg",
       "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,,,zzzzzzzzzzzzzzzzzzzzzz,,,zzggggggggggggggggggg",
       "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,,,zzzzzzzzzzzzzzzzzzz,,,,zzzzgggggggggggggggggg",
-      "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,,,zzzzzzzzzzzzzzzzz,,,zzzzzzzgjjgggggggggggggg",
-      "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,,zzzzzzzzzzzzzzzz,,,zzzzzzzzjjjgggggggggggggg",
-      "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,,,zzzzzzzzzzzzzz,,,zzzzzzzzzzjjjggggggggggggg",
-      "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,,zzzzzzzzzzzzz,,,zzzzzzzzzzzjjjggggggggggggg",
-      "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,,zzzzzzzzzzzz,,,zzzzzzzzzzzzgjjggggggggggggg",
-      "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,,zzzzzzzzzzz,,,zzzzzzzzzzzzzzgjjgggggggggggg",
-      "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,,zzzzzzzzzz,,,zzzzzzzzzzzzzzzggjgggggggggggg",
+      "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,,,zzzzzzzzzzzzzzzzz,,,zzzzzzzggggggggggggggggg",
+      "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,,zzzzzzzzzzzzzzzz,,,zzzzzzzzggggggggggggggggg",
+      "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,,,zzzzzzzzzzzzzz,,,zzzzzzzzzzgggggggggggggggg",
+      "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,,zzzzzzzzzzzzz,,,zzzzzzzzzzzgggggggggggggggg",
+      "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,,zzzzzzzzzzzz,,,zzzzzzzzzzzzgggggggggggggggg",
+      "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,,zzzzzzzzzzz,,,zzzzzzzzzzzzzzggggggggggggggg",
+      "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,,zzzzzzzzzz,,,zzzzzzzzzzzzzzzggggggggggggggg",
       "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,,zzzzzzzz,,,,zzzzzzzzzzzzzzzzzzggzzzzzgggggg",
       "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,,zzzzzzz,,,zzzzzzzzzzzzzzzzzzzzzzzzzzzgggggg",
       "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,,zzzzzz,,,zzzzzzzzzzzzzzzzzzzzzzzzzzzzzggggg",
@@ -228,8 +228,8 @@
       "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzoDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDzzzzzzzzzzzzzDDDDDDDDDDDD"
     ], "surround": [
       "hhhhhhhhhhhhhhhhFFFFhhhhhhFFFFF,,,hhhzzzzDDDDDDDDDDDgggggggggggggggggggggeeeeessrrrrrrrrrrrssseeeeeeeeee",
-      "hhhhhhhhhhhhhhhhFFFFhhhhhhFFFFFF,,,hhzzzzzzDDDDDDDDDDggggggggggggggggggggeeeeeesssrrrrrrrrrrrssseeeeeeee",
-      "hhhhhhhhhhhhhhhhhFFFhhhhhhFFFFFFF,,,hzzzzzzzzDDDDDDDDDggggggggggggggggggggeeeeeeesssrrrrrrrrrrrsseeeeeee",
+      "hhhhhhhhhhhhhhhhFFFEhhhhhhFFFFFF,,,hhzzzzzzDDDDDDDDDDggggggggggggggggggggeeeeeesssrrrrrrrrrrrssseeeeeeee",
+      "hhhhhhhhhhhhhhhhhFEEhhhhhhFFFFFFF,,,hzzzzzzzzDDDDDDDDDggggggggggggggggggggeeeeeeesssrrrrrrrrrrrsseeeeeee",
       "hhhhhhhhhhhhhhhhhhFFhhhhhhFFFFFFhh,,,zzzzzzzzzDDDDDDzzzgggggggggggggggggggeeeeeeeeesssrrrrrrrrrrsseeeeee",
       "hhhheeee",
       "hhhheeee",

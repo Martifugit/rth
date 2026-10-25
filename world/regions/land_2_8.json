@@ -10,10 +10,12 @@
   "materials": {
     "LandCliffGranite": "Granite",
     "LandFarSnow": "Snow",
+    "LandMoor": "MoorGrass",
     "LandRiver": "Water",
+    "LandScree": "Scree",
     "LandSea": "Sea",
     "LandShingle": "Shingle",
-    "LandSnow": "Snow"
+    "LandTundra": "Tundra"
   },
   "seed": 1105896859,
   "generated": "blockout",
@@ -108,16 +110,16 @@
     "0*68 25*5 0*19 25 0*4",
     "0*68 25*8 0*16 25*2 0*3",
     "0*68 25 26*2 25*5 0*15 25*4 0*2",
-    "0*68 25 27 29*3 27 25*3 0*14 25*5 0",
-    "0*60 25 3 0*6 26 29 33 38*2 31 26 25*4 0*11 25*7",
-    "0*56 25*4 43 18 3*6 30 34 42 48*2 35 30 26*2 25*4 0*8 25*4 26 25*3",
-    "0*54 25*5 66*2 41 18*6 44 49 57 62 60 47 36 33 30 27 26 25*13 27 29*2 28*2",
-    "0*48 25*9 26 91*3 66 41*6 67 72 79 82*2 60 52 46 37 33 30 26 25*11 28 32 39 40 38 37",
-    "0*46 25*9 26 29 32 115*3 90 66*6 92 97 103 106 104 103 76 60 52 45 36 32 31 29*5 28*3 29 30 32 40 48 55 56 53",
-    "0*46 25*4 27 29*2 30 31 33 37 144*4 119 90*6 116 121 127 129 130 128 117 86 74 59 51 47 43 40 39*3 38*4 40 42 44 49 63 72 77*2"
+    "0*68 25 27 28*3 26 25*3 0*14 25*5 0",
+    "0*60 25 0*7 26 28 32 36*2 30 26 25*4 0*11 25*7",
+    "0*56 25*4 33 8*4 0*3 26 30 37 43*2 33 29 26 25*5 0*8 25*8",
+    "0*54 25*5 50*2 25*4 8*2 34 28 35 45 51*2 44 35 31 29 26 25*14 27 29 28*2 27",
+    "0*48 25*9 26 151 70*2 45*4 25*2 51 55 43 54 62 65 56 49 43 35 31 29 26 25*11 27 31 37 38 37 35",
+    "0*46 25*9 26 28 151*4 67*4 45*2 72 76 85 93 96 95 80 70 56 48 42 34 31 30 28*9 29 31 38 45 52 53 51",
+    "0*46 25*4 27 28*2 29 30 31 151*4 126 93*4 67*2 93 98 106 115 117 119 117 91 79 68 54 47 44 41 38 37*3 36*4 38 40 42 47 59 68 73*2"
   ] },
   "pieces": [
-    { "id": "ground", "kind": "tiles", "rect": [192, 768, 288, 864], "legend": { ">": { "material": "LandFarSnow", "blocks": true, "beyond": true }, "n": { "material": "LandSnow", "cliff": "LandCliffGranite" }, "q": { "material": "LandShingle" }, "r": { "material": "LandRiver", "water": true, "height": -0.15 }, "~": { "material": "LandSea", "water": true, "height": -0.15 } }, "paint": true, "margin": 4, "rows": [
+    { "id": "ground", "kind": "tiles", "rect": [192, 768, 288, 864], "legend": { ">": { "material": "LandFarSnow", "blocks": true, "beyond": true }, "B": { "material": "LandScree" }, "q": { "material": "LandShingle" }, "r": { "material": "LandRiver", "water": true, "height": -0.15 }, "t": { "material": "LandTundra", "cliff": "LandCliffGranite" }, "x": { "material": "LandMoor", "cliff": "LandCliffGranite" }, "~": { "material": "LandSea", "water": true, "height": -0.15 } }, "paint": true, "margin": 4, "rows": [
       ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",
       ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",
       ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",
@@ -206,14 +208,14 @@
       "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~rq~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
       "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~rrqqqqqq~~~~~~~~~~~~~~~~~~qq~~~",
       "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~rrrqqqqqqqqq~~~~~~~~~~~~~~~qqq~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~rrrrqnnnqqqqq~~~~~~~~~~~~~~qqqqq~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~rrrrrqnnnnnnqqq~~~~~~~~~~~~~qqqqqq",
-      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~qqrrrrrrqnnnnnnqqqqq~~~~~~~~~~qqqnqqq",
-      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~qqqqqqrrrrrrqnnnnnnnqqqqqq~~~~~~~qqqqnnqq",
-      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~qqqqqqqqrrrrrrqnnnnnnnnnqqqqqqqqqqqqqqnnnnn",
-      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~qqqqqqqqqqnnnqrrrrrrqnnnnnnnnnnnqqqqqqqqqqqnnnnnn",
-      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~qqqqqqqqqqnnnnnqrrrrrrqnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
-      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~qqqqnnnnnnnnnnnqrrrrrrqnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~rrrrqtttqqqqq~~~~~~~~~~~~~~qqqqq~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~rrrrrqttttttqqq~~~~~~~~~~~~~qqqqqq",
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~qqrrrrrrqttttttqqqqq~~~~~~~~~~qqqtqqq",
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~qqqqqqrrrrrrqtttttttqqqqqq~~~~~~~qqqqttqq",
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~qqqqqqqqrrrrrqqtttttttttqqqqqqqqqqqqqqttttt",
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~qqqqqqqqqqtttqrrrrrqttttttttttttqqqqqqqqqqqtttttt",
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~qqqqqqqqqqtttBBqrrrrrqttttttttttttttttttttttttttttt",
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~qqqqttttttttttqqrrrrrqttttttttttttttttttttttttttttt"
     ], "surround": [
       ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",
       ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",
@@ -311,14 +313,14 @@
       "~~~~~~qq",
       "~~~~qqqq",
       "~~~~qqqq",
-      "~~~~nnnn",
-      "~~~~nnnn",
-      "~~~~nnnn",
-      "~~~~nnnn",
-      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~qqqnnnnnnnnnnnnqrrrrrqqnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
-      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~qqnnnnnnnnnnnnqrrrrrqnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
-      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~qqqnnnnnnnnnnnqrrrrrqnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
-      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~qqqnnnnnnnnnnnqrrrrrqnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+      "~~~~ttxx",
+      "~~~~tttx",
+      "~~~~tttx",
+      "~~~~tttx",
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~qqqtttttttttttqrrrrrrqttttttttttttttttttttttttttttttttx",
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~qqtttttttttttqrrrrrrqtttttttttttttttttttttttttttttttxx",
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~qqqttttttttttqrrrrrrqttttttttBtttttttttttttttttttttxxx",
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~qqqttttttttttqrrrrrqqttttttttttttttttttttttttttttttxxx"
     ] }
   ]
 }

@@ -837,7 +837,7 @@ namespace Rth.Shared.World.Layout
             Heights.Settle(built, t.BuiltBlend);
         }
 
-        public static float PlatformRadius(PlaceDef p) => p.Tier switch
+        public static float PlatformRadius(PlaceDef p) => p.Flat ?? p.Tier switch
         {
             "city" => 44f,
             "town" => 26f,
@@ -1000,9 +1000,11 @@ namespace Rth.Shared.World.Layout
                 int pu = (int)Math.Floor(u / pw), pv = (int)Math.Floor(v / ph);
                 float fu = u - pu * pw, fv = v - pv * ph;
                 if (fu < 1f || fv < 1f) return; // the hedge line between plots
-                // About half the plots near the place are fields, thinning to none at the reach; the rest stays pasture.
-                float keep = LandNoise.Hash01((int)key, pu, pv);
-                if (keep > 0.6f * (1f - LandNoise.Smooth((d - inner) / (reach - inner)))) return;
+                // Fields come in clusters (where slow noise is high), fewer further out, with the odd
+                // plot left as pasture; the rest of the land round the place stays open.
+                float cluster = LandNoise.Fbm((int)key + 2, (pu * pw) / 34f, (pv * ph) / 34f);
+                float edge = LandNoise.Smooth((d - inner) / (reach - inner));
+                if (cluster < -0.15f + 0.75f * edge || LandNoise.Hash01((int)key, pu, pv) > 0.85f) return;
                 float a = Heights.Corner(X0 + tx, Y0 + ty), b = Heights.Corner(X0 + tx + 1, Y0 + ty + 1);
                 if (Math.Abs(a - b) > 0.5f) return; // too steep to plough
                 Ground[i] = fields[(int)(LandNoise.Hash01((int)key + 1, pu, pv) * fields.Count) % fields.Count];
