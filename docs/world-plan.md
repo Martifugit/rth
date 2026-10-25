@@ -1,10 +1,22 @@
 # The world plan: R'th rethought
 
-Status: **proposed** (2026-10-25), on `claude/world-remake`. It replaces the first layout's
-geography (`layout.md` sections 1-5 describe the format, which stays). It is the plan the layout
-data (`world/layout/continent.json`), the blockout and the ground painting now follow, and the
-plan every area brief starts from. Coordinates are absolute tiles (Tolling's south-west corner is
-(0, 0), east +x, north +y). `p-` names never reach players.
+Status: **built in data, waiting on the owner's walk** (2026-10-25), on `claude/world-remake`. It
+replaces the first layout's geography (`layout.md` keeps the data format). The layout
+(`world/layout/continent.json`), the generator (`Landscape`) and the ground painting
+(`shared/World/Ground`) follow it, and every area brief starts from it. Coordinates are absolute
+tiles (Tolling's south-west corner is (0, 0), east +x, north +y). `p-` names never reach players.
+
+![The continent as the client paints it](images/world-paint-world.png)
+
+| Picture | What it shows |
+| --- | --- |
+| [world-paint-world.png](images/world-paint-world.png) | The whole continent, one pixel a tile, painted and lit as the client draws it. |
+| [world-area-heart.png](images/world-area-heart.png) | The heartland: Knellmere, Cruor in its meander, the Downs, the Scarp's foot. Two pixels a tile. |
+| [world-area-sere.png](images/world-area-sere.png) | Sere: the river's green ribbon, the badlands, Cistern's mesa, the salt pan, the erg. |
+| [world-area-gall.png](images/world-area-gall.png) | Gall's plateau: the caldera lake, the great cone and Kiln, lava tongues, the cinder roads. |
+| [world-area-brack.png](images/world-area-brack.png) | Brack: fens, meres, channels and the broken coast. |
+| [world-area-north.png](images/world-area-north.png) | The cold north: moors, pinewoods, the frozen lake, fjords. |
+| [world-close-lake.png](images/world-close-lake.png), [world-close-cruor.png](images/world-close-cruor.png) | Five pixels a tile: the ground at the player's scale (lakeport and Knellmere; Cruor's river loop and bridges). |
 
 ---
 
@@ -281,13 +293,13 @@ Sited the same way: at bridges and fords (p-greatbridge, p-ford), weirs and mill
 top of passes (toll hamlets), holms in the fens, edges of the moor. Farmland is drawn **round
 villages**, as fields, not as the colour of a whole power: between villages lies pasture, heath,
 copses and common land. The full list, with each place's reason, is in `continent.json` (`places`,
-each with a `note`) and drawn on `docs/images/layout-places.png`.
+each with a `note`) and drawn on `docs/images/layout-continent.png`.
 
 ### The ladder
 
 The layout keeps to `targets.json`'s ladder (towns 0.5-1.5, villages 1.5-4 per 100k tiles of core
-land) and counts it in `tools/world layout`. The core is about 1.2-1.3M tiles: a little smaller
-than the first layout, so the same number of places stands closer together.
+land) and counts it in `tools/world layout`: 4 cities, 13 towns, 34 villages and 22 hamlets on 1.37M
+tiles of core land (0.95 towns and 2.48 villages per 100k).
 
 ## 5. The rhythm of the main roads
 
@@ -304,10 +316,10 @@ The first journeys, checked against rule 5 (a beat every 60-100 tiles):
 ## 6. Sites: reserved for what comes later
 
 A **site** is a spot kept free for content that isn't designed yet: a dungeon mouth, a boss lair, a
-ruin, a skilling ground, a quest location. Each is a point with a kind and a note in
-`continent.json` (`sites`), kept off the players' map, and marked faintly in the blockout so it can
-be found while walking. They are placed in pockets (rule 4), spread so every area has a few at
-each stage. Kinds:
+ruin, a skilling ground, a quest location. Each is a point with a kind, a stage and a note in
+`continent.json` (`sites`), kept off the players' map, and marked in the blockout by a 2 × 2 patch
+of dark marker paving so it can be found while walking. They are placed in pockets (rule 4): 63 of
+them, every area with a few at each stage. Kinds:
 
 | Kind | What it is for |
 | --- | --- |
@@ -382,3 +394,57 @@ its landforms, water, roads, settlement platforms and sites at real scale. Hand 
 region over (stage 1 onwards) and freezes its generated base into its own data. Generated land
 must always meet the regions taken over: the generator blends its heights into theirs at their
 borders, so a finished region never shows a seam against generated land.
+
+## 9. The numbers
+
+From `dotnet run --project tools/world -- layout`:
+
+| | |
+| --- | --- |
+| Core land | 1.37M tiles (the 2004 game's continent is 0.73M); 163 regions mostly core, 244 generated |
+| Frontiers (seen, not walked) | 0.54M tiles west of the spine; the far north and the islands by ship |
+| Places | 4 cities, 13 towns, 34 villages, 22 hamlets, 9 landmarks, 63 sites |
+| Land per power | empire 36.6%, Gall 14.7%, Sere 14.5%, the spine 14.3%, the cold north 12.8%, Brack 7.2% |
+| Tolling to Cruor | 336 tiles by road: 3.4 minutes walking, 1.7 running |
+| Tolling to Cistern, to Meridian | 448 and 464 by road (4.5 and 4.6 minutes walking) |
+| Cruor to Meridian, Kiln, Skerrin | 432, 488, 528 by road |
+| Meridian to Frostpeak Forge | 296 by road |
+
+Sere is over the first guide (8-14%): its rain-shadow deserts are the continent's empty land, so its
+guide is 8-15%.
+
+## 10. Changing it
+
+The world is one text file and a generator; nothing is placed by hand outside the regions taken over.
+
+| To... | Change, then run |
+| --- | --- |
+| Move, add or reshape a landform | `relief` in `continent.json` (kinds: hill, cone, mesa, ridge, scarp, crater, dunes, tors, canyons, terraces, cliffs; ramps on scarps and mesas) |
+| Repaint an area's ground | `areas` (shapes painted with a ground, in order) and the ground's `mix`, `shore`, `bank`, `scree`, `cliff` |
+| Change how a power's land looks and is built | `powers.<id>`: `ground`, `roads` (by kind), `square`, `worn`, `fields` |
+| Add a place or a road | `places` (tier, `note`, `flat` for its platform), `roads` (`main`, `road`, `track`; routed unless `"route": false`) |
+| Keep a spot for content | `sites` |
+| Tune the terrain | `terrain` (heights and rolling by ground, snow line and its fall to the north, valleys, banks, coasts) |
+| See it | `dotnet run --project tools/world -- paint x0 y0 x1 y1 pixels name` (several at once: repeat the six) draws `world/renders/<name>.png` as the client paints it; `probe x0 y0 x1 y1` prints heights and grounds along a line |
+| Make it | `blockout` writes the regions, their maps and `world/layout/routes.json` (the real roads and rivers, for the world map); `layout` the zone grid and the region table; Sync World the scenes |
+
+The painting is in `shared/World/Ground` (`GroundPainter`, `GroundShapes`, `PaintedGround`), the
+land in `shared/World/Layout` (`Landscape`, `Relief`, `RoadRouter`, `LandHeights`, `LandRoutes`).
+
+## 11. What is left, and what waits on the owner
+
+- **Walk it.** The data is generated and checked (`tools/world check`: no seams; every test passes,
+  `BlockoutTests` walks from Tolling to Cruor, over every pass and into every power), and the client
+  code compiles outside Unity, but nobody has seen it in the Editor. Sync World makes the scenes;
+  `TileGround` paints the ground when it loads. Things to judge: the colours (palette entries added
+  for the new grounds), the blend, the 45-degree shapes on water and roads, how high the Scarp and
+  the spine's west face feel, the passes.
+- **Names.** Every new place is a `p-` placeholder (see `lore-rework/names.md` for candidates).
+- **Tolling and Palmerway** are left as built: flat, drawn the old way, at 0. The land round them
+  falls to meet them. When they are rebuilt (F2), they become painted regions like the rest.
+- **Selenfall** keeps its built surface; the generated land blends into its edges.
+- **The old capital blockouts** (Cruor, Tithe, Cistern, Meridian builders and scenes) are on the old
+  map and no region places them. They are left in place for the owner to delete; their kits
+  (`WorldKit.City`, `.Interiors`, `.Terraces`) stay useful.
+- **The area plan (A4)** now starts from this: each area brief takes its landforms, places and
+  sites from here.

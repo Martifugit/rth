@@ -88,7 +88,9 @@ dotnet run --project tools/world -- check     # is the data valid, and are the s
 dotnet run --project tools/world -- export    # write server/data/maps from world/regions
 dotnet run --project tools/world -- render    # draw every region to world/renders/<id>.png and .txt
 dotnet run --project tools/world -- format    # put region files in the standard layout
-dotnet run --project tools/world -- blockout  # regenerate the open land (land_*.json) from the layout
+dotnet run --project tools/world -- blockout  # regenerate the open land (land_*.json) and routes.json from the layout
+dotnet run --project tools/world -- paint [x0 y0 x1 y1 px name]...   # the generated land as the client paints it, to world/renders
+dotnet run --project tools/world -- probe x0 y0 x1 y1 [steps]        # heights and grounds along a line of the generated land
 dotnet run --project tools/world -- terrain <region> flat|layout   # give a region terrain to sculpt
 dotnet run --project tools/world -- terrain-save <file>   # what Edit Terrain's save runs (WorldTerrain)
 dotnet test                                   # includes the same check (WorldDataTests)

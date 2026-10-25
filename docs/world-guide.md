@@ -12,7 +12,8 @@ Started 2026-10-23.
 | Detail | Where |
 | --- | --- |
 | The lore and places | [lore.md](lore.md), [world-map.md](world-map.md) |
-| The continent layout | [layout.md](layout.md) (`world/layout/continent.json`) |
+| The world plan: the continent, its areas and places, the sites kept for content, how ground is painted | [world-plan.md](world-plan.md) |
+| The continent layout's format | [layout.md](layout.md) (`world/layout/continent.json`) |
 | Sizes, terrain rules, camera | [world-scale.md](world-scale.md) |
 | Art rules and budgets | [assets.md](assets.md) |
 | How content is spread (banks, quests, dungeons) | [areas/rules.md](areas/rules.md), [research/world-density.md](research/world-density.md) |
@@ -61,15 +62,15 @@ Started 2026-10-23.
 tiles (one data file, one scene when it is hand-made). An **area** is 1 to 6 regions with one
 identity: the unit we design in.
 
-**The continent** ([layout.md](layout.md)): *Proposed, under the owner's review.*
+**The continent** ([world-plan.md](world-plan.md)): *Proposed, waiting on the owner's walk.*
 
 | | |
 | --- | --- |
-| Core land (the first build) | 1.43M tiles, about twice the 2004 game's main continent; 172 regions mostly core |
-| Generated regions today | 256 (the core and a ring of sea and frontier) |
-| Tolling to Cruor | 368 tiles by road: 3.7 minutes walking, 1.8 running |
-| Between capitals | 330-500 tiles to the nearest other capital (Varrock-Falador is about 230) |
-| Settlement ladder | 4 cities, 12 towns, 29 villages, 19 hamlets |
+| Core land (the first build) | 1.37M tiles, a little under twice the 2004 game's main continent; 163 regions mostly core |
+| Generated regions today | 244 (the core and a ring of sea and frontier) |
+| Tolling to Cruor | 336 tiles by road: 3.4 minutes walking, 1.7 running |
+| Between capitals | 296-528 tiles by road to the nearest other capital (Varrock-Falador is about 230) |
+| Settlement ladder | 4 cities, 13 towns, 34 villages, 22 hamlets, and 63 sites kept for content |
 
 **Settlement sizes** (from the 2004 game, [research/world-density.md](research/world-density.md)):
 
@@ -217,6 +218,9 @@ Use it in every brief and every review.
   undergrowth that looks impassable; never an invisible wall in open ground.
 - **Few ground colours per area.** Blizzard limits itself to four terrain textures per grid
   square. An area's ground uses a handful of palette colours.
+- **Paint ground the RuneScape way** ([world-plan.md](world-plan.md) section 7): natural ground as
+  blended underlays of close colours; anything that contrasts (roads, paving, fields, planks) a crisp
+  overlay with diagonal half tiles; never a per-tile speckle.
 - **History in the ground.** Old roads under new ones, ruins, a border stone: the land shows who
   was here.
 - **Something to find.** A few optional, hidden things that reward exploring and are fine to miss.

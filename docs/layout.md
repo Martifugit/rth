@@ -1,6 +1,11 @@
 # The continent layout (L1)
 
-Status: **ready for the owner's review** (2026-10-22). Workstream L1 in [plan.md](plan.md).
+> **2026-10-25: the geography is remade.** [world-plan.md](world-plan.md) is now the plan (why the
+> land is as it is, the areas, the places, the sites, how the ground is painted) and holds today's
+> numbers. Sections 1, 5 and 6 below describe the first layout and are history; the format
+> (sections 2-4) and the blockout (section 8) are current, with the additions listed in section 3.
+
+Status: first layout reviewed and remade (2026-10-25). Workstream L1 in [plan.md](plan.md).
 
 The whole continent, roughly, at real tile scale: coast, sea and islands, the spine and its passes,
 rivers and lakes, ground kinds, the powers' borders, settlements and landmarks, the main roads, and
@@ -114,6 +119,19 @@ Rectangles exclude their far edges, as in `world/regions`.
 | `regionNotes` | A note on a region's role, by `"rx,ry"`; it goes in front of the computed role in `regions.txt`. |
 | `targets` | The layout's own targets (core size, nearest capital, unreachable share). T-LADDER, T-LAND-BUILT and T-CITY-DOMINANCE are read from `docs/areas/targets.json`. |
 
+Added with the remake (2026-10-25, [world-plan.md](world-plan.md)):
+
+| Section or field | What it is |
+| --- | --- |
+| `relief` | Landforms raised into the terrain: `hill`, `cone` (with a `crater`), `mesa` (a negative height is a basin), `ridge`, `scarp` (a step along a line, its `side` raised by `height` for `reach` tiles over `edge` tiles), `crater`, `dunes`, `tors`, `canyons`, `terraces` (shelves `step` high) and `cliffs` (a coast that keeps its height to the water). Scarps and mesas take `ramps` where they can be climbed. |
+| `sites` | Spots kept for content still to design (`kind`, `stage`, `note`), never on the players' map. |
+| grounds: `layer`, `mix`, `shore`, `bank`, `scree`, `cliff`, `farm`, `detail` | How a ground is painted: `"over"` for made surfaces drawn crisp; patches of other grounds; what lines the sea, lakes and rivers; what steep slopes show; its cliff colour; whether fields are laid on it; whether only the generator draws it. |
+| powers: `roads`, `square`, `worn`, `fields` | Each power's own road surfaces by road kind, settlement paving, worn verges and field grounds. |
+| rivers: `sourceHalfWidth`, `meander` | Rivers widen downstream and wind either side of their line. |
+| roads: `"kind": "track"`, `route` | Roads are routed over the land between their stops unless `"route": false`. |
+| places: `flat` | The radius of ground levelled for a place, when not its tier's. |
+| terrain: `roll`, `rollScale`, `coastBlend`, `valley`, `bank`, `snowLine`, `snowFall`, `screeSlope` | The land's rolling by ground, the fall to the sea, river and lake valleys, and snow that comes lower further north. |
+
 **Shapes** are one of: a polygon `poly` (with `rough`: how far, in tiles, its edges wander, the same
 way for every shape that shares the edge, so borders meet); a band `line` + `halfWidth` (or
 `"along": "spine"`); an `ellipse` `[cx, cy, rx, ry]`. `minY` / `maxY` clip any shape.
@@ -202,6 +220,11 @@ Edit `continent.json`, run `layout`, look at the renders and the checks.
   players; `"hidden": true` on a place keeps it off the map.
 
 ## 8. The walkable blockout (L2)
+
+> Since 2026-10-25 the blockout is drawn by `Landscape` at tile scale from the layout's shapes
+> (no zone steps), with landforms, carved rivers and lakes, routed roads, settlement platforms and
+> painted ground ([world-plan.md](world-plan.md) sections 7 and 10). The description below is of the
+> first blockout; what it says about files, taking regions over and sculpting still holds.
 
 Status: **generated and checked without Unity** (2026-10-23); Sync World still has to create the scenes.
 

@@ -480,6 +480,14 @@ heights), so Unity's terrain tools shape it across regions; Ctrl+S writes it bac
 generated. World-data generation runs on .NET, not in Unity: Mono's float maths draws a slightly
 different blockout.
 
+**The world remade (L6, on `claude/world-remake`):** the continent laid out from the land up to
+`docs/world-plan.md` (read it before world work): landforms (`relief`: the Scarp, the spine's west
+face, mesas, cones, canyons, dunes, tors), rivers carved into valleys and lakes held level, roads
+routed over the land in each power's own surface, settlement platforms and fields, and 63 `sites`
+kept for content. `Landscape` builds it at tile scale; the ground is painted the RuneScape way
+(`shared/World/Ground`: blended underlays, crisp overlays and water with diagonal half tiles), drawn by
+`TileGround` and by `tools/world paint` alike. Waiting on Sync World and the owner's walk.
+
 **Next: not chosen yet.** Candidates: ranged, an art pass on Tolling, more quests and
 achievements.
 
@@ -539,7 +547,10 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | A floor above the ground (upper storey, gallery, footbridge, tower room) | A `MapLevel` (1-3) on a group holding that floor's slab (ground collider), walls (`MapWall`), blockers, objects and spawns: the exporter writes one plane per level. `hiddenFromBelow` (default) switches the group off while the player is on a lower floor; turn it off for what must always show from outside (outer walls, an open-air deck). Planes are separate collision, and people only see people on their own plane. There is no plane below the ground: cellars, caves and dungeons are separate small regions (instanced, 1024 tiles north of the surface place) entered by a `climb` object whose landing is in that region (`trapdoor_down`/`trapdoor_up`, `cave_mouth`/`cave_exit`, or the stairs and ladders). |
 | Stairs, ladders, trapdoors | An object with a `climb` action (`stairs_up`/`stairs_down`/`ladder_up`/`ladder_down` exist) placed with `MapObject` + a collider, and its `climbTo` set to an empty object on the landing tile under the target floor's `MapLevel`. One object per end. The exporter warns about a blocked landing; `ClimbSystem` moves the player. |
 | A new region of the world | A file `world/regions/<id>.json` (id, title, scene path, zone-aligned origin and size, ground, materials, pieces); `tools/world export`, then Sync World creates its scene. No server code. Over the open land, it replaces the generated `land_*` region there at the next `tools/world blockout`. |
-| The open land between places (the blockout) | Change `world/layout/continent.json` and run `tools/world blockout` (`docs/layout.md` section 8); what each layout ground looks like is in `Blockout.Kind`, how high it rises is continent.json's `terrain` (`LandHeights`). Never edit a `land_*.json` that still says `"generated"`. |
+| The open land between places (the blockout) | Change `world/layout/continent.json` and run `tools/world blockout` (`docs/world-plan.md` section 10); see it first with `tools/world paint` and `probe`. `Landscape` builds it: grounds, `relief` (landforms), rivers and lakes, routed roads (`RoadRouter`), platforms, painted detail. Never edit a `land_*.json` that still says `"generated"`. |
+| A landform (hill, scarp, mesa, crater, dunes, canyons) | An entry in continent.json's `relief`; a new kind is a case in `Relief.Contribution`. |
+| A spot kept for future content (a dungeon mouth, a boss arena) | An entry in continent.json's `sites` (kind, stage, note): marked in the blockout, never on the players' map. |
+| How a kind of ground is painted | Its ground in continent.json: `palette`, `layer` (`over` for made surfaces), `mix`, `shore`, `bank`, `scree`, `cliff`; a region's tiles piece with `"paint": true` is painted by `GroundPainter` (client and tools alike). |
 | Ground tile by tile (a whole region's land) | A `tiles` piece: `rect`, `rows` from the north, a `legend` of characters (`material`, `blocks`, `water`, `height`, `cliff`: its own colour for its cliff faces). The compiler gives ground or blocks; `TileGround` draws it. |
 | Shaping the land over many regions at once | **R'th > World > Edit Terrain** in Unity, then Ctrl+S (`TerrainEditor`, `WorldTerrain`); generated land's sculpting is kept in `world/layout/sculpt` (`HeightEdits`), never in its `land_*.json`. Without Unity: `WorldTerrain.WriteHeights` a field and run `tools/world terrain-save`. |
 | Terrain (hills, valleys, cliffs) in a data region | The region's `terrain` (corner heights as text rows, hundredths of a tile; `TerrainText`). The compiler blocks tiles steeper than `cliffStep`; `TileGround` drapes over it; placed pieces stand on it; `GroundHeight.TerrainAt` lifts the camera. Sculpt in Unity (**Sculpt Ground** on a tile ground, written back on save) or start one with `tools/world terrain <region> flat` (or `layout`: the generated land's heights, which meet the neighbours). `check` warns about steps at region borders. |

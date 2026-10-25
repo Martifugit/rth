@@ -254,6 +254,19 @@ readability), not its geography.
 - **Done when** stage 1 is walked and approved, and what the process got wrong is written back into
   the guide.
 
+### L6. The world remade
+
+| | |
+| --- | --- |
+| **Runs** | cloud or local (generator, data, client code); local (Sync World, the walk) |
+| **Depends on** | L2, L5 |
+| **Owns** | `docs/world-plan.md`, `world/layout/*`, `shared/World/Layout/*`, `shared/World/Ground/*`, `tools/world` (paint, probe), the painted branch of `TileGround`, `land_*` |
+| **Status** | **built in data, waiting on the owner's walk** (2026-10-25, on `claude/world-remake`): the continent laid out from the land up (landforms, carved rivers and level lakes, routed roads of each power's making, settlement platforms, fields, 63 sites), and the ground painted the RuneScape way (blended underlays, crisp overlays and water with diagonal half tiles). All tests pass; the client compiles outside Unity. See Handoffs. |
+
+- The plan and its reasons: `docs/world-plan.md`. The first layout's geography (L1) is superseded.
+- Next: the owner walks it (Tolling to Cruor, the salt pass, the Scarp at the Frontline, Sere's
+  river), then area briefs (A4) start from its areas, places and sites.
+
 ### L3. Maps from the layout
 
 | | |
@@ -507,6 +520,7 @@ Notes from one workstream to another ("A1 needs B1 to also change X"). Newest fi
 
 | From | To | Note |
 | --- | --- | --- |
+| L6 | local, owner | `claude/world-remake`, compile-checked outside Unity, not yet seen in the Editor. Run **Sync World (everything)**: the 244 `land_*` scenes are redrawn (17 old ones are gone, new ones appear) and `TileGround` paints their ground when it loads (a texture per region, 8 pixels a tile, painted off the main thread in Play). New palette grounds were appended to `palette.json` (merge with the uncommitted metal shades on `claude/terrain-editor`). Compare with `docs/images/world-*.png` (or `tools/world paint`): the colours, the blend, the 45-degree water and road shapes, the Scarp and the spine's west face at player height. Walk Tolling to Cruor, the salt pass, the Frontline ramp. The old capital blockouts (Cruor, Tithe, Cistern, Meridian builders and scenes) are on the old map; delete them when convenient. |
 | C5 | local, owner | Terrain and incremental sync, compile-checked only. The first Sync World after it redoes every region once (no record yet). Try **Sculpt Ground** on a spare `land_*` region first: select `Data > ground`, pick the tool in the Scene view (Raise, Lower, Flatten, Smooth; `[` `]` size), save the scene, and check the region file gained a `terrain` and lost `"generated"`. Placed pieces only stand on new heights after the next sync. `tools/world terrain <region> layout` is rough (it cut cliffs across the salt pass); `flat` is the safer start. |
 | L2 | local, owner | *Synced (2026-10-23).* Was: run **Sync World (no screenshots)** (or `tools/unity-sync.ps1 -rthNoScreens`): it creates 256 scenes under `Assets/Scenes/Land/`, adds them to the build and checks each scene exports the same map. Generated regions skip screenshots in any case. New client code: `TileGround` (`Scripts/View`, builds each region's ground mesh and collider from its rows on load, never saved in the scene), its case in `PieceBuilder`, and `RegionStreamer` announcing a title only when it changes. Then walk from Tolling west over the salt pass (about x -144, y 40) or east to Cruor (`::tele 384 216` lands on its square). Things to judge: the 1.6 m rock shelf of the crest, the dark frontier shelf, road widths, how the warped coasts read. 25 new `Land*` materials appear under `Assets/Art/Materials`. |
 | U2 (world map) | local, owner | `claude/u2-world-map`, compiled outside Unity; look at it in the Editor: M opens it centred on you at a tile a pixel; drag to pan, wheel or +/- to zoom (whole map, 0.75, 1, 1.5, 2, 3 px a tile); the compass button re-centres; the book button shows the legend and the toggles (place names, realm names, shade unexplored). The ground appears as a coarse draft first, then sharpens (painted on a worker thread; the Editor's Debug build of `Rth.Shared` may take a few seconds for the full picture). Things to judge: colours of the painting against the interface, label sizes, the unexplored shade's strength (`MapInk.Veil`), road widths. Places named `p-...` show as unnamed marks; `p-` landmarks are left off (the hidden occult cells among them); `"hidden": true` on a place in `continent.json` keeps any place off the map. |

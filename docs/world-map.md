@@ -7,7 +7,8 @@ positions are rough and will be settled by the area plan. The old sketch, `image
 `images/` (Cruor, Meridian, Frostpeak Forge) still sets the mood. The game itself should look like
 Old School RuneScape.
 
-The lore behind every place is in `docs/lore.md`.
+The lore behind every place is in `docs/lore.md`. Where every place now stands, and why, is in
+`docs/world-plan.md` (the world remade on 2026-10-25), with the layout in `world/layout/continent.json`.
 
 ## The shape of the land
 
