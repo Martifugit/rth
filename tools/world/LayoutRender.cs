@@ -229,7 +229,7 @@ namespace Rth.WorldTool
             public Rgb Mix(Rgb o, float t) => new((byte)(R + (o.R - R) * t), (byte)(G + (o.G - G) * t), (byte)(B + (o.B - B) * t));
         }
 
-        private sealed class Canvas
+        internal sealed class Canvas
         {
             private readonly int _w, _h;
             private readonly Rgb[] _px;
@@ -242,7 +242,7 @@ namespace Rth.WorldTool
             }
 
             public void Set(int x, int y, Rgb c) { if (x >= 0 && y >= 0 && x < _w && y < _h) _px[y * _w + x] = c; }
-            private void Blend(int x, int y, Rgb c, float t) { if (x >= 0 && y >= 0 && x < _w && y < _h) _px[y * _w + x] = _px[y * _w + x].Mix(c, t); }
+            public void Blend(int x, int y, Rgb c, float t) { if (x >= 0 && y >= 0 && x < _w && y < _h) _px[y * _w + x] = _px[y * _w + x].Mix(c, t); }
 
             public void Fill(int x0, int y0, int fw, int fh, Rgb c)
             {

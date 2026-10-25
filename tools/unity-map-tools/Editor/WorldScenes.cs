@@ -50,6 +50,52 @@ namespace Rth.MapTools.Editor
             Open(Regions().Where(r => r.Rect.Overlaps(around)).Select(r => r.Scene).ToList());
         }
 
+        /// <summary>
+        /// Opens every region of the area the active scene's region belongs to (world/areas.json,
+        /// docs/world-areas.md): the unit the world is built in, so an area's work is done with all
+        /// of it in view.
+        /// </summary>
+        [MenuItem("R'th/World/Open This Area", priority = 18)]
+        private static void OpenArea()
+        {
+            string root = Path.GetFullPath(Path.Combine(Application.dataPath, "..", ".."));
+            string file = Rth.Shared.World.Data.WorldAreas.PathIn(root);
+            if (!File.Exists(file))
+            {
+                Debug.LogWarning("[R'th] No world/areas.json in this checkout.");
+                return;
+            }
+            Rth.Shared.World.Data.WorldAreas areas = Rth.Shared.World.Data.WorldAreas.Load(file);
+            Dictionary<string, string> sceneOf = RegionScenes();
+            string active = SceneManager.GetActiveScene().name;
+            string region = sceneOf.FirstOrDefault(e => e.Value == active).Key;
+            Rth.Shared.World.Data.WorldAreas.Area area = region == null ? null : areas.AreaOf(region);
+            if (area == null)
+            {
+                Debug.LogWarning($"[R'th] The active scene ('{active}') isn't a region in any area: open one of an area's regions first.");
+                return;
+            }
+            Open(area.Regions.Where(sceneOf.ContainsKey).Select(r => sceneOf[r]).ToList());
+            Rth.Shared.World.Data.WorldAreas.Package next = areas.Next(area);
+            Debug.Log($"[R'th] {area.Name}: stage {areas.StageOf(area)}" + (next != null ? $", next {next.Id} {next.Name}: {next.Done}" : ", finished."));
+        }
+
+        /// <summary>Each exported region's scene name, by region id (the map files are named after the region).</summary>
+        private static Dictionary<string, string> RegionScenes()
+        {
+            var scenes = new Dictionary<string, string>();
+            string dir = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "..", "server", "data", "maps"));
+            if (!Directory.Exists(dir)) return scenes;
+            foreach (string file in Directory.GetFiles(dir, "*.region.json"))
+            {
+                RegionInfo info = JsonUtility.FromJson<RegionInfo>(File.ReadAllText(file));
+                if (info == null || string.IsNullOrEmpty(info.scene)) continue;
+                string id = Path.GetFileName(file);
+                scenes[id.Substring(0, id.Length - ".region.json".Length)] = info.scene;
+            }
+            return scenes;
+        }
+
         [MenuItem("R'th/World/Open Whole World", priority = 20)]
         private static void OpenWholeWorld()
         {
@@ -99,6 +145,7 @@ namespace Rth.MapTools.Editor
             foreach (Scene s in others) EditorSceneManager.CloseScene(s, true);
         }
 
+        [MenuItem("R'th/World/Open This Area", true)]
         [MenuItem("R'th/World/Open Regions Around This One", true)]
         [MenuItem("R'th/World/Open Whole World", true)]
         [MenuItem("R'th/World/Close Other Scenes", true)]

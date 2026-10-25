@@ -488,6 +488,11 @@ kept for content. `Landscape` builds it at tile scale; the ground is painted the
 (`shared/World/Ground`: blended underlays, crisp overlays and water with diagonal half tiles), drawn by
 `TileGround` and by `tools/world paint` alike. Waiting on Sync World and the owner's walk.
 
+**The world in areas (L7):** `world/areas.json` splits the continent into 37 areas (3-8 regions
+each, in five waves) and a held-back frontier, and holds the standard: four stages of work packages,
+ticked per area. Read `docs/world-areas.md` before world work; `tools/world areas` checks it and draws
+the coverage map; **R'th > World > Open This Area** opens an area's regions together.
+
 **Next: not chosen yet.** Candidates: ranged, an art pass on Tolling, more quests and
 achievements.
 
@@ -548,6 +553,7 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | Stairs, ladders, trapdoors | An object with a `climb` action (`stairs_up`/`stairs_down`/`ladder_up`/`ladder_down` exist) placed with `MapObject` + a collider, and its `climbTo` set to an empty object on the landing tile under the target floor's `MapLevel`. One object per end. The exporter warns about a blocked landing; `ClimbSystem` moves the player. |
 | A new region of the world | A file `world/regions/<id>.json` (id, title, scene path, zone-aligned origin and size, ground, materials, pieces); `tools/world export`, then Sync World creates its scene. No server code. Over the open land, it replaces the generated `land_*` region there at the next `tools/world blockout`. |
 | The open land between places (the blockout) | Change `world/layout/continent.json` and run `tools/world blockout` (`docs/world-plan.md` section 10); see it first with `tools/world paint` and `probe`. `Landscape` builds it: grounds, `relief` (landforms), rivers and lakes, routed roads (`RoadRouter`), platforms, painted detail. Never edit a `land_*.json` that still says `"generated"`. |
+| Work on a part of the world | Its area in `world/areas.json` (`docs/world-areas.md`): write the brief, do the next package, tick it, run `tools/world areas`. A new region goes into an area too (`WorldAreasTests`). |
 | A landform (hill, scarp, mesa, crater, dunes, canyons) | An entry in continent.json's `relief`; a new kind is a case in `Relief.Contribution`. |
 | A spot kept for future content (a dungeon mouth, a boss arena) | An entry in continent.json's `sites` (kind, stage, note): marked in the blockout, never on the players' map. |
 | How a kind of ground is painted | Its ground in continent.json: `palette`, `layer` (`over` for made surfaces), `mix`, `shore`, `bank`, `scree`, `cliff`; a region's tiles piece with `"paint": true` is painted by `GroundPainter` (client and tools alike). |

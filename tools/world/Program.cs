@@ -82,6 +82,40 @@ switch (command)
     case "blockout":
         return BlockoutCommand(root, rest);
 
+    case "areas":
+    {
+        // The world in areas (docs/world-areas.md): check world/areas.json, say where each area stands, draw the coverage map.
+        WorldAreas areas = WorldAreas.Load(WorldAreas.PathIn(root));
+        var regionRects = ws.Regions.Where(e => !e.Region.Instanced)
+            .ToDictionary(e => e.Region.Id, e => (e.Region.OriginX, e.Region.OriginY, e.Region.Width, e.Region.Height));
+        List<string> errors = areas.Check(regionRects.Keys);
+        foreach (string e in errors) Console.Error.WriteLine("error: " + e);
+        int n = 0;
+        Console.WriteLine($"  {"#",3} {"wave",4} {"stage",5}  {"area",-42} {"regions",7}  next");
+        foreach (WorldAreas.Area a in areas.Areas)
+        {
+            n++;
+            WorldAreas.Package? next = areas.Next(a);
+            string nextText = a.Wave == 0 ? "(held back)" : next == null ? "finished" : $"{next.Id} {next.Name}";
+            Console.WriteLine($"  {n,3} {a.Wave,4} {areas.StageOf(a),5}  {a.Name,-42} {a.Regions.Count,7}  {nextText}");
+        }
+        int built = areas.Areas.Count(a => a.Wave > 0);
+        Console.WriteLine($"{built} areas to build ({areas.Areas.Where(a => a.Wave > 0).Sum(a => a.Regions.Count)} regions), one held back; " +
+                          string.Join(", ", Enumerable.Range(0, 5).Select(s => $"{areas.Areas.Count(a => a.Wave > 0 && areas.StageOf(a) == s)} at stage {s}")));
+        if (!rest.Contains("check"))
+        {
+            LayoutWorkspace lw = LayoutWorkspace.Load(root);
+            if (lw.Map.Count > 0)
+            {
+                byte[] png = AreaRender.Draw(areas, regionRects, WorldChart.From(lw.Map));
+                Directory.CreateDirectory(Path.Combine(root, "docs", "images"));
+                File.WriteAllBytes(Path.Combine(root, "docs", "images", "areas.png"), png);
+                Console.WriteLine("drew docs/images/areas.png");
+            }
+        }
+        return errors.Count == 0 ? 0 : 1;
+    }
+
     case "probe":
     {
         // Heights and grounds along a line of the generated landscape: probe x0 y0 x1 y1 [steps]

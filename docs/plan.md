@@ -267,6 +267,15 @@ readability), not its geography.
 - Next: the owner walks it (Tolling to Cruor, the salt pass, the Scarp at the Frontline, Sere's
   river), then area briefs (A4) start from its areas, places and sites.
 
+### L7. The world in areas
+
+| | |
+| --- | --- |
+| **Runs** | everyone, one area per branch |
+| **Depends on** | L6 |
+| **Owns** | `world/areas.json` (each branch ticks only its own area), `docs/world-areas.md`, `docs/areas/<area>.md` briefs |
+| **Status** | **started** (2026-10-25): 37 areas in five waves plus the held-back frontiers, a standard of 22 work packages over four stages, `tools/world areas` (check, progress, coverage map), **R'th > World > Open This Area**. Every area at stage 0. Next: wave 1 (Tolling, the lake road, Cruor, the western march) through stage 2. |
+
 ### L3. Maps from the layout
 
 | | |

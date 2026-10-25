@@ -18,7 +18,7 @@ Started 2026-10-23.
 | Art rules and budgets | [assets.md](assets.md) |
 | How content is spread (banks, quests, dungeons) | [areas/rules.md](areas/rules.md), [research/world-density.md](research/world-density.md) |
 | Regions as data, commands, who edits what | [workflow.md](workflow.md) |
-| What is being worked on | [plan.md](plan.md) |
+| What is being worked on | [plan.md](plan.md); the areas and how far each has come: [world-areas.md](world-areas.md) |
 
 ---
 
@@ -151,7 +151,7 @@ Unity is written back to text.
 ## 5. How a place gets made
 
 Modelled on Albion Online's map pipeline (a Unity MMO) and Blizzard's zone workflow (section 11).
-*Decided* (2026-10-23); the stage field and the coverage map are not built yet. A worked example
+*Decided* (2026-10-23); built per area (2026-10-25): [world-areas.md](world-areas.md) splits the world into areas, gives each stage a list of work packages to tick, and draws the coverage map. A worked example
 of the whole flow: [world-example.md](world-example.md).
 
 **Stages.** Every region records how far it has come, and a map of the world coloured by stage
@@ -281,7 +281,7 @@ Use it in every brief and every review.
 | Sizes and camera, D1-D4: [world-scale.md](world-scale.md) | Open |
 | Incremental Sync World | Built |
 | Terrain heights in region data, sculpted in Unity and written back | Built (check the sculpting tool in the Editor) |
-| Stages per region and the coverage map | Decided, to build |
+| Stages per area and the coverage map | Built: [world-areas.md](world-areas.md), `world/areas.json`, `tools/world areas` |
 | Entrances and exits as data; the seam check for roads, rivers and walkability | Decided, to build (the height seam check is built) |
 | Claims checked by the tools | Decided, to build |
 | A slope overlay while sculpting (tiles too steep to walk shown red) | Built, in Sculpt Ground |
