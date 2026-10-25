@@ -131,6 +131,13 @@ namespace Rth.Client.Editor
                     ground.materials = keys.Select(k => Material(kit, region, piece.Legend[k].Material)).ToArray();
                     ground.lifts = keys.Select(k => piece.Legend[k].Height ?? 0f).ToArray();
                     ground.walkable = keys.Select(k => piece.Legend[k].Walkable).ToArray();
+                    // Painted the RuneScape way (docs/world-plan.md section 7): the kinds' layers and the neighbours' ring.
+                    ground.painted = piece.Paint == true;
+                    ground.margin = piece.Margin ?? 0;
+                    ground.surround = piece.Surround?.ToArray() ?? new string[0];
+                    ground.overlay = keys.Select(k => piece.Legend[k].IsOverlay).ToArray();
+                    ground.water = keys.Select(k => piece.Legend[k].Water == true).ToArray();
+                    ground.beyond = keys.Select(k => piece.Legend[k].Beyond == true).ToArray();
                     if (terrain != null)
                     {
                         // The terrain's corners under this piece's rectangle, row by row from the south.

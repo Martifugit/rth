@@ -156,6 +156,20 @@ namespace Rth.Shared.World.Data
         public SortedDictionary<string, TileKind>? Legend;
         /// <summary>A tiles piece's ground: one string a row from the north, a character a tile from the west.</summary>
         public List<string>? Rows;
+        /// <summary>
+        /// A tiles piece painted the RuneScape way (<see cref="Ground.GroundPainter"/>): underlays
+        /// blended, overlays and water crisp with diagonal half tiles. Otherwise each kind is a flat material.
+        /// </summary>
+        public bool? Paint;
+        /// <summary>How many tiles of the neighbours' ground <see cref="Surround"/> holds all round, for blending across borders.</summary>
+        public int? Margin;
+        /// <summary>
+        /// The neighbours' tiles round a painted tiles piece, only for painting (they aren't this region's
+        /// ground): <see cref="Margin"/> full rows along the north (the rectangle grown by the margin each
+        /// side), then a row of the west and east parts (2 × margin characters) for each of
+        /// <see cref="Rows"/>, then the margin's rows along the south.
+        /// </summary>
+        public List<string>? Surround;
 
         // ---------------------------------------------------------------- what it does
         /// <summary>Makes it interactive: an id in server/data/content/objects.json.</summary>
@@ -212,6 +226,15 @@ namespace Rth.Shared.World.Data
         public float? Height;
         /// <summary>A material name for this kind's cliff faces (its tiles too steep to walk); none: the ground's rock.</summary>
         public string? Cliff;
+        /// <summary>
+        /// On a painted piece (<see cref="Piece.Paint"/>): "over" for a made surface (road, paving,
+        /// planks), drawn crisp in its own colour; otherwise natural ground, blended with its neighbours.
+        /// </summary>
+        public string? Layer;
+        /// <summary>Land beyond the first build: drawn hazed (on a painted piece), and blocked.</summary>
+        public bool? Beyond;
+
+        [JsonIgnore] public bool IsOverlay => Layer == "over";
 
         [JsonIgnore] public bool Walkable => Blocks != true && Water != true;
     }

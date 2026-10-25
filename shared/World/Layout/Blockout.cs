@@ -7,13 +7,13 @@ using Rth.Shared.World.Data;
 namespace Rth.Shared.World.Layout
 {
     /// <summary>
-    /// The walkable blockout (L2, docs/layout.md): every 96-tile region of the layout that holds core
-    /// land, and the ring of sea and frontier around them, as region data drawn from the layout. Each
-    /// is one <see cref="PieceKind.Tiles"/> piece: the zone grid's ground with its edges wandered so
-    /// coasts and borders don't step by whole zones, the rivers, passes and roads at their real widths
-    /// in tiles, and a plain square where each place will stand, with a first terrain where the layout
-    /// raises its land (<see cref="LandHeights"/>: the spine). No trees, rocks or props. Frontier land
-    /// is drawn but blocked; the built regions (Tolling, Palmerway) are left alone.
+    /// The walkable blockout (L2, docs/layout.md section 8; docs/world-plan.md): every 96-tile region
+    /// of the layout that holds core land, and the ring of sea and frontier around them, as region
+    /// data drawn from the <see cref="Landscape"/>. Each is one painted <see cref="PieceKind.Tiles"/>
+    /// piece (<see cref="Piece.Paint"/>: underlays blended, roads, paving and water crisp with
+    /// diagonal shapes) with a ring of its neighbours' tiles so the colours blend across borders, and
+    /// its terrain. No trees, rocks or props. Frontier land is drawn but blocked; the built regions
+    /// (Tolling, Palmerway, Selenfall) are left alone, and the land blends into their edges.
     /// </summary>
     public static class Blockout
     {
@@ -23,12 +23,15 @@ namespace Rth.Shared.World.Layout
         /// <summary>How far, in tiles, borders wander from the zone grid, and over what distance.</summary>
         public const float Warp = 5f, WarpPeriod = 13f;
 
-        public const char MainRoad = '=', Road = '-', Settlement = '+', Landmark = '*', Frontier = '%', SnowCap = '^';
+        /// <summary>Tiles of the neighbours' ground each region keeps round it for blending.</summary>
+        public const int Margin = 4;
 
         public sealed class Result
         {
             public List<RegionData> Regions = new List<RegionData>();
             public List<string> Warnings = new List<string>();
+            /// <summary>The routed roads and wound rivers, for the world map.</summary>
+            public Landscape? Land;
         }
 
         public static string RegionId(int rx, int ry) => $"land_{Key(rx)}_{Key(ry)}";
@@ -37,14 +40,14 @@ namespace Rth.Shared.World.Layout
         public static Result Generate(ContinentMap map, IReadOnlyList<BuiltRegion> built, HeightEdits? edits = null)
         {
             var result = new Result();
-            Land land = Lay(map, built, result.Warnings, edits);
+            Landscape land = Landscape.Build(map, built, edits);
+            result.Land = land;
+            result.Warnings.AddRange(land.Warnings);
             int size = map.Data.RegionTiles;
-            foreach ((int cx, int cy) in land.Generated)
+            foreach ((int cx, int cy) in Cells(map, built, result.Warnings))
             {
                 int x0 = map.OriginX + cx * size, y0 = map.OriginY + cy * size;
-                char[,] tiles = land.Tiles[(cx, cy)];
-                Snow(map, tiles, land.Heights, x0, y0, size);
-                RegionData region = Region(map, tiles, map.OriginX / size + cx, map.OriginY / size + cy, x0, y0, size);
+                RegionData region = Region(map, land, map.OriginX / size + cx, map.OriginY / size + cy, x0, y0, size);
                 Heightfield? field = land.Heights.Field(x0, y0, size, size);
                 if (field != null) region.Terrain = TerrainText.Write(field);
                 result.Regions.Add(region);
@@ -52,46 +55,19 @@ namespace Rth.Shared.World.Layout
             return result;
         }
 
-        /// <summary>The ridge's tiles above the snow line (all four corners) are drawn as snow.</summary>
-        private static void Snow(ContinentMap map, char[,] tiles, LandHeights heights, int x0, int y0, int size)
-        {
-            TerrainDef? t = map.Data.Terrain;
-            if (t?.SnowAbove == null) return;
-            var ridge = new HashSet<char>(t.RidgeGrounds.Where(map.Data.Grounds.ContainsKey).Select(g => map.Data.Grounds[g].Letter[0]));
-            for (int y = 0; y < size; y++)
-                for (int x = 0; x < size; x++)
-                {
-                    if (!ridge.Contains(tiles[x, y])) continue;
-                    int ax = x0 + x, ay = y0 + y;
-                    float low = Math.Min(Math.Min(heights.Corner(ax, ay), heights.Corner(ax + 1, ay)), Math.Min(heights.Corner(ax, ay + 1), heights.Corner(ax + 1, ay + 1)));
-                    if (low > t.SnowAbove.Value) tiles[x, y] = SnowCap;
-                }
-        }
-
         /// <summary>
-        /// The generated land's first terrain over the whole layout (<see cref="LandHeights"/>): what a
-        /// generated region carries, and where a region taken over starts (`tools/world terrain ... layout`).
+        /// The generated land's terrain over the whole layout: what a generated region carries, and
+        /// where a region taken over starts (`tools/world terrain ... layout`).
         /// </summary>
-        public static LandHeights Heights(ContinentMap map, IReadOnlyList<BuiltRegion> built, HeightEdits? edits = null) => Lay(map, built, new List<string>(), edits).Heights;
+        public static LandHeights Heights(ContinentMap map, IReadOnlyList<BuiltRegion> built, HeightEdits? edits = null) =>
+            Landscape.Build(map, built, edits).Heights;
 
-        private sealed class Land
+        /// <summary>Cells with core land, and the ring around them, so the coast and the edge of the built world are drawn; built regions left out.</summary>
+        private static List<(int, int)> Cells(ContinentMap map, IReadOnlyList<BuiltRegion> built, List<string> warnings)
         {
-            /// <summary>Every cell's tiles, built regions' cells included (their ground still shapes the hills).</summary>
-            public Dictionary<(int, int), char[,]> Tiles = new Dictionary<(int, int), char[,]>();
-            public List<(int, int)> Generated = new List<(int, int)>();
-            public LandHeights Heights = null!;
-        }
-
-        private static Land Lay(ContinentMap map, IReadOnlyList<BuiltRegion> built, List<string> warnings, HeightEdits? edits)
-        {
-            var land = new Land();
             int size = map.Data.RegionTiles;
-            byte[] ground = BaseGround(map);
             int cols = (map.Cols * map.ZoneTiles) / size, rows = (map.Rows * map.ZoneTiles) / size;
             int rx0 = map.OriginX / size, ry0 = map.OriginY / size;
-
-            // Cells with core land, then the ring around them so the coast and the edge of the built
-            // world are drawn rather than left to the unbuilt-land plane.
             var core = new bool[cols, rows];
             for (int i = 0; i < map.Count; i++)
                 if (map.IsCore(i))
@@ -99,6 +75,7 @@ namespace Rth.Shared.World.Layout
                     int col = i % map.Cols, row = i / map.Cols;
                     core[col * map.ZoneTiles / size, row * map.ZoneTiles / size] = true;
                 }
+            var cells = new List<(int, int)>();
             for (int cy = 0; cy < rows; cy++)
                 for (int cx = 0; cx < cols; cx++)
                 {
@@ -108,7 +85,6 @@ namespace Rth.Shared.World.Layout
                             wanted = cx + dx >= 0 && cy + dy >= 0 && cx + dx < cols && cy + dy < rows && core[cx + dx, cy + dy];
                     if (!wanted) continue;
                     int x0 = map.OriginX + cx * size, y0 = map.OriginY + cy * size;
-                    land.Tiles[(cx, cy)] = Tiles(map, ground, x0, y0, size);
                     BuiltRegion? over = built.FirstOrDefault(b => b.X0 < x0 + size && x0 < b.X1 && b.Y0 < y0 + size && y0 < b.Y1);
                     if (over != null)
                     {
@@ -116,107 +92,12 @@ namespace Rth.Shared.World.Layout
                             warnings.Add($"region {rx0 + cx},{ry0 + cy} is left out: '{over.Id}' covers part of it (built regions should fill whole 96-tile cells).");
                         continue;
                     }
-                    land.Generated.Add((cx, cy));
+                    cells.Add((cx, cy));
                 }
-
-            char sea = map.Data.Grounds[map.Data.SeaGround].Letter[0];
-            char TileAt(int x, int y)
-            {
-                int cx = (int)Math.Floor((x - map.OriginX) / (double)size), cy = (int)Math.Floor((y - map.OriginY) / (double)size);
-                return land.Tiles.TryGetValue((cx, cy), out char[,] t) ? t[x - map.OriginX - cx * size, y - map.OriginY - cy * size] : sea;
-            }
-            land.Heights = LandHeights.Compute(map.Data, map.OriginX, map.OriginY, cols * size, rows * size, TileAt, built, edits);
-            return land;
+            return cells;
         }
 
-        /// <summary>
-        /// The zone grid's ground with the rivers, bridges and passes taken out (each takes the ground
-        /// of the nearest zone without one): those are drawn from their lines, at their real width.
-        /// </summary>
-        private static byte[] BaseGround(ContinentMap map)
-        {
-            var lined = new HashSet<string> { map.Data.RiverGround, map.Data.BridgeGround, map.Data.PassGround };
-            var ground = (byte[])map.Ground.Clone();
-            var done = new bool[map.Count];
-            var queue = new Queue<int>();
-            for (int i = 0; i < map.Count; i++)
-                if (!lined.Contains(map.GroundIdAt(i))) { done[i] = true; queue.Enqueue(i); }
-            while (queue.Count > 0)
-            {
-                int i = queue.Dequeue();
-                int col = i % map.Cols, row = i / map.Cols;
-                foreach ((int dc, int dr) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) })
-                {
-                    if (!map.InGrid(col + dc, row + dr)) continue;
-                    int j = map.Index(col + dc, row + dr);
-                    if (done[j]) continue;
-                    done[j] = true;
-                    ground[j] = ground[i];
-                    queue.Enqueue(j);
-                }
-            }
-            return ground;
-        }
-
-        /// <summary>A cell's tiles, [x, y] from the south-west: its ground, then rivers, passes, roads and places.</summary>
-        private static char[,] Tiles(ContinentMap map, byte[] ground, int x0, int y0, int size)
-        {
-            var tiles = new char[size, size];
-            for (int ty = 0; ty < size; ty++)
-                for (int tx = 0; tx < size; tx++)
-                {
-                    float x = x0 + tx + 0.5f, y = y0 + ty + 0.5f;
-                    float wx = x + Warp * Noise(map.Data.Seed, x / WarpPeriod, y / WarpPeriod);
-                    float wy = y + Warp * Noise(map.Data.Seed + 101, x / WarpPeriod, y / WarpPeriod);
-                    (int col, int row) = map.ZoneOf(wx, wy);
-                    col = Math.Max(0, Math.Min(map.Cols - 1, col));
-                    row = Math.Max(0, Math.Min(map.Rows - 1, row));
-                    int i = map.Index(col, row);
-                    tiles[tx, ty] = map.Power[i] == ContinentMap.NoPower ? map.GroundDefs[ground[i]].Letter[0]
-                        : !map.IsCore(i) ? Frontier
-                        : map.GroundDefs[ground[i]].Letter[0];
-                }
-
-            char Letter(string groundId) => map.Data.Grounds[groundId].Letter[0];
-            char river = Letter(map.Data.RiverGround), bridge = Letter(map.Data.BridgeGround), pass = Letter(map.Data.PassGround);
-            var water = new HashSet<char>(map.Data.Grounds.Values.Where(g => g.Water).Select(g => g.Letter[0]));
-            void Paint(IEnumerable<(int x, int y)> at, Func<char, char?> to)
-            {
-                foreach ((int x, int y) in at)
-                {
-                    char? c = to(tiles[x - x0, y - y0]);
-                    if (c.HasValue) tiles[x - x0, y - y0] = c.Value;
-                }
-            }
-            IEnumerable<(int, int)> Along(IList<float[]> line, float halfWidth) => TileShapes.Along(line, halfWidth, x0, y0, size, size);
-
-            // Rivers over the land (the sea and the frontier stay as they are), then passes and roads,
-            // which cross water as a bridge or ford, and the squares where places will be built.
-            foreach (RiverDef r in map.Data.Rivers)
-                Paint(Along(r.Line, r.HalfWidth), c => water.Contains(c) || c == Frontier ? (char?)null : river);
-            foreach (PassDef p in map.Data.Spine.Passes)
-                Paint(Along(p.Line, p.HalfWidth), c => c == Frontier ? (char?)null : water.Contains(c) ? bridge : pass);
-            foreach (RoadLine road in map.Roads)
-            {
-                if (road.Kind != "main" && road.Kind != "road") continue;
-                char mark = road.Kind == "main" ? MainRoad : Road;
-                List<float[]> line = road.Points.Select(p => new[] { p.x, p.y }).ToList();
-                Paint(Along(line, road.Kind == "main" ? 2f : 1.5f), c => c == Frontier ? (char?)null : water.Contains(c) ? bridge : mark);
-            }
-            foreach (PlaceDef place in map.Data.Places)
-            {
-                int side = Square(place.Tier);
-                int px = (int)Math.Floor(place.At[0]) - side / 2, py = (int)Math.Floor(place.At[1]) - side / 2;
-                var square = new List<(int, int)>();
-                for (int y = Math.Max(py, y0); y < Math.Min(py + side, y0 + size); y++)
-                    for (int x = Math.Max(px, x0); x < Math.Min(px + side, x0 + size); x++) square.Add((x, y));
-                char mark = place.IsSettlement ? Settlement : Landmark;
-                Paint(square, c => c == Frontier ? (char?)null : mark);
-            }
-            return tiles;
-        }
-
-        private static RegionData Region(ContinentMap map, char[,] tiles, int rx, int ry, int x0, int y0, int size)
+        private static RegionData Region(ContinentMap map, Landscape land, int rx, int ry, int x0, int y0, int size)
         {
             var region = new RegionData
             {
@@ -228,22 +109,39 @@ namespace Rth.Shared.World.Layout
                 Seed = (int)(Geometry.Hash(map.Data.Seed, RegionId(rx, ry)) & 0x7FFFFFFF),
                 Generated = Generator,
             };
-            var legend = new SortedDictionary<string, TileKind>(StringComparer.Ordinal);
-            var rowsText = new List<string>(size);
-            for (int ty = size - 1; ty >= 0; ty--)
+            char sea = map.Data.Grounds[map.Data.SeaGround].Letter[0];
+            char At(int x, int y) => land.InBounds(x, y) ? land.Char(land.Index(x, y)) : sea;
+
+            var used = new HashSet<char>();
+            var rows = new List<string>(size);
+            for (int y = y0 + size - 1; y >= y0; y--)
             {
                 var row = new char[size];
-                for (int tx = 0; tx < size; tx++)
+                for (int x = 0; x < size; x++) used.Add(row[x] = At(x0 + x, y));
+                rows.Add(new string(row));
+            }
+            // The neighbours' tiles all round: full rows along the north and south, the west and east parts between.
+            var surround = new List<string>(size + 2 * Margin);
+            for (int y = y0 + size + Margin - 1; y >= y0 - Margin; y--)
+            {
+                bool full = y >= y0 + size || y < y0;
+                var row = new System.Text.StringBuilder(full ? size + 2 * Margin : 2 * Margin);
+                for (int x = x0 - Margin; x < x0 + size + Margin; x++)
                 {
-                    char c = tiles[tx, ty];
-                    row[tx] = c;
-                    string key = c.ToString();
-                    if (legend.ContainsKey(key)) continue;
-                    (string material, string palette, TileKind kind) = Kind(map, c);
-                    legend[key] = kind;
-                    region.Materials[material] = palette;
+                    if (!full && x >= x0 && x < x0 + size) continue;
+                    char c = At(x, y);
+                    used.Add(c);
+                    row.Append(c);
                 }
-                rowsText.Add(new string(row));
+                surround.Add(row.ToString());
+            }
+
+            var legend = new SortedDictionary<string, TileKind>(StringComparer.Ordinal);
+            foreach (char c in used.OrderBy(c => c))
+            {
+                (TileKind kind, Dictionary<string, string> materials) = Kind(map, land, c);
+                legend[c.ToString()] = kind;
+                foreach (KeyValuePair<string, string> m in materials) region.Materials[m.Key] = m.Value;
             }
             region.Pieces.Add(new Piece
             {
@@ -251,51 +149,58 @@ namespace Rth.Shared.World.Layout
                 Kind = PieceKind.Tiles,
                 Rect = new[] { x0, y0, x0 + size, y0 + size },
                 Legend = legend,
-                Rows = rowsText,
+                Rows = rows,
+                Paint = true,
+                Margin = Margin,
+                Surround = surround,
             });
             return region;
         }
 
-        /// <summary>The side of the plain square standing in for a place, by its tier.</summary>
-        public static int Square(string tier) => tier switch
-        {
-            "city" => 16,
-            "town" => 12,
-            "village" => 8,
-            "hamlet" => 6,
-            _ => 4,
-        };
+        /// <summary>The side of the plain square standing in for a place, by its tier (the paved middle, in tiles).</summary>
+        public static int Square(string tier) => (int)Math.Round(Landscape.SquareRadius(new PlaceDef { Tier = tier }) * 2f);
 
-        /// <summary>What a character is: its material (and that material's palette colour) and its kind.</summary>
-        private static (string material, string palette, TileKind kind) Kind(ContinentMap map, char c)
+        /// <summary>What a character is, and the materials (with their palette colours) it uses.</summary>
+        private static (TileKind kind, Dictionary<string, string> materials) Kind(ContinentMap map, Landscape land, char c)
         {
-            switch (c)
+            var materials = new Dictionary<string, string>();
+            (string id, bool beyond) = land.Decode(c);
+            var g = new KeyValuePair<string, GroundDef>(id, map.Data.Grounds[id]);
+            if (beyond)
             {
-                case MainRoad: return ("LandMainRoad", "Cobble", new TileKind { Material = "LandMainRoad", Height = 0.01f });
-                case Road: return ("LandRoad", "Furrow", new TileKind { Material = "LandRoad", Height = 0.01f });
-                case Settlement: return ("LandSettlement", "Stone", new TileKind { Material = "LandSettlement", Height = 0.02f });
-                case Landmark: return ("LandLandmark", "BlockoutSigil", new TileKind { Material = "LandLandmark", Height = 0.02f });
-                case Frontier: return ("LandFrontier", "DarkRock", new TileKind { Material = "LandFrontier", Blocks = true, Height = 0.6f });
-                case SnowCap: return ("LandSnowcap", "Snow", new TileKind { Material = "LandSnowcap", Blocks = true });
+                // Land beyond the first build: its own ground, hazed by the painter, and blocked.
+                string far = "LandFar" + Pascal(g.Key);
+                materials[far] = g.Value.Palette;
+                return (new TileKind { Material = far, Blocks = true, Beyond = true }, materials);
             }
-            KeyValuePair<string, GroundDef> g = map.Data.Grounds.First(e => e.Value.Letter[0] == c);
-            string name = "Land" + string.Concat(g.Key.Split('-', '_').Select(w => w.Length == 0 ? w : char.ToUpperInvariant(w[0]) + w.Substring(1)));
+            string name = "Land" + Pascal(g.Key);
+            materials[name] = g.Value.Palette;
             var kind = new TileKind { Material = name };
             if (g.Value.Water)
             {
                 kind.Water = true;
                 kind.Height = -0.15f;
             }
-            else if (!g.Value.Walkable)
+            else if (!g.Value.Walkable && map.Data.Terrain?.RidgeGrounds.Contains(g.Key) != true)
             {
-                // The crest and the glaciers: a shelf of rock about a storey high (docs/world-scale.md 3),
-                // unless the terrain raises them into peaks of their own.
+                // Ground the layout can't cross and the terrain doesn't raise (lava, a rock shelf):
+                // blocked, and standing a storey above the land (docs/world-scale.md 3). The crest and
+                // glaciers are ordinary ground: only their steepness blocks them, as cliffs.
                 kind.Blocks = true;
-                if (map.Data.Terrain?.RidgeGrounds.Contains(g.Key) != true) kind.Height = 1.6f;
+                kind.Height = 1.6f;
             }
             else if (g.Key == map.Data.BridgeGround) kind.Height = 0.05f;
-            return (name, g.Value.Palette, kind);
+            if (g.Value.Layer == "over") kind.Layer = "over";
+            if (g.Value.Cliff != null)
+            {
+                string cliff = "LandCliff" + Pascal(g.Value.Cliff);
+                materials[cliff] = g.Value.Cliff;
+                kind.Cliff = cliff;
+            }
+            return (kind, materials);
         }
+
+        private static string Pascal(string id) => string.Concat(id.Split('-', '_').Select(w => w.Length == 0 ? w : char.ToUpperInvariant(w[0]) + w.Substring(1)));
 
         /// <summary>
         /// Shown on walking in: the biggest place in the region with a real name, or else the power
@@ -328,18 +233,6 @@ namespace Rth.Shared.World.Layout
             string name = map.Data.Powers[counts.OrderByDescending(c => c.Value).ThenBy(c => c.Key, StringComparer.Ordinal).First().Key].Name;
             int bracket = name.IndexOf(" (", StringComparison.Ordinal);
             return bracket > 0 ? name.Substring(0, bracket) : name;
-        }
-
-        /// <summary>Smooth value noise in [-1, 1], the same for a seed on every run.</summary>
-        private static float Noise(int seed, float x, float y)
-        {
-            int ix = (int)Math.Floor(x), iy = (int)Math.Floor(y);
-            float fx = x - ix, fy = y - iy;
-            float sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
-            float Lattice(int a, int b) => (Geometry.Hash(Geometry.Hash((uint)seed, (uint)a), (uint)b) & 0xFFFF) / 32767.5f - 1f;
-            float top = Lattice(ix, iy) + (Lattice(ix + 1, iy) - Lattice(ix, iy)) * sx;
-            float bottom = Lattice(ix, iy + 1) + (Lattice(ix + 1, iy + 1) - Lattice(ix, iy + 1)) * sx;
-            return top + (bottom - top) * sy;
         }
 
         // ------------------------------------------------------------------ files

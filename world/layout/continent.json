@@ -1,5 +1,5 @@
 {
-  "about": "R'th's continent, roughly, at tile scale (docs/layout.md). Absolute tiles: Tolling's south-west corner is (0, 0), east +x, north +y. Compile and check with `dotnet run --project tools/world -- layout`. p- names are placeholders and never reach players.",
+  "about": "R'th's continent at tile scale, laid out from the land up (docs/world-plan.md; the format is docs/layout.md). Absolute tiles: Tolling's south-west corner is (0, 0), east +x, north +y. Check with `dotnet run --project tools/world -- layout`, see it with `paint`, generate it with `blockout`. p- names are placeholders and never reach players.",
   "zoneTiles": 8,
   "regionTiles": 96,
   "bounds": [-768, -864, 1152, 960],
@@ -12,277 +12,1412 @@
   "bridgeGround": "bridge",
   "passGround": "pass",
   "defaultPower": "wild",
-
   "grounds": {
-    "sea":      { "letter": "~", "name": "Sea",            "palette": "Sea",        "map": "#24476b", "water": true,  "walkable": false, "rough": 0,   "height": 0 },
-    "lake":     { "letter": "l", "name": "Lake",           "palette": "Mere",       "map": "#3a6688", "water": true,  "walkable": false, "rough": 0,   "height": 0 },
-    "river":    { "letter": "r", "name": "River",          "palette": "Water",      "map": "#4282c4", "water": true,  "walkable": false, "rough": 0,   "height": 0 },
-    "bridge":   { "letter": "b", "name": "Bridge or ford", "palette": "Planks",     "map": "#c8a46e", "rough": 0.5, "height": 1 },
-    "pass":     { "letter": "p", "name": "Pass",           "palette": "Dirt",       "map": "#c09a62", "rough": 1.5, "height": 11 },
-    "farmland": { "letter": "g", "name": "Farmland",       "palette": "Grass",      "map": "#7f9e4c", "rough": 1.5, "height": 2 },
-    "downs":    { "letter": "e", "name": "Downs",          "palette": "Meadow",     "map": "#93b35c", "rough": 2,   "height": 4 },
-    "forest":   { "letter": "w", "name": "Forest",         "palette": "GraveTurf",  "map": "#3e6b36", "rough": 2,   "height": 3 },
-    "heath":    { "letter": "h", "name": "Heath",          "palette": "Heath",      "map": "#8d8c58", "rough": 1.5, "height": 3 },
-    "moor":     { "letter": "o", "name": "Moor",           "palette": "Moor",       "map": "#6c7658", "rough": 2.5, "height": 5 },
-    "fen":      { "letter": "f", "name": "Fen",            "palette": "Fen",        "map": "#56694a", "rough": 0.6, "height": 1 },
-    "broken":   { "letter": "q", "name": "Broken coast",   "palette": "Shingle",    "map": "#7d7a6c", "rough": 3,   "height": 3 },
-    "scrub":    { "letter": "s", "name": "Dry scrub",      "palette": "Dirt",       "map": "#bba46c", "rough": 2,   "height": 3 },
-    "desert":   { "letter": "d", "name": "Desert",         "palette": "Sand",       "map": "#dcc78f", "rough": 2.5, "height": 3 },
-    "ash":      { "letter": "a", "name": "Ash plain",      "palette": "Umber",      "map": "#7d5f48", "rough": 2.5, "height": 4 },
-    "volcanic": { "letter": "v", "name": "Volcanic",       "palette": "Scorch",     "map": "#4b392d", "rough": 3.5, "height": 9 },
-    "highland": { "letter": "k", "name": "Highland",       "palette": "MossyStone", "map": "#8f8c7b", "rough": 3,   "height": 9 },
-    "crest":    { "letter": "m", "name": "Crest",          "palette": "CliffRock",  "map": "#5b564f", "walkable": false, "rough": 3, "height": 14 },
-    "glacier":  { "letter": "i", "name": "Glacier",        "palette": "Snow",       "map": "#f0f4f8", "walkable": false, "rough": 2, "height": 15 },
-    "snow":     { "letter": "n", "name": "Snowfield",      "palette": "Snow",       "map": "#d3dbe2", "rough": 2,   "height": 6 },
-    "tundra":   { "letter": "t", "name": "Tundra",         "palette": "Shingle",    "map": "#9ba393", "rough": 2,   "height": 4 },
-    "scar":     { "letter": "c", "name": "Moonfall scar",  "palette": "Slate",      "map": "#6e7a8e", "rough": 3,   "height": 8 }
+    "sea": {"letter": "~", "name": "Sea", "palette": "Sea", "map": "#24476b", "water": true, "walkable": false, "rough": 0, "height": 0},
+    "lake": {"letter": "l", "name": "Lake", "palette": "Mere", "map": "#3a6688", "water": true, "walkable": false, "rough": 0, "height": 0},
+    "river": {"letter": "r", "name": "River", "palette": "Water", "map": "#4282c4", "water": true, "walkable": false, "rough": 0, "height": 0},
+    "bridge": {"letter": "b", "name": "Bridge or ford", "palette": "Planks", "map": "#c8a46e", "layer": "over", "detail": true, "rough": 0.5, "height": 1},
+    "cobble": {"letter": "=", "name": "The empire's highway", "palette": "Cobble", "map": "#a8a39a", "layer": "over", "detail": true, "rough": 0, "height": 1},
+    "dirtroad": {"letter": "-", "name": "Road", "palette": "Dirt", "map": "#9a7a50", "layer": "over", "detail": true, "rough": 0, "height": 1},
+    "dustroad": {"letter": ",", "name": "Caravan road", "palette": "Dust", "map": "#c9b385", "layer": "over", "detail": true, "rough": 0, "height": 1},
+    "cinderroad": {"letter": ":", "name": "Cinder road", "palette": "Cinderroad", "map": "#3e3936", "layer": "over", "detail": true, "rough": 0, "height": 1},
+    "causeway": {"letter": "#", "name": "Causeway", "palette": "Causeway", "map": "#7d6a4c", "layer": "over", "detail": true, "rough": 0, "height": 1},
+    "gravelroad": {"letter": ";", "name": "Mountain road", "palette": "Gravel", "map": "#a99a72", "layer": "over", "detail": true, "rough": 0, "height": 1},
+    "paving": {"letter": "+", "name": "Paving", "palette": "Paving", "map": "#8f8b83", "layer": "over", "detail": true, "rough": 0, "height": 1},
+    "sigil": {
+      "letter": "*",
+      "name": "A landmark's mark",
+      "palette": "BlockoutSigil",
+      "map": "#998f61",
+      "layer": "over",
+      "detail": true,
+      "rough": 0,
+      "height": 1
+    },
+    "site": {
+      "letter": "!",
+      "name": "A site kept for content",
+      "palette": "BlockoutRing",
+      "map": "#524224",
+      "layer": "over",
+      "detail": true,
+      "rough": 0,
+      "height": 1
+    },
+    "pass": {"letter": "p", "name": "Pass", "palette": "Scree", "map": "#b09a72", "rough": 1.5, "height": 7, "cliff": "CliffRock"},
+    "grass": {
+      "letter": "g",
+      "name": "Grassland",
+      "palette": "Grass",
+      "map": "#6e9a44",
+      "farm": true,
+      "rough": 1.5,
+      "height": 1,
+      "shore": "sand",
+      "cliff": "CliffRock",
+      "mix": [{"ground": "meadow", "share": 0.3, "scale": 26}, {"ground": "heath", "share": 0.06, "scale": 34}]
+    },
+    "meadow": {"letter": "e", "name": "Meadow", "palette": "Meadow", "map": "#7aa84c", "farm": true, "detail": true, "rough": 1.5, "height": 1, "shore": "sand"},
+    "heath": {
+      "letter": "h",
+      "name": "Heath",
+      "palette": "Heath",
+      "map": "#8d8c58",
+      "rough": 1.5,
+      "height": 2,
+      "shore": "shingle",
+      "cliff": "CliffRock",
+      "mix": [{"ground": "bracken", "share": 0.22, "scale": 22}, {"ground": "grass", "share": 0.14, "scale": 32}]
+    },
+    "bracken": {"letter": "k", "name": "Bracken", "palette": "Bracken", "map": "#7d7440", "detail": true, "rough": 1.5, "height": 2, "shore": "shingle"},
+    "downs": {
+      "letter": "d",
+      "name": "Chalk downs",
+      "palette": "Downland",
+      "map": "#93b35c",
+      "farm": true,
+      "rough": 2,
+      "height": 3,
+      "shore": "shingle",
+      "scree": "chalk",
+      "cliff": "Chalk",
+      "mix": [{"ground": "meadow", "share": 0.22, "scale": 24}]
+    },
+    "chalk": {"letter": "c", "name": "Chalk", "palette": "Chalk", "map": "#c8c5b0", "detail": true, "rough": 2, "height": 3},
+    "forest": {
+      "letter": "w",
+      "name": "Forest",
+      "palette": "GraveTurf",
+      "map": "#3e6b36",
+      "rough": 2,
+      "height": 3,
+      "shore": "mud",
+      "cliff": "CliffRock",
+      "mix": [{"ground": "deepwood", "share": 0.15, "scale": 28}, {"ground": "glade", "share": 0.1, "scale": 18}]
+    },
+    "glade": {"letter": "G", "name": "Glade", "palette": "Grass", "map": "#6e9a44", "detail": true, "rough": 2, "height": 3},
+    "deepwood": {"letter": "v", "name": "Old wood", "palette": "DeepWood", "map": "#2f5228", "rough": 2, "height": 3, "shore": "mud"},
+    "fen": {
+      "letter": "f",
+      "name": "Fen",
+      "palette": "Fen",
+      "map": "#56694a",
+      "rough": 0.6,
+      "height": 1,
+      "bank": "reeds",
+      "shore": "mud",
+      "cliff": "Mud",
+      "mix": [{"ground": "reeds", "share": 0.2, "scale": 20}, {"ground": "pool", "share": 0.05, "scale": 16}, {"ground": "mud", "share": 0.05, "scale": 16}]
+    },
+    "pool": {
+      "letter": "P",
+      "name": "Fen pool",
+      "palette": "Mere",
+      "map": "#3a6688",
+      "water": true,
+      "walkable": false,
+      "detail": true,
+      "rough": 0,
+      "height": 0
+    },
+    "reeds": {"letter": "i", "name": "Reeds", "palette": "Sedge", "map": "#8c994c", "detail": true, "rough": 0.6, "height": 1},
+    "mud": {"letter": "m", "name": "Mud", "palette": "Mud", "map": "#5c472e", "detail": true, "rough": 0.6, "height": 1},
+    "sand": {"letter": "s", "name": "Sand", "palette": "Sand", "map": "#d1bf8c", "detail": true, "rough": 0.5, "height": 0.5},
+    "shingle": {"letter": "q", "name": "Shingle", "palette": "Shingle", "map": "#807a6b", "detail": true, "rough": 0.5, "height": 0.5},
+    "blacksand": {"letter": "X", "name": "Black sand", "palette": "Cinder", "map": "#5a5048", "detail": true, "rough": 0.5, "height": 0.5},
+    "gravel": {
+      "letter": "z",
+      "name": "Gravel plain",
+      "palette": "Gravel",
+      "map": "#bba46c",
+      "rough": 2,
+      "height": 3,
+      "shore": "sand",
+      "bank": "olive",
+      "scree": "redrock",
+      "cliff": "Sandstone",
+      "mix": [{"ground": "dust", "share": 0.22, "scale": 38}, {"ground": "redrock", "share": 0.03, "scale": 44}]
+    },
+    "dust": {"letter": "D", "name": "Dust", "palette": "Dust", "map": "#c2ab7c", "detail": true, "rough": 2, "height": 3},
+    "redrock": {"letter": "o", "name": "Red rock", "palette": "RedRock", "map": "#9c6444", "rough": 3, "height": 4, "shore": "sand", "cliff": "Sandstone"},
+    "erg": {
+      "letter": "u",
+      "name": "Dunes",
+      "palette": "Sand",
+      "map": "#dcc78f",
+      "rough": 2.5,
+      "height": 3,
+      "shore": "sand",
+      "mix": [{"ground": "gravel", "share": 0.08, "scale": 30}]
+    },
+    "saltflat": {"letter": "y", "name": "Salt flat", "palette": "SaltFlat", "map": "#d1ccbd", "rough": 0, "height": 1},
+    "olive": {
+      "letter": "j",
+      "name": "River farmland",
+      "palette": "Olive",
+      "map": "#7f8f45",
+      "farm": true,
+      "rough": 1,
+      "height": 2,
+      "shore": "sand",
+      "mix": [{"ground": "grass", "share": 0.18, "scale": 18}]
+    },
+    "ash": {
+      "letter": "a",
+      "name": "Ash plain",
+      "palette": "AshPlain",
+      "map": "#6e6058",
+      "rough": 2.5,
+      "height": 4,
+      "shore": "blacksand",
+      "scree": "obsidian",
+      "cliff": "DarkRock",
+      "mix": [{"ground": "ashworn", "share": 0.16, "scale": 30}, {"ground": "obsidian", "share": 0.03, "scale": 24}]
+    },
+    "ashworn": {"letter": "T", "name": "Scorched ground", "palette": "Ashworn", "map": "#45382b", "detail": true, "rough": 2.5, "height": 4},
+    "volcanic": {
+      "letter": "K",
+      "name": "Volcanic slope",
+      "palette": "Scorch",
+      "map": "#4b392d",
+      "rough": 3.5,
+      "height": 6,
+      "scree": "obsidian",
+      "cliff": "DarkRock"
+    },
+    "lava": {"letter": "L", "name": "Lava field", "palette": "Lava", "map": "#2a2421", "walkable": false, "rough": 3, "height": 5, "cliff": "DarkRock"},
+    "obsidian": {"letter": "O", "name": "Obsidian", "palette": "Obsidian", "map": "#26232b", "rough": 2, "height": 4},
+    "sulphur": {"letter": "V", "name": "Sulphur flats", "palette": "Sulphur", "map": "#b9a845", "rough": 1, "height": 1, "shore": "blacksand"},
+    "highland": {
+      "letter": "M",
+      "name": "Highland",
+      "palette": "Alpine",
+      "map": "#8f8c7b",
+      "farm": true,
+      "rough": 3,
+      "height": 9,
+      "bank": "scree",
+      "scree": "scree",
+      "cliff": "CliffRock",
+      "mix": [{"ground": "scree", "share": 0.1, "scale": 14}, {"ground": "heath", "share": 0.18, "scale": 26}]
+    },
+    "foothills": {
+      "letter": "F",
+      "name": "Foothills",
+      "palette": "Foothill",
+      "map": "#80a050",
+      "farm": true,
+      "rough": 2,
+      "height": 4,
+      "shore": "shingle",
+      "scree": "scree",
+      "cliff": "CliffRock",
+      "mix": [{"ground": "heath", "share": 0.2, "scale": 24}, {"ground": "bracken", "share": 0.08, "scale": 16}]
+    },
+    "scree": {"letter": "B", "name": "Scree", "palette": "Scree", "map": "#8b8679", "detail": true, "rough": 3, "height": 9},
+    "crest": {"letter": "C", "name": "Crest", "palette": "CliffRock", "map": "#5b564f", "walkable": false, "rough": 3, "height": 14, "cliff": "CliffRock"},
+    "glacier": {"letter": "I", "name": "Glacier", "palette": "Snow", "map": "#f0f4f8", "walkable": false, "rough": 2, "height": 15, "cliff": "Granite"},
+    "snowcap": {"letter": "S", "name": "Snow cap", "palette": "Snow", "map": "#f0f4f8", "detail": true, "rough": 2, "height": 14},
+    "snow": {"letter": "n", "name": "Snowfield", "palette": "Snow", "map": "#d3dbe2", "rough": 2, "height": 6, "shore": "shingle", "cliff": "Granite"},
+    "ice": {"letter": "Y", "name": "Frozen lake", "palette": "Ice", "map": "#c6d6de", "rough": 0, "height": 1},
+    "tundra": {
+      "letter": "t",
+      "name": "Tundra",
+      "palette": "Tundra",
+      "map": "#9ba393",
+      "rough": 2,
+      "height": 4,
+      "shore": "shingle",
+      "bank": "shingle",
+      "scree": "scree",
+      "cliff": "Granite",
+      "mix": [{"ground": "snow", "share": 0.15, "scale": 34}, {"ground": "moor", "share": 0.1, "scale": 30}]
+    },
+    "pine": {
+      "letter": "N",
+      "name": "Pine wood",
+      "palette": "PineFloor",
+      "map": "#43603a",
+      "rough": 2,
+      "height": 4,
+      "shore": "shingle",
+      "cliff": "Granite",
+      "mix": [{"ground": "tundra", "share": 0.12, "scale": 24}]
+    },
+    "moor": {
+      "letter": "x",
+      "name": "Moor",
+      "palette": "MoorGrass",
+      "map": "#6c7658",
+      "rough": 2.5,
+      "height": 5,
+      "bank": "peat",
+      "shore": "shingle",
+      "scree": "scree",
+      "cliff": "Granite",
+      "mix": [{"ground": "bracken", "share": 0.18, "scale": 30}, {"ground": "heath", "share": 0.12, "scale": 38}]
+    },
+    "peat": {"letter": "Z", "name": "Peat bog", "palette": "Peat", "map": "#4a4433", "detail": true, "rough": 1, "height": 4},
+    "broken": {
+      "letter": "R",
+      "name": "Broken coast",
+      "palette": "Shingle",
+      "map": "#7d7a6c",
+      "rough": 3,
+      "height": 3,
+      "shore": "shingle",
+      "cliff": "Granite",
+      "mix": [{"ground": "heath", "share": 0.25, "scale": 16}]
+    },
+    "scar": {"letter": "W", "name": "Moonfall scar", "palette": "Stone", "map": "#6e7a8e", "rough": 3, "height": 8},
+    "unmade": {"letter": "Q", "name": "Unmade ground", "palette": "Unmade", "map": "#b5b8b0", "rough": 0, "height": 1},
+    "worn": {"letter": "U", "name": "Worn ground", "palette": "Worn", "map": "#8d7d55", "detail": true, "rough": 1, "height": 1},
+    "wheat": {"letter": "H", "name": "Wheat", "palette": "Wheat", "map": "#c7ad54", "detail": true, "rough": 1, "height": 1, "layer": "over"},
+    "furrow": {"letter": "J", "name": "Ploughland", "palette": "Furrow", "map": "#735c38", "detail": true, "rough": 1, "height": 1, "layer": "over"},
+    "ley": {"letter": "E", "name": "Ley", "palette": "Ley", "map": "#78a24a", "detail": true, "rough": 1, "height": 1, "layer": "over"}
   },
-
   "powers": {
-    "empire":   { "name": "Cruor's empire",                 "colour": "#a03a3a", "ground": "farmland", "share": [0.30, 0.35], "label": [650, 165] },
-    "gall":     { "name": "House Gall",                     "colour": "#d67828", "ground": "ash",      "share": [0.12, 0.18], "label": [630, -215] },
-    "houses":   { "name": "The lesser houses",              "colour": "#7a5590", "ground": "fen",      "share": [0.07, 0.13], "label": [790, 660] },
-    "range":    { "name": "The spine",                      "colour": "#8a8278", "ground": "highland", "share": [0.12, 0.18], "label": [-175, -390] },
-    "sere":     { "name": "Sere",                           "colour": "#d2b474", "ground": "scrub",    "share": [0.07, 0.13], "label": [110, -545] },
-    "wild":     { "name": "The cold north (unclaimed)",     "colour": "#d8e4ee", "ground": "snow",     "share": [0.10, 0.20], "label": [170, 690] },
-    "frontier": { "name": "Frontiers",                      "colour": "#7c8474", "ground": "heath",    "core": false, "label": [-450, 250] }
+    "empire": {
+      "name": "Cruor's empire",
+      "colour": "#a03a3a",
+      "ground": "grass",
+      "share": [0.3, 0.38],
+      "label": [425, 210],
+      "roads": {"main": "cobble", "road": "dirtroad"},
+      "square": "paving",
+      "worn": "worn",
+      "fields": ["wheat", "furrow", "ley", "wheat", "ley"]
+    },
+    "gall": {
+      "name": "House Gall",
+      "colour": "#d67828",
+      "ground": "ash",
+      "share": [0.12, 0.18],
+      "label": [638, -310],
+      "roads": {"main": "cinderroad", "road": "cinderroad"},
+      "square": "paving",
+      "worn": "ashworn"
+    },
+    "houses": {
+      "name": "The lesser houses",
+      "colour": "#7a5590",
+      "ground": "fen",
+      "share": [0.07, 0.13],
+      "label": [728, 530],
+      "roads": {"main": "causeway", "road": "causeway"},
+      "square": "causeway",
+      "worn": "mud"
+    },
+    "range": {
+      "name": "The spine",
+      "colour": "#8a8278",
+      "ground": "highland",
+      "share": [0.1, 0.18],
+      "label": [-175, -362],
+      "roads": {"main": "gravelroad", "road": "gravelroad"},
+      "square": "paving",
+      "worn": "scree",
+      "fields": ["ley", "furrow"]
+    },
+    "sere": {
+      "name": "Sere",
+      "colour": "#d2b474",
+      "ground": "gravel",
+      "share": [0.08, 0.14],
+      "label": [90, -404],
+      "roads": {"main": "dustroad", "road": "dustroad", "track": "dust"},
+      "square": "paving",
+      "worn": "dust",
+      "fields": ["olive", "furrow", "wheat"]
+    },
+    "wild": {
+      "name": "The cold north (unclaimed)",
+      "colour": "#d8e4ee",
+      "ground": "tundra",
+      "share": [0.1, 0.2],
+      "label": [200, 642],
+      "roads": {},
+      "worn": "worn"
+    },
+    "frontier": {"name": "Frontiers", "colour": "#7c8474", "ground": "heath", "core": false, "label": [-450, 250]}
   },
-
   "tiers": {
-    "city":    { "built": 13000, "across": 180 },
-    "town":    { "built": 3000,  "across": 80 },
-    "village": { "built": 1250,  "across": 50 },
-    "hamlet":  { "built": 400,   "across": 20 }
+    "city": {"built": 13000, "across": 180},
+    "town": {"built": 3000, "across": 80},
+    "village": {"built": 1250, "across": 50},
+    "hamlet": {"built": 400, "across": 20}
   },
-
   "land": [
-    { "id": "continent", "rough": 64, "poly": [
-      [-660, -470], [-520, -540], [-380, -580], [-290, -640], [-220, -690], [-140, -600], [-60, -510], [40, -495],
-      [140, -560], [230, -560], [330, -580], [430, -505], [530, -460], [620, -420], [720, -385], [810, -345],
-      [850, -300], [860, -220], [875, -140], [900, -60], [950, 20], [970, 90], [975, 170], [990, 260],
-      [950, 330], [940, 420], [880, 520], [800, 600], [700, 660], [640, 720], [600, 800], [580, 880],
-      [570, 1100], [-700, 1100], [-690, 700], [-720, 400], [-660, 100], [-700, -200] ] },
-    { "id": "isle-south",  "name": "p-south-isle", "by": "ship", "ellipse": [227, -665, 50, 34] },
-    { "id": "isle-skerry", "name": "p-skerry",     "by": "ship", "ellipse": [390, -680, 28, 20] },
-    { "id": "isle-west",   "name": "p-tern-isle",  "by": "ship", "ellipse": [60, -630, 26, 18] },
-    { "id": "isle-east",   "name": "p-east-isle",  "by": "ship", "ellipse": [1080, -160, 40, 30] },
-    { "id": "isle-east-2", "name": "p-far-isle",   "by": "ship", "ellipse": [1090, -20, 26, 22] }
+    {
+      "id": "continent",
+      "rough": 46,
+      "poly": [
+        [-700, -455], [-560, -506], [-420, -540], [-330, -591], [-270, -642], [-200, -582], [-130, -548], [-60, -566], [10, -595], [80, -574],
+        [130, -591], [200, -601], [250, -574], [288, -540], [330, -540], [400, -510], [466, -506], [531, -493], [597, -521], [662, -496], [728, -459],
+        [777, -412], [814, -353], [833, -285], [822, -208], [839, -130], [863, -50], [880, 30], [874, 110], [890, 190], [902, 262], [894, 330],
+        [882, 400], [874, 470], [846, 530], [808, 582], [762, 628], [713, 665], [646, 702], [580, 725], [515, 742], [441, 760], [360, 764], [260, 779],
+        [160, 772], [60, 785], [-40, 792], [-120, 804], [-200, 800], [-300, 785], [-420, 772], [-560, 785], [-700, 762], [-720, 650], [-690, 545],
+        [-700, 300], [-660, 100], [-700, -200]
+      ]
+    },
+    {"id": "far-north", "name": "the far north", "rough": 30, "poly": [[-900, 824], [1138, 824], [1138, 1025], [-900, 1025]], "by": "ship"},
+    {"id": "isle-south", "name": "p-south-isle", "by": "ship", "ellipse": [232, -650, 46, 24]},
+    {"id": "isle-skerry", "name": "p-skerry", "by": "ship", "ellipse": [400, -591, 24, 14]},
+    {"id": "isle-east", "name": "p-east-isle", "by": "ship", "ellipse": [958, -180, 33, 30]},
+    {"id": "isle-east-2", "name": "p-far-isle", "by": "ship", "ellipse": [967, -40, 20, 20]}
   ],
-
   "seas": [
-    { "id": "western-sound", "name": "p-western-sound", "rough": 18, "poly": [[-800, 530], [-420, 565], [-290, 505], [-262, 455], [-340, 425], [-520, 450], [-800, 440]] },
-    { "id": "southern-gulf", "name": "p-southern-gulf", "rough": 14, "poly": [[190, -660], [232, -540], [300, -505], [345, -560], [330, -660]] }
+    {
+      "id": "western-sound",
+      "name": "p-western-sound",
+      "rough": 18,
+      "poly": [[-800, 522], [-420, 549], [-322, 515], [-300, 470], [-360, 440], [-520, 455], [-800, 440]]
+    },
+    {
+      "id": "southern-gulf",
+      "name": "p-southern-gulf",
+      "rough": 12,
+      "poly": [[262, -676], [288, -548], [300, -472], [314, -417], [334, -401], [356, -430], [368, -506], [384, -676]]
+    },
+    {"id": "estuary", "name": "the great river's mouth", "rough": 6, "poly": [[925, 230], [884, 238], [858, 246], [872, 262], [925, 276]]},
+    {"id": "cove-north", "name": "p-north-cove", "rough": 4, "poly": [[917, 166], [885, 168], [869, 182], [877, 202], [917, 206]]},
+    {"id": "cove-south", "name": "p-south-cove", "rough": 4, "poly": [[900, 82], [872, 86], [861, 102], [871, 118], [900, 122]]},
+    {"id": "fjord-west", "name": "p-west-fjord", "rough": 5, "poly": [[64, 830], [72, 778], [86, 749], [104, 748], [100, 779], [116, 830]]},
+    {"id": "fjord-east", "name": "p-east-fjord", "rough": 5, "poly": [[372, 830], [366, 778], [380, 734], [400, 737], [396, 776], [410, 830]]},
+    {"id": "strait", "name": "the northern strait", "rough": 10, "poly": [[-900, 800], [1138, 800], [1138, 826], [-900, 826]]}
   ],
-
   "realms": [
-    { "id": "frontier-west",  "power": "frontier", "poly": [[-900, -1000], [-216, -1000], [-216, -683], [-164, -462], [-216, -241], [-139, 14], [-182, 252], [-114, 490], [-164, 711], [-110, 1000], [-110, 1200], [-900, 1200]] },
-    { "id": "sere",           "power": "sere",     "rough": 30, "poly": [[-182, 300], [-30, 285], [-25, 160], [-25, 0], [30, -40], [120, -95], [230, -135], [240, -300], [262, -1000], [-216, -1000], [-216, -683], [-164, -462], [-216, -241], [-139, 14], [-182, 252]] },
-    { "id": "empire",         "power": "empire",   "rough": 30, "poly": [[-25, 160], [-60, 300], [-60, 540], [200, 560], [400, 560], [470, 505], [600, 460], [740, 400], [810, 290], [900, 180], [980, 120], [1300, 120], [1300, 80], [800, 48], [720, 31], [566, -60], [464, -100], [380, -108], [300, -172], [226, -258], [230, -135], [120, -95], [30, -40], [-25, 0]] },
-    { "id": "gall",           "power": "gall",     "rough": 30, "poly": [[1300, 80], [800, 48], [720, 31], [566, -60], [464, -100], [380, -108], [300, -172], [226, -258], [240, -300], [262, -1000], [1300, -1000]] },
-    { "id": "houses",         "power": "houses",   "rough": 30, "poly": [[400, 560], [400, 800], [1300, 800], [1300, 120], [980, 120], [900, 180], [810, 290], [740, 400], [600, 460], [470, 505]] },
-    { "id": "cold-north",     "power": "wild",     "rough": 30, "poly": [[-60, 455], [200, 462], [400, 472], [470, 505], [400, 570], [400, 800], [-300, 800], [-300, 540], [-60, 540]] },
-    { "id": "frontier-north", "power": "frontier", "rough": 40, "poly": [[-300, 760], [0, 730], [250, 755], [450, 725], [700, 710], [1300, 710], [1300, 1200], [-300, 1200]] },
-    { "id": "the-range",      "power": "range",    "along": "spine", "halfWidth": 75 },
-    { "id": "salient-sere-river", "name": "up Sere's river",      "power": "empire", "poly": [[73, -88], [158, -20], [226, -88], [150, -170], [73, -241], [5, -262], [0, -207], [30, -130]] },
-    { "id": "salient-foothills",  "name": "into the foothills",   "power": "empire", "poly": [[-60, 300], [20, 320], [-20, 380], [-80, 405], [-95, 350]] },
-    { "id": "salient-fortress",   "name": "a fortress pocket",    "power": "empire", "poly": [[588, -248], [652, -238], [668, -302], [600, -318]] },
-    { "id": "salient-enclave",    "name": "a coastal enclave",    "power": "empire", "poly": [[860, 180], [930, 170], [1020, 200], [1010, 285], [920, 292], [862, 252]] }
+    {
+      "id": "sere",
+      "power": "sere",
+      "rough": 22,
+      "poly": [
+        [-420, -880], [-420, -66], [-100, -78], [-20, -64], [60, -56], [140, -66], [196, -96], [246, -160], [296, -232], [322, -310], [318, -396],
+        [330, -880]
+      ]
+    },
+    {
+      "id": "empire",
+      "power": "empire",
+      "rough": 14,
+      "poly": [
+        [-100, -78], [-20, -64], [60, -56], [140, -66], [196, -96], [246, -160], [296, -232], [322, -310], [324, -324], [356, -241], [408, -180],
+        [464, -132], [520, -92], [569, -62], [616, -38], [682, -12], [746, 8], [817, 22], [1138, 22], [1138, 290], [794, 292], [728, 306], [646, 332],
+        [580, 372], [531, 432], [482, 472], [300, 482], [100, 478], [-40, 472], [-110, 452], [-110, -78]
+      ]
+    },
+    {
+      "id": "gall",
+      "power": "gall",
+      "rough": 14,
+      "poly": [
+        [330, -880], [318, -396], [324, -324], [356, -241], [408, -180], [464, -132], [520, -92], [569, -62], [616, -38], [682, -12], [746, 8],
+        [817, 22], [1138, 22], [1138, -880]
+      ]
+    },
+    {
+      "id": "houses",
+      "power": "houses",
+      "rough": 22,
+      "poly": [
+        [482, 472], [531, 432], [580, 372], [646, 332], [728, 306], [794, 292], [1138, 290], [1138, 740], [646, 740], [597, 642], [531, 582],
+        [498, 530]
+      ]
+    },
+    {
+      "id": "cold-north",
+      "power": "wild",
+      "rough": 22,
+      "poly": [
+        [-200, 452], [-110, 452], [-40, 472], [100, 478], [300, 482], [482, 472], [498, 530], [531, 582], [597, 642], [646, 740], [646, 815],
+        [-200, 815]
+      ]
+    },
+    {
+      "id": "the-range",
+      "power": "range",
+      "rough": 10,
+      "poly": [
+        [-318, -625], [-295, -506], [-270, -387], [-262, -285], [-246, -170], [-226, -40], [-222, 60], [-240, 180], [-246, 286], [-212, 383],
+        [-200, 470], [-218, 560], [-232, 642], [-220, 725], [-210, 815], [-60, 815], [-70, 725], [-85, 642], [-75, 560], [-38, 482], [-66, 400],
+        [-100, 300], [-106, 200], [-96, 100], [-94, 0], [-102, -100], [-112, -200], [-112, -285], [-136, -387], [-160, -506], [-186, -625]
+      ]
+    },
+    {
+      "id": "frontier-west",
+      "power": "frontier",
+      "rough": 6,
+      "poly": [
+        [-900, -880], [-330, -880], [-322, -625], [-299, -506], [-274, -387], [-266, -285], [-250, -170], [-230, -40], [-226, 60], [-244, 180],
+        [-250, 286], [-216, 383], [-204, 470], [-222, 560], [-236, 642], [-224, 725], [-214, 1025], [-900, 1025]
+      ]
+    },
+    {"id": "frontier-north", "power": "frontier", "rough": 20, "poly": [[-900, 820], [1138, 820], [1138, 1025], [-900, 1025]]},
+    {
+      "id": "salient-sere-river",
+      "name": "up Sere's river",
+      "power": "empire",
+      "poly": [[-44, -60], [42, -52], [96, -116], [104, -200], [70, -231], [28, -205], [4, -136], [-50, -92]]
+    },
+    {
+      "id": "salient-foothills",
+      "name": "into the foothills",
+      "power": "empire",
+      "poly": [[-20, 336], [44, 356], [34, 432], [-56, 466], [-90, 420], [-66, 362]]
+    },
+    {"id": "salient-fortress", "name": "a fortress pocket", "power": "empire", "poly": [[566, -231], [603, -229], [605, -263], [566, -263]]},
+    {
+      "id": "salient-enclave",
+      "name": "a coastal enclave",
+      "power": "empire",
+      "poly": [[782, 236], [861, 228], [917, 240], [917, 322], [835, 332], [782, 302]]
+    }
   ],
-
   "areas": [
-    { "id": "far-north",      "ground": "tundra",   "rough": 40, "poly": [[-900, 760], [0, 730], [250, 755], [450, 725], [700, 710], [1300, 710], [1300, 1200], [-900, 1200]] },
-    { "id": "frontier-woods", "name": "the frontier woods", "ground": "forest", "ellipse": [-340, 40, 110, 130] },
-    { "id": "sere-desert",    "name": "Sere's deep desert", "ground": "desert", "rough": 20, "poly": [[-150, -290], [100, -270], [240, -310], [262, -1000], [-150, -1000]] },
-    { "id": "northern-moors", "name": "the northern moors", "ground": "moor",   "rough": 30, "poly": [[-60, 440], [200, 447], [400, 457], [480, 495], [400, 565], [200, 565], [-60, 545]] },
-    { "id": "great-forest",   "name": "p-forest",           "ground": "forest", "ellipse": [470, 420, 110, 80] },
-    { "id": "palmerway-heath","name": "Palmerway's heath",  "ground": "heath",  "ellipse": [160, 60, 52, 45] },
-    { "id": "southern-downs", "name": "p-downs",            "ground": "downs",  "ellipse": [300, -80, 70, 42] },
-    { "id": "eastern-wolds",  "name": "p-wolds",            "ground": "heath",  "ellipse": [700, 140, 80, 55] },
-    { "id": "lake-fens",      "name": "p-lake-fens",        "ground": "fen",    "ellipse": [230, -10, 40, 22] },
-    { "id": "broken-coast",   "name": "the broken coast",   "ground": "broken", "line": [[700, 690], [800, 610], [880, 520], [940, 420], [960, 330]], "halfWidth": 40 },
-    { "id": "gall-volcano-1", "name": "p-cinder-mount",     "ground": "volcanic", "ellipse": [736, -360, 55, 45] },
-    { "id": "gall-volcano-2", "name": "p-ember-mount",      "ground": "volcanic", "ellipse": [800, -280, 40, 35] },
-    { "id": "gall-volcano-3", "name": "p-slag-mount",       "ground": "volcanic", "ellipse": [620, -395, 45, 35] },
-    { "id": "cold-slopes",    "ground": "snow",     "along": "spine", "halfWidth": 75, "minY": 560 },
-    { "id": "crest",          "name": "the spine's crest",  "ground": "crest",   "along": "spine", "halfWidth": 20, "maxY": 560 },
-    { "id": "crest-cold",     "name": "the frozen crest",   "ground": "glacier", "along": "spine", "halfWidth": 24, "minY": 560 },
-    { "id": "selenfall",      "name": "Selenfall",          "ground": "scar",    "ellipse": [-172, 286, 48, 38] },
-    { "id": "p-lake",         "name": "p-lake",             "ground": "lake",    "ellipse": [300, 45, 60, 38] },
-    { "id": "wennow",         "name": "Wennow",             "ground": "lake",    "ellipse": [108, -8, 34, 26] },
-    { "id": "p-mere",         "name": "p-mere",             "ground": "lake",    "ellipse": [700, 560, 35, 22] }
+    {
+      "id": "frontier-woods",
+      "name": "the frontier woods",
+      "ground": "forest",
+      "rough": 30,
+      "poly": [[-600, -120], [-330, -90], [-300, 190], [-420, 300], [-600, 250]]
+    },
+    {"id": "frontier-moor", "name": "the frontier moors", "ground": "moor", "rough": 30, "poly": [[-700, 560], [-330, 560], [-320, 780], [-700, 800]]},
+    {
+      "id": "frontier-south",
+      "name": "the frontier's south",
+      "ground": "gravel",
+      "rough": 30,
+      "poly": [[-720, -700], [-340, -700], [-340, -380], [-720, -380]]
+    },
+    {"id": "frontier-lake", "name": "a frontier lake", "ground": "lake", "ellipse": [-470, 330, 40, 26]},
+    {"id": "far-north-snow", "name": "the far north", "ground": "snow", "rough": 30, "poly": [[-900, 800], [1300, 800], [1300, 1200], [-900, 1200]]},
+    {
+      "id": "pines",
+      "name": "the pine belt",
+      "ground": "pine",
+      "rough": 24,
+      "poly": [[-80, 580], [200, 587], [416, 575], [597, 578], [621, 650], [400, 659], [100, 653], [-80, 659]]
+    },
+    {
+      "id": "north-snow",
+      "name": "the north's snowfields",
+      "ground": "snow",
+      "rough": 28,
+      "poly": [[-90, 730], [150, 734], [400, 725], [613, 702], [646, 800], [-90, 800]]
+    },
+    {
+      "id": "moors",
+      "name": "the moors",
+      "ground": "moor",
+      "rough": 24,
+      "poly": [[-60, 470], [300, 480], [482, 474], [521, 515], [539, 584], [300, 580], [-60, 584]]
+    },
+    {
+      "id": "eller",
+      "name": "p-forest (Eller)",
+      "ground": "forest",
+      "rough": 18,
+      "poly": [[296, 266], [380, 250], [457, 262], [531, 262], [567, 300], [574, 380], [543, 450], [457, 468], [360, 462], [300, 420], [284, 340]]
+    },
+    {"id": "eller-heart", "name": "Eller's old wood", "ground": "deepwood", "ellipse": [467, 396, 38, 34]},
+    {
+      "id": "wolds",
+      "name": "p-wolds",
+      "ground": "heath",
+      "rough": 20,
+      "poly": [[430, 20], [787, 40], [797, 176], [744, 232], [646, 242], [564, 236], [457, 206], [420, 110]]
+    },
+    {
+      "id": "downs",
+      "name": "p-downs",
+      "ground": "downs",
+      "rough": 14,
+      "poly": [[200, -42], [330, -40], [466, -58], [490, -112], [425, -158], [340, -212], [262, -172], [204, -104]]
+    },
+    {"id": "west-march", "name": "the western march", "ground": "heath", "rough": 16, "poly": [[-96, -62], [24, -58], [8, 40], [-6, 130], [-96, 140]]},
+    {"id": "palmerway-heath", "name": "Palmerway's heath", "ground": "heath", "ellipse": [150, 64, 62, 44]},
+    {"id": "lake-fens", "name": "p-lake-fens", "ground": "fen", "ellipse": [208, 34, 24, 22]},
+    {
+      "id": "foothills",
+      "name": "the spine's foothills",
+      "ground": "foothills",
+      "halfWidth": 28,
+      "minY": -110,
+      "line": [[-150, -200], [-112, -160], [-78, -40], [-70, 60], [-86, 180], [-78, 286], [-54, 383], [-40, 470], [-58, 560], [-76, 642], [-62, 725]]
+    },
+    {
+      "id": "badlands",
+      "name": "the badlands",
+      "ground": "redrock",
+      "rough": 14,
+      "poly": [[-170, -446], [-90, -435], [-58, -353], [-68, -236], [-106, -178], [-150, -196], [-176, -310]]
+    },
+    {
+      "id": "erg",
+      "name": "the erg",
+      "ground": "erg",
+      "rough": 18,
+      "poly": [[150, -566], [288, -545], [306, -418], [282, -310], [210, -285], [160, -353], [136, -472]]
+    },
+    {
+      "id": "saltpan",
+      "name": "p-saltpan",
+      "ground": "saltflat",
+      "rough": 6,
+      "poly": [[0, -455], [20, -438], [58, -436], [82, -452], [76, -477], [44, -487], [8, -477]]
+    },
+    {
+      "id": "ribbon",
+      "name": "Sere's river farmland",
+      "ground": "olive",
+      "halfWidth": 14,
+      "minY": -660,
+      "maxY": -150,
+      "line": [[22, -130], [50, -158], [58, -185], [72, -221], [94, -268], [112, -323], [128, -378], [144, -438], [156, -498], [164, -548], [170, -598]]
+    },
+    {
+      "id": "lava-cone",
+      "name": "p-cinder-mount's lava",
+      "ground": "lava",
+      "rough": 12,
+      "poly": [[597, -338], [692, -328], [712, -387], [664, -430], [607, -406]]
+    },
+    {
+      "id": "lava-ember",
+      "name": "p-ember-mount's flow",
+      "ground": "lava",
+      "rough": 8,
+      "poly": [[771, -219], [820, -212], [835, -253], [813, -271], [780, -244]]
+    },
+    {"id": "cone-slopes", "name": "p-cinder-mount", "ground": "volcanic", "ellipse": [646, -285, 33, 32]},
+    {"id": "ember-slopes", "name": "p-ember-mount", "ground": "volcanic", "ellipse": [757, -204, 20, 19]},
+    {"id": "obsidian-flats", "name": "the obsidian flats", "ground": "obsidian", "ellipse": [605, -374, 21, 13]},
+    {
+      "id": "sulphur-flats",
+      "name": "the sulphur flats",
+      "ground": "sulphur",
+      "rough": 8,
+      "poly": [[571, -460], [666, -453], [676, -486], [582, -499]]
+    },
+    {
+      "id": "broken-coast",
+      "name": "the broken coast",
+      "ground": "broken",
+      "halfWidth": 30,
+      "line": [[895, 334], [884, 420], [859, 515], [813, 575], [764, 622], [713, 659]]
+    },
+    {"id": "scalth", "name": "Scalth's pans", "ground": "saltflat", "ellipse": [810, 545, 12, 8]},
+    {"id": "cold-slopes", "ground": "snow", "along": "spine", "halfWidth": 70, "minY": 640},
+    {"id": "crest", "name": "the spine's crest", "ground": "crest", "along": "spine", "halfWidth": 16, "maxY": 620},
+    {"id": "crest-cold", "name": "the frozen crest", "ground": "glacier", "along": "spine", "halfWidth": 18, "minY": 620},
+    {"id": "selenfall", "name": "Selenfall", "ground": "scar", "ellipse": [-172, 286, 48, 38]},
+    {
+      "id": "dry-valley",
+      "name": "the dry valley",
+      "ground": "shingle",
+      "halfWidth": 2.5,
+      "line": [[-40, 330], [20, 300], [80, 280], [140, 250], [190, 215]]
+    },
+    {"id": "unmade-wolds", "name": "unmade ground", "ground": "unmade", "ellipse": [650, 95, 7, 9]},
+    {"id": "unmade-sere", "name": "unmade ground", "ground": "unmade", "ellipse": [-40, -212, 8, 7]},
+    {"id": "unmade-north", "name": "unmade ground", "ground": "unmade", "ellipse": [330, 718, 10, 8]},
+    {
+      "id": "knellmere",
+      "name": "p-lake (Knellmere)",
+      "ground": "lake",
+      "rough": 8,
+      "poly": [[204, 14], [214, 40], [240, 54], [270, 58], [300, 52], [320, 36], [324, 14], [306, -4], [278, -12], [245, -10], [220, -2]]
+    },
+    {"id": "belfry-isle", "name": "the drowned belfry's isle", "ground": "heath", "ellipse": [284, 24, 7, 5]},
+    {"id": "wennow", "name": "Wennow", "ground": "lake", "ellipse": [108, -8, 34, 26]},
+    {"id": "eller-mere", "name": "Eller's mere", "ground": "lake", "ellipse": [500, 384, 11, 9]},
+    {
+      "id": "p-mere",
+      "name": "p-mere",
+      "ground": "lake",
+      "rough": 10,
+      "poly": [[633, 564], [646, 580], [671, 586], [695, 576], [703, 558], [687, 545], [657, 542]]
+    },
+    {"id": "umber-mere", "name": "House Umber's mere", "ground": "lake", "ellipse": [638, 638, 18, 10]},
+    {"id": "umber-mere-2", "ground": "lake", "ellipse": [676, 646, 11, 7]},
+    {"id": "caldera-lake", "name": "the caldera lake", "ground": "lake", "ellipse": [531, -285, 21, 19]},
+    {"id": "oasis-pool", "name": "p-oasis's spring", "ground": "lake", "ellipse": [214, -409, 7, 4]},
+    {"id": "crater-lake", "name": "an old fall's crater lake", "ground": "lake", "ellipse": [531, 80, 7, 7]},
+    {"id": "icemere", "name": "the frozen lake", "ground": "ice", "ellipse": [260, 702, 34, 15]}
   ],
-
+  "relief": [
+    {
+      "id": "west-face",
+      "name": "the spine's west face",
+      "kind": "scarp",
+      "height": 4.5,
+      "edge": 3,
+      "side": "right",
+      "reach": 70,
+      "note": "the range falls sheer to the frontier; the passes come down it on ramps",
+      "line": [
+        [-318, -676], [-295, -506], [-270, -387], [-262, -285], [-246, -170], [-226, -40], [-222, 60], [-240, 180], [-246, 286], [-212, 383],
+        [-200, 470], [-218, 560], [-232, 642], [-220, 725], [-210, 845]
+      ],
+      "ramps": [
+        {"at": [-262, -285], "halfWidth": 5, "length": 22, "name": "the dwarves' pass"},
+        {"at": [-222, 55], "halfWidth": 5, "length": 22, "name": "the salt pass"},
+        {"at": [-200, 468], "halfWidth": 5, "length": 22, "name": "the Meridian pass"},
+        {"at": [-228, 704], "halfWidth": 5, "length": 22, "name": "the frost pass"}
+      ]
+    },
+    {"id": "observatory-spur", "kind": "ridge", "height": 2.2, "halfWidth": 14, "line": [[-112, 136], [-60, 126], [-30, 120]]},
+    {"id": "foothold-spur", "kind": "ridge", "height": 2.4, "halfWidth": 16, "line": [[-70, 404], [-20, 392], [24, 384]]},
+    {"id": "sere-spur", "kind": "ridge", "height": 2.0, "halfWidth": 14, "line": [[-110, -150], [-70, -170], [-30, -176]]},
+    {
+      "id": "high-valley",
+      "name": "the high valley's terraces",
+      "kind": "terraces",
+      "step": 1.1,
+      "edge": 6,
+      "poly": [[-128, -84], [-62, -84], [-56, -8], [-122, 4]]
+    },
+    {
+      "id": "meridian-terraces",
+      "name": "Meridian's terraces",
+      "kind": "terraces",
+      "step": 1.0,
+      "edge": 6,
+      "poly": [[-112, 438], [-46, 440], [-42, 496], [-106, 502]]
+    },
+    {"id": "cruor-hill", "name": "Cruor's hill", "kind": "hill", "height": 3.6, "ellipse": [322, 176, 48, 44]},
+    {
+      "id": "white-edge",
+      "name": "the Downs' white edge",
+      "kind": "scarp",
+      "height": 1.8,
+      "edge": 5,
+      "side": "right",
+      "reach": 45,
+      "line": [[196, -58], [270, -46], [340, -50], [408, -60], [461, -76]]
+    },
+    {
+      "id": "the-scarp",
+      "name": "the Scarp",
+      "kind": "scarp",
+      "height": 3.5,
+      "edge": 2.2,
+      "side": "right",
+      "reach": 600,
+      "note": "the front: Gall's plateau above, the empire's lowland below; climbable only at the ramps",
+      "line": [
+        [300, -404], [312, -310], [345, -234], [400, -172], [457, -122], [515, -82], [564, -52], [613, -28], [679, -2], [744, 18], [814, 34],
+        [859, 44]
+      ],
+      "ramps": [
+        {"at": [358, -217], "halfWidth": 5, "length": 18, "name": "the west ramp"},
+        {"at": [515, -82], "halfWidth": 6, "length": 22, "name": "the Frontline"},
+        {"at": [612, -27], "halfWidth": 2, "length": 12, "name": "the brow stair"},
+        {"at": [769, 23], "halfWidth": 5, "length": 18, "name": "the coast ramp"}
+      ]
+    },
+    {"id": "cinder-mount", "name": "p-cinder-mount", "kind": "cone", "height": 8, "crater": 10, "craterDepth": 2.5, "ellipse": [646, -285, 51, 49]},
+    {"id": "ember-mount", "name": "p-ember-mount", "kind": "cone", "height": 5.5, "crater": 6, "craterDepth": 2, "ellipse": [757, -204, 33, 31]},
+    {
+      "id": "slag-caldera",
+      "name": "p-slag-mount's caldera",
+      "kind": "crater",
+      "height": 2.5,
+      "edge": 8,
+      "craterDepth": 3,
+      "ellipse": [531, -285, 33, 31]
+    },
+    {
+      "id": "fortress-plug",
+      "name": "the fortress pocket's rock",
+      "kind": "mesa",
+      "height": 4,
+      "edge": 1.5,
+      "ellipse": [584, -244, 12, 10],
+      "ramps": [{"at": [594, -235], "halfWidth": 2, "length": 9}]
+    },
+    {"id": "kiln-terraces", "name": "Kiln's terraces", "kind": "terraces", "step": 0.9, "edge": 5, "ellipse": [646, -232, 25, 17]},
+    {
+      "id": "cistern-mesa",
+      "name": "Cistern's mesa",
+      "kind": "mesa",
+      "height": 3,
+      "edge": 2.5,
+      "ellipse": [0, -363, 42, 29],
+      "ramps": [{"at": [0, -334], "halfWidth": 4, "length": 16}, {"at": [42, -363], "halfWidth": 3, "length": 14}]
+    },
+    {
+      "id": "badlands",
+      "name": "the badlands",
+      "kind": "canyons",
+      "height": 3.5,
+      "scale": 30,
+      "edge": 10,
+      "poly": [[-170, -446], [-90, -435], [-58, -353], [-68, -236], [-106, -178], [-150, -196], [-176, -310]]
+    },
+    {"id": "lone-mesa", "name": "the lone mesa", "kind": "mesa", "height": 3, "edge": 1.5, "ellipse": [-40, -242, 15, 9]},
+    {"id": "south-mesa", "kind": "mesa", "height": 2.5, "edge": 2, "ellipse": [70, -430, 13, 8]},
+    {"id": "saltpan", "name": "the salt pan", "kind": "mesa", "height": -1.4, "edge": 12, "ellipse": [40, -460, 46, 27]},
+    {
+      "id": "erg",
+      "name": "the erg",
+      "kind": "dunes",
+      "height": 2.2,
+      "scale": 18,
+      "angle": 65,
+      "edge": 15,
+      "poly": [[150, -566], [288, -545], [306, -418], [282, -310], [210, -285], [160, -353], [136, -472]]
+    },
+    {"id": "oasis-hollow", "name": "p-oasis's hollow", "kind": "mesa", "height": -1.2, "edge": 10, "ellipse": [216, -404, 26, 17]},
+    {
+      "id": "sere-crater",
+      "name": "an old fall in Sere",
+      "kind": "crater",
+      "height": 1.4,
+      "edge": 4,
+      "craterDepth": 1.8,
+      "ellipse": [92, -234, 14, 10]
+    },
+    {"id": "eller-hill-1", "kind": "hill", "height": 2.5, "ellipse": [380, 330, 40, 30]},
+    {"id": "eller-hill-2", "kind": "hill", "height": 3.0, "ellipse": [457, 380, 43, 40]},
+    {"id": "eller-hill-3", "kind": "hill", "height": 2.0, "ellipse": [521, 318, 30, 30]},
+    {"id": "eller-hill-4", "kind": "hill", "height": 2.0, "ellipse": [416, 432, 33, 24]},
+    {"id": "wolds-1", "kind": "hill", "height": 2.0, "ellipse": [482, 62, 41, 34]},
+    {"id": "wolds-2", "name": "the Wolds' high hill", "kind": "hill", "height": 2.8, "ellipse": [610, 116, 48, 44]},
+    {"id": "wolds-3", "kind": "hill", "height": 2.2, "ellipse": [703, 92, 39, 38]},
+    {"id": "wolds-4", "kind": "hill", "height": 2.0, "ellipse": [654, 300, 44, 32]},
+    {
+      "id": "wolds-crater",
+      "name": "an old fall in the Wolds",
+      "kind": "crater",
+      "height": 1.5,
+      "edge": 5,
+      "craterDepth": 2,
+      "ellipse": [531, 80, 16, 18]
+    },
+    {"id": "unmade-wolds", "name": "unmade ground", "kind": "mesa", "height": 1.2, "edge": 1, "ellipse": [650, 95, 7, 9]},
+    {"id": "unmade-sere", "name": "unmade ground", "kind": "mesa", "height": 1.0, "edge": 1, "ellipse": [-40, -212, 8, 7]},
+    {"id": "unmade-north", "name": "unmade ground", "kind": "mesa", "height": 1.5, "edge": 1, "ellipse": [330, 718, 10, 8]},
+    {
+      "id": "tors",
+      "name": "the moor's tors",
+      "kind": "tors",
+      "height": 2.2,
+      "scale": 22,
+      "edge": 20,
+      "poly": [[-40, 482], [515, 486], [531, 582], [-40, 580]]
+    },
+    {
+      "id": "moor-crater",
+      "name": "an old fall on the moors",
+      "kind": "crater",
+      "height": 1.4,
+      "edge": 4,
+      "craterDepth": 1.8,
+      "ellipse": [-20, 575, 18, 12]
+    },
+    {
+      "id": "dry-valley",
+      "name": "the dry valley",
+      "kind": "ridge",
+      "height": -1.6,
+      "halfWidth": 9,
+      "line": [[-40, 330], [20, 300], [80, 280], [140, 250], [190, 215]]
+    },
+    {"id": "east-cliffs", "name": "the east coast's cliffs", "kind": "cliffs", "edge": 4, "poly": [[784, 30], [925, 30], [925, 230], [794, 236]]},
+    {
+      "id": "brack-cliffs",
+      "name": "the broken coast's cliffs",
+      "kind": "cliffs",
+      "edge": 4,
+      "poly": [[810, 334], [925, 334], [908, 552], [794, 598], [761, 575]]
+    },
+    {
+      "id": "stacks",
+      "name": "the sea stacks",
+      "kind": "tors",
+      "height": 2.6,
+      "scale": 9,
+      "edge": 6,
+      "poly": [[815, 334], [895, 334], [884, 545], [794, 584], [779, 545]]
+    },
+    {"id": "holm-skerrin", "kind": "hill", "height": 1.2, "ellipse": [761, 400, 11, 10]},
+    {"id": "holm-sallow", "name": "Sallow's drowned holm", "kind": "hill", "height": 1.2, "ellipse": [638, 515, 10, 7]},
+    {"id": "holm-umber", "name": "House Umber's holm", "kind": "hill", "height": 1.4, "ellipse": [648, 620, 11, 7]},
+    {"id": "holm-sodden", "kind": "hill", "height": 1.0, "ellipse": [712, 470, 11, 10]},
+    {"id": "holm-mereling", "kind": "hill", "height": 1.0, "ellipse": [597, 545, 8, 6]},
+    {"id": "frontier-hills-south", "kind": "hill", "height": 3, "ellipse": [-430, -300, 80, 60]},
+    {"id": "frontier-hills-north", "kind": "hill", "height": 2.5, "ellipse": [-400, 620, 70, 50]},
+    {"id": "frontier-hills-west", "kind": "hill", "height": 2, "ellipse": [-560, 100, 90, 70]},
+    {"id": "frontier-ridge", "kind": "ridge", "height": 2.5, "halfWidth": 26, "line": [[-640, -560], [-560, -420], [-520, -200]]}
+  ],
   "terrain": {
-    "about": "The generated land's first terrain, in tiles (LandHeights, docs/layout.md section 8). Grounds not listed lie at 0.",
-    "heights": { "highland": 4.5, "crest": 6.5, "glacier": 7, "scar": 5 },
+    "about": "The generated land's terrain, in tiles (Landscape, docs/world-plan.md). Each ground's height is smoothed into its neighbours'; then the land's rolling, the landforms (relief), the crest's peaks, the fall to the sea, lakes held level, rivers falling to their mouths in valleys of their own, passes, roads levelled across, settlement platforms.",
+    "heights": {
+      "grass": 0.6,
+      "meadow": 0.6,
+      "heath": 0.9,
+      "bracken": 0.9,
+      "downs": 1.4,
+      "forest": 1.2,
+      "deepwood": 1.6,
+      "glade": 1.2,
+      "fen": 0.2,
+      "reeds": 0.2,
+      "mud": 0.2,
+      "gravel": 2.6,
+      "dust": 2.6,
+      "redrock": 3,
+      "erg": 2,
+      "saltflat": 1.2,
+      "olive": 1.4,
+      "ash": 0.8,
+      "ashworn": 0.8,
+      "volcanic": 1.6,
+      "lava": 1.4,
+      "obsidian": 1,
+      "sulphur": 0.4,
+      "highland": 1.6,
+      "foothills": 1.6,
+      "scree": 2,
+      "crest": 2.5,
+      "glacier": 3,
+      "scar": 3,
+      "snow": 2.4,
+      "tundra": 2.2,
+      "pine": 2.8,
+      "moor": 3.4,
+      "peat": 3,
+      "broken": 1.6,
+      "unmade": 1,
+      "ice": 1.6
+    },
+    "roll": {
+      "grass": 0.7,
+      "meadow": 0.7,
+      "heath": 0.9,
+      "downs": 1.3,
+      "forest": 1.0,
+      "deepwood": 1.0,
+      "fen": 0.06,
+      "reeds": 0.06,
+      "gravel": 0.7,
+      "redrock": 0.8,
+      "erg": 0.3,
+      "saltflat": 0.02,
+      "olive": 0.4,
+      "ash": 0.8,
+      "volcanic": 1.2,
+      "lava": 0.6,
+      "highland": 1.7,
+      "foothills": 1.3,
+      "crest": 1.5,
+      "glacier": 1.0,
+      "snow": 1.0,
+      "tundra": 0.8,
+      "pine": 0.9,
+      "moor": 1.1,
+      "broken": 1.2,
+      "unmade": 0,
+      "ice": 0
+    },
+    "rollDefault": 0.6,
+    "rollScale": 38,
     "smooth": 6,
     "ridge": 2,
     "ridgeGrounds": ["crest", "glacier"],
-    "peaks": 6,
+    "peaks": 5,
     "peakScale": 18,
-    "rough": 1.2,
-    "snowAbove": 10.5,
-    "passSaddle": 3.5,
+    "rough": 0.8,
+    "snowAbove": 12,
+    "snowLine": 13,
+    "passSaddle": 7.5,
     "passBlend": 8,
-    "builtBlend": 16
+    "builtBlend": 16,
+    "coastBlend": 10,
+    "valley": 10,
+    "bank": 0.25,
+    "screeSlope": 0.55,
+    "snowFall": 0.42
   },
   "spine": {
     "name": "the spine",
-    "line": [[-216, -683], [-164, -462], [-216, -241], [-139, 14], [-182, 252], [-114, 490], [-164, 711], [-110, 1000]],
+    "line": [
+      [-255, -676], [-235, -506], [-212, -387], [-205, -285], [-190, -170], [-168, -40], [-162, 60], [-180, 180], [-172, 286], [-148, 383],
+      [-140, 470], [-158, 560], [-172, 642], [-160, 725], [-150, 845]
+    ],
     "passes": [
-      { "id": "pass-south",     "name": "p-dwarves'-pass",   "line": [[-130, -250], [-214, -250], [-300, -245]] },
-      { "id": "pass-salt",      "name": "p-salt-pass",       "line": [[-80, 40], [-144, 40], [-220, 45]] },
-      { "id": "pass-selenfall", "name": "Selenfall's breach","line": [[-120, 290], [-179, 253], [-240, 280]] },
-      { "id": "pass-meridian",  "name": "p-meridian-pass",   "line": [[-100, 440], [-131, 445], [-215, 450]] },
-      { "id": "pass-frost",     "name": "p-frost-pass",      "line": [[-93, 770], [-155, 765], [-240, 760]] }
+      {"id": "pass-south", "name": "p-dwarves'-pass", "line": [[-128, -283], [-205, -285], [-276, -285]]},
+      {"id": "pass-salt", "name": "p-salt-pass", "line": [[-94, 50], [-162, 52], [-232, 55]]},
+      {"id": "pass-selenfall", "name": "Selenfall's breach", "line": [[-120, 290], [-179, 253], [-240, 280]]},
+      {"id": "pass-meridian", "name": "p-meridian-pass", "line": [[-92, 462], [-140, 465], [-210, 468]]},
+      {"id": "pass-frost", "name": "p-frost-pass", "line": [[-118, 704], [-168, 702], [-236, 704]]}
     ]
   },
-
   "rivers": [
-    { "id": "great-river",   "name": "the great river",       "into": "sea",                 "line": [[-80, 385], [0, 395], [100, 380], [200, 335], [300, 260], [384, 216], [470, 215], [560, 235], [660, 250], [760, 230], [860, 215], [960, 220], [1040, 222]] },
-    { "id": "tolling-river", "name": "Tolling's river",       "into": "lake:p-lake",         "line": [[-90, 250], [-40, 200], [10, 150], [42, 100], [44, 60], [60, 30], [85, 10], [110, -5], [135, -15], [180, -25], [225, 0], [252, 32]] },
-    { "id": "sere-river",    "name": "Sere's river",          "into": "river:tolling-river", "line": [[-150, -340], [-90, -300], [-30, -240], [30, -170], [90, -110], [150, -60], [188, -30]] },
-    { "id": "outflow",       "name": "p-outflow",             "into": "sea",                 "line": [[330, 10], [380, -60], [430, -150], [460, -240], [450, -340], [480, -420], [500, -480], [515, -600]] },
-    { "id": "fen-river",     "name": "p-fen-river",           "into": "lake:p-mere",         "line": [[520, 660], [600, 610], [672, 568]] },
-    { "id": "frontier-river","name": "p-frontier-river",      "into": "sea",                 "line": [[-262, -100], [-400, -150], [-560, -180], [-760, -200]] }
+    {
+      "id": "great-river",
+      "name": "the great river",
+      "into": "sea",
+      "halfWidth": 5,
+      "sourceHalfWidth": 2,
+      "meander": 6,
+      "line": [
+        [-62, 432], [-30, 426], [0, 416], [40, 396], [100, 352], [160, 302], [212, 258], [255, 226], [286, 204], [304, 218], [330, 224], [354, 212],
+        [366, 186], [358, 160], [344, 140], [372, 124], [416, 122], [462, 138], [515, 165], [580, 190], [646, 206], [712, 218], [777, 236], [830, 250],
+        [884, 254]
+      ]
+    },
+    {
+      "id": "tolling-river",
+      "name": "Tolling's river",
+      "into": "lake:wennow",
+      "halfWidth": 3,
+      "sourceHalfWidth": 1.5,
+      "meander": 5,
+      "line": [[-100, 212], [-62, 186], [-22, 152], [12, 122], [36, 102], [41, 90], [44, 60], [60, 30], [84, 10], [100, -2]]
+    },
+    {
+      "id": "wenn",
+      "name": "the Wenn",
+      "into": "lake:knellmere",
+      "halfWidth": 3.5,
+      "meander": 3,
+      "line": [[146, -12], [168, -22], [190, -14], [210, 8]]
+    },
+    {
+      "id": "lade",
+      "name": "p-lade (Knellmere's outflow)",
+      "into": "river:great-river",
+      "halfWidth": 3,
+      "meander": 3,
+      "line": [[334, 34], [336, 62], [342, 96], [344, 128]]
+    },
+    {
+      "id": "sere-river",
+      "name": "Sere's river",
+      "into": "sea",
+      "halfWidth": 5,
+      "sourceHalfWidth": 2,
+      "meander": 7,
+      "line": [
+        [-132, 14], [-108, -12], [-80, -40], [-48, -70], [-12, -100], [22, -130], [50, -158], [58, -185], [72, -221], [94, -268], [112, -323],
+        [128, -378], [144, -438], [156, -498], [164, -548], [172, -625]
+      ]
+    },
+    {
+      "id": "yorewater",
+      "name": "p-yorewater (the falls' river)",
+      "into": "river:great-river",
+      "halfWidth": 3,
+      "sourceHalfWidth": 2,
+      "meander": 4,
+      "line": [[554, -268], [564, -234], [574, -180], [585, -110], [594, -56], [597, -30], [598, 0], [594, 40], [589, 90], [587, 140], [584, 188]]
+    },
+    {
+      "id": "fen-river",
+      "name": "p-fen-river",
+      "into": "lake:p-mere",
+      "halfWidth": 3,
+      "meander": 5,
+      "line": [[466, 614], [531, 598], [589, 576], [635, 566]]
+    },
+    {
+      "id": "gall-river",
+      "name": "p-cinder-river",
+      "into": "sea",
+      "halfWidth": 2.5,
+      "sourceHalfWidth": 1.5,
+      "meander": 4,
+      "line": [[638, -346], [631, -401], [623, -455], [618, -540]]
+    },
+    {
+      "id": "north-river",
+      "name": "p-north-river",
+      "into": "sea",
+      "halfWidth": 3,
+      "sourceHalfWidth": 1.5,
+      "meander": 5,
+      "line": [[200, 642], [226, 682], [248, 725], [256, 762], [258, 797]]
+    },
+    {
+      "id": "frontier-river",
+      "name": "p-frontier-river",
+      "into": "sea",
+      "halfWidth": 4,
+      "meander": 8,
+      "line": [[-280, -100], [-400, -150], [-560, -180], [-760, -200]]
+    }
   ],
-
   "places": [
-    { "id": "cruor",            "name": "Cruor",              "tier": "city",    "at": [384, 216], "capital": true, "across": 260, "note": "the empire's capital and p-sworn's church" },
-    { "id": "tolling",          "name": "Tolling",            "tier": "town",    "at": [30, 48],   "note": "built (0-95, 0-95): the start" },
-    { "id": "p-lakeport",       "name": "p-lakeport",         "tier": "town",    "at": [290, 112], "note": "where Palmerway's road meets p-lake" },
-    { "id": "p-forestgate",     "name": "p-forestgate",       "tier": "town",    "at": [480, 330] },
-    { "id": "p-enclave",        "name": "p-enclave",          "tier": "town",    "at": [945, 252], "note": "the empire's coastal enclave in the houses' fens, at the great river's mouth" },
-    { "id": "p-riverhold",      "name": "p-riverhold",        "tier": "town",    "at": [80, -170], "note": "the salient up Sere's river" },
-    { "id": "p-frontline",      "name": "p-frontline",        "tier": "town",    "at": [520, -40], "note": "a border town on the Gall front; changes hands" },
-    { "id": "p-weir",           "name": "p-weir",             "tier": "village", "at": [190, 190] },
-    { "id": "p-greatbridge",    "name": "p-greatbridge",      "tier": "village", "at": [230, 345] },
-    { "id": "p-foothold",       "name": "p-foothold",         "tier": "village", "at": [-20, 350], "note": "the salient into the spine's foothills" },
-    { "id": "p-north-farms",    "name": "p-north-farms",      "tier": "village", "at": [320, 440] },
-    { "id": "p-moorside",       "name": "p-moorside",         "tier": "village", "at": [150, 505] },
-    { "id": "p-east-road",      "name": "p-east-road",        "tier": "village", "at": [560, 285] },
-    { "id": "p-river-east",     "name": "p-river-east",       "tier": "village", "at": [700, 275] },
-    { "id": "p-coast-road",     "name": "p-coast-road",       "tier": "village", "at": [820, 120] },
-    { "id": "p-lake-south",     "name": "p-lake-south",       "tier": "village", "at": [300, -30] },
-    { "id": "p-outflow-mill",   "name": "p-outflow-mill",     "tier": "village", "at": [455, -120] },
-    { "id": "p-south-downs",    "name": "p-south-downs",      "tier": "village", "at": [250, -110] },
-    { "id": "p-brow",           "name": "p-brow",             "tier": "village", "at": [600, -5],   "note": "the village on p-head's brow" },
-    { "id": "p-pocket-fort",    "name": "p-pocket-fort",      "tier": "village", "at": [626, -280], "note": "the fortress pocket in Gall's land" },
-    { "id": "p-west-march",     "name": "p-west-march",       "tier": "hamlet",  "at": [-10, 110] },
-    { "id": "p-hollow",         "name": "p-hollow",           "tier": "hamlet",  "at": [100, 250] },
-    { "id": "p-ford",           "name": "p-ford",             "tier": "hamlet",  "at": [600, 170] },
-    { "id": "p-forest-deep",    "name": "p-forest-deep",      "tier": "hamlet",  "at": [470, 450] },
-    { "id": "widdermill",       "name": "Widdermill",         "tier": "landmark","at": [33, 80],   "note": "built, in Tolling" },
-    { "id": "waygate",          "name": "the waygate",        "tier": "landmark","at": [180, 48],  "note": "built, in Palmerway: today's edge of the world" },
-    { "id": "p-head",           "name": "p-head (the falls)", "tier": "landmark","at": [585, -28] },
-    { "id": "p-cell-north",     "name": "a hidden occult cell", "tier": "landmark", "at": [294, 290] },
-    { "id": "p-cell-west",      "name": "a hidden occult cell", "tier": "landmark", "at": [158, 320] },
-    { "id": "p-cell-south",     "name": "a hidden occult cell", "tier": "landmark", "at": [668, -12] },
-
-    { "id": "cistern",          "name": "Cistern",            "tier": "city",    "at": [40, -360], "capital": true, "note": "Sere's capital, on the deepest wells" },
-    { "id": "p-oasis",          "name": "p-oasis",            "tier": "town",    "at": [170, -450] },
-    { "id": "p-well-west",      "name": "p-well-west",        "tier": "village", "at": [-60, -100] },
-    { "id": "p-dunes",          "name": "p-dunes",            "tier": "village", "at": [60, -450] },
-    { "id": "p-caravanserai",   "name": "p-caravanserai",     "tier": "village", "at": [-110, -262] },
-    { "id": "p-dry-north",      "name": "p-dry-north",        "tier": "village", "at": [-80, 196] },
-    { "id": "p-well-east",      "name": "p-well-east",        "tier": "village", "at": [200, -200] },
-    { "id": "p-sere-salt",      "name": "p-sere-salt",        "tier": "hamlet",  "at": [150, -300] },
-    { "id": "p-saltpan",        "name": "p-saltpan",          "tier": "hamlet",  "at": [-20, -420] },
-    { "id": "p-demigod-dunes",  "name": "a demigod's site",   "tier": "landmark","at": [158, -380] },
-
-    { "id": "meridian",         "name": "Meridian",           "tier": "city",    "at": [-100, 440], "capital": true, "note": "the surface people's capital, on the spine's eastern slopes" },
-    { "id": "frostpeak-forge",  "name": "Frostpeak Forge",    "tier": "town",    "at": [-93, 770],  "capital": true, "note": "the dwarves' trading hall at the frozen end of the spine" },
-    { "id": "p-dwarf-hold",     "name": "p-dwarf-hold",       "tier": "town",    "at": [-170, -252], "note": "where the dwarves' caves open, by the southern pass" },
-    { "id": "p-observatory",    "name": "p-observatory",      "tier": "village", "at": [-118, 140] },
-    { "id": "p-high-valley",    "name": "p-high-valley",      "tier": "village", "at": [-105, -60] },
-    { "id": "p-west-toll",      "name": "p-west-toll",        "tier": "hamlet",  "at": [-215, 45] },
-    { "id": "p-south-observatory", "name": "p-south-observatory", "tier": "hamlet", "at": [-130, -460] },
-    { "id": "selenfall",        "name": "Selenfall",          "tier": "landmark","at": [-172, 286], "note": "the first moonfall's scar: a shaft down to the fragment, and a guarded way over the crest" },
-    { "id": "p-demigod-north",  "name": "a demigod's site",   "tier": "landmark","at": [5, 507] },
-
-    { "id": "p-gall-seat",      "name": "p-gall-seat",        "tier": "city",    "at": [720, -292], "capital": true, "note": "House Gall's seat" },
-    { "id": "p-cinderport",     "name": "p-cinderport",       "tier": "town",    "at": [800, -300] },
-    { "id": "p-gall-front",     "name": "p-gall-front",       "tier": "town",    "at": [410, -260], "note": "Gall's border town on the front" },
-    { "id": "p-ashfield",       "name": "p-ashfield",         "tier": "village", "at": [600, -160] },
-    { "id": "p-caldera",        "name": "p-caldera",          "tier": "village", "at": [750, -370] },
-    { "id": "p-basalt",         "name": "p-basalt",           "tier": "village", "at": [530, -390] },
-    { "id": "p-gall-east",      "name": "p-gall-east",        "tier": "village", "at": [845, -140] },
-    { "id": "p-southcoast",     "name": "p-southcoast",       "tier": "village", "at": [400, -440] },
-    { "id": "p-gall-west",      "name": "p-gall-west",        "tier": "village", "at": [300, -330] },
-    { "id": "p-obsidian",       "name": "p-obsidian",         "tier": "hamlet",  "at": [650, -370] },
-    { "id": "p-smoke",          "name": "p-smoke",            "tier": "hamlet",  "at": [800, -210] },
-    { "id": "p-demigod-front",  "name": "a demigod's site",   "tier": "landmark","at": [362, -241] },
-    { "id": "p-demigod-coast",  "name": "a demigod's site",   "tier": "landmark","at": [920, 40] },
-
-    { "id": "p-houses",         "name": "p-houses",           "tier": "town",    "at": [872, 422], "capital": true, "note": "where the lesser houses meet" },
-    { "id": "house-umber",      "name": "House Umber's hold", "tier": "village", "at": [640, 640] },
-    { "id": "house-mordant",    "name": "House Mordant's sea caves", "tier": "village", "at": [925, 360] },
-    { "id": "p-fen-village",    "name": "p-fen-village",      "tier": "village", "at": [780, 470] },
-    { "id": "p-broken-coast",   "name": "p-broken-coast",     "tier": "hamlet",  "at": [800, 560] },
-    { "id": "p-mere-hamlet",    "name": "p-mere-hamlet",      "tier": "hamlet",  "at": [730, 600] },
-    { "id": "sallow-ruin",      "name": "Sallow's fallen house", "tier": "landmark", "at": [640, 540] },
-    { "id": "p-demigod-fens",   "name": "a demigod's site",   "tier": "landmark","at": [549, 592] },
-
-    { "id": "p-trapper",        "name": "p-trapper",          "tier": "hamlet",  "at": [200, 640] },
-    { "id": "p-cold-camp",      "name": "p-cold-camp",        "tier": "hamlet",  "at": [420, 650] },
-
-    { "id": "p-frontier-camp",  "name": "p-frontier-camp",    "tier": "hamlet",  "at": [-400, 40] },
-    { "id": "p-west-landing",   "name": "p-west-landing",     "tier": "hamlet",  "at": [-520, -300] },
-    { "id": "p-northern-camp",  "name": "p-northern-camp",    "tier": "hamlet",  "at": [100, 880] },
-    { "id": "p-isle-south",     "name": "p-isle-south",       "tier": "hamlet",  "at": [227, -665] },
-    { "id": "p-isle-east",      "name": "p-isle-east",        "tier": "hamlet",  "at": [1080, -160] }
+    {
+      "id": "cruor",
+      "name": "Cruor",
+      "tier": "city",
+      "at": [322, 176],
+      "capital": true,
+      "across": 200,
+      "note": "the empire's capital and p-sworn's church, on a hill in the great river's meander where the lake's outflow joins it"
+    },
+    {"id": "tolling", "name": "Tolling", "tier": "town", "at": [30, 48], "note": "built (0-95, 0-95): the start, in the low Wennow basin"},
+    {
+      "id": "p-lakeport",
+      "name": "p-lakeport",
+      "tier": "town",
+      "at": [262, 70],
+      "note": "Knellmere's north shore, where the lake road meets the water: boats, fishing, the first big market"
+    },
+    {
+      "id": "p-forestgate",
+      "name": "p-forestgate",
+      "tier": "town",
+      "at": [416, 280],
+      "note": "Eller's south edge, where the forest road enters the trees"
+    },
+    {
+      "id": "p-enclave",
+      "name": "p-enclave",
+      "tier": "town",
+      "at": [830, 276],
+      "note": "the empire's walled port at the great river's mouth, on the edge of Brack's fens"
+    },
+    {
+      "id": "p-riverhold",
+      "name": "p-riverhold",
+      "tier": "town",
+      "at": [78, -168],
+      "note": "the sluice fortress on Sere's river: the hand on Sere's water"
+    },
+    {"id": "p-greatbridge", "name": "p-greatbridge", "tier": "village", "at": [196, 236], "note": "where the north road bridges the great river"},
+    {"id": "p-weir", "name": "p-weir", "tier": "village", "at": [356, 92], "note": "a mill and weir on the lake's outflow"},
+    {
+      "id": "p-foothold",
+      "name": "p-foothold",
+      "tier": "village",
+      "at": [16, 376],
+      "note": "the salient into the foothills: forts and farms on a spur where the great river leaves the mountains"
+    },
+    {"id": "p-north-farms", "name": "p-north-farms", "tier": "village", "at": [254, 448], "note": "between Eller and the moors"},
+    {"id": "p-east-road", "name": "p-east-road", "tier": "village", "at": [498, 146], "note": "on the east road, in the great river's valley"},
+    {"id": "p-river-east", "name": "p-river-east", "tier": "village", "at": [651, 186], "note": "a ford on the great river in the Wolds"},
+    {"id": "p-cove-north", "name": "p-cove-north", "tier": "village", "at": [849, 186], "note": "a fishing village in the north cove"},
+    {"id": "p-cove-south", "name": "p-cove-south", "tier": "village", "at": [846, 100], "note": "a fishing village in the south cove"},
+    {"id": "p-lake-south", "name": "p-lake-south", "tier": "village", "at": [262, -28], "note": "fishers on Knellmere's south shore, under the Downs"},
+    {
+      "id": "p-south-downs",
+      "name": "p-south-downs",
+      "tier": "village",
+      "at": [300, -104],
+      "note": "a downland village above the white edge, the hill figure below it"
+    },
+    {"id": "p-dry-north", "name": "p-dry-north", "tier": "village", "at": [-60, 200], "note": "dry farmers at the foot of Selenfall's road"},
+    {"id": "p-camp", "name": "p-camp", "tier": "village", "at": [457, -96], "note": "the empire's war camp below the Scarp, among burned farms"},
+    {"id": "p-west-march", "name": "p-west-march", "tier": "hamlet", "at": [-30, 110], "note": "the last farm west of Tolling"},
+    {"id": "p-hollow", "name": "p-hollow", "tier": "hamlet", "at": [112, 238], "note": "by the dry valley's old bridge"},
+    {"id": "p-wolds-farm", "name": "p-wolds-farm", "tier": "hamlet", "at": [603, 64], "note": "sheep on the Wolds"},
+    {"id": "p-forest-deep", "name": "p-forest-deep", "tier": "hamlet", "at": [457, 440], "note": "foresters in Eller's old wood"},
+    {"id": "p-poolside", "name": "p-poolside", "tier": "hamlet", "at": [584, 6], "note": "below p-head's falls, by the pool"},
+    {"id": "p-ford", "name": "p-ford", "tier": "hamlet", "at": [569, 162], "note": "where the falls' river meets the great river"},
+    {"id": "widdermill", "name": "Widdermill", "tier": "landmark", "at": [30, 80], "note": "built, in Tolling"},
+    {"id": "waygate", "name": "the waygate", "tier": "landmark", "at": [180, 48], "note": "built, in Palmerway: today's edge of the world"},
+    {
+      "id": "p-head",
+      "name": "p-head (the falls)",
+      "tier": "landmark",
+      "at": [587, -22],
+      "note": "the face carved in the Scarp, the river pouring from its mouth"
+    },
+    {"id": "p-cell-north", "name": "a hidden occult cell", "tier": "landmark", "at": [300, 330], "hidden": true},
+    {"id": "p-cell-west", "name": "a hidden occult cell", "tier": "landmark", "at": [150, 300], "hidden": true},
+    {"id": "p-cell-south", "name": "a hidden occult cell", "tier": "landmark", "at": [556, 40], "hidden": true},
+    {
+      "id": "cistern",
+      "name": "Cistern",
+      "tier": "city",
+      "at": [0, -363],
+      "capital": true,
+      "note": "Sere's capital on a mesa in the gravel plain, on the deepest wells, out of the sluice's reach",
+      "across": 140
+    },
+    {"id": "p-oasis", "name": "p-oasis", "tier": "town", "at": [230, -394], "note": "a hollow in the erg with a spring: the caravans' rest"},
+    {"id": "p-sere-port", "name": "p-sere-port", "tier": "town", "at": [138, -574], "note": "Sere's port by the river's delta, and the ferry south"},
+    {
+      "id": "p-caravanserai",
+      "name": "p-caravanserai",
+      "tier": "village",
+      "at": [-88, -290],
+      "note": "on the road from Cistern to Adit, at the badlands' edge"
+    },
+    {"id": "p-well-west", "name": "p-well-west", "tier": "village", "at": [-44, -132], "note": "Sere's northern well town, on the border"},
+    {"id": "p-ribbon", "name": "p-ribbon", "tier": "village", "at": [118, -287], "note": "farmers of the river's green ribbon"},
+    {"id": "p-well-east", "name": "p-well-east", "tier": "village", "at": [204, -242], "note": "wells at the erg's northern edge"},
+    {"id": "p-dunes", "name": "p-dunes", "tier": "village", "at": [196, -506], "note": "in the deep erg"},
+    {"id": "p-saltpan", "name": "p-saltpan", "tier": "hamlet", "at": [64, -469], "note": "salt cutters on the dry lake"},
+    {
+      "id": "meridian",
+      "name": "Meridian",
+      "tier": "city",
+      "at": [-76, 468],
+      "capital": true,
+      "note": "the surface people's capital on a terraced shoulder of the spine, above the great river's source and the Meridian pass",
+      "across": 140
+    },
+    {
+      "id": "frostpeak-forge",
+      "name": "Frostpeak Forge",
+      "tier": "town",
+      "at": [-118, 760],
+      "capital": true,
+      "note": "the dwarves' trading hall in the spine's last peak, above the northern sea"
+    },
+    {
+      "id": "p-dwarf-hold",
+      "name": "p-dwarf-hold (Adit)",
+      "tier": "town",
+      "at": [-150, -285],
+      "note": "where the dwarves' caves open, at the spine's foot by the southern pass"
+    },
+    {
+      "id": "p-observatory",
+      "name": "p-observatory",
+      "tier": "village",
+      "at": [-94, 140],
+      "note": "the surface people's observatory on a spur above the western march"
+    },
+    {
+      "id": "p-high-valley",
+      "name": "p-high-valley",
+      "tier": "village",
+      "at": [-98, -62],
+      "note": "terraced farms in the high valley where Sere's river rises"
+    },
+    {"id": "p-west-toll", "name": "p-west-toll", "tier": "hamlet", "at": [-160, 52], "note": "the toll gate at the top of the salt pass"},
+    {"id": "p-south-observatory", "name": "p-south-observatory", "tier": "hamlet", "at": [-140, -430], "note": "an observatory on the red teeth"},
+    {"id": "p-frost-toll", "name": "p-frost-toll", "tier": "hamlet", "at": [-166, 702], "note": "the toll at the top of the frost pass"},
+    {
+      "id": "selenfall",
+      "name": "Selenfall",
+      "tier": "landmark",
+      "at": [-172, 286],
+      "note": "the first moonfall's scar: a shaft down to the fragment, and a guarded way over the crest"
+    },
+    {
+      "id": "p-gall-seat",
+      "name": "p-gall-seat (Kiln)",
+      "tier": "city",
+      "at": [646, -231],
+      "capital": true,
+      "note": "House Gall's city, terraced on the great cone's north flank",
+      "across": 150
+    },
+    {
+      "id": "p-cinderport",
+      "name": "p-cinderport",
+      "tier": "town",
+      "at": [803, -310],
+      "note": "Gall's port on the black coast, beside the active cone"
+    },
+    {
+      "id": "p-gall-front",
+      "name": "p-gall-front",
+      "tier": "town",
+      "at": [392, -239],
+      "note": "Gall's border town on the plateau's edge above the west ramp"
+    },
+    {
+      "id": "p-frontline",
+      "name": "p-frontline",
+      "tier": "town",
+      "at": [528, -106],
+      "note": "a border town at the head of the great ramp; changes hands"
+    },
+    {"id": "p-ashfield", "name": "p-ashfield", "tier": "village", "at": [564, -166]},
+    {"id": "p-caldera", "name": "p-caldera", "tier": "village", "at": [500, -253], "note": "on the caldera's rim"},
+    {"id": "p-basalt", "name": "p-basalt", "tier": "village", "at": [457, -310]},
+    {"id": "p-gall-east", "name": "p-gall-east", "tier": "village", "at": [776, -118]},
+    {"id": "p-southcoast", "name": "p-southcoast", "tier": "village", "at": [498, -455]},
+    {"id": "p-gall-west", "name": "p-gall-west", "tier": "village", "at": [402, -360]},
+    {
+      "id": "p-pocket-fort",
+      "name": "p-pocket-fort",
+      "tier": "village",
+      "at": [584, -244],
+      "note": "the empire's fortress on a volcanic plug inside Gall"
+    },
+    {"id": "p-sulphur", "name": "p-sulphur", "tier": "village", "at": [626, -436], "note": "sulphur works above the flats"},
+    {"id": "p-brow", "name": "p-brow", "tier": "village", "at": [608, -50], "note": "the village on p-head's brow, neutral ground"},
+    {"id": "p-obsidian", "name": "p-obsidian", "tier": "hamlet", "at": [582, -357]},
+    {"id": "p-smoke", "name": "p-smoke", "tier": "hamlet", "at": [712, -160]},
+    {"id": "p-springs", "name": "p-springs", "tier": "hamlet", "at": [703, -317], "note": "hot springs"},
+    {
+      "id": "p-houses",
+      "name": "p-houses (Skerrin)",
+      "tier": "town",
+      "at": [846, 430],
+      "capital": true,
+      "note": "where the lesser houses meet, among the sea stacks"
+    },
+    {"id": "house-umber", "name": "House Umber's hold", "tier": "village", "at": [648, 620], "note": "on a holm in the northern meres"},
+    {"id": "house-mordant", "name": "House Mordant's sea caves", "tier": "village", "at": [859, 362]},
+    {"id": "p-fen-village", "name": "p-fen-village", "tier": "village", "at": [712, 470], "note": "on a holm in the fens"},
+    {"id": "p-mereling", "name": "p-mereling", "tier": "village", "at": [597, 545]},
+    {"id": "p-scalth", "name": "p-scalth", "tier": "hamlet", "at": [797, 560], "note": "the scalding pans where the mites breed"},
+    {"id": "p-mere-hamlet", "name": "p-mere-hamlet", "tier": "hamlet", "at": [689, 594]},
+    {"id": "p-causeholm", "name": "p-causeholm", "tier": "hamlet", "at": [807, 310], "note": "the enclave's causeway into the fens"},
+    {"id": "p-holm", "name": "p-holm", "tier": "hamlet", "at": [761, 400]},
+    {"id": "sallow-ruin", "name": "Sallow's fallen house", "tier": "landmark", "at": [638, 515]},
+    {"id": "p-moorside", "name": "p-moorside", "tier": "village", "at": [150, 515], "note": "on the edge of the moors"},
+    {"id": "p-tor", "name": "p-tor", "tier": "village", "at": [380, 550], "note": "under the highest tor"},
+    {"id": "p-trapper", "name": "p-trapper", "tier": "hamlet", "at": [120, 650]},
+    {"id": "p-cold-camp", "name": "p-cold-camp", "tier": "hamlet", "at": [425, 670]},
+    {"id": "p-icemere", "name": "p-icemere", "tier": "hamlet", "at": [262, 725], "note": "ice fishers on the frozen lake"},
+    {"id": "p-isle-south", "name": "p-isle-south", "tier": "hamlet", "at": [232, -650]},
+    {"id": "p-isle-east", "name": "p-isle-east", "tier": "hamlet", "at": [958, -180]}
   ],
-
   "roads": [
-    { "id": "palmerway",      "kind": "main", "line": ["tolling", [96, 50], "waygate", [240, 92], "p-lakeport", [330, 160], "cruor"] },
-    { "id": "north-road",     "kind": "main", "line": ["cruor", [300, 300], "p-greatbridge", [100, 370], "p-foothold", "meridian"] },
-    { "id": "spine-road",     "kind": "main", "line": ["meridian", [-60, 520], [-50, 640], [-70, 730], "frostpeak-forge"] },
-    { "id": "east-road",      "kind": "main", "line": ["cruor", "p-east-road", "p-river-east", [850, 285], "p-enclave"] },
-    { "id": "forest-road",    "kind": "main", "line": ["cruor", [430, 280], "p-forestgate", [620, 400], [760, 420], "p-houses"] },
-    { "id": "gall-road",      "kind": "main", "line": ["cruor", [410, 120], [400, 20], "p-frontline", [560, -130], "p-ashfield", [680, -220], "p-gall-seat"] },
-    { "id": "sere-road",      "kind": "main", "line": ["tolling", [40, -40], "p-riverhold", [60, -260], "cistern"] },
-    { "id": "oasis-road",     "kind": "road", "line": ["cistern", [100, -410], "p-oasis", "p-dunes"] },
-    { "id": "caravan-road",   "kind": "main", "line": ["cistern", [-60, -320], "p-caravanserai", "p-dwarf-hold", [-130, -250]] },
-    { "id": "salt-road",      "kind": "road", "line": ["tolling", [-30, 45], [-80, 40]] },
-    { "id": "west-road",      "kind": "road", "line": ["tolling", "p-west-march", "p-dry-north", "p-observatory"] },
-    { "id": "selenfall-road", "kind": "road", "line": ["p-dry-north", [-112, 282], [-120, 290]] },
-    { "id": "foothill-road",  "kind": "road", "line": ["p-dry-north", [-60, 290], "p-foothold"] },
-    { "id": "weir-road",      "kind": "road", "line": ["p-lakeport", "p-weir", "p-greatbridge"] },
-    { "id": "hollow-lane",    "kind": "road", "line": ["p-weir", "p-hollow"] },
-    { "id": "moor-road",      "kind": "road", "line": ["p-greatbridge", "p-north-farms", "p-forest-deep"] },
-    { "id": "moorside-road",  "kind": "road", "line": ["p-north-farms", "p-moorside"] },
-    { "id": "cold-road",      "kind": "road", "line": ["p-moorside", "p-trapper", [300, 680], "p-cold-camp"] },
-    { "id": "fen-road",       "kind": "road", "line": ["p-houses", "p-fen-village", "p-mere-hamlet", "house-umber"] },
-    { "id": "mordant-road",   "kind": "road", "line": ["p-houses", "house-mordant"] },
-    { "id": "broken-road",    "kind": "road", "line": ["p-houses", [850, 480], "p-broken-coast"] },
-    { "id": "coast-road",     "kind": "road", "line": ["p-enclave", [900, 170], "p-coast-road", [880, -20], "p-gall-east", "p-cinderport"] },
-    { "id": "gall-east-road", "kind": "road", "line": ["p-gall-seat", "p-smoke", "p-gall-east"] },
-    { "id": "cinder-road",    "kind": "road", "line": ["p-gall-seat", "p-cinderport"] },
-    { "id": "gall-west-road", "kind": "road", "line": ["p-gall-seat", "p-caldera", "p-obsidian", "p-basalt", "p-gall-front", "p-gall-west", "p-southcoast"] },
-    { "id": "pocket-road",    "kind": "road", "line": ["p-ashfield", "p-pocket-fort", "p-gall-seat"] },
-    { "id": "ford-road",      "kind": "road", "line": ["p-east-road", "p-ford", "p-brow", "p-frontline"] },
-    { "id": "lake-road",      "kind": "road", "line": ["p-lake-south", "p-frontline"] },
-    { "id": "downs-road",     "kind": "road", "line": ["p-lake-south", "p-south-downs", "p-riverhold"] },
-    { "id": "outflow-road",   "kind": "road", "line": ["p-frontline", "p-outflow-mill", "p-gall-front"] },
-    { "id": "well-road",      "kind": "road", "line": ["p-riverhold", "p-well-west", "p-high-valley", [-80, 40]] },
-    { "id": "salt-well-road", "kind": "road", "line": ["p-riverhold", "p-well-east", "p-sere-salt", "cistern"] },
-    { "id": "saltpan-road",   "kind": "road", "line": ["cistern", "p-saltpan", "p-dunes"] },
-    { "id": "south-obs-road", "kind": "road", "line": ["p-caravanserai", [-110, -400], "p-south-observatory"] },
-    { "id": "frontier-west",  "kind": "road", "line": ["p-west-toll", "p-frontier-camp"] },
-    { "id": "frontier-south", "kind": "road", "line": [[-300, -245], "p-west-landing"] },
-    { "id": "north-camp-road","kind": "road", "line": ["frostpeak-forge", [0, 840], "p-northern-camp"] },
-    { "id": "south-ferry",    "kind": "ferry", "line": ["p-southcoast", [300, -600], "p-isle-south"] },
-    { "id": "east-ferry",     "kind": "ferry", "line": ["p-gall-east", "p-isle-east"] }
+    {"id": "palmerway", "kind": "main", "line": [[192, 48], "p-lakeport", [292, 128], "cruor"]},
+    {"id": "north-road", "kind": "main", "line": ["cruor", "p-greatbridge", "p-foothold", "meridian"]},
+    {"id": "spine-road", "kind": "main", "line": ["meridian", [-70, 560], [-88, 642], "frostpeak-forge"]},
+    {"id": "east-road", "kind": "main", "line": ["cruor", "p-east-road", "p-river-east", "p-enclave"]},
+    {"id": "forest-road", "kind": "main", "line": ["cruor", "p-forestgate", [580, 386], "p-houses"]},
+    {"id": "gall-road", "kind": "main", "line": ["cruor", "p-weir", "p-camp", "p-frontline", "p-ashfield", "p-gall-seat"]},
+    {"id": "sere-road", "kind": "main", "line": [[27, -1], "p-riverhold", "p-ribbon", "cistern"]},
+    {"id": "caravan-road", "kind": "main", "line": ["cistern", "p-caravanserai", "p-dwarf-hold"]},
+    {"id": "salt-road", "kind": "road", "line": [[-1, 51], [-60, 50], "p-west-toll"]},
+    {"id": "west-road", "kind": "road", "line": [[-1, 51], "p-west-march", "p-dry-north", [-118, 286]]},
+    {"id": "observatory-lane", "kind": "track", "line": ["p-west-march", "p-observatory"]},
+    {"id": "foothill-road", "kind": "road", "line": ["p-dry-north", "p-foothold"]},
+    {"id": "hollow-lane", "kind": "track", "line": [[30, 97], "p-hollow", "p-greatbridge"]},
+    {"id": "road-to-nowhere", "kind": "track", "line": ["p-hollow", [176, 300]]},
+    {"id": "lake-south-road", "kind": "road", "line": [[196, 52], "p-lake-south", "p-south-downs", "p-riverhold"]},
+    {"id": "front-road", "kind": "road", "line": ["p-south-downs", "p-gall-front", "p-gall-west", "p-southcoast", "p-sulphur", "p-gall-seat"]},
+    {"id": "camp-lane", "kind": "track", "line": ["p-lake-south", "p-camp"]},
+    {"id": "brow-path", "kind": "track", "line": ["p-frontline", "p-brow", "p-poolside", "p-ford"]},
+    {"id": "gall-west-road", "kind": "road", "line": ["p-gall-front", "p-basalt", "p-caldera", "p-gall-seat"]},
+    {"id": "pocket-road", "kind": "road", "line": ["p-ashfield", "p-pocket-fort"]},
+    {"id": "cinder-road", "kind": "road", "line": ["p-gall-seat", "p-springs", "p-cinderport"]},
+    {"id": "obsidian-lane", "kind": "track", "line": ["p-gall-seat", "p-obsidian"]},
+    {"id": "smoke-road", "kind": "road", "line": ["p-gall-seat", "p-smoke", "p-gall-east"]},
+    {"id": "coast-road", "kind": "road", "line": ["p-enclave", "p-cove-north", "p-cove-south", [794, 40], "p-gall-east", "p-cinderport"]},
+    {"id": "wolds-lane", "kind": "track", "line": ["p-east-road", "p-wolds-farm", "p-cove-south"]},
+    {"id": "ford-lane", "kind": "track", "line": ["p-ford", "p-east-road"]},
+    {"id": "forest-lane", "kind": "track", "line": ["p-forestgate", "p-forest-deep", "p-north-farms"]},
+    {"id": "moor-road", "kind": "road", "line": ["p-greatbridge", "p-north-farms", "p-moorside", "p-trapper", "p-icemere", "p-cold-camp"]},
+    {"id": "tor-lane", "kind": "track", "line": ["p-north-farms", "p-tor"]},
+    {"id": "mordant-road", "kind": "road", "line": ["p-houses", "house-mordant"]},
+    {"id": "fen-road", "kind": "road", "line": ["p-houses", "p-holm", "p-fen-village", "p-mere-hamlet", "house-umber"]},
+    {"id": "causeway", "kind": "road", "line": ["p-enclave", "p-causeholm", "p-holm"]},
+    {"id": "scalth-road", "kind": "road", "line": ["p-houses", "p-scalth"]},
+    {"id": "mereling-lane", "kind": "track", "line": ["p-fen-village", "p-mereling", "sallow-ruin"]},
+    {"id": "well-road", "kind": "road", "line": ["p-riverhold", "p-well-west", "p-high-valley", [-94, 50]]},
+    {"id": "ribbon-road", "kind": "road", "line": ["p-ribbon", "p-well-east", "p-oasis", "p-dunes", "p-sere-port"]},
+    {"id": "saltpan-road", "kind": "road", "line": ["cistern", "p-saltpan", "p-sere-port"]},
+    {"id": "south-obs-lane", "kind": "track", "line": ["p-caravanserai", "p-south-observatory"]},
+    {"id": "dwarves-pass-road", "kind": "road", "line": ["p-dwarf-hold", [-205, -285]]},
+    {"id": "meridian-pass-road", "kind": "road", "line": ["meridian", [-140, 465]]},
+    {"id": "frost-pass-road", "kind": "road", "line": ["frostpeak-forge", "p-frost-toll"]},
+    {"id": "south-ferry", "kind": "ferry", "line": ["p-sere-port", [180, -625], "p-isle-south"]},
+    {"id": "east-ferry", "kind": "ferry", "line": ["p-cinderport", [876, -251], "p-isle-east"]}
   ],
-
-  "regionNotes": {
-    "0,0": "the start",
-    "1,0": "the road east, today's edge of the world"
-  },
-
-  "targets": {
-    "coreTiles": [1200000, 1500000],
-    "nearestCapital": [200, 700],
-    "unreachableShare": 0.02
-  }
+  "sites": [
+    {
+      "id": "s-tolling-cave",
+      "kind": "cave",
+      "at": [-18, 150],
+      "stage": "early",
+      "note": "a cave in the first foothills west of Tolling: the first dungeon"
+    },
+    {
+      "id": "s-heath-ruin",
+      "kind": "ruin",
+      "at": [130, 132],
+      "stage": "early",
+      "note": "old stones on the heath north of Palmerway, in a style nobody made"
+    },
+    {
+      "id": "s-dry-bridge",
+      "kind": "moved",
+      "at": [100, 272],
+      "stage": "early",
+      "note": "the dry valley's old bridge over nothing: the river was moved"
+    },
+    {"id": "s-nowhere", "kind": "moved", "at": [176, 300], "stage": "early", "note": "the road that ends in a field: a village taken out"},
+    {
+      "id": "s-lake-view",
+      "kind": "lookout",
+      "at": [232, 92],
+      "stage": "early",
+      "note": "the rise on the lake road where Knellmere and Cruor's hill open out"
+    },
+    {"id": "s-lake-monument", "kind": "monument", "at": [282, 132], "stage": "early", "note": "a blood monument on the road into Cruor"},
+    {"id": "s-reed-fens", "kind": "skilling", "at": [210, 36], "stage": "early", "note": "Knellmere's reed fens: fishing, fen rats"},
+    {"id": "s-belfry", "kind": "ruin", "at": [284, 24], "stage": "mid", "note": "the drowned belfry on Knellmere's isle"},
+    {"id": "s-undercroft", "kind": "dungeon", "at": [330, 150], "stage": "mid", "note": "the undercroft below Cruor's hill"},
+    {"id": "s-bridge-monument", "kind": "monument", "at": [222, 226], "stage": "early", "note": "a monument at the great bridge"},
+    {"id": "s-eller-edge", "kind": "skilling", "at": [380, 312], "stage": "early", "note": "Eller's edge: the first good wood"},
+    {"id": "s-eller-heart", "kind": "thin", "at": [467, 400], "stage": "mid", "note": "the old wood's heart, where the Dreaming is close"},
+    {"id": "s-eller-mere", "kind": "boss", "at": [512, 380], "stage": "mid", "note": "Eller's mere: an open-world boss"},
+    {"id": "s-wolds-crater", "kind": "moonfall", "at": [531, 80], "stage": "early", "note": "an old fall's crater lake in the Wolds"},
+    {"id": "s-wolds-disc", "kind": "unfinished", "at": [650, 95], "stage": "mid", "note": "a perfect disc of ground on the Wolds that nobody made"},
+    {"id": "s-wolds-tower", "kind": "ruin", "at": [613, 132], "stage": "mid", "note": "a tower on the Wolds' high hill"},
+    {"id": "s-coves", "kind": "skilling", "at": [869, 140], "stage": "early", "note": "sea fishing off the coves"},
+    {"id": "s-sea-caves", "kind": "cave", "at": [879, 60], "stage": "mid", "note": "caves under the east cliffs"},
+    {"id": "s-hill-figure", "kind": "lookout", "at": [330, -54], "stage": "early", "note": "the hill figure on the Downs' white edge"},
+    {"id": "s-burned-farms", "kind": "boss", "at": [487, -104], "stage": "mid", "note": "the burned farms below the Scarp: contested ground"},
+    {"id": "s-downs-fort", "kind": "ruin", "at": [420, -140], "stage": "mid", "note": "an old fort on the Downs facing the Scarp"},
+    {
+      "id": "s-moor-leak",
+      "kind": "spoil",
+      "at": [180, 476],
+      "stage": "late",
+      "note": "a hollow on the moors' edge where something leaks back from p-spoil"
+    },
+    {"id": "s-cone-crater", "kind": "dungeon", "at": [646, -285], "stage": "mid", "note": "the great cone's crater: the way into the fire"},
+    {"id": "s-ember", "kind": "boss", "at": [757, -204], "stage": "late", "note": "the active cone: a boss of the living lava"},
+    {"id": "s-obsidian", "kind": "skilling", "at": [605, -374], "stage": "mid", "note": "the obsidian flats"},
+    {"id": "s-caldera-deep", "kind": "dungeon", "at": [531, -285], "stage": "late", "note": "under the caldera lake"},
+    {"id": "s-bathhouse", "kind": "ruin", "at": [708, -328], "stage": "mid", "note": "an old bathhouse at the hot springs"},
+    {
+      "id": "s-gall-seal",
+      "kind": "seal",
+      "at": [425, -285],
+      "stage": "late",
+      "note": "a seal of the deep under Gall's west, the dwarves' work in Gall's land"
+    },
+    {"id": "s-demigod-gall", "kind": "demigod", "at": [380, -270], "stage": "mid", "note": "one of p-scattered's pieces, near the front"},
+    {"id": "s-sulphur", "kind": "skilling", "at": [621, -475], "stage": "mid", "note": "the sulphur flats"},
+    {"id": "s-canyon-cave", "kind": "dungeon", "at": [-120, -336], "stage": "mid", "note": "a cave in the badlands' canyons"},
+    {"id": "s-adit-gate", "kind": "seal", "at": [-168, -276], "stage": "mid", "note": "Adit's deep gate, and the first of the seals"},
+    {"id": "s-sere-disc", "kind": "unfinished", "at": [-40, -212], "stage": "mid", "note": "a disc of unmade ground in the gravel plain"},
+    {"id": "s-lone-mesa", "kind": "lookout", "at": [-40, -256], "stage": "mid", "note": "the lone mesa's foot: a way up is a quest"},
+    {"id": "s-saltpan", "kind": "skilling", "at": [36, -460], "stage": "mid", "note": "the salt pan: salt, and mirages"},
+    {"id": "s-buried-town", "kind": "ruin", "at": [180, -455], "stage": "mid", "note": "a caravan town buried in the dunes"},
+    {"id": "s-demigod-sere", "kind": "demigod", "at": [244, -353], "stage": "mid", "note": "one of p-scattered's pieces, in the erg"},
+    {"id": "s-erg-boss", "kind": "boss", "at": [252, -511], "stage": "late", "note": "the deep erg: something under the sand"},
+    {"id": "s-sere-crater", "kind": "moonfall", "at": [92, -234], "stage": "early", "note": "an old fall beside Sere's river"},
+    {"id": "s-wreck", "kind": "skilling", "at": [62, -584], "stage": "early", "note": "a wreck on Sere's coast"},
+    {"id": "s-salt-lookout", "kind": "lookout", "at": [-214, 56], "stage": "early", "note": "the salt pass's west end: the frontier in view"},
+    {"id": "s-observatory-vault", "kind": "ruin", "at": [-112, 124], "stage": "mid", "note": "a sealed vault under an old observatory"},
+    {"id": "s-high-cave", "kind": "cave", "at": [-130, -160], "stage": "mid", "note": "a cave in the spine's foot south of the high valley"},
+    {"id": "s-undermost", "kind": "dungeon", "at": [-176, -271], "stage": "late", "note": "the dwarves' caves behind Adit, Undermost below"},
+    {"id": "s-orrery-peak", "kind": "lookout", "at": [-118, 515], "stage": "mid", "note": "the peak above Meridian"},
+    {"id": "s-glacier-boss", "kind": "boss", "at": [-150, 650], "stage": "late", "note": "a boss on the frozen spine's glacier"},
+    {"id": "s-frost-seal", "kind": "seal", "at": [-132, 737], "stage": "late", "note": "Frostpeak's deep seal"},
+    {"id": "s-mordant-deep", "kind": "dungeon", "at": [866, 380], "stage": "mid", "note": "House Mordant's sea caves, the deep end"},
+    {"id": "s-scalth", "kind": "skilling", "at": [810, 545], "stage": "mid", "note": "Scalth's pans: the vitriol mites"},
+    {"id": "s-sleepers-mere", "kind": "thin", "at": [667, 568], "stage": "mid", "note": "the mere where sleepwalkers wade in"},
+    {"id": "s-deep-fen", "kind": "boss", "at": [744, 515], "stage": "mid", "note": "the deep fen: something in the reeds"},
+    {"id": "s-demigod-fens", "kind": "demigod", "at": [531, 575], "stage": "mid", "note": "one of p-scattered's pieces, in the fens"},
+    {"id": "s-skerry", "kind": "spoil", "at": [879, 500], "stage": "late", "note": "a skerry where the sea gives back what was taken"},
+    {"id": "s-moor-crater", "kind": "moonfall", "at": [-20, 575], "stage": "mid", "note": "an old fall on the moors"},
+    {"id": "s-stones", "kind": "ruin", "at": [300, 530], "stage": "early", "note": "standing stones on the moor"},
+    {"id": "s-north-disc", "kind": "unfinished", "at": [330, 718], "stage": "late", "note": "a disc of unmade ground in the tundra"},
+    {"id": "s-tundra-boss", "kind": "boss", "at": [449, 718], "stage": "late", "note": "a beast of the frozen north"},
+    {"id": "s-barrow", "kind": "dungeon", "at": [482, 545], "stage": "mid", "note": "a barrow under the tors"},
+    {"id": "s-demigod-north", "kind": "demigod", "at": [20, 522], "stage": "mid", "note": "one of p-scattered's pieces, on the moors"},
+    {"id": "s-ice-fishing", "kind": "skilling", "at": [262, 707], "stage": "mid", "note": "ice fishing on the frozen lake"},
+    {"id": "s-demigod-coast", "kind": "demigod", "at": [838, 4], "stage": "mid", "note": "one of p-scattered's pieces, on the east coast's ramp"}
+  ],
+  "regionNotes": {"0,0": "the start", "1,0": "the road east, today's edge of the world"},
+  "targets": {"coreTiles": [1100000, 1500000], "nearestCapital": [200, 700], "unreachableShare": 0.03}
 }

@@ -82,6 +82,52 @@ switch (command)
     case "blockout":
         return BlockoutCommand(root, rest);
 
+    case "probe":
+    {
+        // Heights and grounds along a line of the generated landscape: probe x0 y0 x1 y1 [steps]
+        LayoutWorkspace lw = LayoutWorkspace.Load(root);
+        Landscape land = Landscape.Build(lw.Map, lw.Built, lw.Edits);
+        float px0 = float.Parse(rest[0]), py0 = float.Parse(rest[1]), px1 = float.Parse(rest[2]), py1 = float.Parse(rest[3]);
+        int steps = rest.Length > 4 ? int.Parse(rest[4]) : 24;
+        for (int s = 0; s <= steps; s++)
+        {
+            float x = px0 + (px1 - px0) * s / steps, y = py0 + (py1 - py0) * s / steps;
+            int tx = (int)Math.Floor(x), ty = (int)Math.Floor(y);
+            string what = land.InBounds(tx, ty) ? land.GroundId(land.Index(tx, ty)) + (land.Beyond[land.Index(tx, ty)] ? " (beyond)" : "") : "-";
+            Console.WriteLine($"({tx,5}, {ty,5})  h {land.Heights.Corner(tx, ty),6:0.00}  {what}");
+        }
+        return 0;
+    }
+
+    case "paint":
+    {
+        // The generated landscape as the client paints it: paint [x0 y0 x1 y1] [pixels a tile] [name]
+        LayoutWorkspace lw = LayoutWorkspace.Load(root);
+        if (lw.Map.Count == 0)
+        {
+            foreach (string e in lw.Map.Errors) Console.Error.WriteLine("error: " + e);
+            return 1;
+        }
+        MapRender.LoadPalette(root);
+        var timer = System.Diagnostics.Stopwatch.StartNew();
+        Landscape land = Landscape.Build(lw.Map, lw.Built, lw.Edits);
+        foreach (string w in land.Warnings) Console.WriteLine("warning: " + w);
+        Console.WriteLine($"landscape built in {timer.ElapsedMilliseconds} ms");
+        int x0 = land.X0, y0 = land.Y0, x1 = land.X0 + land.W, y1 = land.Y0 + land.H, ppt = 1;
+        string name = "paint";
+        if (rest.Length >= 4)
+        {
+            x0 = int.Parse(rest[0]); y0 = int.Parse(rest[1]); x1 = int.Parse(rest[2]); y1 = int.Parse(rest[3]);
+        }
+        if (rest.Length >= 5) ppt = int.Parse(rest[4]);
+        if (rest.Length >= 6) name = rest[5];
+        string outDir = Path.Combine(root, "world", "renders");
+        Directory.CreateDirectory(outDir);
+        File.WriteAllBytes(Path.Combine(outDir, name + ".png"), PaintRender.Landscape(land, x0, y0, x1, y1, ppt, true));
+        Console.WriteLine($"wrote world/renders/{name}.png ({(x1 - x0) * ppt} x {(y1 - y0) * ppt}) in {timer.ElapsedMilliseconds} ms");
+        return 0;
+    }
+
     case "terrain":
         return TerrainCommand(root, ws, rest);
 

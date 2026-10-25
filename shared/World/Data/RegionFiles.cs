@@ -117,12 +117,16 @@ namespace Rth.Shared.World.Data
                 piece.Remove("parts");
                 JToken? rows = piece["rows"];
                 piece.Remove("rows");
+                JToken? surround = piece["surround"];
+                piece.Remove("surround");
                 string head = "    { " + string.Join(", ", piece.Properties().Select(p => Q(p.Name) + ": " + Compact(p.Value)));
                 if (parts is JArray list && list.Count > 0)
                     head += ", \"parts\": [\n" + string.Join(",\n", list.Select(part => "      " + Compact(part))) + "\n    ]";
                 // A tiles piece's rows go one to a line, so its ground reads (and diffs) as a picture.
                 if (rows is JArray rowList)
                     head += ", \"rows\": [" + (rowList.Count == 0 ? "]" : "\n" + string.Join(",\n", rowList.Select(row => "      " + Compact(row))) + "\n    ]");
+                if (surround is JArray ring)
+                    head += ", \"surround\": [" + (ring.Count == 0 ? "]" : "\n" + string.Join(",\n", ring.Select(row => "      " + Compact(row))) + "\n    ]");
                 head += " }";
                 pieces.Add(head);
             }

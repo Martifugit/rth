@@ -223,9 +223,14 @@ namespace Rth.Shared.World.Layout
                 var bad = new HashSet<string>();
                 foreach (int i in Band(map, line.Points.Select(p => new[] { p.x, p.y }).ToList(), 2f))
                 {
+                    // A routed road finds its own way round water and rock (Landscape, RoadRouter), so
+                    // its straight line only marks where it runs; an unrouted one must be clear.
                     if (map.Ground[i] == river) map.Ground[i] = bridge;
-                    else if (map.IsWater(i)) bad.Add("water");
-                    else if (!map.IsWalkable(i)) bad.Add(map.GroundIdAt(i));
+                    else if (map.IsWater(i) || !map.IsWalkable(i))
+                    {
+                        if (!road.Route) bad.Add(map.IsWater(i) ? "water" : map.GroundIdAt(i));
+                        continue;
+                    }
                     map.Road[i] = true;
                 }
                 foreach (string b in bad)

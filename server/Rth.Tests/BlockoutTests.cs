@@ -80,7 +80,10 @@ public class BlockoutTests
         foreach (PassDef pass in lw.Data.Spine.Passes)
         {
             float[] saddle = pass.Line[pass.Line.Count / 2];
-            Assert.Equal(terrain.PassSaddle, land.Corner((int)saddle[0], (int)saddle[1]), 1);
+            // A pass through a region built by hand (Selenfall's breach) has that region's heights.
+            if (lw.Built.Any(b => saddle[0] >= b.X0 && saddle[0] <= b.X1 && saddle[1] >= b.Y0 && saddle[1] <= b.Y1)) continue;
+            // The corner nearest the saddle point (passes wind, and a toll hamlet may level its platform there).
+            Assert.InRange(land.Corner((int)saddle[0], (int)saddle[1]), terrain.PassSaddle - 0.6f, terrain.PassSaddle + 0.6f);
         }
         // The crest stands above its passes.
         float[] crest = lw.Data.Spine.Line[2];

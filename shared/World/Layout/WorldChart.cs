@@ -83,9 +83,17 @@ namespace Rth.Shared.World.Layout
                 Rows = map.Rows,
                 RegionTiles = d.RegionTiles,
             };
-            for (int g = 0; g < map.GroundDefs.Count; g++)
+            // Only the grounds the zone grid uses (the generator's details never reach the chart), so
+            // the chart's ids stay small and are what the map paints.
+            byte[] surface = SurfaceGround(map);
+            var used = new SortedSet<int>(surface.Select(b => (int)b));
+            foreach (string id in new[] { d.RiverGround, d.BridgeGround, d.PassGround, d.SeaGround }) used.Add(map.GroundIds.IndexOf(id));
+            used.Remove(-1);
+            var remap = new Dictionary<int, byte>();
+            foreach (int g in used)
             {
                 GroundDef def = map.GroundDefs[g];
+                remap[g] = (byte)chart.Grounds.Count;
                 chart.Grounds.Add(new ChartGround
                 {
                     Id = map.GroundIds[g],
@@ -103,7 +111,7 @@ namespace Rth.Shared.World.Layout
                 chart.Powers.Add(new ChartPower { Id = id, Name = PlayerName(p.Name), Colour = p.Colour, Core = p.Core, Label = p.Label });
             }
 
-            chart.Ground = Encode(SurfaceGround(map));
+            chart.Ground = Encode(surface.Select(b => remap[b]).ToArray());
             chart.Power = Encode(map.Power);
 
             foreach (RiverDef r in d.Rivers)

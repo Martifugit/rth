@@ -23,6 +23,8 @@ namespace Rth.Shared.World.Layout
         public int X0, Y0, X1, Y1;
         /// <summary>It has heights of its own; one without is flat, so the land around falls to 0 at its edge.</summary>
         public bool HasTerrain;
+        /// <summary>Its heights, when it has terrain: the generated land round it blends into its edge.</summary>
+        public Heightfield? Terrain;
     }
 
     /// <summary>One 96-tile region of the grid laid over the layout.</summary>

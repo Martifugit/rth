@@ -59,6 +59,10 @@ namespace Rth.Shared.World.Layout
         public LayoutTargets Targets = new LayoutTargets();
         /// <summary>The generated land's first terrain (<see cref="LandHeights"/>); none: flat.</summary>
         public TerrainDef? Terrain;
+        /// <summary>Landforms raised or cut into the land: hills, ridges, escarpments, mesas, craters, dunes (docs/world-plan.md).</summary>
+        public List<ReliefDef> Relief = new List<ReliefDef>();
+        /// <summary>Spots kept free for content still to design: dungeon mouths, ruins, boss arenas (docs/world-plan.md section 6).</summary>
+        public List<SiteDef> Sites = new List<SiteDef>();
 
         public static ContinentData Parse(string json) =>
             JsonConvert.DeserializeObject<ContinentData>(json) ?? throw new FormatException("Empty layout.");
@@ -79,6 +83,98 @@ namespace Rth.Shared.World.Layout
         public float Rough = 1f;
         /// <summary>The macro height, in tiles, away from the coast.</summary>
         public float Height = 2f;
+        /// <summary>
+        /// How it is painted (docs/world-plan.md section 7): "under" (natural ground, blended: the
+        /// default) or "over" (a made surface: roads, paving, planks, drawn crisp).
+        /// </summary>
+        public string Layer = "under";
+        /// <summary>Patches of other grounds inside this one, so a large area isn't one colour.</summary>
+        public List<MixDef> Mix = new List<MixDef>();
+        /// <summary>Drawn along the sea's edge (a beach); none: this ground.</summary>
+        public string? Shore;
+        /// <summary>Drawn along a lake's or river's edge; none: <see cref="Shore"/>.</summary>
+        public string? Bank;
+        /// <summary>Drawn where the ground is steep but still walkable (scree, broken rock); none: this ground.</summary>
+        public string? Scree;
+        /// <summary>The colour of this ground's cliff faces (a palette name); none: the default rock.</summary>
+        public string? Cliff;
+        /// <summary>Drawn only by the generator (a mix, a shore, a road), never painted by an area or a power.</summary>
+        public bool Detail;
+        /// <summary>Open ground that settlements farm: fields are laid on it round villages and towns.</summary>
+        public bool Farm;
+    }
+
+    /// <summary>A patch of another ground: where slow noise passes its threshold, so about <see cref="Share"/> of the land.</summary>
+    public sealed class MixDef
+    {
+        public string Ground = "";
+        public float Share = 0.25f;
+        /// <summary>The patches' size, in tiles.</summary>
+        public float Scale = 24f;
+    }
+
+    /// <summary>
+    /// A landform (docs/world-plan.md): a shape and how it raises the land, in tiles.
+    /// <list type="bullet">
+    /// <item><c>hill</c>: a dome over the shape (an ellipse or polygon), <see cref="Height"/> at its middle;</item>
+    /// <item><c>cone</c>: a straight-sided cone, with a <see cref="Crater"/> at its top if given;</item>
+    /// <item><c>mesa</c>: a flat top with steep sides <see cref="Edge"/> tiles wide (a negative height: a basin);</item>
+    /// <item><c>ridge</c>: a band along its line, highest at the line;</item>
+    /// <item><c>scarp</c>: a step along its line, the land on its <see cref="Side"/> raised by <see cref="Height"/>
+    /// for <see cref="Reach"/> tiles, rising over <see cref="Edge"/> tiles (a cliff when narrow), except at its
+    /// <see cref="Ramps"/>, where it climbs gently;</item>
+    /// <item><c>crater</c>: a bowl inside a raised rim;</item>
+    /// <item><c>dunes</c>: long sand ridges across the shape;</item>
+    /// <item><c>tors</c>: knobs of rock scattered over the shape, steep enough to stand out as crags;</item>
+    /// <item><c>canyons</c>: a table of rock <see cref="Height"/> high split by branching cracks down to the floor;</item>
+    /// <item><c>cliffs</c>: a cliff coast: inside the shape the land keeps its height to the water's edge;</item>
+    /// <item><c>terraces</c>: the land inside stepped into flat shelves <see cref="Step"/> high.</item>
+    /// </list>
+    /// </summary>
+    public sealed class ReliefDef : Shape
+    {
+        public string Id = "";
+        public string Name = "";
+        public string Kind = "hill";
+        public float Height = 2f;
+        /// <summary>mesa, scarp, crater: the width of the slope, in tiles.</summary>
+        public float Edge = 6f;
+        /// <summary>scarp: "left" or "right" of the line's direction is the high side.</summary>
+        public string Side = "right";
+        /// <summary>scarp: how far from the line the raise reaches before fading out.</summary>
+        public float Reach = 120f;
+        /// <summary>scarp and mesa: where it can be climbed.</summary>
+        public List<RampDef> Ramps = new List<RampDef>();
+        /// <summary>cone: the crater's radius at the top, in tiles (0: none), and its depth.</summary>
+        public float Crater;
+        public float CraterDepth = 2f;
+        /// <summary>dunes and tors: the pattern's spacing, in tiles; dunes: the direction they run, in degrees from east.</summary>
+        public float Scale = 16f;
+        public float Angle;
+        /// <summary>terraces: the height of each shelf.</summary>
+        public float Step = 1.2f;
+        public string Note = "";
+    }
+
+    /// <summary>A way up a scarp: a point on its line, the ramp's half width along it and its length across.</summary>
+    public sealed class RampDef
+    {
+        public float[] At = new float[2];
+        public float HalfWidth = 5f;
+        public float Length = 18f;
+        public string Name = "";
+    }
+
+    /// <summary>A spot kept for content to come (docs/world-plan.md section 6): never on the players' map.</summary>
+    public sealed class SiteDef
+    {
+        public string Id = "";
+        /// <summary>dungeon, cave, ruin, unfinished, moved, moonfall, demigod, cell, monument, seal, thin, spoil, boss, lookout, skilling.</summary>
+        public string Kind = "ruin";
+        public float[] At = new float[2];
+        /// <summary>early, mid or late (docs/areas/rules.md, "Stage").</summary>
+        public string Stage = "";
+        public string Note = "";
     }
 
     public sealed class PowerDef
@@ -93,6 +189,14 @@ namespace Rth.Shared.World.Layout
         public float[]? Share;
         /// <summary>Where the render writes the power's name, [x, y].</summary>
         public float[]? Label;
+        /// <summary>The ground its roads are made of, by road kind ("main", "road", "track"): each power builds its own (docs/world-plan.md rule 6).</summary>
+        public Dictionary<string, string> Roads = new Dictionary<string, string>();
+        /// <summary>The paving of its settlements' squares.</summary>
+        public string? Square;
+        /// <summary>The worn ground round its settlements and along its roads.</summary>
+        public string? Worn;
+        /// <summary>The grounds of the fields round its villages and towns; none: no fields.</summary>
+        public List<string> Fields = new List<string>();
     }
 
     public sealed class TierDef
@@ -158,6 +262,23 @@ namespace Rth.Shared.World.Layout
         public float PassBlend = 8f;
         /// <summary>Tiles over which land falls to 0 at the edge of a flat built region (Tolling).</summary>
         public float BuiltBlend = 16f;
+        /// <summary>The rolling of open land, in tiles either way, by ground id (grounds not listed: <see cref="RollDefault"/>).</summary>
+        public Dictionary<string, float> Roll = new Dictionary<string, float>();
+        public float RollDefault = 0.6f;
+        /// <summary>The rolling's spacing, in tiles.</summary>
+        public float RollScale = 40f;
+        /// <summary>Tiles over which land falls to the sea.</summary>
+        public float CoastBlend = 10f;
+        /// <summary>How far a river's or lake's valley reaches beyond its water, in tiles.</summary>
+        public float Valley = 10f;
+        /// <summary>How far a bank stands above its water, in tiles.</summary>
+        public float Bank = 0.25f;
+        /// <summary>Land above this is drawn as snow (any ground); none: only the ridge's snow.</summary>
+        public float? SnowLine;
+        /// <summary>How far the snow line (both) comes down for every 100 tiles north of Tolling (it rises as far to the south).</summary>
+        public float SnowFall;
+        /// <summary>Walkable slopes steeper than this (rise across a tile) are drawn as the ground's scree.</summary>
+        public float ScreeSlope = 0.55f;
     }
 
     public sealed class SpineDef
@@ -186,6 +307,10 @@ namespace Rth.Shared.World.Layout
         public float HalfWidth = 3f;
         /// <summary>Where it ends: "sea", "lake:&lt;area id&gt;" or "river:&lt;river id&gt;".</summary>
         public string Into = "sea";
+        /// <summary>Half the width at its source (it widens to <see cref="HalfWidth"/> at its mouth); none: the same all along.</summary>
+        public float? SourceHalfWidth;
+        /// <summary>How far, in tiles, it winds either side of its line.</summary>
+        public float Meander = 6f;
     }
 
     public sealed class PlaceDef
@@ -210,8 +335,13 @@ namespace Rth.Shared.World.Layout
     public sealed class RoadDef
     {
         public string Id = "";
-        /// <summary>"main", "road" or "ferry" (over water, not drawn on the ground).</summary>
+        /// <summary>"main", "road", "track" or "ferry" (over water, not drawn on the ground).</summary>
         public string Kind = "road";
+        /// <summary>
+        /// Routed over the land between its stops the cheapest way (gentle slopes, round water, over
+        /// rivers at narrow points), as roads are made (docs/world-plan.md section 7); false: straight lines.
+        /// </summary>
+        public bool Route = true;
         /// <summary>Stops in order: a place id, or a point [x, y] the road bends through.</summary>
         public List<JToken> Line = new List<JToken>();
     }

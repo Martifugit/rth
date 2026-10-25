@@ -113,9 +113,13 @@ public class ContinentLayoutTests
     public void ARoadMayNotCrossTheCrestOrOpenWater()
     {
         ContinentData d = Data();
-        d.Roads.Add(new RoadDef { Id = "over", Line = { "tolling", "far" } });
+        // A road drawn straight must be clear; a routed one finds its own way (or warns), so only this is an error.
+        d.Roads.Add(new RoadDef { Id = "over", Route = false, Line = { "tolling", "far" } });
         ContinentMap map = ContinentCompiler.Compile(d);
         Assert.Contains(map.Errors, e => e.Contains("road over crosses crest"));
+        d = Data();
+        d.Roads.Add(new RoadDef { Id = "routed", Line = { "tolling", "far" } });
+        Assert.Empty(ContinentCompiler.Compile(d).Errors);
     }
 
     [Fact]
@@ -205,11 +209,12 @@ public class ContinentLayoutTests
             Assert.Equal("empire", cell.Realm);
             Assert.True(cell.LandZones * 4 >= cell.Zones * 3, key + " is mostly land");
         }
-        // Palmerway runs east towards Cruor; Tolling is on the empire's western edge.
+        // Palmerway runs east towards Cruor; Tolling is on the empire's western edge: its dry march
+        // reaches the spine's foothills a little over a hundred tiles west, and Sere lies south.
         PlaceDef cruor = ws.Map.Places["cruor"];
         Assert.True(cruor.At[0] > 192);
-        int west = LayoutReport.ZoneIndex(ws.Map, -60, 48);
-        Assert.NotEqual("empire", ws.Map.PowerIdAt(west));
+        Assert.NotEqual("empire", ws.Map.PowerIdAt(LayoutReport.ZoneIndex(ws.Map, -110, 48)));
+        Assert.Equal("sere", ws.Map.PowerIdAt(LayoutReport.ZoneIndex(ws.Map, -70, -200)));
     }
 
     [Fact]
