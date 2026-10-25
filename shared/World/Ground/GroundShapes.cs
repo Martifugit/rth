@@ -18,13 +18,9 @@ namespace Rth.Shared.World.Ground
     /// (docs/world-plan.md section 7): a made surface or water would otherwise step tile by tile
     /// along every diagonal. A tile may have one corner's half (the triangle on that corner's side
     /// of the diagonal between its two neighbouring corners) drawn as something else:
-    /// <list type="bullet">
-    /// <item>an overlay or water tile whose corner touches only itself (the outside of a step, the
-    /// end of a road) gives that half to the ground beneath;</item>
-    /// <item>a ground tile whose corner is touched by three tiles of one overlay or water (the inside
-    /// of a step) gives that half to it.</item>
-    /// </list>
-    /// So a staircase of tiles reads as a 45-degree edge. Collision stays per tile.
+    /// an overlay or water tile at the outside corner of a step (both neighbours beside the corner
+    /// outside it, both across the tile inside it) gives that half to what lies beyond. So a
+    /// staircase of tiles reads as a 45-degree edge. Collision stays per tile.
     /// </summary>
     public static class GroundShapes
     {
@@ -61,11 +57,6 @@ namespace Rth.Shared.World.Ground
                 _ => (x - 1, y, x, y + 1, x - 1, y + 1),
             };
             byte Opposite(byte c) => c switch { SouthWest => NorthEast, SouthEast => NorthWest, NorthEast => SouthWest, _ => SouthEast };
-            int Count(int x, int y, byte c, int group)
-            {
-                (int ax, int ay, int bx, int by, int dx, int dy) = Around(x, y, c);
-                return (Group(ax, ay) == group ? 1 : 0) + (Group(bx, by) == group ? 1 : 0) + (Group(dx, dy) == group ? 1 : 0);
-            }
 
             for (int y = 0; y < rows; y++)
                 for (int x = 0; x < cols; x++)
@@ -74,38 +65,20 @@ namespace Rth.Shared.World.Ground
                     int k = kinds[i];
                     if (k < 0) continue;
                     int g = Group(x, y);
-                    if (g != 0)
-                    {
-                        // The outside of a step: exactly one corner touches nothing of its own group,
-                        // and the corner across from it is inside the group.
-                        byte lonely = None;
-                        int lonelyCount = 0;
-                        for (byte c = SouthWest; c <= NorthWest; c++)
-                            if (Count(x, y, c, g) == 0) { lonely = c; lonelyCount++; }
-                        if (lonelyCount == 1 && Count(x, y, Opposite(lonely), g) >= 2)
-                        {
-                            corner[i] = lonely;
-                            (int ax, int ay, int bx, int by, _, _) = Around(x, y, lonely);
-                            // The half goes to what lies beyond: another overlay or water if both sides agree.
-                            int ka = Kind(ax, ay), kb = Kind(bx, by);
-                            other[i] = ka >= 0 && ka == kb && layerOf(ka) != GroundLayer.Under ? ka : Beneath;
-                        }
-                        continue;
-                    }
-                    // The inside of a step: three tiles of one group round a corner, none round the opposite one.
+                    if (g == 0) continue;
+                    // The outside corner of a diagonal edge: the two neighbours beside the corner lie
+                    // outside the group and the two across the tile inside it. At most one corner of a
+                    // tile can qualify, and only outer corners are ever cut, so a staircase becomes one
+                    // straight 45-degree edge (cutting inner corners as well would leave teeth).
                     for (byte c = SouthWest; c <= NorthWest; c++)
                     {
-                        (int ax, int ay, int bx, int by, int dx, int dy) = Around(x, y, c);
-                        int ga = Group(ax, ay);
-                        if (ga == 0 || Group(bx, by) != ga || Group(dx, dy) != ga) continue;
-                        if (Count(x, y, Opposite(c), ga) > 0) continue;
-                        // Only one such corner, or the tile is a notch and stays as it is.
-                        bool another = false;
-                        for (byte o = SouthWest; o <= NorthWest; o++)
-                            if (o != c && Count(x, y, o, ga) == 3) another = true;
-                        if (another) break;
+                        (int ax, int ay, int bx, int by, _, _) = Around(x, y, c);
+                        (int oax, int oay, int obx, int oby, _, _) = Around(x, y, Opposite(c));
+                        if (Group(ax, ay) == g || Group(bx, by) == g || Group(oax, oay) != g || Group(obx, oby) != g) continue;
                         corner[i] = c;
-                        other[i] = Kind(dx, dy);
+                        // The half goes to what lies beyond: another overlay or water if both sides agree.
+                        int ka = Kind(ax, ay), kb = Kind(bx, by);
+                        other[i] = ka >= 0 && ka == kb && layerOf(ka) != GroundLayer.Under ? ka : Beneath;
                         break;
                     }
                 }
