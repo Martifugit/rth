@@ -133,6 +133,27 @@ switch (command)
         return 0;
     }
 
+    case "paint" when rest.Length >= 2 && rest[0] == "area":
+    {
+        // An area's regions as their data paints them (the real ground, hand work and all): paint area <id> [pixels a tile]
+        WorldAreas areas = WorldAreas.Load(WorldAreas.PathIn(root));
+        WorldAreas.Area? area = areas.Areas.FirstOrDefault(a => a.Id == rest[1]);
+        if (area == null)
+        {
+            Console.Error.WriteLine($"No area '{rest[1]}' in world/areas.json.");
+            return 2;
+        }
+        MapRender.LoadPalette(root);
+        int ppt = rest.Length >= 3 ? int.Parse(rest[2]) : 4;
+        var parts = ws.Regions.Where(e => area.Regions.Contains(e.Region.Id)).Select(e => e.Region).ToList();
+        string outDir = Path.Combine(root, "world", "renders");
+        Directory.CreateDirectory(outDir);
+        string file = Path.Combine(outDir, "area-" + area.Id + ".png");
+        File.WriteAllBytes(file, PaintRender.Regions(parts, ppt));
+        Console.WriteLine($"wrote {Path.GetRelativePath(root, file).Replace('\\', '/')}");
+        return 0;
+    }
+
     case "paint":
     {
         // The generated landscape as the client paints it: paint [x0 y0 x1 y1] [pixels a tile] [name]

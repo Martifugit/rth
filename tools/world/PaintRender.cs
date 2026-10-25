@@ -69,6 +69,28 @@ public static class PaintRender
         return ToPng(rgba, w, h);
     }
 
+    /// <summary>Several painted regions from their data, side by side in one picture (north up).</summary>
+    public static byte[] Regions(IReadOnlyList<RegionData> regions, int ppt)
+    {
+        int x0 = regions.Min(r => r.OriginX), y0 = regions.Min(r => r.OriginY);
+        int x1 = regions.Max(r => r.OriginX + r.Width), y1 = regions.Max(r => r.OriginY + r.Height);
+        int w = (x1 - x0) * ppt, h = (y1 - y0) * ppt;
+        var all = new byte[w * h * 4];
+        foreach (RegionData region in regions)
+        {
+            Piece? piece = region.Pieces.FirstOrDefault(p => p.Kind == PieceKind.Tiles && p.Paint == true);
+            if (piece == null) continue;
+            Heightfield field = TerrainText.Read(region) ?? new Heightfield(region.OriginX, region.OriginY, region.Width, region.Height);
+            GroundCanvas canvas = PaintedGround.Canvas(region, piece, m => region.Materials.TryGetValue(m, out string? v) ? Colour(v) : null, field);
+            byte[] rgba = GroundPainter.Paint(canvas, ppt, out int rw, out int rh);
+            GroundPainter.Shade(rgba, rw, rh, ppt, canvas);
+            int ox = (region.OriginX - x0) * ppt, oy = (region.OriginY - y0) * ppt;
+            for (int y = 0; y < rh; y++)
+                Buffer.BlockCopy(rgba, y * rw * 4, all, ((oy + y) * w + ox) * 4, rw * 4);
+        }
+        return ToPng(all, w, h);
+    }
+
     /// <summary>Small marks for places (white) and sites (red), so a picture can be read against the layout.</summary>
     private static void Marks(Landscape land, byte[] rgba, int w, int h, int x0, int y0, int ppt)
     {
