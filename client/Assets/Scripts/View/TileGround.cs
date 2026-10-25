@@ -35,7 +35,10 @@ namespace Rth.Client
             {
                 _showSurface = value; // always applied: after a script reload the flag resets, the renderers don't
                 foreach (TileGround g in Active)
+                {
                     if (g != null && g._surface != null) g._surface.GetComponent<MeshRenderer>().enabled = value;
+                    if (g != null && g._water != null) g._water.GetComponent<MeshRenderer>().enabled = value;
+                }
             }
         }
 
@@ -82,8 +85,9 @@ namespace Rth.Client
         [Tooltip("Texture pixels to a tile of painted ground.")]
         public int pixelsPerTile = 8;
 
-        private GameObject _surface, _collider;
-        private Mesh _surfaceMesh, _colliderMesh;
+        private GameObject _surface, _collider, _water;
+        private Mesh _surfaceMesh, _colliderMesh, _waterMesh;
+        private readonly List<Material> _waterMaterials = new List<Material>();
         private Heightfield _field;
         private bool _dirty;
         private Material _paintMaterial;
@@ -295,6 +299,8 @@ namespace Rth.Client
             for (int i = 0; i < k; i++)
             {
                 Color c = materials[i] != null ? materials[i].color : new Color(0.4f, 0.55f, 0.3f);
+                // Water's bed: murky ground, near the shore's colour, seen through the shallows (BuildWater).
+                if (water[i]) c = Color.Lerp(c, new Color(0.50f, 0.47f, 0.37f), 0.55f) * 0.8f;
                 float[] rgb = { c.r, c.g, c.b };
                 if (i < beyond.Length && beyond[i]) rgb = PaintedGround.Haze(rgb);
                 GroundLayer layer = water[i] ? GroundLayer.Water : overlay[i] ? GroundLayer.Over : GroundLayer.Under;
@@ -325,8 +331,9 @@ namespace Rth.Client
             int cols = canvas.Cols, k = kinds.Length;
             GroundShapes.Compute(canvas.Kinds, cols, canvas.Rows, i => canvas.Looks[i].Shelf ? GroundLayer.Over : canvas.Looks[i].Layer,
                                  i => canvas.Looks[i].Shelf ? 1 << 21 : canvas.Looks[i].Group, out byte[] shape, out int[] other);
+            Shore shore = Shore.Of(canvas, water);
 
-            // Submesh 0 is the painted ground; then one per kind, for water tops and for faces.
+            // Submesh 0 is the painted ground (the water's bed too); then one per kind, for faces.
             Material baseMat = null;
             for (int i = 0; i < k && baseMat == null; i++) if (!water[i] && materials[i] != null) baseMat = materials[i];
             if (baseMat == null) baseMat = materials[0];
@@ -341,36 +348,42 @@ namespace Rth.Client
             var colliderTris = new List<int>();
 
             float H(int cx, int cy) => f.Corner(originX + cx, originY + cy);
+            float Dip(int cx, int cy) => shore.Dip(cx + margin, cy + margin);
+            // The ground as drawn: its heights, dipping under the water along the shore.
+            float Ground(int cx, int cy) => H(cx, cy) - Dip(cx, cy);
             Vector3 Normal(int cx, int cy)
             {
-                float dx = (H(cx + 1, cy) - H(cx - 1, cy)) / 2f, dz = (H(cx, cy + 1) - H(cx, cy - 1)) / 2f;
+                float dx = (Ground(cx + 1, cy) - Ground(cx - 1, cy)) / 2f, dz = (Ground(cx, cy + 1) - Ground(cx, cy - 1)) / 2f;
                 return new Vector3(-dx, 1f, -dz).normalized;
             }
-            // -2: the painted ground beneath a cut (lift 0).
-            float Lift(int kind) => kind >= 0 ? lifts[kind] : 0f;
-            int Sub(int kind) => kind >= 0 && water[kind] ? 1 + kind : 0;
-            int Vertex(int cx, int cy, float lift)
+            // -2: the painted ground beneath a cut (lift 0). The water's bed is the ground itself; its
+            // surface is drawn on its own (BuildWater). Ground at its own height dips at the shore;
+            // lifted kinds (a bridge, a rock shelf) don't.
+            float Lift(int kind) => kind >= 0 && !water[kind] ? lifts[kind] : 0f;
+            float Top(int kind, int cx, int cy) => H(cx, cy) + Lift(kind) - (Lift(kind) <= 0.02f ? Dip(cx, cy) : 0f);
+            int Vertex(int cx, int cy, int kind)
             {
-                var p = new Vector3(originX + cx, H(cx, cy) + lift, originY + cy);
-                verts.Add(p);
+                verts.Add(new Vector3(originX + cx, Top(kind, cx, cy), originY + cy));
                 normals.Add(Normal(cx, cy));
                 uvs.Add(new Vector2((float)cx / width, (float)cy / height));
                 return verts.Count - 1;
             }
-            void Triangle(int kind, (int x, int y) a, (int x, int y) b, (int x, int y) c)
+            void Triangle(int kind, (int x, int y) a, (int x, int y) b, (int x, int y) c) =>
+                tris[0].AddRange(new[] { Vertex(a.x, a.y, kind), Vertex(b.x, b.y, kind), Vertex(c.x, c.y, kind) });
+            // A vertical face along an edge from corner a to corner b, from one kind's top up to a
+            // higher kind's at each end (they differ where the ground dips), in the higher kind's material.
+            void Face((int x, int y) a, (int x, int y) b, int low, int high, Vector3 normal)
             {
-                float lift = Lift(kind);
-                tris[Sub(kind)].AddRange(new[] { Vertex(a.x, a.y, lift), Vertex(b.x, b.y, lift), Vertex(c.x, c.y, lift) });
-            }
-            // A vertical face along an edge from corner a to corner b, between two lifts, in a kind's own material.
-            void Face(int kind, (int x, int y) a, (int x, int y) b, float low, float high, Vector3 normal)
-            {
-                if (high <= low + 0.001f) return;
-                Vector3 pa = new Vector3(originX + a.x, H(a.x, a.y), originY + a.y), pb = new Vector3(originX + b.x, H(b.x, b.y), originY + b.y);
+                float la = Top(low, a.x, a.y), ha = Top(high, a.x, a.y), lb = Top(low, b.x, b.y), hb = Top(high, b.x, b.y);
+                if (ha <= la + 0.001f && hb <= lb + 0.001f) return;
+                ha = Mathf.Max(ha, la);
+                hb = Mathf.Max(hb, lb);
+                var pa = new Vector3(originX + a.x, 0f, originY + a.y);
+                var pb = new Vector3(originX + b.x, 0f, originY + b.y);
                 int v = verts.Count;
-                verts.Add(pa + Vector3.up * low); verts.Add(pa + Vector3.up * high); verts.Add(pb + Vector3.up * high); verts.Add(pb + Vector3.up * low);
+                verts.Add(pa + Vector3.up * la); verts.Add(pa + Vector3.up * ha); verts.Add(pb + Vector3.up * hb); verts.Add(pb + Vector3.up * lb);
                 for (int n = 0; n < 4; n++) { normals.Add(normal); uvs.Add(new Vector2((float)a.x / width, (float)a.y / height)); }
-                tris[kind >= 0 ? 1 + kind : 0].AddRange(new[] { v, v + 1, v + 2, v, v + 2, v + 3 });
+                tris[high >= 0 ? 1 + high : 0].AddRange(new[] { v, v + 1, v + 2, v, v + 2, v + 3 });
             }
 
             // A tile is two triangles, clockwise from above. Uncut, they split along the south-west to
@@ -415,9 +428,8 @@ namespace Rth.Client
                         (int x, int y) a = antiDiagonal ? (tx, ty + 1) : (tx, ty), b = antiDiagonal ? (tx + 1, ty) : (tx + 1, ty + 1);
                         bool lowIsA = Lift(k1) < Lift(k2);
                         if (antiDiagonal != lowIsA) (a, b) = (b, a);
-                        int high = lowIsA ? k2 : k1;
                         Vector3 along = new Vector3(b.x - a.x, 0f, b.y - a.y);
-                        Face(high, a, b, Mathf.Min(Lift(k1), Lift(k2)), Mathf.Max(Lift(k1), Lift(k2)), new Vector3(along.z, 0f, -along.x).normalized);
+                        Face(a, b, lowIsA ? k1 : k2, lowIsA ? k2 : k1, new Vector3(along.z, 0f, -along.x).normalized);
                     }
                     // Faces on the tile's edges where this side stands above its neighbour's.
                     (int dx, int dy, int ax, int ay, int bx, int by, int mine, int theirs, Vector3 n)[] sides =
@@ -430,28 +442,28 @@ namespace Rth.Client
                     foreach (var side in sides)
                     {
                         int nx = tx + side.dx, ny = ty + side.dy;
-                        float low;
+                        int theirs;
                         if (nx >= 0 && ny >= 0 && nx < width && ny < height)
                         {
                             if (canvas.Kinds[(ny + margin) * cols + nx + margin] < 0) continue;
-                            low = Lift(Halves(nx, ny, out _, out _, out _, out _)[side.theirs]);
+                            theirs = Halves(nx, ny, out _, out _, out _, out _)[side.theirs];
                         }
                         else
                         {
-                            // Beyond the region: the margin's tile if it has one (none without a margin).
+                            // Beyond the region: the margin's tile if it has one (without a margin, the ground).
                             int gx = nx + margin, gy = ny + margin;
                             int nk = gx >= 0 && gy >= 0 && gx < cols && gy < canvas.Rows ? canvas.Kinds[gy * cols + gx] : -1;
-                            low = nk >= 0 ? lifts[nk] : Mathf.Min(Lift(edge[side.mine]), 0f);
+                            theirs = nk >= 0 ? nk : -1;
                         }
-                        Face(edge[side.mine], (side.ax, side.ay), (side.bx, side.by), low, Lift(edge[side.mine]), side.n);
+                        Face((side.ax, side.ay), (side.bx, side.by), theirs, edge[side.mine], side.n);
                     }
                     bool steep = f.IsSteep(originX + tx, originY + ty, cliffStep);
                     if (walkable[own] && !steep)
                     {
                         float ax = originX + tx, az = originY + ty;
                         int cv = colliderVerts.Count;
-                        colliderVerts.Add(new Vector3(ax, H(tx, ty), az)); colliderVerts.Add(new Vector3(ax, H(tx, ty + 1), az + 1));
-                        colliderVerts.Add(new Vector3(ax + 1, H(tx + 1, ty + 1), az + 1)); colliderVerts.Add(new Vector3(ax + 1, H(tx + 1, ty), az));
+                        colliderVerts.Add(new Vector3(ax, Ground(tx, ty), az)); colliderVerts.Add(new Vector3(ax, Ground(tx, ty + 1), az + 1));
+                        colliderVerts.Add(new Vector3(ax + 1, Ground(tx + 1, ty + 1), az + 1)); colliderVerts.Add(new Vector3(ax + 1, Ground(tx + 1, ty), az));
                         colliderTris.AddRange(new[] { cv, cv + 1, cv + 2, cv, cv + 2, cv + 3 });
                     }
                 }
@@ -470,6 +482,8 @@ namespace Rth.Client
             mats[0] = _paintMaterial;
             surface.sharedMaterials = mats.ToArray();
             surface.enabled = _showSurface;
+
+            BuildWater(canvas, shore, H);
 
             if (colliderTris.Count > 0)
             {
@@ -491,6 +505,165 @@ namespace Rth.Client
                 _painting = System.Threading.Tasks.Task.FromResult(GroundPainter.Paint(canvas, ppt, out _, out _));
                 ApplyPaint();
             }
+        }
+
+        private static Shader _waterShader;
+
+        /// <summary>
+        /// The water's surface (Water.shader): flat at its level over the water tiles and the ring of
+        /// tiles round them. The bank dips under it (<see cref="Shore"/>) and hides it where it rises,
+        /// so the waterline is where they meet. Each corner carries how shallow the water is there and
+        /// which way and how fast it runs: down its level's slope (rivers), smoothed along the
+        /// channel; lakes lie level and only ripple.
+        /// </summary>
+        private void BuildWater(GroundCanvas canvas, Shore shore, System.Func<int, int, float> H)
+        {
+            int cols = canvas.Cols, cc = shore.CornerCols, cr = shore.CornerRows;
+            var level = new float[cc * cr];
+            var has = new bool[cc * cr];
+            for (int y = 0; y < cr; y++)
+                for (int x = 0; x < cc; x++)
+                {
+                    int kind = shore.WaterAround(x, y);
+                    if (kind < 0) continue;
+                    level[y * cc + x] = H(x - margin, y - margin) + lifts[kind];
+                    has[y * cc + x] = true;
+                }
+            if (!has.Any(h => h)) return;
+
+            // Downhill along the level, smoothed a few times over the water so a river runs as one.
+            var fx = new float[cc * cr];
+            var fy = new float[cc * cr];
+            float L(int x, int y, int i) => x >= 0 && y >= 0 && x < cc && y < cr && has[y * cc + x] ? level[y * cc + x] : level[i];
+            for (int y = 0; y < cr; y++)
+                for (int x = 0; x < cc; x++)
+                {
+                    int i = y * cc + x;
+                    if (!has[i]) continue;
+                    fx[i] = -(L(x + 1, y, i) - L(x - 1, y, i)) / 2f;
+                    fy[i] = -(L(x, y + 1, i) - L(x, y - 1, i)) / 2f;
+                }
+            for (int pass = 0; pass < 3; pass++)
+            {
+                var sx = new float[cc * cr];
+                var sy = new float[cc * cr];
+                for (int y = 0; y < cr; y++)
+                    for (int x = 0; x < cc; x++)
+                    {
+                        int i = y * cc + x;
+                        if (!has[i]) continue;
+                        float ax = 0f, ay = 0f;
+                        int n = 0;
+                        for (int oy = -2; oy <= 2; oy++)
+                            for (int ox = -2; ox <= 2; ox++)
+                            {
+                                int nx = x + ox, ny = y + oy;
+                                if (nx < 0 || ny < 0 || nx >= cc || ny >= cr || !has[ny * cc + nx]) continue;
+                                ax += fx[ny * cc + nx];
+                                ay += fy[ny * cc + nx];
+                                n++;
+                            }
+                        sx[i] = ax / n;
+                        sy[i] = ay / n;
+                    }
+                fx = sx;
+                fy = sy;
+            }
+
+            // What a corner of the surface carries; a ring corner on dry land takes its wet neighbours'.
+            (float level, Color data) At(int x, int y)
+            {
+                int i = y * cc + x;
+                float lv = 0f, gx = 0f, gy = 0f;
+                if (has[i])
+                {
+                    lv = level[i];
+                    gx = fx[i];
+                    gy = fy[i];
+                }
+                else
+                {
+                    int n = 0;
+                    for (int oy = -1; oy <= 1; oy++)
+                        for (int ox = -1; ox <= 1; ox++)
+                        {
+                            int nx = x + ox, ny = y + oy;
+                            if (nx < 0 || ny < 0 || nx >= cc || ny >= cr || !has[ny * cc + nx]) continue;
+                            lv += level[ny * cc + nx];
+                            gx += fx[ny * cc + nx];
+                            gy += fy[ny * cc + nx];
+                            n++;
+                        }
+                    if (n > 0) { lv /= n; gx /= n; gy /= n; }
+                    // Under the land there, so the surface ends inside the ring tile, where it meets the bank.
+                    lv = Mathf.Min(lv, H(x - margin, y - margin) - shore.Dip(x, y) - 0.05f);
+                }
+                var flow = new Vector2(gx, gy);
+                float speed = Mathf.Clamp01(flow.magnitude * 25f); // a drop of 4 hundredths a tile runs at full speed
+                Vector2 dir = flow.sqrMagnitude > 1e-10f ? flow.normalized : Vector2.zero;
+                return (lv, new Color(shore.Shallow(x, y), dir.x * 0.5f + 0.5f, dir.y * 0.5f + 0.5f, speed));
+            }
+
+            var verts = new List<Vector3>();
+            var colors = new List<Color>();
+            var subOf = new Dictionary<int, int>();
+            var tris = new List<List<int>>();
+            for (int ty = 0; ty < height; ty++)
+                for (int tx = 0; tx < width; tx++)
+                {
+                    int x = tx + margin, y = ty + margin;
+                    int own = canvas.Kinds[y * cols + x];
+                    int kind = own >= 0 && water[own] ? own : -1;
+                    if (kind < 0)
+                        foreach ((int cx, int cy) in new[] { (x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1) })
+                            if ((kind = shore.WaterAround(cx, cy)) >= 0) break;
+                    if (kind < 0) continue;
+                    if (!subOf.TryGetValue(kind, out int sub))
+                    {
+                        subOf[kind] = sub = tris.Count;
+                        tris.Add(new List<int>());
+                    }
+                    int v = verts.Count;
+                    foreach ((int cx, int cy) in new[] { (x, y), (x, y + 1), (x + 1, y + 1), (x + 1, y) })
+                    {
+                        (float lv, Color data) = At(cx, cy);
+                        verts.Add(new Vector3(originX + cx - margin, lv, originY + cy - margin));
+                        colors.Add(data);
+                    }
+                    tris[sub].AddRange(new[] { v, v + 1, v + 2, v, v + 2, v + 3 });
+                }
+            if (verts.Count == 0) return;
+
+            _waterMesh = new Mesh { name = "Water", hideFlags = HideFlags.DontSave, indexFormat = IndexFormat.UInt32 };
+            _waterMesh.SetVertices(verts);
+            _waterMesh.SetColors(colors);
+            _waterMesh.SetNormals(Enumerable.Repeat(Vector3.up, verts.Count).ToList());
+            _waterMesh.subMeshCount = tris.Count;
+            for (int i = 0; i < tris.Count; i++) _waterMesh.SetTriangles(tris[i], i);
+            _waterMesh.RecalculateBounds();
+            _water = Child("Water");
+            _water.AddComponent<MeshFilter>().sharedMesh = _waterMesh;
+            MeshRenderer renderer = _water.AddComponent<MeshRenderer>();
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            if (_waterShader == null) _waterShader = Resources.Load<Shader>("Shaders/Water");
+            var mats = new Material[tris.Count];
+            foreach (KeyValuePair<int, int> e in subOf)
+            {
+                Material own = materials[e.Key];
+                Color deep = own != null ? own.color : new Color(0.22f, 0.36f, 0.48f);
+                if (_waterShader == null)
+                {
+                    mats[e.Value] = own; // drawn flat, as before
+                    continue;
+                }
+                var m = new Material(_waterShader) { name = "Water", hideFlags = HideFlags.DontSave };
+                m.SetColor("_Color", deep);
+                m.SetColor("_Shallow", Color.Lerp(deep, new Color(0.62f, 0.74f, 0.66f), 0.45f));
+                _waterMaterials.Add(m);
+                mats[e.Value] = m;
+            }
+            renderer.sharedMaterials = mats;
+            renderer.enabled = _showSurface;
         }
 
         private void ApplyPaint()
@@ -533,14 +706,15 @@ namespace Rth.Client
 
         private void Clear()
         {
-            foreach (Object o in new Object[] { _surface, _collider, _surfaceMesh, _colliderMesh, _paintMaterial })
+            foreach (Object o in new Object[] { _surface, _collider, _water, _surfaceMesh, _colliderMesh, _waterMesh, _paintMaterial }.Concat(_waterMaterials))
             {
                 if (o == null) continue;
                 if (Application.isPlaying) Destroy(o);
                 else DestroyImmediate(o);
             }
-            _surface = _collider = null;
-            _surfaceMesh = _colliderMesh = null;
+            _waterMaterials.Clear();
+            _surface = _collider = _water = null;
+            _surfaceMesh = _colliderMesh = _waterMesh = null;
             _paintMaterial = null;
             _painting = null; // a paint still running is dropped; the next build starts its own
         }

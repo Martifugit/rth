@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using Rth.MapTools;
+using Rth.Shared.World;
 using Rth.Shared.World.Data;
 using Rth.Shared.World.Ground;
 using Rth.Shared.World.Layout;
@@ -14,40 +15,53 @@ using UnityEngine;
 namespace Rth.Client.Editor
 {
     /// <summary>
-    /// Paints the ground in the Scene view (docs/world-guide.md section 4): roads, paths, grass,
-    /// sand, water, tile by tile, over every open region at once. Pick a ground from the list (the
-    /// layout's grounds, and any a region has of its own), then paint with a round brush, draw a
-    /// straight stroke (a road: straight or at 45 degrees), fill a patch, or pick up the ground under
-    /// the cursor (Ctrl+click). What you paint is drawn at once the way the game draws it: blended
-    /// ground, crisp roads and water with their diagonal edges, and the neighbouring regions blend
-    /// into it. Saving the scenes (Ctrl+S) writes the tiles to the regions' data (which takes a
-    /// generated region over) and the neighbours' rings of tiles to theirs.
-    /// R'th > World > Paint Ground (G) starts it from anywhere.
+    /// Shapes and paints the ground in the Scene view (docs/world-guide.md section 4), over every
+    /// open region at once. <b>Shape</b>: raise, lower, flatten or smooth the heights with a round
+    /// brush (tiles too steep to walk show red). <b>Paint</b>: roads, paths, grass, sand, water, tile
+    /// by tile, from the layout's grounds and any a region has of its own: a round brush with a soft
+    /// edge, a straight stroke (a road, straight or at 45 degrees), fill a patch, smooth ragged
+    /// edges, or pick up the ground under the cursor (Ctrl+click). It is drawn as the game draws it
+    /// while you work. Saving the scenes (Ctrl+S) writes heights and tiles to the regions' data
+    /// (which takes a generated region over) and the neighbours' rings of tiles to theirs.
+    /// R'th > World > Shape and Paint Ground (G) starts it from anywhere.
     /// </summary>
-    [EditorTool("Paint Ground", typeof(TileGround))]
+    [EditorTool("Ground", typeof(TileGround))]
     public sealed class GroundPaintTool : EditorTool
     {
-        private enum Mode { Brush, Line, Fill, Pick }
+        private enum Tab { Shape, Paint }
+        private enum ShapeMode { Raise, Lower, Flatten, Smooth }
+        private enum Mode { Brush, Line, Fill, Smooth, Pick }
 
+        private static Tab _tab = Tab.Paint;
+        private static ShapeMode _shapeMode = ShapeMode.Raise;
+        private static float _shapeRadius = 4f;
+        private static float _strength = 0.5f;
         private static Mode _mode = Mode.Brush;
-        private static int _radius = 1;
+        private static float _radius = 1.5f;
+        private static float _softness = 0.4f;
         private static int _width = 2;
         private static bool _snap = true;
         private static GroundEdit.Brush _brush;
         private static List<GroundEdit.Brush> _brushes;
         private static Vector2 _scroll;
         private static string _filter = "";
+        private static GUIStyle _panel;
 
-        private (int x, int y)? _hover, _lineStart, _last;
-        private int _undoGroup;
+        private Vector3? _point;
+        private (int x, int y)? _hover, _lineStart;
+        private Vector3? _last;
+        private int _undoGroup, _seed;
+        private float _flattenTo;
         private readonly HashSet<TileGround> _touched = new HashSet<TileGround>();
-        /// <summary>Painted but not yet redrawn: a redraw takes a tenth of a second, so a drag redraws a few times a second.</summary>
+        /// <summary>Changed but not yet redrawn: a redraw takes a tenth of a second, so a drag redraws a few times a second.</summary>
         private readonly HashSet<TileGround> _stale = new HashSet<TileGround>();
+        /// <summary>Heights shaped in this stroke and not yet given to their ground (it redraws when given them).</summary>
+        private readonly Dictionary<TileGround, float[]> _heights = new Dictionary<TileGround, float[]>();
         private double _redrawn;
 
-        public override GUIContent toolbarIcon => new GUIContent("Paint", "Paint Ground: roads, paths and ground, tile by tile");
+        public override GUIContent toolbarIcon => new GUIContent("Ground", "Shape and paint the ground: heights, roads, paths and grass");
 
-        [MenuItem("R'th/World/Paint Ground _g", priority = 7)]
+        [MenuItem("R'th/World/Shape and Paint Ground _g", priority = 7)]
         private static void Begin()
         {
             TileGround ground = Selection.activeGameObject != null ? Selection.activeGameObject.GetComponentInParent<TileGround>() : null;
@@ -58,7 +72,7 @@ namespace Rth.Client.Editor
             }
             if (ground == null)
             {
-                EditorUtility.DisplayDialog("Paint Ground", "Open a region with tile ground first (R'th > World > Open This Area).", "OK");
+                EditorUtility.DisplayDialog("Shape and Paint Ground", "Open a region with tile ground first (R'th > World > Open This Area).", "OK");
                 return;
             }
             // A component's tools are offered once the selection has caught up.
@@ -66,7 +80,7 @@ namespace Rth.Client.Editor
             EditorApplication.delayCall += () => ToolManager.SetActiveTool<GroundPaintTool>();
         }
 
-        [MenuItem("R'th/World/Paint Ground _g", true)]
+        [MenuItem("R'th/World/Shape and Paint Ground _g", true)]
         private static bool BeginValidate() => !EditorApplication.isPlayingOrWillChangePlaymode;
 
         // ------------------------------------------------------------------ the Scene view
@@ -79,60 +93,136 @@ namespace Rth.Client.Editor
             if (e.type == EventType.Layout) HandleUtility.AddDefaultControl(control);
             if (_brushes == null) LoadBrushes();
 
-            Rect panel = new Rect(10, 10, 270, 470);
+            Rect panel = new Rect(10, 10, 300, _tab == Tab.Shape ? 214 : 560);
             bool overPanel = panel.Contains(e.mousePosition);
-            _hover = overPanel ? null : Pick(HandleUtility.GUIPointToWorldRay(e.mousePosition));
-            if (_hover is (int hx, int hy)) DrawTiles(Footprint(hx, hy), _brush);
+            _point = overPanel ? null : Pick(HandleUtility.GUIPointToWorldRay(e.mousePosition));
+            _hover = _point is Vector3 at ? (Mathf.FloorToInt(at.x), Mathf.FloorToInt(at.z)) : ((int, int)?)null;
+            if (_point is Vector3 p) DrawBrush(p);
 
             bool left = e.button == 0 && !e.alt && !overPanel;
-            if (e.type == EventType.MouseDown && left && _hover is (int x, int y))
+            if (e.type == EventType.MouseDown && left && _point is Vector3 down && _hover is (int x, int y))
             {
-                if (e.control || _mode == Mode.Pick) PickUp(x, y);
-                else if (_brush != null)
+                if (_tab == Tab.Paint && (e.control || _mode == Mode.Pick)) PickUp(x, y);
+                else if (_tab == Tab.Shape || _brush != null || _mode == Mode.Smooth)
                 {
                     _undoGroup = Undo.GetCurrentGroup();
                     _touched.Clear();
-                    if (_mode == Mode.Line) _lineStart = (x, y);
+                    _seed = Random.Range(1, int.MaxValue);
+                    if (_tab == Tab.Shape)
+                    {
+                        _flattenTo = WorldCorner(Mathf.RoundToInt(down.x), Mathf.RoundToInt(down.z)) ?? down.y;
+                        Shape(down);
+                    }
+                    else if (_mode == Mode.Line) _lineStart = (x, y);
                     else if (_mode == Mode.Fill) { Paint(Flood(x, y)); EndStroke(); }
-                    else { Paint(Footprint(x, y)); _last = (x, y); }
+                    else Dab(down);
+                    _last = down;
                     GUIUtility.hotControl = control;
                 }
                 e.Use();
             }
-            else if (e.type == EventType.MouseDrag && GUIUtility.hotControl == control && _hover is (int dx, int dy))
+            else if (e.type == EventType.MouseDrag && GUIUtility.hotControl == control && _point is Vector3 drag)
             {
-                if (_mode == Mode.Brush && _last is (int lx, int ly) && (lx, ly) != (dx, dy))
+                if (_tab == Tab.Shape) Shape(drag);
+                else if ((_mode == Mode.Brush || _mode == Mode.Smooth) && _last is Vector3 from)
                 {
-                    // A fast drag skips tiles: paint the run between, as wide as the brush.
-                    Paint(GroundEdit.Line(lx, ly, dx, dy, 2 * _radius + 1));
-                    _last = (dx, dy);
+                    // A fast drag skips tiles: dab along the way, a third of the brush apart.
+                    float step = Mathf.Max(0.5f, _radius / 3f);
+                    int n = Mathf.Max(1, Mathf.CeilToInt(Vector3.Distance(from, drag) / step));
+                    for (int i = 1; i <= n; i++) Dab(Vector3.Lerp(from, drag, (float)i / n));
                 }
+                _last = drag;
                 e.Use();
             }
             else if (e.type == EventType.MouseUp && GUIUtility.hotControl == control)
             {
-                if (_mode == Mode.Line && _lineStart is (int sx, int sy) && _hover is (int ux, int uy)) Paint(Stroke(sx, sy, ux, uy));
+                if (_tab == Tab.Paint && _mode == Mode.Line && _lineStart is (int sx, int sy) && _hover is (int ux, int uy)) Paint(Stroke(sx, sy, ux, uy));
                 EndStroke();
                 GUIUtility.hotControl = 0;
                 e.Use();
             }
             else if (e.type == EventType.KeyDown && (e.keyCode == KeyCode.LeftBracket || e.keyCode == KeyCode.RightBracket))
             {
-                int step = e.keyCode == KeyCode.RightBracket ? 1 : -1;
-                if (_mode == Mode.Line) _width = Mathf.Clamp(_width + step, 1, 8);
-                else _radius = Mathf.Clamp(_radius + step, 0, 8);
+                float step = e.keyCode == KeyCode.RightBracket ? 1f : -1f;
+                if (_tab == Tab.Shape) _shapeRadius = Mathf.Clamp(_shapeRadius + step, 1f, 16f);
+                else if (_mode == Mode.Line) _width = Mathf.Clamp(_width + (int)step, 1, 8);
+                else _radius = Mathf.Clamp(_radius + step * 0.5f, 0f, 10f);
                 e.Use();
             }
-            if (_mode == Mode.Line && _lineStart is (int ax, int ay) && GUIUtility.hotControl == control && _hover is (int bx, int by))
-                DrawTiles(Stroke(ax, ay, bx, by), _brush);
+            if (_tab == Tab.Paint && _mode == Mode.Line && _lineStart is (int ax, int ay) && GUIUtility.hotControl == control && _hover is (int bx, int by))
+                DrawTiles(Stroke(ax, ay, bx, by), _brush, 0.55f);
             if (e.type == EventType.MouseMove || e.type == EventType.MouseDrag) window.Repaint();
 
             Panel(panel);
         }
 
-        /// <summary>The tiles the brush covers at a tile, as the mode draws them.</summary>
-        private static IEnumerable<(int x, int y)> Footprint(int x, int y) =>
-            _mode == Mode.Brush ? GroundEdit.Disc(x, y, _radius) : new[] { (x, y) };
+        /// <summary>
+        /// The tiles a round brush covers at a point (tile middles within its radius; radius 0 is the
+        /// tile under it), with how surely each is painted: 1 inside, falling to 0 over the soft edge.
+        /// </summary>
+        private static IEnumerable<(int x, int y, float weight)> Round(Vector3 p, float radius, float softness)
+        {
+            if (radius <= 0f)
+            {
+                yield return (Mathf.FloorToInt(p.x), Mathf.FloorToInt(p.z), 1f);
+                yield break;
+            }
+            float inner = radius * (1f - softness);
+            for (int y = Mathf.FloorToInt(p.z - radius); y <= Mathf.CeilToInt(p.z + radius); y++)
+                for (int x = Mathf.FloorToInt(p.x - radius); x <= Mathf.CeilToInt(p.x + radius); x++)
+                {
+                    float d = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), new Vector2(p.x, p.z));
+                    if (d > radius) continue;
+                    yield return (x, y, d <= inner ? 1f : 1f - (d - inner) / Mathf.Max(0.01f, radius - inner));
+                }
+        }
+
+        /// <summary>Whether a soft-edged tile is painted in this stroke: the same answer all stroke long, so dabs don't fill the edge in.</summary>
+        private bool Taken(int x, int y, float weight)
+        {
+            if (weight >= 1f) return true;
+            uint h = (uint)(x * 73856093) ^ (uint)(y * 19349663) ^ (uint)_seed;
+            h ^= h >> 13;
+            h *= 0x5bd1e995;
+            h ^= h >> 15;
+            return (h & 0xffff) / 65535f < weight;
+        }
+
+        /// <summary>One dab of the paint brush: its tiles, or in Smooth, each of them made what most of its neighbours are.</summary>
+        private void Dab(Vector3 p)
+        {
+            if (_mode == Mode.Smooth)
+            {
+                var targets = new Dictionary<(int, int), GroundEdit.Brush>();
+                foreach ((int x, int y, float _) in Round(p, Mathf.Max(1f, _radius), 0f))
+                    if (Majority(x, y) is GroundEdit.Brush b) targets[(x, y)] = b;
+                Paint(targets.Keys, (x, y) => targets[(x, y)]);
+                return;
+            }
+            Paint(Round(p, _radius, _softness).Where(t => Taken(t.x, t.y, t.weight)).Select(t => (t.x, t.y)));
+        }
+
+        /// <summary>
+        /// What most of a tile and its eight neighbours are, if that differs from the tile and holds
+        /// at least five of the nine: a speck goes, a ragged edge straightens, a real shape stays.
+        /// </summary>
+        private static GroundEdit.Brush Majority(int x, int y)
+        {
+            if (!(BrushAt(x, y) is GroundEdit.Brush own)) return null;
+            var counts = new List<(GroundEdit.Brush brush, int n)>();
+            for (int oy = -1; oy <= 1; oy++)
+                for (int ox = -1; ox <= 1; ox++)
+                {
+                    if (!(BrushAt(x + ox, y + oy) is GroundEdit.Brush b)) continue;
+                    int i = counts.FindIndex(c => SameBrush(c.brush, b));
+                    if (i < 0) counts.Add((b, 1));
+                    else counts[i] = (counts[i].brush, counts[i].n + 1);
+                }
+            (GroundEdit.Brush best, int most) = counts.OrderByDescending(c => c.n).FirstOrDefault();
+            return best != null && most >= 5 && !SameBrush(best, own) ? best : null;
+        }
+
+        private static bool SameBrush(GroundEdit.Brush a, GroundEdit.Brush b) => GroundEdit.Same(a.Kind, b.Kind) && a.Colour == b.Colour;
 
         private static HashSet<(int x, int y)> Stroke(int ax, int ay, int bx, int by)
         {
@@ -145,36 +235,83 @@ namespace Rth.Client.Editor
             _lineStart = null;
             _last = null;
             Redraw();
+            _heights.Clear();
             if (_touched.Count == 0) return;
-            RefreshRings(_touched);
+            if (_tab == Tab.Paint) RefreshRings(_touched);
             Undo.CollapseUndoOperations(_undoGroup);
             _touched.Clear();
         }
 
+        // ------------------------------------------------------------------ the panel
+
         private static void Panel(Rect area)
         {
+            _panel ??= new GUIStyle(GUI.skin.window) { padding = new RectOffset(12, 12, 28, 12) };
             Handles.BeginGUI();
-            GUILayout.BeginArea(area, "Paint Ground", GUI.skin.window);
-            _mode = (Mode)GUILayout.Toolbar((int)_mode, new[] { "Brush", "Line", "Fill", "Pick" });
-            if (_mode == Mode.Brush)
+            GUILayout.BeginArea(area, "Ground", _panel);
+            float labels = EditorGUIUtility.labelWidth;
+            EditorGUIUtility.labelWidth = 74;
+            _tab = (Tab)GUILayout.Toolbar((int)_tab, new[] { "Shape", "Paint" }, GUILayout.Height(24));
+            GUILayout.Space(10);
+            if (_tab == Tab.Shape) ShapePanel();
+            else PaintPanel();
+            EditorGUIUtility.labelWidth = labels;
+            GUILayout.EndArea();
+            Handles.EndGUI();
+        }
+
+        private static void ShapePanel()
+        {
+            _shapeMode = (ShapeMode)GUILayout.Toolbar((int)_shapeMode, new[] { "Raise", "Lower", "Flatten", "Smooth" });
+            GUILayout.Space(10);
+            _shapeRadius = Mathf.Round(EditorGUILayout.Slider("Radius", _shapeRadius, 1f, 16f));
+            GUILayout.Space(4);
+            _strength = EditorGUILayout.Slider("Strength", _strength, 0.05f, 1f);
+            GUILayout.Space(10);
+            GUILayout.Label("[ and ] change the size. Red tiles are too steep to walk.", EditorStyles.wordWrappedMiniLabel);
+            GUILayout.FlexibleSpace();
+            GUILayout.Label(Changed() ? "Changed: save the scenes (Ctrl+S) to keep it." : " ", EditorStyles.miniLabel);
+        }
+
+        private static void PaintPanel()
+        {
+            _mode = (Mode)GUILayout.Toolbar((int)_mode, new[] { "Brush", "Line", "Fill", "Smooth", "Pick" });
+            GUILayout.Space(10);
+            switch (_mode)
             {
-                GUILayout.Label(_radius == 0 ? "One tile  ([ and ])" : $"Radius {_radius} tiles  ([ and ])");
-                _radius = Mathf.RoundToInt(GUILayout.HorizontalSlider(_radius, 0, 8));
+                case Mode.Brush:
+                    _radius = Mathf.Round(EditorGUILayout.Slider("Radius", _radius, 0f, 10f) * 2f) / 2f;
+                    GUILayout.Space(4);
+                    _softness = EditorGUILayout.Slider("Soft edge", _softness, 0f, 1f);
+                    break;
+                case Mode.Line:
+                    _width = EditorGUILayout.IntSlider("Width", _width, 1, 8);
+                    GUILayout.Space(4);
+                    _snap = EditorGUILayout.Toggle("Straight/45°", _snap);
+                    break;
+                case Mode.Smooth:
+                    _radius = Mathf.Round(EditorGUILayout.Slider("Radius", _radius, 1f, 10f) * 2f) / 2f;
+                    GUILayout.Space(4);
+                    GUILayout.Label("Drag over ragged edges and specks: each tile becomes what most round it are.", EditorStyles.wordWrappedMiniLabel);
+                    break;
+                case Mode.Fill:
+                    GUILayout.Label("Click: the patch of one ground under it.", EditorStyles.wordWrappedMiniLabel);
+                    break;
+                default:
+                    GUILayout.Label("Click: take the ground under it.", EditorStyles.wordWrappedMiniLabel);
+                    break;
             }
-            else if (_mode == Mode.Line)
-            {
-                GUILayout.Label($"{_width} tiles wide  ([ and ]); drag from end to end");
-                _width = Mathf.RoundToInt(GUILayout.HorizontalSlider(_width, 1, 8));
-                _snap = GUILayout.Toggle(_snap, "Straight or 45 degrees");
-            }
-            else if (_mode == Mode.Fill) GUILayout.Label("Click: the patch of one ground under it");
-            else GUILayout.Label("Click: take the ground under it");
+            GUILayout.Space(12);
 
             GUILayout.BeginHorizontal();
-            Swatch(_brush, 18);
+            Swatch(_brush, 20);
+            GUILayout.Space(6);
             GUILayout.Label(_brush != null ? _brush.Name : "Pick a ground below", EditorStyles.boldLabel);
+            GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
+            GUILayout.Space(8);
             _filter = EditorGUILayout.TextField(_filter, EditorStyles.toolbarSearchField);
+            GUILayout.Space(6);
             _scroll = GUILayout.BeginScrollView(_scroll);
             string group = null;
             foreach (GroundEdit.Brush b in _brushes ?? new List<GroundEdit.Brush>())
@@ -182,22 +319,26 @@ namespace Rth.Client.Editor
                 if (_filter.Length > 0 && b.Name.IndexOf(_filter, System.StringComparison.OrdinalIgnoreCase) < 0) continue;
                 if (b.Group != group)
                 {
+                    if (group != null) GUILayout.Space(6);
                     group = b.Group;
                     GUILayout.Label(group, EditorStyles.miniBoldLabel);
                 }
                 GUILayout.BeginHorizontal();
+                GUILayout.Space(2);
                 Swatch(b, 14);
+                GUILayout.Space(6);
                 GUIStyle style = b == _brush ? EditorStyles.boldLabel : EditorStyles.label;
                 if (GUILayout.Button(b.Name, style)) _brush = b;
                 GUILayout.EndHorizontal();
             }
             GUILayout.EndScrollView();
-            GUILayout.Label(TileGround.Active.Any(g => g != null && !string.IsNullOrEmpty(g.brushEdit))
-                ? "Changed: save the scenes (Ctrl+S) to keep it." : "Ctrl+click: take the ground under the cursor.", EditorStyles.miniLabel);
+            GUILayout.Space(6);
+            GUILayout.Label(Changed() ? "Changed: save the scenes (Ctrl+S) to keep it." : "Ctrl+click: take the ground under the cursor. [ and ]: size.", EditorStyles.wordWrappedMiniLabel);
+            GUILayout.Space(4);
             if (GUILayout.Button("Reload the grounds", EditorStyles.miniButton)) LoadBrushes();
-            GUILayout.EndArea();
-            Handles.EndGUI();
         }
+
+        private static bool Changed() => TileGround.Active.Any(g => g != null && (!string.IsNullOrEmpty(g.brushEdit) || g.sculpted));
 
         private static void Swatch(GroundEdit.Brush b, int size)
         {
@@ -209,11 +350,49 @@ namespace Rth.Client.Editor
         private static Color Colour(GroundEdit.Brush b) =>
             b != null && Palette.TryParse(b.Colour, out Color c) ? c : new Color(0.5f, 0.5f, 0.5f, 0.4f);
 
-        /// <summary>Outlines tiles at the ground's height, in the brush's colour.</summary>
-        private static void DrawTiles(IEnumerable<(int x, int y)> tiles, GroundEdit.Brush brush)
+        // ------------------------------------------------------------------ drawing the brush
+
+        private void DrawBrush(Vector3 p)
         {
-            Color c = Colour(brush);
-            Color fill = new Color(c.r, c.g, c.b, 0.55f), line = Color.Lerp(c, Color.white, 0.5f);
+            if (_tab == Tab.Shape)
+            {
+                DrawSteep(p, _shapeRadius * 3f);
+                Handles.color = _shapeMode == ShapeMode.Lower ? new Color(1f, 0.5f, 0.3f) : new Color(0.4f, 0.9f, 1f);
+                Circle(p, _shapeRadius);
+                Circle(p, _shapeRadius * 0.5f);
+                return;
+            }
+            if (_mode == Mode.Line || _mode == Mode.Fill || _mode == Mode.Pick)
+            {
+                if (_hover is (int x, int y)) DrawTiles(new[] { (x, y) }, _brush, 0.55f);
+                return;
+            }
+            float r = _mode == Mode.Smooth ? Mathf.Max(1f, _radius) : _radius;
+            float soft = _mode == Mode.Smooth ? 0f : _softness;
+            foreach ((int x, int y, float w) in Round(p, r, soft)) DrawTiles(new[] { (x, y) }, _mode == Mode.Smooth ? null : _brush, 0.15f + 0.4f * w);
+            Handles.color = Color.white;
+            if (r > 0f) Circle(p, r);
+        }
+
+        /// <summary>A circle lying on the ground round a point (following its heights).</summary>
+        private static void Circle(Vector3 p, float radius)
+        {
+            const int n = 48;
+            var points = new Vector3[n + 1];
+            for (int i = 0; i <= n; i++)
+            {
+                float a = i * Mathf.PI * 2f / n;
+                float x = p.x + Mathf.Cos(a) * radius, z = p.z + Mathf.Sin(a) * radius;
+                points[i] = new Vector3(x, (TileGround.TryHeightAt(x, z, out float h) ? h : p.y) + 0.08f, z);
+            }
+            Handles.DrawAAPolyLine(3f, points);
+        }
+
+        /// <summary>Fills tiles at the ground's height, in the brush's colour.</summary>
+        private static void DrawTiles(IEnumerable<(int x, int y)> tiles, GroundEdit.Brush brush, float alpha)
+        {
+            Color c = brush != null ? Colour(brush) : new Color(0.9f, 0.9f, 0.9f);
+            Color fill = new Color(c.r, c.g, c.b, alpha), line = new Color(1f, 1f, 1f, alpha * 0.35f);
             var quad = new Vector3[4];
             foreach ((int x, int y) in tiles)
             {
@@ -227,6 +406,24 @@ namespace Rth.Client.Editor
             }
         }
 
+        /// <summary>Tiles too steep to walk near the brush, in red.</summary>
+        private static void DrawSteep(Vector3 p, float reach)
+        {
+            var quad = new Vector3[4];
+            int r = Mathf.CeilToInt(reach), cx = Mathf.FloorToInt(p.x), cy = Mathf.FloorToInt(p.z);
+            for (int y = cy - r; y < cy + r; y++)
+                for (int x = cx - r; x < cx + r; x++)
+                {
+                    if (!(GroundAt(x, y) is TileGround g) || !g.Field.IsSteep(x, y, g.cliffStep)) continue;
+                    Heightfield f = g.Field;
+                    quad[0] = new Vector3(x, f.Corner(x, y) + 0.05f, y);
+                    quad[1] = new Vector3(x, f.Corner(x, y + 1) + 0.05f, y + 1);
+                    quad[2] = new Vector3(x + 1, f.Corner(x + 1, y + 1) + 0.05f, y + 1);
+                    quad[3] = new Vector3(x + 1, f.Corner(x + 1, y) + 0.05f, y);
+                    Handles.DrawSolidRectangleWithOutline(quad, new Color(1f, 0.15f, 0.1f, 0.35f), new Color(1f, 0.15f, 0.1f, 0.8f));
+                }
+        }
+
         // ------------------------------------------------------------------ finding the ground
 
         private static TileGround GroundAt(int x, int y)
@@ -236,8 +433,8 @@ namespace Rth.Client.Editor
             return null;
         }
 
-        /// <summary>The tile under the mouse: a few steps between the ray and the ground's heights.</summary>
-        private static (int x, int y)? Pick(Ray ray)
+        /// <summary>The point under the mouse: a few steps between the ray and the ground's heights.</summary>
+        private static Vector3? Pick(Ray ray)
         {
             if (Mathf.Abs(ray.direction.y) < 1e-4f) return null;
             float y = 0f;
@@ -250,9 +447,9 @@ namespace Rth.Client.Editor
                 p = ray.origin + ray.direction * t;
                 if (TileGround.TryHeightAt(p.x, p.z, out float h)) { y = h; any = true; }
             }
-            if (!any) return null;
-            int tx = Mathf.FloorToInt(p.x), ty = Mathf.FloorToInt(p.z);
-            return GroundAt(tx, ty) != null ? (tx, ty) : ((int, int)?)null;
+            if (!any || GroundAt(Mathf.FloorToInt(p.x), Mathf.FloorToInt(p.z)) == null) return null;
+            p.y = y;
+            return p;
         }
 
         // ------------------------------------------------------------------ the grounds to paint with
@@ -285,16 +482,72 @@ namespace Rth.Client.Editor
         /// <summary>Ctrl+click: the ground under the cursor becomes the brush.</summary>
         private static void PickUp(int x, int y)
         {
-            if (!(GroundAt(x, y) is TileGround g) || !(Model(g) is EditModel m) || !(GroundEdit.At(m.Ground, x, y) is char c)) return;
-            if (!m.Ground.Legend.TryGetValue(c.ToString(), out TileKind kind)) return;
-            string colour = m.Materials.TryGetValue(kind.Material, out string v) ? v : "";
-            _brush = _brushes.FirstOrDefault(b => GroundEdit.Same(b.Kind, kind) && b.Colour == colour);
+            if (!(BrushAt(x, y) is GroundEdit.Brush at)) return;
+            _brush = _brushes.FirstOrDefault(b => SameBrush(b, at));
             if (_brush == null)
             {
-                _brush = GroundEdit.BrushOf(m.Region, kind);
-                _brushes.Add(_brush);
+                at.Letter = null;
+                _brushes.Add(_brush = at);
             }
-            if (_mode == Mode.Pick) _mode = Mode.Brush;
+            if (_mode == Mode.Pick || _mode == Mode.Smooth) _mode = Mode.Brush;
+        }
+
+        // ------------------------------------------------------------------ shaping
+
+        /// <summary>A corner's height as it stands in this stroke, from whichever open ground has it.</summary>
+        private float? WorldCorner(int x, int y)
+        {
+            foreach (TileGround g in TileGround.Active)
+            {
+                if (g == null || x < g.originX || y < g.originY || x > g.originX + g.width || y > g.originY + g.height) continue;
+                int i = (y - g.originY) * (g.width + 1) + (x - g.originX);
+                return _heights.TryGetValue(g, out float[] h) ? h[i] : g.Field.Corner(x, y);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// One step of the shaping brush: raise, lower, flatten to the height where the stroke began,
+        /// or smooth, within a soft round brush. A corner on a border is shared, so every ground that
+        /// has it gets the same height.
+        /// </summary>
+        private void Shape(Vector3 p)
+        {
+            float radius = _shapeRadius;
+            var changes = new List<(int x, int y, float h)>();
+            for (int y = Mathf.FloorToInt(p.z - radius); y <= Mathf.CeilToInt(p.z + radius); y++)
+                for (int x = Mathf.FloorToInt(p.x - radius); x <= Mathf.CeilToInt(p.x + radius); x++)
+                {
+                    float d = Vector2.Distance(new Vector2(x, y), new Vector2(p.x, p.z));
+                    if (d > radius || !(WorldCorner(x, y) is float h)) continue;
+                    float weight = Mathf.SmoothStep(0f, 1f, 1f - d / radius) * _strength;
+                    switch (_shapeMode)
+                    {
+                        case ShapeMode.Raise: h += 0.15f * weight; break;
+                        case ShapeMode.Lower: h -= 0.15f * weight; break;
+                        case ShapeMode.Flatten: h += (_flattenTo - h) * weight * 0.5f; break;
+                        case ShapeMode.Smooth:
+                        {
+                            float sum = 0f;
+                            int n = 0;
+                            foreach ((int nx, int ny) in new[] { (x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1) })
+                                if (WorldCorner(nx, ny) is float hn) { sum += hn; n++; }
+                            if (n > 0) h += (sum / n - h) * weight * 0.5f;
+                            break;
+                        }
+                    }
+                    changes.Add((x, y, Mathf.Clamp(h, -4f, 16f))); // the whole world stays within about 16 tiles (world-scale.md 3)
+                }
+            foreach ((int x, int y, float h) in changes)
+                foreach (TileGround g in TileGround.Active)
+                {
+                    if (g == null || x < g.originX || y < g.originY || x > g.originX + g.width || y > g.originY + g.height) continue;
+                    if (!_heights.TryGetValue(g, out float[] heights)) _heights[g] = heights = g.Field.Corners;
+                    heights[(y - g.originY) * (g.width + 1) + (x - g.originX)] = h;
+                    _stale.Add(g);
+                    _touched.Add(g);
+                }
+            if (EditorApplication.timeSinceStartup - _redrawn > 0.15) Redraw();
         }
 
         // ------------------------------------------------------------------ each ground's data while painting
@@ -367,9 +620,10 @@ namespace Rth.Client.Editor
 
         // ------------------------------------------------------------------ painting
 
-        private void Paint(IEnumerable<(int x, int y)> tiles)
+        /// <summary>Paints tiles with the brush, or each with its own (<paramref name="brushAt"/>: smoothing).</summary>
+        private void Paint(IEnumerable<(int x, int y)> tiles, System.Func<int, int, GroundEdit.Brush> brushAt = null)
         {
-            if (_brush == null) return;
+            if (_brush == null && brushAt == null) return;
             foreach (var byGround in tiles.GroupBy(t => GroundAt(t.x, t.y)))
             {
                 TileGround g = byGround.Key;
@@ -381,10 +635,15 @@ namespace Rth.Client.Editor
                     continue;
                 }
                 m = JsonConvert.DeserializeObject<EditModel>(JsonConvert.SerializeObject(m, Json), Json); // undo keeps the one before
-                bool ring = GroundEdit.EnsureRing(m.Ground);
-                char c = GroundEdit.CharFor(m.Region, m.Ground, _brush.Kind, _brush.Materials, _brush.Letter);
-                bool changed = ring;
-                foreach ((int x, int y) in byGround) changed |= GroundEdit.Set(m.Ground, x, y, c);
+                bool changed = GroundEdit.EnsureRing(m.Ground);
+                var chars = new Dictionary<GroundEdit.Brush, char>();
+                foreach ((int x, int y) in byGround)
+                {
+                    GroundEdit.Brush b = brushAt != null ? brushAt(x, y) : _brush;
+                    if (b == null) continue;
+                    if (!chars.TryGetValue(b, out char c)) chars[b] = c = GroundEdit.CharFor(m.Region, m.Ground, b.Kind, b.Materials, b.Letter);
+                    changed |= GroundEdit.Set(m.Ground, x, y, c);
+                }
                 if (!changed) continue;
                 GroundEdit.Prune(m.Ground);
                 Apply(g, m, edited: true, redraw: false);
@@ -394,10 +653,31 @@ namespace Rth.Client.Editor
             if (EditorApplication.timeSinceStartup - _redrawn > 0.15) Redraw();
         }
 
+        /// <summary>The ground at a tile as a brush (its kind, colours and character), or null.</summary>
+        private static GroundEdit.Brush BrushAt(int x, int y)
+        {
+            if (!(GroundAt(x, y) is TileGround g) || !(Model(g) is EditModel m) || !(GroundEdit.At(m.Ground, x, y) is char c)) return null;
+            if (!m.Ground.Legend.TryGetValue(c.ToString(), out TileKind kind)) return null;
+            GroundEdit.Brush b = GroundEdit.BrushOf(m.Region, kind);
+            b.Letter = c;
+            return b;
+        }
+
         private void Redraw()
         {
             foreach (TileGround g in _stale)
-                if (g != null) g.Rebuild();
+            {
+                if (g == null) continue;
+                if (_heights.TryGetValue(g, out float[] heights))
+                {
+                    Undo.RecordObject(g, "Shape ground");
+                    g.SetCorners((float[])heights.Clone()); // redraws
+                    g.sculpted = true;
+                    EditorUtility.SetDirty(g);
+                    EditorSceneManager.MarkSceneDirty(g.gameObject.scene);
+                }
+                else g.Rebuild();
+            }
             _stale.Clear();
             _redrawn = EditorApplication.timeSinceStartup;
         }

@@ -128,24 +128,30 @@ With Unity (the owner, or the agent with Unity):
   off from the same menu item (it asks about unsaved changes); opening other scenes or pressing
   Play keeps your unsaved heights and puts the terrain back afterwards. Saving takes a few seconds
   (it runs on .NET: the blockout drawn by Unity's Mono would differ by a tile here and there).
-- **Sculpting terrain:** select a region's tile ground (`Data > ground`) and pick **Sculpt Ground**
-  in the Scene view's tools: raise, lower, flatten or smooth with a round brush (`[` and `]` change
-  its size); tiles too steep to walk show red. Saving the scene writes the heights into the region's
-  `terrain`, and takes a generated region over. The next sync stands its trees, rocks and props on
-  the new ground.
-- **Painting ground:** **R'th > World > Paint Ground** (or G) in the Scene view, over every open
-  region at once (open an area with **Open This Area**). Pick a ground from the list (the layout's
-  grounds by name, and any a region has of its own; type to filter), then:
-  **Brush** (a round brush, `[` and `]` for its size; radius 0 is one tile), **Line** (drag from end
-  to end: a road or path 1-8 tiles wide, straight or at 45 degrees), **Fill** (the patch of one
-  ground under the click) or **Pick** (Ctrl+click in any mode takes the ground under the cursor).
-  It is drawn as the game draws it while you paint: blended ground, crisp roads and water with
-  their diagonal edges, and the neighbours blend across the border. Ctrl+Z undoes a stroke. Saving
-  (Ctrl+S) writes the tiles into the regions' `tiles` pieces; painting a generated region takes it
-  over, gives its scene its area's folder (moved at the next Sync World) and runs the blockout so
-  the land round it follows; the neighbours' rings of tiles (`surround`) follow either way.
-  Water and blocked ground change what can be walked, so the maps are exported too. Ground drawn
-  another way (Tolling, Palmerway) isn't painted.
+- **Shaping and painting ground:** **R'th > World > Shape and Paint Ground** (or G): one tool in the
+  Scene view, over every open region at once (open an area with **Open This Area**), with two tabs.
+  - **Shape:** raise, lower, flatten (to the height where the stroke began) or smooth with a round
+    brush (`[` and `]` change its size); tiles too steep to walk show red. A corner on a region's
+    border is shared, so both regions get the same height.
+  - **Paint:** pick a ground from the list (the layout's grounds by name, and any a region has of
+    its own; type to filter), then **Brush** (a round brush that follows the cursor, `[` and `]` for
+    its size, radius 0 is one tile; **Soft edge** scatters its rim so edges come out ragged and
+    natural instead of round), **Line** (drag from end to end: a road or path 1-8 tiles wide,
+    straight or at 45 degrees), **Fill** (the patch of one ground under the click), **Smooth** (drag
+    over ragged edges and specks: each tile becomes what most round it are) or **Pick** (Ctrl+click
+    in any mode takes the ground under the cursor).
+
+  It is drawn as the game draws it while you work: blended ground, crisp roads, water with banks
+  dipping under it, and the neighbours blend across the border. Ctrl+Z undoes a stroke. Saving
+  (Ctrl+S) writes the heights into the regions' `terrain` and the tiles into their `tiles` pieces;
+  working on a generated region takes it over, gives its scene its area's folder (moved at the next
+  Sync World) and runs the blockout so the land round it follows; the neighbours' rings of tiles
+  (`surround`) follow either way. Water and blocked ground change what can be walked, so the maps
+  are exported too. Ground drawn another way (Tolling, Palmerway) isn't shaped or painted.
+- **Water** is drawn as one flat surface over the water's tiles and the ring round them, with the
+  bank dipping under it by how much water lies near (`Shore`), so the waterline is curved wherever
+  the bank meets it; the surface (`Resources/Shaders/Water.shader`) goes from shallow to deep, with
+  glints that drift on lakes and run downstream on rivers. Walking stays tile by tile.
 - **Saving a region scene** writes back what you did to data pieces in the Editor: moving one by
   whole tiles, turning a placed one, deleting one. Then it captures `Handmade` and re-exports.
   Pressing Play and **R'th > Export Map** do the same capture and export.

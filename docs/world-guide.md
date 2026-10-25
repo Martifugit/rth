@@ -144,7 +144,7 @@ Unity is written back to text.
   corner, as rows of text in the region file (`terrain`), so an agent without Unity can read and
   change them and git can merge them. The owner sculpts in Unity with **Edit Terrain** (the whole
   world as one Unity Terrain, Unity's own tools; generated land keeps its raise in
-  `world/layout/sculpt` and stays generated) or **Sculpt Ground** (one region); saving writes the
+  `world/layout/sculpt` and stays generated) or **Shape and Paint Ground**'s Shape tab (the open regions); saving writes the
   heights back. Regions drawn with `tiles` pieces follow it; the older `MapTerrain`
   (the scale test region) still keeps its heights in its scene. How: [workflow.md](workflow.md).
 - **Ground paint belongs in the region's data, and is painted in Unity.** *Decided* (2026-10-25),
@@ -152,7 +152,7 @@ Unity is written back to text.
   routed), so it stays one character a tile in the region's `tiles` piece, and the look (blends,
   crisp roads, diagonal half tiles) is drawn from it. A Unity Terrain's splat map was weighed and
   turned down: soft blends have no tile, the server would have to read them back, and agents
-  couldn't change them. The owner paints with **Paint Ground** (R'th > World > Paint Ground, G): a
+  couldn't change them. The owner paints with **Shape and Paint Ground** (R'th > World, G): a
   brush, straight or 45-degree strokes for roads, fill and pick, over every open region at once,
   drawn as the game draws it; saving writes the tiles back, and the neighbours' rings follow.
 
@@ -292,8 +292,9 @@ Use it in every brief and every review.
 | Stages per area and the coverage map | Built: [world-areas.md](world-areas.md), `world/areas.json`, `tools/world areas` |
 | Entrances and exits as data; the seam check for roads, rivers and walkability | Decided, to build (the height seam check is built) |
 | Claims checked by the tools | Decided, to build |
-| A slope overlay while sculpting (tiles too steep to walk shown red) | Built, in Sculpt Ground |
-| Painting ground in the Editor (brush, road strokes, fill, pick) | Built: Paint Ground |
+| A slope overlay while sculpting (tiles too steep to walk shown red) | Built, in Shape and Paint Ground |
+| Painting ground in the Editor (soft brush, road strokes, fill, smooth, pick) | Built: Shape and Paint Ground |
+| Shores that curve down to the waterline; water that reads as water | Built: `Shore`, `Water.shader` |
 | Combining static pieces at build time | Decided, after measuring |
 | The first area brief (Tolling's neighbourhood) | Next |
 
