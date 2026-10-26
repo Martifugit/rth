@@ -42,3 +42,10 @@ __pycache__/
 
 # World renders (tools/world render): regenerate rather than commit
 /world/renders/
+
+# Reference screenshots of Jagex games: kept locally, never committed
+/images/osrs-*
+/images/rs3-*
+
+# Character-model experiments (logs, test exports)
+tools/character-models/experiments/
