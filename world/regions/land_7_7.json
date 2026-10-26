@@ -9,11 +9,9 @@
   "music": "",
   "materials": {
     "LandBroken": "Shingle",
-    "LandCliffCliffRock": "CliffRock",
     "LandCliffGranite": "Granite",
     "LandCliffMud": "Mud",
     "LandFen": "Fen",
-    "LandHeath": "Heath",
     "LandMud": "Mud",
     "LandSea": "Sea",
     "LandShingle": "Shingle"
@@ -120,7 +118,7 @@
     "25*3 26 28 31 34 37 39 42 44*2 43 44 45*2 47 50 53 56 57*2 59 58 53 50 41 35 29 27 26 25*4 0*62"
   ] },
   "pieces": [
-    { "id": "ground", "kind": "tiles", "rect": [672, 672, 768, 768], "legend": { "R": { "material": "LandBroken", "cliff": "LandCliffGranite" }, "f": { "material": "LandFen", "cliff": "LandCliffMud" }, "h": { "material": "LandHeath", "cliff": "LandCliffCliffRock" }, "m": { "material": "LandMud" }, "q": { "material": "LandShingle" }, "~": { "material": "LandSea", "water": true, "height": -0.15 } }, "paint": true, "margin": 4, "rows": [
+    { "id": "ground", "kind": "tiles", "rect": [672, 672, 768, 768], "legend": { "R": { "material": "LandBroken", "cliff": "LandCliffGranite" }, "f": { "material": "LandFen", "cliff": "LandCliffMud" }, "m": { "material": "LandMud" }, "q": { "material": "LandShingle" }, "~": { "material": "LandSea", "water": true, "height": -0.15 } }, "paint": true, "margin": 4, "rows": [
       "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
       "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
       "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
@@ -215,8 +213,8 @@
       "ffmmmmfffffffffffRRqqqqqqqqqqq~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
       "ffmmmfffffffffffRRRRRRRRRRRqqqq~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
       "fmmmffffffffffffRRRRRRRRRRRRqqqqq~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
-      "mmmmfffffffffffRRRRRRRRRRRRRhqqqqq~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
-      "mmmffffffffffffRRRRRRRRRRRRRhhhqqqq~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+      "mmmmfffffffffffRRRRRRRRRRRRRRqqqqq~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+      "mmmffffffffffffRRRRRRRRRRRRRRRRqqqq~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
     ], "surround": [
       "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
       "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
@@ -318,10 +316,10 @@
       "ffff~~~~",
       "fffm~~~~",
       "fmmm~~~~",
-      "fmmmmfffffffffffffRRRRRRRRRRRRRRhhhhqqqq~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
-      "mmmmmfffffffffffffRRRRRRRRRRRRRRRhhhhqqqq~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
-      "mmmmmfffffffffffffRRRRRRRRRRRRRRRhhhhhqqqq~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
-      "mmmmfffffffffffffRRRRRRRRRRRRRRRRhhhhhhqqqq~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+      "fmmmmfffffffffffffRRRRRRRRRRRRRRRRRRqqqq~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+      "mmmmmfffffffffffffRRRRRRRRRRRRRRRRRRRqqqq~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+      "mmmmmfffffffffffffRRRRRRRRRRRRRRRRRRRRqqqq~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+      "mmmmfffffffffffffRRRRRRRRRRRRRRRRRRRRRRqqqq~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
     ] }
   ]
 }

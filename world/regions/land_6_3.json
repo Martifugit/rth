@@ -11,22 +11,21 @@
     "LandCauseway": "Causeway",
     "LandCliffCliffRock": "CliffRock",
     "LandCliffMud": "Mud",
-    "LandCobble": "Cobble",
     "LandFen": "Fen",
     "LandForest": "GraveTurf",
     "LandGrass": "Grass",
     "LandHeath": "Heath",
     "LandMeadow": "Meadow",
     "LandMud": "Mud",
+    "LandPath": "Trodden",
     "LandPool": "Mere",
-    "LandReeds": "Sedge",
-    "LandWorn": "Worn"
+    "LandReeds": "Sedge"
   },
   "seed": 1023024260,
   "generated": "blockout",
   "terrain": { "cliffStep": 1, "rows": [
-    "81 77 72 67 61 57 55 50 46 42 37 34 30 28 25 24 22 21*5 20*11 21*3 22*3 23*3 24*9 23*5 22*10 21*17 22*5 21*9",
-    "83 79 75 71 67 62 58 54 49 44 40 35 31 28 26 24 23 22*2 21*9 20*2 21*5 22*3 23*3 24*3 25*4 24*4 23*4 22*8 21*20 22*3 21*10",
+    "80 75 69 63 58 57 55 50 46 42 37 34 30 28 25 24 22 21*5 20*11 21*3 22*3 23*3 24*9 23*5 22*10 21*17 22*5 21*9",
+    "84 80 75 71 66 62 58 54 49 44 40 35 31 28 26 24 23 22*2 21*9 20*2 21*5 22*3 23*3 24*3 25*4 24*4 23*4 22*8 21*20 22*3 21*10",
     "85 81 77 73 69 66 61 57 52 47 42 37 33 29 27 25 23*2 22*7 21*8 22*4 23*3 24*3 25*7 24*3 23*4 22*6 21*18 22*4 21*9 20 21*2",
     "87 83 79 75 72 68 64 59 54 49 44 38 34 30 28 26 24 23*5 22*13 23*4 24*3 25*9 24*2 23*4 22*7 21*14 22*9 21*6 20*3 21",
     "90 86 82 78 74 70 66 61 56 51 45 40 35 32 29 27 25 24*2 23*7 22*6 23*5 24*4 25*3 26*4 25*3 24*3 23*4 22*7 21*12 22*11 21*6 20 21*2",
@@ -124,8 +123,8 @@
     "118 117 116 114 112 110 109*2 111 113 116 118 121 123*3 121 118 114 111 107 104 101 99 97 95 94 92 91 90*2 89*2 88 87 85 83 81 78 76 73 70 66 63 61 60 61 63 68 75 84 93 101 110 117 122 125 126*4 127 130 134 139 145 152 158 163 168 171 172 171 170 168 166 164*2 165 166 168 170 172 173*4 174 175 176 178*3 175 171 165 158"
   ] },
   "pieces": [
-    { "id": "ground", "kind": "tiles", "rect": [576, 288, 672, 384], "legend": { "#": { "material": "LandCauseway", "layer": "over" }, "=": { "material": "LandCobble", "layer": "over" }, "P": { "material": "LandPool", "water": true, "height": -0.15 }, "U": { "material": "LandWorn" }, "e": { "material": "LandMeadow" }, "f": { "material": "LandFen", "cliff": "LandCliffMud" }, "g": { "material": "LandGrass", "cliff": "LandCliffCliffRock" }, "h": { "material": "LandHeath", "cliff": "LandCliffCliffRock" }, "i": { "material": "LandReeds" }, "m": { "material": "LandMud" }, "w": { "material": "LandForest", "cliff": "LandCliffCliffRock" } }, "paint": true, "margin": 4, "rows": [
-      "UUUUUhfffffffffffffffffffffffffffffffffffffiffffffffiiiiiiiiiiiiiiiiiiiiifffffffffffffffffffffff",
+    { "id": "ground", "kind": "tiles", "rect": [576, 288, 672, 384], "legend": { "#": { "material": "LandCauseway", "layer": "over" }, "A": { "material": "LandPath", "layer": "over" }, "P": { "material": "LandPool", "water": true, "height": -0.15 }, "e": { "material": "LandMeadow" }, "f": { "material": "LandFen", "cliff": "LandCliffMud" }, "g": { "material": "LandGrass", "cliff": "LandCliffCliffRock" }, "h": { "material": "LandHeath", "cliff": "LandCliffCliffRock" }, "i": { "material": "LandReeds" }, "m": { "material": "LandMud" }, "w": { "material": "LandForest", "cliff": "LandCliffCliffRock" } }, "paint": true, "margin": 4, "rows": [
+      "gghhhhfffffffffffffffffffffffffffffffffffffiffffffffiiiiiiiiiiiiiiiiiiiiifffffffffffffffffffffff",
       "ggghhhhfffffffffffffffffffffffffffffffffffiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiffffffffffffffffffffffff",
       "ggghhhhhfffffffffffffffffffffffffffffffffiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiffffffffffffffffffffffff",
       "ggghhhhffffffffffffffffffffffffffffffffffiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiffffffffffffffffffffffff",
@@ -222,12 +221,12 @@
       "ggggggeeeeeeeeeeeeeeeeeeeggggggggggggggggggggggggggggeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
       "gggggggeeeeeeeeeeeeeeeeeeeeegggggggggggggggggggggggggeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
     ], "surround": [
-      "UUUUUUU#####mmfffffffffffffffffffffffffffffffffffffffffffiiiiiiiiiiiiiiiiiiiifffffffffffffffffffffffffff",
-      "=======####mmffffffffffffffffffffffffffffffffffffffffffffiiiiiiiiiiiiiiiiiiiifffffffffffffffffffffffffff",
-      "========##mmfffffffffffffffffffffffffffffffffffffffffffffiiiiiiiiiiiiiiiiiiiifffffffffffffffffffffmfffff",
-      "========#mmfffffffffffffffffffffffffffffffffffffffffffffiiiiiiiiiiiiiiiiiiiiifffffffffffffffffffffffffff",
-      "UUUUffff",
-      "UUggffff",
+      "AAAAAAA####mmffffffffffffffffffffffffffffffffffffffffffffiiiiiiiiiiiiiiiiiiiifffffffffffffffffffffffffff",
+      "AAAAAAA####mfffffffffffffffffffffffffffffffffffffffffffffiiiiiiiiiiiiiiiiiiiifffffffffffffffffffffffffff",
+      "AAAAAAAA##mmfffffffffffffffffffffffffffffffffffffffffffffiiiiiiiiiiiiiiiiiiiifffffffffffffffffffffmfffff",
+      "gghhhhAA#mmfffffffffffffffffffffffffffffffffffffffffffffiiiiiiiiiiiiiiiiiiiiifffffffffffffffffffffffffff",
+      "ggggffff",
+      "ggggffff",
       "wgggffff",
       "wgggffff",
       "wgggffff",

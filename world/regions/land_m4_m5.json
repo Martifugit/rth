@@ -15,7 +15,6 @@
     "LandFarGrass": "Grass",
     "LandFarGravel": "Gravel",
     "LandFarHeath": "Heath",
-    "LandFarRedrock": "RedRock",
     "LandGravel": "Gravel",
     "LandHighland": "Alpine",
     "LandRedrock": "RedRock"
@@ -122,7 +121,7 @@
     "206 207 209 210 211*6 212 213 214*2 213*2 212 213 214 218 223 230 238 247 256 264 272 279 286 292 299 304 310 314 318 321 324 326 327*6 326 324 322 320 317 314 311 307 302 297 290 283 274 264 253 242 231 219 208 197 186 174 163 151 140 129 119 111 105 101 99 98 99 100 101 102 103 104 103 102 101 99 98*2 99 100 101 102 104 117 212 396 534"
   ] },
   "pieces": [
-    { "id": "ground", "kind": "tiles", "rect": [-384, -480, -288, -384], "legend": { "0": { "material": "LandFarGrass", "blocks": true, "beyond": true }, "1": { "material": "LandFarHeath", "blocks": true, "beyond": true }, "2": { "material": "LandFarBracken", "blocks": true, "beyond": true }, "6": { "material": "LandFarGravel", "blocks": true, "beyond": true }, "7": { "material": "LandFarDust", "blocks": true, "beyond": true }, "8": { "material": "LandFarRedrock", "blocks": true, "beyond": true }, "M": { "material": "LandHighland", "cliff": "LandCliffCliffRock" }, "o": { "material": "LandRedrock", "cliff": "LandCliffSandstone" }, "z": { "material": "LandGravel", "cliff": "LandCliffSandstone" } }, "paint": true, "margin": 4, "rows": [
+    { "id": "ground", "kind": "tiles", "rect": [-384, -480, -288, -384], "legend": { "0": { "material": "LandFarGrass", "blocks": true, "beyond": true }, "1": { "material": "LandFarHeath", "blocks": true, "beyond": true }, "2": { "material": "LandFarBracken", "blocks": true, "beyond": true }, "6": { "material": "LandFarGravel", "blocks": true, "beyond": true }, "7": { "material": "LandFarDust", "blocks": true, "beyond": true }, "M": { "material": "LandHighland", "cliff": "LandCliffCliffRock" }, "o": { "material": "LandRedrock", "cliff": "LandCliffSandstone" }, "z": { "material": "LandGravel", "cliff": "LandCliffSandstone" } }, "paint": true, "margin": 4, "rows": [
       "666666666666666666661111666666666666666666666222222222222222220000000000011111111111111111111111",
       "666666666666666666666666666666666666666666666222222222222222220000000000000111111111111111111111",
       "666666666666666666666666666666666666666666666222222222222222222000000000000111111111111111111111",
@@ -230,10 +229,10 @@
       "66661111",
       "66661111",
       "66661111",
-      "86661111",
-      "86661111",
-      "88661111",
-      "86661111",
+      "66661111",
+      "66661111",
+      "66661111",
+      "66661111",
       "66661111",
       "66661111",
       "66661111",

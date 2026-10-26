@@ -34,7 +34,7 @@
   ],
   "areas": [
     { "id": "tolling", "name": "Tolling and Wennow", "wave": 1, "about": "The start: the river town, the mill, Wennow, Palmerway's heath and the waygate.",
-      "regions": ["tolling", "palmerway", "land_0_m1", "land_1_m1"],
+      "regions": ["land_0_0", "land_1_0", "land_0_m1", "land_1_m1"],
       "done": {}, "notes": "" },
     { "id": "lake-road", "name": "Knellmere and the lake road", "wave": 1, "about": "The first long road: the lake opening out, p-lakeport, the lake's south shore and the weir.",
       "regions": ["land_2_0", "land_2_m1", "land_3_0", "land_3_m1"],
@@ -44,7 +44,7 @@
       "done": {}, "notes": "" },
     { "id": "western-march", "name": "The western march", "wave": 1, "about": "Dry downs and scrub west of Tolling, the observatory spur, the road to the salt pass.",
       "regions": ["land_m1_m1", "land_m1_0", "land_m1_1"],
-      "done": {}, "notes": "" },
+      "done": { "1.2": "2026-10-26 regions taken over; first ground pass (world/strokes/western-march.json)" }, "notes": "Brief drafted, waiting on the owner (1.1)." },
     { "id": "great-bridge", "name": "The great bridge and the dry valley", "wave": 2, "about": "The north road over the great river, the dry valley and its bridge over nothing.",
       "regions": ["land_0_1", "land_1_1", "land_0_2", "land_1_2", "land_2_2"],
       "done": {}, "notes": "" },

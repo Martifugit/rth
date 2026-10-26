@@ -1,0 +1,575 @@
+{
+  "area": "lake-road",
+  "note": "First pass on the lake road (2026-10-26): the highways became gravel paths and a dirt track, the outflow and the stream from the Downs wind, and mud at the water's edge became reeds and sand. Applied once with `tools/world strokes world/strokes/lake-road.json`; the regions' tiles are the truth from then on. Second pass: crisp gravel paths with stones, falls on the rivers, and the belfry isle (a knoll with cliffs to the east, beaches west and south; its level top is kept for the drowned belfry, the sheltered foot of the knoll on the south for a dungeon's way up).",
+  "strokes": [
+    {
+      "id": "outflow",
+      "ground": "river",
+      "seed": 11,
+      "points": [
+        [
+          322,
+          25
+        ],
+        [
+          328,
+          30.5
+        ],
+        [
+          333.5,
+          38
+        ],
+        [
+          335,
+          50
+        ],
+        [
+          336.5,
+          63
+        ],
+        [
+          338,
+          77
+        ],
+        [
+          340.5,
+          88
+        ],
+        [
+          342.5,
+          97
+        ]
+      ],
+      "width": [
+        3.2,
+        4.2
+      ],
+      "wind": 6,
+      "wave": 42,
+      "ragged": 0.12,
+      "erase": [
+        "river",
+        "mud"
+      ],
+      "eraseReach": 9,
+      "banks": [
+        {
+          "ground": "reeds",
+          "share": 0.28,
+          "scale": 6
+        },
+        {
+          "ground": "sand",
+          "share": 0.16,
+          "scale": 4
+        }
+      ],
+      "fall": 0.12
+    },
+    {
+      "id": "downs-stream",
+      "ground": "river",
+      "seed": 23,
+      "points": [
+        [
+          310,
+          -91
+        ],
+        [
+          306,
+          -80
+        ],
+        [
+          301,
+          -66
+        ],
+        [
+          296,
+          -51
+        ],
+        [
+          291,
+          -37
+        ],
+        [
+          288,
+          -26
+        ],
+        [
+          286.5,
+          -16
+        ]
+      ],
+      "width": [
+        1.8,
+        2.8
+      ],
+      "wind": 4.5,
+      "wave": 30,
+      "ragged": 0.08,
+      "erase": [
+        "river",
+        "shingle",
+        "mud"
+      ],
+      "eraseReach": 8,
+      "banks": [
+        {
+          "ground": "reeds",
+          "share": 0.22,
+          "scale": 5
+        },
+        {
+          "ground": "shingle",
+          "share": 0.1,
+          "scale": 3
+        },
+        {
+          "ground": "sand",
+          "share": 0.08,
+          "scale": 3
+        }
+      ],
+      "fall": 0.12,
+      "pool": 1.6
+    },
+    {
+      "id": "lake-road-west",
+      "ground": "path",
+      "seed": 31,
+      "points": [
+        [
+          190.5,
+          48
+        ],
+        [
+          204,
+          55
+        ],
+        [
+          224,
+          59.5
+        ],
+        [
+          244,
+          64
+        ],
+        [
+          256,
+          68
+        ]
+      ],
+      "width": [
+        2,
+        2
+      ],
+      "wind": 1.6,
+      "wave": 38,
+      "ragged": 0.15,
+      "erase": [
+        "cobble"
+      ],
+      "eraseReach": 4
+    },
+    {
+      "id": "lake-road-north",
+      "ground": "path",
+      "seed": 37,
+      "points": [
+        [
+          264,
+          75
+        ],
+        [
+          264,
+          83
+        ],
+        [
+          266.5,
+          90
+        ],
+        [
+          269.5,
+          97
+        ]
+      ],
+      "width": [
+        2,
+        2.4
+      ],
+      "wind": 1.2,
+      "wave": 30,
+      "ragged": 0.15,
+      "erase": [
+        "cobble"
+      ],
+      "eraseReach": 4
+    },
+    {
+      "id": "weir-road",
+      "ground": "path",
+      "seed": 41,
+      "points": [
+        [
+          356,
+          88
+        ],
+        [
+          358,
+          82
+        ],
+        [
+          362,
+          73
+        ],
+        [
+          365.5,
+          62
+        ],
+        [
+          367,
+          48
+        ],
+        [
+          370,
+          37
+        ],
+        [
+          377,
+          27
+        ],
+        [
+          385,
+          19
+        ]
+      ],
+      "width": [
+        2,
+        2
+      ],
+      "wind": 1.8,
+      "wave": 40,
+      "ragged": 0.15,
+      "erase": [
+        "cobble"
+      ],
+      "eraseReach": 4
+    },
+    {
+      "id": "fen-path",
+      "ground": "path",
+      "seed": 43,
+      "points": [
+        [
+          197,
+          51
+        ],
+        [
+          199.5,
+          40
+        ],
+        [
+          201.5,
+          28
+        ],
+        [
+          203,
+          17
+        ],
+        [
+          202,
+          8
+        ],
+        [
+          203,
+          3.5
+        ],
+        [
+          207,
+          -2
+        ],
+        [
+          212,
+          -7
+        ],
+        [
+          222,
+          -11.5
+        ],
+        [
+          236,
+          -15.5
+        ],
+        [
+          249,
+          -20.5
+        ],
+        [
+          258,
+          -27
+        ]
+      ],
+      "width": [
+        2,
+        2
+      ],
+      "wind": 1.4,
+      "wave": 36,
+      "ragged": 0.15,
+      "erase": [
+        "dirtroad",
+        "bridge"
+      ],
+      "eraseReach": 5
+    },
+    {
+      "id": "downs-track",
+      "ground": "dirttrack",
+      "seed": 47,
+      "points": [
+        [
+          262,
+          -32
+        ],
+        [
+          265.5,
+          -41
+        ],
+        [
+          270,
+          -51
+        ],
+        [
+          272,
+          -62
+        ],
+        [
+          277.5,
+          -72
+        ],
+        [
+          284,
+          -82
+        ],
+        [
+          290.5,
+          -90
+        ],
+        [
+          295.5,
+          -97
+        ]
+      ],
+      "width": [
+        1.8,
+        1.8
+      ],
+      "wind": 1.8,
+      "wave": 34,
+      "ragged": 0.2,
+      "erase": [
+        "dirtroad"
+      ],
+      "eraseReach": 4
+    }
+  ],
+  "swaps": [
+    {
+      "from": [
+        "mud"
+      ],
+      "nearWater": 3,
+      "to": [
+        {
+          "ground": "reeds",
+          "share": 0.55,
+          "scale": 4
+        },
+        {
+          "ground": "sand",
+          "share": 0.35,
+          "scale": 3
+        }
+      ],
+      "otherwise": "grass"
+    },
+    {
+      "from": [
+        "dirtroad"
+      ],
+      "nearWater": 0,
+      "rect": [
+        205,
+        -12,
+        224,
+        8
+      ],
+      "to": [
+        {
+          "ground": "reeds",
+          "share": 0.3,
+          "scale": 3
+        }
+      ],
+      "otherwise": "grass"
+    },
+    {
+      "from": [
+        "sand",
+        "shingle"
+      ],
+      "nearWater": 0,
+      "awayFromWater": 2,
+      "rect": [
+        318,
+        20,
+        350,
+        96
+      ],
+      "to": [],
+      "otherwise": "grass"
+    },
+    {
+      "from": [
+        "sand",
+        "shingle"
+      ],
+      "nearWater": 0,
+      "awayFromWater": 2,
+      "rect": [
+        280,
+        -96,
+        316,
+        -12
+      ],
+      "to": [],
+      "otherwise": "grass"
+    }
+  ],
+  "shapes": [
+    {
+      "id": "belfry-isle",
+      "seed": 61,
+      "clear": [
+        248,
+        6,
+        308,
+        38
+      ],
+      "clearGrounds": [
+        "broken",
+        "shingle",
+        "sand",
+        "reeds",
+        "grass",
+        "meadow",
+        "heath"
+      ],
+      "clearTo": "lake",
+      "points": [
+        [
+          253.9,
+          20.4
+        ],
+        [
+          258.0,
+          25.3
+        ],
+        [
+          264.6,
+          28.9
+        ],
+        [
+          272.1,
+          30.7
+        ],
+        [
+          277.8,
+          28.3
+        ],
+        [
+          283.6,
+          31.2
+        ],
+        [
+          291.9,
+          30.6
+        ],
+        [
+          297.6,
+          27.3
+        ],
+        [
+          300.1,
+          22.0
+        ],
+        [
+          297.6,
+          16.4
+        ],
+        [
+          290.2,
+          13.1
+        ],
+        [
+          281.1,
+          14.7
+        ],
+        [
+          275.4,
+          12.6
+        ],
+        [
+          266.3,
+          13.8
+        ],
+        [
+          258.0,
+          16.4
+        ]
+      ],
+      "ragged": 0.9,
+      "ground": "grass",
+      "patches": [
+        {
+          "ground": "meadow",
+          "share": 0.35,
+          "scale": 5
+        },
+        {
+          "ground": "heath",
+          "share": 0.3,
+          "scale": 4
+        }
+      ],
+      "peak": [
+        291,
+        22
+      ],
+      "height": 2.2,
+      "plateau": 5,
+      "spread": 17,
+      "gentle": 5,
+      "beach": "shingle",
+      "beachWidth": 1.6,
+      "beachPatches": [
+        {
+          "ground": "reeds",
+          "share": 0.3,
+          "scale": 4
+        },
+        {
+          "ground": "sand",
+          "share": 0.45,
+          "scale": 3
+        }
+      ],
+      "rock": "broken",
+      "rockRise": 0.85,
+      "cliffSide": [
+        1,
+        -0.15
+      ]
+    }
+  ]
+}

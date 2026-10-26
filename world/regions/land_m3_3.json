@@ -8,7 +8,7 @@
   "instanced": false,
   "music": "",
   "materials": {
-    "LandFrontier": "DarkRock",
+    "LandFrontier": "Heath",
     "LandHighland": "MossyStone",
     "LandMoonFace": "Moonlight",
     "LandScar": "Stone"
@@ -114,7 +114,7 @@
     "0*18 1*3 2 3 5 7 10 15 20 26 34 43 54 66 79 95 112 130 149 169 189 214 242 270 295 316 336 359 385 413 444 479 517 557 597 635 671 705 735 762 786 807 824 838 849 854 856*3 857*2 845 822 798 774 750 726 702 597 342 86 -20*17"
   ] },
   "pieces": [
-    { "id": "ground", "kind": "tiles", "rect": [-288, 288, -192, 384], "legend": { "%": { "material": "LandFrontier", "blocks": true, "height": 0.6 }, "c": { "material": "LandScar" }, "k": { "material": "LandHighland" }, "l": { "material": "LandScar", "cliff": "LandMoonFace" }, "v": { "material": "LandMoonFace", "blocks": true, "cliff": "LandMoonFace" } }, "rows": [
+    { "id": "ground", "kind": "tiles", "rect": [-288, 288, -192, 384], "legend": { "%": { "material": "LandFrontier", "blocks": true, "beyond": true }, "c": { "material": "LandScar" }, "k": { "material": "LandHighland" }, "l": { "material": "LandScar", "cliff": "LandMoonFace" }, "v": { "material": "LandMoonFace", "blocks": true, "cliff": "LandMoonFace" } }, "paint": true, "rows": [
       "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%kkkkkkkkkkkkkkkkkkkkkkkkkkk",
       "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%kkkkkkkkkkkkkkkkkkkkkkkkkkk",
       "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%kkkkkkkkkkkkkkkkkkkkkkkkkkk",

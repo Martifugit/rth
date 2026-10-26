@@ -1,0 +1,452 @@
+{
+  "area": "cruor",
+  "takeOver": true,
+  "note": "First pass on Cruor and the meander (2026-10-26): the regions taken over, the highways across the open land became gravel paths (wider near the city; the paved square stays as the city's placeholder), and the river's even strip of sand became patches of reeds and sand in the ground round it. Applied once with `tools/world strokes world/strokes/cruor.json`. The dead-end lobe of the great river where it enters land_3_2 painted out, matching the owner's fix in land_2_2.",
+  "strokes": [
+    {
+      "id": "outflow-end",
+      "ground": "river",
+      "seed": 97,
+      "points": [
+        [
+          342.5,
+          95
+        ],
+        [
+          342,
+          103
+        ],
+        [
+          344.5,
+          111
+        ],
+        [
+          343.5,
+          119
+        ],
+        [
+          345.5,
+          127
+        ]
+      ],
+      "width": [
+        4.2,
+        4.6
+      ],
+      "wind": 5.5,
+      "wave": 24,
+      "ragged": 0.12,
+      "erase": [
+        "river",
+        "sand",
+        "mud"
+      ],
+      "eraseReach": 4,
+      "banks": [
+        {
+          "ground": "reeds",
+          "share": 0.28,
+          "scale": 5
+        },
+        {
+          "ground": "sand",
+          "share": 0.15,
+          "scale": 3
+        }
+      ]
+    },
+    {
+      "id": "west-road",
+      "ground": "path",
+      "seed": 71,
+      "width": [
+        2.6,
+        2.2
+      ],
+      "wind": 1.2,
+      "wave": 34,
+      "ragged": 0.15,
+      "points": [
+        [
+          316,
+          175
+        ],
+        [
+          307,
+          175.5
+        ],
+        [
+          300,
+          179
+        ],
+        [
+          293,
+          183
+        ],
+        [
+          289,
+          187
+        ],
+        [
+          285,
+          192.5
+        ]
+      ],
+      "erase": [
+        "cobble",
+        "worn"
+      ],
+      "eraseReach": 4,
+      "keep": [
+        "paving",
+        "site"
+      ]
+    },
+    {
+      "id": "north-road",
+      "ground": "path",
+      "seed": 73,
+      "width": [
+        2.6,
+        2.2
+      ],
+      "wind": 1.4,
+      "wave": 38,
+      "ragged": 0.15,
+      "points": [
+        [
+          327,
+          183
+        ],
+        [
+          330.5,
+          191
+        ],
+        [
+          331,
+          199
+        ],
+        [
+          332,
+          207
+        ],
+        [
+          334,
+          215
+        ],
+        [
+          337,
+          219.5
+        ],
+        [
+          340.5,
+          223
+        ],
+        [
+          349,
+          227
+        ],
+        [
+          359,
+          231
+        ],
+        [
+          366,
+          235.5
+        ],
+        [
+          371,
+          241
+        ],
+        [
+          379,
+          249
+        ],
+        [
+          385,
+          252.5
+        ]
+      ],
+      "erase": [
+        "cobble",
+        "worn",
+        "bridge"
+      ],
+      "eraseReach": 4,
+      "keep": [
+        "paving",
+        "site"
+      ]
+    },
+    {
+      "id": "lake-road",
+      "ground": "path",
+      "seed": 79,
+      "width": [
+        2.6,
+        2.2
+      ],
+      "wind": 1.4,
+      "wave": 38,
+      "ragged": 0.15,
+      "points": [
+        [
+          321,
+          167
+        ],
+        [
+          316,
+          155
+        ],
+        [
+          311,
+          147
+        ],
+        [
+          303,
+          139
+        ],
+        [
+          295,
+          131
+        ],
+        [
+          288,
+          123
+        ],
+        [
+          281,
+          115
+        ],
+        [
+          275.5,
+          105
+        ],
+        [
+          271.5,
+          99
+        ],
+        [
+          269.5,
+          95
+        ]
+      ],
+      "erase": [
+        "cobble",
+        "worn"
+      ],
+      "eraseReach": 4,
+      "keep": [
+        "paving",
+        "site"
+      ]
+    },
+    {
+      "id": "weir-road",
+      "ground": "path",
+      "seed": 83,
+      "width": [
+        2.6,
+        2.2
+      ],
+      "wind": 1.2,
+      "wave": 32,
+      "ragged": 0.15,
+      "points": [
+        [
+          325,
+          167
+        ],
+        [
+          326.5,
+          155
+        ],
+        [
+          330.5,
+          147
+        ],
+        [
+          337.5,
+          139
+        ],
+        [
+          344.5,
+          131
+        ],
+        [
+          350.5,
+          126
+        ],
+        [
+          354,
+          121
+        ],
+        [
+          356,
+          114
+        ],
+        [
+          356,
+          105
+        ],
+        [
+          355.5,
+          95
+        ]
+      ],
+      "erase": [
+        "cobble",
+        "worn",
+        "bridge"
+      ],
+      "eraseReach": 4,
+      "keep": [
+        "paving",
+        "site"
+      ]
+    },
+    {
+      "id": "east-road",
+      "ground": "path",
+      "seed": 89,
+      "width": [
+        2.2,
+        2.2
+      ],
+      "wind": 1.6,
+      "wave": 40,
+      "ragged": 0.15,
+      "points": [
+        [
+          356,
+          119
+        ],
+        [
+          363,
+          119
+        ],
+        [
+          371,
+          115.5
+        ],
+        [
+          385,
+          111.5
+        ],
+        [
+          405,
+          111
+        ],
+        [
+          429,
+          111.5
+        ],
+        [
+          440,
+          115
+        ],
+        [
+          452,
+          119
+        ],
+        [
+          461,
+          123
+        ],
+        [
+          469,
+          127
+        ],
+        [
+          476,
+          131
+        ],
+        [
+          480.5,
+          133.5
+        ]
+      ],
+      "erase": [
+        "cobble",
+        "worn",
+        "bridge"
+      ],
+      "eraseReach": 4,
+      "keep": [
+        "paving",
+        "site"
+      ]
+    }
+  ],
+  "swaps": [
+    {
+      "from": [
+        "river",
+        "sand"
+      ],
+      "nearWater": 0,
+      "rect": [
+        288,
+        208,
+        295,
+        216
+      ],
+      "to": [],
+      "otherwise": "grass",
+      "seed": 99
+    },
+    {
+      "from": [
+        "cobble"
+      ],
+      "nearWater": 0,
+      "to": [],
+      "otherwise": "surround",
+      "seed": 93
+    },
+    {
+      "from": [
+        "sand"
+      ],
+      "nearWater": 1,
+      "to": [
+        {
+          "ground": "reeds",
+          "share": 0.3,
+          "scale": 4
+        },
+        {
+          "ground": "sand",
+          "share": 0.22,
+          "scale": 3
+        }
+      ],
+      "otherwise": "surround",
+      "seed": 91
+    },
+    {
+      "from": [
+        "grass",
+        "meadow",
+        "heath",
+        "reeds",
+        "sand",
+        "wheat",
+        "ley",
+        "furrow"
+      ],
+      "nearWater": 0,
+      "steep": 0.9,
+      "steepReach": 1,
+      "to": [
+        {
+          "ground": "shingle",
+          "share": 0.3,
+          "scale": 3
+        }
+      ],
+      "otherwise": "broken",
+      "seed": 95
+    }
+  ]
+}

@@ -12,6 +12,12 @@
   "bridgeGround": "bridge",
   "passGround": "pass",
   "defaultPower": "wild",
+  "stones": {
+    "gravel": {"name": "Gravel", "palette": "Gravel"},
+    "flint": {"name": "Grey stones", "palette": "Scree"},
+    "chalk": {"name": "Chalk chips", "palette": "Chalk"},
+    "rubble": {"name": "Dark rubble", "palette": "CliffRock"}
+  },
   "grounds": {
     "sea": {"letter": "~", "name": "Sea", "palette": "Sea", "map": "#24476b", "water": true, "walkable": false, "rough": 0, "height": 0},
     "lake": {"letter": "l", "name": "Lake", "palette": "Mere", "map": "#3a6688", "water": true, "walkable": false, "rough": 0, "height": 0},
@@ -19,6 +25,8 @@
     "bridge": {"letter": "b", "name": "Bridge or ford", "palette": "Planks", "map": "#c8a46e", "layer": "over", "detail": true, "rough": 0.5, "height": 1},
     "cobble": {"letter": "=", "name": "The empire's highway", "palette": "Cobble", "map": "#a8a39a", "layer": "over", "detail": true, "rough": 0, "height": 1},
     "dirtroad": {"letter": "-", "name": "Road", "palette": "Dirt", "map": "#9a7a50", "layer": "over", "detail": true, "rough": 0, "height": 1},
+    "path": {"letter": "A", "name": "Gravel path", "palette": "Trodden", "map": "#8b8679", "layer": "over", "stones": {"kind": "gravel", "share": 0.3}, "detail": true, "rough": 0, "height": 1},
+    "dirttrack": {"letter": "&", "name": "Dirt track", "palette": "Worn", "map": "#8d7d55", "layer": "over", "stones": {"kind": "gravel", "share": 0.14}, "detail": true, "rough": 0, "height": 1},
     "dustroad": {"letter": ",", "name": "Caravan road", "palette": "Dust", "map": "#c9b385", "layer": "over", "detail": true, "rough": 0, "height": 1},
     "cinderroad": {"letter": ":", "name": "Cinder road", "palette": "Cinderroad", "map": "#3e3936", "layer": "over", "detail": true, "rough": 0, "height": 1},
     "causeway": {"letter": "#", "name": "Causeway", "palette": "Causeway", "map": "#7d6a4c", "layer": "over", "detail": true, "rough": 0, "height": 1},
@@ -136,7 +144,7 @@
       "bank": "olive",
       "scree": "redrock",
       "cliff": "Sandstone",
-      "mix": [{"ground": "dust", "share": 0.22, "scale": 38}, {"ground": "redrock", "share": 0.03, "scale": 44}]
+      "mix": [{"ground": "dust", "share": 0.22, "scale": 38}]
     },
     "dust": {"letter": "D", "name": "Dust", "palette": "Dust", "map": "#c2ab7c", "detail": true, "rough": 2, "height": 3},
     "redrock": {"letter": "o", "name": "Red rock", "palette": "RedRock", "map": "#9c6444", "rough": 3, "height": 4, "shore": "sand", "cliff": "Sandstone"},
@@ -295,8 +303,8 @@
       "ground": "grass",
       "share": [0.3, 0.38],
       "label": [425, 210],
-      "roads": {"main": "cobble", "road": "dirtroad"},
-      "square": "paving",
+      "roads": {"main": "path", "road": "dirttrack", "track": "dirttrack"},
+      "square": null,
       "worn": "worn",
       "fields": ["wheat", "furrow", "ley", "wheat", "ley"]
     },
@@ -307,7 +315,7 @@
       "share": [0.12, 0.18],
       "label": [638, -310],
       "roads": {"main": "cinderroad", "road": "cinderroad"},
-      "square": "paving",
+      "square": null,
       "worn": "ashworn"
     },
     "houses": {
@@ -317,7 +325,7 @@
       "share": [0.07, 0.13],
       "label": [728, 530],
       "roads": {"main": "causeway", "road": "causeway"},
-      "square": "causeway",
+      "square": null,
       "worn": "mud"
     },
     "range": {
@@ -326,8 +334,8 @@
       "ground": "highland",
       "share": [0.1, 0.18],
       "label": [-175, -362],
-      "roads": {"main": "gravelroad", "road": "gravelroad"},
-      "square": "paving",
+      "roads": {"main": "path", "road": "dirttrack", "track": "dirttrack"},
+      "square": null,
       "worn": "scree",
       "fields": ["ley", "furrow"]
     },
@@ -338,7 +346,7 @@
       "share": [0.08, 0.15],
       "label": [90, -404],
       "roads": {"main": "dustroad", "road": "dustroad", "track": "dust"},
-      "square": "paving",
+      "square": null,
       "worn": "dust",
       "fields": ["olive", "furrow", "wheat"]
     },
@@ -348,7 +356,7 @@
       "ground": "tundra",
       "share": [0.1, 0.2],
       "label": [200, 642],
-      "roads": {},
+      "roads": {"main": "path", "road": "dirttrack", "track": "dirttrack"},
       "worn": "worn"
     },
     "frontier": {"name": "Frontiers", "colour": "#7c8474", "ground": "heath", "core": false, "label": [-450, 250]}
@@ -1241,7 +1249,7 @@
       "across": 200,
       "note": "the empire's capital and p-sworn's church, on a hill in the great river's meander where the lake's outflow joins it"
     },
-    {"id": "tolling", "name": "Tolling", "tier": "town", "at": [30, 48], "note": "built (0-95, 0-95): the start, in the low Wennow basin"},
+    {"id": "tolling", "name": "Tolling", "tier": "town", "at": [30, 48], "start": true, "note": "the start, in the low Wennow basin"},
     {
       "id": "p-lakeport",
       "name": "p-lakeport",
@@ -1300,8 +1308,8 @@
     {"id": "p-forest-deep", "name": "p-forest-deep", "tier": "hamlet", "at": [457, 440], "note": "foresters in Eller's old wood"},
     {"id": "p-poolside", "name": "p-poolside", "tier": "hamlet", "at": [584, 6], "note": "below p-head's falls, by the pool"},
     {"id": "p-ford", "name": "p-ford", "tier": "hamlet", "at": [569, 162], "note": "where the falls' river meets the great river"},
-    {"id": "widdermill", "name": "Widdermill", "tier": "landmark", "at": [30, 80], "note": "built, in Tolling"},
-    {"id": "waygate", "name": "the waygate", "tier": "landmark", "at": [180, 48], "note": "built, in Palmerway: today's edge of the world"},
+    {"id": "widdermill", "name": "Widdermill", "tier": "landmark", "at": [30, 80], "note": "the mill on Tolling's river, north of the town"},
+    {"id": "waygate", "name": "the waygate", "tier": "landmark", "at": [180, 48], "note": "the wardens' gate on Palmerway"},
     {
       "id": "p-head",
       "name": "p-head (the falls)",

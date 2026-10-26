@@ -116,7 +116,7 @@
     "213 190 167 145 124 105 87 71 56 44 33 25 18 12 8 5 3 2 1 0*78"
   ] },
   "pieces": [
-    { "id": "ground", "kind": "tiles", "rect": [-96, 192, 0, 288], "legend": { "+": { "material": "LandSettlement", "height": 0.02 }, "-": { "material": "LandRoad", "height": 0.01 }, "b": { "material": "LandBridge", "height": 0.05 }, "g": { "material": "LandFarmland" }, "r": { "material": "LandRiver", "water": true, "height": -0.15 }, "s": { "material": "LandScrub" } }, "rows": [
+    { "id": "ground", "kind": "tiles", "rect": [-96, 192, 0, 288], "legend": { "+": { "material": "LandSettlement", "height": 0.02, "layer": "over" }, "-": { "material": "LandRoad", "height": 0.01, "layer": "over" }, "b": { "material": "LandBridge", "height": 0.05, "layer": "over" }, "g": { "material": "LandFarmland" }, "r": { "material": "LandRiver", "water": true, "height": -0.15 }, "s": { "material": "LandScrub" } }, "paint": true, "rows": [
       "ssssssssssssssssssssssssssssssssss---ssssssssssssggggggggggggggggggggggggggggggggggggggggggggggg",
       "ssssssssssssssssssssssssssssssssss---ssssssssssssggggggggggggggggggggggggggggggggggggggggggggggg",
       "ssssssssssssssssssssssssssssssssss---ssssssssssssggggggggggggggggggggggggggggggggggggggggggggggg",

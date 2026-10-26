@@ -12,6 +12,8 @@
     "b": { "name": "Bridge or ford", "ground": "Planks", "water": false, "walkable": true, "rough": 0.5 },
     "=": { "name": "The empire's highway", "ground": "Cobble", "water": false, "walkable": true, "rough": 0 },
     "-": { "name": "Road", "ground": "Dirt", "water": false, "walkable": true, "rough": 0 },
+    "A": { "name": "Gravel path", "ground": "Trodden", "water": false, "walkable": true, "rough": 0 },
+    "&": { "name": "Dirt track", "ground": "Worn", "water": false, "walkable": true, "rough": 0 },
     ",": { "name": "Caravan road", "ground": "Dust", "water": false, "walkable": true, "rough": 0 },
     ":": { "name": "Cinder road", "ground": "Cinderroad", "water": false, "walkable": true, "rough": 0 },
     "#": { "name": "Causeway", "ground": "Causeway", "water": false, "walkable": true, "rough": 0 },
