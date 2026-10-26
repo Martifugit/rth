@@ -65,8 +65,8 @@ These come from how RuneScape's world is built, from Albion's and Blizzard's zon
    a settlement, a landmark, a junction, a bridge, a view. Quiet stretches between beats are good
    for contrast; 200 tiles of nothing is not.
 6. **Each power builds its own roads.** The road tells you whose land you are in:
-   - the empire's highways are paved and run straight where they can, on causeways over wet
-     ground and through cuttings in hills (an empire that must keep moving soldiers);
+   - the empire's roads out in the land are gravel paths and dirt tracks that wander in easy
+     bends (paving is for towns, not the wild);
    - Sere's are caravan tracks from well to well, marked by cairns;
    - the spine's are switchbacks with a toll gate at every crossing ("every crossing pays");
    - Gall's are black cinder roads between lava fields;
@@ -382,12 +382,13 @@ a road bends at 45 degrees instead of stepping.
 
 | Class | Width | Painted | Routed |
 | --- | --- | --- | --- |
-| Highway (`main`) | 3 tiles | An overlay (the power's paving: cobble, cinder, planks), with a tile of worn verge underlay each side | Between its stops, the cheapest way over the land: gentle slopes, round lakes, across rivers at narrow points (a bridge), straight where the land allows |
-| Road (`road`) | 2 tiles | Dirt overlay | The same, more willing to wind |
-| Track (`track`) | 1-2 tiles | Worn underlay only (a desire line in the grass, blended) | The same, cheapest of all |
+| Highway (`main`) | 3 tiles | An overlay, the power's own (`powers.<id>.roads`): the empire's gravel `path` (plain earth with stones scattered unevenly over it), cinder, planks; a worn verge each side unless the ground carries stones | Between its stops, the cheapest way over the land: gentle slopes, round lakes, across rivers at narrow points (a bridge); then loosened into easy bends (`wind`, default 5 tiles either side, over `wave` 55) wherever the bends stay on ground a road may cross |
+| Road (`road`) | 2 tiles | The empire's `dirttrack`, thinly stoned | The same, drifting 6 tiles |
+| Track (`track`) | 1-2 tiles | The same (or the power's worn ground) | The same |
 
 Every road starts and ends in a place, a junction or another road. Roads widen into a square where
-they meet a settlement. Bridges are an overlay (planks) where a road crosses water.
+they meet a settlement only for a power that names one (`square`); none does while the world is
+ground only, so roads simply meet. Bridges are an overlay (planks) where a road crosses water.
 
 **Water** is a surface at its own level, and the ground under it is carved lower: the shore is where
 the land meets the water, so it runs smoothly at any angle instead of stepping tile by tile. Lakes
@@ -464,9 +465,16 @@ land in `shared/World/Layout` (`Landscape`, `Relief`, `RoadRouter`, `LandHeights
   `TileGround` paints the ground when it loads. Things to judge: the colours (palette entries added
   for the new grounds), the blend, the 45-degree shapes on water and roads, how high the Scarp and
   the spine's west face feel, the passes.
+- **Found in the generated land (2026-10-26), for the areas they lie in:** short tributaries
+  (p-moor-burn, p-eller-brook, p-downs-brook) run almost straight, because a river's bends are
+  sized for the great river (`Landscape.Meander`); redraw them with strokes as each area is
+  built, rather than changing every river's bends (that would move where rivers cross into regions
+  already taken over). The cold north's southern border is a straight line across the heartland's
+  north with white flecks along it.
 - **Names.** Every new place is a `p-` placeholder (see `lore-rework/names.md` for candidates).
-- **Tolling and Palmerway** are left as built: flat, drawn the old way, at 0. The land round them
-  falls to meet them. When they are rebuilt (F2), they become painted regions like the rest.
+- **Tolling and Palmerway** were scrapped (2026-10-26): their old flat blockouts are gone and the
+  blockout generates `land_0_0` and `land_1_0` like the rest. The spawn is the layout's start place
+  (`"start": true` on Tolling in `places`); the town's content returns at its area's stage 3.
 - **Selenfall** keeps its built surface; the generated land blends into its edges.
 - **The old capital blockouts** (Cruor, Tithe, Cistern, Meridian builders and scenes) are on the old
   map and no region places them. They are left in place for the owner to delete; their kits

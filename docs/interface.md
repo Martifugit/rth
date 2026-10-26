@@ -34,7 +34,7 @@ every piece and how they are organised.
 |---|---|
 | **Main action bar** ✓ | Blood, phlegm and breath as three equal gauges; the bile axis (two halves filling outward from a black centre that holds the value); 14 slots on keys 1 to 0, - and =. Fixed size. Devotion (hymns) replaced breath. **To change:** the style meter shown may follow the weapon you hold. |
 | **Secondary action bars** ✓ | Two more bars of 14 slots (from the window menu). Abilities and items are dragged onto any bar; layouts are kept on the server. |
-| **Minimap** ✓ | Round, in a bronze bezel with a gold crest (`Skin/minimap-bezel`); it turns with the camera, click to walk. The compass (click to face north) and the clock sit in medallions on the ring's upper corners, the region's name low on the map. Six round buttons sit in a cradle around the bottom of the ring: run, world map, journal, guide, settings and a menu of every window. Fixed at 240 px; its geometry is shared by `MinimapPanel.cs` and `make_skin.py`. No blood orb: blood is on the action bar. |
+| **Minimap** ✓ | Round, in a bronze bezel with a gold crest (`Skin/minimap-bezel`); it turns with the camera, click to walk. The compass (click to face north) and the clock sit in medallions on the ring's upper corners, the region's name low on the map. A red flag marks where a click sent you (on the map or in the world) until you get there or stop; the world map's marker shows as a small gold diamond, or, while it's out of sight, a small arrow at the edge that slowly fades in and out. Six round buttons sit in a cradle around the bottom of the ring: run, world map, journal, guide, settings and a menu of every window. Fixed at 240 px; its geometry is shared by `MinimapPanel.cs` and `make_skin.py`. No blood orb: blood is on the action bar. |
 | **Chat** ✓ | Filters (all, game, public) and the line you type on (Enter). Fixed size. Private and group chat to come. |
 | **Target** ✓ | What you are fighting, and its health. Kept while you walk away in combat. |
 | **Buffs / debuffs** ✓ | Two fixed rows of status icons above the action bar (bile's four statuses, wards from abilities), each with its % or time left; hover for what it does. |
@@ -85,13 +85,15 @@ every piece and how they are organised.
   (`world/layout/`, sent as `ClientContent.Chart`), so it always matches the world. The ground is
   painted once (each ground in its colour, wandering edges, hill shading, shallows, an inked coast,
   faint borders between the powers); over it, as vectors that stay crisp at every zoom, rivers,
-  main roads, roads, passes (dashed) and ferries (dotted), the built regions outlined in gold with
-  the rest shaded as unexplored, and the places' marks by tier. Names by tier (cities and towns in
+  main roads, roads, passes (dashed) and ferries (dotted), the built regions outlined faintly in gold
+  (**Region borders** in the legend hides them) with the rest shaded as unexplored, and the places' marks by tier. Names by tier (cities and towns in
   Cinzel, villages smaller, hamlets and landmarks only close in), realm names faint across their
   land, named rivers and passes close in; a place that has no name yet is an unnamed mark. Drag to
   pan, the wheel or +/- to zoom in fixed steps, "you are here" with your facing, a button to come
   back to it, a legend with toggles, and the ground, realm and region under the pointer at the
-  bottom. Waystone travel will be a tab.
+  bottom. A right-click sets **your marker** (a gold pin, kept in the client state `map.waypoint`, so
+  it follows the player); a right-click on it or the clear button removes it, and reaching it clears
+  it. Waystone travel will be a tab. Where the map is going: "The world map (design)" below.
 - **Settings** ✓: general (roofs, lock, scale, reset layout, log out) and controls.
 - **Character** ✓ (from the worn equipment's buttons): **stats** (every combat stat, grouped:
   offence, defence, devotion, a per-style table of power, accuracy, damage and deflection, and the
@@ -101,6 +103,76 @@ every piece and how they are organised.
   another player offers **Inspect** (after Walk here, so a left click still walks), which opens
   the same page on them. The server answers with public information only.
 - To come: announcements (level up, quest complete, new drop).
+
+## The world map (design)
+
+Agreed 2026-10-26; not built yet beyond the marker and the toggles above.
+
+**Why the map goes stale today.** `WorldChart` is the layout's plan (one ground per 8x8 zone from
+`continent.json`, lines from the blockout's routes), compiled once when the server starts. Hand
+painting, strokes, terrain and taken-over regions never reach it, and a server left running keeps
+the old chart.
+
+**The picture comes from the world itself.** The export (`tools/world export`, also run by Sync
+World) bakes a chart from the compiled regions: each tile's ground in its map colour (a ground's
+`map` colour, else its palette colour), hill shading from the terrain, water and shores as the game
+draws them, house footprints filled and walls and fences as thin lines. Land nobody has built yet is
+painted from the layout as now. It is a new file beside `server/data/maps`; nothing existing changes.
+Objects are never drawn from their models: a thing shows only if it says how (below).
+
+**Names stay design data:** places, tiers, realms and river names come from `continent.json`;
+area names (forests, marshes, ranges, seas) from named `relief` and grounds; districts close in.
+
+**Markers.** Every icon is a marker of a **kind**, described once in a data file (`map.json`):
+icon, category, zoom band, priority, and the detail shown on hover. Markers come from providers,
+all through one pipeline:
+
+| Provider | Example |
+|---|---|
+| Placed by hand | `"map": { "marker": "minigame" }` on a piece in a region's data |
+| Object and NPC types | `"map": { "marker": "dungeon" }` on `cave_mouth`: every placed one |
+| Actions and menus | anything with `bank`, `pray`, a shop, a task-giver |
+| Quests | whoever runs `startQuest` |
+| Gathering clusters | enough nodes of one skill close together: one marker at their centre, listing what and the levels |
+| Instances | a way into an instanced region: dungeon, boss arena |
+| Creatures | where a kind lives (spawns and the bestiary): an area with its name and level range |
+
+The most specific setting wins: a ground's `map` colour, then an object type's `map`, then a placed
+piece's `map`; `"map": false` hides it. A tint (`"map": { "tint": "Wheat" }`) colours a footprint
+instead of an icon, so a wheat field reads as wheat. Markers from content are made when the server
+starts, so they follow hot-reload; only the ground picture is baked.
+
+**Legend categories** (each a toggle; a search later):
+
+- **Travel:** waystones, docks and ferries, shortcuts (the skill's icon, its level on hover), gates
+  and barriers (locked by a quest or flag), dungeon and cave entrances.
+- **Services:** bank, shops (one icon, a badge for what they sell), altars, monuments, task-givers,
+  workstations (forge, furnace, range, rack, vat, still, loom, bench; close in only).
+- **Skills:** gathering clusters per skill (Mining, Woodcutting, Fishing, Foraging, Dreaming),
+  Butchering's hunting grounds.
+- **Combat:** creature areas (level range; aggressive ones tinted), bosses, demigods, dungeons.
+  Danger shading by level later, once there are enough creatures.
+- **Quests:** quest starts by state for this player (available, locked with what's missing,
+  in progress, done hidden); readables and view points close in.
+- **Activities:** minigames, arenas, group content.
+- **Personal:** you, your marker (done), where you last died, your own pins and notes, friends and
+  group later.
+
+**Zoom bands**, named rather than numbers: **continent** (realms, cities, a few landmarks),
+**realm** (towns, bosses, minigames), **region** (villages, quest starts, banks), **area**
+(entrances, resources, shortcuts, workstations, hamlets). A kind says the band it appears from; one
+marker may override it (a famous dungeon from `realm`). Place tiers move onto the same bands.
+Where icons would overlap, priority decides. Zoomed out, a town may show a small strip of what it
+has instead of hiding it all.
+
+**Per player:** done quests drop their marker; later, markers may stay hidden until discovered.
+Inside a dungeon or instance, M shows that region's own chart.
+
+**Kept off the map:** single creatures and NPCs, single trees and rocks, anything marked secret,
+and the layout's reserved `sites` until their content exists.
+
+**Order:** (1) bake the ground from the tiles; (2) markers, kinds and zoom bands, placed and by
+object type; (3) the other providers and the legend's categories.
 
 ## Server windows
 

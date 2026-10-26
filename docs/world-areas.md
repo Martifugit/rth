@@ -19,7 +19,7 @@ enough to finish, big enough to mean something ([world-guide.md](world-guide.md)
 - **The frontiers and the open sea** (158 regions) are one area held back: drawn, never built, until
   a frontier opens.
 - An area is a set of region scenes, nothing more: in Unity, open one of its regions and use
-  **R'th > World > Open This Area** to open the rest beside it.
+  **R'th > Open Selected Area** (Alt+Shift+O, or right-click its scene in the Hierarchy) to open the rest beside it.
 
 ## The standard
 

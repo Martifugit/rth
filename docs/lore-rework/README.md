@@ -18,8 +18,9 @@ Work goes top-down, because each layer hangs off the one above it:
 | 2 | **Triage**: which existing entities survive into that universe, and which are new | a table, agreed |
 | 3 | **The board**: the powers, how much land each holds, where their borders press, who wants what from whom | `powers.md` with a relations matrix |
 | 4 | **One sheet per entity**, one at a time, in an agreed order | `entities/<id>.md` |
-| 5 | **The timeline**: founding events in order, checked against every sheet | `timeline.md` |
-| 6 | **Clocks**: what each power does next if the player does nothing | in each sheet, summarised in `timeline.md` |
+| 5 | **One sheet per region**, after its holder and pressure are known | `regions/<id>.md` |
+| 6 | **The timeline**: founding events in order, checked against every sheet | `timeline.md` |
+| 7 | **Clocks**: what each power does next if the player does nothing | in each sheet, summarised in `timeline.md` |
 
 Then the area plan's pass 1 is redone on the new map, and `lore.md` and `world-map.md` are
 rewritten from the sheets.

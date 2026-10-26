@@ -129,7 +129,7 @@ With Unity (the owner, or the agent with Unity):
   Play keeps your unsaved heights and puts the terrain back afterwards. Saving takes a few seconds
   (it runs on .NET: the blockout drawn by Unity's Mono would differ by a tile here and there).
 - **Shaping and painting ground:** **R'th > World > Shape and Paint Ground** (or G): one tool in the
-  Scene view, over every open region at once (open an area with **Open This Area**), with two tabs.
+  Scene view, over every open region at once (open an area with **R'th > Open Selected Area**, Alt+Shift+O), with two tabs.
   - **Shape:** raise, lower, flatten (to the height where the stroke began) or smooth with a round
     brush (`[` and `]` change its size); tiles too steep to walk show red. A corner on a region's
     border is shared, so both regions get the same height.

@@ -104,7 +104,7 @@ a walk round. The bake warns before it switches off a region's flat ground.
   tiles that are too steep (cliffs) or marked impassable (water, the mountain wall).
 - **The server has no heights** and needs none: movement and line of sight stay on the tile grid.
 - **The client stands things on the ground** (`GroundHeight`), and the camera lifts over it.
-- **R'th > World > Open Whole World** opens every region side by side; baking with several open
+- **R'th > Open All Scenes** opens every region side by side; baking with several open
   bakes each, and they meet at their borders.
 
 ## 6. The ground layer
