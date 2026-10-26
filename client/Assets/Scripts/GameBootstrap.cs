@@ -16,9 +16,14 @@ namespace Rth.Client
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Boot()
         {
-            if (Object.FindAnyObjectByType<GameSession>() != null)
+            // Look for the Game scene by name, not by its objects: with several scenes open in the
+            // Editor it can still be loading here, and loading it again makes two clients that log
+            // in as the same player and keep knocking each other off the server.
+            Scene open = SceneManager.GetSceneByName(GameScene);
+            if (open.IsValid() || Object.FindAnyObjectByType<GameSession>() != null)
             {
-                MakeActive(SceneManager.GetSceneByName(GameScene));
+                if (open.isLoaded) MakeActive(open);
+                else SceneManager.sceneLoaded += OnLoaded;
                 return;
             }
             if (!Application.CanStreamedLevelBeLoaded(GameScene))
