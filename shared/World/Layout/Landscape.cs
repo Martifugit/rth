@@ -96,11 +96,12 @@ namespace Rth.Shared.World.Layout
         {
             var found = new SortedSet<byte>();
             for (int i = 0; i < Ground.Length; i++) if (Beyond[i] && !IsWater(i)) found.Add(Ground[i]);
-            int k = 0;
+            // Never a character some ground already uses as its own letter (a dirt track is '&').
+            var free = new Queue<char>(BeyondChars.Where(ch => !Data.Grounds.Values.Any(d => d.Letter.Length > 0 && d.Letter[0] == ch)));
             foreach (byte g in found)
             {
-                if (k >= BeyondChars.Length) { Warnings.Add($"too many grounds beyond the first build; {Map.GroundIds[g]} is drawn as itself"); continue; }
-                _twins[g] = BeyondChars[k++];
+                if (free.Count == 0) { Warnings.Add($"too many grounds beyond the first build; {Map.GroundIds[g]} is drawn as itself"); continue; }
+                _twins[g] = free.Dequeue();
             }
         }
 
@@ -801,6 +802,7 @@ namespace Rth.Shared.World.Layout
                         Warnings.Add($"road {road.Id}: no way over the land from ({a.x}, {a.y}) to ({b.x}, {b.y}); drawn straight");
                         part = new List<float[]> { new[] { a.x, a.y }, new[] { b.x, b.y } };
                     }
+                    if (road.Route) part = Drift(part, road, k);
                     if (line.Points.Count > 0) part.RemoveAt(0);
                     line.Points.AddRange(part);
                 }
@@ -823,6 +825,44 @@ namespace Rth.Shared.World.Layout
         }
 
         public static float HalfWidth(string kind) => kind == "main" ? 1.6f : kind == "road" ? 1.05f : 0.7f;
+
+        /// <summary>
+        /// A routed stretch of road loosened into easy bends, as a path is (the same drift as a
+        /// painted stroke, <see cref="Rth.Shared.World.Ground.GroundStrokes"/>): the route thinned to a point every
+        /// 8 tiles, smoothed and wound, its ends kept. Where a bend would leave ground a road may
+        /// cross (into a lake, over a drop), the stretch keeps its route.
+        /// </summary>
+        private List<float[]> Drift(List<float[]> routed, RoadDef road, int part)
+        {
+            float wind = road.WindOrDefault;
+            if (wind <= 0f || routed.Count < 2) return routed;
+            // A point every 8 tiles along the route (the router gives only its corners).
+            var stops = new List<float[]> { routed[0] };
+            float since = 0f;
+            for (int k = 0; k + 1 < routed.Count; k++)
+            {
+                float[] a = routed[k], b = routed[k + 1];
+                float len = (float)Math.Sqrt(Sq(b[0] - a[0]) + Sq(b[1] - a[1]));
+                for (float t = 8f - since; t < len; t += 8f)
+                    stops.Add(new[] { a[0] + (b[0] - a[0]) * t / len, a[1] + (b[1] - a[1]) * t / len });
+                since = (since + len) % 8f;
+            }
+            if (since > 3f || stops.Count == 1) stops.Add(routed[routed.Count - 1]);
+            else stops[stops.Count - 1] = routed[routed.Count - 1];
+            if (stops.Count < 3) return routed;
+            var stroke = new Rth.Shared.World.Ground.Stroke
+            {
+                Points = stops, Wind = wind, Wave = road.Wave, Bends = "drift",
+                Seed = (int)(Geometry.Hash(Data.Seed, road.Id + ":" + part) & 0x7FFFFFFF),
+            };
+            List<float[]> wound = Rth.Shared.World.Ground.GroundStrokes.Line(stroke);
+            foreach (float[] p in wound)
+            {
+                int x = (int)Math.Floor(p[0]), y = (int)Math.Floor(p[1]);
+                if (!InBounds(x, y) || Cost(Index(x, y), 0f) < 0f) return routed;
+            }
+            return wound;
+        }
 
         /// <summary>Whether a tile may carry a road, and what crossing it costs (for <see cref="RoadRouter"/>).</summary>
         internal float Cost(int i, float slope)
@@ -956,22 +996,28 @@ namespace Rth.Shared.World.Layout
                 id ??= kind == "track" ? power?.Worn : null;
                 if (id != null) Ground[i] = G(id, Ground[i]);
             }
+            // (A path whose ground carries stones fades into the land by itself, so it gets no verge.)
             foreach (LandLine line in Roads.Where(l => l.Kind == "main"))
                 Stamp(line, (x, y, d, s, w) =>
                 {
                     if (d <= w || d > w + 1.3f) return;
                     int i = Index(x, y);
                     if (_road[i] != 0 || IsWater(i) || Beyond[i] || Power[i] == ContinentMap.NoPower) return;
-                    byte worn = G(Data.Powers[Map.PowerIds[Power[i]]].Worn, 255);
+                    PowerDef power = Data.Powers[Map.PowerIds[Power[i]]];
+                    if (power.Roads.TryGetValue("main", out string? main) && Data.Grounds.TryGetValue(main, out GroundDef? g) && g.Stones != null) return;
+                    byte worn = G(power.Worn, 255);
                     if (worn != 255) Ground[i] = worn;
                 });
 
-            // Squares where the roads meet the places; marks for landmarks and sites.
+            // Squares where the roads meet the places, for powers that name one; marks for sites.
+            // (Landmarks and places are given their ground when their area is built, not here.)
             foreach (PlaceDef p in Data.Places)
             {
+                if (!p.IsSettlement) continue;
                 int zi = LayoutReport.ZoneIndex(Map, p.At[0], p.At[1]);
                 PowerDef? power = zi >= 0 && Map.Power[zi] != ContinentMap.NoPower ? Data.Powers[Map.PowerIds[Map.Power[zi]]] : null;
-                byte paving = p.IsSettlement ? G(power?.Square, G("paving", 0)) : G("sigil", 0);
+                if (power?.Square == null) continue;
+                byte paving = G(power.Square, G("paving", 0));
                 float r = SquareRadius(p);
                 Disc(p.At[0], p.At[1], r, (i, d) =>
                 {
@@ -1016,6 +1062,7 @@ namespace Rth.Shared.World.Layout
             double angle = (key & 3) * Math.PI / 4.0;
             float ca = (float)Math.Cos(angle), sa = (float)Math.Sin(angle);
             float pw = 11f + (key >> 16 & 7), ph = 7f + (key >> 20 & 3);
+            var laid = new Dictionary<int, byte>(); // each tile ploughed, and the ground it was
             Disc(p.At[0], p.At[1], reach, (i, d) =>
             {
                 if (d < inner || IsWater(i) || Beyond[i] || _road[i] != 0) return;
@@ -1034,8 +1081,27 @@ namespace Rth.Shared.World.Layout
                 if (cluster < -0.15f + 0.75f * edge || LandNoise.Hash01((int)key, pu, pv) > 0.85f) return;
                 float a = Heights.Corner(X0 + tx, Y0 + ty), b = Heights.Corner(X0 + tx + 1, Y0 + ty + 1);
                 if (Math.Abs(a - b) > 0.5f) return; // too steep to plough
+                if (!laid.ContainsKey(i)) laid[i] = Ground[i];
                 Ground[i] = fields[(int)(LandNoise.Hash01((int)key + 1, pu, pv) * fields.Count) % fields.Count];
             });
+            // A plot's tip (where a plot at 45 degrees comes to a point) or a stray tile left by the
+            // reach, a road or a slope reads as a spike: a field tile with fewer than two of its own
+            // kind beside it goes back to the land it was.
+            for (int pass = 0; pass < 2; pass++)
+            {
+                var back = new List<int>();
+                foreach (int i in laid.Keys)
+                {
+                    if (Ground[i] == laid[i]) continue;
+                    int tx = i % W, ty = i / W, same = 0;
+                    if (tx > 0 && Ground[i - 1] == Ground[i]) same++;
+                    if (tx < W - 1 && Ground[i + 1] == Ground[i]) same++;
+                    if (ty > 0 && Ground[i - W] == Ground[i]) same++;
+                    if (ty < H - 1 && Ground[i + W] == Ground[i]) same++;
+                    if (same < 2) back.Add(i);
+                }
+                foreach (int i in back) Ground[i] = laid[i];
+            }
         }
 
         private void Disc(float cx, float cy, float r, Action<int, float> at)

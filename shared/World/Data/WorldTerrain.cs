@@ -199,6 +199,18 @@ namespace Rth.Shared.World.Data
                 RegionFiles.SaveRegion(a.Region, a.Path);
                 result.Regions.Add(a.Region.Id);
             }
+            // Built neighbours outside what was edited take up the new edges.
+            if (result.Regions.Count > 0)
+            {
+                TerrainSeams.Result seams = TerrainSeams.Follow(world.Areas.Select(a => a.Region).ToList(), result.Regions);
+                foreach (string id in seams.Changed)
+                {
+                    Area a = world.Areas.First(x => x.Region.Id == id);
+                    RegionFiles.SaveRegion(a.Region, a.Path);
+                    if (!result.Regions.Contains(id)) result.Regions.Add(id);
+                }
+                result.Messages.AddRange(seams.Messages);
+            }
             if (pinnedTouched > 0)
                 result.Messages.Add($"{pinnedTouched} corners on regions without tile ground ({string.Join(", ", world.Areas.Where(a => !a.Editable).Select(a => a.Region.Id))}) were left as they are.");
 

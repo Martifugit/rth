@@ -170,6 +170,15 @@ namespace Rth.Shared.World.Data
         /// <see cref="Rows"/>, then the margin's rows along the south.
         /// </summary>
         public List<string>? Surround;
+        /// <summary>
+        /// A painted tiles piece's stones (<see cref="Ground.GroundStones"/>): small flat chips lying
+        /// over the ground, painted on their own wherever they belong (along a path, round a rock),
+        /// whatever ground is under them. One string a row from the north like <see cref="Rows"/>,
+        /// a character a tile from <see cref="StoneLegend"/>; a space is none. Null: no stones.
+        /// </summary>
+        public List<string>? Stones;
+        /// <summary>What each character of <see cref="Stones"/> is: the stones' colour and how thickly they lie.</summary>
+        public SortedDictionary<string, StoneKind>? StoneLegend;
 
         // ---------------------------------------------------------------- what it does
         /// <summary>Makes it interactive: an id in server/data/content/objects.json.</summary>
@@ -227,8 +236,9 @@ namespace Rth.Shared.World.Data
         /// <summary>A material name for this kind's cliff faces (its tiles too steep to walk); none: the ground's rock.</summary>
         public string? Cliff;
         /// <summary>
-        /// On a painted piece (<see cref="Piece.Paint"/>): "over" for a made surface (road, paving,
-        /// planks), drawn crisp in its own colour; otherwise natural ground, blended with its neighbours.
+        /// On a painted piece (<see cref="Piece.Paint"/>): "over" for a made surface (paving, planks),
+        /// drawn crisp in its own colour; "soft" for a path, faded fully into the ground round it;
+        /// otherwise natural ground, blended with its neighbours.
         /// </summary>
         public string? Layer;
         /// <summary>Land beyond the first build: drawn hazed (on a painted piece), and blocked.</summary>
@@ -236,7 +246,18 @@ namespace Rth.Shared.World.Data
 
         [JsonIgnore] public bool IsOverlay => Layer == "over";
 
+        [JsonIgnore] public bool IsSoft => Layer == "soft";
+
         [JsonIgnore] public bool Walkable => Blocks != true && Water != true;
+    }
+
+    /// <summary>One character of a tiles piece's <see cref="Piece.StoneLegend"/>: stones of one colour, this thick.</summary>
+    public sealed class StoneKind
+    {
+        /// <summary>A material name from the region's <see cref="RegionData.Materials"/>.</summary>
+        public string Material = "";
+        /// <summary>How thickly they lie: about <see cref="Ground.GroundStones.PerTile"/> times this a tile (0..1).</summary>
+        public float Share;
     }
 
     /// <summary>

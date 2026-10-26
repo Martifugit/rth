@@ -30,7 +30,7 @@ public class BlockoutTests
     {
         LayoutWorkspace lw = LayoutWorkspace.Load(Root);
         ContinentMap layout = lw.Map;
-        WorldMap world = WorldLoader.Load(Path.Combine(Repo.ServerDirectory, "data", "maps"), "tolling").Map;
+        WorldMap world = WorldLoader.Load(Path.Combine(Repo.ServerDirectory, "data", "maps"), "land_0_0").Map;
         int x0 = layout.OriginX, y0 = layout.OriginY, w = layout.Cols * layout.ZoneTiles, h = layout.Rows * layout.ZoneTiles;
         bool[] reached = Walk(world, world.Spawn, x0, y0, w, h);
         bool Reached(float x, float y) => reached[((int)y - y0) * w + (int)x - x0];
@@ -72,13 +72,6 @@ public class BlockoutTests
         LandHeights land = Blockout.Heights(lw.Map, lw.Built, lw.Edits);
         TerrainDef terrain = lw.Data.Terrain!;
 
-        // Flat built regions (Tolling) are met at 0 all round their edge.
-        BuiltRegion tolling = lw.Built.Single(b => b.Id == "tolling");
-        for (int x = tolling.X0; x <= tolling.X1; x++)
-        {
-            Assert.Equal(0f, land.Corner(x, tolling.Y0));
-            Assert.Equal(0f, land.Corner(x, tolling.Y1));
-        }
         foreach (PassDef pass in lw.Data.Spine.Passes)
         {
             float[] saddle = pass.Line[pass.Line.Count / 2];
@@ -101,10 +94,21 @@ public class BlockoutTests
     }
 
     [Fact]
+    public void EveryGroundsLetterReadsBackAsThatGroundNotLandBeyond()
+    {
+        // Land beyond the first build gets twin characters; none may be a ground's own letter,
+        // or that ground (a dirt track, '&') is read back as blocked land beyond.
+        LayoutWorkspace lw = LayoutWorkspace.Load(Root);
+        Landscape land = Landscape.Build(lw.Map, lw.Built, lw.Edits);
+        foreach (KeyValuePair<string, GroundDef> g in lw.Data.Grounds)
+            Assert.Equal((g.Key, false), land.Decode(g.Value.Letter[0]));
+    }
+
+    [Fact]
     public void GeneratedRegionsAreLeftOutOfTheLayoutsBuiltRegions()
     {
         LayoutWorkspace lw = LayoutWorkspace.Load(Root);
-        Assert.Contains(lw.Built, b => b.Id == "tolling");
+        Assert.Contains(lw.Built, b => b.Id == "land_m2_2"); // Selenfall, taken over
         // A land region still marked generated is the generator's; one taken over by hand is built.
         HashSet<string> generated = RegionFiles.RegionPaths(Path.Combine(Root, "world", "regions"))
             .Select(RegionFiles.LoadRegion).Where(r => r.Generated != null).Select(r => r.Id).ToHashSet();

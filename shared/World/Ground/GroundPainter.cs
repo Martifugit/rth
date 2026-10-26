@@ -12,9 +12,25 @@ namespace Rth.Shared.World.Ground
         public int Group;
         /// <summary>Blocked ground standing above the rest (a rock shelf, the frontier): drawn crisp, never blended.</summary>
         public bool Shelf;
+        /// <summary>A path: fades fully into the ground round it, however different their colours.</summary>
+        public bool Soft;
 
         public static GroundLook Of(float r, float g, float b, GroundLayer layer = GroundLayer.Under, int group = 1) =>
             new GroundLook { R = r, G = g, B = b, Layer = layer, Group = layer == GroundLayer.Water ? 1 << 20 : group };
+
+        /// <summary>This look as a path (soft): faded fully into the ground round it.</summary>
+        public GroundLook Path(bool soft)
+        {
+            GroundLook l = this;
+            l.Soft = soft && Layer == GroundLayer.Under;
+            return l;
+        }
+    }
+
+    /// <summary>How one kind of stones looks: their colour (0..1) and how thickly they lie (<see cref="Data.StoneKind.Share"/>).</summary>
+    public struct StoneLook
+    {
+        public float R, G, B, Share;
     }
 
     /// <summary>
@@ -35,6 +51,9 @@ namespace Rth.Shared.World.Ground
         /// <summary>The colour of cliff faces, per kind (null: <see cref="CliffColour"/>).</summary>
         public float[]? CliffColours;
         public float[] CliffColour = { 0.42f, 0.40f, 0.37f };
+        /// <summary>The stones over the region's own tiles (no margin), row by row from the south: an index into <see cref="StoneLooks"/>, -1 none. Null: no stones.</summary>
+        public int[]? Stones;
+        public StoneLook[] StoneLooks = Array.Empty<StoneLook>();
 
         public int Cols => Width + 2 * Margin;
         public int Rows => Height + 2 * Margin;
@@ -50,8 +69,9 @@ namespace Rth.Shared.World.Ground
     /// <summary>
     /// Paints a region's ground into a texture the way RuneScape paints its ground
     /// (docs/world-plan.md section 7): underlays blended over the tiles around each corner, so no
-    /// tile edge shows; overlays and water crisp, with diagonal half tiles (<see cref="GroundShapes"/>);
-    /// a gentle drift of lightness over the land so large areas don't look printed; cliffs in rock.
+    /// tile edge shows; overlays and water crisp and flat, with diagonal half tiles (<see cref="GroundShapes"/>);
+    /// broad, slow patches of lighter and darker, yellower and bluer ground over the land (never
+    /// tile by tile, which reads as speckle), so large areas don't look printed; cliffs in rock.
     /// Albedo only: the client lights it, and <see cref="Shade"/> lights it for pictures. Shared, so
     /// `tools/world render` draws exactly what the client draws.
     /// </summary>
@@ -68,6 +88,7 @@ namespace Rth.Shared.World.Ground
             height = c.Height * ppt;
             var rgba = new byte[width * height * 4];
             float[] corners = BlendCorners(c);
+            float[] beds = BedCorners(c, corners);
             GroundShapes.Compute(c.Kinds, c.Cols, c.Rows, k => c.Looks[k].Shelf ? GroundLayer.Over : c.Looks[k].Layer,
                                  k => c.Looks[k].Shelf ? 1 << 21 : c.Looks[k].Group, out byte[] shape, out int[] other);
             int cw = c.Width + 1;
@@ -79,7 +100,7 @@ namespace Rth.Shared.World.Ground
                     int own = c.Kinds[gi];
                     int ax = c.X0 + tx, ay = c.Y0 + ty;
                     bool cliff = own >= 0 && c.Field != null && c.Looks[own].Layer == GroundLayer.Under && c.Field.IsSteep(ax, ay, c.CliffStep);
-                    float jitter = 1f + 0.035f * Hash01(ax, ay);
+                    float jitter = 1f + 0.035f * Hash01(ax, ay); // cliff faces only: rock is broken, ground is not
                     for (int py = 0; py < ppt; py++)
                         for (int px = 0; px < ppt; px++)
                         {
@@ -87,14 +108,16 @@ namespace Rth.Shared.World.Ground
                             int kind = own;
                             if (shape[gi] != GroundShapes.None && GroundShapes.InHalf(shape[gi], u, v)) kind = other[gi];
                             float r, g, b;
-                            if (kind >= 0 && c.Looks[kind].Layer != GroundLayer.Under || kind >= 0 && c.Looks[kind].Shelf)
+                            // Water's bed is the bank carried on under it, darkening to the bed's own colour
+                            // away from the shore, so no tile's edge shows where the bank rises above the surface.
+                            bool bed = kind >= 0 && c.Looks[kind].Layer == GroundLayer.Water;
+                            if (!bed && (kind >= 0 && c.Looks[kind].Layer != GroundLayer.Under || kind >= 0 && c.Looks[kind].Shelf))
                             {
+                                // Made surfaces are flat, as RuneScape's overlays are.
                                 GroundLook l = c.Looks[kind];
-                                // Made surfaces are near flat, as RuneScape's overlays are: only a breath of variation.
-                                float j = l.Layer == GroundLayer.Water ? 1f : 1f + (jitter - 1f) * 0.35f;
-                                r = l.R * j; g = l.G * j; b = l.B * j;
+                                r = l.R; g = l.G; b = l.B;
                             }
-                            else if (cliff)
+                            else if (cliff && !bed)
                             {
                                 float[] rock = own >= 0 && c.CliffColours != null && own * 3 + 2 < c.CliffColours.Length && c.CliffColours[own * 3] >= 0
                                     ? new[] { c.CliffColours[own * 3], c.CliffColours[own * 3 + 1], c.CliffColours[own * 3 + 2] } : c.CliffColour;
@@ -103,11 +126,12 @@ namespace Rth.Shared.World.Ground
                             }
                             else
                             {
-                                // Bilinear between the tile's blended corners.
+                                // Bilinear between the tile's blended corners (the bed's, under water).
+                                float[] cs = bed ? beds : corners;
                                 int s = (ty * cw + tx) * 3, n = ((ty + 1) * cw + tx) * 3;
-                                r = Lerp(Lerp(corners[s], corners[s + 3], u), Lerp(corners[n], corners[n + 3], u), v);
-                                g = Lerp(Lerp(corners[s + 1], corners[s + 4], u), Lerp(corners[n + 1], corners[n + 4], u), v);
-                                b = Lerp(Lerp(corners[s + 2], corners[s + 5], u), Lerp(corners[n + 2], corners[n + 5], u), v);
+                                r = Lerp(Lerp(cs[s], cs[s + 3], u), Lerp(cs[n], cs[n + 3], u), v);
+                                g = Lerp(Lerp(cs[s + 1], cs[s + 4], u), Lerp(cs[n + 1], cs[n + 4], u), v);
+                                b = Lerp(Lerp(cs[s + 2], cs[s + 5], u), Lerp(cs[n + 2], cs[n + 5], u), v);
                             }
                             int o = ((ty * ppt + py) * width + tx * ppt + px) * 4;
                             rgba[o] = Byte(r);
@@ -122,14 +146,23 @@ namespace Rth.Shared.World.Ground
         /// <summary>How far apart two colours (RGB, 0..1) can be and still blend fully; further apart, they keep an edge.</summary>
         public const float BlendSimilarity = 0.11f;
 
+        /// <summary>How much the land's lightness drifts, in broad patches (a share, either way).</summary>
+        public const float PatchLight = 0.075f;
+        /// <summary>How far the land's colour leans yellow-olive (red up, blue down) or blue-green, in broad patches, either way.</summary>
+        public const float PatchHue = 0.07f;
+        /// <summary>The patches' size, in tiles: lightness and hue drift on their own scales, so they don't line up.</summary>
+        public const float PatchLightScale = 23f, PatchHueScale = 37f;
+
         /// <summary>
         /// Each corner's underlay colour: a tent-weighted mean of the underlay tiles within
         /// <see cref="BlendRadius"/> (overlays and water don't count; they lie on top), weighted
         /// again by how alike each tile's colour is to the corner's own four tiles: grounds of close
         /// colours (grass and meadow) shade into each other over a few tiles, while very different
         /// ones (pasture and scree) meet at an edge half a tile wide instead of smearing into a
-        /// stain. A faint drift of lightness over the land (the same at a corner whichever region
-        /// paints it) keeps large areas from looking printed.
+        /// stain. Broad patches of lightness and hue (<see cref="Patch"/>, the same at a corner
+        /// whichever region paints it) keep large areas from looking printed. Where a soft ground (a path) touches a
+        /// corner, the corner is just the mean of its four tiles, as RuneScape colours a vertex: the
+        /// path keeps its own colour across its width and softens over one tile at its edge.
         /// </summary>
         private static float[] BlendCorners(GroundCanvas c)
         {
@@ -143,15 +176,19 @@ namespace Rth.Shared.World.Ground
                     int ax = c.X0 + cx, ay = c.Y0 + cy;
                     // The corner's own colour: the mean of the underlay tiles touching it.
                     float rr = 0, rg = 0, rb = 0, rn = 0;
+                    bool soft = false;
                     for (int ty = ay - 1; ty <= ay; ty++)
                         for (int tx = ax - 1; tx <= ax; tx++)
                         {
                             int k = c.KindAt(tx, ty);
                             if (k < 0 || c.Looks[k].Layer != GroundLayer.Under || c.Looks[k].Shelf) continue;
                             rr += c.Looks[k].R; rg += c.Looks[k].G; rb += c.Looks[k].B; rn++;
+                            soft |= c.Looks[k].Soft;
                         }
                     if (rn > 0) { rr /= rn; rg /= rn; rb /= rn; }
-                    // Tiles whose centre lies within R of the corner on both axes.
+                    // Tiles whose centre lies within R of the corner on both axes (a path's corner: its own four).
+                    if (soft && rn > 0) { r = rr; g = rg; b = rb; w = 1f; }
+                    else
                     for (int ty = ay - R; ty < ay + R; ty++)
                         for (int tx = ax - R; tx < ax + R; tx++)
                         {
@@ -161,7 +198,7 @@ namespace Rth.Shared.World.Ground
                             if (l.Layer != GroundLayer.Under || l.Shelf) continue;
                             float wx = R - Math.Abs(tx + 0.5f - ax), wy = R - Math.Abs(ty + 0.5f - ay);
                             float wt = wx * wy;
-                            if (rn > 0)
+                            if (rn > 0 && !l.Soft)
                             {
                                 float d2 = (l.R - rr) * (l.R - rr) + (l.G - rg) * (l.G - rg) + (l.B - rb) * (l.B - rb);
                                 wt *= (float)Math.Exp(-d2 * inv);
@@ -176,11 +213,52 @@ namespace Rth.Shared.World.Ground
                         GroundLook l = k >= 0 ? c.Looks[k] : default;
                         r = l.R; g = l.G; b = l.B; w = 1f;
                     }
-                    float drift = 1f + 0.03f * Noise(ax / 17f, ay / 17f) + 0.015f * Noise(ax / 5.3f + 40f, ay / 5.3f);
+                    (float light, float warm) = Patch(ax, ay);
                     int o = (cy * cw + cx) * 3;
-                    result[o] = r / w * drift;
-                    result[o + 1] = g / w * drift;
-                    result[o + 2] = b / w * drift;
+                    result[o] = r / w * light * (1f + warm);
+                    result[o + 1] = g / w * light * (1f + 0.3f * warm);
+                    result[o + 2] = b / w * light * (1f - 1.6f * warm);
+                }
+            return result;
+        }
+
+        /// <summary>
+        /// The land's broad patches at a corner, as OSRS's grass drifts: a lightness (a factor near
+        /// 1) and a lean towards yellow-olive (above 0) or blue-green (below), each wandering slowly
+        /// over tens of tiles with a smaller ripple on top, and nothing tile by tile.
+        /// </summary>
+        public static (float light, float warm) Patch(int x, int y)
+        {
+            float l = PatchLightScale, h = PatchHueScale;
+            float light = 0.75f * Noise(x / l, y / l) + 0.25f * Noise(x / (l * 0.4f) + 40f, y / (l * 0.4f) - 13f);
+            float hue = 0.7f * Noise(x / h + 101f, y / h - 57f) + 0.3f * Noise(x / (h * 0.35f) - 7f, y / (h * 0.35f) + 33f);
+            return (1f + PatchLight * light, PatchHue * hue);
+        }
+
+        /// <summary>
+        /// Each corner's colour under water: the bank's own (its blended corner) where any of its four
+        /// tiles is land, so the ground keeps one colour across the waterline wherever the bank rises
+        /// above the surface; the water's bed colour where all four are water.
+        /// </summary>
+        private static float[] BedCorners(GroundCanvas c, float[] corners)
+        {
+            int cw = c.Width + 1, ch = c.Height + 1;
+            var result = new float[cw * ch * 3];
+            for (int cy = 0; cy < ch; cy++)
+                for (int cx = 0; cx < cw; cx++)
+                {
+                    int o = (cy * cw + cx) * 3, bed = -1;
+                    bool land = false;
+                    for (int ty = c.Y0 + cy - 1; ty <= c.Y0 + cy; ty++)
+                        for (int tx = c.X0 + cx - 1; tx <= c.X0 + cx; tx++)
+                        {
+                            int k = c.KindAt(tx, ty);
+                            if (k < 0) continue;
+                            if (c.Looks[k].Layer == GroundLayer.Water) bed = k;
+                            else land = true;
+                        }
+                    if (land || bed < 0) { result[o] = corners[o]; result[o + 1] = corners[o + 1]; result[o + 2] = corners[o + 2]; }
+                    else { result[o] = c.Looks[bed].R; result[o + 1] = c.Looks[bed].G; result[o + 2] = c.Looks[bed].B; }
                 }
             return result;
         }
@@ -256,7 +334,7 @@ namespace Rth.Shared.World.Ground
         private static byte Byte(float v) => (byte)Math.Max(0, Math.Min(255, (int)Math.Round(v * 255f)));
 
         /// <summary>A tile's own small lightness offset in [-1, 1].</summary>
-        private static float Hash01(int x, int y)
+        internal static float Hash01(int x, int y)
         {
             uint h = (uint)x * 0x8DA6B343u ^ (uint)y * 0xD8163841u;
             h ^= h >> 13; h *= 0x2C1B3C6Du; h ^= h >> 15;
@@ -264,7 +342,7 @@ namespace Rth.Shared.World.Ground
         }
 
         /// <summary>Smooth value noise in [-1, 1].</summary>
-        private static float Noise(float x, float y)
+        internal static float Noise(float x, float y)
         {
             int ix = (int)Math.Floor(x), iy = (int)Math.Floor(y);
             float fx = x - ix, fy = y - iy;

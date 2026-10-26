@@ -52,7 +52,10 @@ namespace Rth.Shared.World.Data
                 // The parser sorts a new dictionary by the machine's culture ('-' after '+' on some);
                 // sort legends by character, as the blockout writes them, so every machine formats alike.
                 foreach (Piece piece in region.Pieces)
+                {
                     if (piece.Legend != null) piece.Legend = new SortedDictionary<string, TileKind>(piece.Legend, StringComparer.Ordinal);
+                    if (piece.StoneLegend != null) piece.StoneLegend = new SortedDictionary<string, StoneKind>(piece.StoneLegend, StringComparer.Ordinal);
+                }
                 return region;
             }
             catch (JsonException e)
@@ -119,6 +122,8 @@ namespace Rth.Shared.World.Data
                 piece.Remove("rows");
                 JToken? surround = piece["surround"];
                 piece.Remove("surround");
+                JToken? stones = piece["stones"];
+                piece.Remove("stones");
                 string head = "    { " + string.Join(", ", piece.Properties().Select(p => Q(p.Name) + ": " + Compact(p.Value)));
                 if (parts is JArray list && list.Count > 0)
                     head += ", \"parts\": [\n" + string.Join(",\n", list.Select(part => "      " + Compact(part))) + "\n    ]";
@@ -127,6 +132,8 @@ namespace Rth.Shared.World.Data
                     head += ", \"rows\": [" + (rowList.Count == 0 ? "]" : "\n" + string.Join(",\n", rowList.Select(row => "      " + Compact(row))) + "\n    ]");
                 if (surround is JArray ring)
                     head += ", \"surround\": [" + (ring.Count == 0 ? "]" : "\n" + string.Join(",\n", ring.Select(row => "      " + Compact(row))) + "\n    ]");
+                if (stones is JArray stoneRows)
+                    head += ", \"stones\": [" + (stoneRows.Count == 0 ? "]" : "\n" + string.Join(",\n", stoneRows.Select(row => "      " + Compact(row))) + "\n    ]");
                 head += " }";
                 pieces.Add(head);
             }

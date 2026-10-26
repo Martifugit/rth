@@ -49,7 +49,7 @@ namespace Rth.Client.Editor
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
             Report report = SyncAll(null, screenshots: true);
-            EditorUtility.DisplayDialog("Sync World", report.Summary(), "OK");
+            Announce(report);
         }
 
         [MenuItem("R'th/World/Sync World (no screenshots)", priority = 1)]
@@ -57,7 +57,7 @@ namespace Rth.Client.Editor
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
             Report report = SyncAll(null, screenshots: false);
-            EditorUtility.DisplayDialog("Sync World", report.Summary(), "OK");
+            Announce(report);
         }
 
         /// <summary>Every region, changed or not: after a Unity upgrade, or when a scene looks wrong.</summary>
@@ -66,7 +66,20 @@ namespace Rth.Client.Editor
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
             Report report = SyncAll(null, screenshots: false, everything: true);
-            EditorUtility.DisplayDialog("Sync World", report.Summary(), "OK");
+            Announce(report);
+        }
+
+        /// <summary>
+        /// Says how a sync went without stopping the Editor: the summary in the Console (an error if
+        /// anything failed) and a notice in the Scene view. No modal dialog, so a sync started from
+        /// the Unity CLI or by another agent never waits on a click.
+        /// </summary>
+        private static void Announce(Report report)
+        {
+            if (report.Failed) Debug.LogError("[R'th] " + report.Summary());
+            else Debug.Log("[R'th] " + report.Summary());
+            string notice = report.Failed ? "Sync World found problems: see the Console" : "Sync World is done";
+            foreach (SceneView view in SceneView.sceneViews) view.ShowNotification(new GUIContent(notice), report.Failed ? 8f : 3f);
         }
 
         /// <summary>
@@ -150,10 +163,14 @@ namespace Rth.Client.Editor
             foreach (string w in warnings) report.Info("warning: " + w);
             WorldSnapshot.WriteIndex(ws);
             AssetDatabase.SaveAssets();
-            if (scenesBefore.Length > 0 && !Application.isBatchMode)
+            // Reopen what was open, at its new path if a takeover moved it to its area's folder.
+            string[] reopen = scenesBefore.Select(s => File.Exists(Path.Combine(Application.dataPath, "..", s)) ? s
+                    : ws.Regions.Select(e => e.Region.Scene).FirstOrDefault(n => Path.GetFileName(n) == Path.GetFileName(s)))
+                .Where(s => s != null && File.Exists(Path.Combine(Application.dataPath, "..", s))).Distinct().ToArray();
+            if (reopen.Length > 0 && !Application.isBatchMode)
             {
-                EditorSceneManager.OpenScene(scenesBefore[0], OpenSceneMode.Single);
-                foreach (string s in scenesBefore.Skip(1)) EditorSceneManager.OpenScene(s, OpenSceneMode.Additive);
+                EditorSceneManager.OpenScene(reopen[0], OpenSceneMode.Single);
+                foreach (string s in reopen.Skip(1)) EditorSceneManager.OpenScene(s, OpenSceneMode.Additive);
             }
             report.Info(report.Failed ? "Sync World finished with errors." : "Sync World finished cleanly.");
             File.WriteAllText(Path.Combine(Application.dataPath, "..", "Temp", "rth-sync-report.txt"), string.Join("\n", report.Lines) + "\n");
@@ -459,6 +476,7 @@ namespace Rth.Client.Editor
                         field.SetCorner(x, y, TerrainText.Hundredths(sculpted.Corner(x, y)) * TerrainText.Step);
                 region.Terrain = TerrainText.Write(field, region.Terrain?.CliffStep ?? ground.cliffStep);
                 ground.sculpted = false;
+                Sculpted.Add(region.Id);
                 changes.Add("sculpted the ground");
             }
 
@@ -484,8 +502,49 @@ namespace Rth.Client.Editor
             return changes;
         }
 
+        /// <summary>
+        /// After saving sculpted ground: every built neighbour, open or not, takes up its new edge,
+        /// so the ground never steps at a border because the scene next door was closed while you
+        /// shaped (<see cref="TerrainSeams"/>); their maps are exported again and the open ones
+        /// redrawn. True when generated land beside it must follow too (the blockout).
+        /// </summary>
+        private static bool FollowSeams()
+        {
+            if (Sculpted.Count == 0) return false;
+            var written = new HashSet<string>(Sculpted);
+            Sculpted.Clear();
+            var regions = new List<RegionData>();
+            var paths = new Dictionary<string, string>();
+            foreach (string path in RegionFiles.RegionPaths(Path.Combine(RepoRoot, "world", "regions")))
+            {
+                try
+                {
+                    RegionData r = RegionFiles.LoadRegion(path);
+                    regions.Add(r);
+                    paths[r.Id] = path;
+                }
+                catch (System.FormatException) { }
+            }
+            TerrainSeams.Result seams = TerrainSeams.Follow(regions, written);
+            foreach (string m in seams.Messages) Debug.LogWarning("[R'th] " + m);
+            List<string> neighbours = seams.Changed.Where(id => !written.Contains(id)).ToList();
+            foreach (string id in seams.Changed) RegionFiles.SaveRegion(regions.First(r => r.Id == id), paths[id]);
+            if (seams.Changed.Count > 0)
+            {
+                var messages = new List<string>();
+                var errors = new List<string>();
+                TerrainEditor.RunWorldTool("export", messages, errors);
+                foreach (string e in errors) Debug.LogError("[R'th] export: " + e);
+                Debug.Log($"[R'th] The ground meets at the borders: {string.Join(", ", seams.Changed)} took up the sculpted edges.");
+                TerrainEditor.Redraw(neighbours);
+            }
+            return seams.GeneratedNeighbours.Count > 0;
+        }
+
         /// <summary>Regions taken over by the scenes being saved: the generated land round them now blends into them.</summary>
         private static readonly HashSet<string> TakenOver = new HashSet<string>();
+        /// <summary>Regions whose heights the scenes being saved wrote: their neighbours' edges follow (<see cref="FollowSeams"/>).</summary>
+        private static readonly HashSet<string> Sculpted = new HashSet<string>();
 
         private static void OnSceneSaved(Scene scene)
         {
@@ -503,12 +562,14 @@ namespace Rth.Client.Editor
         /// </summary>
         internal static void AfterSaving()
         {
-            if (TakenOver.Count == 0)
+            bool generatedNeighbours = FollowSeams();
+            if (TakenOver.Count == 0 && !generatedNeighbours)
             {
                 GroundPaintTool.FollowRings();
                 return;
             }
-            List<string> ids = TakenOver.OrderBy(id => id, System.StringComparer.Ordinal).ToList();
+            // A takeover, or sculpting beside generated land, which the blockout pins to the built edges.
+            string what = TakenOver.Count > 0 ? "Taken over: " + string.Join(", ", TakenOver.OrderBy(id => id, System.StringComparer.Ordinal)) : "Sculpted beside generated land";
             TakenOver.Clear();
             var open = new List<string>();
             for (int i = 0; i < SceneManager.sceneCount; i++)
@@ -523,7 +584,7 @@ namespace Rth.Client.Editor
             var errors = new List<string>();
             try
             {
-                EditorUtility.DisplayProgressBar("Taken over: " + string.Join(", ", ids), "The generated land round it follows (tools/world blockout)...", 0.5f);
+                EditorUtility.DisplayProgressBar(what, "The generated land round it follows (tools/world blockout)...", 0.5f);
                 TerrainEditor.RunWorldTool("blockout", messages, errors);
             }
             catch (System.Exception e)
@@ -536,7 +597,7 @@ namespace Rth.Client.Editor
             }
             GroundPaintTool.RingsFollowed(); // the blockout takes every ring from the world as it now is
             foreach (string e in errors) Debug.LogError("[R'th] blockout: " + e);
-            Debug.Log($"[R'th] Taken over: {string.Join(", ", ids)}. The generated land round it follows: {messages.LastOrDefault(m => m.Contains("blockout regions")) ?? "see the Console"}");
+            Debug.Log($"[R'th] {what}. The generated land round it follows: {messages.LastOrDefault(m => m.Contains("blockout regions")) ?? "see the Console"}");
             List<string> changed = open.Where(id => File.Exists(RegionPath(id)) && File.ReadAllText(RegionPath(id)) != before[id]).ToList();
             TerrainEditor.Redraw(changed);
         }

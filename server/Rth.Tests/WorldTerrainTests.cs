@@ -110,14 +110,21 @@ public sealed class WorldTerrainTests : IDisposable
     [Fact]
     public void GroundWithoutTilesIsLeftAsItIs()
     {
+        // A region built the old way, flat and without tile ground (as Tolling was).
+        RegionData old = Region("land_0_0");
+        old.Pieces.RemoveAll(p => p.Kind == PieceKind.Tiles);
+        old.Generated = null;
+        old.Terrain = null;
+        RegionFiles.SaveRegion(old, Path.Combine(_root, "world", "regions", "land_0_0.json"));
+
         WorldTerrain world = WorldTerrain.Load(_root);
-        Assert.True(world.Pinned(50, 50)); // Tolling
+        Assert.True(world.Pinned(50, 50));
         Assert.True(world.Pinned(96, 50)); // its border with the land east of it
         Assert.Null(world.Tile(50, 50));
         Assert.NotNull(world.Tile(40, 140));
         WorldTerrain.Result result = WorldTerrain.Save(_root, Edited(world, (50, 50, 4f), (96, 50, 4f)));
         Assert.Empty(result.Regions);
         Assert.Contains(result.Messages, m => m.Contains("left as they are"));
-        Assert.Null(Region("tolling").Terrain);
+        Assert.Null(Region("land_0_0").Terrain);
     }
 }

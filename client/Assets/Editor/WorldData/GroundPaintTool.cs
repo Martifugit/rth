@@ -20,8 +20,10 @@ namespace Rth.Client.Editor
     /// brush (tiles too steep to walk show red). <b>Paint</b>: roads, paths, grass, sand, water, tile
     /// by tile, from the layout's grounds and any a region has of its own: a round brush with a soft
     /// edge, a straight stroke (a road, straight or at 45 degrees), fill a patch, smooth ragged
-    /// edges, or pick up the ground under the cursor (Ctrl+click). It is drawn as the game draws it
-    /// while you work. Saving the scenes (Ctrl+S) writes heights and tiles to the regions' data
+    /// edges, or pick up the ground under the cursor (Ctrl+click). <b>Stones</b> (the Paint tab's
+    /// other layer): gravel, chalk chips or rubble scattered over any ground, on their own, as thick
+    /// or thin as you like and, if wanted, unevenly; the same brushes, and Smooth spreads them out.
+    /// It is drawn as the game draws it while you work. Saving the scenes (Ctrl+S) writes heights and tiles to the regions' data
     /// (which takes a generated region over) and the neighbours' rings of tiles to theirs.
     /// R'th > World > Shape and Paint Ground (G) starts it from anywhere.
     /// </summary>
@@ -31,6 +33,7 @@ namespace Rth.Client.Editor
         private enum Tab { Shape, Paint }
         private enum ShapeMode { Raise, Lower, Flatten, Smooth }
         private enum Mode { Brush, Line, Fill, Smooth, Pick }
+        private enum Layer { Ground, Stones }
 
         private static Tab _tab = Tab.Paint;
         private static ShapeMode _shapeMode = ShapeMode.Raise;
@@ -43,6 +46,14 @@ namespace Rth.Client.Editor
         private static bool _snap = true;
         private static GroundEdit.Brush _brush;
         private static List<GroundEdit.Brush> _brushes;
+        private static Layer _layer = Layer.Ground;
+        /// <summary>The stones to paint with; <see cref="NoStones"/> clears them.</summary>
+        private static GroundEdit.StoneBrush _stoneBrush;
+        private static List<GroundEdit.StoneBrush> _stoneBrushes;
+        private static readonly GroundEdit.StoneBrush NoStones = new GroundEdit.StoneBrush { Id = "", Name = "Clear stones" };
+        /// <summary>How thick, as an index into <see cref="GroundStones.Levels"/>.</summary>
+        private static int _thickness = 1;
+        private static bool _uneven = true;
         private static Vector2 _scroll;
         private static string _filter = "";
         private static GUIStyle _panel;
@@ -53,6 +64,8 @@ namespace Rth.Client.Editor
         private int _undoGroup, _seed;
         private float _flattenTo;
         private readonly HashSet<TileGround> _touched = new HashSet<TileGround>();
+        /// <summary>The thickness each tile was given in this stroke of stones.</summary>
+        private readonly Dictionary<(int, int), int> _strokeStones = new Dictionary<(int, int), int>();
         /// <summary>Changed but not yet redrawn: a redraw takes a tenth of a second, so a drag redraws a few times a second.</summary>
         private readonly HashSet<TileGround> _stale = new HashSet<TileGround>();
         /// <summary>Heights shaped in this stroke and not yet given to their ground (it redraws when given them).</summary>
@@ -72,7 +85,7 @@ namespace Rth.Client.Editor
             }
             if (ground == null)
             {
-                EditorUtility.DisplayDialog("Shape and Paint Ground", "Open a region with tile ground first (R'th > World > Open This Area).", "OK");
+                EditorUtility.DisplayDialog("Shape and Paint Ground", "Open a region with tile ground first (R'th > Open Selected Area).", "OK");
                 return;
             }
             // A component's tools are offered once the selection has caught up.
@@ -93,7 +106,7 @@ namespace Rth.Client.Editor
             if (e.type == EventType.Layout) HandleUtility.AddDefaultControl(control);
             if (_brushes == null) LoadBrushes();
 
-            Rect panel = new Rect(10, 10, 300, _tab == Tab.Shape ? 214 : 560);
+            Rect panel = new Rect(10, 10, 300, _tab == Tab.Shape ? 214 : 610);
             bool overPanel = panel.Contains(e.mousePosition);
             _point = overPanel ? null : Pick(HandleUtility.GUIPointToWorldRay(e.mousePosition));
             _hover = _point is Vector3 at ? (Mathf.FloorToInt(at.x), Mathf.FloorToInt(at.z)) : ((int, int)?)null;
@@ -103,7 +116,7 @@ namespace Rth.Client.Editor
             if (e.type == EventType.MouseDown && left && _point is Vector3 down && _hover is (int x, int y))
             {
                 if (_tab == Tab.Paint && (e.control || _mode == Mode.Pick)) PickUp(x, y);
-                else if (_tab == Tab.Shape || _brush != null || _mode == Mode.Smooth)
+                else if (_tab == Tab.Shape || (_layer == Layer.Stones ? _stoneBrush != null : _brush != null) || _mode == Mode.Smooth)
                 {
                     _undoGroup = Undo.GetCurrentGroup();
                     _touched.Clear();
@@ -114,7 +127,7 @@ namespace Rth.Client.Editor
                         Shape(down);
                     }
                     else if (_mode == Mode.Line) _lineStart = (x, y);
-                    else if (_mode == Mode.Fill) { Paint(Flood(x, y)); EndStroke(); }
+                    else if (_mode == Mode.Fill) { PaintAll(Flood(x, y)); EndStroke(); }
                     else Dab(down);
                     _last = down;
                     GUIUtility.hotControl = control;
@@ -136,7 +149,7 @@ namespace Rth.Client.Editor
             }
             else if (e.type == EventType.MouseUp && GUIUtility.hotControl == control)
             {
-                if (_tab == Tab.Paint && _mode == Mode.Line && _lineStart is (int sx, int sy) && _hover is (int ux, int uy)) Paint(Stroke(sx, sy, ux, uy));
+                if (_tab == Tab.Paint && _mode == Mode.Line && _lineStart is (int sx, int sy) && _hover is (int ux, int uy)) PaintAll(Stroke(sx, sy, ux, uy));
                 EndStroke();
                 GUIUtility.hotControl = 0;
                 e.Use();
@@ -150,7 +163,7 @@ namespace Rth.Client.Editor
                 e.Use();
             }
             if (_tab == Tab.Paint && _mode == Mode.Line && _lineStart is (int ax, int ay) && GUIUtility.hotControl == control && _hover is (int bx, int by))
-                DrawTiles(Stroke(ax, ay, bx, by), _brush, 0.55f);
+                DrawTiles(Stroke(ax, ay, bx, by), BrushColour(), 0.55f);
             if (e.type == EventType.MouseMove || e.type == EventType.MouseDrag) window.Repaint();
 
             Panel(panel);
@@ -191,6 +204,13 @@ namespace Rth.Client.Editor
         /// <summary>One dab of the paint brush: its tiles, or in Smooth, each of them made what most of its neighbours are.</summary>
         private void Dab(Vector3 p)
         {
+            if (_layer == Layer.Stones)
+            {
+                if (_mode == Mode.Smooth) SpreadStones(Round(p, Mathf.Max(1f, _radius), 0f).Select(t => (t.x, t.y)).ToList());
+                // The soft edge thins the stones out rather than leaving tiles bare.
+                else PaintStones(Round(p, _radius, _softness).Select(t => (t.x, t.y, Mathf.CeilToInt((_thickness + 1) * t.weight) - 1)));
+                return;
+            }
             if (_mode == Mode.Smooth)
             {
                 var targets = new Dictionary<(int, int), GroundEdit.Brush>();
@@ -224,6 +244,13 @@ namespace Rth.Client.Editor
 
         private static bool SameBrush(GroundEdit.Brush a, GroundEdit.Brush b) => GroundEdit.Same(a.Kind, b.Kind) && a.Colour == b.Colour;
 
+        /// <summary>A line or a fill: the ground brush's tiles, or stones as thick as the brush over all of them.</summary>
+        private void PaintAll(IEnumerable<(int x, int y)> tiles)
+        {
+            if (_layer == Layer.Stones) PaintStones(tiles.Select(t => (t.x, t.y, _thickness)));
+            else Paint(tiles);
+        }
+
         private static HashSet<(int x, int y)> Stroke(int ax, int ay, int bx, int by)
         {
             (int ex, int ey) = _snap ? GroundEdit.Snap45(ax, ay, bx, by) : (bx, by);
@@ -234,10 +261,11 @@ namespace Rth.Client.Editor
         {
             _lineStart = null;
             _last = null;
+            _strokeStones.Clear();
             Redraw();
             _heights.Clear();
             if (_touched.Count == 0) return;
-            if (_tab == Tab.Paint) RefreshRings(_touched);
+            if (_tab == Tab.Paint && _layer == Layer.Ground) RefreshRings(_touched);
             Undo.CollapseUndoOperations(_undoGroup);
             _touched.Clear();
         }
@@ -275,6 +303,9 @@ namespace Rth.Client.Editor
 
         private static void PaintPanel()
         {
+            Layer layer = (Layer)GUILayout.Toolbar((int)_layer, new[] { "Ground", "Stones" });
+            if (layer != _layer) { _layer = layer; _scroll = Vector2.zero; }
+            GUILayout.Space(6);
             _mode = (Mode)GUILayout.Toolbar((int)_mode, new[] { "Brush", "Line", "Fill", "Smooth", "Pick" });
             GUILayout.Space(10);
             switch (_mode)
@@ -292,14 +323,26 @@ namespace Rth.Client.Editor
                 case Mode.Smooth:
                     _radius = Mathf.Round(EditorGUILayout.Slider("Radius", _radius, 1f, 10f) * 2f) / 2f;
                     GUILayout.Space(4);
-                    GUILayout.Label("Drag over ragged edges and specks: each tile becomes what most round it are.", EditorStyles.wordWrappedMiniLabel);
+                    GUILayout.Label(_layer == Layer.Stones
+                        ? "Drag: the stones spread out, each tile taking the mean of the tiles round it."
+                        : "Drag over ragged edges and specks: each tile becomes what most round it are.", EditorStyles.wordWrappedMiniLabel);
                     break;
                 case Mode.Fill:
-                    GUILayout.Label("Click: the patch of one ground under it.", EditorStyles.wordWrappedMiniLabel);
+                    GUILayout.Label(_layer == Layer.Stones ? "Click: stones over the patch of one ground under it (a whole path)." : "Click: the patch of one ground under it.", EditorStyles.wordWrappedMiniLabel);
                     break;
                 default:
-                    GUILayout.Label("Click: take the ground under it.", EditorStyles.wordWrappedMiniLabel);
+                    GUILayout.Label(_layer == Layer.Stones ? "Click: take the stones under it." : "Click: take the ground under it.", EditorStyles.wordWrappedMiniLabel);
                     break;
+            }
+            if (_layer == Layer.Stones)
+            {
+                GUILayout.Space(4);
+                _thickness = EditorGUILayout.IntSlider("Thickness", _thickness + 1, 1, GroundStones.Levels.Length) - 1;
+                GUILayout.Space(4);
+                _uneven = EditorGUILayout.Toggle(new GUIContent("Uneven", "Patches of thicker and thinner stones with bare gaps, as the blockout scatters them, rather than the same everywhere."), _uneven);
+                GUILayout.Space(8);
+                StonePanel();
+                return;
             }
             GUILayout.Space(12);
 
@@ -338,6 +381,47 @@ namespace Rth.Client.Editor
             if (GUILayout.Button("Reload the grounds", EditorStyles.miniButton)) LoadBrushes();
         }
 
+        private static void StonePanel()
+        {
+            GUILayout.BeginHorizontal();
+            StoneSwatch(_stoneBrush, 20);
+            GUILayout.Space(6);
+            GUILayout.Label(_stoneBrush != null ? _stoneBrush.Name : "Pick stones below", EditorStyles.boldLabel);
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(8);
+            _scroll = GUILayout.BeginScrollView(_scroll);
+            foreach (GroundEdit.StoneBrush b in new[] { NoStones }.Concat(_stoneBrushes ?? new List<GroundEdit.StoneBrush>()))
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(2);
+                StoneSwatch(b, 14);
+                GUILayout.Space(6);
+                if (GUILayout.Button(b.Name, b == _stoneBrush ? EditorStyles.boldLabel : EditorStyles.label)) _stoneBrush = b;
+                GUILayout.EndHorizontal();
+            }
+            GUILayout.EndScrollView();
+            GUILayout.Space(6);
+            GUILayout.Label(Changed() ? "Changed: save the scenes (Ctrl+S) to keep it." : "Ctrl+click: take the stones under the cursor. [ and ]: size.", EditorStyles.wordWrappedMiniLabel);
+            GUILayout.Space(4);
+            if (GUILayout.Button("Reload the grounds", EditorStyles.miniButton)) LoadBrushes();
+        }
+
+        private static void StoneSwatch(GroundEdit.StoneBrush b, int size)
+        {
+            Rect r = GUILayoutUtility.GetRect(size, size, GUILayout.Width(size), GUILayout.Height(size));
+            r.y += 2;
+            EditorGUI.DrawRect(r, StoneColour(b));
+            if (b == NoStones) EditorGUI.DrawRect(new Rect(r.x, r.center.y - 1, r.width, 2), new Color(0.8f, 0.25f, 0.2f));
+        }
+
+        private static Color StoneColour(GroundEdit.StoneBrush b) =>
+            b != null && b != NoStones && Palette.TryParse(b.Colour, out Color c) ? c : new Color(0.5f, 0.5f, 0.5f, 0.4f);
+
+        /// <summary>The colour the brush's tiles are shown in: the ground's, or the stones' (grey to clear them).</summary>
+        private static Color? BrushColour() =>
+            _layer == Layer.Stones ? (_stoneBrush != null ? StoneColour(_stoneBrush) : (Color?)null) : (_brush != null ? Colour(_brush) : (Color?)null);
+
         private static bool Changed() => TileGround.Active.Any(g => g != null && (!string.IsNullOrEmpty(g.brushEdit) || g.sculpted));
 
         private static void Swatch(GroundEdit.Brush b, int size)
@@ -364,12 +448,12 @@ namespace Rth.Client.Editor
             }
             if (_mode == Mode.Line || _mode == Mode.Fill || _mode == Mode.Pick)
             {
-                if (_hover is (int x, int y)) DrawTiles(new[] { (x, y) }, _brush, 0.55f);
+                if (_hover is (int x, int y)) DrawTiles(new[] { (x, y) }, BrushColour(), 0.55f);
                 return;
             }
             float r = _mode == Mode.Smooth ? Mathf.Max(1f, _radius) : _radius;
             float soft = _mode == Mode.Smooth ? 0f : _softness;
-            foreach ((int x, int y, float w) in Round(p, r, soft)) DrawTiles(new[] { (x, y) }, _mode == Mode.Smooth ? null : _brush, 0.15f + 0.4f * w);
+            foreach ((int x, int y, float w) in Round(p, r, soft)) DrawTiles(new[] { (x, y) }, _mode == Mode.Smooth ? null : BrushColour(), 0.15f + 0.4f * w);
             Handles.color = Color.white;
             if (r > 0f) Circle(p, r);
         }
@@ -389,9 +473,9 @@ namespace Rth.Client.Editor
         }
 
         /// <summary>Fills tiles at the ground's height, in the brush's colour.</summary>
-        private static void DrawTiles(IEnumerable<(int x, int y)> tiles, GroundEdit.Brush brush, float alpha)
+        private static void DrawTiles(IEnumerable<(int x, int y)> tiles, Color? colour, float alpha)
         {
-            Color c = brush != null ? Colour(brush) : new Color(0.9f, 0.9f, 0.9f);
+            Color c = colour ?? new Color(0.9f, 0.9f, 0.9f);
             Color fill = new Color(c.r, c.g, c.b, alpha), line = new Color(1f, 1f, 1f, alpha * 0.35f);
             var quad = new Vector3[4];
             foreach ((int x, int y) in tiles)
@@ -457,10 +541,16 @@ namespace Rth.Client.Editor
         private static void LoadBrushes()
         {
             var brushes = new List<GroundEdit.Brush>();
+            var stones = new List<GroundEdit.StoneBrush>();
             string continent = Path.Combine(WorldSync.RepoRoot, "world", "layout", "continent.json");
             try
             {
-                if (File.Exists(continent)) brushes.AddRange(GroundEdit.Brushes(ContinentData.Parse(File.ReadAllText(continent))));
+                if (File.Exists(continent))
+                {
+                    ContinentData data = ContinentData.Parse(File.ReadAllText(continent));
+                    brushes.AddRange(GroundEdit.Brushes(data));
+                    stones.AddRange(GroundEdit.StoneBrushes(data));
+                }
             }
             catch (System.Exception e)
             {
@@ -473,15 +563,38 @@ namespace Rth.Client.Editor
                 foreach (TileKind k in m.Ground.Legend.Values)
                     if (k.Beyond != true && !brushes.Any(b => GroundEdit.Same(b.Kind, k) && b.Colour == (m.Materials.TryGetValue(k.Material, out string c) ? c : "")))
                         brushes.Add(GroundEdit.BrushOf(m.Region, k));
+                foreach (StoneKind k in m.Ground.StoneLegend?.Values ?? Enumerable.Empty<StoneKind>())
+                    if (StoneBrushOf(m, k) is GroundEdit.StoneBrush own && !stones.Any(b => b.Colour == own.Colour)) stones.Add(own);
             }
+            _stoneBrushes = stones;
+            if (_stoneBrush != null && _stoneBrush != NoStones) _stoneBrush = stones.FirstOrDefault(b => b.Colour == _stoneBrush.Colour) ?? _stoneBrush;
             string[] order = { "Ground", "Surfaces", "Water", "Blocked" };
             _brushes = brushes.OrderBy(b => System.Array.IndexOf(order, b.Group)).ThenBy(b => b.Name, System.StringComparer.OrdinalIgnoreCase).ToList();
             if (_brush != null) _brush = _brushes.FirstOrDefault(b => b.Id == _brush.Id && GroundEdit.Same(b.Kind, _brush.Kind)) ?? _brush;
         }
 
-        /// <summary>Ctrl+click: the ground under the cursor becomes the brush.</summary>
+        /// <summary>A region's own stones as a brush (its material's colour), or null if it names none.</summary>
+        private static GroundEdit.StoneBrush StoneBrushOf(EditModel m, StoneKind k) =>
+            m.Materials.TryGetValue(k.Material, out string colour)
+                ? new GroundEdit.StoneBrush { Id = k.Material, Name = k.Material.StartsWith("LandStones") ? k.Material.Substring(10) : k.Material, Material = k.Material, Colour = colour }
+                : null;
+
+        /// <summary>Ctrl+click: the ground (or in the Stones layer, the stones) under the cursor becomes the brush.</summary>
         private static void PickUp(int x, int y)
         {
+            if (_layer == Layer.Stones)
+            {
+                if (!(GroundAt(x, y) is TileGround sg) || !(Model(sg) is EditModel sm)) return;
+                if (!(GroundEdit.StoneAt(sm.Ground, x, y) is StoneKind k)) _stoneBrush = NoStones;
+                else if (StoneBrushOf(sm, k) is GroundEdit.StoneBrush picked)
+                {
+                    _stoneBrush = _stoneBrushes.FirstOrDefault(b => b.Colour == picked.Colour);
+                    if (_stoneBrush == null) _stoneBrushes.Add(_stoneBrush = picked);
+                    _thickness = Mathf.Max(0, GroundStones.Level(k.Share));
+                }
+                if (_mode == Mode.Pick || _mode == Mode.Smooth) _mode = Mode.Brush;
+                return;
+            }
             if (!(BrushAt(x, y) is GroundEdit.Brush at)) return;
             _brush = _brushes.FirstOrDefault(b => SameBrush(b, at));
             if (_brush == null)
@@ -565,16 +678,17 @@ namespace Rth.Client.Editor
         private sealed class Entry
         {
             public string Edit, Kinds;
-            public string[] Rows, Surround;
+            public string[] Rows, Surround, Stones;
             public EditModel Model;
 
-            public bool Fresh(TileGround g) => ReferenceEquals(Edit, g.brushEdit) && ReferenceEquals(Rows, g.rows) && ReferenceEquals(Surround, g.surround) && Kinds == g.kinds;
+            public bool Fresh(TileGround g) => ReferenceEquals(Edit, g.brushEdit) && ReferenceEquals(Rows, g.rows) && ReferenceEquals(Surround, g.surround) &&
+                                               ReferenceEquals(Stones, g.stoneRows) && Kinds == g.kinds;
         }
 
         private static readonly Dictionary<TileGround, Entry> Cache = new Dictionary<TileGround, Entry>();
 
         private static void Remember(TileGround g, EditModel m) =>
-            Cache[g] = new Entry { Edit = g.brushEdit, Kinds = g.kinds, Rows = g.rows, Surround = g.surround, Model = m };
+            Cache[g] = new Entry { Edit = g.brushEdit, Kinds = g.kinds, Rows = g.rows, Surround = g.surround, Stones = g.stoneRows, Model = m };
         private static readonly JsonSerializerSettings Json = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
 
         /// <summary>
@@ -646,6 +760,78 @@ namespace Rth.Client.Editor
                 }
                 if (!changed) continue;
                 GroundEdit.Prune(m.Ground);
+                Apply(g, m, edited: true, redraw: false);
+                _touched.Add(g);
+                _stale.Add(g);
+            }
+            if (EditorApplication.timeSinceStartup - _redrawn > 0.15) Redraw();
+        }
+
+        /// <summary>
+        /// Paints stones at a thickness per tile (an index into <see cref="GroundStones.Levels"/>;
+        /// below 0 leaves the tile as it is), or clears them with <see cref="NoStones"/>. Uneven, the
+        /// thickness drifts in patches with bare gaps (<see cref="GroundStones.Spread"/>).
+        /// </summary>
+        private void PaintStones(IEnumerable<(int x, int y, int level)> tiles)
+        {
+            if (_stoneBrush == null) return;
+            // A tile keeps the thickest it was given in this stroke: a drag's soft edges don't thin what its middle laid.
+            var levels = new Dictionary<(int, int), int>();
+            foreach ((int x, int y, int level) in tiles)
+            {
+                if (level < 0 || _strokeStones.TryGetValue((x, y), out int had) && had >= level) continue;
+                levels[(x, y)] = _strokeStones[(x, y)] = level;
+            }
+            EditStones(levels.Keys, (m, x, y) =>
+            {
+                if (_stoneBrush == NoStones) return ' ';
+                int level = levels[(x, y)];
+                if (_uneven) level = GroundStones.Spread(x, y, GroundStones.Levels[level], null);
+                return level < 0 ? (char?)null : GroundEdit.StoneCharFor(m.Region, m.Ground, _stoneBrush, level);
+            });
+        }
+
+        /// <summary>Smooth, for stones: each tile takes the mean thickness of the nine round it, in the colour most of them have.</summary>
+        private void SpreadStones(List<(int x, int y)> tiles)
+        {
+            var targets = new Dictionary<(int, int), (GroundEdit.StoneBrush brush, int level)?>();
+            foreach ((int x, int y) in tiles)
+            {
+                float sum = 0f;
+                var colours = new List<(GroundEdit.StoneBrush b, float share)>();
+                for (int oy = -1; oy <= 1; oy++)
+                    for (int ox = -1; ox <= 1; ox++)
+                    {
+                        if (!(GroundAt(x + ox, y + oy) is TileGround g) || !(Model(g) is EditModel m) || !(GroundEdit.StoneAt(m.Ground, x + ox, y + oy) is StoneKind k)) continue;
+                        sum += k.Share;
+                        if (StoneBrushOf(m, k) is GroundEdit.StoneBrush b) colours.Add((b, k.Share));
+                    }
+                int level = GroundStones.Level(sum / 9f);
+                GroundEdit.StoneBrush most = colours.GroupBy(c => c.b.Colour).OrderByDescending(gr => gr.Sum(c => c.share)).Select(gr => gr.First().b).FirstOrDefault();
+                targets[(x, y)] = level < 0 || most == null ? ((GroundEdit.StoneBrush, int)?)null : (most, level);
+            }
+            EditStones(targets.Keys, (m, x, y) => targets[(x, y)] is (GroundEdit.StoneBrush b, int level) ? GroundEdit.StoneCharFor(m.Region, m.Ground, b, level) : ' ');
+        }
+
+        /// <summary>Sets the stones of tiles, each ground's model copied first so undo keeps the one before; <paramref name="charAt"/> null leaves a tile.</summary>
+        private void EditStones(IEnumerable<(int x, int y)> tiles, System.Func<EditModel, int, int, char?> charAt)
+        {
+            foreach (var byGround in tiles.GroupBy(t => GroundAt(t.x, t.y)))
+            {
+                TileGround g = byGround.Key;
+                if (g == null) continue;
+                EditModel m = Model(g);
+                if (m == null)
+                {
+                    Debug.LogWarning($"[R'th] Paint Ground: {g.gameObject.scene.name}'s ground doesn't match its data; run Sync World on it first.");
+                    continue;
+                }
+                m = JsonConvert.DeserializeObject<EditModel>(JsonConvert.SerializeObject(m, Json), Json); // undo keeps the one before
+                bool changed = false;
+                foreach ((int x, int y) in byGround)
+                    if (charAt(m, x, y) is char c) changed |= GroundEdit.SetStone(m.Ground, x, y, c);
+                if (!changed) continue;
+                GroundEdit.PruneStones(m.Ground);
                 Apply(g, m, edited: true, redraw: false);
                 _touched.Add(g);
                 _stale.Add(g);
@@ -756,6 +942,8 @@ namespace Rth.Client.Editor
             piece.Legend = new SortedDictionary<string, TileKind>(m.Ground.Legend, System.StringComparer.Ordinal);
             piece.Margin = m.Ground.Margin;
             piece.Surround = m.Ground.Surround;
+            piece.Stones = m.Ground.Stones;
+            piece.StoneLegend = m.Ground.StoneLegend != null ? new SortedDictionary<string, StoneKind>(m.Ground.StoneLegend, System.StringComparer.Ordinal) : null;
             foreach (KeyValuePair<string, string> c in m.Materials) region.Materials[c.Key] = c.Value;
             g.brushEdit = "";
             Cache.Remove(g);

@@ -258,7 +258,25 @@ namespace Rth.Shared.World.Layout
             }
             float rise = LandNoise.Smooth((signed + edge / 2f) / edge);
             if (signed > d.Reach) rise *= Math.Max(0f, 1f - (signed - d.Reach) / 60f);
+            // Past either end of its line the scarp dies away (it would otherwise go on raising the
+            // land along the line's extension until its bounding box cut it off as a straight cliff).
+            rise *= LandNoise.Smooth(1f - Beyond(f.Line!, x, y) / ScarpTaper);
             return d.Height * rise;
+        }
+
+        /// <summary>How far, in tiles, a scarp takes to die away past the ends of its line.</summary>
+        public const float ScarpTaper = 40f;
+
+        /// <summary>How far a point lies past the nearer end of a line, along that end's direction (0 alongside it).</summary>
+        private static float Beyond(List<float[]> line, float x, float y)
+        {
+            float Past(float[] end, float[] next)
+            {
+                float dx = end[0] - next[0], dy = end[1] - next[1], len = (float)Math.Sqrt(dx * dx + dy * dy);
+                return len > 0f ? Math.Max(0f, ((x - end[0]) * dx + (y - end[1]) * dy) / len) : 0f;
+            }
+            int n = line.Count;
+            return n < 2 ? 0f : Math.Max(Past(line[0], line[1]), Past(line[n - 1], line[n - 2]));
         }
 
         /// <summary>

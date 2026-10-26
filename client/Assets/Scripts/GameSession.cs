@@ -58,6 +58,8 @@ namespace Rth.Client
         private float _nextReconnectTime;
         private Transform _clickMarker;
         private float _clickMarkerHideTime;
+        private TileCoord _flagLastTile;
+        private float _flagLastMove;
         private float _tickSeconds = 0.6f;
         private float _stateReceivedTime;
 
@@ -241,6 +243,7 @@ namespace Rth.Client
 
             if (_clickMarker != null && _clickMarker.gameObject.activeSelf && Time.unscaledTime > _clickMarkerHideTime)
                 _clickMarker.gameObject.SetActive(false);
+            UpdateWalkFlag();
             if (cameraRig != null && world != null && world.Local != null) cameraRig.target = world.Local.transform;
         }
 
@@ -791,6 +794,35 @@ namespace Rth.Client
             Send(new SetClientStateMessage { Key = key, Json = json });
         }
 
+        /// <summary>The client state key of the marker set on the world map (a tile as "[x,y]").</summary>
+        public const string WaypointKey = "map.waypoint";
+
+        private string _waypointJson;
+        private TileCoord? _waypoint;
+
+        /// <summary>The marker the player set on the world map, if any; the minimap points to it. It follows the player.</summary>
+        public TileCoord? Waypoint
+        {
+            get
+            {
+                ClientState.TryGetValue(WaypointKey, out string json);
+                if (json == _waypointJson) return _waypoint;
+                _waypointJson = json;
+                _waypoint = null;
+                try
+                {
+                    int[] xy = string.IsNullOrEmpty(json) ? null : Newtonsoft.Json.JsonConvert.DeserializeObject<int[]>(json);
+                    if (xy != null && xy.Length == 2) _waypoint = new TileCoord(xy[0], xy[1]);
+                }
+                catch (Newtonsoft.Json.JsonException) { }
+                return _waypoint;
+            }
+        }
+
+        /// <summary>Sets the world map's marker, or clears it with null.</summary>
+        public void SetWaypoint(TileCoord? tile) =>
+            SetClientState(WaypointKey, tile.HasValue ? "[" + tile.Value.X + "," + tile.Value.Y + "]" : "");
+
         private Ui.ActionBars _bars;
 
         /// <summary>The action bar layouts, once content and the saved layout have arrived.</summary>
@@ -953,6 +985,29 @@ namespace Rth.Client
             _clickMarker.position = GroundHeight.Centre(tile, world.Local != null ? world.Local.Plane : 0) + Vector3.up * 0.03f;
             _clickMarker.gameObject.SetActive(true);
             _clickMarkerHideTime = Time.unscaledTime + 0.6f;
+            WalkFlag = tile;
+            _flagLastMove = Time.unscaledTime;
+        }
+
+        /// <summary>Where the last click sent the local player, until they get there or stop: the minimap's flag.</summary>
+        public TileCoord? WalkFlag { get; private set; }
+
+        private void UpdateWalkFlag()
+        {
+            if (WalkFlag == null) return;
+            EntityView local = world != null ? world.Local : null;
+            if (local == null)
+            {
+                WalkFlag = null;
+                return;
+            }
+            if (local.Tile != _flagLastTile)
+            {
+                _flagLastTile = local.Tile;
+                _flagLastMove = Time.unscaledTime;
+            }
+            // There, or still for two ticks: blocked, or stopped beside what was clicked.
+            if (local.Tile == WalkFlag.Value || Time.unscaledTime - _flagLastMove > 1.3f) WalkFlag = null;
         }
 
         // ------------------------------------------------------------------ login screen

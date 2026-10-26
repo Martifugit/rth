@@ -257,8 +257,25 @@ namespace Rth.Client.Editor
             ground.margin = piece.Margin ?? 0;
             ground.surround = piece.Surround?.ToArray() ?? new string[0];
             ground.overlay = keys.Select(k => piece.Legend[k].IsOverlay).ToArray();
+            ground.soft = keys.Select(k => piece.Legend[k].IsSoft).ToArray();
             ground.water = keys.Select(k => piece.Legend[k].Water == true).ToArray();
             ground.beyond = keys.Select(k => piece.Legend[k].Beyond == true).ToArray();
+            List<string> stoneKeys = piece.StoneLegend?.Keys.ToList() ?? new List<string>();
+            ground.stoneRows = piece.Stones?.ToArray() ?? new string[0];
+            ground.stoneKinds = string.Concat(stoneKeys);
+            ground.stoneColours = stoneKeys.Select(k => StoneColour(region, piece.StoneLegend[k])).ToArray();
+        }
+
+        /// <summary>A kind of stones: their colour from the region's materials, alpha how thickly they lie (clear: none).</summary>
+        private static Color StoneColour(RegionData region, StoneKind kind)
+        {
+            if (!region.Materials.TryGetValue(kind.Material, out string value) || !Palette.TryParse(value, out Color colour))
+            {
+                Debug.LogWarning($"[R'th] {region.Id}: stones of material '{kind.Material}' have no colour in the region's materials; left out.");
+                return Color.clear;
+            }
+            colour.a = Mathf.Clamp01(kind.Share);
+            return colour;
         }
 
         /// <summary>A material the region names, created once under Assets/Art/Materials.</summary>

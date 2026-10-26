@@ -199,10 +199,9 @@ public class ContinentLayoutTests
     }
 
     [Fact]
-    public void TheShippedLayoutHoldsTheBuiltRegionsInTheEmpire()
+    public void TheStartRegionsAreInTheEmpire()
     {
         LayoutWorkspace ws = Shipped();
-        Assert.Contains(ws.Built, b => b.Id == "tolling" && b.X0 == 0 && b.Y0 == 0);
         foreach (string key in new[] { "0,0", "1,0" })
         {
             RegionCell cell = ws.Report.Regions.Single(r => r.Key == key);

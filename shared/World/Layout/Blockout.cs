@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Rth.Shared.World.Data;
+using Rth.Shared.World.Ground;
 
 namespace Rth.Shared.World.Layout
 {
@@ -145,7 +146,7 @@ namespace Rth.Shared.World.Layout
                 legend[c.ToString()] = kind;
                 foreach (KeyValuePair<string, string> m in materials) region.Materials[m.Key] = m.Value;
             }
-            region.Pieces.Add(new Piece
+            var ground = new Piece
             {
                 Id = "ground",
                 Kind = PieceKind.Tiles,
@@ -155,8 +156,53 @@ namespace Rth.Shared.World.Layout
                 Paint = true,
                 Margin = Margin,
                 Surround = surround,
-            });
+            };
+            Stones(map, land, region, ground);
+            region.Pieces.Add(ground);
+            // Where new players start, if the layout puts it in this region.
+            PlaceDef? start = map.Data.Places.FirstOrDefault(p => p.Start
+                && p.At[0] >= x0 && p.At[0] < x0 + size && p.At[1] >= y0 && p.At[1] < y0 + size);
+            if (start != null)
+                region.Pieces.Add(new Piece { Id = "spawn", Kind = PieceKind.Spawn, At = new[] { (int)Math.Floor(start.At[0]), (int)Math.Floor(start.At[1]) } });
             return region;
+        }
+
+        /// <summary>
+        /// The stones over the region's grounds that carry them (continent.json grounds' `stones`: the
+        /// gravel on a path), scattered unevenly along them (<see cref="GroundStones.Spread"/>).
+        /// </summary>
+        private static void Stones(ContinentMap map, Landscape land, RegionData region, Piece ground)
+        {
+            int[] r = ground.Rect!;
+            int size = r[2] - r[0];
+            ScatterDef? Scatter(int x, int y)
+            {
+                if (!land.InBounds(x, y)) return null;
+                (string id, bool beyond) = land.Decode(land.Char(land.Index(x, y)));
+                return beyond || !map.Data.Grounds.TryGetValue(id, out GroundDef? g) ? null : g.Stones;
+            }
+            var rows = new List<string>(size);
+            bool any = false;
+            for (int y = r[3] - 1; y >= r[1]; y--)
+            {
+                var row = new char[size];
+                for (int x = 0; x < size; x++)
+                {
+                    row[x] = ' ';
+                    int ax = r[0] + x;
+                    if (!(Scatter(ax, y) is ScatterDef s) || !map.Data.Stones.TryGetValue(s.Kind, out StoneDef? def)) continue;
+                    int level = GroundStones.Spread(ax, y, s.Share, (px, py) => Scatter(px, py)?.Kind == s.Kind);
+                    if (level < 0) continue;
+                    string material = "LandStones" + Pascal(s.Kind);
+                    region.Materials[material] = def.Palette;
+                    row[x] = GroundEdit.StoneCharFor(ground, material, GroundStones.Levels[level]);
+                    any = true;
+                }
+                rows.Add(new string(row));
+            }
+            if (!any) return;
+            ground.Stones = rows;
+            GroundEdit.PruneStones(ground);
         }
 
         /// <summary>The side of the plain square standing in for a place, by its tier (the paved middle, in tiles).</summary>
@@ -201,7 +247,7 @@ namespace Rth.Shared.World.Layout
                 kind.Height = 1.6f;
             }
             else if (g.Key == data.BridgeGround) kind.Height = 0.05f;
-            if (g.Value.Layer == "over") kind.Layer = "over";
+            if (g.Value.Layer == "over" || g.Value.Layer == "soft") kind.Layer = g.Value.Layer;
             if (g.Value.Cliff != null)
             {
                 string cliff = "LandCliff" + Pascal(g.Value.Cliff);

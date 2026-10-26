@@ -1779,6 +1779,15 @@
     margin-top: -14px;
 }
 
+/* The player's marker: the pin's point sits on the tile. */
+.worldmap__marker {
+    position: absolute;
+    width: 18px;
+    height: 24px;
+    margin-left: -9px;
+    margin-top: -24px;
+}
+
 .worldmap__you-pulse {
     position: absolute;
     width: 34px;

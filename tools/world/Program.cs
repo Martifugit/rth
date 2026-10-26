@@ -2,6 +2,7 @@ using Rth.Shared.World;
 using Rth.Shared.World.Data;
 using Rth.Shared.World.Layout;
 using Rth.WorldTool;
+using Rth.Shared.World.Ground;
 
 // The world data from the command line (docs/workflow.md). Every command works on the whole
 // checkout: world/regions/*.json in, server/data/maps/* and world/renders/* out.
@@ -187,8 +188,68 @@ switch (command)
         return 0;
     }
 
+    case "strokes":
+    {
+        // Paths and rivers redrawn from a plan of points (GroundStrokes): strokes <plan.json>
+        if (rest.Length != 1 || !File.Exists(rest[0]))
+        {
+            Console.Error.WriteLine("Usage: strokes <plan.json> (see shared/World/Ground/GroundStrokes.cs)");
+            return 2;
+        }
+        StrokePlan plan = StrokePlan.Parse(File.ReadAllText(rest[0]));
+        var ids = new HashSet<string>(plan.Regions, StringComparer.Ordinal);
+        if (plan.Area != null)
+        {
+            WorldAreas.Area? area = WorldAreas.Load(WorldAreas.PathIn(root)).Areas.FirstOrDefault(a => a.Id == plan.Area);
+            if (area == null) { Console.Error.WriteLine($"No area '{plan.Area}' in world/areas.json."); return 2; }
+            ids.UnionWith(area.Regions);
+        }
+        var entries = ws.Regions.Where(e => ids.Contains(e.Region.Id)).ToList();
+        // Before the takeover too, so a region taken over whose tiles don't change is still written.
+        var before = ws.Regions.ToDictionary(e => e.Region.Id, e => RegionFiles.Format(e.Region));
+        foreach (WorldWorkspace.Entry e in entries.Where(e => e.Region.Generated != null))
+        {
+            if (!plan.TakeOver)
+            {
+                Console.WriteLine($"note: {e.Region.Id} is generated; the next `blockout` redraws it without these strokes (set \"takeOver\").");
+                continue;
+            }
+            // As the Editor takes a region over (WorldSync): no longer generated, its scene in its area's folder.
+            WorldAreas.Area? own = WorldAreas.Load(WorldAreas.PathIn(root)).AreaOf(e.Region.Id);
+            e.Region.Generated = null;
+            if (own != null && e.Region.Scene.StartsWith("Assets/Scenes/Land/", StringComparison.Ordinal))
+                e.Region.Scene = $"Assets/Scenes/{Blockout.Pascal(own.Id)}/{Path.GetFileName(e.Region.Scene)}";
+            Console.WriteLine($"{e.Region.Id}: taken over, its scene goes to {e.Region.Scene}. Run `blockout` so the generated land round it follows.");
+        }
+        ContinentData data = ContinentData.Parse(File.ReadAllText(Path.Combine(root, "world", "layout", "continent.json")));
+        foreach (string line in GroundStrokes.Apply(entries.Select(e => e.Region).ToList(), data, plan)) Console.WriteLine(line);
+        // The rings of neighbours' tiles follow, here and next door.
+        var all = ws.Regions.Where(e => !e.Region.Instanced).Select(e => e.Region).ToList();
+        GroundEdit.RefreshSurrounds(all);
+        // A river's lowered bed or an island's rise at a border: the neighbours' edges follow.
+        var edited = new HashSet<string>(ws.Regions.Where(e => before.TryGetValue(e.Region.Id, out string was) && was != RegionFiles.Format(e.Region)).Select(e => e.Region.Id));
+        TerrainSeams.Result seams = TerrainSeams.Follow(ws.Regions.Select(e => e.Region).ToList(), edited);
+        foreach (string m in seams.Messages) Console.WriteLine("note: " + m);
+        if (seams.GeneratedNeighbours.Count > 0) Console.WriteLine($"note: run `blockout` so the generated land meets them ({string.Join(", ", seams.GeneratedNeighbours)}).");
+        foreach (WorldWorkspace.Entry e in ws.Regions)
+            if (before.TryGetValue(e.Region.Id, out string was) && was != RegionFiles.Format(e.Region))
+            {
+                RegionFiles.SaveRegion(e.Region, e.Path);
+                Console.WriteLine("wrote " + Path.GetRelativePath(root, e.Path).Replace(Path.DirectorySeparatorChar, '/'));
+            }
+        return 0;
+    }
+
     case "terrain":
         return TerrainCommand(root, ws, rest);
+
+    case "seams":
+    {
+        // Every border whose two sides disagree on the ground's height, mended: built regions meet halfway.
+        int n = FollowSeams(root, ws, null);
+        Console.WriteLine(n == 0 ? "Every border meets." : $"{n} regions written.");
+        return 0;
+    }
 
     case "terrain-save":
     {
@@ -222,6 +283,8 @@ switch (command)
               terrain-save <file> write heights edited over the whole world (the Editor's Edit Terrain) into
                                  the data: built regions' terrain, generated land's raise (world/layout/sculpt),
                                  then the blockout and the maps
+              seams              mend every border where two built regions disagree on the ground's height
+                                 (they meet halfway); every command that writes terrain already does this
               blockout [check]   generate the walkable blockout from the layout: world/regions/land_*.json for
                                  every region with core land and the ring around it, then export their maps
                                  (check: only check that the generated regions are up to date)
@@ -296,8 +359,26 @@ static int TerrainCommand(string root, WorldWorkspace ws, string[] args)
     }
     region.Terrain = TerrainText.Write(field, region.Terrain?.CliffStep ?? 1f);
     RegionFiles.SaveRegion(region, e.Path);
-    Console.WriteLine($"{region.Id}: {args[1]} terrain written. Run `export`, then `check` for steps at its borders.");
+    Console.WriteLine($"{region.Id}: {args[1]} terrain written.");
+    FollowSeams(root, ws, new[] { region.Id });
+    Console.WriteLine("Run `export`.");
     return 0;
+}
+
+// The built neighbours of regions whose terrain was written take up their edges (null: mend every border).
+static int FollowSeams(string root, WorldWorkspace ws, ICollection<string>? written)
+{
+    TerrainSeams.Result seams = TerrainSeams.Follow(ws.Regions.Select(e => e.Region).ToList(), written);
+    foreach (string m in seams.Messages) Console.WriteLine("note: " + m);
+    foreach (string id in seams.Changed)
+    {
+        WorldWorkspace.Entry e = ws.Find(id)!;
+        RegionFiles.SaveRegion(e.Region, e.Path);
+        Console.WriteLine($"wrote {Path.GetRelativePath(root, e.Path).Replace(Path.DirectorySeparatorChar, '/')} (its border meets its neighbours')");
+    }
+    if (seams.GeneratedNeighbours.Count > 0)
+        Console.WriteLine($"note: run `blockout` so the generated land meets the built edges ({string.Join(", ", seams.GeneratedNeighbours)}).");
+    return seams.Changed.Count;
 }
 
 // The walkable blockout (L2, docs/layout.md): regions generated from the layout.

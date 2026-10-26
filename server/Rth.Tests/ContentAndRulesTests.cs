@@ -22,9 +22,10 @@ public class ContentAndRulesTests
     [Fact]
     public void TheShippedRegionsFitTogetherIntoOneWorld()
     {
-        WorldLoader.Result world = WorldLoader.Load(Path.Combine(Repo.ServerDirectory, "data", "maps"), "tolling");
-        Assert.Contains(world.Map.Regions, r => r.Name == "tolling" && r.X == 0 && r.Y == 0);
-        Assert.Equal(new TileCoord(33, 53), world.Map.Spawn);
+        WorldLoader.Result world = WorldLoader.Load(Path.Combine(Repo.ServerDirectory, "data", "maps"), "land_0_0");
+        Assert.Contains(world.Map.Regions, r => r.Name == "land_0_0" && r.X == 0 && r.Y == 0);
+        // The layout's start place (continent.json, "start") is where the blockout puts the spawn.
+        Assert.Equal(new TileCoord(30, 48), world.Map.Spawn);
         Assert.False(world.Map.IsBlocked(0, world.Map.Spawn.X, world.Map.Spawn.Y));
 
         // The dead wake on open ground (death.json), not silently at the spawn because the tile is gone.
@@ -48,12 +49,9 @@ public class ContentAndRulesTests
             Assert.Contains(beside, t => Pathfinder.FindPath(world.Map, wake.Plane, start, t) is { Count: > 0 } p && p[^1] == t);
         }
 
-        // Palmerway joins Tolling: walk from the town's east road over the border.
-        if (world.Map.FindRegion("palmerway") != null)
-        {
-            List<TileCoord> path = Pathfinder.FindPath(world.Map, 0, new TileCoord(88, 45), new TileCoord(104, 47));
-            Assert.Equal(new TileCoord(104, 47), path[^1]);
-        }
+        // Tolling's land joins the land east of it: walk over the border.
+        List<TileCoord> east = Pathfinder.FindPath(world.Map, 0, new TileCoord(88, 47), new TileCoord(104, 47));
+        Assert.Equal(new TileCoord(104, 47), east[^1]);
     }
 
     [Fact]
@@ -61,7 +59,7 @@ public class ContentAndRulesTests
     {
         GameContent content = GameContent.Load(Repo.ContentDirectory);
         string[] maps = Directory.GetFiles(Path.Combine(Repo.ServerDirectory, "data", "maps"), "*.rthmap");
-        Assert.Contains(maps, m => Path.GetFileName(m) == "tolling.rthmap");
+        Assert.Contains(maps, m => Path.GetFileName(m) == "land_0_0.rthmap");
         foreach (string path in maps)
         {
             MapData map = MapData.Load(path);

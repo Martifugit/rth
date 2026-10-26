@@ -39,6 +39,8 @@ namespace Rth.Shared.World.Layout
         public string DefaultPower = "wild";
 
         public Dictionary<string, GroundDef> Grounds = new Dictionary<string, GroundDef>();
+        /// <summary>Kinds of stones to scatter over the ground (gravel, chalk chips), painted on their own (<see cref="Ground.GroundStones"/>).</summary>
+        public Dictionary<string, StoneDef> Stones = new Dictionary<string, StoneDef>();
         public Dictionary<string, PowerDef> Powers = new Dictionary<string, PowerDef>();
         /// <summary>Land, as shapes; everything else is sea.</summary>
         public List<ShapeEntry> Land = new List<ShapeEntry>();
@@ -85,9 +87,12 @@ namespace Rth.Shared.World.Layout
         public float Height = 2f;
         /// <summary>
         /// How it is painted (docs/world-plan.md section 7): "under" (natural ground, blended: the
-        /// default) or "over" (a made surface: roads, paving, planks, drawn crisp).
+        /// default), "soft" (a path: natural ground that fades fully into whatever lies round it,
+        /// however different its colour) or "over" (a made surface: paving, planks, drawn crisp).
         /// </summary>
         public string Layer = "under";
+        /// <summary>Stones the blockout scatters over it (a gravel path), unevenly: which kind and how thick on the whole.</summary>
+        public ScatterDef? Stones;
         /// <summary>Patches of other grounds inside this one, so a large area isn't one colour.</summary>
         public List<MixDef> Mix = new List<MixDef>();
         /// <summary>Drawn along the sea's edge (a beach); none: this ground.</summary>
@@ -104,6 +109,20 @@ namespace Rth.Shared.World.Layout
         public bool Farm;
         /// <summary>What it gives way to higher up (mountain pasture to rock): each band's ground above its height, the line ragged.</summary>
         public List<BandDef> Above = new List<BandDef>();
+    }
+
+    /// <summary>A kind of stones (<see cref="ContinentData.Stones"/>): its name in the brush's list and its palette colour.</summary>
+    public sealed class StoneDef
+    {
+        public string Name = "";
+        public string Palette = "Gravel";
+    }
+
+    /// <summary>Stones over a ground (<see cref="GroundDef.Stones"/>): an id in <see cref="ContinentData.Stones"/> and how thickly they lie on the whole (0..1).</summary>
+    public sealed class ScatterDef
+    {
+        public string Kind = "gravel";
+        public float Share = 0.25f;
     }
 
     /// <summary>A ground drawn above a height (<see cref="GroundDef.Above"/>).</summary>
@@ -348,6 +367,8 @@ namespace Rth.Shared.World.Layout
         public bool Hidden;
         /// <summary>The radius of the ground levelled for it, when it differs from its tier's (a terraced city levels less).</summary>
         public float? Flat;
+        /// <summary>New players start here: the blockout puts the player spawn on this tile.</summary>
+        public bool Start;
 
         public bool IsSettlement => Tier != "landmark";
     }
@@ -364,6 +385,13 @@ namespace Rth.Shared.World.Layout
         public bool Route = true;
         /// <summary>Stops in order: a place id, or a point [x, y] the road bends through.</summary>
         public List<JToken> Line = new List<JToken>();
+        /// <summary>How far, in tiles, the road drifts either side of its route in easy bends (none: by its kind; 0: as routed).</summary>
+        public float? Wind;
+        /// <summary>The length, in tiles, of its long bends.</summary>
+        public float Wave = 55f;
+
+        /// <summary>The drift a road of this kind gets when it names none: paths wander, highways less.</summary>
+        public float WindOrDefault => Wind ?? (Kind == "main" ? 5f : 6f);
     }
 
     public sealed class LayoutTargets

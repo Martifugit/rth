@@ -142,7 +142,7 @@ public class LevelTestMapTests
 {
     private static readonly string Maps = Path.Combine(Repo.ServerDirectory, "data", "maps");
 
-    private static WorldLoader.Result Load() => WorldLoader.Load(Maps, "tolling");
+    private static WorldLoader.Result Load() => WorldLoader.Load(Maps, "land_0_0");
 
     [Fact]
     public void TheTestRegionHasTwoFloorsWithTheirOwnCollision()

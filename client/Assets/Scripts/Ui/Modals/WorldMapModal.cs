@@ -29,7 +29,8 @@ namespace Rth.Client.Ui.Modals
     /// over it, as vectors so they stay crisp at every zoom, the rivers, roads, passes and ferries,
     /// the built regions (land beyond them is shaded as unexplored), the places by tier and the
     /// labels. Drag to pan, the wheel to zoom (<see cref="WorldMapView"/>), "you are here" with
-    /// your facing. Placeholder names never reach the client: those places are unnamed marks.
+    /// your facing. A right-click sets your marker (<see cref="GameSession.Waypoint"/>, which the
+    /// minimap points to); a right-click on it, or the tool button, clears it. Placeholder names never reach the client: those places are unnamed marks.
     /// </summary>
     public sealed class WorldMapTab : ModalTab
     {
@@ -41,6 +42,7 @@ namespace Rth.Client.Ui.Modals
         private const string RealmsPref = "rth.map.realms";
         private const string ShadePref = "rth.map.shade";
         private const string LegendPref = "rth.map.legend";
+        private const string BordersPref = "rth.map.borders";
 
         private VisualElement _view;
         private VisualElement _content;
@@ -49,12 +51,14 @@ namespace Rth.Client.Ui.Modals
         private VisualElement _labels;
         private VisualElement _you;
         private VisualElement _youPulse;
+        private VisualElement _marker;
+        private VisualElement _clearMarker;
         private Label _status;
         private Label _where;
         private Label _hover;
         private VisualElement _legend;
         private Label _zoomIn, _zoomOut;
-        private UiKit.Check _namesCheck, _realmsCheck, _shadeCheck;
+        private UiKit.Check _namesCheck, _realmsCheck, _shadeCheck, _bordersCheck;
 
         private WorldChart _chart;
         private WorldMapView _mapView;
@@ -73,7 +77,7 @@ namespace Rth.Client.Ui.Modals
         private Vector2 _dragLast;
         private Vector2? _pointer;
 
-        private bool _showNames, _showRealms, _shade;
+        private bool _showNames, _showRealms, _shade, _showBorders;
 
         private readonly List<(VisualElement Label, float X, float Y, float MinScale, float MaxScale, float Lift)> _placed =
             new List<(VisualElement, float, float, float, float, float)>();
@@ -93,6 +97,7 @@ namespace Rth.Client.Ui.Modals
             _showNames = PlayerPrefs.GetInt(NamesPref, 1) == 1;
             _showRealms = PlayerPrefs.GetInt(RealmsPref, 1) == 1;
             _shade = PlayerPrefs.GetInt(ShadePref, 1) == 1;
+            _showBorders = PlayerPrefs.GetInt(BordersPref, 1) == 1;
 
             _view = UiKit.El(root, "worldmap__view");
             _content = UiKit.El(_view, "worldmap__content");
@@ -103,6 +108,9 @@ namespace Rth.Client.Ui.Modals
             _content.Add(_ink);
             _labels = UiKit.El(_content, "worldmap__layer");
             _labels.pickingMode = PickingMode.Ignore;
+
+            _marker = new MarkerPin();
+            _content.Add(_marker);
 
             _youPulse = UiKit.El(_content, "worldmap__you-pulse");
             _youPulse.pickingMode = PickingMode.Ignore;
@@ -119,6 +127,8 @@ namespace Rth.Client.Ui.Modals
             UiKit.Tooltip(_zoomOut, () => "Zoom out (wheel)");
             VisualElement centre = UiKit.IconButton(tools, "compass", "Back to where you are", CentreOnYou);
             centre.AddToClassList("worldmap__tool");
+            _clearMarker = UiKit.IconButton(tools, "close", "Clear your marker (right-click it)", () => Session?.SetWaypoint(null));
+            _clearMarker.AddToClassList("worldmap__tool");
             VisualElement legendButton = UiKit.IconButton(tools, "book", "Legend", () => ShowLegend(_legend.style.display == DisplayStyle.None));
             legendButton.AddToClassList("worldmap__tool");
 
@@ -169,6 +179,7 @@ namespace Rth.Client.Ui.Modals
             _namesCheck = new UiKit.Check(legend, "Place names", () => Toggle(ref _showNames, NamesPref));
             _realmsCheck = new UiKit.Check(legend, "Realm names", () => Toggle(ref _showRealms, RealmsPref));
             _shadeCheck = new UiKit.Check(legend, "Shade unexplored land", () => Toggle(ref _shade, ShadePref));
+            _bordersCheck = new UiKit.Check(legend, "Region borders", () => Toggle(ref _showBorders, BordersPref));
         }
 
         private void Toggle(ref bool value, string pref)
@@ -211,6 +222,7 @@ namespace Rth.Client.Ui.Modals
             _namesCheck.Set(_showNames);
             _realmsCheck.Set(_showRealms);
             _shadeCheck.Set(_shade);
+            _bordersCheck.Set(_showBorders);
             if (_mapView != null)
             {
                 _zoomIn.SetEnabled(_mapView.CanZoomIn);
@@ -220,7 +232,8 @@ namespace Rth.Client.Ui.Modals
             WorldRegion current = Ui.regions != null ? Ui.regions.Current : null;
             _where.text = current != null ? "You are in " + UiKit.Colour(current.Title, UiKit.Value) : "";
             PlaceYou();
-            _hover.text = _pointer.HasValue ? Describe(_pointer.Value) : "";
+            PlaceMarker();
+            _hover.text = _pointer.HasValue ? Describe(_pointer.Value) : "Right-click to set a marker";
         }
 
         private void SetChart(WorldChart chart)
@@ -411,6 +424,7 @@ namespace Rth.Client.Ui.Modals
                 }
             }
             PlaceYou();
+            PlaceMarker();
         }
 
         private void ZoomBy(int steps, Vector2 pivot)
@@ -463,6 +477,36 @@ namespace Rth.Client.Ui.Modals
             _youPulse.style.opacity = 1f - pulse;
         }
 
+        private void PlaceMarker()
+        {
+            TileCoord? waypoint = Session?.Waypoint;
+            bool show = waypoint.HasValue && _chart != null && _mapView != null;
+            _marker.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+            _clearMarker.style.display = waypoint.HasValue ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!show) return;
+            Vector2 p = MapPixel(waypoint.Value.X + 0.5f, waypoint.Value.Y + 0.5f);
+            _marker.style.left = p.x;
+            _marker.style.top = p.y;
+        }
+
+        /// <summary>A right-click sets the marker there, or clears it when it lands on the marker.</summary>
+        private void ToggleMarker(Vector2 viewPoint)
+        {
+            if (Session == null || _chart == null || _mapView == null) return;
+            TileCoord? waypoint = Session.Waypoint;
+            if (waypoint.HasValue)
+            {
+                Vector2 at = MapPixel(waypoint.Value.X + 0.5f, waypoint.Value.Y + 0.5f) + new Vector2(_mapView.PanX, _mapView.PanY);
+                if ((at - viewPoint).sqrMagnitude <= 10f * 10f)
+                {
+                    Session.SetWaypoint(null);
+                    return;
+                }
+            }
+            Vector2 tile = TileAt(viewPoint);
+            Session.SetWaypoint(new TileCoord(Mathf.FloorToInt(tile.x), Mathf.FloorToInt(tile.y)));
+        }
+
         // ------------------------------------------------------------------ input
 
         private void OnWheel(WheelEvent e)
@@ -473,8 +517,15 @@ namespace Rth.Client.Ui.Modals
 
         private void OnPointerDown(PointerDownEvent e)
         {
-            if (e.button != 0 || _mapView == null) return;
+            if (_mapView == null) return;
             if (e.target != _view) return; // the tools and the legend are buttons, not the map
+            if (e.button == 1)
+            {
+                ToggleMarker(_view.WorldToLocal(e.position));
+                e.StopPropagation();
+                return;
+            }
+            if (e.button != 0) return;
             _dragging = true;
             _dragPointer = e.pointerId;
             _dragLast = _view.WorldToLocal(e.position);
@@ -514,6 +565,9 @@ namespace Rth.Client.Ui.Modals
                 if (d <= best) { best = d; near = place; }
             }
             string where = $"{Mathf.FloorToInt(tile.x)}, {Mathf.FloorToInt(tile.y)}";
+            TileCoord? waypoint = Session?.Waypoint;
+            if (waypoint.HasValue && Sq(waypoint.Value.X + 0.5f - tile.x) + Sq(waypoint.Value.Y + 0.5f - tile.y) <= reach * reach)
+                return "Your marker  ·  right-click to clear it";
             if (near != null)
             {
                 string tier = near.Tier == "landmark" ? "" : " (" + near.Tier + ")";
@@ -538,6 +592,7 @@ namespace Rth.Client.Ui.Modals
         internal WorldChart Chart => _chart;
         internal float Scale => _mapView?.Scale ?? 1f;
         internal bool ShadeUnexplored => _shade;
+        internal bool ShowBorders => _showBorders;
 
         // ------------------------------------------------------------------ the vector layer
 
@@ -553,7 +608,8 @@ namespace Rth.Client.Ui.Modals
             private static readonly Color MainRoad = new Color32(214, 180, 118, 255);
             private static readonly Color MinorRoad = new Color32(84, 60, 36, 230);
             private static readonly Color FerryColour = new Color32(236, 226, 200, 210);
-            private static readonly Color ExploredEdge = new Color32(240, 213, 140, 200);
+            // Faint: with the whole continent blocked out, every region's edge makes a grid over the map.
+            private static readonly Color ExploredEdge = new Color32(240, 213, 140, 55);
             private static readonly Color Veil = new Color32(10, 8, 6, 115);
             private static readonly Color Gold = new Color32(240, 213, 140, 255);
             private static readonly Color Unnamed = new Color32(186, 166, 126, 255);
@@ -592,7 +648,8 @@ namespace Rth.Client.Ui.Modals
                     foreach (WorldRegion r in built) RectPath(p, RegionRect(r));
                     p.Fill(FillRule.OddEven);
                 }
-                foreach (WorldRegion r in built) Explored(p, RegionRect(r));
+                if (_tab.ShowBorders)
+                    foreach (WorldRegion r in built) Explored(p, RegionRect(r));
 
                 foreach (ChartPlace place in chart.Places)
                 {
@@ -686,7 +743,7 @@ namespace Rth.Client.Ui.Modals
             public static void Explored(Painter2D p, Rect r)
             {
                 p.strokeColor = ExploredEdge;
-                p.lineWidth = 1.2f;
+                p.lineWidth = 1f;
                 p.lineJoin = LineJoin.Miter;
                 p.BeginPath();
                 RectPath(p, r);
@@ -762,6 +819,41 @@ namespace Rth.Client.Ui.Modals
                 AddToClassList("worldmap__swatch");
                 pickingMode = PickingMode.Ignore;
                 generateVisualContent += ctx => draw(ctx.painter2D, contentRect.center);
+            }
+        }
+
+        /// <summary>Your marker: a gold pin, its point on the tile.</summary>
+        private sealed class MarkerPin : VisualElement
+        {
+            private static readonly Color Fill = new Color32(240, 196, 80, 255);
+            private static readonly Color Rim = new Color32(28, 20, 12, 255);
+
+            public MarkerPin()
+            {
+                AddToClassList("worldmap__marker");
+                pickingMode = PickingMode.Ignore;
+                generateVisualContent += Draw;
+            }
+
+            private void Draw(MeshGenerationContext context)
+            {
+                Painter2D p = context.painter2D;
+                Vector2 tip = new Vector2(contentRect.width / 2f, contentRect.height);
+                p.lineJoin = LineJoin.Round;
+                p.fillColor = Fill;
+                p.strokeColor = Rim;
+                p.lineWidth = 2f;
+                p.BeginPath();
+                p.MoveTo(tip);
+                p.LineTo(tip + new Vector2(-6f, -10f));
+                p.Arc(tip + new Vector2(0f, -14f), 7.2f, new Angle(146f), new Angle(394f));
+                p.ClosePath();
+                p.Fill();
+                p.Stroke();
+                p.fillColor = Rim;
+                p.BeginPath();
+                p.Arc(tip + new Vector2(0f, -14f), 2.4f, new Angle(0f), new Angle(360f));
+                p.Fill();
             }
         }
 

@@ -15,7 +15,8 @@ namespace Rth.Client.Editor
     public static class GameSceneBuilder
     {
         public const string ScenePath = "Assets/Scenes/Game.unity";
-        private static readonly Color Sky = new Color(0.55f, 0.72f, 0.88f);
+        // Dark and weathered (2026-10-26): an overcast grey-blue sky, a pale sun, low ambient so shade reads.
+        private static readonly Color Sky = new Color(0.50f, 0.56f, 0.62f);
 
         [MenuItem("R'th/Dev/Rebuild Game Scene", priority = 100)]
         private static void BuildMenu()
@@ -43,8 +44,8 @@ namespace Rth.Client.Editor
             sun.type = LightType.Directional;
             sun.transform.rotation = Quaternion.Euler(50f, -35f, 0f);
             sun.shadows = LightShadows.Soft;
-            sun.color = new Color(1f, 0.96f, 0.88f);
-            sun.intensity = 1.1f;
+            sun.color = new Color(0.96f, 0.94f, 0.89f);
+            sun.intensity = 1.15f;
 
             // Distance fog in the sky colour: regions load beyond it, so nothing pops into view.
             RenderSettings.fog = true;
@@ -53,9 +54,9 @@ namespace Rth.Client.Editor
             RenderSettings.fogStartDistance = 45f;
             RenderSettings.fogEndDistance = 85f;
             RenderSettings.ambientMode = AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor = new Color(0.62f, 0.68f, 0.78f);
-            RenderSettings.ambientEquatorColor = new Color(0.5f, 0.52f, 0.5f);
-            RenderSettings.ambientGroundColor = new Color(0.3f, 0.28f, 0.24f);
+            RenderSettings.ambientSkyColor = new Color(0.47f, 0.51f, 0.57f);
+            RenderSettings.ambientEquatorColor = new Color(0.38f, 0.39f, 0.38f);
+            RenderSettings.ambientGroundColor = new Color(0.2f, 0.19f, 0.17f);
             RenderSettings.sun = sun;
 
             // Unbuilt land: plain ground under the whole world, as the classic client filled map
@@ -68,7 +69,7 @@ namespace Rth.Client.Editor
             Object.DestroyImmediate(horizon.GetComponent<Collider>());
             horizon.transform.position = new Vector3(0f, -0.3f, 0f);
             horizon.transform.localScale = new Vector3(600f, 1f, 600f); // 6000 tiles across
-            horizon.GetComponent<Renderer>().sharedMaterial = kit.Mat("UnbuiltLand", new Color(0.33f, 0.5f, 0.21f));
+            horizon.GetComponent<Renderer>().sharedMaterial = kit.Mat("UnbuiltLand", new Color(0.3f, 0.384f, 0.247f)); // the palette's UnbuiltLand
             horizon.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.Off;
 
             var game = new GameObject("Game");

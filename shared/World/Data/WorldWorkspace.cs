@@ -147,18 +147,9 @@ namespace Rth.Shared.World.Data
         {
             RegionData a = ea.Region, b = eb.Region;
             Heightfield? ta = ea.Compiled.Terrain, tb = eb.Compiled.Terrain;
-            if (ta == null && tb == null || a.Instanced || b.Instanced || a.Plane != b.Plane) return null;
-            var corners = new List<(int x, int y)>();
-            void Edge(int x0, int y0, int x1, int y1)
-            {
-                for (int y = y0; y <= y1; y++)
-                    for (int x = x0; x <= x1; x++) corners.Add((x, y));
-            }
-            int ax1 = a.OriginX + a.Width, ay1 = a.OriginY + a.Height, bx1 = b.OriginX + b.Width, by1 = b.OriginY + b.Height;
-            int oy0 = Math.Max(a.OriginY, b.OriginY), oy1 = Math.Min(ay1, by1), ox0 = Math.Max(a.OriginX, b.OriginX), ox1 = Math.Min(ax1, bx1);
-            if ((ax1 == b.OriginX || bx1 == a.OriginX) && oy0 < oy1) Edge(ax1 == b.OriginX ? ax1 : a.OriginX, oy0, ax1 == b.OriginX ? ax1 : a.OriginX, oy1);
-            else if ((ay1 == b.OriginY || by1 == a.OriginY) && ox0 < ox1) Edge(ox0, ay1 == b.OriginY ? ay1 : a.OriginY, ox1, ay1 == b.OriginY ? ay1 : a.OriginY);
-            else return null;
+            if (ta == null && tb == null) return null;
+            List<(int x, int y)> corners = TerrainSeams.SharedCorners(a, b);
+            if (corners.Count == 0) return null;
             int differ = 0;
             (int x, int y, float ha, float hb) first = default;
             foreach ((int x, int y) in corners)
@@ -168,7 +159,7 @@ namespace Rth.Shared.World.Data
                 if (differ++ == 0) first = (x, y, ha, hb);
             }
             return differ == 0 ? null
-                : FormattableString.Invariant($"The ground steps at the border of '{a.Id}' and '{b.Id}': {differ} corners differ, the first at ({first.x}, {first.y}): {first.ha:0.##} against {first.hb:0.##}.");
+                : FormattableString.Invariant($"The ground steps at the border of '{a.Id}' and '{b.Id}': {differ} corners differ, the first at ({first.x}, {first.y}): {first.ha:0.##} against {first.hb:0.##}. `tools/world seams` mends it.");
         }
 
         /// <summary>Map files of a region that differ from what its data compiles to.</summary>

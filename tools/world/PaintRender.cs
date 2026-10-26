@@ -33,6 +33,7 @@ public static class PaintRender
             GroundLayer layer = g.Value.Water ? GroundLayer.Water : g.Value.Layer == "over" ? GroundLayer.Over : GroundLayer.Under;
             GroundLook look = GroundLook.Of(rgb[0], rgb[1], rgb[2], layer, layer == GroundLayer.Over ? 1 + k : 1);
             look.Shelf = !beyond && !g.Value.Water && !g.Value.Walkable && data.Terrain?.RidgeGrounds.Contains(g.Key) != true;
+            look = look.Path(g.Value.Layer == "soft");
             looks.Add(look);
             float[]? cliff = Colour(g.Value.Cliff);
             cliffs.AddRange(cliff ?? new[] { -1f, -1f, -1f });
@@ -51,7 +52,26 @@ public static class PaintRender
             X0 = x0, Y0 = y0, Width = w, Height = h, Margin = margin, Kinds = grid, Looks = looks.ToArray(),
             Field = land.Heights.Field(x0, y0, w, h) ?? new Heightfield(x0, y0, w, h), CliffColours = cliffs.ToArray(),
         };
+        // The stones the blockout would scatter over grounds that carry them.
+        ScatterDef? Scatter(int x, int y)
+        {
+            if (!land.InBounds(x, y)) return null;
+            (string id, bool beyond) = land.Decode(land.Char(land.Index(x, y)));
+            return beyond ? null : data.Grounds[id].Stones;
+        }
+        var stoneIds = data.Stones.Keys.ToList();
+        canvas.StoneLooks = stoneIds.Select(id => Colour(data.Stones[id].Palette) ?? new[] { 0.53f, 0.5f, 0.4f })
+            .SelectMany(c => GroundStones.Levels.Select(l => new StoneLook { R = c[0], G = c[1], B = c[2], Share = l })).ToArray();
+        canvas.Stones = new int[w * h];
+        for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++)
+            {
+                ScatterDef? s = Scatter(x0 + x, y0 + y);
+                int level = s == null ? -1 : GroundStones.Spread(x0 + x, y0 + y, s.Share, (px, py) => Scatter(px, py)?.Kind == s.Kind);
+                canvas.Stones[y * w + x] = level < 0 ? -1 : stoneIds.IndexOf(s!.Kind) * GroundStones.Levels.Length + level;
+            }
         byte[] rgba = GroundPainter.Paint(canvas, ppt, out int pw, out int ph);
+        GroundStones.Draw(rgba, pw, ph, ppt, x0, y0, GroundStones.Scatter(canvas));
         GroundPainter.Shade(rgba, pw, ph, ppt, canvas);
         if (labels) Marks(land, rgba, pw, ph, x0, y0, ppt);
         return ToPng(rgba, pw, ph);
@@ -65,6 +85,7 @@ public static class PaintRender
         Heightfield field = TerrainText.Read(region) ?? new Heightfield(region.OriginX, region.OriginY, region.Width, region.Height);
         GroundCanvas canvas = PaintedGround.Canvas(region, piece, m => region.Materials.TryGetValue(m, out string? v) ? Colour(v) : null, field);
         byte[] rgba = GroundPainter.Paint(canvas, ppt, out int w, out int h);
+        GroundStones.Draw(rgba, w, h, ppt, region.OriginX, region.OriginY, GroundStones.Scatter(canvas));
         GroundPainter.Shade(rgba, w, h, ppt, canvas);
         return ToPng(rgba, w, h);
     }
@@ -83,6 +104,7 @@ public static class PaintRender
             Heightfield field = TerrainText.Read(region) ?? new Heightfield(region.OriginX, region.OriginY, region.Width, region.Height);
             GroundCanvas canvas = PaintedGround.Canvas(region, piece, m => region.Materials.TryGetValue(m, out string? v) ? Colour(v) : null, field);
             byte[] rgba = GroundPainter.Paint(canvas, ppt, out int rw, out int rh);
+            GroundStones.Draw(rgba, rw, rh, ppt, region.OriginX, region.OriginY, GroundStones.Scatter(canvas));
             GroundPainter.Shade(rgba, rw, rh, ppt, canvas);
             int ox = (region.OriginX - x0) * ppt, oy = (region.OriginY - y0) * ppt;
             for (int y = 0; y < rh; y++)

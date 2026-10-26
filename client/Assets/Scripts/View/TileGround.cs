@@ -38,6 +38,7 @@ namespace Rth.Client
                 {
                     if (g != null && g._surface != null) g._surface.GetComponent<MeshRenderer>().enabled = value;
                     if (g != null && g._water != null) g._water.GetComponent<MeshRenderer>().enabled = value;
+                    if (g != null && g._stones != null) g._stones.GetComponent<MeshRenderer>().enabled = value;
                 }
             }
         }
@@ -78,6 +79,14 @@ namespace Rth.Client
         public string[] surround = new string[0];
         [Tooltip("Per kind: a made surface (road, paving, planks), drawn crisp.")]
         public bool[] overlay = new bool[0];
+        [Tooltip("Per kind: a path, faded fully into the ground round it.")]
+        public bool[] soft = new bool[0];
+        [Tooltip("The stones lying over the ground (Piece.Stones): one string a row from the north, a character a tile of stoneKinds; a space is none.")]
+        public string[] stoneRows = new string[0];
+        [Tooltip("The characters of stoneRows, in order.")]
+        public string stoneKinds = "";
+        [Tooltip("Per stone kind: its colour; alpha is how thickly they lie (StoneKind.Share).")]
+        public Color[] stoneColours = new Color[0];
         [Tooltip("Per kind: water, drawn as its own surface.")]
         public bool[] water = new bool[0];
         [Tooltip("Per kind: land beyond the first build, drawn hazed.")]
@@ -85,7 +94,9 @@ namespace Rth.Client
         [Tooltip("Texture pixels to a tile of painted ground.")]
         public int pixelsPerTile = 8;
 
-        private GameObject _surface, _collider, _water;
+        private GameObject _surface, _collider, _water, _stones;
+        private Mesh _stonesMesh;
+        private readonly List<Material> _stoneMaterials = new List<Material>();
         private Mesh _surfaceMesh, _colliderMesh, _waterMesh;
         private readonly List<Material> _waterMaterials = new List<Material>();
         private Heightfield _field;
@@ -306,16 +317,23 @@ namespace Rth.Client
                 GroundLayer layer = water[i] ? GroundLayer.Water : overlay[i] ? GroundLayer.Over : GroundLayer.Under;
                 looks[i] = GroundLook.Of(rgb[0], rgb[1], rgb[2], layer, layer == GroundLayer.Over ? 1 + i : 1);
                 looks[i].Shelf = !walkable[i] && !water[i] && lifts[i] > 0.3f;
+                looks[i] = looks[i].Path(i < soft.Length && soft[i]);
                 Color own = i < cliffMaterials.Length && cliffMaterials[i] != null ? cliffMaterials[i].color : rock;
                 cliffs[i * 3] = own.r; cliffs[i * 3 + 1] = own.g; cliffs[i * 3 + 2] = own.b;
             }
             int[] grid = GroundPainter.Grid(rows, surround, width, height, margin, ch => kinds.IndexOf(ch));
-            return new GroundCanvas
+            var canvas = new GroundCanvas
             {
                 X0 = originX, Y0 = originY, Width = width, Height = height, Margin = margin,
                 Kinds = grid, Looks = looks, Field = Field, CliffStep = cliffStep, CliffColours = cliffs,
                 CliffColour = new[] { rock.r, rock.g, rock.b },
             };
+            if (stoneRows != null && stoneRows.Length > 0 && stoneColours != null)
+            {
+                canvas.StoneLooks = stoneColours.Select(c => new StoneLook { R = c.r, G = c.g, B = c.b, Share = c.a }).ToArray();
+                canvas.Stones = PaintedGround.StoneGrid(stoneRows, width, height, ch => stoneKinds.IndexOf(ch));
+            }
+            return canvas;
         }
 
         /// <summary>
@@ -478,12 +496,13 @@ namespace Rth.Client
             _surface = Child("Surface");
             _surface.AddComponent<MeshFilter>().sharedMesh = _surfaceMesh;
             MeshRenderer surface = _surface.AddComponent<MeshRenderer>();
-            _paintMaterial = new Material(baseMat) { name = "Painted ground", hideFlags = HideFlags.DontSave, color = Color.white };
+            _paintMaterial = Matte(new Material(baseMat) { name = "Painted ground", hideFlags = HideFlags.DontSave, color = Color.white });
             mats[0] = _paintMaterial;
             surface.sharedMaterials = mats.ToArray();
             surface.enabled = _showSurface;
 
             BuildWater(canvas, shore, H);
+            BuildStones(canvas, baseMat, Ground);
 
             if (colliderTris.Count > 0)
             {
@@ -505,6 +524,67 @@ namespace Rth.Client
                 _painting = System.Threading.Tasks.Task.FromResult(GroundPainter.Paint(canvas, ppt, out _, out _));
                 ApplyPaint();
             }
+        }
+
+        /// <summary>
+        /// The stones over the ground (<see cref="GroundStones"/>): small flat chips lying on it,
+        /// one material for each colour and tone, so they stay crisp however near the camera comes.
+        /// </summary>
+        private void BuildStones(GroundCanvas canvas, Material baseMat, System.Func<int, int, float> ground)
+        {
+            List<Stone> stones = GroundStones.Scatter(canvas);
+            if (stones.Count == 0) return;
+            // On the ground as its triangles split (south-west to north-east), a breath above it.
+            float At(float x, float z)
+            {
+                float lx = Mathf.Clamp(x - originX, 0f, width), lz = Mathf.Clamp(z - originY, 0f, height);
+                int i = Mathf.Min((int)lx, width - 1), j = Mathf.Min((int)lz, height - 1);
+                float u = lx - i, v = lz - j;
+                float sw = ground(i, j), se = ground(i + 1, j), nw = ground(i, j + 1), ne = ground(i + 1, j + 1);
+                return (u >= v ? sw + (se - sw) * u + (ne - se) * v : sw + (ne - nw) * u + (nw - sw) * v) + 0.02f;
+            }
+            var verts = new List<Vector3>();
+            var keys = new List<(Color colour, int tone)>();
+            var tris = new List<List<int>>();
+            foreach (Stone s in stones)
+            {
+                var key = (new Color(s.R, s.G, s.B), s.Tone);
+                int sub = keys.IndexOf(key);
+                if (sub < 0) { sub = keys.Count; keys.Add(key); tris.Add(new List<int>()); }
+                int first = verts.Count, n = s.Outline.Length / 2;
+                for (int k = 0; k < n; k++) verts.Add(new Vector3(s.Outline[k * 2], At(s.Outline[k * 2], s.Outline[k * 2 + 1]), s.Outline[k * 2 + 1]));
+                // The outline runs anticlockwise seen from above; Unity's front faces are clockwise.
+                for (int k = 1; k + 1 < n; k++) tris[sub].AddRange(new[] { first, first + k + 1, first + k });
+            }
+            _stonesMesh = new Mesh { name = "Stones", hideFlags = HideFlags.DontSave, indexFormat = IndexFormat.UInt32 };
+            _stonesMesh.SetVertices(verts);
+            _stonesMesh.subMeshCount = keys.Count;
+            for (int i = 0; i < keys.Count; i++) _stonesMesh.SetTriangles(tris[i], i);
+            _stonesMesh.SetNormals(Enumerable.Repeat(Vector3.up, verts.Count).ToList());
+            _stonesMesh.RecalculateBounds();
+            _stones = Child("Stones");
+            _stones.AddComponent<MeshFilter>().sharedMesh = _stonesMesh;
+            MeshRenderer renderer = _stones.AddComponent<MeshRenderer>();
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            foreach (var key in keys)
+            {
+                var m = Matte(new Material(baseMat) { name = "Stone", hideFlags = HideFlags.DontSave, mainTexture = null });
+                m.color = key.colour * GroundStones.Tones[key.tone];
+                _stoneMaterials.Add(m);
+            }
+            renderer.sharedMaterials = _stoneMaterials.ToArray();
+            renderer.enabled = _showSurface;
+        }
+
+        /// <summary>Ground is earth, not plastic: no highlights and no reflections of the sky (URP Lit).</summary>
+        private static Material Matte(Material m)
+        {
+            m.SetFloat("_Smoothness", 0f);
+            m.SetFloat("_SpecularHighlights", 0f);
+            m.EnableKeyword("_SPECULARHIGHLIGHTS_OFF");
+            m.SetFloat("_EnvironmentReflections", 0f);
+            m.EnableKeyword("_ENVIRONMENTREFLECTIONS_OFF");
+            return m;
         }
 
         private static Shader _waterShader;
@@ -706,15 +786,17 @@ namespace Rth.Client
 
         private void Clear()
         {
-            foreach (Object o in new Object[] { _surface, _collider, _water, _surfaceMesh, _colliderMesh, _waterMesh, _paintMaterial }.Concat(_waterMaterials))
+            foreach (Object o in new Object[] { _surface, _collider, _water, _stones, _surfaceMesh, _colliderMesh, _waterMesh, _stonesMesh, _paintMaterial }
+                         .Concat(_waterMaterials).Concat(_stoneMaterials))
             {
                 if (o == null) continue;
                 if (Application.isPlaying) Destroy(o);
                 else DestroyImmediate(o);
             }
             _waterMaterials.Clear();
-            _surface = _collider = _water = null;
-            _surfaceMesh = _colliderMesh = _waterMesh = null;
+            _stoneMaterials.Clear();
+            _surface = _collider = _water = _stones = null;
+            _surfaceMesh = _colliderMesh = _waterMesh = _stonesMesh = null;
             _paintMaterial = null;
             _painting = null; // a paint still running is dropped; the next build starts its own
         }

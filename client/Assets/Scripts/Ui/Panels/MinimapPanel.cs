@@ -5,13 +5,15 @@ using Rth.Shared.Net;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UIElements;
+using TileCoord = global::Rth.Shared.World.TileCoord;
 
 namespace Rth.Client.Ui.Panels
 {
     /// <summary>
     /// The minimap: a round top-down view that turns with the camera (dots: gold creatures, white
     /// players; click to walk), set in a bronze bezel (the skin's minimap-bezel, drawn by
-    /// tools/ui-skin/make_skin.py). The compass sits in a medallion at the top left (click to face
+    /// tools/ui-skin/make_skin.py), with a flag where a click sent you and, for the marker set on the
+    /// world map, a pin (or a softly blinking arrow at the edge while it's further off). The compass sits in a medallion at the top left (click to face
     /// north), the clock in one at the top right, the region's name low on the map. Round buttons
     /// sit in a cradle around the bottom of the ring: run (running is free: there is no run
     /// energy), the world map, journal, guide, settings and a menu of every window.
@@ -49,6 +51,7 @@ namespace Rth.Client.Ui.Panels
         private RenderTexture _texture;
         private VisualElement _map;
         private VisualElement _dots;
+        private Marks _marks;
         private VisualElement _compass;
         private VisualElement _run;
         private Label _clock;
@@ -122,6 +125,8 @@ namespace Rth.Client.Ui.Panels
             view.style.backgroundImage = Background.FromRenderTexture(_texture);
             _dots = UiKit.El(_map, "minimap__layer");
             _dots.pickingMode = PickingMode.Ignore;
+            _marks = new Marks(this);
+            _map.Add(_marks);
             VisualElement you = UiKit.El(_map, "minimap__dot", "minimap__you");
             you.pickingMode = PickingMode.Ignore;
             you.style.left = you.style.top = MapRadius - 4f;
@@ -218,7 +223,9 @@ namespace Rth.Client.Ui.Panels
                 Vector3 p = local.transform.position;
                 _camera.transform.SetPositionAndRotation(new Vector3(p.x, p.y + 80f, p.z), Quaternion.Euler(90f, Yaw, 0f));
                 UpdateDots(local);
+                ArriveAtWaypoint(local);
             }
+            _marks.MarkDirtyRepaint();
             _compass.style.rotate = new Rotate(-Yaw);
             _run.EnableInClassList("orb--on", Session.Running);
             string region = Ui.regions != null && Ui.regions.Current != null ? Ui.regions.Current.Title : "";
@@ -262,6 +269,138 @@ namespace Rth.Client.Ui.Panels
             var right = new Vector2(Mathf.Cos(yaw), -Mathf.Sin(yaw));
             var d = new Vector2(delta.x, delta.z);
             return new Vector2(Vector2.Dot(d, right), Vector2.Dot(d, up)) * PixelsPerTile;
+        }
+
+        /// <summary>The world map's marker is done with once you reach it.</summary>
+        private void ArriveAtWaypoint(EntityView local)
+        {
+            TileCoord? waypoint = Session.Waypoint;
+            if (waypoint.HasValue && Mathf.Abs(local.Tile.X - waypoint.Value.X) <= 2 && Mathf.Abs(local.Tile.Y - waypoint.Value.Y) <= 2)
+                Session.SetWaypoint(null);
+        }
+
+        /// <summary>A tile's centre in the map's pixels (top-left origin), from where the local player stands.</summary>
+        private Vector2 MapPoint(EntityView local, TileCoord tile)
+        {
+            Vector3 p = local.transform.position;
+            Vector2 offset = ToMap(new Vector3(tile.X + 0.5f - p.x, 0f, tile.Y + 0.5f - p.z));
+            return new Vector2(MapRadius + offset.x, MapRadius - offset.y);
+        }
+
+        /// <summary>
+        /// The walk flag and the world map's marker, drawn over the dots. The flag is bold, so you
+        /// can see where you're going at a glance; the marker's arrow at the edge stays small and
+        /// fades in and out, so it guides without nagging.
+        /// </summary>
+        private sealed class Marks : VisualElement
+        {
+            private static readonly Color FlagRed = new Color32(226, 48, 36, 255);
+            private static readonly Color Pole = new Color32(245, 236, 214, 255);
+            private static readonly Color Outline = new Color32(16, 10, 6, 255);
+            private static readonly Color Pin = new Color32(240, 196, 80, 255);
+
+            private readonly MinimapPanel _panel;
+
+            public Marks(MinimapPanel panel)
+            {
+                _panel = panel;
+                pickingMode = PickingMode.Ignore;
+                AddToClassList("minimap__layer");
+                generateVisualContent += Draw;
+            }
+
+            private void Draw(MeshGenerationContext context)
+            {
+                EntityView local = _panel.World != null ? _panel.World.Local : null;
+                if (local == null || _panel.Session == null) return;
+                Painter2D p = context.painter2D;
+                p.lineJoin = LineJoin.Round;
+                Vector2 centre = new Vector2(MapRadius, MapRadius);
+
+                TileCoord? waypoint = _panel.Session.Waypoint;
+                if (waypoint.HasValue)
+                {
+                    Vector2 at = _panel.MapPoint(local, waypoint.Value);
+                    Vector2 d = at - centre;
+                    float edge = MapRadius - 11f;
+                    if (d.sqrMagnitude <= edge * edge) PinAt(p, at);
+                    else
+                    {
+                        float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * Mathf.PI * 2f / 1.8f);
+                        ArrowAt(p, centre + d.normalized * edge, d.normalized, 0.35f + 0.5f * pulse);
+                    }
+                }
+
+                TileCoord? flag = _panel.Session.WalkFlag;
+                if (flag.HasValue)
+                {
+                    Vector2 at = _panel.MapPoint(local, flag.Value);
+                    if ((at - centre).sqrMagnitude <= (MapRadius - 4f) * (MapRadius - 4f)) FlagAt(p, at);
+                }
+            }
+
+            /// <summary>A flag on a pole, its foot on the tile.</summary>
+            private static void FlagAt(Painter2D p, Vector2 foot)
+            {
+                p.lineCap = LineCap.Round;
+                p.strokeColor = Outline;
+                p.lineWidth = 3.5f;
+                p.BeginPath();
+                p.MoveTo(foot);
+                p.LineTo(foot + new Vector2(0f, -15f));
+                p.Stroke();
+                p.strokeColor = Pole;
+                p.lineWidth = 1.5f;
+                p.BeginPath();
+                p.MoveTo(foot);
+                p.LineTo(foot + new Vector2(0f, -15f));
+                p.Stroke();
+
+                p.fillColor = FlagRed;
+                p.strokeColor = Outline;
+                p.lineWidth = 1.5f;
+                p.BeginPath();
+                p.MoveTo(foot + new Vector2(0.5f, -15f));
+                p.LineTo(foot + new Vector2(10f, -11.5f));
+                p.LineTo(foot + new Vector2(0.5f, -8f));
+                p.ClosePath();
+                p.Fill();
+                p.Stroke();
+            }
+
+            /// <summary>The marker within sight: a small gold diamond.</summary>
+            private static void PinAt(Painter2D p, Vector2 c)
+            {
+                p.fillColor = Pin;
+                p.strokeColor = Outline;
+                p.lineWidth = 1.5f;
+                p.BeginPath();
+                p.MoveTo(c + new Vector2(0f, -6f));
+                p.LineTo(c + new Vector2(4.5f, 0f));
+                p.LineTo(c + new Vector2(0f, 6f));
+                p.LineTo(c + new Vector2(-4.5f, 0f));
+                p.ClosePath();
+                p.Fill();
+                p.Stroke();
+            }
+
+            /// <summary>The marker out of sight: a small arrow at the edge pointing its way (y down).</summary>
+            private static void ArrowAt(Painter2D p, Vector2 tip, Vector2 dir, float alpha)
+            {
+                Vector2 side = new Vector2(-dir.y, dir.x);
+                Vector2 back = tip - dir * 8f;
+                p.fillColor = new Color(Pin.r, Pin.g, Pin.b, alpha);
+                p.strokeColor = new Color(Outline.r, Outline.g, Outline.b, alpha);
+                p.lineWidth = 1.2f;
+                p.BeginPath();
+                p.MoveTo(tip);
+                p.LineTo(back + side * 5f);
+                p.LineTo(back + dir * 2.5f);
+                p.LineTo(back - side * 5f);
+                p.ClosePath();
+                p.Fill();
+                p.Stroke();
+            }
         }
 
         private void OnMapClick(PointerDownEvent e)

@@ -69,7 +69,10 @@ namespace Rth.Shared.World.Ground
         public static bool Same(TileKind a, TileKind b) =>
             a.Material == b.Material && (a.Blocks ?? false) == (b.Blocks ?? false) && (a.Water ?? false) == (b.Water ?? false) &&
             Math.Abs((a.Height ?? 0f) - (b.Height ?? 0f)) < 1e-4f && a.Cliff == b.Cliff &&
-            a.IsOverlay == b.IsOverlay && (a.Beyond ?? false) == (b.Beyond ?? false);
+            LayerOf(a) == LayerOf(b) && (a.Beyond ?? false) == (b.Beyond ?? false);
+
+        /// <summary>A kind's layer as it paints: "over", "soft" or null (natural ground).</summary>
+        private static string? LayerOf(TileKind k) => k.IsOverlay || k.IsSoft ? k.Layer : null;
 
         public static TileKind Copy(TileKind k) => new TileKind
         {
@@ -227,6 +230,85 @@ namespace Rth.Shared.World.Ground
             foreach (RegionData r in regions)
                 if ((only == null || only.Contains(r.Id)) && RefreshSurround(r, world.At)) changed.Add(r.Id);
             return changed;
+        }
+
+        // ------------------------------------------------------------------ stones
+
+        /// <summary>A kind of stones to paint with: its material's name and colour (a palette name or #hex).</summary>
+        public sealed class StoneBrush
+        {
+            public string Id = "";
+            public string Name = "";
+            public string Material = "";
+            public string Colour = "";
+        }
+
+        /// <summary>Every kind of stones of the layout (continent.json `stones`), as the blockout scatters them.</summary>
+        public static List<StoneBrush> StoneBrushes(ContinentData data) =>
+            data.Stones.Select(s => new StoneBrush
+            {
+                Id = s.Key, Name = s.Value.Name.Length > 0 ? s.Value.Name : s.Key, Material = "LandStones" + Blockout.Pascal(s.Key), Colour = s.Value.Palette,
+            }).ToList();
+
+        /// <summary>Characters stones may be written as, in the order they are taken.</summary>
+        private const string StoneSpare = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!#$%&*+-=?@^~<>/|:;.,_()[]{}'`";
+
+        /// <summary>The character the piece writes stones of <paramref name="material"/> at <paramref name="share"/> as, added to its stone legend if it has none.</summary>
+        public static char StoneCharFor(Piece piece, string material, float share)
+        {
+            piece.StoneLegend ??= new SortedDictionary<string, StoneKind>(StringComparer.Ordinal);
+            foreach (KeyValuePair<string, StoneKind> e in piece.StoneLegend)
+                if (e.Key.Length == 1 && e.Value.Material == material && Math.Abs(e.Value.Share - share) < 1e-4f) return e.Key[0];
+            char c = StoneSpare.FirstOrDefault(s => !piece.StoneLegend.ContainsKey(s.ToString()));
+            if (c == default) throw new InvalidOperationException($"{piece.Id}: its stones have no characters left for another kind.");
+            piece.StoneLegend[c.ToString()] = new StoneKind { Material = material, Share = share };
+            return c;
+        }
+
+        /// <summary>The character for a brush's stones at a level of <see cref="GroundStones.Levels"/>, its material added to the region's under a name of its colour.</summary>
+        public static char StoneCharFor(RegionData region, Piece piece, StoneBrush brush, int level)
+        {
+            string material = MaterialFor(region, brush.Material, new Dictionary<string, string> { [brush.Material] = brush.Colour });
+            return StoneCharFor(piece, material, GroundStones.Levels[Math.Max(0, Math.Min(GroundStones.Levels.Length - 1, level))]);
+        }
+
+        /// <summary>The stones at an absolute tile: their kind, or null for none (or outside the piece).</summary>
+        public static StoneKind? StoneAt(Piece piece, int x, int y)
+        {
+            int[] r = piece.Rect!;
+            if (piece.Stones == null || piece.StoneLegend == null || x < r[0] || y < r[1] || x >= r[2] || y >= r[3]) return null;
+            string row = piece.Stones[r[3] - 1 - y];
+            int i = x - r[0];
+            return i < row.Length && row[i] != ' ' && piece.StoneLegend.TryGetValue(row[i].ToString(), out StoneKind k) ? k : null;
+        }
+
+        /// <summary>Sets the stones at an absolute tile (' ': none), giving the piece rows of stones if it has none; false when nothing changed.</summary>
+        public static bool SetStone(Piece piece, int x, int y, char c)
+        {
+            int[] r = piece.Rect!;
+            if (x < r[0] || y < r[1] || x >= r[2] || y >= r[3]) return false;
+            int w = r[2] - r[0], h = r[3] - r[1];
+            if (piece.Stones == null)
+            {
+                if (c == ' ') return false;
+                piece.Stones = Enumerable.Repeat(new string(' ', w), h).ToList();
+            }
+            int ri = r[3] - 1 - y, i = x - r[0];
+            string row = piece.Stones[ri].PadRight(w);
+            if (row[i] == c) return false;
+            piece.Stones[ri] = row.Substring(0, i) + c + row.Substring(i + 1);
+            return true;
+        }
+
+        /// <summary>Drops stone kinds nothing uses, and the stones altogether when none are left.</summary>
+        public static void PruneStones(Piece piece)
+        {
+            if (piece.Stones == null || piece.StoneLegend == null) { piece.Stones = null; piece.StoneLegend = null; return; }
+            var used = new HashSet<char>();
+            foreach (string row in piece.Stones) used.UnionWith(row);
+            foreach (string k in piece.StoneLegend.Keys.Where(k => k.Length != 1 || !used.Contains(k[0])).ToList()) piece.StoneLegend.Remove(k);
+            if (piece.StoneLegend.Count == 0) { piece.Stones = null; piece.StoneLegend = null; }
+            else piece.Stones = piece.Stones.Select(s => s.TrimEnd()).ToList();
         }
 
         // ------------------------------------------------------------------ brush shapes

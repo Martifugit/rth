@@ -15,7 +15,7 @@ namespace Rth.Server
         public string MapDirectory = "data/maps";
 
         /// <summary>The region whose spawn point new players start at (else the first with a spawn).</summary>
-        public string? SpawnRegion = "tolling";
+        public string? SpawnRegion = "land_0_0";
         public string SaveDirectory = "saves";
 
         /// <summary>Autosave every this many ticks (300 ticks = 3 minutes at 600 ms).</summary>

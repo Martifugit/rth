@@ -182,6 +182,9 @@ namespace Rth.Shared.World.Data
                         CheckMaterial(region, kind.Material, piece.Id, result);
                         if (kind.Cliff != null) CheckMaterial(region, kind.Cliff, piece.Id, result);
                     }
+                    CheckStones(piece);
+                    if (piece.StoneLegend != null)
+                        foreach (StoneKind stone in piece.StoneLegend.Values) CheckMaterial(region, stone.Material, piece.Id, result);
                     break;
                 case PieceKind.Npc:
                     NeedPair(piece.At, "at");
@@ -238,6 +241,23 @@ namespace Rth.Shared.World.Data
                     (int rx, int ry) = Turn(dx, dy, turns);
                     yield return (piece.X + rx, piece.Y + ry);
                 }
+        }
+
+        /// <summary>A tiles piece's stones must fit its rectangle and use only characters their legend lists.</summary>
+        private static void CheckStones(Piece piece)
+        {
+            if (piece.Stones == null) return;
+            int[] r = NeedRect(piece);
+            int w = r[2] - r[0], h = r[3] - r[1];
+            if (piece.Stones.Count != h) throw new PieceException($"has {piece.Stones.Count} rows of stones; its rect is {h} tall.");
+            var legend = piece.StoneLegend ?? new SortedDictionary<string, StoneKind>();
+            for (int i = 0; i < h; i++)
+            {
+                string row = piece.Stones[i];
+                if (row.Length > w) throw new PieceException($"stones row {i} from the north is {row.Length} long; its rect is {w} wide.");
+                foreach (char c in row)
+                    if (c != ' ' && !legend.ContainsKey(c.ToString())) throw new PieceException($"stones row {i} from the north uses '{c}', which the stone legend doesn't list.");
+            }
         }
 
         /// <summary>
