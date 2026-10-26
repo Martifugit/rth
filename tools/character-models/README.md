@@ -16,15 +16,43 @@ The source's head is not used: `make_head` lofts our own from `HEAD_GRID`, rows 
 the neck's base to the top of the skull, each ten points from the front midline round to the
 back, as shares of the head's height (chin 0, crown 1), mirrored to the left. Every column means
 the same thing on every row (midline, side of the nose, eye, cheek, side, ear, back...), so a
-feature is a few numbers: the jaw's edge rising from a flat chin to its corner, the nose pushed
-forward between its base and bridge, eyes set back under a brow. `HEAD_SHARP` names the edges
-the mesh is split along so the shading breaks there (the jaw line, the brow, the nose); `EAR` is
-a wedge each side; `HEAD_EYES` places the dark almonds. `female_head` derives the female from
-the male grid (smaller, a slimmer neck, a narrower jaw, a smaller nose, no brow ridge, larger
-eyes). Short hair (`make_hair`) is the same grid above `HAIRLINE`, cut to a clean ring along it
-and stood off the skull. Change the numbers, rebuild, look at it from the front, the side and
-three-quarters: the proportions follow the 2004 game's head (about 13 % of the body, nearly as
-deep as wide, a square jaw), the shape is ours.
+feature is a few numbers. The rows slant: the jaw's edge runs from the chin up to its corner and
+on to the nape, with a shelf under it, so a row's back sits higher than its front.
+
+Features and proportions are kept apart:
+- `HEAD_BASE` holds the features: the jaw's edge and the shelf under it, the nose between its base
+  and bridge, the eyes set back under a brow, the lips. `female_base` is her variant (shallow
+  sockets, a smooth brow, high cheekbones, a narrow nose, full lips, a rounder chin).
+- `HEAD_SHAPE` holds each sex's proportions, measured off the owner's references in `images/`
+  (`male-face-reference*.jpg` and `male-bust-reference.webp`; `female-face-reference*.jpeg`, whose
+  `-2` has a front and a side view). `z` moves the base's heights so the chin, mouth, nose, eyes and
+  brow sit where the reference has them. `profile` is the front view's outline (the face's and the
+  head's half width) and the side view's (the midline's front and the back) at each height.
+- `fit_head` scales every vertex, at its own height, from the base's outline to the profile, and
+  adds a dome row so the skull is an egg rather than flat.
+
+To change a head, measure the reference (silhouette widths per height, as shares of chin to
+crown), edit the profile, rebuild, and lay the reference's outline over orthographic front and
+side renders at the same scale. That overlay is the check: the first attempts, judged by eye,
+came out alien (big dark eyes, a sunken mouth) and then boxy (proportions fitted by row ignored
+the slant).
+
+`HEAD_SHARP` names the edges the mesh is split along so the shading breaks there (the jaw line,
+the brow, the nose); `EAR` is a wedge each side, close to the skull; `HEAD_EYES` places the dark
+almonds and `HEAD_MOUTH` her small mouth (the "lips" channel). Short hair (`make_hair`) is the
+same grid above `HAIRLINE`, cut to a clean ring and stood off the skull. Longer styles
+(`HAIR_STYLES`, `HANG`; the female's chin-length `hair_bob`) hang straight down once past the
+skull's widest point and are closed along their cut edge. Hair lines are given in HEAD_BASE's
+heights, and `zmap` moves them with the face.
+
+## The body
+
+The body is the source's, re-rigged. Two corrections for the female's narrower shoulders:
+`SHOULDER_DROP` brings her shoulder tops down at the joint, sloping them from the neck (the
+source's run level and stand high, which reads as a box and pokes up a corner when the arms come
+down); and the shirt's neck stub is deleted only where a face lies wholly within the neck
+(`NECK_HALF`). Judging by the face's middle had deleted her shoulder tops too, leaving a hole each
+side of the collar.
 
 ## The contract with the client
 

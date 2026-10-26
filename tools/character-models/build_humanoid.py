@@ -109,18 +109,18 @@ EYE_POINTS = 6             # the outline's corners: 6 makes a long almond, near 
 #   - the mouth is a little recessed between the chin and the nose's base;
 #   - the nose is the midline and column 1 pushed forward between its base and its bridge;
 #   - the eyes sit back in sockets under a brow that stands out over them;
-#   - the forehead leans back to a flat top; the skull is widest above the ears and longer behind
+#   - the forehead leans back to the top; the skull is widest above the ears and longer behind
 #     than the face is in front.
-# Proportions after the 2004 game's head (chin to crown 13 % of the body, nearly as deep as it is
-# wide, a square jaw); the shape is ours.
+# HEAD_BASE holds the features; each sex's head is HEAD_BASE fitted row by row to that sex's
+# HEAD_SHAPE (see `fit_head`), which carries the proportions, measured off the owner's
+# references (images/male-face-reference*.jpg, images/female-face-reference*.jpeg).
 HEAD_BUILT = globals().get("HEAD_BUILT", True)
 HEAD_HEIGHT = 0.135          # chin to crown, as a share of the source body's height
 CHIN = 0.16                  # how far below the source's crown the chin stays (where the neck needs it)
 HEAD_WIDTH = 1.1             # all the rows' widths times this
 BACK_SQUASH = 0.85           # the skull behind the ears times this: nearly as deep as it is wide
 HEAD_FORWARD = 0.035         # the skull's middle, in front of the neck joint
-HEAD_GRID = {
-    "male": [
+HEAD_BASE = [
         [(0, .17, -.50), (.12, .16, -.50), (.24, .12, -.50), (.36, .04, -.50), (.46, -.08, -.50), (.50, -.18, -.50), (.44, -.30, -.50), (.32, -.39, -.50), (.16, -.45, -.50), (0, -.47, -.50)],  # neck's base
         [(0, .13, -.25), (.08, .125, -.25), (.16, .09, -.25), (.22, .02, -.25), (.26, -.07, -.25), (.26, -.16, -.25), (.23, -.25, -.25), (.17, -.32, -.25), (.09, -.37, -.25), (0, -.38, -.25)],  # neck
         [(0, .14, -.03), (.07, .135, -.03), (.14, .10, -.02), (.19, .04, -.01), (.22, -.05, .00), (.23, -.14, .02), (.21, -.23, .05), (.16, -.30, .08), (.08, -.35, .10), (0, -.36, .11)],  # under the jaw
@@ -134,12 +134,11 @@ HEAD_GRID = {
         [(0, .385, .61), (.09, .39, .61), (.19, .37, .61), (.28, .29, .62), (.34, .14, .64), (.37, -.05, .70), (.35, -.22, .75), (.27, -.38, .80), (.14, -.48, .82), (0, -.50, .82)],  # brow
         [(0, .36, .77), (.09, .355, .77), (.19, .33, .77), (.28, .27, .77), (.35, .14, .78), (.37, -.05, .82), (.35, -.21, .85), (.26, -.35, .89), (.13, -.42, .91), (0, -.44, .91)],  # forehead
         [(0, .25, .93), (.09, .245, .93), (.18, .22, .93), (.26, .17, .93), (.30, .08, .93), (.31, -.06, .94), (.29, -.17, .95), (.20, -.26, .96), (.10, -.30, .97), (0, -.31, .975)],  # top
-    ],
-}
+]
 HEAD_CAP = (0, -.04, 1.0)    # the crown, a point above the top row
 # An ear: a wedge off the side of the head, (front top, front bottom, outer top, outer bottom,
 # back top, back bottom); the front and back edges sit inside the skull.
-EAR = [(.33, -.04, .57), (.34, .00, .35), (.46, -.15, .54), (.43, -.07, .37), (.32, -.22, .56), (.33, -.13, .36)]
+EAR_BASE = [(.33, -.04, .57), (.34, .00, .35), (.46, -.15, .54), (.43, -.07, .37), (.32, -.22, .56), (.33, -.13, .36)]
 # Hard edges, where the mesh is split so the shading breaks: ("row", r, c0, c1) runs along row r
 # from column c0 to c1, ("col", c, r0, r1) up column c from row r0 to r1.
 HEAD_SHARP = {
@@ -149,41 +148,201 @@ HEAD_SHARP = {
 }
 # The eyes: a dark almond each, cast onto the socket from the front: (across, height above the
 # chin) of the centre, half width and half height, all shares of the head's height.
-HEAD_EYES = {"male": (0.14, 0.51, 0.075, 0.028)}
+HEAD_EYES = {}
+# A small mouth, cast on like the eyes in the "lips" channel: (height above the chin, half width,
+# half height). The reference's female has one and its male none.
+HEAD_MOUTH = {}
 
 
-def female_head():
-    """The female: a smaller, rounder head on a slimmer neck, a narrower jaw and chin, a smaller
-    nose, a lighter brow with no ridge, and larger eyes."""
+# Each sex's proportions, measured off the references as shares of the head's height (chin 0,
+# crown 1), in the finished head (after HEAD_WIDTH and BACK_SQUASH):
+#   "z": where HEAD_BASE's heights go (base height, new height), between which it runs straight;
+#        it puts the chin, mouth, nose, eyes and brow at the reference's heights;
+#   "profile": (height, half width of the face, half width of the head, the midline's front,
+#        the back), between which it runs straight. The head's width is the front view's outline
+#        (ears left out), the face's the cheek and jaw inside it; the front and back are the side
+#        view's outline, from a middle just in front of the ear;
+#   "neck": how much slimmer the neck is than HEAD_BASE's.
+# `fit_head` moves every vertex of HEAD_BASE (its features: nose, sockets, lips, the jaw's edge
+# and the shelf under it) to these outlines, at its own height.
+HEAD_SHAPE = {
+    # Between images/male-face-reference.jpg and -2.jpg (front) and male-bust-reference.webp (the
+    # back): a broad egg of a skull, high cheekbones, a strong jaw tapering to a squared chin, a
+    # straight nose, ears close to the head, the back of the skull well behind the neck.
+    "male": {
+        "z": [(0, 0), (.07, .055), (.20, .155), (.30, .25), (.36, .30), (.44, .39), (.51, .46),
+              (.61, .53), (.77, .70), (.93, .895), (1, 1)],
+        "profile": [
+            # z    face  head  front back
+            (0.00, .12, .22, .34, .355),
+            (0.05, .18, .23, .38, .35),
+            (0.10, .23, .25, .385, .345),
+            (0.155, .26, .27, .40, .345),
+            (0.20, .275, .285, .41, .36),
+            (0.25, .29, .30, .42, .385),
+            (0.30, .30, .31, .49, .415),
+            (0.35, .31, .325, .45, .445),
+            (0.40, .32, .335, .41, .47),
+            (0.46, .325, .345, .375, .49),
+            (0.53, .33, .35, .40, .50),
+            (0.60, .33, .35, .395, .50),
+            (0.70, .32, .345, .385, .49),
+            (0.80, .29, .32, .355, .445),
+            (0.85, .27, .30, .32, .41),
+            (0.90, .235, .265, .27, .365),
+            (0.94, .19, .22, .22, .305),
+            (0.97, .14, .17, .16, .245),
+            (1.00, .05, .05, .05, .10),
+        ],
+        "neck": 0.84,
+    },
+    # images/female-face-reference-2.jpeg, front and side (and -reference.jpeg): a narrower egg
+    # of a skull, a heart-shaped face (wide cheekbones to a small pointed chin), full lips, a
+    # small nose, a long slender neck.
+    "female": {
+        "z": [(0, 0), (.07, .05), (.20, .18), (.30, .25), (.36, .30), (.44, .38), (.51, .47),
+              (.61, .55), (.77, .70), (.93, .89), (1, 1)],
+        "profile": [
+            # z    face  head  front back
+            (0.00, .09, .20, .33, .345),
+            (0.05, .15, .215, .365, .34),
+            (0.10, .19, .226, .37, .33),
+            (0.15, .225, .256, .40, .33),
+            (0.20, .245, .27, .415, .345),
+            (0.25, .26, .276, .405, .37),
+            (0.30, .27, .285, .48, .40),
+            (0.35, .28, .30, .47, .43),
+            (0.40, .29, .315, .43, .45),
+            (0.47, .30, .33, .375, .48),
+            (0.55, .31, .344, .385, .48),
+            (0.65, .31, .348, .38, .475),
+            (0.75, .30, .338, .365, .455),
+            (0.80, .285, .32, .345, .43),
+            (0.85, .26, .294, .31, .395),
+            (0.90, .22, .25, .26, .35),
+            (0.94, .18, .205, .21, .295),
+            (0.97, .13, .147, .155, .235),
+            (1.00, .04, .04, .05, .10),
+        ],
+        "neck": 0.72,
+    },
+}
+
+
+def zmap(z, sex=None):
+    """A height in HEAD_BASE to the same place on this sex's head."""
+    if z <= 0:
+        return z
+    pts = HEAD_SHAPE[sex or SEX]["z"]
+    for (a0, b0), (a1, b1) in zip(pts, pts[1:]):
+        if z <= a1:
+            return b0 + (b1 - b0) * (z - a0) / (a1 - a0)
+    return z
+
+
+def _along(pts, z):
+    """Straight-line interpolation in [(z, value...)], clamped at the ends."""
+    if z <= pts[0][0]:
+        return pts[0][1:]
+    for p0, p1 in zip(pts, pts[1:]):
+        if z <= p1[0]:
+            t = (z - p0[0]) / (p1[0] - p0[0]) if p1[0] > p0[0] else 0.0
+            return tuple(a + (b - a) * t for a, b in zip(p0[1:], p1[1:]))
+    return pts[-1][1:]
+
+
+def fit_head(rows, sex):
+    """Fit a grid (HEAD_BASE or a variant) to a sex's outlines. A dome row goes over the top, the
+    heights move by `zmap`, then every vertex on the head (the jaw's edge up) is scaled at its own
+    height: the face's columns (0-4) to the face's width, the head's (5-9) to the head's, the
+    front to the front, the back to the back, each against the grid's own outline at that height.
+    The shelf under the jaw follows the jaw's edge; the neck is made slimmer."""
+    shape = HEAD_SHAPE[sex]
+    cx, cy = HEAD_CAP[0], HEAD_CAP[1]
+    rows = list(rows) + [[(cx + (x - cx) * 0.6, cy + (y - cy) * 0.6, z + (1 - z) * 0.55)
+                          for x, y, z in rows[-1]]]
+    rows = [[(x, y, zmap(z, sex)) for x, y, z in row] for row in rows]
+    head = rows[3:]
+    outline = {c: sorted((r[c][2], abs(r[c][0]) if c in (4, 5) else abs(r[c][1])) for r in head)
+               for c in (0, 4, 5, 9)}
+    target = shape["profile"]
+
+    def factors(c, z):
+        face, side, front, back = _along(target, z)
+        fx = (face if c <= 4 else side) / HEAD_WIDTH / _along(outline[4 if c <= 4 else 5], z)[0]
+        return fx, front / _along(outline[0], z)[0], back / BACK_SQUASH / _along(outline[9], z)[0]
+
+    out = []
+    for i, row in enumerate(rows):
+        new = []
+        for c, (x, y, z) in enumerate(row):
+            if i >= 3:
+                fx, ff, fb = factors(c, z)
+            elif i == 2:
+                fx, ff, fb = factors(c, rows[3][c][2])           # under the jaw's edge
+                n = 0.85 + 0.15 * shape["neck"]
+                fb = (fb + n) / 2                                # the nape runs on into the neck
+            else:
+                n = shape["neck"] if i == 1 else (1 + shape["neck"]) / 2
+                fx, ff, fb = n, 0.85 + 0.15 * n, 0.85 + 0.15 * n
+            new.append((x * fx, y * (ff if y > 0 else fb), z))
+        out.append(new)
+    return out
+
+
+def female_base():
+    """HEAD_BASE with the female's features (her outline comes from HEAD_SHAPE): shallow eye
+    sockets under a smooth brow, high full cheekbones, a narrow nose, full lips, a rounder chin."""
     rows = []
-    for i, row in enumerate(HEAD_GRID["male"]):
+    for i, row in enumerate(HEAD_BASE):
         out = []
-        for x, y, z in row:
-            if i <= 2:
-                x *= 0.85                              # the neck
-            elif 3 <= i <= 6:
-                x *= 0.88                              # the jaw and chin
-            if i == 7 and x < .1:
-                y -= 0.04                              # the nose
-            if i == 10:
-                y -= 0.03                              # the brow
-            out.append((x * 0.96, y * 0.96, z * 0.96 if z > 0 else z))   # a smaller head
+        for c, (x, y, z) in enumerate(row):
+            if i == 9 and 1 <= c <= 3:
+                y += 0.025                         # shallow sockets
+            if i == 10 and 1 <= c <= 3:
+                y -= 0.02                          # a smooth brow, no ridge
+            if i == 8 and c in (3, 4):
+                y += 0.015                         # high, full cheekbones
+            if i in (6, 7) and c == 1:
+                x *= 0.8                           # a narrow nose
+            if i == 5 and c in (1, 2):
+                y += 0.012                         # full lips
+            if i in (3, 4) and c in (1, 2):
+                y -= 0.015                         # a rounder chin
+            out.append((x, y, z))
         rows.append(out)
-    HEAD_GRID["female"] = rows
-    HEAD_SHARP["female"] = [("row", 3, 0, 6), ("col", 1, 6, 7), ("row", 6, 0, 1), ("col", 0, 6, 8)]
-    HEAD_EYES["female"] = (0.14 * 0.96, 0.51 * 0.96, 0.08, 0.03)
+    return rows
 
 
-female_head()
+def ear(side, out_by, mid, size):
+    """An ear on the side of the skull (`side`, the head's half width there, finished), standing
+    out_by from it (the references' ears lie close), its middle at height `mid`, `size` times
+    the base ear's height."""
+    base_mid = sum(z for _, _, z in EAR_BASE) / len(EAR_BASE)
+    return [((side - 0.012 + (out_by if k in (2, 3) else 0)) / HEAD_WIDTH, y,
+             mid + (z - base_mid) * size) for k, (x, y, z) in enumerate(EAR_BASE)]
+
+
+HEAD_GRID = {"male": fit_head(HEAD_BASE, "male"), "female": fit_head(female_base(), "female")}
+EAR = {"male": ear(_along(HEAD_SHAPE["male"]["profile"], 0.40)[1], 0.05, 0.40, 0.95),
+       "female": ear(_along(HEAD_SHAPE["female"]["profile"], 0.41)[1], 0.04, 0.41, 0.95)}
+# Only the jaw line and the small nose stay hard on hers: the rest of her face is shaded smooth.
+HEAD_SHARP["female"] = [("row", 3, 1, 5), ("row", 6, 0, 1), ("col", 0, 6, 8)]
+HEAD_EYES["male"] = (0.132, 0.46, 0.062, 0.022, EYE_TILT)
+HEAD_EYES["female"] = (0.109, 0.47, 0.066, 0.024, 0.12)
+HEAD_MOUTH["female"] = (0.182, 0.06, 0.012)
 # Where short hair stops: (degrees from the front, t), between which it runs straight.
-HAIRLINE = [(0, 0.72), (45, 0.70), (80, 0.66), (115, 0.63), (140, 0.44), (180, 0.30)]
+HAIRLINE = {"male": [(0, 0.72), (45, 0.70), (80, 0.66), (115, 0.63), (140, 0.44), (180, 0.30)],
+            # The female's comes lower over the forehead and the temples: a softer frame for the face.
+            "female": [(0, 0.82), (45, 0.80), (80, 0.70), (115, 0.62), (140, 0.46), (180, 0.32)]}
 
 
 def hairline(deg):
-    for (a0, t0), (a1, t1) in zip(HAIRLINE, HAIRLINE[1:]):
+    line = HAIRLINE[SEX]
+    for (a0, t0), (a1, t1) in zip(line, line[1:]):
         if deg <= a1:
-            return t0 + (t1 - t0) * (deg - a0) / (a1 - a0)
-    return HAIRLINE[-1][1]
+            return zmap(t0 + (t1 - t0) * (deg - a0) / (a1 - a0))
+    return zmap(line[-1][1])
 
 
 def head_point(p, crown, height, centre_y):
@@ -225,23 +384,33 @@ def make_head(bm, crown, height, centre_y):
     for k in range(n):
         bm.faces.new((rings[-1][k], rings[-1][(k + 1) % n], top)).smooth = True
     for s in (1, -1):
-        ft, fb, ot, ob, bt, bb = [bm.verts.new(head_point((s * x, y, z), crown, height, centre_y)) for x, y, z in EAR]
+        ft, fb, ot, ob, bt, bb = [bm.verts.new(head_point((s * x, y, z), crown, height, centre_y)) for x, y, z in EAR[SEX]]
         for f in ((ft, fb, ob, ot), (ot, ob, bb, bt), (ft, ot, bt), (fb, bb, ob), (ft, bt, bb, fb)):
             bm.faces.new(f).smooth = False
     bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
-    ex, ez, hw, hh = HEAD_EYES[SEX]
+    ex, ez, hw, hh, tilt = HEAD_EYES[SEX]
     for s in (-1, 1):
         outline = []
         for i in range(EYE_POINTS):
             a = 2 * math.pi * i / EYE_POINTS
             dx, dz = hw * height * math.cos(a), hh * height * math.sin(a)
             outline.append((s * (ex * HEAD_WIDTH * height + dx), centre_y + 0.1,
-                            crown - height + ez * height + dz + dx * EYE_TILT))
+                            crown - height + ez * height + dz + dx * tilt))
         eye = A.decal(bm, outline, (0, 1, 0), mat=1)
         # The almond folds over the socket's crease; as one polygon Unity may call it
         # self-intersecting and drop it, so it goes out as triangles.
         if eye:
             bmesh.ops.triangulate(bm, faces=[eye])
+    if SEX in HEAD_MOUTH:
+        mz, hw, hh = HEAD_MOUTH[SEX]
+        outline = []
+        for i in range(8):
+            a = 2 * math.pi * i / 8
+            outline.append((hw * height * math.cos(a), centre_y + 0.1,
+                            crown - height + mz * height + hh * height * math.sin(a)))
+        mouth = A.decal(bm, outline, (0, 1, 0), mat=2)
+        if mouth:
+            bmesh.ops.triangulate(bm, faces=[mouth])
 
 
 def make_hair(bm, crown, height, centre_y):
@@ -283,6 +452,101 @@ def make_hair(bm, crown, height, centre_y):
         else:
             d = HAIR_EDGE if v in edge else (HAIR_EDGE + HAIR_THICK) / 2
         v.co += v.normal * d
+    for f in bm.faces:
+        f.smooth = True
+
+
+# How far the top of each shoulder comes down, at the joint. The source female's shoulders run
+# level from the neck and stand high over the joint, so they read as a box (and, with the arms
+# down, a corner pokes up); bringing their top down slopes them from the neck like the male's.
+SHOULDER_DROP = {"male": 0.0, "female": 0.035}
+
+
+def slope_shoulders(mesh, old):
+    """Lower the top of the shoulders: most at the joint, nothing at the side of the neck or past
+    the upper arm's middle, and only above the arm's centre line, so the armpit stays put."""
+    drop = SHOULDER_DROP[SEX]
+    if not drop:
+        return
+    joint = old["Upperarm.Left"][0]
+    jx, jz = abs(joint.x), joint.z
+    for v in mesh.vertices:
+        x = abs(v.co.x)
+        across = smoothstep(0.04, jx, x) * (1 - smoothstep(jx + 0.05, jx + 0.2, x))
+        above = smoothstep(jz - 0.01, jz + 0.06, v.co.z) * (1 - smoothstep(jz + 0.10, jz + 0.14, v.co.z))
+        v.co.z -= drop * across * above
+
+
+# Longer styles hang from the skull: their lower edge (degrees from the front, t), as HAIRLINE.
+# A chin-length bob: a fringe over the forehead, then curtains down past the cheeks to the jaw,
+# and the back cut level at the nape.
+HAIR_STYLES = {"male": [], "female": ["bob"]}
+HANG = {"bob": [(0, 0.79), (35, 0.76), (55, 0.50), (70, 0.16), (110, 0.12), (180, 0.09)]}
+
+
+def hang_line(style, deg):
+    line = HANG[style]
+    for (a0, t0), (a1, t1) in zip(line, line[1:]):
+        if deg <= a1:
+            return zmap(t0 + (t1 - t0) * (deg - a0) / (a1 - a0))
+    return zmap(line[-1][1])
+
+
+def make_hanging_hair(bm, style, crown, height, centre_y):
+    """A style that hangs: the skull's columns from the crown down to the style's lower edge,
+    each hanging straight down once it has passed its widest point (so it falls past the cheeks
+    and neck instead of following them in). A shell HAIR_THICK thick, closed along the edge."""
+    rows = HEAD_GRID[SEX]
+    full = [row + [(-x, y, z) for x, y, z in reversed(row[1:-1])] for row in rows]
+    n = len(full[0])
+    cols = []
+    for k in range(n):
+        x, y, _ = full[-2][k]
+        t = hang_line(style, math.degrees(abs(math.atan2(x, y))))
+        pts = [full[r][k] for r in range(len(rows)) if full[r][k][2] > t]
+        below = max((r for r in range(len(rows)) if full[r][k][2] <= t), default=0)
+        p0, p1 = full[below][k], full[below + 1][k]
+        f = (t - p0[2]) / (p1[2] - p0[2]) if p1[2] > p0[2] else 0.0
+        pts = [tuple(a + (b - a) * f for a, b in zip(p0, p1))] + pts
+        widest = 0.0
+        for i in range(len(pts) - 1, -1, -1):          # from the crown down
+            px, py, pz = pts[i]
+            r = math.hypot(px, py)
+            if r < widest and r > 1e-6:
+                pts[i] = (px * widest / r, py * widest / r, pz)
+            widest = max(widest, r)
+        cols.append(pts)
+    count = max(len(c) for c in cols)
+    rings = [[] for _ in range(count)]
+    for k, col in enumerate(cols):
+        col = [col[0]] * (count - len(col)) + col
+        for i, p in enumerate(col):
+            rings[i].append(bm.verts.new(head_point(p, crown, height, centre_y)))
+    for r0, r1 in zip(rings, rings[1:]):
+        for k in range(n):
+            bm.faces.new((r0[k], r0[(k + 1) % n], r1[(k + 1) % n], r1[k]))
+    top = bm.verts.new(head_point(HEAD_CAP, crown, height, centre_y))
+    for k in range(n):
+        bm.faces.new((rings[-1][k], rings[-1][(k + 1) % n], top))
+    bmesh.ops.remove_doubles(bm, verts=list(bm.verts), dist=1e-6)
+    bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
+    bm.normal_update()
+    inner = {v: v.co.copy() for v in bm.verts}
+    normals = {v: v.normal.copy() for v in bm.verts}
+    rim = [(e.verts[0], e.verts[1]) for e in bm.edges if e.is_boundary]
+    outer_faces = list(bm.faces)
+    for v in bm.verts:
+        v.co += normals[v] * HAIR_THICK
+    # The inside, a hair off the skull, facing in; then the cut edge joining the two.
+    twin = {v: bm.verts.new(inner[v] + normals[v] * 0.003) for v in list(inner)}
+    for f in outer_faces:
+        bm.faces.new([twin[v] for v in reversed(f.verts)])
+    for a, b in rim:
+        try:
+            bm.faces.new((a, b, twin[b], twin[a]))
+        except ValueError:
+            pass
+    bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
     for f in bm.faces:
         f.smooth = True
 
@@ -339,9 +603,13 @@ def material(name):
     preview = {
         "skin": (0.85, 0.66, 0.49, 1), "hair": (0.25, 0.16, 0.09, 1), "primary": (0.25, 0.45, 0.85, 1),
         "secondary": (0.3, 0.24, 0.17, 1), "leather": (0.2, 0.13, 0.08, 1), "eyes": (0.08, 0.06, 0.06, 1),
+        "lips": (0.55, 0.30, 0.28, 1),
     }
     mat.diffuse_color = preview.get(name, (0.6, 0.6, 0.6, 1))
     return mat
+
+
+NECK_HALF = 0.08             # the shirt's neck stub lies within this of the middle
 
 
 def build():
@@ -382,6 +650,7 @@ def build():
     body.data.transform(turn)
     old = {k: (turn @ h, turn @ t) for k, (h, t) in old.items()}
     bpy.data.objects.remove(old_rig, do_unlink=True)
+    slope_shoulders(body.data, old)
 
     # 2. The new skeleton.
     top = max(v.co.z for v in body.data.vertices)
@@ -517,6 +786,8 @@ def build():
     # 5. The face: eye strokes on the head, smooth shading, and a bare neck.
     head = parts["head"]
     head.data.materials.append(material("eyes"))
+    if SEX in HEAD_MOUTH:
+        head.data.materials.append(material("lips"))
     bm = bmesh.new()
     if HEAD_BUILT:
         head_h = HEAD_HEIGHT * top
@@ -565,9 +836,12 @@ def build():
     torso = parts["torso"]
     bm = bmesh.new()
     bm.from_mesh(torso.data)
+    # The shirt's stub of neck goes (the built head brings its own): faces above the neck joint
+    # lying wholly within the neck. Judging by the face's middle took the narrower female's
+    # shoulder tops too, leaving a hole each side of the collar.
     bmesh.ops.delete(bm, geom=[f for f in bm.faces
                                if f.calc_center_median().z > back_top + 0.03
-                               and abs(f.calc_center_median().x) < 0.09], context="FACES")
+                               and all(abs(v.co.x) < NECK_HALF for v in f.verts)], context="FACES")
     bm.to_mesh(torso.data)
     bm.free()
 
@@ -614,11 +888,28 @@ def build():
     hair.vertex_groups.clear()
     hg = hair.vertex_groups.new(name="head")
     hg.add(list(range(len(hair.data.vertices))), 1.0, "REPLACE")
+    hairs = [hair]
+    for style in (HAIR_STYLES[SEX] if HEAD_BUILT else []):
+        other = hair.copy()
+        other.data = bpy.data.meshes.new("hair_" + style)
+        other.name = "hair_" + style
+        bpy.context.scene.collection.objects.link(other)
+        bm = bmesh.new()
+        make_hanging_hair(bm, style, crown, head_h, head_cy)
+        bm.to_mesh(other.data)
+        bm.free()
+        other.data.materials.append(material("hair"))
+        for p in other.data.polygons:
+            p.use_smooth = True
+        other.vertex_groups.clear()
+        g = other.vertex_groups.new(name="head")
+        g.add(list(range(len(other.data.vertices))), 1.0, "REPLACE")
+        hairs.append(other)
 
     bpy.data.objects.remove(body, do_unlink=True)
 
     # Skin every part to the rig.
-    for obj in list(parts.values()) + [hair]:
+    for obj in list(parts.values()) + hairs:
         obj.parent = rig
         md = obj.modifiers.new("Armature", "ARMATURE")
         md.object = rig
@@ -629,13 +920,14 @@ def build():
             obj.vertex_groups.remove(obj.vertex_groups[name])
 
     if PREVIEW:
-        return {"preview": NAME, "height": round(top, 3), "neck_z": round(neck_z, 3), "back_y": round(back_y, 3)}
+        return {"preview": NAME, "height": round(top, 3), "neck_z": round(neck_z, 3), "back_y": round(back_y, 3),
+                "centre_y": back_y + HEAD_FORWARD}
     os.makedirs(os.path.dirname(EXPORT), exist_ok=True)
     bpy.ops.object.select_all(action="DESELECT")
-    for obj in [rig] + list(parts.values()) + [hair]:
+    for obj in [rig] + list(parts.values()) + hairs:
         obj.select_set(True)
     bpy.context.view_layer.objects.active = rig
-    exported = [rig] + list(parts.values()) + [hair]
+    exported = [rig] + list(parts.values()) + hairs
     with bpy.context.temp_override(active_object=rig, object=rig, selected_objects=exported):
         bpy.ops.export_scene.fbx(
             filepath=EXPORT, use_selection=True, object_types={"ARMATURE", "MESH"},
@@ -647,7 +939,7 @@ def build():
     return {
         "export": EXPORT,
         "parts": {k: len(v.data.polygons) for k, v in parts.items()},
-        "hair": len(hair.data.polygons),
+        "hair": {h.name: len(h.data.polygons) for h in hairs},
         "bones": list(bones),
         "height": round(top, 3),
     }

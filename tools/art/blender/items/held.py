@@ -207,13 +207,16 @@ def hatchet():
 
 def pickaxe():
     bm = bmesh.new()
-    rod(bm, -0.10, 0.56, 0.02)
+    # Held two-handed a little way up the haft from its butt (the grip is the origin), so the
+    # haft runs 0.175 back past the fist and 0.485 on to the head.
+    g = -0.075
+    rod(bm, -0.10 + g, 0.56 + g, 0.02)
     # Head: a block round the top of the haft, a long pick curving up and a short one down.
-    box(bm, 0.52, 0.60, -0.04, 0.04, 0.03)
-    A.hull(bm, [F(0.53, 0.03, -0.02), F(0.53, 0.03, 0.02), F(0.59, 0.03, -0.02), F(0.59, 0.03, 0.02),
-                F(0.54, 0.16, -0.012), F(0.54, 0.16, 0.012), F(0.50, 0.27, 0)], METAL)
-    A.hull(bm, [F(0.53, -0.03, -0.02), F(0.53, -0.03, 0.02), F(0.59, -0.03, -0.02), F(0.59, -0.03, 0.02),
-                F(0.54, -0.14, -0.012), F(0.54, -0.14, 0.012), F(0.50, -0.24, 0)], METAL)
+    box(bm, 0.52 + g, 0.60 + g, -0.04, 0.04, 0.03)
+    A.hull(bm, [F(0.53 + g, 0.03, -0.02), F(0.53 + g, 0.03, 0.02), F(0.59 + g, 0.03, -0.02), F(0.59 + g, 0.03, 0.02),
+                F(0.54 + g, 0.16, -0.012), F(0.54 + g, 0.16, 0.012), F(0.50 + g, 0.27, 0)], METAL)
+    A.hull(bm, [F(0.53 + g, -0.03, -0.02), F(0.53 + g, -0.03, 0.02), F(0.59 + g, -0.03, -0.02), F(0.59 + g, -0.03, 0.02),
+                F(0.54 + g, -0.14, -0.012), F(0.54 + g, -0.14, 0.012), F(0.50 + g, -0.24, 0)], METAL)
     return bm, "Pickaxe", HAFTED
 
 
