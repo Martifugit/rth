@@ -35,7 +35,7 @@ so terrain rules stay in tiles.
 | Thing | Reference | × k | Proposed | Today | |
 | --- | --- | --- | --- | --- | --- |
 | Player | 1.56 | 1.94 | **1.94** | 1.94 | **Decision D1**: keep the player as is (the alternative is in D1 below). |
-| One storey, wall pieces, doorways | 1.88 | 2.33 | **2.3** | 1.7 | **Decision D2**: raises every house wall by 0.6. |
+| One storey, wall pieces, doorways | 1.88 | 2.33 | **2.6** (doors 2.1 high, 0.84 to 0.9 wide) | 2.6 in the kits | **Decision D2**, revised 2026-10-27 by the owner: at 2.3 the player barely fitted (his head at the door's top), so the storey is 2.6 and doors fit his build. |
 | Roof | | | eaves at the storey line, ridge ≤ 1.6 above it | eaves 2.05, ridge 3.3–3.6 | Follows D2. |
 | Low walls (dry stone, garden, ruins) | 1.31 | 1.6 | **1.0–1.6** | 0.6–1.4 | Below the player's eyes, so they never hide a player. |
 | Fences, hedges, railings | 0.5–0.7 | 0.6–0.9 | **0.6–0.9** | 0.6 rail, 0.8 posts | Unchanged. |
@@ -56,7 +56,7 @@ which then match the reference almost tile for tile (walls 1.06 × the player, t
 Shrinking is one number but makes every 4 × 4 cottage roomier and every creature relatively
 bigger; growing walls changes every house. **Proposal: keep the player, raise the storey.**
 
-**Decision D2: the storey.** 2.3, against 1.7 today. With the proposed camera (distance 12,
+**Decision D2: the storey.** First 2.3, against 1.7 then; raised to **2.6** on 2026-10-27 so the player fits his doors (the kits in `tools/art/blender` follow it). The camera note below was worked out at 2.3. With the proposed camera (distance 12,
 pitch 35°, focus 1 tile up) a 2.3 wall hides the camera's focus only from within 1.9 tiles in
 front of the player; today's 1.7 wall from within 1.0.
 
