@@ -1,6 +1,6 @@
 # The Altar of Martyrs: style study and design
 
-**Status:** proposal (2026-10-27), for the owner to mark up before modelling. The first passes
+**Status:** design agreed (2026-10-27, decisions below); blockout next. The first passes
 (`tools/art/blender/buildings/cruor/altar.py`, commits up to `a56a7e6`) were rejected as "a cheap
 Valheim copy": random out-of-true shapes and ad-hoc figures. This is the design-first redo.
 
@@ -50,7 +50,7 @@ is secondary.
 | --- | --- |
 | Dais | three round steps, 11 tiles across, 0.75 high, pale-nosed steps |
 | Pool | 6 tiles across, a bevelled rim 0.3 high, twelve short spikes pointing out round it |
-| Pedestal | 2.4 across, 3.2 high above the pool: a moulded base, a shaft with the motif inset on each face, a moulded cap |
+| Pedestal | 2.4 across, 3.2 high above the pool: a moulded base with four spouts, a shaft with the motif inset on each face, a moulded cap |
 | Martyrs | 3.0 tall (1.7 times a player), on the pedestal's cap |
 | Braziers | four, 1.6 tall, a spike crown round the bowl |
 
@@ -65,14 +65,11 @@ pale bar laid across its top, like wax under a seal: an oath sealed in blood, wh
 made of. It goes on the pedestal's faces, the braziers, the dais's risers at the four quarters,
 and later on the cathedral's banners and the monuments, so the whole faith carries it.
 
-**The martyrs, built from the game's own figures:** the player body from the character kit
-(`tools/character-models`), posed through its skeleton (hooded robe, one hand on the heart, the
-other raising a broad sword), joined and coloured as pale stone. Proportions then match the
-characters, and every later statue starts from the same tool.
+**The martyrs:** designed by hand (decision 4), as clean symmetric figures: a hooded robe with a
+flared hem, broad shoulders, one hand on the heart, the other raising a broad sword.
 
-**The faces of the fallen:** four masks on the pedestal's base, designed symmetric (a cowled head,
-closed eyes as two strokes, an open mouth), each pouring a single clean line of blood into the
-pool. If they do not hold up in the blockout, they become four plain spout heads carrying the motif.
+**The spouts:** four plain spouts on the pedestal's base, each with the motif over it, each pouring
+a single clean line of blood into the pool.
 
 **Blood:** the pool, one inlaid line from the nave down the dais's steps to the pool (not three
 gutters), and a few flat splashes on the floor where it is worn.
@@ -85,9 +82,12 @@ gutters), and a few flat splashes on the floor where it is worn.
 3. **In place:** set in the cathedral's east end and judged from the nave.
 4. **Rules:** what passes goes into `tools/art/blender/README.md` as the method for centrepieces.
 
-## Questions for the owner
+## Decided by the owner (2026-10-27)
 
-1. Is the motif (the sealed drop) right for Troth's church, or should it be something else?
-2. Three martyrs, or a single great martyr?
-3. Keep the faces of the fallen, or simpler spouts?
-4. May the martyrs be built from the posed player body (it sets how all statues are made)?
+1. **The motif is the sealed drop**, to be tried.
+2. **Three martyrs:** the empire wants people to aspire to martyrdom.
+3. **The altar must look outstanding on its own**, judged alone, not in the cathedral (which is not
+   yet true to style either). The faces of the fallen go: the blood leaves the pedestal through four
+   plain spouts carrying the motif.
+4. **Statues from the posed player body are deferred** until we know more of what makes a good
+   outcome; the martyrs are designed by hand for now.

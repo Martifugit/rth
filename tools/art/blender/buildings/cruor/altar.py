@@ -1,27 +1,16 @@
-"""The Altar of Martyrs: the centrepiece of Cruor's cathedral and the heart of Troth's church,
-where the faithful honour the fallen martyrs; for the dais the cathedral leaves at its east end
-(cathedral.py; 18 tiles across under a 22-tile nave). Troth itself is not on it (the god is
-creatures/troth.py).
+"""The Altar of Martyrs: the centrepiece of Cruor's cathedral and the heart of Troth's church.
+Design and decisions: docs/regions/cruor-altar.md (read it first). This is the blockout: every
+part at its final size, deliberate and symmetric (revolved mouldings, designed figures; nothing
+random), mostly plain, the blood already red because it is part of the focus.
 
-Our reading of images/blood-altar-of-martyrs.jpg, made the way the nature and caves kits are
-(tools/art/blender/README.md): chunky faceted masses with smooth light over few faces, nothing quite
-true, flat palette colours with the contrast between materials, detail painted onto big faces.
-- Three martyrs stand back to back on a tall pedestal in a round pool of blood, larger than life
-  in bone-pale stone: hooded, a hand on the heart (the oath), a broad sword raised outwards, so the
-  three blades fan out over the pool.
-- Faces of the fallen are carved round the pedestal, cowled, eyes closed, mouths open, each pouring
-  a thick stream of blood into the pool.
-- Channels come in from the nave across the dais and down its steps to the pool. Four iron braziers
-  stand at its corners.
-
-Red is the faith's and the blood's only (docs/regions/cruor-architecture.md). As dressing, it is
-flat colour, not the cathedral's painted stone (rule 10). Front is -Y (towards the nave).
+Read from the nave: three pale martyrs back to back on a tall dark pedestal, swords raised and
+fanned, in a round red pool ringed with outward spikes, on a stepped round dais; one red line
+running to it from the nave. Front is -Y (the nave).
 
     runpy.run_path(r"C:\\dev\\rth\\tools\\art\\blender\\buildings\\cruor\\altar.py")
 """
 import math
 import os
-import random
 import sys
 
 import bmesh
@@ -30,29 +19,25 @@ from mathutils import Matrix, Vector
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ART = os.path.join(HERE, "..", "..")
-for p in (os.path.join(ART, "caves"), os.path.join(ART, "nature"), ART):
-    if p not in sys.path:
-        sys.path.insert(0, p)
-for m in ("rth_art", "basin", "shapes"):
-    sys.modules.pop(m, None)
+if ART not in sys.path:
+    sys.path.insert(0, ART)
+sys.modules.pop("rth_art", None)
 import rth_art as A  # noqa: E402
-from shapes import block, chunk  # noqa: E402  (the caves kit's stone)
 
-MATS = ["Gravestone", "Ashgrey", "SaintBone", "FountBlood", "Sable", "Steel", "Bronze", "Blackiron", "Ember",
-        "Charcoal", "CryptFloor"]
-STONE, DARKSTONE, BONE, BLOOD, VOID, BLADE, BRONZE, IRON, COALS, CHAR, FLOOR = range(len(MATS))
+# The blockout's values: dark stone, pale trim, the martyrs' stone, blood, iron, the floor.
+MATS = ["Ashgrey", "Gravestone", "Tin", "FountBlood", "Blackiron", "CryptFloor", "Sable"]
+DARK, TRIM, FIGURE, BLOOD, IRON, FLOOR, VOID = range(len(MATS))
 
-STEPS = ((5.6, 0.25), (5.0, 0.5), (4.4, 0.75))   # the dais's rings: outer radius, top
+# The dais: three round steps, each a riser and a pale nose.
+STEPS = [(5.5, 0.25), (4.9, 0.5), (4.3, 0.75)]
 TOP = 0.75
-POOL_R, KERB_R = 2.9, 3.35
-POOL_Z, KERB_Z = 0.88, 1.08
-PED_TOP = 3.9
-CHANNELS = (270, 0, 180)                         # degrees: from the nave (front), and from either side
-FACES = (270, 0, 90, 180)
-BONE3 = (BONE, BONE, BONE)
+RIM_OUT, RIM_IN, RIM_H = 3.4, 2.95, 1.08     # the pool's rim
+POOL_Z = 0.92
+PED_TOP = 4.1
+SPIKES = 12
 
 
-def obj(name, bm, smooth=40):
+def obj(name, bm, smooth=None):
     A.finish(bm)
     return A.mesh_from(name, bm, MATS, coll="Altar", smooth_angle=smooth)
 
@@ -65,172 +50,182 @@ def new(bm, before):
     return [v for v in bm.verts if v not in before]
 
 
-def chunky(bm, points, half, mat):
-    """A thick limb or bar: the hull of a box of half-size `half` round each point."""
-    hx, hy, hz = half
-    return A.hull(bm, [Vector(p) + Vector((dx, dy, dz)) for p in points
-                       for dx in (-hx, hx) for dy in (-hy, hy) for dz in (-hz, hz)], mat)
-
-
-def wedge(bm, r0, r1, a0, a1, z0, z1, rnd, mat, chip=0.03, gap=0.012):
-    """One block of a ring: from radius r0 to r1 and angle a0 to a1 (radians), z0 to z1, its
-    corners knocked out of true and a hair of gap to its neighbours."""
-    pts = []
-    for a in (a0 + gap, a1 - gap):
-        for r in (r0, r1):
-            for z in (z0, z1):
-                j = chip if z == z1 else chip * 0.3
-                pts.append((r * math.cos(a) + rnd.uniform(-j, j), r * math.sin(a) + rnd.uniform(-j, j),
-                            z + (rnd.uniform(-j, j * 0.5) if z == z1 else 0)))
-    return A.hull(bm, pts, mat)
-
-
-def ring(bm, r0, r1, z0, z1, rnd, mat, size=1.1, chip=0.03):
-    """A ring of wedge blocks about `size` long at the outside."""
-    n = max(6, int(2 * math.pi * r1 / size))
-    for k in range(n):
-        wedge(bm, r0, r1, 2 * math.pi * k / n, 2 * math.pi * (k + 1) / n, z0, z1, rnd, mat, chip)
-
-
-def course(bm, r_bottom, r_top, z0, z1, rnd, mat, sides=8, turn_by=0.0, chip=0.04):
-    """One course of the pedestal: a faceted drum, its corners out of true, turned a little from the
-    course below."""
-    pts = []
-    for r, z in ((r_bottom, z0), (r_top, z1)):
+def lathe(bm, profile, sides, rot=0.0, centre=(0, 0)):
+    """A solid of revolution: profile is (radius, height, material of the band from the previous
+    point) from bottom to top; a radius of 0 closes it to a point; a ring left open at either end is
+    capped flat with that point's material."""
+    cx, cy = centre
+    rings = []
+    for r, z, _ in profile:
+        if r == 0:
+            rings.append([bm.verts.new((cx, cy, z))])
+        else:
+            rings.append([bm.verts.new((cx + r * math.cos(rot + 2 * math.pi * k / sides),
+                                        cy + r * math.sin(rot + 2 * math.pi * k / sides), z)) for k in range(sides)])
+    for i in range(1, len(rings)):
+        a, b, m = rings[i - 1], rings[i], profile[i][2]
         for k in range(sides):
-            a = turn_by + 2 * math.pi * k / sides
-            pts.append((r * math.cos(a) + rnd.uniform(-chip, chip), r * math.sin(a) + rnd.uniform(-chip, chip),
-                        z + (rnd.uniform(-chip, chip * 0.4) if z == z1 else 0)))
-    return A.hull(bm, pts, mat)
+            n = (k + 1) % sides
+            if len(a) == 1:
+                f = bm.faces.new((a[0], b[k], b[n]))
+            elif len(b) == 1:
+                f = bm.faces.new((a[k], a[n], b[0]))
+            else:
+                f = bm.faces.new((a[k], a[n], b[n], b[k]))
+            f.material_index = m
+    if len(rings[-1]) > 1:
+        bm.faces.new(rings[-1]).material_index = profile[-1][2]
+    if len(rings[0]) > 1:
+        bm.faces.new(list(reversed(rings[0]))).material_index = profile[0][2]
+    return rings
 
 
-# ---- the dais, the pool, the pedestal, the faces, the channels --------------------------------------
+def band(bm, profile, sides):
+    """An open band of revolution (no caps): a ring-shaped moulding such as the pool's rim."""
+    rings = [[bm.verts.new((r * math.cos(2 * math.pi * k / sides), r * math.sin(2 * math.pi * k / sides), z))
+              for k in range(sides)] for r, z, _ in profile]
+    for i in range(1, len(rings)):
+        for k in range(sides):
+            n = (k + 1) % sides
+            bm.faces.new((rings[i - 1][k], rings[i - 1][n], rings[i][n], rings[i][k])).material_index = profile[i][2]
+    return rings
+
+
+# ---- the dais, the pool, the spikes, the line ----------------------------------------------------
 
 def dais():
-    r = random.Random(3)
+    """Three round steps with pale bevelled noses, the platform, and the pool's rim: a worked
+    moulding bevelled on its outer and inner edges, the blood level just under its lip."""
     bm = bmesh.new()
-    for k, (rad, top) in enumerate(STEPS):
-        inner = STEPS[k + 1][0] - 0.05 if k + 1 < len(STEPS) else KERB_R
-        ring(bm, inner, rad, top - 0.3, top, r, STONE, size=1.4, chip=0.035)
-    # The pool's kerb, block by block, and the blood inside it.
-    ring(bm, POOL_R, KERB_R, TOP - 0.05, KERB_Z, r, DARKSTONE, size=0.9, chip=0.03)
-    pool = [bm.verts.new((POOL_R * math.cos(a) * r.uniform(0.99, 1.01), POOL_R * math.sin(a) * r.uniform(0.99, 1.01), POOL_Z))
-            for a in [2 * math.pi * k / 16 for k in range(16)]]
+    prof = [(STEPS[0][0], -0.05, DARK)]
+    for k, (r, top) in enumerate(STEPS):
+        prof += [(r, top - 0.07, DARK), (r - 0.07, top, TRIM)]
+        if k + 1 < len(STEPS):
+            prof += [(STEPS[k + 1][0] + 0.02, top, TRIM)]
+    prof += [(RIM_OUT, TOP, TRIM)]
+    lathe(bm, prof, 48)
+    band(bm, [(RIM_OUT, TOP - 0.01, DARK), (RIM_OUT, RIM_H - 0.12, DARK), (RIM_OUT - 0.1, RIM_H, TRIM),
+              (RIM_IN + 0.1, RIM_H, TRIM), (RIM_IN, RIM_H - 0.08, TRIM), (RIM_IN, POOL_Z - 0.02, DARK)], 48)
+    pool = [bm.verts.new((RIM_IN * math.cos(2 * math.pi * k / 48), RIM_IN * math.sin(2 * math.pi * k / 48), POOL_Z)) for k in range(48)]
     bm.faces.new(pool).material_index = BLOOD
-    # The pedestal: a plinth out of the pool, two drums, a cap; each a little off the one below.
-    course(bm, 1.6, 1.5, TOP, 1.35, r, DARKSTONE, turn_by=0.1)
-    course(bm, 1.2, 1.12, 1.33, 2.45, r, STONE, turn_by=0.32)
-    course(bm, 1.12, 1.02, 2.43, 3.6, r, STONE, turn_by=0.15)
-    course(bm, 1.5, 1.45, 3.58, PED_TOP, r, DARKSTONE, turn_by=0.4)
-    for deg in FACES:
-        fallen_face(bm, deg, r)
-    # The channels: a gutter of chipped blocks either side of a stream of blood, from the nave
-    # across the floor, down the steps and over the dais to the kerb.
-    profile = [(5.6, 10.0, 0.0), (5.0, 5.6, 0.25), (4.4, 5.0, 0.5), (KERB_R, 4.4, TOP)]
-    for deg in CHANNELS:
+    return obj("AltarDais", bm, smooth=40)
+
+
+def spikes():
+    """Twelve short spikes pointing out from the rim, square in section, a pale collar at each foot."""
+    bm = bmesh.new()
+    for k in range(SPIKES):
+        a = 2 * math.pi * (k + 0.5) / SPIKES
+        d = Vector((math.cos(a), math.sin(a), 0))
+        s = Vector((-d.y, d.x, 0))
+        foot = d * (RIM_OUT - 0.05) + Vector((0, 0, RIM_H - 0.2))
+        tip = d * (RIM_OUT + 0.62) + Vector((0, 0, RIM_H + 0.12))
+        out = (tip - foot).normalized()
+        up = out.cross(s).normalized()
+        A.hull(bm, [foot + s * 0.13 + up * 0.13, foot - s * 0.13 + up * 0.13, foot + s * 0.13 - up * 0.13,
+                    foot - s * 0.13 - up * 0.13, tip], IRON)
+        A.hull(bm, [foot + out * dd + s * ss * 0.16 + up * uu * 0.16 for dd in (0.02, 0.1) for ss in (-1, 1) for uu in (-1, 1)], TRIM)
+    return obj("AltarSpikes", bm)
+
+
+def blood_line():
+    """The one red line: inlaid from the nave, down each riser and across each tread, over the
+    platform to the rim, edged in pale stone."""
+    bm = bmesh.new()
+    w, e = 0.16, 0.08
+    runs = [(12.0, STEPS[0][0], 0.0)] + [(STEPS[k][0], STEPS[k + 1][0] if k + 1 < len(STEPS) else RIM_OUT, STEPS[k][1])
+                                          for k in range(len(STEPS))]
+    for r0, r1, z in runs:
+        A.box(bm, (-w, -r0, z + 0.005), (w, -r1, z + 0.02), BLOOD)
+        A.box(bm, (-w - e, -r0, z + 0.005), (-w, -r1, z + 0.035), TRIM)
+        A.box(bm, (w, -r0, z + 0.005), (w + e, -r1, z + 0.035), TRIM)
+    for k, (r, top) in enumerate(STEPS):
+        z0 = STEPS[k - 1][1] if k else 0.0
+        A.box(bm, (-w, -r - 0.02, z0), (w, -r + 0.01, top - 0.06), BLOOD)
+    return obj("AltarLine", bm)
+
+
+# ---- the pedestal and its spouts ----------------------------------------------------------------
+
+def pedestal():
+    """A moulded base standing in the pool, an eight-sided shaft (the motif goes on its faces in the
+    detail pass), a moulded cap under the martyrs; four plain spouts on the base pouring into the
+    pool."""
+    bm = bmesh.new()
+    lathe(bm, [(1.65, POOL_Z - 0.1, DARK), (1.65, 1.25, DARK), (1.55, 1.35, TRIM), (1.32, 1.42, TRIM),
+               (1.32, 1.6, DARK), (1.22, 1.66, TRIM), (1.08, 1.7, TRIM)], 32)
+    lathe(bm, [(1.08, 1.69, DARK), (0.98, 3.55, DARK), (0.98, 3.56, DARK)], 8, rot=math.pi / 8)
+    lathe(bm, [(1.12, 3.5, TRIM), (1.22, 3.62, TRIM), (1.22, 3.72, DARK), (1.45, 3.88, TRIM), (1.55, 3.95, TRIM),
+               (1.55, PED_TOP, TRIM)], 32)
+    for deg in (270, 0, 90, 180):
         before = set(bm.verts)
-        for r0, r1, z in profile:
-            x = r0
-            while x < r1 - 0.01:
-                x1 = min(r1, x + r.uniform(0.7, 1.0))
-                for y0, y1 in ((-0.34, -0.17), (0.17, 0.34)):
-                    block(bm, (x + 0.01, y0, z - 0.05), (x1 - 0.01, y1, z + 0.09), r, mat=DARKSTONE, chip=0.015)
-                x = x1
-            A.box(bm, (r0, -0.17, z - 0.05), (r1, 0.17, z + 0.025), BLOOD)
+        A.box(bm, (1.2, -0.13, 1.08), (1.75, 0.13, 1.28), TRIM)                     # the spout
+        A.box(bm, (1.6, -0.08, 1.12), (1.76, 0.08, 1.2), DARK)                      # its mouth
+        lathe(bm, [(0.06, POOL_Z, BLOOD), (0.06, 1.16, BLOOD), (0, 1.17, BLOOD)], 6, centre=(1.82, 0))   # the pour
         turn(bm, new(bm, before), deg)
-    return obj("AltarDais", bm, smooth=30)
-
-
-def fallen_face(bm, deg, r):
-    """A face of the fallen on the pedestal's side facing `deg`: a cowled head in bone-pale stone
-    growing out of the drum, one smooth mass, its eyes closed (two thin dark strokes, the outer ends
-    low) and its mouth open, a thick stream of blood from the mouth down the drums and a spill of it
-    into the pool."""
-    before = set(bm.verts)
-    y = 1.0                                  # inside the drum's face, so the head grows out of it
-    A.loft(bm, [((y, 0, 2.62), 0.42, 0.62), ((y + 0.22, 0, 2.66), 0.4, 0.58), ((y + 0.34, 0, 2.6), 0.3, 0.46),
-                ((y + 0.42, 0, 2.55), 0.18, 0.3), ((y + 0.45, 0, 2.52), 0, 0)], sides=8, ref=(0, 0, 1), mats=BONE)
-    A.loft(bm, [((y, 0, 2.66), 0.5, 0.72), ((y + 0.22, 0, 2.72), 0.5, 0.72), ((y + 0.3, 0, 2.8), 0, 0)],
-           sides=8, ref=(0, 0, 1), mats=BONE)                                         # the cowl behind it
-    chunky(bm, [(y + 0.4, 0, 2.38), (y + 0.3, 0.02, 2.05), (1.2, 0.0, 1.4)], (0.03, 0.09, 0.02), BLOOD)
-    chunk(bm, (1.62, 0, POOL_Z - 0.02), (0.3, 0.35, 0.06), r, sink=0.0, mats=(BLOOD, BLOOD, BLOOD), points=10)
-    turn(bm, new(bm, before), deg)
-    a = math.radians(deg)
-    out = Vector((math.cos(a), math.sin(a), 0))
-    side = Vector((-out.y, out.x, 0))
-    from mathutils.bvhtree import BVHTree
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    bm.normal_update()
-    face = BVHTree.FromBMesh(bm)
-    far = out * 3.0
-    for sx in (-1, 1):
-        inner, outer = side * sx * 0.05, side * sx * 0.22
-        A.decal(bm, [far + inner + Vector((0, 0, 2.72)), far + outer + Vector((0, 0, 2.68)),
-                     far + outer + Vector((0, 0, 2.74)), far + inner + Vector((0, 0, 2.78))], out, VOID, onto=face, facing=0.2)
-    A.decal(bm, [far - side * 0.09 + Vector((0, 0, 2.38)), far + side * 0.09 + Vector((0, 0, 2.38)),
-                 far + side * 0.07 + Vector((0, 0, 2.5)), far - side * 0.07 + Vector((0, 0, 2.5))], out, VOID, onto=face, facing=0.2)
+    return obj("AltarPedestal", bm, smooth=40)
 
 
 # ---- the martyrs ----------------------------------------------------------------------------------
 
-def martyr_mass(bm, r, facing):
-    """One martyr, built facing -Y and turned to `facing`: one smooth robed mass rising into its
-    hood, thick arms grown out of the shoulders (one to the heart, one raised), a broad sword held up
-    and outwards."""
+def martyr(bm, facing, at_r=0.62):
+    """One martyr, designed: a hooded robe with a flared hem, a narrow waist, broad shoulders, the
+    hood leaning a little forward; the left hand on the heart, the right raising a broad sword up and
+    outwards. Built facing -Y, then turned to `facing` and set back to back."""
     before = set(bm.verts)
     z0 = PED_TOP
-    secs = [(0.0, 0.64, 0.5), (0.5, 0.6, 0.46), (1.3, 0.47, 0.37), (2.0, 0.6, 0.4), (2.18, 0.3, 0.3), (2.45, 0.37, 0.39),
-            (2.8, 0.2, 0.24), (2.98, 0, 0)]
-    A.loft(bm, [((0, -0.5 - 0.1 * max(0.0, z - 2.1), z0 + z), w, d) for z, w, d in secs], sides=8, ref=(0, 1, 0), mats=BONE)
-    A.loft(bm, [((-0.42, -0.5, z0 + 1.92), 0.16, 0.16), ((-0.4, -0.88, z0 + 1.6), 0.14, 0.14),
-                ((-0.05, -0.92, z0 + 1.72), 0.13, 0.13), ((0.04, -0.93, z0 + 1.74), 0, 0)], sides=6, ref=(0, 0, 1), mats=BONE)
-    hand = Vector((0.95, -0.8, z0 + 2.9))
-    A.loft(bm, [((0.42, -0.5, z0 + 1.92), 0.16, 0.16), ((0.82, -0.66, z0 + 2.42), 0.14, 0.14), (hand, 0.13, 0.13),
-                (hand + Vector((0.03, -0.02, 0.1)), 0, 0)], sides=6, ref=(1, 0, 0), mats=BONE)
-    d = Vector((0.35, -0.45, 1.0)).normalized()
+    secs = [(0.0, 0.64, 0.56, 0.0), (0.18, 0.6, 0.52, 0.0), (1.05, 0.44, 0.37, 0.0), (1.7, 0.53, 0.4, 0.0),
+            (2.02, 0.62, 0.42, 0.02), (2.18, 0.3, 0.3, 0.0), (2.38, 0.35, 0.37, -0.04), (2.72, 0.3, 0.33, -0.08),
+            (2.92, 0.13, 0.17, -0.12), (3.0, 0, 0, -0.14)]
+    A.loft(bm, [((0, -at_r + dy, z0 + z), w, d) for z, w, d, dy in secs], sides=12, ref=(0, 1, 0), mats=FIGURE)
+    A.loft(bm, [((-0.46, -at_r - 0.05, z0 + 1.98), 0.15, 0.15), ((-0.4, -at_r - 0.3, z0 + 1.56), 0.13, 0.13),
+                ((-0.08, -at_r - 0.42, z0 + 1.78), 0.12, 0.12), ((0.0, -at_r - 0.43, z0 + 1.82), 0, 0)],
+           sides=8, ref=(0, 0, 1), mats=FIGURE)
+    hand = Vector((0.86, -at_r - 0.28, z0 + 3.02))
+    A.loft(bm, [((0.5, -at_r, z0 + 1.98), 0.15, 0.15), ((0.8, -at_r - 0.14, z0 + 2.52), 0.13, 0.13), (hand, 0.12, 0.12),
+                (hand + Vector((0.02, -0.02, 0.1)), 0, 0)], sides=8, ref=(1, 0, 0), mats=FIGURE)
+    d = Vector((0.26, -0.36, 1.0)).normalized()
     side = d.cross(Vector((0, 0, 1))).normalized()
-    thick = d.cross(side).normalized() * 0.035
+    flat = d.cross(side).normalized()
     guard = hand + d * 0.2
-    A.hull(bm, [guard + side * 0.15 + thick, guard - side * 0.15 + thick, guard + side * 0.15 - thick, guard - side * 0.15 - thick,
-                guard + side * 0.12 + d * 1.0, guard - side * 0.12 + d * 1.0, guard + d * 1.32], BLADE)
-    A.hull(bm, [guard + side * s * 0.36 + d * dd + Vector((0, 0, dz)) for s in (-1, 1) for dd in (-0.06, 0.06)
-                for dz in (-0.05, 0.05)], BRONZE)
-    A.loft(bm, [(hand - d * 0.2, 0.05, 0.05), (guard, 0.05, 0.05)], sides=5, ref=(0, 0, 1), mats=IRON)
+    A.loft(bm, [(hand - d * 0.22, 0.045, 0.045), (guard, 0.045, 0.045)], sides=6, ref=(0, 0, 1), mats=IRON)
+    A.hull(bm, [guard + side * s * 0.34 + d * dd + flat * ff for s in (-1, 1) for dd in (-0.05, 0.05) for ff in (-0.05, 0.05)], IRON)
+    A.hull(bm, [guard + d * 0.05 + side * s * 0.13 + flat * ff for s in (-1, 1) for ff in (-0.035, 0.035)] +
+           [guard + d * 0.95 + side * s * 0.11 for s in (-1, 1)] + [guard + d * 0.95 + flat * f * 0.03 for f in (-1, 1)] +
+           [guard + d * 1.25], TRIM)
     turn(bm, new(bm, before), facing - 270)
 
 
-def martyrs_raised():
-    r = random.Random(11)
+def martyrs():
     bm = bmesh.new()
     for facing in (270, 30, 150):
-        martyr_mass(bm, r, facing)
-    for facing in (270, 30, 150):            # the dark in each hood, painted on its face
+        martyr(bm, facing)
+    for facing in (270, 30, 150):            # the dark of each hood's opening
         a = math.radians(facing)
         out = Vector((math.cos(a), math.sin(a), 0))
-        A.paint(bm, out * 0.95 + Vector((0, 0, PED_TOP + 2.45)), VOID, facing=out, size=0.85)
-    return obj("AltarMartyrs", bm, smooth=60)
+        A.paint(bm, out * 1.05 + Vector((0, 0, PED_TOP + 2.55)), VOID, facing=out, size=0.9)
+    return obj("AltarMartyrs", bm, smooth=55)
 
 
-# ---- the braziers ---------------------------------------------------------------------------------
+# ---- the braziers -----------------------------------------------------------------------------------
 
-def brazier(at=(0, 0, 0), seed=1):
-    """An iron brazier on three thick legs, a wide rough bowl heaped with coals."""
-    r = random.Random(seed)
+def brazier(at=(0, 0, 0)):
+    """A tall iron brazier: a round foot, a shaft, a wide bowl with a crown of short spikes round its
+    lip, coals heaped in it."""
     bm = bmesh.new()
-    for k in range(3):
-        a = 2 * math.pi * k / 3
-        chunky(bm, [(math.cos(a) * 0.6, math.sin(a) * 0.6, -0.02), (math.cos(a) * 0.34, math.sin(a) * 0.34, 0.85)],
-               (0.06, 0.06, 0.02), IRON)
-    course(bm, 0.3, 0.7, 0.85, 1.32, r, IRON, sides=8, chip=0.03)
+    lathe(bm, [(0.42, 0.0, IRON), (0.42, 0.1, IRON), (0.3, 0.18, IRON), (0.1, 0.26, IRON), (0.08, 1.15, IRON),
+               (0.14, 1.2, IRON), (0.55, 1.42, IRON), (0.6, 1.5, IRON), (0.5, 1.5, IRON), (0.3, 1.38, IRON)], 16)
     for k in range(8):
-        a, d = r.uniform(0, 2 * math.pi), r.uniform(0, 0.42)
-        chunk(bm, (d * math.cos(a), d * math.sin(a), 1.28), (0.15, 0.13, 0.16), r, sink=0.0,
-              mats=(COALS, CHAR, COALS) if k % 3 else (CHAR, CHAR, CHAR), points=8)
+        a = 2 * math.pi * k / 8
+        d = Vector((math.cos(a), math.sin(a), 0))
+        A.hull(bm, [d * 0.5 + Vector((0, 0, 1.46)) + Vector((-d.y, d.x, 0)) * s * 0.07 for s in (-1, 1)] +
+               [d * 0.6 + Vector((0, 0, 1.46)), d * 0.62 + Vector((0, 0, 1.78))], IRON)
+    lathe(bm, [(0.5, 1.44, BLOOD), (0.32, 1.56, BLOOD), (0, 1.6, BLOOD)], 12)
     bmesh.ops.translate(bm, vec=Vector(at), verts=bm.verts)
-    return obj("AltarBrazier", bm, smooth=35)
+    return obj("AltarBrazier", bm, smooth=40)
 
 
-# ---- the preview ------------------------------------------------------------------------------
+# ---- the board ------------------------------------------------------------------------------------
 
 def build():
     A.reset()
@@ -238,15 +233,15 @@ def build():
         if c.name in ("Altar", "Preview"):
             bpy.data.collections.remove(c)
     bm = bmesh.new()
-    A.box(bm, (-13, -13, -0.1), (13, 13, 0.0), FLOOR)
-    floor = obj("Floor", bm, smooth=None)
+    A.box(bm, (-14, -14, -0.1), (14, 14, 0.0), FLOOR)
+    floor = obj("Floor", bm)
     for c in list(floor.users_collection):
         c.objects.unlink(floor)
     A.collection("Preview").objects.link(floor)
-    objs = [dais(), martyrs_raised()]
+    objs = [dais(), spikes(), blood_line(), pedestal(), martyrs()]
     for k in range(4):
         a = math.radians(45 + 90 * k)
-        objs.append(brazier(at=(7.4 * math.cos(a), 7.4 * math.sin(a), 0), seed=k + 1))
+        objs.append(brazier(at=(7.2 * math.cos(a), 7.2 * math.sin(a), 0)))
     return objs
 
 
