@@ -14,6 +14,9 @@ Legend:
         front: timber stairs between stone and a jetty, stone steps down from stone to the water.
     b   an iron bollard on stone; p a tall mooring post on timber; l a lamp (on stone or timber).
         Each stands on the deck of its neighbours' kind and blocks its tile.
+    #   stone carried by a placed piece (an arch, a splay, a pier head), = timber carried by one (a
+        pontoon): nothing is built there, but the drawing's own stone and timber treat it as theirs,
+        so no wall or kerb is built against it. The piece writes its own walk layout.
 
 Ships and boats are placed on top (`berths`), each a model from vessels.py at a tile with a turn.
 """
@@ -31,8 +34,9 @@ from structures import chip_off, cracks, loose_stone
 MATS = ["Fence", "Boards", "Iron", "Driftwood", "Moss", "DeadWood", "Harbourstone", "Gravestone", "Flagstone", "CandleWax", "Hide"]
 TIM, BOARD, IRON, GREY, WEEDM, OLD, STONE, COPE, PAVE, GLOW, ROPE = range(len(MATS))
 
-STONEY = set("Sbs")          # cells built as stone
-TIMBER = set("JWXp")         # cells built as timber
+STONEY = set("Sbs#")         # cells built as stone (# by a placed piece)
+TIMBER = set("JWXp=")        # cells built as timber (= by a placed piece)
+PLACED = set("#=")
 STAIRS = {">": (1, 0), "<": (-1, 0), "^": (0, 1), "v": (0, -1)}
 DIRS = {"E": (1, 0), "W": (-1, 0), "N": (0, 1), "S": (0, -1)}
 
@@ -261,10 +265,12 @@ def compose(name, rows, rnd_seed=1):
     plan = Plan(rows)
     bm = bmesh.new()
     w = Walk(name)
-    timber = {c for c in plan.cells if plan.kind(*c) == "timber" and plan.get(*c) != "X"}
+    timber = {c for c in plan.cells if plan.kind(*c) == "timber" and plan.get(*c) not in "X="}
     timber_frame(bm, plan, rnd, timber | {c for c in plan.cells if plan.get(*c) == "X"})
     for (x, y), ch in sorted(plan.cells.items()):
         k = plan.kind(x, y)
+        if ch in PLACED:
+            continue
         if ch in STAIRS:
             w.tile(x, y, stairs_cell(bm, plan, x, y, ch, w))
         elif k == "stone":

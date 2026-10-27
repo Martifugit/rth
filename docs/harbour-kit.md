@@ -121,6 +121,20 @@ worn row per kit; the example harbours are built worn.
 neck)`), so a 4-wide head makes a T on a 2-wide pier; `stone_head(2, 2)` ends a narrow pier in its
 own round nose; `stone_splay(2, 4)` widens a pier over two tiles into a 4-wide run and head.
 
+## 3d. The showcase
+
+`tools/art/blender/harbour/showcase.py` is the preview at the top of the gallery: one working
+waterfront built from the kits. A long stone quay (a composer drawing) with bollards, lamps and water
+stairs; the sea ship alongside with a gangplank, a crane and cargo (the nature kit's barrels, sacks and
+crates, a cart); a stone mole closing the basin, carried on an arch, widening through a splay into the
+lamp head at the mouth, channel markers outside; two timber jetties down stairs off the quay, an L
+with a lamp and a pontoon, a T-head with mooring posts, the river boat, fishing and rowing boats
+between them; past the quay's end a natural shore with a slipway cut into the bank, a boat drawn up,
+nets drying, the old jetty (Weathered) rotting into the reeds, trees and a fingerpost behind. All worn.
+In a drawing, `#` and `=` mark tiles a placed piece carries (an arch, splay, head, pontoon), so the
+drawn stone and timber join them without walls between. `harbours.py` (three small examples) is kept
+as a reference for drawings.
+
 ## 4. Order of work
 
 1. **Blockout** in Blender (`tools/art/blender/harbour/`): every part at its final size, plain

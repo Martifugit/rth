@@ -1,10 +1,11 @@
-"""The harbour kit's gallery: every kit laid out as its own cluster, each built in rows, a style (styles.py)
-with or without wear (common.WEAR: the flaws of use), labelled, south of the example harbours (harbours.py). The place to judge a kit, compare
-its styles, and see a new piece next to the rest.
+"""The harbour kit's gallery: every kit laid out as its own cluster, each built in rows, a style
+(styles.py) with or without wear (common.WEAR: the flaws of use), labelled, south of the showcase
+(showcase.py), the waterfront built from the kits that previews them. The place to judge a kit,
+compare its styles, and see a new piece next to the rest.
 
 In the Outliner: Gallery > <kit> > <kit> . <style>. To add a piece, add a line to its kit in KITS;
 to add a kit, add an entry; to add a style, add it to styles.py. Walk layouts are not written from
-here (the examples and the exports write them).
+here (the showcase and the exports write them).
 
     import runpy; runpy.run_path(r"C:\\dev\\rth\\tools\\art\\blender\\harbour\\gallery.py")
 """
@@ -18,7 +19,7 @@ import bpy
 from mathutils import Vector
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-runpy.run_path(os.path.join(HERE, "harbours.py"), run_name="__main__")      # the examples, from a clean scene
+runpy.run_path(os.path.join(HERE, "showcase.py"), run_name="__main__")      # the preview, from a clean scene
 for name in ("common", "structures", "vessels", "styles"):
     sys.modules.pop(name, None)
 import common as C  # noqa: E402
@@ -78,7 +79,7 @@ KITS = [
 # The rows each kit is built in: a style (styles.py) and whether it is worn (common.WEAR).
 ROWS = [("Plain", 0), ("Plain", 1), ("Weathered", 1), ("Dark", 0), ("Pale", 0)]
 
-TOP = -12.0         # the gallery starts this far south of the examples
+TOP = -12.0         # the gallery starts this far south of the showcase
 GAP = 1.5           # between pieces in a row
 ROW_GAP = 2.5       # between style rows
 KIT_GAP = 6.0       # between kits
@@ -148,10 +149,11 @@ def build():
 
 
 def gallery_ground(bottom):
-    """Water under the gallery, the bed under it."""
+    """Water under the gallery, the bed under it, up to where the showcase's own water begins."""
     bm = bmesh.new()
-    A.box(bm, (-12, bottom, C.BED - 0.1), (120, TOP + 2, C.BED), 0)
-    bm.faces.new([bm.verts.new(p) for p in ((-12, bottom, 0), (120, bottom, 0), (120, TOP + 2, 0), (-12, TOP + 2, 0))]).material_index = 1
+    top = -6.0
+    A.box(bm, (-12, bottom, C.BED - 0.1), (120, top, C.BED), 0)
+    bm.faces.new([bm.verts.new(p) for p in ((-12, bottom, 0), (120, bottom, 0), (120, top, 0), (-12, top, 0))]).material_index = 1
     ob = N.make("GalleryWater", bm, ["Mud", "Mere"], coll="Preview")
     return ob
 
