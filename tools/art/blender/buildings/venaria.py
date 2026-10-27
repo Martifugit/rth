@@ -375,9 +375,10 @@ def piece_chimney_breast():
     """The hearth's back, outside an end wall tile: a stone breast a storey high whose top steps
     in to the stack (in the wall tile's frame: x along the wall, -Y outside)."""
     bm = bmesh.new()
-    box(bm, 0.1, 0.9, -T / 2 - 0.42, T / 2, 0, STOREY - 0.5, STONE)
+    back = T / 2 - 0.04                                          # inside the wall, never on its inner face
+    box(bm, 0.1, 0.9, -T / 2 - 0.42, back, 0, STOREY - 0.5, STONE)
     A.hull(bm, [(x, y, z) for x, z in ((0.1, STOREY - 0.5), (0.9, STOREY - 0.5), (0.72, STOREY - 0.1), (0.28, STOREY - 0.1))
-                for y in (-T / 2 - 0.42, T / 2)], STONE)
+                for y in (-T / 2 - 0.42, back)], STONE)
     return bm
 
 
@@ -390,7 +391,7 @@ def piece_chimney_stack():
 
 def piece_chimney_cap():
     bm = bmesh.new()
-    box(bm, 0.24, 0.76, -T / 2 - 0.40, T / 2, 0, 0.12, STONE)
+    box(bm, 0.24, 0.76, -T / 2 - 0.40, T / 2 - 0.04, 0, 0.12, STONE)
     box(bm, 0.36, 0.64, -T / 2 - 0.3, T / 2 - 0.1, 0.12, 0.125, DARK)
     return bm
 

@@ -152,6 +152,7 @@ namespace Rth.MapTools.Editor
                     entry.ToX = Mathf.FloorToInt(to.x);
                     entry.ToY = Mathf.FloorToInt(to.z);
                 }
+                if (!string.IsNullOrWhiteSpace(obj.edge)) entry.Edge = obj.edge.Trim();
                 list.Add(entry);
             }
             return list;

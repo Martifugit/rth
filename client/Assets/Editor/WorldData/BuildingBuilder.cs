@@ -21,6 +21,7 @@ namespace Rth.Client.Editor
     {
         // The kit's Blender axes arrive in Unity as (-x, z, -y): a half turn about the vertical.
         private const float ImportTurn = 180f;
+        private const int IgnoreRaycast = 2;
 
         public static void Build(Transform group, RegionData region, Piece piece, Heightfield terrain)
         {
@@ -46,14 +47,17 @@ namespace Rth.Client.Editor
             var b = new Assembly(kit, spec, r, floorZ, group);
             b.Walls();
             b.Roof(storeys);
+            b.Doors();
 
-            // The floor (the ground collider players stand on inside) and the foundation under it.
+            // The floor (the ground collider players stand on inside) and the foundation under it,
+            // in a group of their own: what fades when it hides the player never includes the floor.
+            Transform grounds = WorldKit.Group(group, "Floor");
             Material stone = Mat("Stone", Colours(spec, 0));
-            GameObject floor = WorldKit.Box("Floor", b.Ground, new Vector3((r[0] + r[2]) / 2f, floorZ + 0.02f, (r[1] + r[3]) / 2f),
+            GameObject floor = WorldKit.Box("Floor", grounds, new Vector3((r[0] + r[2]) / 2f, floorZ + 0.02f, (r[1] + r[3]) / 2f),
                 new Vector3(r[2] - r[0], 0.04f, r[3] - r[1]), NatureImporter.For(spec.Floor ?? "Planks"));
             floor.isStatic = true;
             if (floorZ - lowest > 0.01f)
-                WorldKit.Box("Foundation", b.Ground, new Vector3((r[0] + r[2]) / 2f, (floorZ + lowest) / 2f - 0.1f, (r[1] + r[3]) / 2f),
+                WorldKit.Box("Foundation", grounds, new Vector3((r[0] + r[2]) / 2f, (floorZ + lowest) / 2f - 0.1f, (r[1] + r[3]) / 2f),
                     new Vector3(r[2] - r[0] + 0.26f, floorZ - lowest + 0.2f, r[3] - r[1] + 0.26f), stone, collider: false);
 
             // A step up to each doorway the ground falls away from.
@@ -66,7 +70,7 @@ namespace Rth.Client.Editor
                 Vector2 n = Mathf.Abs(toWall.x) > Mathf.Abs(toWall.y) ? new Vector2(Mathf.Sign(toWall.x), 0f) : new Vector2(0f, Mathf.Sign(toWall.y));
                 Vector2 at2 = c + n * 0.32f;
                 bool alongX = n.y != 0f;
-                WorldKit.Box("Step", b.Ground, new Vector3(at2.x, (floorZ + outside) / 2f - 0.05f, at2.y),
+                WorldKit.Box("Step", grounds, new Vector3(at2.x, (floorZ + outside) / 2f - 0.05f, at2.y),
                     alongX ? new Vector3(0.9f, floorZ - outside + 0.1f, 0.36f) : new Vector3(0.36f, floorZ - outside + 0.1f, 0.9f), stone, collider: false);
             }
 
@@ -83,6 +87,8 @@ namespace Rth.Client.Editor
                 w.position += Vector3.up * floorZ;
                 Object.DestroyImmediate(w.GetComponent<MeshRenderer>());
                 Object.DestroyImmediate(w.GetComponent<MeshFilter>());
+                // Clicks pass through to the floor or ground behind: a click on a wall walks to where it points.
+                w.gameObject.layer = IgnoreRaycast;
             }
             // What stands outside the walls blocks its tile (its own group: a blocker's colliders all block).
             foreach ((int x, int y) in Buildings.BlockedOutside(spec, kit, r))
@@ -160,7 +166,7 @@ namespace Rth.Client.Editor
             }
 
             /// <summary>Puts a kit piece at (lx, ly) in the local frame, turned rot degrees anticlockwise as in Blender, z up from the floor.</summary>
-            private void Place(Transform parent, string name, float lx, float ly, float rot, float z, Dictionary<string, string> colours, float scaleX = 1f)
+            private GameObject Place(Transform parent, string name, float lx, float ly, float rot, float z, Dictionary<string, string> colours, float scaleX = 1f)
             {
                 if (!_models.TryGetValue(name, out GameObject model))
                 {
@@ -170,7 +176,7 @@ namespace Rth.Client.Editor
                 if (model == null)
                 {
                     Debug.LogError($"[R'th] building kit '{_kit.Id}': no model {_kit.Models}/{name}.fbx; export the kit from Blender.");
-                    return;
+                    return null;
                 }
                 float wx, wy, turn;
                 if (_alongX) { wx = _r[0] + lx; wy = _r[1] + ly; turn = rot; }
@@ -184,13 +190,14 @@ namespace Rth.Client.Editor
                 if (colours != null && colours.Count > 0)
                     foreach (Renderer rend in go.GetComponentsInChildren<Renderer>())
                         rend.sharedMaterials = rend.sharedMaterials.Select(m => m != null && colours.TryGetValue(m.name, out string swap) ? NatureImporter.For(swap) : m).ToArray();
+                return go;
             }
 
             private void PlaceTile(Transform parent, string entry, float x, float y, float rot, float z, Dictionary<string, string> colours)
             {
                 (string wall, string[] extras) = Buildings.Split(entry);
                 Place(parent, wall, x, y, rot, z, colours);
-                if (_kit.Openings.TryGetValue(wall, out string leaf) && !string.IsNullOrEmpty(leaf)) Place(parent, leaf, x, y, rot, z, colours);
+                // A doorway's leaf is hung by Doors(), as a door that opens.
                 foreach (string a in extras) Place(parent, a, x, y, rot, z, colours);
             }
 
@@ -227,6 +234,55 @@ namespace Rth.Client.Editor
                     foreach (float cx in new[] { -jet, _l + jet })
                         foreach (float cy in new float[] { 0, _d })
                             Place(parent, "Post", cx, cy, 0, z, rc);
+                }
+            }
+
+            /// <summary>
+            /// The ground floor's doors: each leaf on a hinge at its doorway's corner (a <see cref="DoorLeaf"/>
+            /// that swings into the room when the server opens it), under the door object (a
+            /// <see cref="Rth.MapTools.MapObject"/> on the tile inside, with the edge it closes) that
+            /// players click. Doors stay solid: they don't fade with the walls.
+            /// </summary>
+            public void Doors()
+            {
+                Transform doors = WorldKit.Group(Ground.parent, "Doors");
+                Dictionary<string, string> rc = Colours(_spec, 0);
+                foreach (ObjectEntry door in Buildings.DoorObjects(_spec, _kit, _r, 0))
+                {
+                    string side = door.Edge;
+                    int i = side == "S" || side == "N" ? door.X - _r[0] : door.Y - _r[1];
+                    string leafName = _kit.Openings[Buildings.Split(Buildings.Face(_spec, _kit, _r, side, 0)[i]).piece];
+                    // The doorway's place in volume()'s frame, as Walls() puts it.
+                    string local = LocalSide(side);
+                    int j = _alongX || side == "E" || side == "W" ? i : _d - 1 - i;
+                    (float lx, float ly, float rot) = local == "S" ? (j, 0f, 0f) : local == "N" ? (j + 1f, (float)_d, 180f)
+                        : local == "W" ? (0f, j + 1f, 270f) : ((float)_l, (float)j, 90f);
+
+                    var root = new GameObject($"Door {door.X},{door.Y} {side}");
+                    root.transform.SetParent(doors, false);
+                    root.transform.position = new Vector3(door.X + 0.5f, _base, door.Y + 0.5f);
+                    var obj = root.AddComponent<Rth.MapTools.MapObject>();
+                    obj.objectType = door.Type;
+                    obj.edge = side;
+                    var hinge = new GameObject("Hinge").transform;
+                    hinge.SetParent(root.transform, false);
+                    GameObject leaf = Place(hinge, leafName, lx, ly, rot, 0f, rc);
+                    if (leaf == null) continue;
+                    hinge.SetPositionAndRotation(leaf.transform.position, leaf.transform.rotation);
+                    leaf.transform.localPosition = Vector3.zero;
+                    leaf.transform.localRotation = Quaternion.identity;
+                    foreach (MeshFilter mf in leaf.GetComponentsInChildren<MeshFilter>()) mf.gameObject.AddComponent<BoxCollider>();
+                    // Swing into the room: whichever quarter turn takes the leaf's middle inside.
+                    Renderer[] parts = leaf.GetComponentsInChildren<Renderer>();
+                    Vector3 middle = parts.Length > 0 ? parts.Select(rr => rr.bounds.center).Aggregate(Vector3.zero, (a, c) => a + c) / parts.Length : hinge.position;
+                    Vector3 swung = hinge.position + Quaternion.Euler(0f, 90f, 0f) * (middle - hinge.position);
+                    bool inside = swung.x > _r[0] && swung.x < _r[2] && swung.z > _r[1] && swung.z < _r[3];
+                    var dl = hinge.gameObject.AddComponent<DoorLeaf>();
+                    dl.plane = door.Plane;
+                    dl.x = door.X;
+                    dl.y = door.Y;
+                    dl.edge = side;
+                    dl.openYaw = inside ? 90f : -90f;
                 }
             }
 

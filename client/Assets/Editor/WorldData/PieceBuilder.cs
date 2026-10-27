@@ -99,7 +99,8 @@ namespace Rth.Client.Editor
                         piece.Height ?? WorldKit.DefaultStorey, 0.2f, (piece.Gaps ?? new List<int>()).ToArray());
                     break;
                 case PieceKind.Fence:
-                    WorldKit.Fence(group, "Fence", piece.From[0], piece.From[1], piece.To[0], piece.To[1], Material(kit, region, piece.Material),
+                    if (!string.IsNullOrWhiteSpace(piece.Model)) ModelFence(group, region, piece, terrain);
+                    else WorldKit.Fence(group, "Fence", piece.From[0], piece.From[1], piece.To[0], piece.To[1], Material(kit, region, piece.Material),
                         (piece.Gaps ?? new List<int>()).ToArray());
                     break;
                 case PieceKind.House:
@@ -227,6 +228,52 @@ namespace Rth.Client.Editor
             }
             if (piece.Kind == PieceKind.Spawn) go.AddComponent<MapSpawn>();
             return go;
+        }
+
+        /// <summary>
+        /// A fence of a kit's model (a span one tile long along its Blender +X from its origin: a
+        /// hurdle, a buck fence, a dry-stone wall) laid span by span along the piece's grid line, from
+        /// <c>from</c> towards <c>to</c>, standing on the terrain, skipping the gaps. Where a run of
+        /// spans ends, the model's "End" version is used if there is one (a closing post). Its
+        /// collision is the fence's edges (invisible walls that clicks pass through).
+        /// </summary>
+        private static void ModelFence(Transform group, RegionData region, Piece piece, Heightfield terrain)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(piece.Model);
+            if (prefab == null)
+            {
+                Debug.LogError($"[R'th] {region.Id}: fence '{piece.Id}' names model '{piece.Model}', which isn't in the project.");
+                return;
+            }
+            var end = AssetDatabase.LoadAssetAtPath<GameObject>(piece.Model.Substring(0, piece.Model.Length - 4) + "End.fbx") ?? prefab;
+            int[] a = piece.From, b = piece.To;
+            bool alongX = a[1] == b[1];
+            int length = alongX ? b[0] - a[0] : b[1] - a[1], dir = length >= 0 ? 1 : -1;
+            // Blender's anticlockwise turn for the direction, made Unity's (the import is a half turn).
+            float blenderRot = alongX ? (dir > 0 ? 0f : 180f) : (dir > 0 ? 90f : 270f);
+            var gaps = new HashSet<int>(piece.Gaps ?? new List<int>());
+            for (int k = 0; k < Mathf.Abs(length); k++)
+            {
+                int sx = alongX ? a[0] + k * dir : a[0], sy = alongX ? a[1] : a[1] + k * dir;
+                int tile = alongX ? Mathf.Min(sx, sx + dir) : Mathf.Min(sy, sy + dir);   // the span's tile along the line
+                if (gaps.Contains(tile)) continue;
+                int nextTile = tile + dir;
+                bool last = k == Mathf.Abs(length) - 1 || gaps.Contains(nextTile);
+                float mx = alongX ? sx + dir * 0.5f : sx, my = alongX ? sy : sy + dir * 0.5f;
+                float h = terrain != null ? terrain.Sample(mx, my) : 0f;
+                var go = (GameObject)PrefabUtility.InstantiatePrefab(last ? end : prefab, group);
+                go.transform.position = new Vector3(sx, h, sy);
+                go.transform.rotation = Quaternion.Euler(0f, 180f - blenderRot, 0f);
+                go.isStatic = true;
+            }
+            Transform collision = WorldKit.Group(group, "Collision");
+            WorldKit.Wall(collision, "Fence", a[0], a[1], b[0], b[1], null, 1f, 0.08f, piece.Gaps?.ToArray() ?? new int[0]);
+            foreach (Transform w in collision)
+            {
+                Object.DestroyImmediate(w.GetComponent<MeshRenderer>());
+                Object.DestroyImmediate(w.GetComponent<MeshFilter>());
+                w.gameObject.layer = 2; // clicks pass through
+            }
         }
 
         /// <summary>

@@ -28,6 +28,8 @@ namespace Rth.Shared.World.Data
         public int? ToPlane;
         public int? ToX;
         public int? ToY;
+        /// <summary>For a door: the edge of its tile it closes ("N", "E", "S" or "W").</summary>
+        public string? Edge;
     }
 
     /// <summary>A creature's home in a region's map files (&lt;id&gt;.spawns.json).</summary>

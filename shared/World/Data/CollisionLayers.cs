@@ -77,6 +77,14 @@ namespace Rth.Shared.World.Data
             _walls[i] |= flags & ~CollisionFlags.Blocked;
         }
 
+        public override void RemoveFlags(int plane, int x, int y, CollisionFlags flags)
+        {
+            if (!Contains(plane, x, y)) return;
+            int i = Index(plane, x, y);
+            if ((flags & CollisionFlags.Blocked) != 0) _blocked[i] = false;
+            _walls[i] &= ~(flags & ~CollisionFlags.Blocked);
+        }
+
         /// <summary>Adds another region's layers (the same rectangle) on top of these.</summary>
         public void Merge(CollisionLayers other)
         {

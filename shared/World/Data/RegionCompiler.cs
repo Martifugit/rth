@@ -90,7 +90,7 @@ namespace Rth.Shared.World.Data
                     for (int x = region.OriginX; x < region.OriginX + w; x++)
                         if (result.Terrain.IsSteep(x, y, region.Terrain!.CliffStep)) layers.Block(region.Plane, x, y);
                 foreach (Piece piece in region.Pieces)
-                    if ((piece.Plane ?? region.Plane) == region.Plane && FlatKinds.Contains(piece.Kind))
+                    if ((piece.Plane ?? region.Plane) == region.Plane && FlatKinds.Contains(piece.Kind) && !(piece.Kind == PieceKind.Fence && piece.Model != null))
                         result.Warnings.Add($"Piece '{piece.Id}' ({piece.Kind}) is drawn flat at height 0 over the region's terrain: on terrain, draw ground with a tiles piece.");
             }
 
@@ -141,7 +141,8 @@ namespace Rth.Shared.World.Data
                     break;
                 case PieceKind.Wall:
                 case PieceKind.Fence:
-                    CheckMaterial(region, Need(piece.Material, "material"), piece.Id, result);
+                    // A fence drawn from a model needs no material.
+                    if (piece.Kind == PieceKind.Wall || string.IsNullOrWhiteSpace(piece.Model)) CheckMaterial(region, Need(piece.Material, "material"), piece.Id, result);
                     int[] from = NeedPair(piece.From, "from"), to = NeedPair(piece.To, "to");
                     if (from[0] != to[0] && from[1] != to[1]) throw new PieceException("must run along one grid line (from and to share x or y).");
                     AddWallLine(layers, plane, from[0], from[1], to[0], to[1], piece.Gaps);
@@ -178,6 +179,8 @@ namespace Rth.Shared.World.Data
                     AddWallLine(layers, plane, b[2], b[1], b[2], b[3], Gaps("E"));
                     foreach ((int x, int y) in Buildings.BlockedOutside(spec, kit, b))
                         if (InRegion(region, x, y)) layers.Block(plane, x, y);
+                    // The doorways stay open in the map; their doors close them on the server (DoorSystem).
+                    result.Objects.AddRange(Buildings.DoorObjects(spec, kit, b, plane));
                     break;
                 }
                 case PieceKind.Tree:
@@ -427,6 +430,7 @@ namespace Rth.Shared.World.Data
                     sb.Append(", \"toPlane\": ").Append(o.ToPlane.Value)
                       .Append(", \"toX\": ").Append(o.ToX ?? 0)
                       .Append(", \"toY\": ").Append(o.ToY ?? 0);
+                if (!string.IsNullOrEmpty(o.Edge)) sb.Append(", \"edge\": \"").Append(o.Edge).Append('"');
                 sb.Append(" }");
             }
             return sb.Append("\n]\n").ToString();

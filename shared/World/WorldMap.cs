@@ -38,6 +38,12 @@ namespace Rth.Shared.World
             if (_zones.TryGetValue(ZoneKey(plane, x, y), out CollisionFlags[]? zone)) zone[TileIndex(x, y)] |= flags;
         }
 
+        public override void RemoveFlags(int plane, int x, int y, CollisionFlags flags)
+        {
+            if (plane < 0 || plane >= MaxPlanes) return;
+            if (_zones.TryGetValue(ZoneKey(plane, x, y), out CollisionFlags[]? zone)) zone[TileIndex(x, y)] &= ~flags;
+        }
+
         /// <summary>The region covering a tile, if any.</summary>
         public WorldRegion? RegionAt(int x, int y)
         {

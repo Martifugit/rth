@@ -16,6 +16,8 @@ namespace Rth.Shared.World
         public List<ActionDef> Actions = new List<ActionDef>();
         /// <summary>Makes it a gathering node (a rock, a tree, a monument's fount), worked with the "gather" action.</summary>
         public NodeDef? Node;
+        /// <summary>Makes it a door: it closes an edge of its tile, and "open" and "close" swing it.</summary>
+        public DoorDef? Door;
         /// <summary>
         /// Client only: colours to swap on every placement's model, from a material name to a
         /// palette colour or #RRGGBB ({"Stone": "CopperOre"}), so one rock serves every ore.
@@ -109,6 +111,29 @@ namespace Rth.Shared.World
         public string? Message;
     }
 
+    /// <summary>
+    /// A door (objects.json "door"): it stands on a tile and closes one of that tile's edges
+    /// (<see cref="PlacedObject.Edge"/>). The map is exported with the edge open; the server closes
+    /// it at startup and opens and closes it with the "open" and "close" actions, for everyone.
+    /// </summary>
+    public sealed class DoorDef
+    {
+        /// <summary>The actions that swing a door, and the server state listing the doors standing open.</summary>
+        public const string OpenAction = "open-door", CloseAction = "close-door", StateKey = "doors";
+
+        /// <summary>Ticks an opened door stays open before it swings shut by itself; null or 0: until someone closes it.</summary>
+        public int? CloseAfter;
+    }
+
+    /// <summary>A door standing open, as clients are told ("doors" in the player's server state).</summary>
+    public sealed class DoorState
+    {
+        public int Plane;
+        public int X;
+        public int Y;
+        public string Edge = "";
+    }
+
     /// <summary>A node that isn't in its ordinary state, as clients are told ("nodes" in the player's server state).</summary>
     public sealed class NodeState
     {
@@ -156,6 +181,8 @@ namespace Rth.Shared.World
         public int? ToPlane;
         public int? ToX;
         public int? ToY;
+        /// <summary>For a door: the edge of its tile it closes ("N", "E", "S" or "W"). Null for everything else.</summary>
+        public string? Edge;
 
         public TileCoord Tile => new TileCoord(X, Y);
 

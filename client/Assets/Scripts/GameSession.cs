@@ -192,6 +192,9 @@ namespace Rth.Client
             NodeViews nodes = GetComponent<NodeViews>();
             if (nodes == null) nodes = gameObject.AddComponent<NodeViews>();
             nodes.session = this;
+            DoorViews doors = GetComponent<DoorViews>();
+            if (doors == null) doors = gameObject.AddComponent<DoorViews>();
+            doors.session = this;
             Ui.UiRoot ui = GetComponent<Ui.UiRoot>();
             if (ui == null) ui = gameObject.AddComponent<Ui.UiRoot>();
             ui.session = this;
@@ -631,8 +634,11 @@ namespace Rth.Client
             {
                 string type = objectDef.Id;
                 TileCoord tile = new TileCoord(mapObject.Tile.x, mapObject.Tile.y);
+                // A door offers Open or Close, whichever it isn't.
+                bool doorOpen = objectDef.Door != null && DoorViews.IsOpen(this, floor, tile.X, tile.Y);
                 foreach (ActionDef action in objectDef.Actions)
                 {
+                    if (objectDef.Door != null && (action.Id == DoorDef.OpenAction ? doorOpen : action.Id == DoorDef.CloseAction && !doorOpen)) continue;
                     string actionId = action.Id;
                     options.Add((action.Label + " " + objectDef.Name, () => ObjectAction(type, tile, actionId, floor)));
                 }

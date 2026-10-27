@@ -1,5 +1,12 @@
 [
   {
+    "id": "door",
+    "name": "Door",
+    "examine": "Planks on iron straps. It swings shut on its own.",
+    "door": { "closeAfter": 200 },
+    "actions": [ { "id": "open-door", "label": "Open" }, { "id": "close-door", "label": "Close" } ]
+  },
+  {
     "id": "skinning_rack",
     "name": "Skinning rack",
     "examine": "Pegs, hooks and a lot of old stains. For fen game.",

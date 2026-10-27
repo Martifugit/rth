@@ -70,6 +70,8 @@ namespace Rth.Shared.World.Data
         public Dictionary<string, List<string>> Attachments = new Dictionary<string, List<string>>();
         /// <summary>Attachments that block the tile outside their wall.</summary>
         public List<string> Blocking = new List<string>();
+        /// <summary>The object type (objects.json) of a doorway's leaf: a door that opens and closes.</summary>
+        public string DoorObject = "door";
         /// <summary>Material swaps for every storey above the ground (an upper storey sits on a timber sill).</summary>
         public Dictionary<string, string> UpperColors = new Dictionary<string, string>();
     }
@@ -238,6 +240,33 @@ namespace Rth.Shared.World.Data
                 List<string> face = Face(spec, kit, rect, side, 0);
                 for (int i = 0; i < face.Count; i++)
                     if (kit.Openings.ContainsKey(Split(face[i]).piece)) yield return (side, i);
+            }
+        }
+
+        /// <summary>The tile just inside tile <paramref name="i"/> of a side.</summary>
+        public static (int x, int y) Inside(int[] rect, string side, int i)
+        {
+            switch (side)
+            {
+                case "S": return (rect[0] + i, rect[1]);
+                case "N": return (rect[0] + i, rect[3] - 1);
+                case "W": return (rect[0], rect[1] + i);
+                default: return (rect[2] - 1, rect[1] + i);
+            }
+        }
+
+        /// <summary>The doors hung in the ground floor's doorways (those with a leaf): their tile inside and the edge they close.</summary>
+        public static IEnumerable<ObjectEntry> DoorObjects(BuildingSpec spec, BuildingKit kit, int[] rect, int plane)
+        {
+            foreach (string side in Sides)
+            {
+                List<string> face = Face(spec, kit, rect, side, 0);
+                for (int i = 0; i < face.Count; i++)
+                    if (kit.Openings.TryGetValue(Split(face[i]).piece, out string leaf) && !string.IsNullOrEmpty(leaf))
+                    {
+                        (int x, int y) = Inside(rect, side, i);
+                        yield return new ObjectEntry { Type = kit.DoorObject, Plane = plane, X = x, Y = y, Edge = side };
+                    }
             }
         }
 

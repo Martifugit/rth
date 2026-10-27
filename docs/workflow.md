@@ -38,9 +38,9 @@ rectangles are `[x0, y0, x1, y1]` with the far edges excluded. The kinds
 | `patch` | Ground in a material over `rect` (a square, a field; with `plane`, an upper floor) | gives ground |
 | `road` | Ground along `line` (points), `width` (half-width) | gives ground |
 | `water` | Water over `rect` or along `line` | blocks |
-| `wall`, `fence` | Along a grid line `from`-`to`, open at `gaps` | blocks edges |
+| `wall`, `fence` | Along a grid line `from`-`to`, open at `gaps`. A fence with a `model` (a kit's span, one tile along its +X: `Hurdle`, `BuckFence`, `WallSpan`) is laid span by span from `from` towards `to` on the terrain, with the model's `End` version closing each run | blocks edges |
 | `house` | Floor, four walls, a `door` (N/E/S/W) at `doorAt`, a roof that hides inside (the old boxes) | ground, walls |
-| `building` | A building from a kit's models over `rect` (its walls on the rect's edges): `building` names the `kit` (`world/kits`), `storeys`, the `ridge`, the `faces` (a piece a tile, `"S"` from the west, `"W"` from the south, `"S1"` for the storey above; `"WallDoorway+Lantern"`), `colors` per storey, `roofColors`, `jetty`, `slit`, `bellcote`, `chimney` (`"W1"`), `floor`. Stands level on the terrain under it, with a foundation | ground, walls open at its doorways; a chimney or a woodpile blocks the tile outside |
+| `building` | A building from a kit's models over `rect` (its walls on the rect's edges): `building` names the `kit` (`world/kits`), `storeys`, the `ridge`, the `faces` (a piece a tile, `"S"` from the west, `"W"` from the south, `"S1"` for the storey above; `"WallDoorway+Lantern"`), `colors` per storey, `roofColors`, `jetty`, `slit`, `bellcote`, `chimney` (`"W1"`), `floor`. Stands level on the terrain under it, with a foundation. A doorway with a leaf gets a door (the kit's door object on the tile inside) | ground, walls open at its doorways (their doors close them on the server); a chimney or a woodpile blocks the tile outside |
 | `blocker` | An invisible barrier over `rect` | blocks |
 | `tree`, `rock` | On tile `at`; look from `parts`, or grown from the seed | blocks its tile |
 | `prop` | Anything on `at`: `parts` (boxes, cylinders) or a `model` prefab | `footprint` (objects: own tile) |

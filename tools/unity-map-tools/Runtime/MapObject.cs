@@ -15,6 +15,9 @@ namespace Rth.MapTools
         [Tooltip("For a stair, ladder or trapdoor (a \"climb\" object): where it leads. An empty object standing on the landing tile, under the MapLevel of the floor it lands on (or none for the ground).")]
         public Transform climbTo;
 
+        [Tooltip("For a door: the edge of its tile it closes (N, E, S or W). The map keeps the edge open; the server closes it.")]
+        public string edge = "";
+
         public Vector2Int Tile
         {
             get

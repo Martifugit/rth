@@ -20,6 +20,9 @@ namespace Rth.Shared.World
         /// <summary>Adds flags to a tile. Does nothing outside the map.</summary>
         public abstract void AddFlags(int plane, int x, int y, CollisionFlags flags);
 
+        /// <summary>Clears flags from a tile (a door opening). Does nothing outside the map.</summary>
+        public abstract void RemoveFlags(int plane, int x, int y, CollisionFlags flags);
+
         public void Block(int plane, int x, int y) => AddFlags(plane, x, y, CollisionFlags.Blocked);
 
         public bool IsBlocked(int plane, int x, int y) => (GetFlags(plane, x, y) & CollisionFlags.Blocked) != 0;
@@ -45,6 +48,39 @@ namespace Rth.Shared.World
                     AddFlags(plane, x, y, CollisionFlags.WallWest);
                     AddFlags(plane, x - 1, y, CollisionFlags.WallEast);
                     break;
+            }
+        }
+
+        /// <summary>Takes the wall off one edge of a tile and the matching flag off the neighbour across it.</summary>
+        public void RemoveWall(int plane, int x, int y, WallSide side)
+        {
+            (int dx, int dy, CollisionFlags here, CollisionFlags there) = Edge(side);
+            RemoveFlags(plane, x, y, here);
+            RemoveFlags(plane, x + dx, y + dy, there);
+        }
+
+        /// <summary>The neighbour across an edge, the edge's flag on this tile and on the neighbour.</summary>
+        public static (int dx, int dy, CollisionFlags here, CollisionFlags there) Edge(WallSide side)
+        {
+            switch (side)
+            {
+                case WallSide.North: return (0, 1, CollisionFlags.WallNorth, CollisionFlags.WallSouth);
+                case WallSide.East: return (1, 0, CollisionFlags.WallEast, CollisionFlags.WallWest);
+                case WallSide.South: return (0, -1, CollisionFlags.WallSouth, CollisionFlags.WallNorth);
+                default: return (-1, 0, CollisionFlags.WallWest, CollisionFlags.WallEast);
+            }
+        }
+
+        /// <summary>"N", "E", "S" or "W" as a side, or null.</summary>
+        public static WallSide? SideOf(string? letter)
+        {
+            switch (letter)
+            {
+                case "N": return WallSide.North;
+                case "E": return WallSide.East;
+                case "S": return WallSide.South;
+                case "W": return WallSide.West;
+                default: return null;
             }
         }
 

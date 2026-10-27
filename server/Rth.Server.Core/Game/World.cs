@@ -77,6 +77,7 @@ namespace Rth.Server.Game
             new LootSystem(),
             new ObjectSystem(placements.Objects),
             new ClimbSystem(),
+            new DoorSystem(),
             new ReligionSystem(),
             new RecipeSystem(),
             new GatheringSystem(),

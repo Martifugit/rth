@@ -56,6 +56,11 @@ namespace Rth.Shared.World
             if (Contains(plane, x, y)) _flags[Index(plane, x, y)] |= flags;
         }
 
+        public override void RemoveFlags(int plane, int x, int y, CollisionFlags flags)
+        {
+            if (Contains(plane, x, y)) _flags[Index(plane, x, y)] &= ~flags;
+        }
+
         public void Write(Stream stream)
         {
             using (var w = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
