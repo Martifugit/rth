@@ -65,14 +65,13 @@ badlands, not here), bracken becomes heath.
 | Tolling's river | river | from the north at about (36, 96), through the town, into Wennow | `land_0_1` |
 | The Wenn | river | out of Wennow at about (146, -12), east | Knellmere, via `land_2_m1`/`land_2_0` |
 
-The Sere road is drawn as cobble in the south today. Out of town it should be a road of the
-empire but not a highway: gravel, faded into the grass, the paving
-ending where Tolling ends.
+The Sere road is a road of the empire but not a highway: gravel, faded into the grass, any paving
+ending where Tolling ends (finding 4).
 
 **Wide and narrow:** wide almost everywhere, as a start should be. The narrows are the bridge
 in the town, the road between the mere and the heath on Palmerway, and the waygate.
 
-**Edges:** see question 1. Inside the area the only real edge is water (Wennow, the river, the
+**Edges:** the waygate waits for stage 2 (finding 2). Inside the area the only real edge is water (Wennow, the river, the
 Wenn); everything else is open to its neighbours.
 
 **Places:**
@@ -117,9 +116,9 @@ before it bites: the dry ground is where it starts.
 | Wide and narrow | Wide; narrows at the bridge, the shore road and the waygate. |
 | Ground with character | Basin, mere, heath, dry rise: each walks differently. |
 | Landmarks shape the skyline | Wennow, the mill, the monument; the spine to the west. |
-| Edges are scenery | **Fails today** (question 1). |
+| Edges are scenery | **Fails today**: the waygate can be walked round (finding 2, stage 2). |
 | Few ground colours | Five, down from eleven in the south. |
-| Paint the RuneScape way | The south is painted; Tolling and Palmerway are not yet (question 2). |
+| Paint the RuneScape way | All four regions are generated and painted. |
 | History in the ground | Toll-house, graves, field walls in the gravel. |
 | Something to find | s-wennow-south, Sour Hollow. |
 | Danger reads before it bites | Rats in town, harder things on the dry edge. |

@@ -113,15 +113,16 @@ road was laid); cairns on the downs.
      scraps of field (furrow under 45 tiles, ley and wheat under 25) to the land round them. Left:
      heath, bracken, foothills, grass and meadow, the rivers, the dirt tracks, and the fields of the
      high valley (south-west) and the observatory (north-west). `land_m1_0` had only five already.
-3. **Selenfall's approach doesn't meet the march** (not changed; that area's work): `land_m1_2` is an
-   old-style flat blockout (its own scrub, settlement and road kinds) whose river reaches the border
-   at x -33, about 40 tiles east of where the layout (and this area) has it at x -73, and whose
-   road arrives at x -76 where the march's west road has it at x -61. It wants scrapping and
-   regenerating like Tolling and Palmerway were.
+3. **Selenfall's approach doesn't meet the march** (not changed; Selenfall's work, L4): `land_m1_2`'s
+   river reaches the border at x -33, about 40 tiles east of where the layout (and this area) has it
+   at x -73, and its road arrives at x -76 where the march's west road has it at x -61. Decided
+   (2026-10-27): keep the approach (part of L4's approved stage 1) and move its river and road at the
+   southern border to meet the march's, rather than scrapping and regenerating it.
 
 ## Questions for the owner
 
 1. Is the march the dry high ground between two green river valleys, as above?
-2. Keep the cave (s-tolling-cave) as the first dungeon here, this close to the town?
-3. Scrap Selenfall's approach (`land_m1_2`) and regenerate it, so its river and road meet the
-   march's (finding 3)?
+
+Answered (2026-10-27): the cave (s-tolling-cave) stays as the first dungeon, close to the town, so
+players see early that dungeons exist; Selenfall's approach is fixed at the seam, not scrapped
+(finding 3).
