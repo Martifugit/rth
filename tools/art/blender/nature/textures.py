@@ -7,6 +7,7 @@ below it, so a canopy skirt wearing it ends in hanging leaves.
 - Foliage.png: round broad leaves in olive greens (the alder; recolour for autumn).
 - Ashleaf.png: sprays of narrow paired leaflets, light yellow-green (the ash).
 - Elmleaf.png: broad rough ovals hanging slantwise, a deeper blue-green (the elm).
+- Needles.png: tufts of long dark needles, a cold blue-green (the pine).
 - Thorn.png: small crowded dark leaves flecked with red haws (the hawthorn).
 - Gorse.png: short dark spines in a tangle, a few small yellow flowers.
 - BushDark.png / BushDarkPicked.png: a low bush's dark leaves with blue-black berries, and picked.
@@ -40,6 +41,7 @@ GORSE_GREEN = ["#1b2313", "#252f19", "#303c1f", "#3c4926", "#49572e", "#576636",
 BUSH_DARK = ["#1a2318", "#232f20", "#2d3b28", "#384830", "#445539", "#516342", "#5f714c"]
 BUSH_PALE = ["#283117", "#36411e", "#465327", "#576530", "#69773a", "#7c8945", "#909b52"]
 ELM_GREEN = ["#1f2a19", "#2a3821", "#36462a", "#435533", "#51643c", "#5f7346", "#6e8250"]
+NEEDLE_GREEN = ["#151f1c", "#1c2a25", "#24362f", "#2d4339", "#375143", "#42604e", "#4e6f5a"]
 WITHY = ["#2a241c", "#3f3529", "#544736", "#695a45", "#7e6d55", "#938266"]
 
 
@@ -261,6 +263,28 @@ def elmleaf(seed):
     return shade, [rgb(c) for c in ELM_GREEN]
 
 
+def needles(seed):
+    """The pine's needles: tufts of long dark strokes fanning out from short twigs, a cold
+    blue-green, darkest underneath; a fine spiky hem."""
+    rng = random.Random(seed)
+    shade = [[0] * SIZE for _ in range(SIZE)]
+    tufts = []
+    for _ in range(430):
+        tufts.append((rng.uniform(-6, SIZE + 6), rng.uniform(-6, SIZE + 6)))
+    tufts.sort(key=lambda t: t[1])
+    for cx, cy in tufts:
+        base = 3 + int(2.6 * (1 - cy / SIZE) + rng.uniform(-0.8, 1.2))
+        for _ in range(9):
+            a = rng.uniform(-2.6, -0.5)                  # fanning out and down from the twig
+            n = rng.randint(5, 8)
+            for i in range(n):
+                px, py = int(cx + math.cos(a) * i), int(cy - math.sin(a) * i)
+                if 0 <= py < SIZE:
+                    shade[py][px % SIZE] = max(0, min(6, base - (1 if i > n - 3 else 0)))
+    hem(shade, rng, 8, 20, width=(3, 7))
+    return shade, [rgb(c) for c in NEEDLE_GREEN]
+
+
 def save(name, shade, palette, preview):
     pixels = [(0, 0, 0, 0) if s < 0 else palette[s] + (255,) for row in shade for s in row]
     os.makedirs(OUT, exist_ok=True)
@@ -284,6 +308,7 @@ def main(argv):
     save("Ashleaf", *ashleaf(seed), preview)
     save("Thorn", *thorn(seed), preview)
     save("Elmleaf", *elmleaf(seed), preview)
+    save("Needles", *needles(seed), preview)
     save("Gorse", *gorse(seed), preview)
     for name, ramp, berry, n in (("BushDark", BUSH_DARK, ("#3d3a6e", "#7a76b4"), 46),
                                  ("BushPale", BUSH_PALE, ("#8e2b26", "#c4544a"), 40)):

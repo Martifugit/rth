@@ -835,9 +835,234 @@ def wall_stile(seed=2, at=(0, 0, 0)):
     return ob
 
 
+def lily_pads(seed=1, at=(0, 0, 0)):
+    """Lily pads on still water: round flat leaves, each with its notch, lying at the surface (the
+    origin), two small pale flowers among them."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    pads = []
+    for _ in range(7):
+        a, d = rnd.uniform(0, 2 * math.pi), rnd.uniform(0, 0.6)
+        pads.append((Vector((d * math.cos(a), d * math.sin(a), 0.01)), rnd.uniform(0.12, 0.22)))
+    for c, r in pads:
+        notch = rnd.randrange(8)
+        rot = rnd.uniform(0, 1)
+        centre = bm.verts.new(c)
+        ring = [bm.verts.new(c + Vector((r * math.cos(rot + 2 * math.pi * k / 8), r * math.sin(rot + 2 * math.pi * k / 8), 0)))
+                for k in range(8)]
+        for k in range(8):
+            if k != notch:
+                bm.faces.new((centre, ring[k], ring[(k + 1) % 8])).material_index = 0
+    for c, r in pads[:2]:
+        A.loft(bm, [(c + Vector((0, 0, 0.0)), 0, 0), (c + Vector((0, 0, 0.03)), 0.05, 0.05),
+                    (c + Vector((0, 0, 0.06)), 0.035, 0.035), (c + Vector((0, 0, 0.07)), 0, 0)],
+               sides=6, ref=(1, 0, 0), mats=1)
+    return make("LilyPads", bm, ["Leaf4", "SaintBone"], smooth_angle=60, at=at)
+
+
+def mooring_post(seed=1, at=(0, 0, 0)):
+    """A mooring post standing in the shallows (origin at the water's surface): a leaning round
+    post driven into the bed, a rope wound round it and trailing off into the water."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    rod(bm, wobble(rnd, (0, 0, -0.8), (0.06, 0.03, 0.95), 3, 0.03), 0.09, mat=0, sides=6, taper=0.85)
+    rod(bm, [(0.04, 0.02, 0.5), (0.045, 0.022, 0.62)], 0.105, mat=1, sides=6)
+    rod(bm, [(0.1, 0.03, 0.55), (0.45, 0.1, 0.3), (0.85, 0.05, -0.02)], 0.016, mat=1, sides=3)
+    return make("MooringPost", bm, ["Driftwood", "Wheat"], smooth_angle=50, at=at)
+
+
+def jetty_span(seed=1, at=(0, 0, 0), rot=0.0):
+    """One tile of jetty along X, centred on its tile, its origin at the water's surface: planks
+    laid across on two stringers, each end carried by a pair of piles driven into the bed."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    deck = 0.32
+    for k in range(5):
+        x0 = -0.5 + 0.2 * k + 0.01
+        dz = rnd.uniform(-0.015, 0.015)
+        A.box(bm, (x0, -0.55 + rnd.uniform(-0.03, 0.03), deck - 0.05 + dz),
+              (x0 + 0.18, 0.55 + rnd.uniform(-0.03, 0.03), deck + dz), 0)
+    for y in (-0.42, 0.42):
+        A.box(bm, (-0.5, y - 0.05, deck - 0.14), (0.5, y + 0.05, deck - 0.05), 1)
+        rod(bm, [(-0.45, y, -0.9), (-0.45, y, deck - 0.02)], 0.07, mat=1, sides=6)
+    return make("JettySpan", bm, ["Planks", "Driftwood"], smooth_angle=30, at=at, rot=rot)
+
+
+def punt(seed=1, at=(0, 0, 0), rot=0.0):
+    """A flat-bottomed punt for the mere, its origin at the water's surface: square ends rising a
+    little, plank walls with an inside, a seat across, and its pole lying along it."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    sections = [(-1.15, 0.30, 0.10), (-0.85, 0.42, -0.06), (0.85, 0.42, -0.06), (1.15, 0.30, 0.10)]
+    wall, t = 0.24, 0.04
+    rings = []
+    for x, w, z in sections:
+        outer = [Vector((x, -w, z + wall)), Vector((x, -w, z)), Vector((x, w, z)), Vector((x, w, z + wall))]
+        inner = [Vector((x, -w + t, z + wall)), Vector((x, -w + t, z + t)), Vector((x, w - t, z + t)), Vector((x, w - t, z + wall))]
+        rings.append(([bm.verts.new(p) for p in outer], [bm.verts.new(p) for p in inner]))
+    for (o0, i0), (o1, i1) in zip(rings, rings[1:]):
+        for k in range(3):
+            bm.faces.new((o0[k], o1[k], o1[k + 1], o0[k + 1]))
+            bm.faces.new((i0[k], i0[k + 1], i1[k + 1], i1[k]))
+        bm.faces.new((o0[0], i0[0], i1[0], o1[0]))           # the gunwales
+        bm.faces.new((o0[3], o1[3], i1[3], i0[3]))
+    for o, i in (rings[0], rings[-1]):                       # the square ends
+        for k in range(3):
+            bm.faces.new((o[k], o[k + 1], i[k + 1], i[k]))
+    A.box(bm, (0.15, -0.38, 0.08), (0.42, 0.38, 0.13), 0)   # the seat
+    rod(bm, [(-1.0, 0.12, 0.2), (0.4, 0.05, 0.24), (1.5, -0.08, 0.3)], 0.022, sides=4)
+    return make("Punt", bm, ["Driftwood"], smooth_angle=30, at=at, rot=rot)
+
+
+def pine(seed=7, at=(0, 0, 0)):
+    """A pine for the hills and the spine: a tall trunk, bare for most of its height and red-barked
+    above, a couple of dead branch stubs, and flat dark clumps of needles on short limbs at the top,
+    held out downwind."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    uvs = {}
+    top = WIND * 0.3 + Vector((0, 0, 4.3))
+    pts = wobble(rnd, (0, 0, -0.05), top, 5, 0.06)
+    secs = [(p, 0.17 - 0.1 * i / (len(pts) - 1), 0.17 - 0.1 * i / (len(pts) - 1)) for i, p in enumerate(pts)]
+    A.loft(bm, secs, sides=6, ref=(1, 0, 0), mats=[0, 0, 1, 1], roll=math.pi / 6)
+    roots(bm, 0.17, 0.55, 3, rnd, rot=0.4)
+    for z, a in ((1.7, 2.5), (2.3, 0.9)):
+        base = pts[0].lerp(top, z / 4.3)
+        A.spike(bm, base, 0.04, base + Vector((0.4 * math.cos(a), 0.4 * math.sin(a), 0.08)), sides=3, mat=0)
+    limbs = ((3.3, 0.3, 0.9), (3.6, 2.6, 0.75), (3.9, 4.4, 0.7))
+    for z, a, reach in limbs:
+        base = pts[0].lerp(top, z / 4.3)
+        out = (Vector((math.cos(a), math.sin(a), 0)) + WIND * 0.6).normalized()
+        tip = base + out * reach + Vector((0, 0, 0.12))
+        rod(bm, [base, tip], 0.05, mat=1, sides=4, taper=0.6)
+        clump(bm, tip + Vector((0, 0, 0.1)), (0.8, 0.65, 0.38), rnd, 2, 3, uvs)
+    clump(bm, top + Vector((0, 0, 0.15)), (0.65, 0.6, 0.42), rnd, 2, 3, uvs)
+    return leafy("Pine", bm, uvs, ["Bark", "Brick", leaf_mat("Needles"), "Leaf1"], at)
+
+
+def pine_stump(seed=7, at=(0, 0, 0)):
+    """The pine after Woodcutting: a tall narrow stump, a slanted cut, three roots."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    cut_stub(bm, (0, 0, -0.05), 0.17, 0.48, 0.08, rnd, sides=6)
+    roots(bm, 0.17, 0.55, 3, rnd, rot=0.4, rise=1.3)
+    return make("PineStump", bm, ["Bark", "Ash"], smooth_angle=50, at=at)
+
+
+def monolith(bm, length, half, twist, rnd, mat=0):
+    """A four-sided stone column, each course turned a little further than the one below, so it
+    twists as it rises: a shape no mason in R'th makes. Returns nothing; flat top."""
+    rings = []
+    n = 6
+    for i in range(n + 1):
+        z = -0.1 + length * i / n
+        taper = 1 - 0.25 * i / n
+        a = twist * i / n
+        ring = []
+        for sx, sy in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
+            x, y = sx * half[0] * taper, sy * half[1] * taper
+            ring.append(bm.verts.new((x * math.cos(a) - y * math.sin(a), x * math.sin(a) + y * math.cos(a), z)))
+        rings.append(ring)
+    for r0, r1 in zip(rings, rings[1:]):
+        for k in range(4):
+            bm.faces.new((r0[k], r0[(k + 1) % 4], r1[(k + 1) % 4], r1[k])).material_index = mat
+    bm.faces.new(rings[-1]).material_index = mat
+    bm.faces.new(list(reversed(rings[0]))).material_index = mat
+
+
+def standing_stone(seed=1, at=(0, 0, 0)):
+    """A standing stone on the heath in a style nobody made: a tall pale column twisted through a
+    quarter turn as it rises, too regular for weather, leaning a little."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    monolith(bm, 2.5, (0.34, 0.22), math.radians(80), rnd)
+    from mathutils import Matrix as M
+    bmesh.ops.transform(bm, matrix=M.Rotation(math.radians(5), 4, Vector((1, 0.3, 0)).normalized()), verts=bm.verts)
+    return make("StandingStone", bm, ["Gravestone"], smooth_angle=20, at=at)
+
+
+def standing_stone_fallen(seed=2, at=(0, 0, 0)):
+    """One of the twisted stones fallen and half sunk into the turf."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    monolith(bm, 2.2, (0.32, 0.2), math.radians(80), rnd)
+    from mathutils import Matrix as M
+    bmesh.ops.transform(bm, matrix=M.Rotation(math.radians(84), 4, Vector((0, 1, 0))), verts=bm.verts)
+    bmesh.ops.translate(bm, vec=Vector((-1.0, 0, 0.04)), verts=bm.verts)
+    return make("StandingStoneFallen", bm, ["Gravestone"], smooth_angle=20, at=at)
+
+
+def grave(seed=1, at=(0, 0, 0), old=False):
+    """A grave: a plain headstone with a rounded top and a low turf mound before it. old: the stone
+    leaning and sunk, the mound grown down almost flat."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    w, h, t = 0.24, 0.62, 0.05
+    prof = [(-w, -0.1), (w, -0.1), (w, h - 0.1)] + \
+           [(w * math.cos(a), h - 0.1 + 0.12 * math.sin(a)) for a in (math.radians(40), math.radians(90), math.radians(140))] + \
+           [(-w, h - 0.1)]
+    A.hull(bm, [(x, y, z) for x, z in prof for y in (-t, t)], mat=0)
+    if old:
+        from mathutils import Matrix as M
+        bmesh.ops.transform(bm, matrix=M.Rotation(math.radians(rnd.choice((-1, 1)) * 11), 4, Vector((0, 1, 0.2)).normalized()),
+                            verts=bm.verts)
+        bmesh.ops.translate(bm, vec=Vector((0, 0, -0.14)), verts=bm.verts)
+    mound_h = 0.06 if old else 0.16
+    blob(bm, (0, -0.55, 0.0), (0.28, 0.48, mound_h), 1, rnd, jitter=(0.92, 1.06), mat=1, squash_below=-0.02)
+    return make("GraveOld" if old else "Grave", bm, ["Gravestone", "GraveTurf"], smooth_angle=40, at=at)
+
+
+def hay_stook(seed=1, at=(0, 0, 0)):
+    """A stook of sheaves drying in the field: six sheaves leaning together, each tied at the waist."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    for k in range(6):
+        a = 2 * math.pi * k / 6 + rnd.uniform(-0.15, 0.15)
+        out = Vector((math.cos(a), math.sin(a), 0))
+        foot = out * 0.3 + Vector((0, 0, -0.02))
+        waist = out * 0.17 + Vector((0, 0, 0.45))
+        head = out * 0.08 + Vector((0, 0, 0.78 + rnd.uniform(-0.04, 0.04)))
+        A.loft(bm, [(foot, 0.13, 0.13), (waist - Vector((0, 0, 0.04)), 0.075, 0.075),
+                    (waist + Vector((0, 0, 0.04)), 0.075, 0.075), (head, 0.12, 0.12),
+                    (head + Vector((0, 0, 0.14)), 0, 0)], sides=6, ref=(1, 0, 0), mats=[0, 1, 0, 0])
+    return make("HayStook", bm, ["Wheat", "Bark"], smooth_angle=50, at=at)
+
+
+def farm_cart(seed=1, at=(0, 0, 0), rot=0.0):
+    """A two-wheeled farm cart at rest, its shafts down on the ground: a plank bed with low sides,
+    two spoked wheels on an axle."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    A.box(bm, (-0.75, -0.45, 0.48), (0.75, 0.45, 0.56), 0)
+    for y in (-0.45, 0.41):
+        A.box(bm, (-0.75, y, 0.56), (0.75, y + 0.04, 0.78), 0)
+    A.box(bm, (-0.75, -0.41, 0.56), (-0.71, 0.41, 0.76), 0)
+    # Wheels: ten-sided rims as short tubes along Y, a hub, four spokes.
+    for s in (-1, 1):
+        y = s * 0.56
+        ring_a = [bm.verts.new((0.42 * math.cos(2 * math.pi * k / 10), y - 0.03, 0.42 + 0.42 * math.sin(2 * math.pi * k / 10))) for k in range(10)]
+        ring_b = [bm.verts.new((v.co.x * 0.84, y - 0.03, 0.42 + (v.co.z - 0.42) * 0.84)) for v in ring_a]
+        ring_c = [bm.verts.new((v.co.x, y + 0.03, v.co.z)) for v in ring_a]
+        ring_d = [bm.verts.new((v.co.x, y + 0.03, v.co.z)) for v in ring_b]
+        for k in range(10):
+            n = (k + 1) % 10
+            bm.faces.new((ring_a[k], ring_a[n], ring_c[n], ring_c[k])).material_index = 1
+            bm.faces.new((ring_b[n], ring_b[k], ring_d[k], ring_d[n])).material_index = 1
+            bm.faces.new((ring_a[n], ring_a[k], ring_b[k], ring_b[n])).material_index = 1
+            bm.faces.new((ring_c[k], ring_c[n], ring_d[n], ring_d[k])).material_index = 1
+        for k in range(4):
+            a = math.pi / 4 + math.pi / 2 * k
+            rod(bm, [(0, y, 0.42), (0.37 * math.cos(a), y, 0.42 + 0.37 * math.sin(a))], 0.02, mat=1, sides=4)
+        rod(bm, [(0, y - 0.06, 0.42), (0, y + 0.06, 0.42)], 0.06, mat=1, sides=6)
+    rod(bm, [(0, -0.6, 0.42), (0, 0.6, 0.42)], 0.03, mat=1, sides=4)
+    for s in (-1, 1):
+        rod(bm, [(0.7, s * 0.32, 0.5), (1.4, s * 0.34, 0.27), (2.0, s * 0.36, 0.04)], 0.035, mat=1, sides=4)
+    return make("FarmCart", bm, ["Planks", "Driftwood"], smooth_angle=35, at=at, rot=rot)
+
+
 # ---- the board --------------------------------------------------------------------------------
 
-W, H = 38, 22
+W, H = 44, 26
 WATER_Z = -0.18
 
 
@@ -896,12 +1121,13 @@ def ground():
     return make("Ground", bm, ["Grass", "Mud", "Mere"], coll="Preview")
 
 
-ROW_TREES, ROW_BUSHES, ROW_STONE, ROW_BOUNDS = 8.0, 12.5, 16.0, 19.5
+ROW_TREES, ROW_BUSHES, ROW_STONE, ROW_BOUNDS, ROW_PLACES = 8.0, 12.5, 16.0, 19.5, 23.0
 
 
 def build():
-    """The board, in rows from the water back: what grows in the mere; the trees, each with its
-    felled state beside it; bushes and plants; stone; boundaries."""
+    """The board, in rows from the water back: the mere's edge; the trees, each with its felled
+    state beside it; bushes and plants; stone; boundaries; places (the heath's stones, graves, the
+    farm)."""
     A.reset()
     for c in list(bpy.data.collections):
         if c.name in ("Nature", "Preview"):
@@ -910,6 +1136,12 @@ def build():
     objs = {}
     for i, x in enumerate((7.0, 13.5, 22.0)):
         objs["reeds_%d" % i] = reeds(seed=3 + 5 * i, at=(x, 2.4, ground_z(x, 2.4) + 0.2))
+    objs["lily_pads"] = lily_pads(at=(17.5, 1.6, WATER_Z))
+    objs["lily_pads_2"] = lily_pads(seed=4, at=(10.0, 1.2, WATER_Z))
+    for i, y in enumerate((3.5, 2.5, 1.5, 0.5)):       # a jetty out from the bank
+        objs["jetty_%d" % i] = jetty_span(seed=i + 1, at=(30.5, y, WATER_Z), rot=math.pi / 2)
+    objs["mooring_post"] = mooring_post(at=(31.4, 1.2, WATER_Z))
+    objs["punt"] = punt(at=(32.2, 1.3, WATER_Z), rot=math.pi / 2 + 0.1)
     t = ROW_TREES
     objs.update({
         "alder": alder(at=(3.0, t, 0)), "stool_cut": stool_cut(at=(5.4, t, 0)),
@@ -918,6 +1150,7 @@ def build():
         "pollard": pollard(at=(22.8, t, 0)), "pollard_stump": pollard_stump(at=(25.2, t, 0)),
         "snag": snag(at=(28.6, t, 0)),
         "elm": elm(at=(32.0, t, 0)), "elm_stump": elm_stump(at=(35.2, t, 0)),
+        "pine": pine(at=(38.5, t, 0)), "pine_stump": pine_stump(at=(41.0, t, 0)),
     })
     b = ROW_BUSHES
     objs.update({
@@ -956,6 +1189,16 @@ def build():
     for i, x in enumerate((12, 13, 15, 16)):           # a gap at 14: a fallen stretch of wall
         objs["wall_%d" % i] = wall_span(seed=i + 1, at=(x, r, 0))
     objs["stile"] = wall_stile(at=(17, r, 0))
+    p_ = ROW_PLACES
+    objs.update({
+        "standing_stone": standing_stone(at=(3.0, p_, 0)),
+        "standing_stone_2": standing_stone(seed=5, at=(4.6, p_ + 0.6, 0)),
+        "standing_stone_fallen": standing_stone_fallen(at=(7.5, p_, 0)),
+        "grave": grave(at=(11.0, p_, 0)), "grave_2": grave(seed=3, at=(12.2, p_, 0)),
+        "grave_old": grave(seed=4, at=(13.4, p_, 0), old=True),
+        "hay_stook": hay_stook(at=(17.0, p_, 0)), "hay_stook_2": hay_stook(seed=2, at=(18.5, p_ + 0.4, 0)),
+        "farm_cart": farm_cart(at=(22.0, p_, 0), rot=0.4),
+    })
     for i, x in enumerate(range(19, 25)):
         objs["hedge_%d" % i] = hedge(seed=i + 1, at=(x, r, 0))
     return objs
@@ -963,7 +1206,7 @@ def build():
 
 def rig():
     """The game's sun and camera, the player by the trees, Material Preview with scene lights."""
-    A.preview_rig(focus=(19.0, 11.0, 0.8), distance=38.0, pitch=40, yaw=-20, ground=0, human=True,
+    A.preview_rig(focus=(22.0, 12.5, 0.8), distance=44.0, pitch=40, yaw=-20, ground=0, human=True,
                   human_at=(7.0, ROW_TREES - 1.2))
     for area in bpy.context.screen.areas:
         if area.type == "VIEW_3D":
@@ -1005,6 +1248,11 @@ ASSETS = {
     "Herb": herb, "HerbPicked": lambda: herb(picked=True),
     "Mushrooms": mushrooms, "MushroomsPicked": lambda: mushrooms(picked=True),
     "FieldGate": span(field_gate), "WallStile": span(wall_stile),
+    "Pine": pine, "PineStump": pine_stump,
+    "LilyPads": lily_pads, "MooringPost": mooring_post, "JettySpan": jetty_span, "Punt": punt,
+    "StandingStone": standing_stone, "StandingStoneFallen": standing_stone_fallen,
+    "Grave": grave, "GraveOld": lambda: grave(old=True),
+    "HayStook": hay_stook, "FarmCart": farm_cart,
 }
 
 
