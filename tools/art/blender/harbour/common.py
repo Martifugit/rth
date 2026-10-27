@@ -126,16 +126,51 @@ class Walk:
         return o
 
 
+# What `make` does with a part: the collection it goes in, the style it is drawn in (a palette name to
+# the palette colour it is recoloured to, the texture kept, as objects.json "recolor" does in the
+# game), and whether its walk layout is written and drawn. The gallery changes these as it builds.
+COLL = "Harbour"
+STYLE = {}
+WALK = True
+
+
+def styled(name):
+    """The material for a palette name in the current style: the name's own, or a copy recoloured to
+    the style's colour that keeps its texture ("Boards@Driftwood")."""
+    to = STYLE.get(name)
+    if not to:
+        return A.mat(name)
+    key = "%s@%s" % (name, to)
+    m = bpy.data.materials.get(key)
+    if m is None:
+        m = A.mat(name).copy()
+        m.name = key
+        col = A.rgba(to)
+        nodes = m.node_tree.nodes
+        mix = next((n for n in nodes if n.bl_idname == "ShaderNodeMix"), None)
+        if mix is not None:
+            mix.inputs[7].default_value = col
+        else:
+            nodes["Principled BSDF"].inputs["Base Color"].default_value = col
+        m.diffuse_color = col
+    return m
+
+
+def base_name(material):
+    """A material's palette name without its style ("Boards@Driftwood" is Boards)."""
+    return material.name.split("@")[0]
+
+
 def make(name, bm, materials, walk=None, smooth=None):
-    """The part's object in the Harbour collection, with only the materials it uses; its walk layout
-    saved and drawn."""
+    """The part's object in the current collection and style, with only the materials it uses; its
+    walk layout saved and drawn."""
     used = sorted({f.material_index for f in bm.faces})
     remap = {m: i for i, m in enumerate(used)}
     for f in bm.faces:
         f.material_index = remap[f.material_index]
-    ob = N.make(name, bm, [materials[m] for m in used], smooth_angle=smooth, coll="Harbour")
+    ob = N.make(name, bm, [styled(materials[m]) for m in used], smooth_angle=smooth, coll=COLL)
     lay_boards(ob)
-    if walk is not None:
+    if walk is not None and WALK:
         walk.save()
         walk.overlay(ob)
     return ob
@@ -145,7 +180,7 @@ def lay_boards(ob, along_y=False):
     """Turn the Boards texture on the part's flat tops so the boards run across it (along X, seams at
     constant Y), as a jetty's or a pier's deck is laid; along_y lays them lengthwise instead."""
     me = ob.data
-    names = [m.name for m in me.materials]
+    names = [base_name(m) for m in me.materials]
     if "Boards" not in names:
         return
     k = names.index("Boards")

@@ -97,7 +97,7 @@ def box_uvs(me):
         ax = max(range(3), key=lambda i: abs(n[i]))
         a, b = {0: (1, 2), 1: (0, 2), 2: (0, 1)}[ax]
         name = me.materials[p.material_index].name if me.materials else ""
-        surface = surfaces().get(name, {})
+        surface = surfaces().get(name.split("@")[0], {})        # "Boards@Driftwood": a recolour keeps its pattern
         tiles = surface.get("tiles", 1)
         tiles_v = surface.get("tilesV", tiles)
         for li in p.loop_indices:

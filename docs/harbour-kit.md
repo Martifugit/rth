@@ -96,6 +96,16 @@ Flags, painted on a 32-cell grid and blown up four times) on the palette's Board
 Flagstone; posts, rails and trim are flat colours. The fine 128-pixel textures read too modern and
 smooth next to the references.
 
+## 3b. The gallery and styles
+
+`tools/art/blender/harbour/gallery.py` builds the example harbours and, south of them, every kit as
+its own labelled cluster (timber jetty, stone pier, worn and broken timber, waterfront dressing,
+vessels), each built once per style in rows; in the Outliner, Gallery > kit > kit . style. A style
+(`styles.py`) is a set of colour swaps that keep each texture's pattern, as objects.json `recolor` does
+in the game: Plain, Weathered, Dark and Pale so far, starting points for each port's identity. A new
+piece is a line in its kit's list in the gallery; a new style is an entry in `styles.py`, and every
+kit appears in it.
+
 ## 4. Order of work
 
 1. **Blockout** in Blender (`tools/art/blender/harbour/`): every part at its final size, plain

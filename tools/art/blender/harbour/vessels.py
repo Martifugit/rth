@@ -15,7 +15,7 @@ from mathutils import Vector
 
 import rth_art as A
 import basin as N
-from common import (STOREY, Walk, beam, make, rope_coil)
+from common import (STOREY, Walk, base_name, beam, make, rope_coil)
 
 MATS = ["Boards", "Ash", "Fence", "Linen", "Hide", "Iron", "Glaze", "CandleWax", "DeadWood", "Driftwood"]
 HULL, POST, TRIM, SAIL, ROPE, IRON, GLASS, LIGHT, DARK, TIM = range(len(MATS))
@@ -27,7 +27,7 @@ def make_vessel(name, bm, walk=None, smooth=30):
     ob = make(name, bm, MATS, walk, smooth=smooth)
     me = ob.data
     uv = me.uv_layers[0]
-    names = [m.name for m in me.materials]
+    names = [base_name(m) for m in me.materials]
     if "Boards" not in names:
         return ob
     plank = names.index("Boards")
