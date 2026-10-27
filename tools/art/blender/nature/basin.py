@@ -1276,7 +1276,7 @@ def export_all():
 
 if globals().get("EXPORT"):
     result = export_all()
-else:
+elif __name__ != "basin":           # imported by another kit (import basin): its helpers only
     objs = build()
     rig()
     result = {k: A.report([o])["triangles"] for k, o in objs.items() if not k[-1].isdigit() or k.endswith("_0")}

@@ -7,8 +7,9 @@ using UnityEngine;
 namespace Rth.Client.Editor
 {
     /// <summary>
-    /// The nature kit's models (Assets/Resources/Nature, exported by tools/art/blender/nature/basin.py)
-    /// get the game's materials by name, as the scripts name them:
+    /// The kit models made in Blender (Assets/Resources/Nature from tools/art/blender/nature/basin.py,
+    /// Assets/Resources/Caves from tools/art/blender/caves/entrances.py) get the game's materials by
+    /// name, as the scripts name them:
     /// <list type="bullet">
     /// <item>a world texture's name (Assets/Art/Textures/&lt;name&gt;.png: Foliage, Thorn, Wattle...):
     /// that texture, alpha-clipped so leaf hems cut out, drawn on both sides, matte;</item>
@@ -19,12 +20,12 @@ namespace Rth.Client.Editor
     /// </summary>
     public sealed class NatureImporter : AssetPostprocessor
     {
-        public const string Folder = "Assets/Resources/Nature/";
+        public static readonly string[] Folders = { "Assets/Resources/Nature/", "Assets/Resources/Caves/" };
         private const string MaterialDir = "Assets/Art/Materials/Nature";
 
         private void OnPreprocessModel()
         {
-            if (!assetPath.StartsWith(Folder)) return;
+            if (!Ours(assetPath)) return;
             var importer = (ModelImporter)assetImporter;
             importer.animationType = ModelImporterAnimationType.None;
             importer.importAnimation = false;
@@ -38,11 +39,13 @@ namespace Rth.Client.Editor
 
         private Material OnAssignMaterialModel(Material imported, Renderer renderer)
         {
-            if (!assetPath.StartsWith(Folder)) return null;
+            if (!Ours(assetPath)) return null;
             return For(imported.name);
         }
 
-        /// <summary>The shared material for a name from the nature kit's scripts.</summary>
+        private static bool Ours(string path) => System.Array.Exists(Folders, f => path.StartsWith(f));
+
+        /// <summary>The shared material for a name from the kits' scripts.</summary>
         public static Material For(string name)
         {
             name = name.Trim();
