@@ -82,8 +82,12 @@ def build():
     # a stone pier to the east: a solid run, an arch, a solid run, the head, water stairs
     o["stone_pier"] = place(S.stone_pier(2, 4), 45, 13, rot=180)
     o["stone_arch"] = place(S.stone_arch(2), 45, 9, rot=180)
-    o["stone_pier_2"] = place(S.stone_pier(2, 2, name="StonePier2x2"), 45, 6, rot=180)
-    o["stone_head"] = place(S.stone_head(), 46, 4, rot=180)
+    o["stone_splay"] = place(S.stone_splay(2, 4), 45, 6, rot=180)
+    o["stone_pier_4"] = place(S.stone_pier(4, 1, name="StonePier4x1"), 46, 4, rot=180)
+    o["stone_head"] = place(S.stone_head(4, 4, name="StonePierHead4"), 46, 3, rot=180)
+    # a narrow pier ending in a narrow head
+    o["stone_pier_n"] = place(S.stone_pier(2, 3, name="StonePier2x3"), 42, 13, rot=180)
+    o["stone_head_n"] = place(S.stone_head(2, 2, name="StonePierHead2"), 42, 10, rot=180)
     o["stone_steps"] = place(S.stone_steps(), 46, 13, rot=180)
     return o
 

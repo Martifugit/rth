@@ -106,6 +106,21 @@ in the game: Plain, Weathered, Dark and Pale so far, starting points for each po
 piece is a line in its kit's list in the gallery; a new style is an entry in `styles.py`, and every
 kit appears in it.
 
+## 3c. Wear, and joining piers
+
+**Wear** (`common.WEAR`): every piece can be built with the flaws of use, the same each time (seeded
+by its name), deliberate rather than jittered: a deck board missing, snapped and sagging, split off
+short or patched with an older length (on the Boards texture's seams); a length of kerb gone; a
+ladder rung gone; a stair tread missing or split; a coping block chipped with the chip lying by it, now
+and then one gone and left askew; weeds in the paving's cracks; stones fallen at a wall's foot; a
+fender gone; a step's nosing chipped; patched planks on hulls, a stretch of the ship's balustrade
+stove in, a porthole smashed; a crate's slat gone, a pot crushed, a net torn. The gallery shows a
+worn row per kit; the example harbours are built worn.
+
+**Joining piers:** a pier head's back is finished either side of its neck (`stone_head(width,
+neck)`), so a 4-wide head makes a T on a 2-wide pier; `stone_head(2, 2)` ends a narrow pier in its
+own round nose; `stone_splay(2, 4)` widens a pier over two tiles into a 4-wide run and head.
+
 ## 4. Order of work
 
 1. **Blockout** in Blender (`tools/art/blender/harbour/`): every part at its final size, plain

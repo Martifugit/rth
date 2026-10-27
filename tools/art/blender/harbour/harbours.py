@@ -13,7 +13,7 @@ import bmesh
 import bpy
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-for name in ("rth_art", "basin", "common", "structures", "vessels", "layout"):
+for name in ("rth_art", "basin", "common", "structures", "vessels", "layout", "styles"):
     sys.modules.pop(name, None)
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
@@ -95,6 +95,7 @@ def build():
             bpy.data.collections.remove(c)
     ground()
     o = {}
+    C.WEAR = 1                                  # lived-in: a broken board here, a chipped block there
     for name, rows, x0 in HARBOURS:
         ob = Lay.compose(name, rows)
         ob.location = (x0, 0, 0)
@@ -110,6 +111,7 @@ def build():
     berth("rowing_boat_2", V.rowing_boat(), 21.6, 5.5, 180)
     berth("ship", V.ship(), 30 + 16.0, 6.0, 90)
     berth("river_boat", V.barge(), 70 + 4.0, 6.4, 90)
+    C.WEAR = 0
     return o
 
 

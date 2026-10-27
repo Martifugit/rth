@@ -24,7 +24,9 @@ import bmesh
 from mathutils import Vector
 
 import rth_art as A
-from common import BED, JETTY, QUAY, WEED, Walk, beam, bollard_at, make, pile, ring_on
+import common as C
+from common import BED, JETTY, QUAY, WEED, Walk, beam, bollard_at, deck, make, pile, ring_on
+from structures import chip_off, cracks, loose_stone
 
 MATS = ["Fence", "Boards", "Iron", "Driftwood", "Moss", "DeadWood", "Harbourstone", "Gravestone", "Flagstone", "CandleWax", "Hide"]
 TIM, BOARD, IRON, GREY, WEEDM, OLD, STONE, COPE, PAVE, GLOW, ROPE = range(len(MATS))
@@ -89,15 +91,23 @@ def stone_cell(bm, plan, x, y, rnd):
         for f in A.hull(bm, band, WEEDM):
             f.normal_update()
     A.box(bm, (x - 0.5, y - 0.5, QUAY - 0.13), (x + 0.5, y + 0.5, QUAY - 0.02), PAVE)
+    if C.WEAR and rnd.random() < 0.3:
+        cracks(bm, x - 0.45, x + 0.45, y - 0.45, y + 0.45, QUAY - 0.017, rnd, n=1)
     for d, (dx, dy) in DIRS.items():
         if not water[d]:
             continue
         if dx:
             ex = x + 0.5 * dx
-            A.hull(bm, [Vector((xx, yy, z)) for xx in (ex - 0.24 * dx, ex + 0.08 * dx) for yy in (y - 0.51, y + 0.51) for z in (QUAY - 0.13, QUAY)], COPE)
+            pts = [Vector((xx, yy, z)) for xx in (ex - 0.24 * dx, ex + 0.08 * dx) for yy in (y - 0.51, y + 0.51) for z in (QUAY - 0.13, QUAY)]
         else:
             ey = y + 0.5 * dy
-            A.hull(bm, [Vector((xx, yy, z)) for yy in (ey - 0.24 * dy, ey + 0.08 * dy) for xx in (x - 0.51, x + 0.51) for z in (QUAY - 0.13, QUAY)], COPE)
+            pts = [Vector((xx, yy, z)) for yy in (ey - 0.24 * dy, ey + 0.08 * dy) for xx in (x - 0.51, x + 0.51) for z in (QUAY - 0.13, QUAY)]
+        if C.WEAR and rnd.random() < 0.22:                       # a chipped block, the chip beside it
+            chip_off(pts, Vector((dx, dy, 0)) + Vector((dy, dx, 0)) * rnd.choice((-1, 1)), rnd)
+            loose_stone(bm, (x - dx * 0.2 + dy * rnd.uniform(-0.3, 0.3), y - dy * 0.2 + dx * rnd.uniform(-0.3, 0.3), QUAY - 0.02), 0.06, rnd, COPE)
+        A.hull(bm, pts, COPE)
+        if C.WEAR and rnd.random() < 0.12:                       # a stone fallen at the foot
+            loose_stone(bm, (x + dx * rnd.uniform(0.95, 1.2), y + dy * rnd.uniform(0.95, 1.2), -0.3), rnd.uniform(0.14, 0.2), rnd, STONE)
         straight = all(plan.kind(x + dy * s, y + dx * s) == "stone" and plan.kind(x + dy * s + dx, y + dx * s + dy) == "water" for s in (-1, 1))
         if straight and (x + y) % 3 == 0:                         # a buttress in a straight run
             side = Vector((dx, dy, 0))
@@ -173,7 +183,7 @@ def timber_cell(bm, plan, x, y, rnd, worn=False):
                       rnd.choice((GREY, GREY, OLD)))
             yy += w
     else:
-        A.box(bm, (x - 0.5, y - 0.5, JETTY - 0.08), (x + 0.5, y + 0.5, JETTY), BOARD)
+        deck(bm, x - 0.5, x + 0.5, y - 0.5, y + 0.5, JETTY, BOARD, OLD, rnd, C.WEAR, chance=0.12)
     for d, (dx, dy) in DIRS.items():
         k = plan.kind(x + dx, y + dy)
         if k in ("timber", "stairs"):

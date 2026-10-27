@@ -132,6 +132,13 @@ class Walk:
 COLL = "Harbour"
 STYLE = {}
 WALK = True
+WEAR = 0            # 0: as built; 1: with the flaws of use (a broken board, a chipped step); see deck()
+
+
+def wear_rnd(name):
+    """The same flaws every time a piece is built: a random stream seeded by its name."""
+    import zlib
+    return random.Random(zlib.crc32(name.encode()))
 
 
 def styled(name):
@@ -240,6 +247,45 @@ def deck_boards(bm, x0, y0, x1, y1, z, rnd, t=0.06, mats=(1, 1, 1, 1, 3), overha
         b = x1 + overhang + rnd.uniform(-ragged, ragged)
         A.box(bm, (a, y + 0.007, z - t + rnd.uniform(-0.006, 0.006)), (b, y + w - 0.007, z), rnd.choice(mats))
         y += w
+
+
+def deck(bm, x0, x1, y0, y1, z, mat, alt, rnd=None, wear=0, t=0.08, board=0.3, chance=0.14):
+    """A deck from y0 to y1 across x0..x1, its top at z, wearing the Boards texture (boards across
+    it, `board` wide, on the texture's seams). Worn (`wear`), now and then a board is a flaw: missing
+    (the frame shows through), snapped with both halves sagging into the gap, patched with a board of
+    another timber (`alt`), or split off short. Still walkable."""
+    if not wear or rnd is None:
+        A.box(bm, (x0, y0, z - t), (x1, y1, z), mat)
+        return
+    k0 = math.floor(y0 / board + 1e-6)
+    edges = [y0] + [k * board for k in range(k0 + 1, math.ceil(y1 / board - 1e-6))] + [y1]
+    run = y0
+    for ya, yb in zip(edges, edges[1:]):
+        if yb - ya < board * 0.6 or rnd.random() > chance * wear:
+            continue
+        if ya > run:
+            A.box(bm, (x0, run, z - t), (x1, ya, z), mat)
+        kind = rnd.choice(("gap", "snapped", "snapped", "patch", "short"))
+        a, b = ya + 0.012, yb - 0.012
+        if kind == "patch":                                  # a short length let in, in older timber
+            xm = x0 + (x1 - x0) * rnd.uniform(0.35, 0.65)
+            A.box(bm, (x0, a, z - t), (xm, b, z), alt)
+            A.box(bm, (xm + 0.01, a, z - t), (x1, b, z), mat)
+        elif kind == "short":
+            xm = x0 + (x1 - x0) * rnd.uniform(0.35, 0.65)
+            if rnd.random() < 0.5:
+                A.box(bm, (x0, a, z - t), (xm, b, z), mat)
+            else:
+                A.box(bm, (xm, a, z - t), (x1, b, z), mat)
+        elif kind == "snapped":
+            xm = x0 + (x1 - x0) * rnd.uniform(0.4, 0.6)
+            for xa, xb in ((x0, xm - 0.03), (x1, xm + 0.03)):
+                A.hull(bm, [Vector((xx, yy, zz)) for yy in (a, b) for xx, zz in ((xa, z), (xa, z - t), (xb, z - 0.13), (xb, z - 0.13 - t))], alt)
+                for yy in (a + 0.05, b - 0.05):              # splinters at the break
+                    A.spike(bm, (xb, yy, z - 0.13), 0.025, (xb + (xb - xa) * 0.08, yy, z - 0.1), sides=3, mat=alt)
+        run = yb
+    if y1 > run:
+        A.box(bm, (x0, run, z - t), (x1, y1, z), mat)
 
 
 def rope_coil(bm, c, r, mat, turns=3, h=0.04):

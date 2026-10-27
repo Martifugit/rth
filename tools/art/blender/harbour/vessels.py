@@ -15,6 +15,7 @@ from mathutils import Vector
 
 import rth_art as A
 import basin as N
+import common as C
 from common import (STOREY, Walk, base_name, beam, make, rope_coil)
 
 MATS = ["Boards", "Ash", "Fence", "Linen", "Hide", "Iron", "Glaze", "CandleWax", "DeadWood", "Driftwood"]
@@ -171,17 +172,72 @@ class Hull:
             for s in (0, 1):
                 bm.faces.new((rows[k][s], rows[k + 1][s], under[k + 1][s], under[k][s])).material_index = TRIM
 
-    def porthole(self, bm, y, z, side, r=0.17):
-        """A round porthole in the hull's side: a ring of timber and the glass in it."""
+    def patch(self, bm, y, z, side, rnd, mat=DARK, w=0.7, h=0.26):
+        """A patch over a sprung plank: a short board of another timber nailed onto the side."""
+        pts = []
+        for dy in (-w / 2, w / 2):
+            for dz in (-h / 2, h / 2):
+                p = min((self.point(y + dy, k / 40, side) for k in range(41)), key=lambda q: abs(q.z - (z + dz)))
+                pts += [p + Vector((side * 0.01, 0, 0)), p + Vector((side * 0.045, 0, 0))]
+        A.hull(bm, pts, mat)
+
+    def patches(self, bm, rnd, n, z0, z1, mat=DARK):
+        """Worn: `n` patches on each side, between heights z0 and z1."""
+        if not C.WEAR:
+            return
+        for side in (-1, 1):
+            for _ in range(n):
+                self.patch(bm, rnd.uniform(-self.L * 0.6, self.L * 0.6), rnd.uniform(z0, z1), side, rnd, mat)
+
+    def porthole(self, bm, y, z, side, r=0.17, broken=False):
+        """A round porthole in the hull's side: a ring of timber and the glass in it (broken: dark)."""
         best = min((self.point(y, k / 40, side) for k in range(41)), key=lambda p: abs(p.z - z))
         n = Vector((side, 0, 0))
         A.loft(bm, [(best - n * 0.03, r, r), (best + n * 0.05, r, r)], sides=10, ref=(0, 0, 1), mats=POST)
-        A.loft(bm, [(best + n * 0.05, r * 0.7, r * 0.7), (best + n * 0.065, r * 0.7, r * 0.7)], sides=10, ref=(0, 0, 1), mats=GLASS)
+        A.loft(bm, [(best + n * 0.05, r * 0.7, r * 0.7), (best + n * 0.065, r * 0.7, r * 0.7)], sides=10, ref=(0, 0, 1),
+               mats=DARK if broken else GLASS)
 
 
-def balustrade(bm, path, h=0.75, spacing=0.3, mat=POST, rail=TRIM):
+def split_path(path, t0, t1):
+    """The parts of a path before fraction t0 and after t1 of its length."""
+    path = [Vector(p) for p in path]
+    seg = [(a, b, (b - a).length) for a, b in zip(path, path[1:])]
+    total = sum(l for _, _, l in seg)
+
+    def at(d):
+        for a, b, l in seg:
+            if d <= l + 1e-6:
+                return a.lerp(b, d / l if l else 0)
+            d -= l
+        return path[-1]
+    before, after = [path[0]], []
+    acc = 0.0
+    for a, b, l in seg:
+        if acc + l < t0 * total:
+            before.append(b)
+        acc += l
+    before.append(at(t0 * total))
+    after.append(at(t1 * total))
+    acc = 0.0
+    for a, b, l in seg:
+        acc += l
+        if acc > t1 * total:
+            after.append(b)
+    return before, after
+
+
+def balustrade(bm, path, h=0.75, spacing=0.3, mat=POST, rail=TRIM, gap=None):
     """A balustrade along a path of points (the line it stands on): small square posts every
-    `spacing`, a bottom rail and a broader top rail. The references' signature piece."""
+    `spacing`, a bottom rail and a broader top rail. The references' signature piece. gap: (t0, t1),
+    the fractions of its length where it is broken: posts gone, the rail snapped and hanging."""
+    if gap:
+        before, after = split_path(path, *gap)
+        balustrade(bm, before, h, spacing, mat, rail)
+        balustrade(bm, after, h, spacing, mat, rail)
+        a, b = before[-1], after[0]
+        beam(bm, a + Vector((0, 0, h)), a.lerp(b, 0.45) + Vector((0, 0, 0.12)), 0.06, 0.08, mat=rail)    # the rail, hanging
+        A.box(bm, b.lerp(a, 0.4) + Vector((-0.03, -0.03, 0.03)), b.lerp(a, 0.4) + Vector((0.03, 0.03, 0.3)), mat)   # a snapped post
+        return
     path = [Vector(p) for p in path]
     A.loft(bm, [(p + Vector((0, 0, 0.03)), 0.06, 0.05) for p in path], sides=4, ref=(0, 0, 1), mats=rail)
     A.loft(bm, [(p + Vector((0, 0, h)), 0.09, 0.06) for p in path], sides=4, ref=(0, 0, 1), mats=rail)
@@ -274,6 +330,7 @@ def rowing_boat(name="RowingBoat"):
     for y in (-0.7, 0.35):
         h.thwart(bm, y, 0.17)
     A.box(bm, (-0.25, -1.2, 0.08), (0.25, 1.0, 0.11), DARK)
+    h.patches(bm, C.wear_rnd(name), 1, 0.12, 0.3, mat=TIM)
     for s in (-1, 1):
         oar(bm, (s * 0.2, -1.25, h.top(0) - 0.12), (s * 0.36, 1.6, h.top(0) - 0.06))
         A.box(bm, (s * h.half(0.05) - 0.03, -0.02, h.top(0.0)), (s * h.half(0.05) + 0.03, 0.12, h.top(0.0) + 0.07), IRON)
@@ -295,6 +352,7 @@ def fishing_boat(name="FishingBoat"):
     for y in (-1.3, -0.1, 1.0):
         h.thwart(bm, y, 0.25, wall=0.07)
     A.box(bm, (-0.35, -1.9, 0.1), (0.35, 1.7, 0.13), DARK)
+    h.patches(bm, C.wear_rnd(name), 2, 0.15, 0.6, mat=TIM)
     mast(bm, 0, 1.05, 0.1, 3.4, 0.08, 0.05)
     beam(bm, (0.1, 1.45, 3.2), (0.1, -0.9, 2.3), 0.06, 0.06, mat=POST)
     furled_sail(bm, (0.1, 1.38, 3.17), (0.1, -0.83, 2.33), 0.11, ties=3)
@@ -343,6 +401,7 @@ def barge(name="RiverBarge"):
     for end in (1, -1):
         h.stem(bm, w=0.09, curl=0.45, end=end)
     h.deck(bm, -3.9, 3.9, deck, inset=0.1)
+    h.patches(bm, C.wear_rnd(name), 2, 0.2, 0.75, mat=TIM)
     for y in (-2.6, -0.9, 0.9, 2.6):                                          # frames showing inside the sides
         for side in (-1, 1):
             beam(bm, h.point(y, 0.4, side, 0.09), h.point(y, 0.0, side, 0.09) + Vector((0, 0, 0.04)), 0.06, 0.06, mat=TRIM)
@@ -415,9 +474,12 @@ def ship(name="SeaShip"):
     h.deck(bm, fy, L - 0.5, fore_z, inset=0.18, n=8)
     h.deck(bm, -L + 0.15, sc1, castle_z, inset=0.18, n=8)
     # balustrades along the sides of each deck, across the castle's front and the forecastle's back
+    rnd = C.wear_rnd(name)
     for side in (-1, 1):
-        for ys in ((sc1 + 0.1, -2.5, 0.5, 3.5, fy - 0.1), (-L + 0.15, -8.0, -6.5, sc1 - 0.45), (fy + 0.45, 8.0, L - 1.2)):
-            balustrade(bm, [h.gunwale(y, side, 0.14) + Vector((-side * 0.03, 0, 0.07)) for y in ys])
+        for k, ys in enumerate(((sc1 + 0.1, -2.5, 0.5, 3.5, fy - 0.1), (-L + 0.15, -8.0, -6.5, sc1 - 0.45), (fy + 0.45, 8.0, L - 1.2))):
+            gap = (0.62, 0.7) if (C.WEAR and side < 0 and k == 0) else None    # a stretch stove in, to port
+            balustrade(bm, [h.gunwale(y, side, 0.14) + Vector((-side * 0.03, 0, 0.07)) for y in ys], gap=gap)
+    h.patches(bm, rnd, 3, 0.4, 1.6, mat=TIM)
     fw = h.half(sc1) - 0.2
     balustrade(bm, [Vector((-fw, sc1 + 0.05, castle_z)), Vector((0.9, sc1 + 0.05, castle_z))])          # open at the stair's head
     ff = h.half(fy) - 0.2
@@ -440,7 +502,7 @@ def ship(name="SeaShip"):
         for y in (-8.6, -7.1):
             h.porthole(bm, y, deck + 1.2, side, r=0.2)
         for y in (-2.0, 1.5, 4.5):
-            h.porthole(bm, y, deck - 0.55, side, r=0.15)
+            h.porthole(bm, y, deck - 0.55, side, r=0.15, broken=(C.WEAR and side > 0 and y > 0 and y < 2))
     tw = h.half(-L) - 0.3
     for x in (-tw * 0.6, 0.0, tw * 0.6):
         A.box(bm, (x - 0.3, -L - 0.08, deck + 0.9), (x + 0.3, -L - 0.02, deck + 1.6), GLASS)

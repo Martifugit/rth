@@ -1,5 +1,5 @@
-"""The harbour kit's gallery: every kit laid out as its own cluster, each built once per style in rows
-(styles.py), labelled, south of the example harbours (harbours.py). The place to judge a kit, compare
+"""The harbour kit's gallery: every kit laid out as its own cluster, each built in rows, a style (styles.py)
+with or without wear (common.WEAR: the flaws of use), labelled, south of the example harbours (harbours.py). The place to judge a kit, compare
 its styles, and see a new piece next to the rest.
 
 In the Outliner: Gallery > <kit> > <kit> . <style>. To add a piece, add a line to its kit in KITS;
@@ -44,7 +44,10 @@ KITS = [
         ("StonePier2x2", lambda n: S.stone_pier(2, 2, name=n)),
         ("StonePier2x4", lambda n: S.stone_pier(2, 4, name=n)),
         ("StoneArch", lambda n: S.stone_arch(name=n)),
-        ("StonePierHead", lambda n: S.stone_head(name=n)),
+        ("StonePierHead2", lambda n: S.stone_head(2, 2, name=n)),
+        ("StoneSplay2to4", lambda n: S.stone_splay(2, 4, name=n)),
+        ("StonePier4x2", lambda n: S.stone_pier(4, 2, name=n)),
+        ("StonePierHead", lambda n: S.stone_head(4, 2, name=n)),
         ("StoneSteps", lambda n: S.stone_steps(name=n)),
         ("QuayEdge4", lambda n: S.quay_edge(4, name=n)),
         ("QuaySteps", lambda n: S.quay_steps(name=n)),
@@ -71,6 +74,9 @@ KITS = [
         ("SeaShip", lambda n: V.ship(name=n)),
     ]),
 ]
+
+# The rows each kit is built in: a style (styles.py) and whether it is worn (common.WEAR).
+ROWS = [("Plain", 0), ("Plain", 1), ("Weathered", 1), ("Dark", 0), ("Pale", 0)]
 
 TOP = -12.0         # the gallery starts this far south of the examples
 GAP = 1.5           # between pieces in a row
@@ -116,16 +122,17 @@ def build():
     for kit, pieces in KITS:
         label(kit, (0.0, y + 0.8, 0.02), size=1.4)
         y -= 1.5
-        for style, swaps in STYLES.items():
-            coll = "%s . %s" % (kit, style)
+        for style, wear in ROWS:
+            row = style + (", worn" if wear else "")
+            coll = "%s . %s" % (kit, row)
             nest(kit, "Gallery")
             nest(coll, kit)
-            C.COLL, C.STYLE = coll, dict(swaps)
-            label(style, (-9.0, y - 1.0, 0.02), size=0.9)
+            C.COLL, C.STYLE, C.WEAR = coll, dict(STYLES[style]), wear
+            label(row, (-11.0, y - 1.0, 0.02), size=0.8)
             x = 0.0
             row_depth = 0.0
             for piece, fn in pieces:
-                ob = fn("%s.%s" % (piece, style))
+                ob = fn("%s%s.%s" % (piece, "Worn" if wear else "", style))
                 x0, y0, x1, y1 = footprint(ob)
                 if y1 - y0 > 6 and y1 - y0 > 2 * (x1 - x0):      # long pieces (vessels) lie along the row, bow east
                     ob.rotation_euler.z = math.radians(-90)
@@ -136,7 +143,7 @@ def build():
                 out[ob.name] = ob
             y -= row_depth + ROW_GAP
         y -= KIT_GAP
-    C.WALK, C.STYLE, C.COLL = True, {}, "Harbour"
+    C.WALK, C.STYLE, C.COLL, C.WEAR = True, {}, "Harbour", 0
     return out, y
 
 

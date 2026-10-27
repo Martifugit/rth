@@ -14,7 +14,8 @@ from mathutils import Vector
 
 import rth_art as A
 import basin as N
-from common import (BED, JETTY, QUAY, WEED, Walk, beam, bollard_at, deck_boards, make, pile, ring_on, rope_coil)
+import common as C
+from common import (BED, JETTY, QUAY, WEED, Walk, beam, bollard_at, deck, deck_boards, make, pile, ring_on, rope_coil)
 
 MATS = ["Fence", "Boards", "Iron", "Driftwood", "Moss", "DeadWood", "Hide", "Harbourstone", "Gravestone", "Mud"]
 TIM, BOARD, IRON, GREY, WEEDM, OLD, ROPE, STONE, COPE, MUD = range(len(MATS))
@@ -38,46 +39,56 @@ def frame(bm, rnd, xs, ys, deck, posts=(), post_h=0.85, brace_every=2):
             beam(bm, (a, y + 0.13, deck - 0.3), (b, y + 0.13, WEED[1] + 0.05), 0.07, 0.05, mat=OLD)
 
 
-def kerb(bm, x, y0, y1, deck):
-    """A kerb along the deck's edge, so the edge reads from the game's camera."""
-    beam(bm, (x, y0, deck + 0.035), (x, y1, deck + 0.035), 0.07, 0.1, mat=TIM)
+def kerb(bm, x, y0, y1, deck_z, rnd=None):
+    """A kerb along the deck's edge, so the edge reads from the game's camera. Worn, a length of it
+    has gone."""
+    if C.WEAR and rnd is not None and y1 - y0 > 1.2 and rnd.random() < 0.6:
+        g = rnd.uniform(y0 + 0.3, y1 - 0.9)
+        beam(bm, (x, y0, deck_z + 0.035), (x, g, deck_z + 0.035), 0.07, 0.1, mat=TIM)
+        beam(bm, (x, g + rnd.uniform(0.35, 0.6), deck_z + 0.035), (x, y1, deck_z + 0.035), 0.07, 0.1, mat=TIM)
+        return
+    beam(bm, (x, y0, deck_z + 0.035), (x, y1, deck_z + 0.035), 0.07, 0.1, mat=TIM)
 
 
 def jetty_span(width=1, length=1, name=None):
     """A straight run of jetty out over the water along +Y, `width` tiles wide: piles in pairs at the
     start of each tile under a headstock, joists along, X-bracing every other pair, boards across
     with a kerb along each side, the deck a half tile above the water. Walkable; its sides are open
-    (the water beside it is blocked anyway)."""
-    rnd = random.Random(10 + width * 7 + length)
+    (the water beside it is blocked anyway). Worn: a board missing, snapped or patched here and
+    there, a length of kerb gone."""
+    name = name or "JettySpan%dx%d" % (width, length)
+    rnd = C.wear_rnd(name)
     bm = bmesh.new()
     x0, x1 = -0.5, width - 0.5
     xs = [x0 + 0.12] + ([x0 + width / 2] if width > 1 else []) + [x1 - 0.12]
     frame(bm, rnd, xs, [k - 0.5 for k in range(length + 1)], JETTY)
-    A.box(bm, (x0 - 0.06, -0.5, JETTY - 0.08), (x1 + 0.06, length - 0.5, JETTY), BOARD)
+    deck(bm, x0 - 0.06, x1 + 0.06, -0.5, length - 0.5, JETTY, BOARD, OLD, rnd, C.WEAR)
     for x in (x0 + 0.03, x1 - 0.03):
-        kerb(bm, x, -0.5, length - 0.5, JETTY)
-    w = Walk(name or "JettySpan%dx%d" % (width, length))
+        kerb(bm, x, -0.5, length - 0.5, JETTY, rnd)
+    w = Walk(name)
     w.rect(0, 0, width, length, JETTY)
-    return make(w.name, bm, MATS, w)
+    return make(name, bm, MATS, w)
 
 
 def jetty_head(name="JettyHead"):
     """A jetty's end: a platform three tiles square, a tall mooring post at each corner with rope
     wound on it, a ladder down to the water on its far side, a coil of rope on the boards."""
-    rnd = random.Random(2)
+    rnd = C.wear_rnd(name)
     bm = bmesh.new()
     xs = ys = [-0.38, 1.0, 2.38]
     posts = {(-0.38, -0.38), (2.38, -0.38), (-0.38, 2.38), (2.38, 2.38)}
     frame(bm, rnd, xs, ys, JETTY, posts=posts, brace_every=1)
-    A.box(bm, (-0.56, -0.5, JETTY - 0.08), (2.56, 2.5, JETTY), BOARD)
+    deck(bm, -0.56, 2.56, -0.5, 2.5, JETTY, BOARD, OLD, rnd, C.WEAR)
     for x in (-0.47, 2.47):
-        kerb(bm, x, -0.5, 2.5, JETTY)
+        kerb(bm, x, -0.5, 2.5, JETTY, rnd)
     for x, y in ((-0.38, 2.38), (2.38, 2.38)):                  # rope wound on the far posts
         for k in range(3):
             A.prism(bm, 7, 0.16, 0.16, JETTY + 0.45 + 0.06 * k, JETTY + 0.5 + 0.06 * k, (x, y), mat_index=ROPE)
     for x in (0.78, 1.22):                                       # the ladder: timber stiles, iron rungs
         beam(bm, (x, 2.6, WEED[0] - 0.5), (x, 2.6, JETTY + 0.4), 0.07, 0.07, mat=TIM)
-    for z in (-0.45, -0.15, 0.15, 0.42):
+    for k, z in enumerate((-0.45, -0.15, 0.15, 0.42)):
+        if C.WEAR and k == 1:
+            continue                                             # a rung gone
         A.loft(bm, [(Vector((0.78, 2.6, z)), 0.02, 0.02), (Vector((1.22, 2.6, z)), 0.02, 0.02)], sides=4, ref=(0, 0, 1), mats=IRON)
     rope_coil(bm, (0.3, 0.1, JETTY), 0.22, ROPE)
     w = Walk(name)
@@ -88,13 +99,20 @@ def jetty_head(name="JettyHead"):
 
 def jetty_stairs(name="JettyStairs"):
     """Steps from the bank (a quay's height) down onto a jetty along +Y, two tiles: a stringer each
-    side notched for the treads, each tread with a nosing, a post at the foot of each stringer."""
-    rnd = random.Random(5)
+    side notched for the treads, each tread with a nosing, a post at the foot of each stringer. Worn:
+    one tread gone, one split across."""
+    rnd = C.wear_rnd(name)
     bm = bmesh.new()
     n = 5
     for k in range(n):
         z = QUAY - 0.02 - (QUAY - JETTY) * (k + 1) / (n + 1)
         y0, y1 = -0.5 + 1.9 * k / n, -0.5 + 1.9 * (k + 1) / n
+        if C.WEAR and k == 2:
+            continue
+        if C.WEAR and k == 3:
+            A.box(bm, (-0.42, y0, z - 0.05), (-0.05, y1 + 0.04, z), GREY)
+            A.hull(bm, [Vector((xx, yy, zz)) for yy in (y0, y1 + 0.04) for xx, zz in ((0.02, z - 0.03), (0.02, z - 0.08), (0.42, z), (0.42, z - 0.05))], GREY)
+            continue
         A.box(bm, (-0.42, y0, z - 0.05), (0.42, y1 + 0.04, z), BOARD if k % 3 else GREY)
     for x in (-0.47, 0.47):
         A.hull(bm, [Vector((x + s, y, z)) for s in (-0.04, 0.04) for y, z in ((-0.5, QUAY), (-0.5, QUAY - 0.32),
@@ -110,8 +128,10 @@ def quay_edge(length=4, name=None):
     """A stone quay's face along X, the water toward -Y: a battered wall from the bed to the bank
     (the stone's texture carries its courses), a weed band at the waterline, a coping of separate
     pale blocks overhanging the face, an iron bollard on every other block, a ring under each
-    bollard, and a timber fender against the face between them."""
-    rnd = random.Random(11)
+    bollard, and a timber fender against the face between them. Worn: chipped and missing coping,
+    stones fallen at the foot, a fender gone."""
+    name = name or "QuayEdge%d" % length
+    rnd = C.wear_rnd(name)
     bm = bmesh.new()
     x0, x1 = -0.5, length - 0.5
 
@@ -123,32 +143,45 @@ def quay_edge(length=4, name=None):
                                                                    (face_y(WEED[0]) + 0.05, WEED[0]), (face_y(WEED[1]) + 0.05, WEED[1]))], WEEDM)
     for k in range(length):                         # the coping, block by block
         a, b = k - 0.5 + 0.012, k + 0.5 - 0.012
-        A.hull(bm, [Vector((x, y, QUAY - 0.12)) for x in (a, b) for y in (-0.64, 0.25)] +
-               [Vector((x, y, QUAY)) for x in (a + 0.02, b - 0.02) for y in (-0.61, 0.25)], COPE)
+        pts = [Vector((x, y, QUAY - 0.12)) for x in (a, b) for y in (-0.64, 0.25)] + \
+              [Vector((x, y, QUAY)) for x in (a + 0.02, b - 0.02) for y in (-0.61, 0.25)]
+        if C.WEAR and rnd.random() < 0.3:
+            chip_off(pts, Vector((rnd.choice((-1, 1)), -1, 0)), rnd)
+            loose_stone(bm, (rnd.uniform(a + 0.2, b - 0.2), face_y(-0.3) - rnd.uniform(0.2, 0.4), -0.25), 0.08, rnd, COPE)
+        A.hull(bm, pts, COPE)
     for k in range(0, length, 2):
         bollard_at(bm, k, -0.2, QUAY, IRON)
         ring_on(bm, (k, face_y(QUAY - 0.4) - 0.01, QUAY - 0.38), (0, -1, 0), 0.09, IRON)
     for k in range(1, length, 2):                   # fenders between the bollards
+        if C.WEAR and rnd.random() < 0.3:
+            continue
         beam(bm, (k, face_y(BED + 0.3) - 0.09, BED + 0.3), (k, face_y(QUAY - 0.16) - 0.09, QUAY - 0.16), 0.16, 0.14, mat=OLD)
-    w = Walk(name or "QuayEdge%d" % length)
+    if C.WEAR:
+        for _ in range(max(1, length // 3)):
+            loose_stone(bm, (rnd.uniform(x0 + 0.3, x1 - 0.3), face_y(-0.3) - rnd.uniform(0.3, 0.6), -0.3), rnd.uniform(0.15, 0.22), rnd, STONE)
+    w = Walk(name)
     w.rect(0, 0, length, 1, QUAY)
     for k in range(0, length, 2):
         w.drop((k, 0))                              # the bollards block their tiles
-    return make(w.name, bm, MATS, w)
+    return make(name, bm, MATS, w)
 
 
 def quay_steps(name="QuaySteps"):
     """Water stairs let into a quay's face, running down along it (+X) from the coping to the water:
     three broad stone steps with pale nosings, the lowest green with weed, a low wall with its own
-    coping on the water side."""
+    coping on the water side. Worn: a nosing chipped, the chip in the water."""
+    rnd = C.wear_rnd(name)
     bm = bmesh.new()
     hs = [QUAY - 0.2, JETTY, 0.15]
     for k, h in enumerate(hs):
         A.box(bm, (k - 0.5, -0.5, BED), (k + 0.5, 0.5, h - 0.06), STONE)
-        A.box(bm, (k - 0.52, -0.5, h - 0.06), (k + 0.5, 0.5, h), WEEDM if k == 2 else COPE)
+        chip = Vector((-1, -1, 0)) if (C.WEAR and k == 1) else None
+        nosing(bm, k - 0.52, -0.5, k + 0.5, 0.5, h, WEEDM if k == 2 else COPE, rnd, chip)
     A.box(bm, (-0.5, -0.66, BED), (2.5, -0.5, QUAY - 0.08), STONE)
     A.hull(bm, [Vector((x, y, z)) for x in (-0.5, 2.5) for y, z in ((-0.7, QUAY - 0.1), (-0.46, QUAY - 0.1), (-0.68, QUAY), (-0.48, QUAY))], COPE)
     A.box(bm, (-0.5, -0.69, WEED[0]), (2.5, -0.66, WEED[1]), WEEDM)
+    if C.WEAR:
+        loose_stone(bm, (1.6, -0.95, -0.2), 0.12, rnd, COPE)
     w = Walk(name)
     for k, h in enumerate(hs):
         w.tile(k, 0, h)
@@ -196,7 +229,7 @@ def float_barrel(bm, a, b, r):
 def pontoon(name="Pontoon"):
     """A floating landing two tiles by four, low on the water: a deck framed on a raft of lashed
     barrels, a kerb round three sides, iron cleats on its corners."""
-    rnd = random.Random(4)
+    rnd = C.wear_rnd(name)
     bm = bmesh.new()
     z = 0.24
     for x in (-0.22, 1.22):
@@ -204,9 +237,9 @@ def pontoon(name="Pontoon"):
             float_barrel(bm, (x, k - 0.42, 0.0), (x, k + 0.42, 0.0), 0.24)
     for x in (-0.4, 0.5, 1.4):
         beam(bm, (x, -0.5, z - 0.1), (x, 3.5, z - 0.1), 0.1, 0.1, mat=TIM)
-    A.box(bm, (-0.54, -0.5, z - 0.08), (1.54, 3.5, z), BOARD)
+    deck(bm, -0.54, 1.54, -0.5, 3.5, z, BOARD, OLD, rnd, C.WEAR)
     for x in (-0.47, 1.47):
-        kerb(bm, x, -0.5, 3.5, z)
+        kerb(bm, x, -0.5, 3.5, z, rnd)
     beam(bm, (-0.5, 3.47, z + 0.035), (1.5, 3.47, z + 0.035), 0.07, 0.1, mat=TIM)
     for x, y in ((-0.35, 3.3), (1.35, 3.3), (-0.35, -0.3), (1.35, -0.3)):
         A.box(bm, (x - 0.12, y - 0.03, z), (x + 0.12, y + 0.03, z + 0.05), IRON)
@@ -253,18 +286,20 @@ def bollard(name="Bollard"):
 
 def capstan(name="Capstan"):
     """A capstan for warping ships in: a waisted drum with whelps (ribs) on a round stone base, a
-    ring of bar holes in its head, two bars shipped."""
+    ring of bar holes in its head, two bars shipped. Worn: one bar gone, a whelp split off."""
     bm = bmesh.new()
     A.prism(bm, 10, 0.5, 0.45, -0.05, 0.14, mat_index=STONE)
     for z0, z1, r0, r1 in ((0.14, 0.48, 0.3, 0.23), (0.48, 0.74, 0.23, 0.3)):
         A.prism(bm, 10, r0, r1, z0, z1, mat_index=TIM)
     for k in range(6):
+        if C.WEAR and k == 2:
+            continue
         a = 2 * math.pi * k / 6
         d = Vector((math.cos(a), math.sin(a), 0))
         A.hull(bm, [d * r + Vector((0, 0, z)) + Vector((-d.y, d.x, 0)) * s for r, z in ((0.25, 0.16), (0.32, 0.16), (0.2, 0.48), (0.26, 0.48),
                                                                                        (0.25, 0.72), (0.32, 0.72)) for s in (-0.03, 0.03)], OLD)
     A.prism(bm, 10, 0.36, 0.36, 0.74, 0.9, mat_index=TIM)
-    for k in range(2):
+    for k in range(1 if C.WEAR else 2):
         a = math.pi * k / 2 + 0.3
         d = Vector((math.cos(a), math.sin(a), 0))
         beam(bm, d * -1.0 + Vector((0, 0, 0.83)), d * 1.0 + Vector((0, 0, 0.83)), 0.07, 0.07, mat=GREY)
@@ -293,7 +328,7 @@ def crane(name="Crane"):
 
 def net_rack(name="NetRack"):
     """Nets hung to dry along X: two forked posts, a pole between them, the net in a sagging dark
-    sheet, cork floats along its foot."""
+    sheet, cork floats along its foot. Worn: a tear through the net, floats lost."""
     rnd = random.Random(8)
     bm = bmesh.new()
     for x in (-0.95, 0.95):
@@ -305,10 +340,14 @@ def net_rack(name="NetRack"):
     top = [bm.verts.new((-0.88 + 1.76 * k / cols, 0.01, 1.7)) for k in range(cols + 1)]
     mid = [bm.verts.new((-0.88 + 1.76 * k / cols, 0.05, 1.0 - 0.08 * math.sin(math.pi * k / cols))) for k in range(cols + 1)]
     bot = [bm.verts.new((-0.86 + 1.72 * k / cols, 0.09, 0.4 + 0.12 * math.sin(k * 1.7) ** 2)) for k in range(cols + 1)]
-    for row_a, row_b in ((mid, top), (bot, mid)):
+    for r_i, (row_a, row_b) in enumerate(((mid, top), (bot, mid))):
         for k in range(cols):
+            if C.WEAR and r_i == 1 and k in (5, 6):
+                continue                                              # the tear
             bm.faces.new((row_a[k], row_a[k + 1], row_b[k + 1], row_b[k])).material_index = OLD
     for k in range(0, cols + 1, 2):
+        if C.WEAR and k in (4, 6):
+            continue
         A.loft(bm, [(bot[k].co + Vector((0, 0, -0.05)), 0.055, 0.04), (bot[k].co + Vector((0, 0, 0.05)), 0.055, 0.04)],
                sides=6, ref=(1, 0, 0), mats=BOARD)
     return make(name, bm, MATS)
@@ -345,12 +384,18 @@ def channel_marker(name="ChannelMarker"):
 
 def fish_crates(name="FishCrates"):
     """Fish crates stacked on the quay: shallow slatted boxes, three high and one beside, a coil of
-    rope against them."""
-    rnd = random.Random(6)
+    rope against them. Worn: a slat gone, the one beside knocked over on its side."""
     bm = bmesh.new()
     for k, (x, y, z) in enumerate(((0, 0, 0), (0.03, 0.02, 0.24), (-0.02, -0.01, 0.48), (0.62, -0.08, 0))):
+        if C.WEAR and k == 3:
+            A.box(bm, (x - 0.27, y - 0.2, 0), (x + 0.27, y + 0.02, 0.4), GREY)
+            for xx in (-0.15, 0.15):
+                A.box(bm, (x + xx - 0.02, y - 0.21, 0), (x + xx + 0.02, y + 0.03, 0.41), BOARD)
+            continue
         A.box(bm, (x - 0.27, y - 0.2, z), (x + 0.27, y + 0.2, z + 0.22), GREY)
-        for zz in (0.07, 0.15):
+        for j, zz in enumerate((0.07, 0.15)):
+            if C.WEAR and k == 1 and j == 1:
+                continue
             A.box(bm, (x - 0.28, y - 0.21, z + zz - 0.02), (x + 0.28, y + 0.21, z + zz + 0.02), BOARD)
     rope_coil(bm, (0.25, -0.5, 0), 0.24, ROPE)
     return make(name, bm, MATS)
@@ -358,15 +403,21 @@ def fish_crates(name="FishCrates"):
 
 def lobster_pots(name="LobsterPots"):
     """Wicker pots for crabs and eels, stacked by a jetty's foot: domed baskets with a dark mouth on
-    top, three on the ground and one on them."""
+    top, three on the ground and one on them. Worn: one crushed flat and split."""
     bm = bmesh.new()
-    for x, y, z in ((-0.3, 0, 0), (0.3, 0.05, 0), (0.0, -0.45, 0), (0.0, -0.18, 0.38)):
+    for k, (x, y, z) in enumerate(((-0.3, 0, 0), (0.3, 0.05, 0), (0.0, -0.45, 0), (0.0, -0.18, 0.38))):
+        h = 0.36
+        if C.WEAR and k == 2:
+            h = 0.18
+            A.hull(bm, [Vector((x + 0.27 * math.cos(a), y + 0.27 * math.sin(a), z + (0.0 if j == 0 else 0.14 + 0.03 * math.sin(3 * a))))
+                        for a in (2 * math.pi * i / 8 for i in range(8)) for j in (0, 1)], GREY)
+            continue
         A.prism(bm, 8, 0.25, 0.25, z, z + 0.12, (x, y), mat_index=GREY, cap_bottom=True)
-        A.prism(bm, 8, 0.25, 0.12, z + 0.12, z + 0.36, (x, y), mat_index=GREY)
-        A.prism(bm, 8, 0.12, 0.11, z + 0.36, z + 0.37, (x, y), mat_index=OLD)
+        A.prism(bm, 8, 0.25, 0.12, z + 0.12, z + h, (x, y), mat_index=GREY)
+        A.prism(bm, 8, 0.12, 0.11, z + h, z + h + 0.01, (x, y), mat_index=OLD)
         for zz in (0.06, 0.2):
-            r = 0.255 if zz < 0.12 else 0.2
-            A.prism(bm, 8, r, r, z + zz, z + zz + 0.025, (x, y), mat_index=OLD, cap_top=False)
+            rr = 0.255 if zz < 0.12 else 0.2
+            A.prism(bm, 8, rr, rr, z + zz, z + zz + 0.025, (x, y), mat_index=OLD, cap_top=False)
     return make(name, bm, MATS)
 
 
@@ -381,13 +432,28 @@ STONE_MATS = MATS + ["Flagstone", "CandleWax"]
 GLOW = PAVE + 1
 
 
-def coping_run(bm, x, y0, y1, side):
-    """Coping blocks along an edge at x from y0 to y1, overhanging on `side` (-1 west, +1 east)."""
+def coping_run(bm, x, y0, y1, side, rnd=None):
+    """Coping blocks along an edge at x from y0 to y1, overhanging on `side` (-1 west, +1 east). Worn:
+    the odd block chipped at a corner, the chip lying on the paving beside it, and now and then a
+    block gone, left lying askew where it was pushed."""
     y = y0
     while y < y1 - 0.05:
         b = min(y + 1.0, y1)
-        A.hull(bm, [Vector((xx, yy, QUAY - 0.13)) for xx in (x - 0.22 * side, x + 0.1 * side) for yy in (y + 0.012, b - 0.012)] +
-               [Vector((xx, yy, QUAY)) for xx in (x - 0.22 * side, x + 0.08 * side) for yy in (y + 0.03, b - 0.03)], COPE)
+        pts = [Vector((xx, yy, QUAY - 0.13)) for xx in (x - 0.22 * side, x + 0.1 * side) for yy in (y + 0.012, b - 0.012)] + \
+              [Vector((xx, yy, QUAY)) for xx in (x - 0.22 * side, x + 0.08 * side) for yy in (y + 0.03, b - 0.03)]
+        roll = rnd.random() if (C.WEAR and rnd is not None) else 1.0
+        if roll < 0.07 and y > y0:
+            c = Vector((x - side * 0.55, (y + b) / 2, QUAY - 0.02))
+            a = rnd.uniform(0.3, 0.6)
+            ca, sa = math.cos(a), math.sin(a)
+            loose = [Vector((c.x + dx * ca - dy * sa, c.y + dx * sa + dy * ca, c.z + dz))
+                     for dx in (-0.14, 0.14) for dy in (-0.42, 0.42) for dz in (0.0, 0.13)]
+            A.hull(bm, loose, COPE)
+        else:
+            if roll < 0.3:
+                chip_off(pts, Vector((side, rnd.choice((-1, 1)), 0)), rnd)
+                loose_stone(bm, (x - side * rnd.uniform(0.35, 0.5), rnd.uniform(y + 0.2, b - 0.2), QUAY - 0.02), 0.06, rnd, COPE)
+            A.hull(bm, pts, COPE)
         y = b
 
 
@@ -405,7 +471,10 @@ def stone_pier(width=2, length=4, name=None):
     """A solid stone pier along +Y, `width` tiles wide: masonry from the bed with battered sides and a
     weed band, a coping of pale blocks along each edge, paving between, a buttress out of each side
     every other tile with an iron bollard over one of them, rings on the sides. Walkable at the
-    quay's height."""
+    quay's height. Worn: chipped and missing coping, weeds in the paving's cracks, stones fallen at
+    the foot."""
+    name = name or "StonePier%dx%d" % (width, length)
+    rnd = C.wear_rnd(name)
     bm = bmesh.new()
     x0, x1 = -0.5, width - 0.5
     y0, y1 = -0.5, length - 0.5
@@ -415,8 +484,12 @@ def stone_pier(width=2, length=4, name=None):
         bat = lambda z: 0.3 * (1 - (z - BED) / (QUAY - 0.13 - BED)) + 0.012
         A.hull(bm, [Vector((x + side * bat(z), y, z)) for y in (y0, y1) for z in WEED] +
                [Vector((x + side * (bat(z) - 0.05), y, z)) for y in (y0, y1) for z in WEED], WEEDM)
-        coping_run(bm, x, y0, y1, side)
+        coping_run(bm, x, y0, y1, side, rnd)
+        if C.WEAR:
+            fallen(bm, x, y0, y1, side, rnd, n=max(1, length // 2))
     A.box(bm, (x0 + 0.2, y0, QUAY - 0.1), (x1 - 0.2, y1, QUAY - 0.02), PAVE)
+    if C.WEAR:
+        cracks(bm, x0 + 0.25, x1 - 0.25, y0 + 0.1, y1 - 0.1, QUAY - 0.017, rnd, n=length)
     for k in range(1, length, 2):
         for side, x in ((-1, x0), (1, x1)):
             buttress(bm, x, k - 0.5, side)
@@ -424,17 +497,18 @@ def stone_pier(width=2, length=4, name=None):
     for k in range(0, length, 2):
         for side, x in ((-1, x0), (1, x1)):
             ring_on(bm, (x + side * 0.1, k, QUAY - 0.42), (side, 0, 0), 0.09, IRON)
-    w = Walk(name or "StonePier%dx%d" % (width, length))
+    w = Walk(name)
     w.rect(0, 0, width, length, QUAY)
     for k in range(1, length, 2):
         w.drop((0 if k % 4 == 1 else width - 1, k))
-    return make(w.name, bm, STONE_MATS, w)
+    return make(name, bm, STONE_MATS, w)
 
 
 def stone_arch(width=2, name="StoneArch"):
     """Three tiles of stone pier along +Y carried on an arch, so water and small boats pass under it:
     solid ends, a round arch between them with a ring of pale voussoirs on each face, the same coping
-    and paving as the solid pier on top. Walkable at the quay's height."""
+    and paving as the solid pier on top. Walkable at the quay's height. Worn: as the solid pier."""
+    rnd = C.wear_rnd(name)
     bm = bmesh.new()
     x0, x1 = -0.5, width - 0.5
     y0, y1 = -0.5, 2.5
@@ -459,73 +533,89 @@ def stone_arch(width=2, name="StoneArch"):
         A.loft(bm, [(p, 0.03, 0.1) for p in ring], sides=4, ref=(1, 0, 0), mats=COPE)
         A.box(bm, (x - 0.012, y0, WEED[0]), (x + 0.012, a0 - 0.02, WEED[1]), WEEDM)
         A.box(bm, (x - 0.012, a1 + 0.02, WEED[0]), (x + 0.012, y1, WEED[1]), WEEDM)
-        coping_run(bm, x, y0, y1, side)
+        coping_run(bm, x, y0, y1, side, rnd)
     A.box(bm, (x0 + 0.2, y0, QUAY - 0.1), (x1 - 0.2, y1, QUAY - 0.02), PAVE)
+    if C.WEAR:
+        cracks(bm, x0 + 0.25, x1 - 0.25, y0 + 0.1, y1 - 0.1, QUAY - 0.017, rnd, n=3)
     w = Walk(name)
     w.rect(0, 0, width, 3, QUAY)
     return make(name, bm, STONE_MATS, w)
 
 
-def stone_head(name="StonePierHead"):
-    """A pier's head, four tiles wide and four long, its far end rounded: battered masonry with a weed
-    band, a coping round its edge, paving, a stone plinth in the middle with a lamp on an iron post,
-    bollards round the nose. Walkable at the quay's height, but for the plinth and the bollards."""
+def stone_head(width=4, neck=2, name=None):
+    """A pier's head, `width` tiles wide, its far end rounded: battered masonry with a weed band, a
+    coping round its edge, paving. Its back joins a pier `neck` tiles wide, centred; either side of
+    the neck the back is finished like any other face (battered, coped), so a 4-wide head makes a T
+    on a 2-wide pier. A 4-wide head has a stone plinth with a lamp and bollards round its nose; a
+    2-wide one a bollard at its tip. Walkable at the quay's height but for the plinth and bollards."""
+    name = name or ("StonePierHead%d" % width if width != 4 else "StonePierHead")
+    rnd = C.wear_rnd(name)
     bm = bmesh.new()
-    cx, cy = 1.5, 1.5
-    outline = [(-0.5, -0.5), (3.5, -0.5), (3.5, cy)] + [(cx + 2.0 * math.cos(a), cy + 2.0 * math.sin(a))
-                                                       for a in (math.pi * k / 8 for k in range(1, 8))] + [(-0.5, cy)]
-
-    def ring(out, z):
-        pts = []
-        for x, y in outline:
-            if y < -0.45:
-                pts.append(bm.verts.new((x, y, z)))
-                continue
-            dx, dy = x - cx, max(y - cy, 0.0)
-            d = math.hypot(dx, dy) or 1
-            pts.append(bm.verts.new((x + dx / d * out, y + dy / d * out, z)))
-        return pts
-
-    def batter(z):
-        return 0.3 * (1 - (z - BED) / (QUAY - 0.13 - BED))
-    lo, hi = ring(batter(BED), BED), ring(0.0, QUAY - 0.13)
-    m = len(outline)
-    for k in range(m):
-        j = (k + 1) % m
-        bm.faces.new((lo[k], lo[j], hi[j], hi[k])).material_index = STONE
-    bm.faces.new(list(reversed(lo))).material_index = STONE
-    bm.faces.new(hi).material_index = PAVE
-    wl, wh = ring(batter(WEED[0]) + 0.012, WEED[0]), ring(batter(WEED[1]) + 0.012, WEED[1])
-    for k in range(1, m - 1):
-        bm.faces.new((wl[k], wl[k + 1], wh[k + 1], wh[k])).material_index = WEEDM
-    A.loft(bm, [(Vector((x, y, QUAY - 0.065)), 0.2, 0.065) for x, y in outline[1:]] +
-           [(Vector((outline[0][0], outline[0][1] + 0.01, QUAY - 0.065)), 0.2, 0.065)], sides=4, ref=(0, 0, 1), mats=COPE)
-    A.box(bm, (cx - 0.45, cy - 0.45, QUAY - 0.13), (cx + 0.45, cy + 0.45, QUAY + 0.35), STONE)
-    A.box(bm, (cx - 0.52, cy - 0.52, QUAY + 0.35), (cx + 0.52, cy + 0.52, QUAY + 0.45), COPE)
-    A.prism(bm, 8, 0.12, 0.09, QUAY + 0.45, QUAY + 2.2, (cx, cy), mat_index=IRON)
-    A.prism(bm, 6, 0.2, 0.24, QUAY + 2.2, QUAY + 2.65, (cx, cy), mat_index=GLOW)
-    A.prism(bm, 6, 0.28, 0.03, QUAY + 2.65, QUAY + 2.82, (cx, cy), mat_index=IRON)
-    for a in (math.pi * 0.2, math.pi * 0.5, math.pi * 0.8):
-        bollard_at(bm, cx + 1.7 * math.cos(a), cy + 1.7 * math.sin(a), QUAY, IRON)
+    r = width / 2
+    cx, cy = (width - 1) / 2, r - 0.5
+    n0, n1 = cx - neck / 2, cx + neck / 2
+    arc = [(cx + r * math.cos(a), cy + r * math.sin(a)) for a in (math.pi * k / 8 for k in range(1, 8))]
+    outline = ([(n0, -0.5), (n1, -0.5)] + ([(width - 0.5, -0.5)] if n1 < width - 0.5 - 1e-6 else []) +
+               [(width - 0.5, cy)] + arc + [(-0.5, cy)] + ([(-0.5, -0.5)] if n0 > -0.5 + 1e-6 else []))
+    push = []
+    for x, y in outline:
+        if y < -0.45 and n0 - 1e-6 <= x <= n1 + 1e-6:
+            push.append((0.0, 0.0))                                   # where the pier joins
+        elif y < -0.45:
+            push.append((1.0 if x > cx else -1.0, -1.0))
+        elif y <= cy + 1e-6:
+            push.append((1.0 if x > cx else -1.0, 0.0))
+        else:
+            d = Vector((x - cx, y - cy, 0)).normalized()
+            push.append((d.x, d.y))
+    coped = [k for k in range(len(outline)) if k != 0]               # every edge but the neck's
+    outline_solid(bm, outline, push, rnd, coped)
+    if C.WEAR:
+        cracks(bm, -0.2, width - 0.8, -0.3, cy + r * 0.5, QUAY - 0.017, rnd, n=width)
+    if width >= 4:
+        A.box(bm, (cx - 0.45, cy - 0.45, QUAY - 0.13), (cx + 0.45, cy + 0.45, QUAY + 0.35), STONE)
+        top = [Vector((x, y, z)) for x in (cx - 0.52, cx + 0.52) for y in (cy - 0.52, cy + 0.52) for z in (QUAY + 0.35, QUAY + 0.45)]
+        if C.WEAR:
+            chip_off(top, Vector((1, 1, 0)), rnd)
+        A.hull(bm, top, COPE)
+        A.prism(bm, 8, 0.12, 0.09, QUAY + 0.45, QUAY + 2.2, (cx, cy), mat_index=IRON)
+        A.prism(bm, 6, 0.2, 0.24, QUAY + 2.2, QUAY + 2.65, (cx, cy), mat_index=GLOW)
+        A.prism(bm, 6, 0.28, 0.03, QUAY + 2.65, QUAY + 2.82, (cx, cy), mat_index=IRON)
+        bollards = [(cx + (r - 0.3) * math.cos(a), cy + (r - 0.3) * math.sin(a)) for a in (math.pi * 0.2, math.pi * 0.5, math.pi * 0.8)]
+    else:
+        bollards = [(cx, cy + r - 0.35)]
+    for bx, by in bollards:
+        bollard_at(bm, bx, by, QUAY, IRON)
     w = Walk(name)
-    for dx in range(4):
-        for dy in range(4):
-            if dy <= 1 or math.hypot(dx - cx, dy - cy) < 1.75:
+    for dx in range(width):
+        for dy in range(width):
+            if dy <= cy or math.hypot(dx - cx, dy - cy) < r - 0.25:
                 w.tile(dx, dy, QUAY)
-    w.drop((1, 1), (2, 1), (1, 2), (2, 2), (3, 2), (1, 3), (0, 2))
+    if width >= 4:
+        w.drop((round(cx - 0.5), round(cy - 0.5)), (round(cx + 0.5), round(cy - 0.5)), (round(cx - 0.5), round(cy + 0.5)), (round(cx + 0.5), round(cy + 0.5)))
+    for bx, by in bollards:
+        w.drop((round(bx), round(by)))
     return make(name, bm, STONE_MATS, w)
 
 
 def stone_steps(name="StoneSteps"):
     """Stairs down the side of a stone pier to the water, three tiles along +Y against the pier's face
-    (to the east, +X): broad stone steps with pale nosings, a low parapet on the water side (-X)."""
+    (to the east, +X): broad stone steps with pale nosings, a low parapet on the water side (-X).
+    Worn: the middle nosing chipped, a stone of the parapet's coping gone."""
+    rnd = C.wear_rnd(name)
     bm = bmesh.new()
     hs = [QUAY - 0.28, QUAY - 0.58, 0.12]
     for k, h in enumerate(hs):
         A.box(bm, (-0.5, k - 0.5, BED), (0.5, k + 0.5, h - 0.06), STONE)
-        A.box(bm, (-0.5, k - 0.52, h - 0.06), (0.5, k + 0.5, h), WEEDM if k == 2 else COPE)
+        chip = Vector((-1, -1, 0)) if (C.WEAR and k == 1) else None
+        nosing(bm, -0.5, k - 0.52, 0.5, k + 0.5, h, WEEDM if k == 2 else COPE, rnd, chip)
     A.box(bm, (-0.62, -0.5, BED), (-0.5, 2.5, QUAY - 0.1), STONE)
-    A.box(bm, (-0.66, -0.5, QUAY - 0.1), (-0.46, 2.5, QUAY), COPE)
+    if C.WEAR:
+        A.box(bm, (-0.66, -0.5, QUAY - 0.1), (-0.46, 1.2, QUAY), COPE)
+        A.box(bm, (-0.66, 1.7, QUAY - 0.1), (-0.46, 2.5, QUAY), COPE)
+        loose_stone(bm, (-0.95, 1.4, -0.25), 0.14, rnd, COPE)
+    else:
+        A.box(bm, (-0.66, -0.5, QUAY - 0.1), (-0.46, 2.5, QUAY), COPE)
     A.box(bm, (-0.67, -0.5, WEED[0]), (-0.62, 2.5, WEED[1]), WEEDM)
     w = Walk(name)
     for k, h in enumerate(hs):
@@ -631,3 +721,121 @@ def pile_stubs(name="PileStubs"):
             snapped(bm, x + rnd.uniform(-0.05, 0.05), k + rnd.uniform(-0.08, 0.08), rnd.uniform(0.05, 0.55), rnd, r=rnd.uniform(0.1, 0.13), mat=OLD)
     beam(bm, (-0.4, 2.0, 0.35), (0.35, 3.0, -0.1), 0.1, 0.1, mat=GREY)
     return make(name, bm, MATS)
+
+
+def stone_splay(neck=2, width=4, length=2, name=None):
+    """Where a pier widens: `length` tiles along +Y over which its sides splay out from `neck` tiles
+    wide to `width`, centred, battered and coped like the rest; the paving runs through. Joins a
+    narrow pier behind and a wide pier or head ahead."""
+    name = name or "StoneSplay%dto%d" % (neck, width)
+    rnd = C.wear_rnd(name)
+    bm = bmesh.new()
+    o = (width - neck) / 2
+    y0, y1 = -0.5, length - 0.5
+    outline = [(-0.5, y0), (neck - 0.5, y0), (neck - 0.5 + o, y1), (-0.5 - o, y1)]
+    push = [(-1.0, 0.0), (1.0, 0.0), (1.0, 0.0), (-1.0, 0.0)]      # out sideways, as the piers either end
+    outline_solid(bm, outline, push, rnd, coped=[1, 3])
+    if C.WEAR:
+        cracks(bm, -0.2, neck - 0.8, y0 + 0.1, y1 - 0.1, QUAY - 0.017, rnd, n=2)
+    w = Walk(name)
+    for dy in range(length):
+        half = neck / 2 + o * (dy + 0.5) / length
+        for dx in range(-math.ceil(o), neck + math.ceil(o)):
+            if abs(dx - (neck - 1) / 2) + 0.5 <= half + 0.05:
+                w.tile(dx, dy, QUAY)
+    return make(name, bm, STONE_MATS, w)
+
+
+def outline_solid(bm, outline, push, rnd, coped=None, lamp_at=None):
+    """Battered masonry under an outline of (x, y) points: each point pushed out at the bed along its
+    `push` vector (zero where it meets another piece), a weed band and a coping along the edges in
+    `coped` (indices of the outline's edges, i to i+1), paving on top."""
+    def batter(z):
+        return 0.3 * (1 - (z - BED) / (QUAY - 0.13 - BED))
+
+    def ring(z, extra=0.0):
+        return [bm.verts.new((x + px * (batter(z) + extra * (abs(px) + abs(py) > 0)), y + py * (batter(z) + extra * (abs(px) + abs(py) > 0)), z))
+                for (x, y), (px, py) in zip(outline, push)]
+    lo, hi = ring(BED), ring(QUAY - 0.13)
+    m = len(outline)
+    for k in range(m):
+        j = (k + 1) % m
+        bm.faces.new((lo[k], lo[j], hi[j], hi[k])).material_index = STONE
+    bm.faces.new(list(reversed(lo))).material_index = STONE
+    bm.faces.new(hi).material_index = PAVE
+    coped = range(m) if coped is None else coped
+    wl, wh = ring(WEED[0], 0.012), ring(WEED[1], 0.012)
+    for k in coped:
+        j = (k + 1) % m
+        bm.faces.new((wl[k], wl[j], wh[j], wh[k])).material_index = WEEDM
+    runs, cur = [], []
+    for k in range(m):
+        if k in coped:
+            if not cur:
+                cur = [k]
+            cur.append((k + 1) % m)
+        elif cur:
+            runs.append(cur)
+            cur = []
+    if cur:
+        if runs and runs[0][0] == cur[-1]:
+            runs[0] = cur[:-1] + runs[0]
+        else:
+            runs.append(cur)
+    for run in runs:
+        A.loft(bm, [(Vector((outline[i][0], outline[i][1], QUAY - 0.065)), 0.2, 0.065) for i in run], sides=4, ref=(0, 0, 1), mats=COPE)
+        if C.WEAR and rnd is not None:
+            for _ in range(len(run) // 3):
+                i = rnd.choice(run)
+                loose_stone(bm, (outline[i][0] - push[i][0] * 0.35, outline[i][1] - push[i][1] * 0.35, QUAY - 0.02), 0.06, rnd, COPE)
+
+
+def nosing(bm, x0, y0, x1, y1, z, mat, rnd=None, chip=None):
+    """A step's pale nosing slab from (x0, y0) to (x1, y1), its top at z; chip: a direction whose
+    corner is knocked off."""
+    pts = [Vector((x, y, zz)) for x in (x0, x1) for y in (y0, y1) for zz in (z - 0.06, z)]
+    if chip is not None:
+        chip_off(pts, chip, rnd)
+    A.hull(bm, pts, mat)
+
+
+def fallen(bm, x, y0, y1, side, rnd, n=2):
+    """Stones fallen from the face, lying at its foot half in the water."""
+    for _ in range(n):
+        loose_stone(bm, (x + side * rnd.uniform(0.45, 0.8), rnd.uniform(y0 + 0.3, y1 - 0.3), rnd.uniform(-0.35, -0.15)),
+                    rnd.uniform(0.15, 0.22), rnd, STONE)
+
+
+def cracks(bm, x0, x1, y0, y1, z, rnd, n=3):
+    """Weeds in the cracks of the paving: thin green lines wandering across it."""
+    for _ in range(n):
+        p = Vector((rnd.uniform(x0, x1), rnd.uniform(y0, y1), z))
+        d = Vector((rnd.uniform(-1, 1), rnd.uniform(-1, 1), 0)).normalized()
+        for k in range(rnd.randint(3, 5)):
+            q = p + d * rnd.uniform(0.12, 0.22)
+            q.x, q.y = min(max(q.x, x0), x1), min(max(q.y, y0), y1)
+            side = Vector((-d.y, d.x, 0)) * 0.018
+            v = [bm.verts.new(c) for c in (p - side, p + side, q + side, q - side)]
+            bm.faces.new(v).material_index = WEEDM
+            d = (d + Vector((rnd.uniform(-0.6, 0.6), rnd.uniform(-0.6, 0.6), 0))).normalized()
+            p = q
+
+
+def loose_stone(bm, at, s, rnd, mat):
+    """A broken-off stone lying where it fell, its foot just under it."""
+    at = Vector(at)
+    pts = [at + Vector((rnd.uniform(-s, s), rnd.uniform(-s, s), -0.01)) for _ in range(4)]
+    pts += [at + Vector((rnd.uniform(-s, s) * 0.7, rnd.uniform(-s, s) * 0.7, s * rnd.uniform(0.6, 1.0))) for _ in range(3)]
+    A.hull(bm, pts, mat)
+
+
+def chip_off(pts, which, rnd):
+    """Knock a corner off a block given by its points: the top point nearest `which` (a direction)
+    drops and draws in."""
+    top = max(p.z for p in pts)
+    tops = [p for p in pts if p.z > top - 1e-4]
+    c = max(tops, key=lambda p: p.dot(which))
+    mid = sum(tops, Vector()) / len(tops)
+    c.z -= rnd.uniform(0.05, 0.08)
+    c += (mid - c).normalized() * rnd.uniform(0.08, 0.14) * Vector((1, 1, 0))
+    return pts
