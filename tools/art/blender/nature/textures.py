@@ -6,6 +6,7 @@ below it, so a canopy skirt wearing it ends in hanging leaves.
 
 - Foliage.png: round broad leaves in olive greens (the alder; recolour for autumn).
 - Ashleaf.png: sprays of narrow paired leaflets, light yellow-green (the ash).
+- Elmleaf.png: broad rough ovals hanging slantwise, a deeper blue-green (the elm).
 - Thorn.png: small crowded dark leaves flecked with red haws (the hawthorn).
 - Gorse.png: short dark spines in a tangle, a few small yellow flowers.
 - BushDark.png / BushDarkPicked.png: a low bush's dark leaves with blue-black berries, and picked.
@@ -38,6 +39,7 @@ THORN_GREEN = ["#1d2619", "#28331f", "#334027", "#3f4e2f", "#4c5c37", "#5a6a41",
 GORSE_GREEN = ["#1b2313", "#252f19", "#303c1f", "#3c4926", "#49572e", "#576636", "#66753f"]
 BUSH_DARK = ["#1a2318", "#232f20", "#2d3b28", "#384830", "#445539", "#516342", "#5f714c"]
 BUSH_PALE = ["#283117", "#36411e", "#465327", "#576530", "#69773a", "#7c8945", "#909b52"]
+ELM_GREEN = ["#1f2a19", "#2a3821", "#36462a", "#435533", "#51643c", "#5f7346", "#6e8250"]
 WITHY = ["#2a241c", "#3f3529", "#544736", "#695a45", "#7e6d55", "#938266"]
 
 
@@ -241,6 +243,24 @@ def bush(seed, ramp, berry, clusters, leaf=(3.0, 4.6)):
     return shade, picked, palette
 
 
+def elmleaf(seed):
+    """The elm's leaves: broad rough ovals, larger than the alder's, mostly hanging slantwise, in a
+    deeper, slightly blue green; a blunt hem."""
+    rng = random.Random(seed)
+    shade = [[0] * SIZE for _ in range(SIZE)]
+    leaves = []
+    for _ in range(330):
+        a = rng.choice((0.7, 2.4)) + rng.uniform(-0.35, 0.35)
+        leaves.append((rng.uniform(-6, SIZE + 6), rng.uniform(-6, SIZE + 6), rng.uniform(5.0, 7.0),
+                       rng.uniform(3.0, 4.0), a))
+    leaves.sort(key=lambda l: l[1])
+    for cx, cy, rx, ry, a in leaves:
+        base = 2 + int(3.0 * (1 - cy / SIZE) + rng.uniform(-0.8, 1.3))
+        ellipse(shade, cx, cy, rx, ry, a, base)
+    hem(shade, rng, 8, 22, width=(10, 18))
+    return shade, [rgb(c) for c in ELM_GREEN]
+
+
 def save(name, shade, palette, preview):
     pixels = [(0, 0, 0, 0) if s < 0 else palette[s] + (255,) for row in shade for s in row]
     os.makedirs(OUT, exist_ok=True)
@@ -263,6 +283,7 @@ def main(argv):
     save("Foliage", *foliage(seed), preview)
     save("Ashleaf", *ashleaf(seed), preview)
     save("Thorn", *thorn(seed), preview)
+    save("Elmleaf", *elmleaf(seed), preview)
     save("Gorse", *gorse(seed), preview)
     for name, ramp, berry, n in (("BushDark", BUSH_DARK, ("#3d3a6e", "#7a76b4"), 46),
                                  ("BushPale", BUSH_PALE, ("#8e2b26", "#c4544a"), 40)):

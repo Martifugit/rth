@@ -667,9 +667,177 @@ def snag(seed=2, at=(0, 0, 0)):
     return make("Snag", bm, ["Driftwood"], smooth_angle=45, at=at)
 
 
+def elm(seed=8, at=(0, 0, 0)):
+    """The elm, the basin's great tree: a short heavy trunk forking low into three limbs that rise
+    steeply and spread like a vase, under one broad crown of big overlapping clumps, wide and
+    flat-topped, narrow at the waist; broad deep-green leaves."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    uvs = {}
+    fork = Vector((0.05, 0.0, 1.5))
+    roots(bm, 0.22, 0.7, 4, rnd, rot=0.8)
+    for k in range(3):
+        a = 2 * math.pi * k / 3 + rnd.uniform(-0.25, 0.25)
+        out = Vector((math.cos(a), math.sin(a), 0))
+        top = fork + out * rnd.uniform(1.0, 1.2) + Vector((0, 0, rnd.uniform(2.2, 2.5)))
+        # Each limb grows out of the one trunk: the trunk's path runs on into it.
+        path = [Vector((0, 0, -0.05)), Vector((0.03, 0.0, 0.8)), fork, fork.lerp(top, 0.5) + out * 0.12, top]
+        rod(bm, path, 0.22 if k == 0 else 0.2, sides=7, taper=0.3)
+        clump(bm, top + out * 0.2 + Vector((0, 0, 0.35)), (1.2, 1.2, 0.85), rnd, 1, 2, uvs)
+    clump(bm, fork + Vector((0, 0, 3.15)), (0.95, 0.95, 0.7), rnd, 1, 2, uvs)          # the crown's middle
+    return leafy("Elm", bm, uvs, ["Bark", leaf_mat("Elmleaf"), "Leaf1"], at)
+
+
+def elm_stump(seed=8, at=(0, 0, 0)):
+    """The elm after Woodcutting: a broad low stump, its cut showing where the trunk was about to
+    fork, heavy roots."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    cut_stub(bm, (0, 0, -0.05), 0.24, 0.5, 0.08, rnd, sides=7)
+    roots(bm, 0.22, 0.7, 4, rnd, rot=0.8, rise=1.3)
+    return make("ElmStump", bm, ["Bark", "Ash"], smooth_angle=50, at=at)
+
+
+def seam(seed=31, at=(0, 0, 0), dug=False):
+    """A mining rock: a rounded stone with its ore showing as one vein running through it, a few
+    ore-coloured chips at its foot. The ore material is named CopperOre, so other ores are a
+    recolour (objects.json "recolor"). dug: the depleted rock, the vein dug out into a dark scar."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    faces = blob(bm, (0, 0, 0.36), (0.62, 0.55, 0.52), 2, rnd, jitter=(0.88, 1.1), squash_below=-0.05)
+    normal = Vector((rnd.uniform(-0.4, 0.4), 1.0, rnd.uniform(0.4, 0.8))).normalized()
+    centre = Vector((0, 0, 0.36))
+    for f in faces:
+        d = (f.calc_center_median() - centre).dot(normal)
+        if abs(d + 0.04 * math.sin(f.calc_center_median().x * 9)) < 0.11:
+            f.material_index = 1
+    for k in range(5):
+        a, dist = rnd.uniform(0, 2 * math.pi), rnd.uniform(0.75, 1.05)
+        c = Vector((dist * math.cos(a), dist * math.sin(a), 0))
+        s = rnd.uniform(0.05, 0.09)
+        A.hull(bm, [c + Vector((s * math.cos(t), s * math.sin(t), -0.01)) for t in
+                    (rnd.uniform(0, 1), rnd.uniform(2, 3), rnd.uniform(4, 5))] + [c + Vector((0, 0, s * 0.7))],
+               mat=1 if k < 3 else 0)
+    if dug:
+        for f in bm.faces:
+            if f.material_index == 1:
+                for v in f.verts:
+                    v.co = centre + (v.co - centre) * 0.93      # the vein dug back into the rock
+        return make("SeamDug", bm, ["Scree", "Cinder"], smooth_angle=40, at=at)
+    return make("Seam", bm, ["Scree", "CopperOre"], smooth_angle=40, at=at)
+
+
+def flax(seed=5, at=(0, 0, 0), picked=False):
+    """A stand of flax (Foraging's fibre): slender upright stalks, each with a small pale-blue
+    flower. picked: the stalks pulled, a few short broken stems left in the ground."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    for i in range(16):
+        a, d = rnd.uniform(0, 2 * math.pi), rnd.uniform(0, 0.32)
+        base = Vector((d * math.cos(a), d * math.sin(a), -0.02))
+        if picked:
+            if i % 3 == 0:
+                rod(bm, [base, base + Vector((rnd.uniform(-0.05, 0.05), rnd.uniform(-0.05, 0.05), rnd.uniform(0.1, 0.2)))],
+                    0.012, mat=0, sides=3)
+            continue
+        h = rnd.uniform(0.75, 1.0)
+        top = base + Vector((rnd.uniform(-0.1, 0.1), rnd.uniform(-0.1, 0.1), h))
+        rod(bm, [base, base.lerp(top, 0.5) + Vector((rnd.uniform(-0.03, 0.03), 0, 0)), top], 0.012, mat=0, sides=3)
+        A.loft(bm, [(top - Vector((0, 0, 0.01)), 0, 0), (top + Vector((0, 0, 0.03)), 0.05, 0.05),
+                    (top + Vector((0, 0, 0.045)), 0, 0)], sides=5, ref=(1, 0, 0), mats=1)
+    name = "FlaxPicked" if picked else "Flax"
+    return make(name, bm, ["Leaf5", "Moonlight"] if not picked else ["Wheat"], smooth_angle=60, at=at)
+
+
+def herb(seed=6, at=(0, 0, 0), picked=False):
+    """A herb (Foraging): a low rosette of broad leaves curling up at the tips, a stalk from its
+    middle with a head of small pale flowers. picked: the stalk and the best leaves taken, a few
+    small leaves left flat on the ground."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    n = 4 if picked else 8
+    for k in range(n):
+        a = 2 * math.pi * k / n + rnd.uniform(-0.2, 0.2)
+        d = Vector((math.cos(a), math.sin(a), 0))
+        s = Vector((-d.y, d.x, 0))
+        length = rnd.uniform(0.18, 0.24) if picked else rnd.uniform(0.28, 0.38)
+        lift = 0.03 if picked else 0.12
+        v = [bm.verts.new(p) for p in (Vector((0, 0, 0.03)), d * length * 0.45 + s * 0.08 + Vector((0, 0, lift * 0.4)),
+                                         d * length + Vector((0, 0, lift)), d * length * 0.45 - s * 0.08 + Vector((0, 0, lift * 0.4)))]
+        bm.faces.new(v).material_index = 0
+    if not picked:
+        top = Vector((rnd.uniform(-0.03, 0.03), rnd.uniform(-0.03, 0.03), 0.5))
+        rod(bm, [(0, 0, 0.02), Vector((0, 0, 0.28)), top], 0.014, mat=0, sides=3)
+        for k in range(5):
+            a = 2 * math.pi * k / 5
+            c = top + Vector((0.05 * math.cos(a), 0.05 * math.sin(a), rnd.uniform(-0.03, 0.02)))
+            A.loft(bm, [(c - Vector((0, 0, 0.025)), 0, 0), (c, 0.035, 0.035), (c + Vector((0, 0, 0.025)), 0, 0)],
+                   sides=4, ref=(1, 0, 0), mats=1)
+    return make("HerbPicked" if picked else "Herb", bm, ["Leaf4", "SaintBone"], smooth_angle=60, at=at)
+
+
+def mushrooms(seed=7, at=(0, 0, 0), picked=False):
+    """A cluster of mushrooms (Foraging): pale stalks under broad ochre caps, one large, the rest
+    smaller, leaning out from each other. picked: the caps taken, broken stalks and two buttons left."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    sizes = [1.6, 1.2, 0.95, 0.8, 0.65]
+    for i, k in enumerate(sizes):
+        a = rnd.uniform(0, 2 * math.pi)
+        d = 0.0 if i == 0 else rnd.uniform(0.2, 0.38)
+        out = Vector((math.cos(a), math.sin(a), 0))
+        base = out * d + Vector((0, 0, -0.02))
+        if picked and i < 3:
+            rod(bm, [base, base + Vector((0, 0, 0.06 * k))], 0.035 * k, mat=0, sides=5)
+            continue
+        if picked:
+            k *= 0.5
+        h = 0.22 * k
+        top = base + out * 0.04 * k + Vector((0, 0, h))
+        rod(bm, [base, top], 0.03 * k, mat=0, sides=5)
+        r = 0.13 * k
+        A.loft(bm, [(top - Vector((0, 0, 0.01)), r * 0.35, r * 0.35), (top + Vector((0, 0, 0.0)), r, r),
+                    (top + Vector((0, 0, 0.05 * k)), r * 0.75, r * 0.75), (top + Vector((0, 0, 0.08 * k)), 0, 0)],
+                   sides=7, ref=(1, 0, 0), mats=1)
+    return make("MushroomsPicked" if picked else "Mushrooms", bm, ["SaintBone", "Sandstone"], smooth_angle=60, at=at)
+
+
+def field_gate(seed=1, at=(0, 0, 0)):
+    """A field gate, one tile along X, to hang in any of the fences: a round hanging post at the
+    span's start, a frame of crooked rails with a brace running up from the hinge foot, a
+    closing post at the far end."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    for x in (0.0, 1.0):
+        rod(bm, wobble(rnd, (x, 0, -0.05), (x, 0, 1.08), 3, 0.015), 0.055, sides=6, taper=0.9)
+    for z in (0.2, 0.45, 0.7, 0.95):
+        rod(bm, wobble(rnd, (0.06, 0.06, z), (0.94, 0.06, z + rnd.uniform(-0.02, 0.02)), 3, 0.015), 0.03, sides=4)
+    for x in (0.06, 0.94):
+        rod(bm, [(x, 0.06, 0.15), (x, 0.06, 1.0)], 0.035, sides=4)
+    rod(bm, [(0.08, 0.075, 0.22), (0.9, 0.075, 0.93)], 0.028, sides=4)
+    return make("FieldGate", bm, ["Driftwood"], smooth_angle=50, at=at)
+
+
+def wall_stile(seed=2, at=(0, 0, 0)):
+    """A stile through the field wall, one tile along X: the wall's span with three flat through-
+    stones set in it as steps, sticking out on both sides, climbing to the top."""
+    ob = wall_span(seed=seed, at=at)
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    bm.from_mesh(ob.data)
+    for x, z in ((0.3, 0.18), (0.5, 0.38), (0.7, 0.58)):
+        w = rnd.uniform(0.1, 0.13)                   # a flat stone through the wall, out both sides
+        A.box(bm, (x - w, -0.42, z), (x + w, 0.42, z + 0.07), 1)
+    bm.to_mesh(ob.data)
+    bm.free()
+    A.box_uvs(ob.data)
+    ob.name = ob.data.name = "WallStile"
+    return ob
+
+
 # ---- the board --------------------------------------------------------------------------------
 
-W, H = 32, 22
+W, H = 38, 22
 WATER_Z = -0.18
 
 
@@ -749,6 +917,7 @@ def build():
         "hawthorn": hawthorn(at=(15.0, t, 0)), "hawthorn_stump": hawthorn_stump(at=(19.6, t, 0)),
         "pollard": pollard(at=(22.8, t, 0)), "pollard_stump": pollard_stump(at=(25.2, t, 0)),
         "snag": snag(at=(28.6, t, 0)),
+        "elm": elm(at=(32.0, t, 0)), "elm_stump": elm_stump(at=(35.2, t, 0)),
     })
     b = ROW_BUSHES
     objs.update({
@@ -761,20 +930,32 @@ def build():
         objs["tussock_%d" % i] = tussock(seed=i + 1, at=(x, y, 0))
     for i, (x, y) in enumerate(((24.0, b), (24.8, b + 0.5), (25.5, b - 0.3))):
         objs["dock_%d" % i] = dock(seed=i + 1, at=(x, y, 0))
+    objs.update({
+        "flax": flax(at=(28.0, b, 0)), "flax_picked": flax(at=(29.4, b, 0), picked=True),
+        "herb": herb(at=(31.0, b, 0)), "herb_picked": herb(at=(32.2, b, 0), picked=True),
+        "mushrooms": mushrooms(at=(33.8, b, 0)), "mushrooms_picked": mushrooms(at=(35.0, b, 0), picked=True),
+    })
     s_ = ROW_STONE
     objs.update({
         "boulders": boulders(at=(3.5, s_, 0)),
         "boulders_small": boulders(seed=17, at=(7.5, s_, 0), size=0.6),
         "boulders_large": boulders(seed=3, at=(11.5, s_, 0), size=1.4),
         "cairn": cairn(at=(15.5, s_, 0)),
+        "seam": seam(at=(20.0, s_, 0)),
+        "seam_iron": seam(seed=33, at=(22.5, s_, 0)),
+        "seam_dug": seam(at=(25.0, s_, 0), dug=True),
     })
+    iron = objs["seam_iron"].data                      # what objects.json "recolor" does in the game
+    iron.materials[1] = A.mat("IronOre")
     r = ROW_BOUNDS
     for i, x in enumerate((1, 2, 3, 4)):
         objs["buck_%d" % i] = buck_fence(seed=i + 1, at=(x, r, 0), end_post=(i == 3))
     for i, x in enumerate((7, 8, 9)):
         objs["hurdle_%d" % i] = hurdle(seed=i + 1, at=(x, r, 0), end_post=(i == 2))
+    objs["gate"] = field_gate(at=(10, r, 0))          # in the hurdles' line
     for i, x in enumerate((12, 13, 15, 16)):           # a gap at 14: a fallen stretch of wall
         objs["wall_%d" % i] = wall_span(seed=i + 1, at=(x, r, 0))
+    objs["stile"] = wall_stile(at=(17, r, 0))
     for i, x in enumerate(range(19, 25)):
         objs["hedge_%d" % i] = hedge(seed=i + 1, at=(x, r, 0))
     return objs
@@ -782,7 +963,7 @@ def build():
 
 def rig():
     """The game's sun and camera, the player by the trees, Material Preview with scene lights."""
-    A.preview_rig(focus=(16.0, 11.0, 0.8), distance=34.0, pitch=40, yaw=-20, ground=0, human=True,
+    A.preview_rig(focus=(19.0, 11.0, 0.8), distance=38.0, pitch=40, yaw=-20, ground=0, human=True,
                   human_at=(7.0, ROW_TREES - 1.2))
     for area in bpy.context.screen.areas:
         if area.type == "VIEW_3D":
@@ -818,6 +999,12 @@ ASSETS = {
     "BuckFence": span(buck_fence), "BuckFenceEnd": span(buck_fence, end_post=True),
     "Hurdle": span(hurdle), "HurdleEnd": span(hurdle, end_post=True),
     "WallSpan": span(wall_span), "Hedge": span(hedge),
+    "Elm": elm, "ElmStump": elm_stump,
+    "Seam": seam, "SeamDug": lambda: seam(dug=True),
+    "Flax": flax, "FlaxPicked": lambda: flax(picked=True),
+    "Herb": herb, "HerbPicked": lambda: herb(picked=True),
+    "Mushrooms": mushrooms, "MushroomsPicked": lambda: mushrooms(picked=True),
+    "FieldGate": span(field_gate), "WallStile": span(wall_stile),
 }
 
 
