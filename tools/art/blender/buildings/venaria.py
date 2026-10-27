@@ -24,7 +24,7 @@ import rth_art as A  # noqa: E402
 EXPORT = True
 STOREY = 2.6                    # fits the player (1.9) with room over his head
 DOOR = 2.1                      # a doorway's clear height
-LIFT = STOREY - 2.3             # windows and fittings were placed for a 2.3 storey
+LIFT = STOREY - 2.3             # the lantern and banner were placed for a 2.3 storey
 PITCH = 42.0
 RISE = math.tan(math.radians(PITCH))
 T = 0.22                        # wall thickness, centred on the grid line
@@ -172,7 +172,7 @@ def piece_wall_shuttered():
     """A poor house's window: a dark opening and plank shutters standing open."""
     bm = bmesh.new()
     wall_frame(bm)
-    w0, w1, s0, s1 = 0.32, 0.68, 1.05 + LIFT, 1.7 + LIFT
+    w0, w1, s0, s1 = 0.28, 0.72, 1.15, 1.85
     holed_wall(bm, w0, w1, s0, s1)
     box(bm, w0, w1, -0.02, 0.02, s0, s1, DARK)
     window_surround(bm, w0, w1, s0, s1)
@@ -185,7 +185,7 @@ def piece_wall_leaded():
     """A better house's window: two lights of leaded glass either side of a mullion."""
     bm = bmesh.new()
     wall_frame(bm)
-    w0, w1, s0, s1 = 0.24, 0.76, 0.95 + LIFT, 1.75 + LIFT
+    w0, w1, s0, s1 = 0.2, 0.8, 1.0, 1.9
     holed_wall(bm, w0, w1, s0, s1)
     mid = (w0 + w1) / 2
     for a, b in ((w0, mid - 0.025), (mid + 0.025, w1)):
@@ -207,7 +207,7 @@ def piece_wall_lancet():
     """The wound's shape: a narrow pointed window of leaded glass (red in a church, by recolour)."""
     bm = bmesh.new()
     wall_frame(bm)
-    w0, w1, s0, s1, apex = 0.36, 0.64, 0.8 + LIFT, 1.5 + LIFT, 1.92 + LIFT
+    w0, w1, s0, s1, apex = 0.34, 0.66, 1.0, 1.75, 2.2
     panel(bm, 0, w0, LO, HI)
     panel(bm, w1, 1, LO, HI)
     panel(bm, w0, w1, LO, s0)
@@ -239,17 +239,13 @@ def piece_wall_lancet():
 
 def piece_wall_doorway():
     bm = bmesh.new()
-    box(bm, 0, 0.12, -T / 2 - 0.02, T / 2 + 0.02, 0, PLINTH, STONE)
-    box(bm, 0.88, 1, -T / 2 - 0.02, T / 2 + 0.02, 0, PLINTH, STONE)
     d1 = DOOR
-    panel(bm, 0, 0.12, PLINTH, HI)
-    panel(bm, 0.88, 1, PLINTH, HI)
-    panel(bm, 0.12, 0.88, d1 + 0.1, HI)
+    panel(bm, 0.08, 0.92, d1 + 0.1, HI)
     box(bm, 0, 1, -T / 2 - 0.015, T / 2 + 0.015, HI, STOREY, TIMBER)
-    for x in (0.08, 0.84):
+    for x in (0.0, 0.92):                                         # the jambs, at the tile's edges
         box(bm, x, x + 0.08, -T / 2 - 0.02, T / 2 + 0.02, 0, d1 + 0.1, TIMBER)
-    box(bm, 0.04, 0.96, -T / 2 - 0.03, T / 2 + 0.03, d1, d1 + 0.12, TIMBER)
-    box(bm, 0.16, 0.84, -T / 2 - 0.02, T / 2 + 0.02, 0, 0.04, STONE)
+    box(bm, 0.0, 1.0, -T / 2 - 0.03, T / 2 + 0.03, d1, d1 + 0.12, TIMBER)
+    box(bm, 0.08, 0.92, -T / 2 - 0.02, T / 2 + 0.02, 0, 0.04, STONE)
     return bm
 
 
@@ -272,12 +268,12 @@ def piece_wall_barn_door():
 def piece_door():
     """Planks behind heavy iron: three straps and studs (the iron worn openly)."""
     bm = bmesh.new()
-    box(bm, 0.16, 0.84, -0.03, 0.03, 0.04, DOOR, PLANKS)
+    box(bm, 0.08, 0.92, -0.03, 0.03, 0.04, DOOR, PLANKS)
     for z in (0.35, 0.35 + (DOOR - 0.5) / 2, DOOR - 0.3):
-        box(bm, 0.16, 0.78, -0.05, -0.03, z, z + 0.08, IRON)
-        for x in (0.3, 0.5, 0.7):
+        box(bm, 0.08, 0.84, -0.05, -0.03, z, z + 0.08, IRON)
+        for x in (0.25, 0.47, 0.69):
             box(bm, x - 0.018, x + 0.018, -0.065, -0.05, z + 0.022, z + 0.058, IRON)
-    box(bm, 0.70, 0.75, -0.07, -0.03, DOOR / 2, DOOR / 2 + 0.07, IRON)
+    box(bm, 0.78, 0.83, -0.07, -0.03, DOOR / 2, DOOR / 2 + 0.07, IRON)
     return bm
 
 
@@ -354,9 +350,9 @@ def piece_font():
     """The tithe font by a sworn door: a stone basin on a stem, dark with blood."""
     bm = bmesh.new()
     A.loft(bm, [((0, 0, 0), 0.16, 0.16), ((0, 0, 0.1), 0.16, 0.16), ((0, 0, 0.12), 0.07, 0.07),
-                ((0, 0, 0.5), 0.06, 0.06), ((0, 0, 0.55), 0.17, 0.17), ((0, 0, 0.68), 0.19, 0.19)],
+                ((0, 0, 0.77), 0.06, 0.06), ((0, 0, 0.82), 0.17, 0.17), ((0, 0, 0.95), 0.19, 0.19)],
            sides=8, ref=(0, 1, 0), mats=STONE)
-    A.loft(bm, [((0, 0, 0.684), 0.15, 0.15), ((0, 0, 0.686), 0, 0)], sides=8, ref=(0, 1, 0), mats=BLOOD)
+    A.loft(bm, [((0, 0, 0.954), 0.15, 0.15), ((0, 0, 0.956), 0, 0)], sides=8, ref=(0, 1, 0), mats=BLOOD)
     return bm
 
 
