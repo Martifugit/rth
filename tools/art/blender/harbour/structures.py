@@ -782,8 +782,22 @@ def outline_solid(bm, outline, push, rnd, coped=None, lamp_at=None):
             runs[0] = cur[:-1] + runs[0]
         else:
             runs.append(cur)
+    def normal(k):
+        """The outward normal of edge k (the outline runs anticlockwise)."""
+        (ax, ay), (bx, by) = outline[k], outline[(k + 1) % m]
+        return Vector((by - ay, -(bx - ax), 0)).normalized()
+
     for run in runs:
-        A.loft(bm, [(Vector((outline[i][0], outline[i][1], QUAY - 0.065)), 0.2, 0.065) for i in run], sides=4, ref=(0, 0, 1), mats=COPE)
+        # lay the coping as coping_run does: from 0.22 inside the face to 0.1 outside it, so it lines
+        # up with the piers this piece joins; at each point the normals of its coped edges are mitred
+        pts = []
+        for idx, i in enumerate(run):
+            edges = [e for e in ((i - 1) % m, i) if e in coped and (idx > 0 or e == i) and (idx < len(run) - 1 or e != i)]
+            n = sum((normal(e) for e in edges), Vector()) or normal(i)
+            n.normalize()
+            k = 1.0 / max(n.dot(normal(edges[0])), 0.5)
+            pts.append((Vector((outline[i][0], outline[i][1], QUAY - 0.065)) + n * (-0.06 * k), 0.16 * k, 0.065))
+        A.loft(bm, pts, sides=4, ref=(0, 0, 1), mats=COPE)
         if C.WEAR and rnd is not None:
             for _ in range(len(run) // 3):
                 i = rnd.choice(run)
