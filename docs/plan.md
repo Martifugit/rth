@@ -140,8 +140,8 @@ Wave 3
 | **Owns** | `docs/lore-rework/entities/*.md`, `docs/lore-rework/timeline.md` |
 | **Status** | not started |
 
-- **Who the player is** and why they matter: the old premise (the one sleeper who woke) is under
-  review (`docs/lore.md` VI). Decide it early: it shapes the first quests.
+- ~~Who the player is~~ Decided (2026-10-27): the stranger the bell tolled for (`docs/lore.md` VI,
+  `docs/quests/the-bell.md`). Why they came back is sealed; who they were is open.
 - One sheet per power, using the entity sheet in `docs/lore-rework/README.md`: the empire, House
   Gall, the lesser houses, the spine's surface people, the dwarves, Sere, the Faceless, the
   demigods' keepers, the village on p-head's brow, the frontier peoples.
@@ -513,7 +513,7 @@ The owner's list (2026-10-22):
 | Decision | Needed by |
 | --- | --- |
 | Names (church, spine people, realm of the dead, ferryman, walker, p-spoil, gods, places), and which "under review" names come back | A2, B2 |
-| Who the player is (the sleeper premise: keep, change or drop) | A3, the first quests |
+| ~~Who the player is~~ Decided 2026-10-27: the stranger the bell tolled for (`docs/lore.md` VI) | A3, the first quests |
 | ~~Whether L1 extends the art branch's layout prototype or replaces it~~ L1 extended it: `world/layout/zones.json` is in its format and the bake reads it. Whether to delete the old `layout.json` and `tools/world-layout/` | L1 |
 | The rough layout: size, Tolling-Cruor distance, Sere west of Tolling, the drainage, the passes, the cold north (`docs/layout.md` section 6) | L1 |
 | How much terrain to use: the scale decisions D1-D4 (`docs/world-scale.md`) | the first test area |

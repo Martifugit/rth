@@ -48,6 +48,9 @@ badlands, not here), bracken becomes heath.
 **Landmarks and views:**
 - **Wennow** itself is the area's shape: seen from the town's south-east, from Palmerway along
   its north shore, and from the dry rise south.
+- **Tolling's bell tower**, over the chapel and the dead-house where every player first wakes: the
+  town's mark on the skyline, seen from the dry rise, from Palmerway and across Wennow. It is the
+  player's story (`docs/lore.md` VI), so it should read from everywhere in the basin.
 - **Widdermill's wheel**, turning against the river: seen from the bridge and from across the mere.
 - **Cruor's monument** on Palmerway: seen along the road from the town's east edge.
 - **The view south-west to the spine** from the dry rise: the mountains always west.
@@ -78,12 +81,12 @@ Wenn); everything else is open to its neighbours.
 
 | Place | Where | Holds |
 | --- | --- | --- |
-| Tolling (town) | (30, 48), the spawn | a plain square for now; at stage 3 the bank, apothecary, skinning yard and the first quest |
+| Tolling (town) | (30, 48), the spawn | a plain square for now; at stage 2 the chapel, bell tower and dead-house (where new players appear); at stage 3 the bank, apothecary, skinning yard and the first quest, The Bell (`docs/quests/the-bell.md`) |
 | Widdermill (landmark) | (30, 80) | the mill and its pond, on the river |
 | The waygate (landmark) | (180, 48) | the wardens' gate on the road (finding 2) |
 | Palmerway's monument | on the road east | Cruor's monument, Brother Hollis (stage 3) |
 | **p-edge-farm** (hamlet, proposed) | the Sere road, about 60 tiles south of Tolling, where the meadow meets the gravel | the last green farm before Sere: the first beat on the Sere road (world-plan section 5, "the edge of the green") |
-| **s-wennow-south** (site, proposed) | Wennow's south shore | early, kind open: something to find off every road (a drowned thing, a shrine, a fishing spot) |
+| **s-wennow-south** (site) | Wennow's south shore | early: where the fishers pulled the player out of the mere (The Bell's fourth step); something is still there |
 | **s-dry-rise** (site, proposed) | the gravel rise in `land_1_m1`, about (130, -70) | early, a lookout: the view back over the basin |
 
 The area has no sites in the layout today (the nearest are s-heath-ruin north of Palmerway and
@@ -103,7 +106,7 @@ s-reed-fens east of it, both in other areas).
 waygate); the sleepers' graves; at the edge of the green, field walls running out into the
 gravel where the farms used to reach further (the dry is spreading).
 
-**Something to find:** s-wennow-south, and whatever is in Sour Hollow's cask.
+**Something to find:** s-wennow-south (where you were found), and whatever is in Sour Hollow's cask.
 
 **Danger:** none in the town but rats and mites; a little more at the dry edge. Danger reads
 before it bites: the dry ground is where it starts.
@@ -145,6 +148,7 @@ before it bites: the dry ground is where it starts.
 
 ## Questions for the owner
 
-1. **The farm and the two sites:** keep p-edge-farm, s-wennow-south and s-dry-rise?
+1. **The farm and the dry rise:** keep p-edge-farm and s-dry-rise? (s-wennow-south is kept: it is
+   where the player was found, 2026-10-27.)
 2. **Height:** the basin is low (0 to 1.5) and rises only to the south and the dry edge. Right, or
    should the town stand on a gentle rise above the river?

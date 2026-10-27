@@ -273,8 +273,20 @@ empire, learn from the occultists, study with the spine's surface people or trad
 dwarves, and most players will do something with all of them. Each power's stories show the
 others from inside.
 
-*Open: who the player is and why they matter (the earlier premise, a sleeper who woke, is under
-review).*
+**The bell tolled for them** (decided 2026-10-27). The night before the game begins, Tolling's
+bell rang for a death: fishers had pulled a stranger out of Wennow, and the church laid the body out
+in the dead-house under the bell tower. In the morning the stranger got up. That is the player.
+
+The game never stages this as an opening; the player simply starts in the dead-house, and the town
+remembers. The bell-ringer looks twice, the church's ledger has them down as dead, and the first
+quest (`docs/quests/the-bell.md`) is finding out what happened, as far as anyone in Tolling knows.
+
+- **Sealed:** why the bell rang for them, and why they came back. It is connected to the revision;
+  how is not decided.
+- **Their past is open.** Nobody in Tolling knows them. Someone may come looking later: not
+  necessarily someone who knew them, or who wishes them well, but someone who knows a little more
+  than the player does, and gives it out in pieces.
+- The ferryman, meeting them the first time they die, already knows them.
 
 ---
 
