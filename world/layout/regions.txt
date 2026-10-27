@@ -169,7 +169,7 @@
 -3,0    x  -288.. -193  y     0..   95  land 100%  core  33%  frontier  pass p-salt-pass; open heath (road)
 -2,0    x  -192..  -97  y     0..   95  land 100%  core 100%  range     hamlet p-west-toll; pass p-salt-pass (road, river)
 -1,0    x   -96..   -1  y     0..   95  land 100%  core 100%  empire    built: land_m1_0; pass p-salt-pass (road)
-0,0     x     0..   95  y     0..   95  land  97%  core  97%  empire    the start; town Tolling; landmark Widdermill (road, river, lake)
+0,0     x     0..   95  y     0..   95  land  97%  core  97%  empire    the start; built: land_0_0; town Tolling; landmark Widdermill (road, river, lake)
 1,0     x    96..  191  y     0..   95  land  93%  core  93%  empire    the road east, today's edge of the world; built: land_1_0; landmark the waygate (road, lake)
 2,0     x   192..  287  y     0..   95  land  59%  core  59%  empire    built: land_2_0; town p-lakeport (road, river, lake)
 3,0     x   288..  383  y     0..   95  land  84%  core  84%  empire    built: land_3_0; village p-weir (road, river, lake)

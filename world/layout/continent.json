@@ -768,6 +768,7 @@
       "poly": [[-142, 440], [-70, 442], [-64, 502], [-136, 506]]
     },
     {"id": "cruor-hill", "name": "Cruor's hill", "kind": "hill", "height": 3.6, "ellipse": [322, 176, 48, 44]},
+    {"id": "tolling-knoll", "name": "Tolling's knoll", "kind": "hill", "height": 1.2, "ellipse": [26, 49, 24, 22]},
     {
       "id": "white-edge",
       "name": "the Downs' white edge",
@@ -1249,7 +1250,7 @@
       "across": 200,
       "note": "the empire's capital and p-sworn's church, on a hill in the great river's meander where the lake's outflow joins it"
     },
-    {"id": "tolling", "name": "Tolling", "tier": "town", "at": [30, 48], "start": true, "note": "the start, in the low Wennow basin"},
+    {"id": "tolling", "name": "Tolling", "tier": "town", "at": [30, 48], "flat": 12, "start": true, "note": "the start, on a low knoll in the Wennow basin (tolling-knoll), the bell tower on its crown"},
     {
       "id": "p-lakeport",
       "name": "p-lakeport",

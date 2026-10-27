@@ -8,7 +8,7 @@ stage 2 ([world-areas.md](../world-areas.md)). Template: [world-example.md](../w
 
 | Region | Tiles | Now | Role in the area |
 | --- | --- | --- | --- |
-| `land_0_0` | x 0..95, y 0..95 | generated (was `tolling`); take over at 1.2 | the start: the town's square and fields, the river, the spawn (the layout's start place), Wennow's north-west shore |
+| `land_0_0` | x 0..95, y 0..95 | taken over (was `tolling`) | the start: the town's square and fields, the river, the spawn (the layout's start place), Wennow's north-west shore |
 | `land_1_0` | x 96..191, y 0..95 | taken over (was `palmerway`) | the heath road east along Wennow's north shore to the waygate's place |
 | `land_0_m1` | x 0..95, y -96..-1 | taken over | south of the town: the Sere road leaving, meadow and grass rising gently to the first dry ground |
 | `land_1_m1` | x 96..191, y -96..-1 | taken over | Wennow's south half, the Wenn leaving east for Knellmere, and the edge of the green: gravel rising to about 4 in the south-east |
@@ -144,7 +144,7 @@ before it bites: the dry ground is where it starts.
 | Landmarks shape the skyline | The bell tower on its knoll; Wennow, the mill, the monument; the spine to the west. |
 | Edges are scenery | **Fails today**: the waygate can be walked round (finding 2, stage 2). |
 | Few ground colours | Five, down from eleven in the south. |
-| Paint the RuneScape way | All four regions are painted (three taken over, `land_0_0` still generated). |
+| Paint the RuneScape way | All four regions are painted and taken over. |
 | History in the ground | Toll-house, graves, field walls in the gravel. |
 | Something to find | s-wennow-south, Sour Hollow. |
 | Danger reads before it bites | Rats in town, harder things on the dry edge. |
@@ -168,6 +168,15 @@ before it bites: the dry ground is where it starts.
    the land past the west end of its line until its bounding box cut it off; scarps now die away
    over 40 tiles past their ends (`ReliefTests`).
 6. **Red stains on the gravel** (fixed): gravel no longer mixes in 3% red rock.
+7. **The knoll** (2026-10-27): a `hill` in the layout, `tolling-knoll` (height 1.2, an ellipse
+   24 by 22 tiles centred just west of the town), and the town's platform narrowed to 12 (`"flat"`
+   on Tolling in `continent.json`), then `land_0_0` taken over. The town stands at about 2.1, the
+   river below it at 0.1 and the water meadows east of it at 0.4 to 0.6; nothing steeper than 0.7
+   a tile, so no cliffs, and the roads out wind down off it. The roads were re-routed over it in
+   `land_0_0`; on the world map Palmerway's line now bends slightly off the painted road in
+   `land_1_0` (taken over earlier), which 2.1 Routes settles.
+8. **Tolling's river is ruler-straight** through `land_0_0`, unlike the march's, which meanders
+   now: 1.4 Water.
 
 ## Decided (2026-10-27)
 
