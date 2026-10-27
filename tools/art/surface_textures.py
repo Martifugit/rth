@@ -279,6 +279,27 @@ def coarse(grid):
     return c
 
 
+def chunky(c):
+    """Any painter's pattern made as chunky as the 2004 game's: each CELL x CELL block one shade,
+    its commonest, or its darkest where a joint or seam runs through it (so mortar lines, slate
+    edges and reed shadows stay one cell wide rather than averaging away). Tinted pixels (moss)
+    average. Fine 128-pixel detail read as plastic and modern on buildings (the owner, 2026-10-28)."""
+    out = Canvas()
+    for gy in range(GRID):
+        for gx in range(GRID):
+            cell = [c.px[(gy * CELL + dy) * SIZE + gx * CELL + dx] for dy in range(CELL) for dx in range(CELL)]
+            if any(not isinstance(v, float) for v in cell):
+                rgb = [(v, v, v) if isinstance(v, float) else v for v in cell]
+                value = tuple(sum(p[k] for p in rgb) / len(rgb) for k in range(3))
+            else:
+                darkest, mean = min(cell), sum(cell) / len(cell)
+                value = darkest if darkest <= LEVELS[2] else min(LEVELS, key=lambda lv: abs(lv - mean))
+            for dy in range(CELL):
+                for dx in range(CELL):
+                    out.px[(gy * CELL + dy) * SIZE + gx * CELL + dx] = value
+    return out
+
+
 def boards(rnd):
     """Broad boards side by side (the seams run down the image), each its own shade, a dark seam and a
     lit edge beside it, a short streak of grain or two, and on each board one butt joint with a pair
@@ -336,6 +357,31 @@ def blocks(rnd):
     return coarse(g)
 
 
+def coursed(rnd, heights, widths, joint=2):
+    """Stone in courses, painted on the chunky grid (one-pixel mortar can't survive being made
+    chunky): courses of the given heights in cells (split to fill the tile exactly), stones of the
+    given widths, each its own shade, lit along its top and shaded along its foot, a dark joint
+    round each. Fieldstone: uneven courses of small stones; ashlar: even courses of long ones."""
+    g = [[joint] * GRID for _ in range(GRID)]
+    y0 = 0
+    for course in split(GRID, heights[0], heights[1], rnd):
+        x = rnd.randrange(GRID)
+        total = 0
+        while total < GRID:
+            wdt = min(rnd.randint(widths[0], widths[1]), GRID - total)
+            shade = rnd.choice((4, 5, 5, 6, 6, 7))
+            for dx in range(1, wdt):
+                for dy in range(1, course):
+                    level = min(7, shade + 1) if dy == 1 else shade - 1 if dy == course - 1 and course > 2 else shade
+                    g[(y0 + dy) % GRID][(x + dx) % GRID] = level
+            x += wdt
+            total += wdt
+        y0 += course
+    for _ in range(5):                                         # a few chips and stains
+        g[rnd.randrange(GRID)][rnd.randrange(GRID)] = 3
+    return coarse(g)
+
+
 def flags(rnd):
     """Paving flags, roughly square, laid in rows each a little off the last: a dark joint, each flag
     its own shade, the odd crack."""
@@ -362,13 +408,13 @@ def flags(rnd):
 
 
 TEXTURES = {
-    "Thatch": lambda r: thatch(r),
-    "Slate": lambda r: slate(r),
-    "Fieldstone": lambda r: stones(r, 12, 20, 14, 30, rough=True),
-    "Ashlar": lambda r: stones(r, 16, 16, 28, 36, rough=False),
-    "Planks": lambda r: planks(r),
-    "Plaster": lambda r: plaster(r),
-    "Beam": lambda r: beam(r),
+    "Thatch": lambda r: chunky(thatch(r)),
+    "Slate": lambda r: chunky(slate(r)),
+    "Fieldstone": lambda r: coursed(r, (3, 5), (3, 7)),
+    "Ashlar": lambda r: coursed(r, (4, 4), (7, 9)),
+    "Planks": lambda r: chunky(planks(r)),
+    "Plaster": lambda r: chunky(plaster(r)),
+    "Beam": lambda r: chunky(beam(r)),
     "Boards": lambda r: boards(r),
     "Blocks": lambda r: blocks(r),
     "Flags": lambda r: flags(r),

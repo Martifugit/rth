@@ -268,7 +268,7 @@ def alder(seed=11, at=(0, 0, 0)):
     bm = bmesh.new()
     uvs = {}
     blob(bm, (0, 0, 0.12), (0.38, 0.34, 0.3), 1, rnd, jitter=(0.8, 1.15), mat=0, squash_below=-0.02)
-    for k, h in enumerate((3.3, 2.8, 2.5)):
+    for k, h in enumerate((3.6, 3.15, 2.9)):          # every clump clears a head (the player is 1.9)
         a = 2 * math.pi * k / 3 + rnd.uniform(-0.3, 0.3) + 0.4
         out = Vector((math.cos(a), math.sin(a), 0))
         top = out * 0.4 + Vector((0, 0, h))
@@ -306,14 +306,15 @@ def hawthorn(seed=3, at=(0, 0, 0)):
     rnd = random.Random(seed)
     bm = bmesh.new()
     uvs = {}
-    pts = [Vector((0, 0, -0.05)), Vector((0.08, 0.0, 0.7)), WIND * 0.55 + Vector((0, 0, 1.3)),
-           WIND * 1.2 + Vector((0, 0, 1.6))]
+    lift = 1.1                                    # the crown clears a head walking under it (the player is 1.9)
+    pts = [Vector((0, 0, -0.05)), Vector((0.08, 0.0, 0.7 + lift)), WIND * 0.55 + Vector((0, 0, 1.3 + lift)),
+           WIND * 1.2 + Vector((0, 0, 1.6 + lift))]
     rod(bm, pts, 0.14, sides=6, taper=0.4)
     roots(bm, 0.14, 0.45, 3, rnd, rot=2.0)
     for d, side, z, radii in ((1.25, 0.0, 1.8, (1.1, 0.75, 0.6)), (0.55, 0.3, 1.45, (0.6, 0.5, 0.42)),
                               (1.95, -0.15, 1.45, (0.55, 0.45, 0.35))):
         c = WIND * d + Vector((-WIND.y, WIND.x, 0)) * side + Vector((0, 0, z))
-        clump(bm, c, radii, rnd, 1, 2, uvs)
+        clump(bm, c + Vector((0, 0, lift)), radii, rnd, 1, 2, uvs)
     return leafy("Hawthorn", bm, uvs, ["Bark", leaf_mat("Thorn"), "Leaf1"], at)
 
 

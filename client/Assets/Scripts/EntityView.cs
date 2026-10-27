@@ -7,14 +7,32 @@ using UnityEngine;
 namespace Rth.Client
 {
     /// <summary>
-    /// Draws one entity and moves it smoothly through the tiles the server reports. Each tick's
-    /// steps are spread over one tick's duration, so walking and running look continuous; if
-    /// updates pile up (a hitch or lag spike) it speeds up to catch up rather than falling behind.
+    /// Draws one entity and walks it through the tiles the server reports, the way the 2004 client
+    /// does (2004scape's client.updateMovement / updateFacingDirection), which is what makes
+    /// tick-based movement feel continuous:
+    /// <list type="bullet">
+    /// <item>a step walks a little slower than a tick (32 client cycles of 20 ms against 30), so the
+    /// next step always arrives before this one ends and a walker never stops between tiles;</item>
+    /// <item>it speeds up by how far behind it is: 1.5 times with more than two steps to go, twice
+    /// with more than three; running doubles it;</item>
+    /// <item>it turns at a fixed rate and walks at half speed while turning, so doubling back eases
+    /// round instead of snapping (click behind you and back, in rhythm, and it never stops);</item>
+    /// <item>it moves along each axis on its own, so a diagonal step takes as long as a straight one;</item>
+    /// <item>more than two tiles from its next step, it jumps there.</item>
+    /// </list>
     /// </summary>
     public sealed class EntityView : MonoBehaviour
     {
         /// <summary>How long after its last attack or hit an entity keeps its combat stance.</summary>
         private const float CombatStanceSeconds = 8f;
+
+        // The 2004 client's numbers: a cycle is 20 ms, a tile 128 units; walking 4 units a cycle,
+        // turning 32 of 2048 a cycle.
+        private const float CycleSeconds = 0.02f;
+        private const float TurnDegreesPerSecond = 32f / 2048f * 360f / CycleSeconds;
+        /// <summary>Steps of a tile; the server's tick may be faster in tests, so the cycle scales with it.</summary>
+        private const float CyclesPerTileWalking = 32f;
+        private const int MaxPending = 9;
 
         private readonly Queue<Vector3> _pending = new Queue<Vector3>();
         private float _tickSeconds = 0.6f;
@@ -22,7 +40,6 @@ namespace Rth.Client
         private bool _moving;
         private Vector3 _from;
         private Vector3 _to;
-        private float _t;
         private EntityBody _body;
         private Quaternion _facing = Quaternion.identity;
         private float _deathTime = -1f;
@@ -96,6 +113,8 @@ namespace Rth.Client
             _stepsPerTick = running ? 2 : 1;
             foreach (TileCoord step in steps)
             {
+                // Far behind (a long hitch): drop the oldest steps rather than replaying them all.
+                if (_pending.Count >= MaxPending) _pending.Dequeue();
                 // Each step stands on the ground just under the last one, so hills and stairs are
                 // followed and a roof or the floor above is never mistaken for the ground.
                 Vector3 centre = GroundHeight.Centre(step, Plane, _lastY);
@@ -153,6 +172,7 @@ namespace Rth.Client
 
             Vector3 before = transform.position;
             float dt = Time.deltaTime;
+            bool turning = Quaternion.Angle(transform.rotation, _facing) > 0.5f;
             while (dt > 0f)
             {
                 if (!_moving)
@@ -160,32 +180,48 @@ namespace Rth.Client
                     if (_pending.Count == 0) break;
                     _from = transform.position;
                     _to = _pending.Dequeue();
-                    _t = 0f;
                     _moving = true;
                     Face(_to - _from);
+                    turning = Quaternion.Angle(transform.rotation, _facing) > 0.5f;
+                    if (Mathf.Abs(_to.x - _from.x) > 2.01f || Mathf.Abs(_to.z - _from.z) > 2.01f)
+                    {
+                        transform.position = _to; // too far behind to walk it
+                        _moving = false;
+                        continue;
+                    }
                 }
 
-                // Normally one step lasts tick / stepsPerTick. Steps queued beyond one tick's
-                // worth mean we're behind, so each extra queued step adds 50% speed.
-                float catchUp = 1f + Mathf.Max(0, _pending.Count - _stepsPerTick + 1) * 0.5f;
-                float stepSeconds = _tickSeconds / _stepsPerTick / catchUp;
-                float remaining = (1f - _t) * stepSeconds;
-                if (dt >= remaining)
+                // Tiles a second: a walking step is 32 cycles, scaled to the server's tick (30 cycles a tick).
+                float cycle = CycleSeconds * _tickSeconds / 0.6f;
+                float tilesPerSecond = 1f / (CyclesPerTileWalking * cycle);
+                int pathLength = _pending.Count + 1;
+                float pace = turning ? 0.5f : 1f;
+                if (pathLength > 2) pace = 1.5f;
+                if (pathLength > 3) pace = 2f;
+                if (_stepsPerTick == 2) pace *= 2f;
+                float stepLength = tilesPerSecond * pace * dt;
+
+                // Each axis moves on its own (a diagonal step takes as long as a straight one).
+                Vector3 p = transform.position;
+                float nx = Mathf.MoveTowards(p.x, _to.x, stepLength), nz = Mathf.MoveTowards(p.z, _to.z, stepLength);
+                float span = Mathf.Max(Mathf.Abs(_to.x - _from.x), Mathf.Abs(_to.z - _from.z));
+                float left = Mathf.Max(Mathf.Abs(_to.x - nx), Mathf.Abs(_to.z - nz));
+                float ny = span > 0.0001f ? Mathf.Lerp(_to.y, _from.y, left / span) : _to.y;
+                float used = Mathf.Max(Mathf.Abs(nx - p.x), Mathf.Abs(nz - p.z));
+                transform.position = new Vector3(nx, ny, nz);
+                if (nx == _to.x && nz == _to.z)
                 {
-                    dt -= remaining;
                     transform.position = _to;
                     _moving = false;
+                    // The rest of the frame carries on into the next step.
+                    dt = stepLength > 0f ? dt * Mathf.Clamp01(1f - used / stepLength) : 0f;
                 }
-                else
-                {
-                    _t += dt / stepSeconds;
-                    transform.position = Vector3.Lerp(_from, _to, _t);
-                    dt = 0f;
-                }
+                else dt = 0f;
             }
 
-            // Turn smoothly rather than snapping to each new heading.
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, _facing, 720f * Time.deltaTime);
+            // Turn at the old client's fixed rate, snapping the last few degrees.
+            if (Quaternion.Angle(transform.rotation, _facing) < 5.7f) transform.rotation = _facing;
+            else transform.rotation = Quaternion.RotateTowards(transform.rotation, _facing, TurnDegreesPerSecond * Time.deltaTime);
             Vector3 moved = transform.position - before;
             moved.y = 0f;
             float speed = Time.deltaTime > 0f ? moved.magnitude / Time.deltaTime : 0f;

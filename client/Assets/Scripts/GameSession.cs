@@ -23,7 +23,6 @@ namespace Rth.Client
         private const int MaxReconnectAttempts = 10;
         private const float ReconnectDelaySeconds = 2f;
         private const int MaxLogLines = 50;
-        private static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
 
         public WorldView world;
         public CameraRig cameraRig;
@@ -56,8 +55,7 @@ namespace Rth.Client
         private string _status = "";
         private int _reconnectAttempts;
         private float _nextReconnectTime;
-        private Transform _clickMarker;
-        private float _clickMarkerHideTime;
+        private TileMarker _clickMarker;
         private TileCoord _flagLastTile;
         private float _flagLastMove;
         private float _tickSeconds = 0.6f;
@@ -155,6 +153,8 @@ namespace Rth.Client
         }
         /// <summary>What a left-click would do on whatever is under the pointer ("Attack Fen rat").</summary>
         public string HoverText { get; private set; } = "";
+        /// <summary>The world object under the pointer, if any (FocusHighlight outlines it).</summary>
+        public Rth.MapTools.MapObject HoveredObject { get; private set; }
         private int _hoveredEntity;
         public List<LogLine> Log { get; } = new List<LogLine>();
         /// <summary>How many lines have ever been logged, so views can tell what's new after old lines drop off.</summary>
@@ -211,7 +211,7 @@ namespace Rth.Client
             world.HymnIconLookup = id => Ui.Hymns.Get(this, id)?.Icon;
             _name = PlayerPrefs.GetString(NamePref, "");
             _host = PlayerPrefs.GetString(HostPref, "127.0.0.1");
-            _clickMarker = CreateClickMarker();
+            _clickMarker = TileMarker.Create(this, world);
         }
 
         private void Update()
@@ -248,8 +248,6 @@ namespace Rth.Client
                     break;
             }
 
-            if (_clickMarker != null && _clickMarker.gameObject.activeSelf && Time.unscaledTime > _clickMarkerHideTime)
-                _clickMarker.gameObject.SetActive(false);
             UpdateWalkFlag();
             if (cameraRig != null && world != null && world.Local != null) cameraRig.target = world.Local.transform;
         }
@@ -445,6 +443,7 @@ namespace Rth.Client
                 // The fly camera owns the keys and clicks; Enter still opens the chat (for ::fly).
                 HoverText = "";
                 world.HoveredId = 0;
+                HoveredObject = null;
                 return;
             }
 
@@ -472,6 +471,7 @@ namespace Rth.Client
             bool overHud = CombatHud.IsPointerOverHud(pointer) || PopupMenu.IsOpen || Ui.UiRoot.IsPointerOverUi(pointer);
             string title = "";
             _hoveredEntity = 0;
+            HoveredObject = null;
             _useTargets = 0;
             List<(string Label, Action Action)> options = overHud ? null : WorldOptionsAt(pointer, out title);
             world.HoveredId = _hoveredEntity;
@@ -636,6 +636,7 @@ namespace Rth.Client
             ObjectDef objectDef = mapObject != null ? ObjectDefFor(mapObject.objectType) : null;
             if (objectDef != null)
             {
+                if (npc == null) HoveredObject = mapObject;
                 string type = objectDef.Id;
                 TileCoord tile = new TileCoord(mapObject.Tile.x, mapObject.Tile.y);
                 // A door offers Open or Close, whichever it isn't.
@@ -691,6 +692,7 @@ namespace Rth.Client
             ObjectDef objectDef = mapObject != null ? ObjectDefFor(mapObject.objectType) : null;
             if (objectDef != null)
             {
+                if (npc == null) HoveredObject = mapObject;
                 string type = objectDef.Id;
                 TileCoord tile = new TileCoord(mapObject.Tile.x, mapObject.Tile.y);
                 options.Add((UseLabel + " -> " + objectDef.Name, () => UseOnObject(type, tile, floor)));
@@ -976,25 +978,9 @@ namespace Rth.Client
             DropClient();
         }
 
-        private Transform CreateClickMarker()
-        {
-            GameObject marker = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            marker.name = "Click Marker";
-            Destroy(marker.GetComponent<Collider>());
-            marker.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-            marker.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
-            marker.SetActive(false);
-            return marker.transform;
-        }
-
         private void ShowClickMarker(TileCoord tile, Color color)
         {
-            var block = new MaterialPropertyBlock();
-            block.SetColor(BaseColor, color);
-            _clickMarker.GetComponent<Renderer>().SetPropertyBlock(block);
-            _clickMarker.position = GroundHeight.Centre(tile, world.Local != null ? world.Local.Plane : 0) + Vector3.up * 0.03f;
-            _clickMarker.gameObject.SetActive(true);
-            _clickMarkerHideTime = Time.unscaledTime + 0.6f;
+            _clickMarker.Show(tile, world.Local != null ? world.Local.Plane : 0, color);
             WalkFlag = tile;
             _flagLastMove = Time.unscaledTime;
         }
