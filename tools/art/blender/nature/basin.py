@@ -489,11 +489,18 @@ def hurdle(seed=1, at=(0, 0, 0), end_post=False):
     cols = [(0.04, 0.0), (0.5, 0.035), (0.96, 0.0)]
     lo = [bm.verts.new((x, y, 0.06 + rnd.uniform(-0.02, 0.02))) for x, y in cols]
     hi = [bm.verts.new((x, y, 0.84 + rnd.uniform(-0.03, 0.03))) for x, y in cols]
+    # The panel has two faces, back to back a hair apart: the game lights each side from its own
+    # normal, so a single face would show its back black.
+    back_lo = [bm.verts.new(v.co + Vector((0, 0.012, 0))) for v in lo]
+    back_hi = [bm.verts.new(v.co + Vector((0, 0.012, 0))) for v in hi]
     for k in range(2):
+        u0, u1 = k * 0.5, (k + 1) * 0.5
         f = bm.faces.new((lo[k], lo[k + 1], hi[k + 1], hi[k]))
         f.material_index = 1
-        u0, u1 = k * 0.5, (k + 1) * 0.5
         uvs[f] = [(u0, 0), (u1, 0), (u1, 0.85), (u0, 0.85)]
+        b = bm.faces.new((back_lo[k + 1], back_lo[k], back_hi[k], back_hi[k + 1]))
+        b.material_index = 1
+        uvs[b] = [(u1, 0), (u0, 0), (u0, 0.85), (u1, 0.85)]
     rod(bm, [hi[0].co + Vector((-0.02, 0, 0.02)), hi[1].co + Vector((0, 0, 0.02)), hi[2].co + Vector((0.02, 0, 0.02))],
         0.025, sides=4)
     return leafy("Hurdle", bm, uvs, ["Driftwood", leaf_mat("Wattle")], at, smooth=50)

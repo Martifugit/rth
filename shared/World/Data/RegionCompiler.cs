@@ -163,6 +163,23 @@ namespace Rth.Shared.World.Data
                 case PieceKind.Blocker:
                     foreach ((int x, int y) in RectTiles(NeedRect(piece))) layers.Block(plane, x, y);
                     break;
+                case PieceKind.Building:
+                {
+                    BuildingKit kit = Buildings.Check(piece);
+                    int[] b = piece.Rect!;
+                    BuildingSpec spec = piece.Building!;
+                    foreach ((int x, int y) in RectTiles(b)) layers.SetGround(plane, x, y);
+                    var doors = Buildings.Doors(spec, kit, b).ToList();
+                    if (doors.Count == 0) result.Warnings.Add($"Building '{piece.Id}' has no doorway: nobody can get in.");
+                    List<int> Gaps(string side) => doors.Where(d => d.side == side).Select(d => (side == "S" || side == "N" ? b[0] : b[1]) + d.at).ToList();
+                    AddWallLine(layers, plane, b[0], b[1], b[2], b[1], Gaps("S"));
+                    AddWallLine(layers, plane, b[0], b[3], b[2], b[3], Gaps("N"));
+                    AddWallLine(layers, plane, b[0], b[1], b[0], b[3], Gaps("W"));
+                    AddWallLine(layers, plane, b[2], b[1], b[2], b[3], Gaps("E"));
+                    foreach ((int x, int y) in Buildings.BlockedOutside(spec, kit, b))
+                        if (InRegion(region, x, y)) layers.Block(plane, x, y);
+                    break;
+                }
                 case PieceKind.Tree:
                 case PieceKind.Rock:
                 case PieceKind.Prop:

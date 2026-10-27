@@ -80,7 +80,9 @@ namespace Rth.Client.Editor
             material.SetFloat("_EnvironmentReflections", 0f);
             material.SetFloat("_Cull", 0f); // both sides: blades, fronds, leaves and cloth are single faces
 
-            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(ArtTextureImporter.Folder + name + ".png");
+            // A palette colour with a surface pattern (Plaster, Thatch) is that, even when a texture shares its name.
+            Dictionary<string, string> surfaces = Surfaces();
+            var texture = surfaces.ContainsKey(name) ? null : AssetDatabase.LoadAssetAtPath<Texture2D>(ArtTextureImporter.Folder + name + ".png");
             if (texture != null)
             {
                 material.SetColor("_BaseColor", Color.white);
@@ -99,7 +101,11 @@ namespace Rth.Client.Editor
                     colour = Color.magenta;
                 }
                 material.SetColor("_BaseColor", colour);
-                material.SetTexture("_BaseMap", Surfaces().TryGetValue(name, out string surface)
+                material.SetFloat("_AlphaClip", 0f);
+                material.DisableKeyword("_ALPHATEST_ON");
+                material.SetOverrideTag("RenderType", "Opaque");
+                material.renderQueue = -1;
+                material.SetTexture("_BaseMap", surfaces.TryGetValue(name, out string surface)
                     ? AssetDatabase.LoadAssetAtPath<Texture2D>(ArtTextureImporter.Folder + surface + ".png")
                     : null);
             }

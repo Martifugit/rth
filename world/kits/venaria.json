@@ -1,0 +1,78 @@
+{
+  "id": "venaria",
+  "models": "Assets/Art/Buildings/Venaria",
+  "storey": 2.6,
+  "rise": 0.9004,
+  "roofBase": 2.75307,
+  "verge": 0.4,
+  "jettyOut": 0.25,
+  "slab": 0.09,
+  "wall": "Wall",
+  "maxSpan": 8,
+  "pieces": [
+    "Banner",
+    "Barrel",
+    "Bellcote",
+    "Bench",
+    "ChimneyBreast",
+    "ChimneyCap",
+    "ChimneyStack",
+    "Crate",
+    "Door",
+    "Font",
+    "Gable0",
+    "Gable0Slit",
+    "Gable1",
+    "Gable1Slit",
+    "Gable2",
+    "Gable2Slit",
+    "Gable3",
+    "Gable3Slit",
+    "Hay",
+    "JettyBeams",
+    "Lantern",
+    "Post",
+    "RoofEave",
+    "RoofRidge",
+    "RoofSlope",
+    "VergeEave",
+    "VergeRidge",
+    "VergeSlope",
+    "Wall",
+    "WallBarnDoor",
+    "WallBraced",
+    "WallDoorway",
+    "WallLancet",
+    "WallLeaded",
+    "WallShuttered",
+    "Woodpile"
+  ],
+  "openings": {
+    "WallDoorway": "Door",
+    "WallBarnDoor": ""
+  },
+  "attachments": {
+    "Banner": [
+      "Wall",
+      "WallBraced"
+    ],
+    "Woodpile": [
+      "Wall",
+      "WallBraced"
+    ],
+    "Bench": [
+      "Wall",
+      "WallBraced"
+    ],
+    "Lantern": [
+      "WallDoorway"
+    ]
+  },
+  "blocking": [
+    "Woodpile",
+    "Bench"
+  ],
+  "upperColors": {
+    "Stone": "Timber"
+  }
+}

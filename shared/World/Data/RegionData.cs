@@ -89,8 +89,14 @@ namespace Rth.Shared.World.Data
         /// from the north, each one a <see cref="Piece.Legend"/> entry (ground, blocked ground or water).
         /// </summary>
         public const string Tiles = "tiles";
+        /// <summary>
+        /// A building put together from a kit's pieces (<see cref="Piece.Building"/>) over
+        /// <see cref="Piece.Rect"/>: walls along its edges, open at its doorways, a floor and a roof
+        /// that hides inside. It stands on the terrain.
+        /// </summary>
+        public const string Building = "building";
 
-        public static readonly string[] All = { Patch, Road, Water, Wall, Fence, House, Blocker, Tree, Rock, Prop, Npc, Spawn, Tiles };
+        public static readonly string[] All = { Patch, Road, Water, Wall, Fence, House, Blocker, Tree, Rock, Prop, Npc, Spawn, Tiles, Building };
 
         /// <summary>Kinds placed at one tile (<see cref="Piece.At"/>), which can be moved and turned in the Editor.</summary>
         public static bool IsPlaced(string kind) => kind == Tree || kind == Rock || kind == Prop || kind == Npc || kind == Spawn;
@@ -179,6 +185,8 @@ namespace Rth.Shared.World.Data
         public List<string>? Stones;
         /// <summary>What each character of <see cref="Stones"/> is: the stones' colour and how thickly they lie.</summary>
         public SortedDictionary<string, StoneKind>? StoneLegend;
+        /// <summary>A building piece's kit, faces and roof.</summary>
+        public BuildingSpec? Building;
 
         // ---------------------------------------------------------------- what it does
         /// <summary>Makes it interactive: an id in server/data/content/objects.json.</summary>

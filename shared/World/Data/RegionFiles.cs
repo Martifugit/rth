@@ -124,6 +124,8 @@ namespace Rth.Shared.World.Data
                 piece.Remove("surround");
                 JToken? stones = piece["stones"];
                 piece.Remove("stones");
+                JToken? building = piece["building"];
+                piece.Remove("building");
                 string head = "    { " + string.Join(", ", piece.Properties().Select(p => Q(p.Name) + ": " + Compact(p.Value)));
                 if (parts is JArray list && list.Count > 0)
                     head += ", \"parts\": [\n" + string.Join(",\n", list.Select(part => "      " + Compact(part))) + "\n    ]";
@@ -134,6 +136,16 @@ namespace Rth.Shared.World.Data
                     head += ", \"surround\": [" + (ring.Count == 0 ? "]" : "\n" + string.Join(",\n", ring.Select(row => "      " + Compact(row))) + "\n    ]");
                 if (stones is JArray stoneRows)
                     head += ", \"stones\": [" + (stoneRows.Count == 0 ? "]" : "\n" + string.Join(",\n", stoneRows.Select(row => "      " + Compact(row))) + "\n    ]");
+                // A building's faces go one to a line, so its walls read (and diff) side by side.
+                if (building is JObject spec)
+                {
+                    JToken? faces = spec["faces"];
+                    spec.Remove("faces");
+                    var props = spec.Properties().Select(q => Q(q.Name) + ": " + Compact(q.Value)).ToList();
+                    if (faces is JObject faceList && faceList.Count > 0)
+                        props.Add("\"faces\": {\n" + string.Join(",\n", faceList.Properties().Select(f => "        " + Q(f.Name) + ": " + Compact(f.Value))) + "\n      }");
+                    head += ", \"building\": {\n      " + string.Join(",\n      ", props) + "\n    }";
+                }
                 head += " }";
                 pieces.Add(head);
             }

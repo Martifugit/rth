@@ -39,7 +39,8 @@ rectangles are `[x0, y0, x1, y1]` with the far edges excluded. The kinds
 | `road` | Ground along `line` (points), `width` (half-width) | gives ground |
 | `water` | Water over `rect` or along `line` | blocks |
 | `wall`, `fence` | Along a grid line `from`-`to`, open at `gaps` | blocks edges |
-| `house` | Floor, four walls, a `door` (N/E/S/W) at `doorAt`, a roof that hides inside | ground, walls |
+| `house` | Floor, four walls, a `door` (N/E/S/W) at `doorAt`, a roof that hides inside (the old boxes) | ground, walls |
+| `building` | A building from a kit's models over `rect` (its walls on the rect's edges): `building` names the `kit` (`world/kits`), `storeys`, the `ridge`, the `faces` (a piece a tile, `"S"` from the west, `"W"` from the south, `"S1"` for the storey above; `"WallDoorway+Lantern"`), `colors` per storey, `roofColors`, `jetty`, `slit`, `bellcote`, `chimney` (`"W1"`), `floor`. Stands level on the terrain under it, with a foundation | ground, walls open at its doorways; a chimney or a woodpile blocks the tile outside |
 | `blocker` | An invisible barrier over `rect` | blocks |
 | `tree`, `rock` | On tile `at`; look from `parts`, or grown from the seed | blocks its tile |
 | `prop` | Anything on `at`: `parts` (boxes, cylinders) or a `model` prefab | `footprint` (objects: own tile) |
@@ -62,7 +63,9 @@ region's snapshot are committed as usual.
 from the north, in hundredths of a tile (`125` is 1.25 tiles up; `0*40` is forty corners at 0), and
 a `cliffStep`. A tile rising more than `cliffStep` across is a cliff and blocked, in the compiler
 and in Unity alike. It is drawn by the region's `tiles` pieces and stood on by everything placed;
-other area kinds (patches, roads, houses) are still drawn flat and get a warning on terrain.
+a building stands level on the highest corner under it, on a foundation; other area kinds (patches,
+roads, houses) are still drawn flat and get a warning on terrain. A water tile's height is the
+water's surface, so what is placed on it (a punt, a jetty) floats.
 `check` warns where two regions side by side disagree on the heights along their border. The
 `layout` start (`tools/world terrain <region> layout`) takes the heights the blockout gives the
 generated land (`docs/layout.md` section 8: the spine's foothills, crest and passes), so a region

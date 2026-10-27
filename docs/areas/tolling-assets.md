@@ -108,15 +108,10 @@ What works today:
 
 What is missing, in order of need:
 
-1. **Buildings.**
-   - A region's `house` piece still draws the old `WorldKit` boxes.
-   - The village kit's pieces are in Unity, but they can only be put together in Blender (`volume()`).
-   - The general fix is a building piece in the region data: a footprint, its storeys and roof, and a
-     line of pieces per wall face (as `volume()` takes now). Unity would assemble it from the kit's
-     pieces, with walk-in collision, the door, the upper floors and a roof that hides.
-   - One description serves every house, and it keeps the world as data.
-   - The quicker fix: export each finished building as one model and let a `house` piece take a
-     `model`.
+1. **Buildings.** Done (2026-10-27): a region's `building` piece describes a building face by face
+   from the village kit's pieces (`docs/workflow.md`), and Unity puts it together, walk-in on the
+   ground floor with a roof that hides. `kittest` (`::tele kittest`) shows it. Still to come: upper
+   floors you can climb to, and Cruor's kit in the same form.
 2. **The harbour kit in the game.**
    - Export it.
    - Teach the compiler its walk layouts (`world/walk/<Name>.json`), and give the decks colliders, so

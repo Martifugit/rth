@@ -11,6 +11,7 @@ the same pieces. Buildings are put together face by face from a short descriptio
 the way a world builder would from data.
 
 The storey is 2.3 (docs/world-scale.md)."""
+import json
 import math
 import os
 import sys
@@ -35,6 +36,7 @@ OVERHANG = 0.35                 # eaves past the wall
 VERGE = 0.4                     # roof past the gable ends
 JETTY = 0.25                    # how far an upper storey juts out over a gable end
 SLAB = 0.09
+MAX_SPAN = 8                    # the widest gable span (tiles across the ridge) the gable pieces cover
 # The roof rests on the walls' outer edge (and the corner posts), not their centre line, so no
 # rail or post pokes through the slope.
 ROOF_BASE = STOREY + (T / 2 + 0.06) * RISE
@@ -338,7 +340,8 @@ def piece_gable(k, slit=False):
         A.hull(bm, [(x, y, z) for x, z in ((0, z0 - 0.06), (1, z1 - 0.06), (1, z1 + 0.04), (0, z0 + 0.04))
                     for y in (-T / 2 - 0.03, T / 2 + 0.03)], TIMBER)
         if slit:
-            out = lancet_outline(0.86, 0.98, STOREY + 0.25, STOREY + 0.65, STOREY + 0.82)
+            lift = STOREY + 0.25 + RISE * max(0, k - 1)              # in the piece's own rise on a wide gable
+            out = lancet_outline(0.86, 0.98, lift, lift + 0.4, lift + 0.57)
             prism_xz(bm, out, -T / 2 - 0.005, -T / 2 + 0.01, DARK)
         return bm
     return make
@@ -475,7 +478,7 @@ PIECES = {
     "RoofEave": piece_roof_eave(), "RoofSlope": piece_roof_slope(), "RoofRidge": piece_roof_ridge(),
     "VergeEave": piece_roof_eave(0, VERGE, plate=False), "VergeSlope": piece_roof_slope(0, VERGE),
     "VergeRidge": piece_roof_ridge(0, VERGE),
-    "Gable0": piece_gable(0), "Gable1": piece_gable(1), "Gable1Slit": piece_gable(1, slit=True),
+    **{f"Gable{k}{'Slit' if slit else ''}": piece_gable(k, slit) for k in range(MAX_SPAN // 2) for slit in (False, True)},
     "Font": piece_font, "Bellcote": piece_bellcote, "ChimneyBreast": piece_chimney_breast,
     "ChimneyStack": piece_chimney_stack, "ChimneyCap": piece_chimney_cap, "Banner": piece_banner,
     "WallBarnDoor": piece_wall_barn_door,
@@ -686,6 +689,27 @@ def townhouse(kit, ox, oy):
         slit="E", chimney=("E", 1))
 
 
+def write_kit():
+    """The kit's rules for the world data (world/kits/venaria.json): read by the region compiler
+    (doorways, what blocks outside a wall) and by Unity, which puts buildings together from these
+    pieces as volume() does here (shared/World/Data/Buildings.cs, BuildingBuilder.cs)."""
+    kit = {
+        "id": "venaria", "models": "Assets/Art/Buildings/Venaria",
+        "storey": STOREY, "rise": round(RISE, 5), "roofBase": round(ROOF_BASE, 5), "verge": VERGE,
+        "jettyOut": JETTY, "slab": SLAB, "wall": "Wall", "maxSpan": MAX_SPAN,
+        "pieces": sorted(PIECES),
+        "openings": {name: OPENINGS.get(name, "") for name in ("WallDoorway", "WallBarnDoor")},
+        "attachments": {a: sorted(on) for a, on in ATTACHMENTS.items()},
+        "blocking": ["Woodpile", "Bench"],
+        "upperColors": {"Stone": "Timber"},
+    }
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "..", "world", "kits", "venaria.json")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        json.dump(kit, f, indent=2)
+        f.write("\n")
+
+
 def build():
     A.reset()
     kit = build_pieces()
@@ -693,6 +717,7 @@ def build():
     if EXPORT:
         for name, o in kit.items():
             A.export([o], f"Art/Buildings/Venaria/{name}.fbx")
+        write_kit()
     for i, o in enumerate(kit.values()):
         o.location = (-4.0 + i * 1.3, -9.0, 0)
     cottage(kit, 0, 0)

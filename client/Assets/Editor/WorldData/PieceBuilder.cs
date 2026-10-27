@@ -12,7 +12,8 @@ namespace Rth.Client.Editor
     /// Draws a region's data (<see cref="RegionData"/>) under its scene's <see cref="DataRoot"/>,
     /// with the same footprints, walls and ground the C# compiler (<see cref="RegionCompiler"/>)
     /// gives the server: area kinds (patches, roads, water, walls, fences, houses) through
-    /// <see cref="WorldKit"/>, tiles through <see cref="TileGround"/>; placed kinds (trees, rocks, props, creatures, the spawn) as one object
+    /// <see cref="WorldKit"/>, buildings from their kit's models through <see cref="BuildingBuilder"/>,
+    /// tiles through <see cref="TileGround"/>; placed kinds (trees, rocks, props, creatures, the spawn) as one object
     /// on their tile whose look has no colliders, plus a collider over exactly their footprint.
     /// </summary>
     public static class PieceBuilder
@@ -116,6 +117,9 @@ namespace Rth.Client.Editor
                     AddFootprint(group, r[0], r[1], r[2], r[3], 1.5f);
                     break;
                 }
+                case PieceKind.Building:
+                    BuildingBuilder.Build(group, region, piece, terrain);
+                    break;
                 case PieceKind.Tiles:
                 {
                     // The rows go into the scene; TileGround builds the mesh and the ground collider from them on load.
@@ -227,15 +231,15 @@ namespace Rth.Client.Editor
 
         /// <summary>
         /// An invisible collider over tiles [x0, x1) x [y0, y1), kept 0.2 inside their edges so the
-        /// exporter counts exactly those tiles, with a <see cref="MapBlocker"/>. It is also what the
-        /// player clicks.
+        /// exporter counts exactly those tiles, with a <see cref="MapBlocker"/>, its foot at
+        /// <paramref name="baseY"/>. It is also what the player clicks.
         /// </summary>
-        private static void AddFootprint(Transform owner, int x0, int y0, int x1, int y1, float height)
+        internal static void AddFootprint(Transform owner, int x0, int y0, int x1, int y1, float height, float baseY = 0f)
         {
             var f = new GameObject("Footprint");
             f.transform.SetParent(owner, false);
             f.transform.rotation = Quaternion.identity;
-            f.transform.position = new Vector3((x0 + x1) / 2f, height / 2f, (y0 + y1) / 2f);
+            f.transform.position = new Vector3((x0 + x1) / 2f, baseY + height / 2f, (y0 + y1) / 2f);
             f.AddComponent<BoxCollider>().size = new Vector3(x1 - x0 - 0.4f, height, y1 - y0 - 0.4f);
             if (owner.GetComponent<MapBlocker>() == null) owner.gameObject.AddComponent<MapBlocker>();
         }

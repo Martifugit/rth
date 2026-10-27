@@ -1052,5 +1052,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Land/Land_1_0.unity
     guid: b032c36e4dd3bad4a88327d713e8b2f1
+  - enabled: 1
+    path: Assets/Scenes/KitTest.unity
+    guid: f3eb107338e2bb748ae8ba6920fd5c81
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
