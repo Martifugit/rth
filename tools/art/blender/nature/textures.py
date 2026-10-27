@@ -8,6 +8,7 @@ below it, so a canopy skirt wearing it ends in hanging leaves.
 - Ashleaf.png: sprays of narrow paired leaflets, light yellow-green (the ash).
 - Elmleaf.png: broad rough ovals hanging slantwise, a deeper blue-green (the elm).
 - Needles.png: tufts of long dark needles, a cold blue-green (the pine).
+- Ivy.png: strands of three-lobed dark leaves trailing down, gaps between (drapes over rock).
 - Thorn.png: small crowded dark leaves flecked with red haws (the hawthorn).
 - Gorse.png: short dark spines in a tangle, a few small yellow flowers.
 - BushDark.png / BushDarkPicked.png: a low bush's dark leaves with blue-black berries, and picked.
@@ -42,6 +43,7 @@ BUSH_DARK = ["#1a2318", "#232f20", "#2d3b28", "#384830", "#445539", "#516342", "
 BUSH_PALE = ["#283117", "#36411e", "#465327", "#576530", "#69773a", "#7c8945", "#909b52"]
 ELM_GREEN = ["#1f2a19", "#2a3821", "#36462a", "#435533", "#51643c", "#5f7346", "#6e8250"]
 NEEDLE_GREEN = ["#151f1c", "#1c2a25", "#24362f", "#2d4339", "#375143", "#42604e", "#4e6f5a"]
+IVY_GREEN = ["#141c12", "#1c2718", "#24331f", "#2e4027", "#394e2f", "#455c38", "#536b42"]
 WITHY = ["#2a241c", "#3f3529", "#544736", "#695a45", "#7e6d55", "#938266"]
 
 
@@ -285,6 +287,24 @@ def needles(seed):
     return shade, [rgb(c) for c in NEEDLE_GREEN]
 
 
+def ivy(seed):
+    """Ivy hanging in strands: three-lobed dark leaves along trailing stems, gaps between the
+    strands, each strand ending at its own length (the hem)."""
+    rng = random.Random(seed)
+    shade = [[-1] * SIZE for _ in range(SIZE)]
+    x = 3.0
+    while x < SIZE:
+        end = rng.randint(SIZE - 40, SIZE - 2)
+        sway = rng.uniform(-0.08, 0.08)
+        for y in range(-6, end, 6):
+            cx = x + sway * y + rng.uniform(-1.5, 1.5)
+            base = 2 + int(2.5 * (1 - y / SIZE) + rng.uniform(-0.6, 1.2))
+            for dx, dy, rx, ry in ((0, 0, 3.2, 2.6), (-2.6, 1.2, 2.2, 1.8), (2.6, 1.2, 2.2, 1.8)):
+                ellipse(shade, cx + dx, y + 3 + dy, rx, ry, rng.uniform(0, math.pi), base)
+        x += rng.uniform(9, 14)
+    return shade, [rgb(c) for c in IVY_GREEN]
+
+
 def save(name, shade, palette, preview):
     pixels = [(0, 0, 0, 0) if s < 0 else palette[s] + (255,) for row in shade for s in row]
     os.makedirs(OUT, exist_ok=True)
@@ -309,6 +329,7 @@ def main(argv):
     save("Thorn", *thorn(seed), preview)
     save("Elmleaf", *elmleaf(seed), preview)
     save("Needles", *needles(seed), preview)
+    save("Ivy", *ivy(seed), preview)
     save("Gorse", *gorse(seed), preview)
     for name, ramp, berry, n in (("BushDark", BUSH_DARK, ("#3d3a6e", "#7a76b4"), 46),
                                  ("BushPale", BUSH_PALE, ("#8e2b26", "#c4544a"), 40)):

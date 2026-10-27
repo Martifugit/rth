@@ -60,6 +60,7 @@ namespace Rth.Client.Editor
             material.SetFloat("_Smoothness", 0f);
             material.SetFloat("_SpecularHighlights", 0f);
             material.SetFloat("_EnvironmentReflections", 0f);
+            material.SetFloat("_Cull", 0f); // both sides: blades, fronds, leaves and cloth are single faces
 
             var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(ArtTextureImporter.Folder + name + ".png");
             if (texture != null)
@@ -69,7 +70,6 @@ namespace Rth.Client.Editor
                 material.SetFloat("_AlphaClip", 1f);
                 material.SetFloat("_Cutoff", 0.5f);
                 material.EnableKeyword("_ALPHATEST_ON");
-                material.SetFloat("_Cull", 0f); // both sides: a hem shows from behind as well
                 material.SetOverrideTag("RenderType", "TransparentCutout");
                 material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
             }
