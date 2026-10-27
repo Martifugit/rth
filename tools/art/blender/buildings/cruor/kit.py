@@ -45,7 +45,7 @@ GLOW = {"Blood": 0.22}        # the faith's glass glows a little
 
 WT = 0.25                     # a wall is a skin
 SLATE_PITCH = 55.0            # roofs: steep
-STOREY = 2.3                  # docs/world-scale.md, D2
+STOREY = 2.6                  # fits the player (1.9) with room over his head
 SMOOTH = 50                   # light across edges flatter than this (degrees) as one surface
 
 
@@ -415,7 +415,7 @@ def townhouse(b, w, d, storeys=3, plaster=True, gable_front=True, jetty=0.35, ch
         b.gable_roof(0, w, front, d, top, rise, ROOF, along="x", over=0.3)
         ridge_top = top + rise
     door_x = xs[0] if nw > 1 else w * 0.3
-    doorway(b, frame((min(door_x, w - 0.9), 0.0), (1, 0), (0, -1)), 0.5, 2.2)
+    doorway(b, frame((min(door_x, w - 0.9), 0.0), (1, 0), (0, -1)), 0.45, 2.38)   # 0.9 wide, springing over his shoulders, its apex under the floor beam
     if w > 3.2:
         lancet(b, frame((max(w - 1.0, door_x + 1.4), 0.0), (1, 0), (0, -1)), 0.28, 0.9, 1.9, DARK)
     if chimney:

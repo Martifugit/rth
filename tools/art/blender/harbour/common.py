@@ -28,7 +28,7 @@ WALK_DIR = os.path.join(REPO, "world", "walk")
 BED = -1.4          # the bottom piles stand on
 JETTY = 0.45        # a jetty's deck above the water
 QUAY = 0.9          # the bank and a quay's top above the water
-STOREY = 2.3        # docs/world-scale.md D2
+STOREY = 2.6        # fits the player (1.9) with room over his head
 WEED = (-0.12, 0.16)   # the green band on anything standing in the water
 
 

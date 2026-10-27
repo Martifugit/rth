@@ -486,16 +486,16 @@ def ship(name="SeaShip"):
     balustrade(bm, [Vector((-ff, fy + 0.05, fore_z)), Vector((ff, fy + 0.05, fore_z))], h=0.6)
     # the castle's front: planked, the cabin's door and two windows; the forecastle's riser
     A.box(bm, (-fw, sc1 - 0.06, deck), (fw, sc1 + 0.04, castle_z), HULL)
-    A.box(bm, (-0.5, sc1 + 0.03, deck), (0.5, sc1 + 0.08, deck + 1.95), DARK)
-    A.box(bm, (-0.6, sc1 + 0.03, deck + 1.95), (0.6, sc1 + 0.1, deck + 2.07), TRIM)
+    A.box(bm, (-0.5, sc1 + 0.03, deck), (0.5, sc1 + 0.08, deck + 2.1), DARK)
+    A.box(bm, (-0.6, sc1 + 0.03, deck + 2.1), (0.6, sc1 + 0.1, deck + 2.22), TRIM)
     for x in (-1.6, 0.9):
         A.box(bm, (x - 0.24, sc1 + 0.03, deck + 1.0), (x + 0.24, sc1 + 0.08, deck + 1.5), GLASS)
         A.box(bm, (x - 0.3, sc1 + 0.04, deck + 0.94), (x + 0.3, sc1 + 0.09, deck + 1.0), TRIM)
     A.box(bm, (-ff, fy - 0.05, deck), (ff, fy + 0.05, fore_z), HULL)
     # the stair up to the castle, starboard, climbing aft, with its handrail
-    for k in range(7):
-        y = sc1 + 2.0 - k * 0.28
-        A.box(bm, (1.45, y - 0.28, deck), (2.35, y, deck + (k + 1) * STOREY / 7), HULL)
+    for k in range(9):
+        y = sc1 + 2.0 - k * 0.216
+        A.box(bm, (1.45, y - 0.216, deck), (2.35, y, deck + (k + 1) * STOREY / 9), HULL)
     balustrade(bm, [Vector((1.4, sc1 + 2.0, deck)), Vector((1.4, sc1 + 0.05, castle_z))], h=0.8, spacing=0.5)
     # portholes along the cabin and the hold; windows in the transom; the rudder; the stern lantern
     for side in (-1, 1):

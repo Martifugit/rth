@@ -401,7 +401,7 @@ def wall_span(seed=1, at=(0, 0, 0), rot=0.0):
     stone, a row of cope stones on edge along its top. The texture carries the coursing."""
     rnd = random.Random(seed)
     bm = bmesh.new()
-    h, wb, wt = 0.62, 0.24, 0.17
+    h, wb, wt = 0.92, 0.27, 0.17                 # to the player's waist and more (he is 1.9)
     xs = [0.0, 0.5, 1.0]
     rings = []
     for x in xs:
@@ -798,7 +798,7 @@ def wall_stile(seed=2, at=(0, 0, 0)):
     rnd = random.Random(seed)
     bm = bmesh.new()
     bm.from_mesh(ob.data)
-    for x, z in ((0.3, 0.18), (0.5, 0.38), (0.7, 0.58)):
+    for x, z in ((0.3, 0.24), (0.5, 0.52), (0.7, 0.8)):
         w = rnd.uniform(0.1, 0.13)                   # a flat stone through the wall, out both sides
         A.box(bm, (x - w, -0.42, z), (x + w, 0.42, z + 0.07), 1)
     bm.to_mesh(ob.data)
@@ -866,7 +866,7 @@ def punt(seed=1, at=(0, 0, 0), rot=0.0):
     little, plank walls with an inside, a seat across, and its pole lying along it."""
     rnd = random.Random(seed)
     bm = bmesh.new()
-    sections = [(-1.15, 0.30, 0.10), (-0.85, 0.42, -0.06), (0.85, 0.42, -0.06), (1.15, 0.30, 0.10)]
+    sections = [(-2.0, 0.36, 0.10), (-1.6, 0.5, -0.06), (1.6, 0.5, -0.06), (2.0, 0.36, 0.10)]     # long enough to lie in
     wall, t = 0.24, 0.04
     rings = []
     for x, w, z in sections:
@@ -882,8 +882,8 @@ def punt(seed=1, at=(0, 0, 0), rot=0.0):
     for o, i in (rings[0], rings[-1]):                       # the square ends
         for k in range(3):
             bm.faces.new((o[k], o[k + 1], i[k + 1], i[k]))
-    A.box(bm, (0.15, -0.38, 0.08), (0.42, 0.38, 0.13), 0)   # the seat
-    rod(bm, [(-1.0, 0.12, 0.2), (0.4, 0.05, 0.24), (1.5, -0.08, 0.3)], 0.022, sides=4)
+    A.box(bm, (0.15, -0.46, 0.08), (0.42, 0.46, 0.13), 0)   # the seat
+    rod(bm, [(-1.9, 0.14, 0.2), (0.4, 0.05, 0.24), (2.6, -0.1, 0.3)], 0.022, sides=4)
     return make("Punt", bm, ["Driftwood"], smooth_angle=30, at=at, rot=rot)
 
 
@@ -981,7 +981,7 @@ def grave(seed=1, at=(0, 0, 0), old=False):
                             verts=bm.verts)
         bmesh.ops.translate(bm, vec=Vector((0, 0, -0.14)), verts=bm.verts)
     mound_h = 0.06 if old else 0.16
-    blob(bm, (0, -0.55, 0.0), (0.28, 0.48, mound_h), 1, rnd, jitter=(0.92, 1.06), mat=1, squash_below=-0.02)
+    blob(bm, (0, -1.0, 0.0), (0.3, 0.85, mound_h), 1, rnd, jitter=(0.92, 1.06), mat=1, squash_below=-0.02)
     return make("GraveOld" if old else "Grave", bm, ["Gravestone", "GraveTurf"], smooth_angle=40, at=at)
 
 

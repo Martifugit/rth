@@ -444,10 +444,10 @@ def piece_bench():
 
 def piece_barrel():
     bm = bmesh.new()
-    A.loft(bm, [((0, 0, 0), 0.2, 0.2), ((0, 0, 0.3), 0.24, 0.24), ((0, 0, 0.6), 0.2, 0.2)],
+    A.loft(bm, [((0, 0, 0), 0.25, 0.25), ((0, 0, 0.4), 0.3, 0.3), ((0, 0, 0.8), 0.25, 0.25)],     # as the nature kit's
            sides=8, ref=(0, 1, 0), mats=OAK)
-    for z in (0.08, 0.52):
-        A.loft(bm, [((0, 0, z), 0.215, 0.215), ((0, 0, z + 0.04), 0.225, 0.225)], sides=8, ref=(0, 1, 0), mats=IRON)
+    for z in (0.1, 0.66):
+        A.loft(bm, [((0, 0, z), 0.27, 0.27), ((0, 0, z + 0.05), 0.28, 0.28)], sides=8, ref=(0, 1, 0), mats=IRON)
     return bm
 
 
