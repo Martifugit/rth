@@ -258,6 +258,109 @@ def beam(rnd):
     return c
 
 
+# ---- chunky textures --------------------------------------------------------------------------
+# The harbour's (and anything else that wants the old look): painted on a 32 x 32 grid and blown up
+# four times, so every texel is a visible block, as in the reference screenshots; few shades, bold
+# seams, no fine grain.
+
+CELL = 4
+GRID = SIZE // CELL
+
+
+def coarse(grid):
+    """A Canvas from a GRID x GRID list of levels, each cell CELL pixels square."""
+    c = Canvas(5)
+    for gy in range(GRID):
+        for gx in range(GRID):
+            level = grid[gy][gx]
+            for dy in range(CELL):
+                for dx in range(CELL):
+                    c.set(gx * CELL + dx, gy * CELL + dy, level)
+    return c
+
+
+def boards(rnd):
+    """Broad boards side by side (the seams run down the image), each its own shade, a dark seam and a
+    lit edge beside it, a short streak of grain or two, and on each board one butt joint with a pair
+    of nail heads by it."""
+    g = [[5] * GRID for _ in range(GRID)]
+    x = 0
+    for w in (8, 8, 8, 8):
+        shade = rnd.choice((4, 5, 5, 6))
+        joint = rnd.randrange(GRID)
+        for gx in range(x, x + w):
+            for gy in range(GRID):
+                g[gy][gx] = shade
+        for gy in range(GRID):
+            g[gy][x] = 1                                       # the seam
+            g[gy][x + 1] = min(7, shade + 1)                    # the lit edge beside it
+        for _ in range(2):                                     # grain
+            gx, gy = rnd.randint(x + 2, x + w - 2), rnd.randrange(GRID)
+            for k in range(rnd.randint(3, 6)):
+                g[(gy + k) % GRID][gx] = shade - 1
+        for gx in range(x + 1, x + w):                         # the butt joint
+            g[joint][gx] = 2
+        for gx in (x + 2, x + w - 2):
+            g[(joint + 1) % GRID][gx] = 1                      # nail heads
+        x += w
+    return coarse(g)
+
+
+def blocks(rnd):
+    """Big squared blocks in courses, each course half a block off the last: a dark joint between them,
+    each block its own shade, lit along its top, shaded along its foot."""
+    g = [[2] * GRID for _ in range(GRID)]
+    course = 4
+    for row in range(GRID // course):
+        y0 = row * course
+        x = (row % 2) * 4 + rnd.randint(0, 1)
+        widths = []
+        total = 0
+        while total < GRID:
+            wdt = rnd.choice((6, 7, 8, 8, 9))
+            widths.append(wdt)
+            total += wdt
+        for wdt in widths:
+            shade = rnd.choice((4, 5, 5, 6, 6, 7))
+            for dx in range(1, wdt):
+                for dy in range(1, course):
+                    level = shade
+                    if dy == 1:
+                        level = min(7, shade + 1)
+                    elif dy == course - 1:
+                        level = shade - 1
+                    g[(y0 + dy) % GRID][(x + dx) % GRID] = level
+            x += wdt
+    for _ in range(6):                                         # a few chips and stains
+        g[rnd.randrange(GRID)][rnd.randrange(GRID)] = 3
+    return coarse(g)
+
+
+def flags(rnd):
+    """Paving flags, roughly square, laid in rows each a little off the last: a dark joint, each flag
+    its own shade, the odd crack."""
+    g = [[2] * GRID for _ in range(GRID)]
+    size = 8
+    for row in range(GRID // size):
+        y0 = row * size
+        x = (row % 2) * 3
+        for k in range(GRID // size + 1):
+            shade = rnd.choice((4, 5, 5, 6, 6))
+            for dx in range(1, size):
+                for dy in range(1, size):
+                    level = shade
+                    if dy == 1 or dx == 1:
+                        level = min(7, shade + 1)
+                    g[(y0 + dy) % GRID][(x + dx) % GRID] = level
+            if rnd.random() < 0.3:                             # a crack across it
+                cx, cy = x + rnd.randint(2, 5), y0 + 1
+                for dy in range(1, size - 1):
+                    cx += rnd.choice((-1, 0, 0, 1))
+                    g[(cy + dy) % GRID][cx % GRID] = 3
+            x += size
+    return coarse(g)
+
+
 TEXTURES = {
     "Thatch": lambda r: thatch(r),
     "Slate": lambda r: slate(r),
@@ -266,6 +369,9 @@ TEXTURES = {
     "Planks": lambda r: planks(r),
     "Plaster": lambda r: plaster(r),
     "Beam": lambda r: beam(r),
+    "Boards": lambda r: boards(r),
+    "Blocks": lambda r: blocks(r),
+    "Flags": lambda r: flags(r),
 }
 
 

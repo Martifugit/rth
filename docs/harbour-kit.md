@@ -78,6 +78,24 @@ stairs and hatch climb).
 - **Identity later:** colours of hull bands and sails, figureheads, the stone of the quays, lamps and
   banners come as each port's set (the empire's red and its sealed drop; Cinderport's black stone).
 
+## 3a. Drawing a harbour
+
+A whole waterfront is drawn as text, one character a tile, rows from the north
+(`tools/art/blender/harbour/layout.py`): `S` stone (quay, pier, mole) at the quay's height, `J` a
+timber jetty, `W` worn timber, `X` broken timber, arrows for stairs going down (timber from stone to
+a jetty, stone steps from stone to the water), `b` bollards, `p` mooring posts, `l` lamps, `.` water.
+The composer builds the masonry (battered only where it faces water, coping and buttresses along
+those edges, corners resolved), the timber (piles round the outline and through the middle,
+headstocks and joists, kerbs on open edges), the stairs and the dressing, and one walk layout for the
+whole harbour (heights per tile, a block wherever two heights meet without stairs). Boats and ships
+are placed on it as berths. `harbours.py` draws three: finger jetties off a quay, a mole closing a
+basin, a ferry jetty zig-zagging out past a broken stretch. Any formation is a new drawing.
+
+**Style:** the harbour wears chunky textures (`tools/art/surface_textures.py`: Boards, Blocks,
+Flags, painted on a 32-cell grid and blown up four times) on the palette's Boards, Harbourstone and
+Flagstone; posts, rails and trim are flat colours. The fine 128-pixel textures read too modern and
+smooth next to the references.
+
 ## 4. Order of work
 
 1. **Blockout** in Blender (`tools/art/blender/harbour/`): every part at its final size, plain

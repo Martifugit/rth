@@ -16,7 +16,7 @@ import rth_art as A
 import basin as N
 from common import (BED, JETTY, QUAY, WEED, Walk, beam, bollard_at, deck_boards, make, pile, ring_on, rope_coil)
 
-MATS = ["Timber", "Planks", "Iron", "Driftwood", "Moss", "DeadWood", "Hide", "Stone", "Gravestone", "Mud"]
+MATS = ["Fence", "Boards", "Iron", "Driftwood", "Moss", "DeadWood", "Hide", "Harbourstone", "Gravestone", "Mud"]
 TIM, BOARD, IRON, GREY, WEEDM, OLD, ROPE, STONE, COPE, MUD = range(len(MATS))
 
 
@@ -53,7 +53,7 @@ def jetty_span(width=1, length=1, name=None):
     x0, x1 = -0.5, width - 0.5
     xs = [x0 + 0.12] + ([x0 + width / 2] if width > 1 else []) + [x1 - 0.12]
     frame(bm, rnd, xs, [k - 0.5 for k in range(length + 1)], JETTY)
-    deck_boards(bm, x0, -0.5, x1, length - 0.5, JETTY, rnd, mats=(BOARD, BOARD, BOARD, BOARD, OLD))
+    A.box(bm, (x0 - 0.06, -0.5, JETTY - 0.08), (x1 + 0.06, length - 0.5, JETTY), BOARD)
     for x in (x0 + 0.03, x1 - 0.03):
         kerb(bm, x, -0.5, length - 0.5, JETTY)
     w = Walk(name or "JettySpan%dx%d" % (width, length))
@@ -69,7 +69,7 @@ def jetty_head(name="JettyHead"):
     xs = ys = [-0.38, 1.0, 2.38]
     posts = {(-0.38, -0.38), (2.38, -0.38), (-0.38, 2.38), (2.38, 2.38)}
     frame(bm, rnd, xs, ys, JETTY, posts=posts, brace_every=1)
-    deck_boards(bm, -0.5, -0.5, 2.5, 2.5, JETTY, rnd, mats=(BOARD, BOARD, BOARD, OLD))
+    A.box(bm, (-0.56, -0.5, JETTY - 0.08), (2.56, 2.5, JETTY), BOARD)
     for x in (-0.47, 2.47):
         kerb(bm, x, -0.5, 2.5, JETTY)
     for x, y in ((-0.38, 2.38), (2.38, 2.38)):                  # rope wound on the far posts
@@ -204,7 +204,7 @@ def pontoon(name="Pontoon"):
             float_barrel(bm, (x, k - 0.42, 0.0), (x, k + 0.42, 0.0), 0.24)
     for x in (-0.4, 0.5, 1.4):
         beam(bm, (x, -0.5, z - 0.1), (x, 3.5, z - 0.1), 0.1, 0.1, mat=TIM)
-    deck_boards(bm, -0.5, -0.5, 1.5, 3.5, z, rnd, mats=(BOARD, BOARD, OLD))
+    A.box(bm, (-0.54, -0.5, z - 0.08), (1.54, 3.5, z), BOARD)
     for x in (-0.47, 1.47):
         kerb(bm, x, -0.5, 3.5, z)
     beam(bm, (-0.5, 3.47, z + 0.035), (1.5, 3.47, z + 0.035), 0.07, 0.1, mat=TIM)
@@ -376,8 +376,8 @@ def lobster_pots(name="LobsterPots"):
 # battered sides, a weed band, a coping of pale blocks along each edge, paving between them, and
 # buttresses standing out of the sides every other tile. They run on from a quay along +Y.
 
-PAVE = len(MATS)                    # the paving's material slot (Cobble: the ashlar texture)
-STONE_MATS = MATS + ["Cobble", "CandleWax"]
+PAVE = len(MATS)                    # the paving's material slot (Flagstone: the flags texture)
+STONE_MATS = MATS + ["Flagstone", "CandleWax"]
 GLOW = PAVE + 1
 
 

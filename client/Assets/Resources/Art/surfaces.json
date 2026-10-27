@@ -58,6 +58,18 @@
   "Yew": {
    "texture": "Beam",
    "tiles": 1
+  },
+  "Boards": {
+   "texture": "Boards",
+   "tiles": 1.2
+  },
+  "Harbourstone": {
+   "texture": "Blocks",
+   "tiles": 2.4
+  },
+  "Flagstone": {
+   "texture": "Flags",
+   "tiles": 2
   }
  }
 }

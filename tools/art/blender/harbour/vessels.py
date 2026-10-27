@@ -2,7 +2,7 @@
 a sea-going trader (docs/harbour-kit.md). Bow to +Y, origin amidships at the waterline.
 
 The technique follows the owner's references (images/osrs-port-3, -4); the forms are our own. One warm
-timber throughout, its planks drawn by the Planks texture laid along the hull, never painted bands;
+timber throughout, its planks drawn by the chunky Boards texture laid along the hull, never painted bands;
 detail from a few crafted, repeated things: balustrades of small posts along every deck edge, round
 portholes, a curled stem head, sails furled into tied bundles. Open boats keep their inner floor above
 the waterline so the water never shows inside them.
@@ -17,22 +17,21 @@ import rth_art as A
 import basin as N
 from common import (STOREY, Walk, beam, make, rope_coil)
 
-MATS = ["Planks", "Ash", "Oak", "Linen", "Hide", "Iron", "Glaze", "CandleWax", "DeadWood", "Timber"]
+MATS = ["Boards", "Ash", "Fence", "Linen", "Hide", "Iron", "Glaze", "CandleWax", "DeadWood", "Driftwood"]
 HULL, POST, TRIM, SAIL, ROPE, IRON, GLASS, LIGHT, DARK, TIM = range(len(MATS))
-PLANK_SCALE = 0.45          # texture repeats per unit along the hull: boards about a quarter tile wide
 
 
 def make_vessel(name, bm, walk=None, smooth=30):
-    """Make the vessel, then lay the plank texture along it: on the hull's sides the boards run fore
+    """Make the vessel, then lay the Boards texture along it: on the hull's sides the boards run fore
     and aft (u up the side, v along the length), on the transom across it, on decks along the length."""
     ob = make(name, bm, MATS, walk, smooth=smooth)
     me = ob.data
     uv = me.uv_layers[0]
     names = [m.name for m in me.materials]
-    if "Planks" not in names:
+    if "Boards" not in names:
         return ob
-    plank = names.index("Planks")
-    s = PLANK_SCALE
+    plank = names.index("Boards")
+    s = 1.0 / A.surfaces().get("Boards", {}).get("tiles", 1)
     for p in me.polygons:
         if p.material_index != plank:
             continue

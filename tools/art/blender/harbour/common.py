@@ -134,10 +134,30 @@ def make(name, bm, materials, walk=None, smooth=None):
     for f in bm.faces:
         f.material_index = remap[f.material_index]
     ob = N.make(name, bm, [materials[m] for m in used], smooth_angle=smooth, coll="Harbour")
+    lay_boards(ob)
     if walk is not None:
         walk.save()
         walk.overlay(ob)
     return ob
+
+
+def lay_boards(ob, along_y=False):
+    """Turn the Boards texture on the part's flat tops so the boards run across it (along X, seams at
+    constant Y), as a jetty's or a pier's deck is laid; along_y lays them lengthwise instead."""
+    me = ob.data
+    names = [m.name for m in me.materials]
+    if "Boards" not in names:
+        return
+    k = names.index("Boards")
+    tiles = A.surfaces().get("Boards", {}).get("tiles", 1)
+    uv = me.uv_layers[0]
+    for p in me.polygons:
+        if p.material_index != k or abs(p.normal.z) < 0.75:
+            continue
+        for li in p.loop_indices:
+            co = me.vertices[me.loops[li].vertex_index].co
+            uv.data[li].uv = ((co.x, co.y) if along_y else (co.y, co.x))
+            uv.data[li].uv = (uv.data[li].uv[0] / tiles, uv.data[li].uv[1] / tiles)
 
 
 # ---- timber -------------------------------------------------------------------------------------
