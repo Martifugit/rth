@@ -15,6 +15,9 @@ below it, so a canopy skirt wearing it ends in hanging leaves.
 - BushPale.png / BushPalePicked.png: a tall bush's paler leaves with red berries, and picked.
 - Lance.png: long narrow silvery leaves, standing up and out (the pollard willow's shoots).
 - Wattle.png: a woven hurdle panel, opaque.
+- Bracken.png: fronds of paired leaflets fanning up, olive going tawny at the tips.
+- Bramble.png: dark toothed leaves on arching canes, a few pale flowers and dark berries.
+- Birchleaf.png: small light leaves on hanging threads, sky between them (the birch).
 
     python tools/art/blender/nature/textures.py [--seed N] [--preview]
 
@@ -45,6 +48,9 @@ ELM_GREEN = ["#1f2a19", "#2a3821", "#36462a", "#435533", "#51643c", "#5f7346", "
 NEEDLE_GREEN = ["#151f1c", "#1c2a25", "#24362f", "#2d4339", "#375143", "#42604e", "#4e6f5a"]
 IVY_GREEN = ["#141c12", "#1c2718", "#24331f", "#2e4027", "#394e2f", "#455c38", "#536b42"]
 WITHY = ["#2a241c", "#3f3529", "#544736", "#695a45", "#7e6d55", "#938266"]
+BRACKEN = ["#262814", "#36391b", "#4a4c22", "#5e5d29", "#736b31", "#887739", "#9b8442"]
+BRAMBLE = ["#161f15", "#1f2b1c", "#283723", "#32442b", "#3d5233", "#49603c", "#566e46"]
+BIRCH_GREEN = ["#2f381a", "#414d22", "#55632b", "#6a7935", "#7f8e40", "#94a24c", "#a8b45a"]
 
 
 def rgb(h):
@@ -68,7 +74,7 @@ def ellipse(shade, cx, cy, rx, ry, a, base, lit=True):
             elif lit and d < 0.3 and (dx + dy) < -0.4:
                 s += 1
             if 0 <= y < SIZE:
-                shade[y][x % SIZE] = max(0, min(6, s))
+                shade[y][x % SIZE] = max(0, min(6 if base <= 6 else base, s))
 
 
 def hem(shade, rng, depth_min, depth_max, width=(7, 14)):
@@ -305,6 +311,83 @@ def ivy(seed):
     return shade, [rgb(c) for c in IVY_GREEN]
 
 
+def bracken(seed):
+    """Bracken: fronds rising from the bottom and fanning out, each a stalk with paired leaflets
+    shrinking toward its tip; olive low down, tawny where the tips have turned. The hem is the
+    fronds' own tips."""
+    rng = random.Random(seed)
+    shade = [[-1] * SIZE for _ in range(SIZE)]
+    for _ in range(17):
+        x0 = rng.uniform(-6, SIZE + 6)
+        lean = rng.uniform(-0.4, 0.4)
+        length = rng.uniform(75, 125)
+        step = 3.4
+        steps = int(length / step)
+        for i in range(steps):
+            t = i / steps
+            y = SIZE - 1 - i * step
+            x = x0 + lean * i * step
+            base = min(6, 1 + int(4.5 * t + rng.uniform(-0.6, 0.8)))
+            span = (1 - t) * 6.5 + 1.4
+            for side in (-1, 1):            # a pair of leaflets, swept up toward the tip
+                ellipse(shade, x + side * span * 0.6, y - span * 0.25, span * 0.62, 1.15,
+                        side * -0.45 + lean * 0.6, base)
+            for k in range(int(step) + 1):  # the stalk
+                yy, xx = int(y) - k, int(x + lean * k)
+                if 0 <= yy < SIZE:
+                    shade[yy][xx % SIZE] = max(0, base - 2)
+    return shade, [rgb(c) for c in BRACKEN]
+
+
+def bramble(seed):
+    """Bramble: dark toothed leaves in threes along arching canes, crowded, with a scatter of pale
+    five-petalled flowers and dark berries; a ragged hem of leaf tips."""
+    rng = random.Random(seed)
+    shade = [[0] * SIZE for _ in range(SIZE)]
+    for _ in range(300):
+        cx, cy = rng.uniform(-6, SIZE + 6), rng.uniform(-6, SIZE + 6)
+        base = 1 + int(3.5 * (1 - cy / SIZE) + rng.uniform(-0.8, 1.3))
+        a = rng.uniform(0, math.pi)
+        for dx, dy, k in ((0, 0, 1.0), (-3.2, 2.0, 0.8), (3.2, 2.0, 0.8)):
+            ellipse(shade, cx + dx, cy + dy, 4.2 * k, 2.6 * k, a + dx * 0.15, base)
+    flowers, berries = [], []
+    for _ in range(18):
+        flowers.append((rng.uniform(4, SIZE - 4), rng.uniform(4, SIZE - 30)))
+    for _ in range(24):
+        berries.append((rng.uniform(4, SIZE - 4), rng.uniform(4, SIZE - 24)))
+    for x, y in berries:
+        ellipse(shade, x, y, 1.6, 1.6, 0, 7, lit=False)
+    for x, y in flowers:
+        for k in range(5):
+            a = 2 * math.pi * k / 5
+            ellipse(shade, x + 1.6 * math.cos(a), y + 1.6 * math.sin(a), 1.3, 1.3, 0, 8, lit=False)
+        ellipse(shade, x, y, 0.8, 0.8, 0, 9, lit=False)
+    hem(shade, rng, 8, 20, width=(8, 15))
+    pal = [rgb(c) for c in BRAMBLE] + [rgb("#2a1622"), rgb("#bdb6a6"), rgb("#a8973f")]
+    return shade, pal
+
+
+def birchleaf(seed):
+    """The birch's leaves: small light triangular ovals on hanging threads, in loose strands with
+    the sky between them, darker inside the crown; the strands' ends make a long fine hem."""
+    rng = random.Random(seed)
+    shade = [[-1] * SIZE for _ in range(SIZE)]
+    for _ in range(60):
+        x = rng.uniform(-4, SIZE + 4)
+        y = rng.uniform(-30, SIZE * 0.5)
+        sway = rng.uniform(-0.12, 0.12)
+        length = rng.uniform(55, 120)
+        while length > 0 and y < SIZE:
+            base = 2 + int(3.0 * (1 - y / SIZE) + rng.uniform(-1.0, 1.3))
+            ellipse(shade, x + rng.uniform(-2.5, 2.5), y, rng.uniform(2.6, 3.4), rng.uniform(1.8, 2.4),
+                    math.pi / 2 + rng.uniform(-0.5, 0.5), base)
+            step = rng.uniform(3.0, 4.5)
+            y += step
+            x += sway * step
+            length -= step
+    return shade, [rgb(c) for c in BIRCH_GREEN]
+
+
 def save(name, shade, palette, preview):
     pixels = [(0, 0, 0, 0) if s < 0 else palette[s] + (255,) for row in shade for s in row]
     os.makedirs(OUT, exist_ok=True)
@@ -338,6 +421,9 @@ def main(argv):
         save(name + "Picked", picked, palette, preview)
     save("Lance", *lance(seed), preview)
     save("Wattle", *wattle(seed), preview)
+    save("Bracken", *bracken(seed), preview)
+    save("Bramble", *bramble(seed), preview)
+    save("Birchleaf", *birchleaf(seed), preview)
 
 
 if __name__ == "__main__":

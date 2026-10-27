@@ -29,6 +29,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, ".."))
 import rth_art as A  # noqa: E402
 
+A._palette = None                  # read the palette afresh: Blender keeps the module between runs
+
 TEXTURES = os.path.join(HERE, "textures")
 
 
@@ -1033,7 +1035,7 @@ def farm_cart(seed=1, at=(0, 0, 0), rot=0.0):
 
 # ---- the board --------------------------------------------------------------------------------
 
-W, H = 44, 30
+W, H = 44, 38
 WATER_Z = -0.18
 
 
@@ -1092,13 +1094,16 @@ def ground():
     return make("Ground", bm, ["Grass", "Mud", "Mere"], coll="Preview")
 
 
-ROW_TREES, ROW_BUSHES, ROW_STONE, ROW_BOUNDS, ROW_PLACES, ROW_MINING = 8.0, 12.5, 16.0, 19.5, 23.0, 27.0
+ROW_TREES, ROW_BUSHES, ROW_STONE, ROW_BOUNDS, ROW_PLACES, ROW_MINING, ROW_WILDS, ROW_WAYS = (
+    8.0, 12.5, 16.0, 19.5, 23.0, 27.0, 31.0, 35.0)
 
 
 def build():
     """The board, in rows from the water back: the mere's edge; the trees, each with its felled
     state beside it; bushes and plants; stone; boundaries; places (the heath's stones, graves, the
-    farm); mining (nature/mining.py: each kind's variants in copper and iron, then worked out)."""
+    farm); mining (nature/mining.py: each kind's variants in copper and iron, then worked out);
+    the wilds and the ways (nature/wilds.py: ground cover, deadwood, loose stone; ways, camps and
+    work)."""
     A.reset()
     for c in list(bpy.data.collections):
         if c.name in ("Nature", "Preview"):
@@ -1167,18 +1172,21 @@ def build():
     })
     for i, x in enumerate(range(19, 25)):
         objs["hedge_%d" % i] = hedge(seed=i + 1, at=(x, r, 0))
-    objs.update(mining().row(ROW_MINING))
+    objs.update(kit("mining").row(ROW_MINING))
+    W_ = kit("wilds")
+    objs.update(W_.row(ROW_WILDS, ROW_WAYS))
+    objs["stepping_stones"] = W_.stepping_stones(at=(4.0, 2.2, 0), water=WATER_Z)
     return objs
 
 
-def mining():
-    """The mining nodes' module (it uses this one's helpers, so it is loaded once they exist)."""
-    sys.modules.pop("mining", None)
+def kit(name):
+    """One of the modules built on this one's helpers (mining, wilds), loaded fresh once they exist."""
+    import importlib
+    sys.modules.pop(name, None)
     sys.modules.pop("basin", None)
     if HERE not in sys.path:
         sys.path.insert(0, HERE)
-    import mining as M
-    return M
+    return importlib.import_module(name)
 
 
 def rig():
@@ -1238,7 +1246,7 @@ def export_all():
     world's."""
     import shutil
     out = {}
-    for name, builder in list(ASSETS.items()) + list(mining().ASSETS.items()):
+    for name, builder in list(ASSETS.items()) + list(kit("mining").ASSETS.items()) + list(kit("wilds").ASSETS.items()):
         A.reset()
         ob = builder()
         ob.name = ob.data.name = name
