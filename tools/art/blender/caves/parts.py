@@ -13,7 +13,7 @@ from mathutils import Matrix, Vector
 
 import rth_art as A
 import basin as N
-from shapes import DARK, ROCK, STONE, added, along_x, block, chunk, lay, make, rng, weather
+from shapes import DARK, ROCK, STONE, added, along_x, block, chunk, hole, lay, make, rng, weather
 
 SPAN = 2.5          # between a doorway's post centres
 DOOR_H = 2.6        # posts' height; lintels and arches start here
@@ -113,7 +113,11 @@ THROATS = {
     "cleft": ([(-1.0, 0.0), (1.0, 0.0), (0.9, 0.45), (0.45, 0.85), (0.05, 1.0), (-0.5, 0.75), (-0.95, 0.4)], 0.45, 2.5),
     "low": ([(-1.0, 0.0), (1.0, 0.0), (1.0, 0.5), (0.6, 0.9), (-0.5, 0.95), (-1.0, 0.55)], 0.55, 0.95),
     "square": ([(-1.0, 0.0), (1.0, 0.0), (1.0, 1.0), (-1.0, 1.0)], 0.95, 2.6),
+    "squeeze": ([(-1.0, 0.0), (1.0, 0.0), (0.8, 0.35), (1.0, 0.7), (0.3, 1.0), (-0.6, 0.8), (-1.0, 0.45)], 0.22, 2.1),
+    "burrow": ([(-1.0, 0.0), (1.0, 0.0), (1.0, 0.5), (0.55, 0.95), (-0.55, 0.95), (-1.0, 0.5)], 0.32, 0.55),
 }
+# How far each ring of a throat is shifted sideways: a squeeze bends, so its end can't be seen.
+BENDS = {"squeeze": [0.0, 0.12, 0.3, 0.2, 0.0]}
 
 
 def throat(seed=1, at=(0, 0, 0), kind="wide"):
@@ -121,15 +125,17 @@ def throat(seed=1, at=(0, 0, 0), kind="wide"):
     cover anything lower), narrowing as its roof comes down, its faces darkening from the rim to
     black. Seen from inside only (its faces point in), so it disappears wherever nothing covers it;
     set anything behind it at least 2.3 tiles back from its origin. kind: wide (a cave), cleft (a
-    tall crack), low (a crawl hole), square (behind a built doorway)."""
+    tall crack), low (a crawl hole), square (behind a built doorway), squeeze (a crack barely a body
+    wide, bending as it goes), burrow (a body's width, into an earth bank)."""
     r = rng(seed)
     bm = bmesh.new()
     outline, width, height = THROATS[kind]
     steps = [(-0.15, 1.0, 1.0), (0.5, 0.9, 0.8), (1.1, 0.8, 0.6), (1.7, 0.7, 0.42), (2.2, 0.6, 0.3)]
     jitter = 0.0 if kind == "square" else 0.05
     rings = []
-    for y, scale, roof in steps:
-        rings.append([bm.verts.new((x * width * scale * r.uniform(1 - jitter, 1 + jitter), y,
+    bend = BENDS.get(kind, [0.0] * len(steps))
+    for (y, scale, roof), dx in zip(steps, bend):
+        rings.append([bm.verts.new((dx + x * width * scale * r.uniform(1 - jitter, 1 + jitter), y,
                                     0.02 + z * height * roof * r.uniform(1 - jitter, 1 + jitter))) for x, z in outline])
     n = len(outline)
     for i, (r0, r1) in enumerate(zip(rings, rings[1:])):
@@ -143,7 +149,8 @@ def throat(seed=1, at=(0, 0, 0), kind="wide"):
         inward = Vector((0, -1, 0)) if f is end else Vector((0, mid.y, mid.z * 0.5 + 0.3)) - mid
         if f.normal.dot(inward) < 0:
             f.normal_flip()
-    name = "Throat" + {"wide": "", "cleft": "Cleft", "low": "Low", "square": "Square"}[kind]
+    name = "Throat" + {"wide": "", "cleft": "Cleft", "low": "Low", "square": "Square", "squeeze": "Squeeze",
+                       "burrow": "Burrow"}[kind]
     return make(name, bm, DARK, at=at, smooth=60, finish=False)
 
 
@@ -360,6 +367,181 @@ def grate(seed=2, at=(0, 0, 0)):
     return make("Grate", bm, [STONE, "Blackiron", "CryptEarth"], at=at, smooth=20)
 
 
+# ---- descents: holes, and the rigging for going down them -------------------------------------
+
+EARTH = ["Grass", "Dirt", "Mud", "CryptDarkStone", "CryptEarth"]   # a hole's outside, crest, walls, deep walls, floor
+
+
+def outline_round(r, n, rnd, jit, stretch=(1.0, 1.0)):
+    """A ragged ring of points round the origin, r across, stretched (x, y)."""
+    pts = []
+    for k in range(n):
+        a = 2 * math.pi * k / n + rnd.uniform(-0.15, 0.15)
+        rr = r * rnd.uniform(1 - jit, 1 + jit)
+        pts.append((math.cos(a) * rr * stretch[0], math.sin(a) * rr * stretch[1]))
+    return pts
+
+
+def pit(seed=1, at=(0, 0, 0)):
+    """A pit in the turf, about two tiles across: an earth rim, walls dropping into the dark. For a
+    rope (RopeAnchor) or a ladder (LadderTop), or a jump. A few stones on its lip."""
+    r = rng(seed)
+    bm = bmesh.new()
+    hole(bm, outline_round(0.95, 10, r, 0.1), 0.35, r)
+    for k in range(3):
+        a = r.uniform(0, 2 * math.pi)
+        chunk(bm, (1.25 * math.cos(a), 1.25 * math.sin(a), 0.1), (0.16, 0.14, 0.22), r, mats=(5, 6, 7), points=10)
+    return make("Pit", bm, EARTH + ROCK, at=at)
+
+
+def sinkhole(seed=2, at=(0, 0, 0)):
+    """Ground that has fallen in: a wide ragged hole, its lip torn, two slabs of turf sliding in."""
+    r = rng(seed)
+    bm = bmesh.new()
+    c = hole(bm, outline_round(1.5, 13, r, 0.28), 0.3, r, rim_w=0.6)
+    for k, a in enumerate((0.6, 3.6)):
+        before = set(bm.verts)
+        chunk(bm, (0, 0, 0), (0.45, 0.3, 0.22), r, mats=(1, 2, 0), points=12)
+        out = Vector((math.cos(a), math.sin(a), 0))
+        lay(bm, added(bm, before), Matrix.Translation(out * 1.05 + Vector((0, 0, 0.12)))
+            @ Matrix.Rotation(a + math.pi / 2, 4, 'Z') @ Matrix.Rotation(math.radians(28), 4, 'X'))
+    return make("Sinkhole", bm, EARTH, at=at)
+
+
+def fissure(seed=3, at=(0, 0, 0)):
+    """A crack in the ground, three tiles long and barely a body wide, rock breaking through the turf
+    along both lips."""
+    r = rng(seed)
+    bm = bmesh.new()
+    pts = []
+    for k in range(14):
+        a = 2 * math.pi * k / 14
+        pts.append((math.cos(a) * 1.5 * r.uniform(0.9, 1.05), math.sin(a) * 0.35 + math.sin(math.cos(a) * 4) * 0.12))
+    hole(bm, pts, 0.4, r, rim_w=0.35)
+    for k in range(5):
+        x = -1.3 + 0.65 * k
+        side = 1 if k % 2 else -1
+        chunk(bm, (x, side * 0.62, 0), (0.28, 0.22, r.uniform(0.35, 0.6)), r, points=12)
+    return make("Fissure", bm, ["Scree", "Moss", "Cinder", "CryptDarkStone", "CryptEarth"], at=at)
+
+
+def shaft(seed=4, at=(0, 0, 0)):
+    """A shaft going straight down, built: a square kerb of stone blocks round a dark drop. For a
+    rope, a ladder, or a windlass (Windlass)."""
+    r = rng(seed)
+    bm = bmesh.new()
+    hole(bm, [(-0.7, -0.7), (0.7, -0.7), (0.7, 0.7), (-0.7, 0.7)], 0.5, r, rim_w=0.05, rings=3)
+    for x0, y0, x1, y1 in ((-0.95, -0.95, 0.0, -0.7), (0.0, -0.95, 0.95, -0.7), (-0.95, 0.7, 0.0, 0.95),
+                           (0.0, 0.7, 0.95, 0.95), (-0.95, -0.7, -0.7, 0.7), (0.7, -0.7, 0.95, 0.7)):
+        block(bm, (x0 + 0.005, y0 + 0.005, -0.1), (x1 - 0.005, y1 - 0.005, 0.5), r, mat=0, chip=0.02)
+    weather(bm, r, 0.008)
+    return make("Shaft", bm, [STONE, STONE, "CryptDarkStone", "CryptEarth", "CryptEarth"], at=at, smooth=20)
+
+
+def stairwell(seed=5, at=(0, 0, 0)):
+    """Steps going down into the ground (+Y), built: a kerb round a long opening, a low sill to step
+    over, six steps dropping inside it, the lower ones lost in the dark."""
+    r = rng(seed)
+    bm = bmesh.new()
+    top = 0.45
+    for x0, y0, x1, y1, h in ((-0.75, -1.25, 0.75, -1.05, 0.25), (-0.75, -1.05, -0.55, 1.05, top),
+                              (0.55, -1.05, 0.75, 1.05, top), (-0.75, 1.05, 0.75, 1.25, top)):
+        block(bm, (x0, y0, -0.1), (x1, y1, h), r, mat=0, chip=0.02)
+    for k in range(6):
+        y0 = -1.05 + 0.28 * k
+        z = 0.4 - 0.066 * k
+        block(bm, (-0.55, y0, -0.1), (0.55, y0 + 0.3, z), r, mat=1 if k < 3 else 2, chip=0.01)
+    for (x0, y0), (x1, y1) in (((-0.55, -1.05), (-0.55, 1.05)), ((0.55, 1.05), (0.55, -1.05)), ((-0.55, 1.05), (0.55, 1.05))):
+        v = [bm.verts.new(p) for p in ((x0, y0, 0.02), (x1, y1, 0.02), (x1, y1, top), (x0, y0, top))]
+        bm.faces.new(v).material_index = 2
+    floor = [bm.verts.new(p) for p in ((-0.55, 0.63, 0.02), (0.55, 0.63, 0.02), (0.55, 1.05, 0.02), (-0.55, 1.05, 0.02))]
+    bm.faces.new(floor).material_index = 3
+    weather(bm, r, 0.006)
+    return make("Stairwell", bm, [STONE, STONE, "CryptDarkStone", "CryptEarth"], at=at, smooth=20)
+
+
+def sump(seed=6, at=(0, 0, 0)):
+    """A sump at the foot of the rock: a pool of still black water ringed with stone, the way on
+    under the surface. Rock heaped behind it (+Y)."""
+    r = rng(seed)
+    bm = bmesh.new()
+    hole(bm, outline_round(1.0, 11, r, 0.12), 0.3, r, rim_w=0.3, bottom_z=0.14)
+    for k, (x, y, h) in enumerate(((-0.9, 1.1, 1.1), (0.4, 1.4, 1.5), (1.2, 0.7, 0.8))):
+        chunk(bm, (x, y, 0), (0.55, 0.45, h), r, mats=(0, 2, 1), points=16)
+    return make("Sump", bm, ["Scree", "Moss", "Cinder", "CryptDarkStone", "Sea"], at=at)
+
+
+def burrow(seed=7, at=(0, 0, 0)):
+    """An earth bank with a low hole in it, a body's width (pair it with ThroatBurrow): two shoulders
+    of earth and a turf roof over the gap, roots showing where the bank was dug."""
+    r = rng(seed)
+    bm = bmesh.new()
+    for x in (-0.68, 0.68):                       # deep enough to cover its throat (2.3 tiles)
+        chunk(bm, (x, 1.0, 0), (0.48, 1.4, 0.8), r, mats=(1, 2, 0), points=18)
+    chunk(bm, (0, 1.1, 0.5), (0.8, 1.35, 0.5), r, sink=0.0, mats=(1, 2, 0), points=18)
+    for k in range(4):
+        x = r.uniform(-0.3, 0.3)
+        N.rod(bm, [(x, -0.15, 0.62), (x + r.uniform(-0.1, 0.1), -0.2, 0.42)], 0.015, mat=3, sides=3, taper=0.5)
+    return make("Burrow", bm, ["Grass", "Dirt", "Mud", "Bark"], at=at)
+
+
+def rope_anchor(seed=1, at=(0, 0, 0)):
+    """A rope down a hole: a stake driven in a little way back from the lip, leaning away from it, the
+    rope tied off round it and run over the lip (+Y, the lip about a tile away) and down into the
+    dark; the spare coiled at the stake's foot."""
+    r = rng(seed)
+    bm = bmesh.new()
+    N.rod(bm, [(0, 0, -0.1), (0.02, -0.1, 0.55)], 0.05, sides=5, taper=0.8)
+    N.rod(bm, [(0.02, -0.06, 0.42), (0.0, 0.5, 0.3), (0.0, 1.05, 0.4), (0.02, 1.25, 0.25), (0.0, 1.35, 0.05)],
+          0.02, mat=1, sides=4)
+    for k, (rad, z) in enumerate(((0.16, 0.03), (0.13, 0.07))):
+        pts = [(0.32 + rad * math.cos(a), -0.25 + rad * math.sin(a), z) for a in [2 * math.pi * i / 10 for i in range(11)]]
+        N.rod(bm, pts, 0.02, mat=1, sides=4)
+    return make("RopeAnchor", bm, ["Driftwood", "Wheat"], at=at, smooth=50)
+
+
+def ladder_top(seed=2, at=(0, 0, 0)):
+    """The top of a ladder standing in a hole, its rails sticking up out of it and leaning against the
+    lip (-Y), rungs lashed on; its foot is in the dark at the hole's floor."""
+    r = rng(seed)
+    bm = bmesh.new()
+    foot, head = Vector((0, 0.3, 0.03)), Vector((0, -0.35, 1.25))
+    for x in (-0.22, 0.22):
+        N.rod(bm, [foot + Vector((x, 0, 0)), head + Vector((x * 1.05, 0, 0))], 0.04, sides=5)
+    for k in range(5):
+        p = foot.lerp(head, 0.12 + 0.19 * k)
+        N.rod(bm, [p + Vector((-0.24, 0, 0)), p + Vector((0.24, 0, 0))], 0.025, sides=4)
+    return make("LadderTop", bm, ["Driftwood"], at=at, smooth=50)
+
+
+def windlass(seed=3, at=(0, 0, 0)):
+    """A windlass over a shaft: two posts either side of it, an axle with a crank, the rope wound on
+    it running straight down into the dark."""
+    r = rng(seed)
+    bm = bmesh.new()
+    for x in (-1.05, 1.05):
+        N.rod(bm, N.wobble(r, (x, 0, -0.05), (x, 0, 1.35), 3, 0.02), 0.07, sides=6, taper=0.9)
+    N.rod(bm, [(-1.12, 0, 1.2), (1.12, 0, 1.2)], 0.07, sides=6)
+    N.rod(bm, [(1.12, 0, 1.2), (1.3, 0, 1.2), (1.3, 0, 0.92)], 0.03, sides=4)
+    A.prism(bm, 8, 0.11, 0.11, -0.22, 0.22, (0, 0), mat_index=1, cap_top=True, cap_bottom=True)
+    lay(bm, list(bm.verts)[-16:], Matrix.Translation((0, 0, 1.2)) @ Matrix.Rotation(math.radians(90), 4, 'Y'))
+    N.rod(bm, [(0, -0.1, 1.15), (0, -0.1, 0.04)], 0.02, mat=1, sides=4)
+    return make("Windlass", bm, ["Timber", "Wheat"], at=at, smooth=40)
+
+
+def planked(seed=4, at=(0, 0, 0)):
+    """Planks laid over a hole about two tiles across, resting on its lip: four boards, one missing
+    from the middle, one sagging."""
+    r = rng(seed)
+    bm = bmesh.new()
+    for k, x in enumerate((-0.75, -0.38, 0.38, 0.75)):
+        before = set(bm.verts)
+        block(bm, (x - 0.15, -1.15, -0.03), (x + 0.15, 1.15, 0.03), r, chip=0.01)
+        sag = 0.12 if k == 2 else 0.0
+        lay(bm, added(bm, before), Matrix.Translation((0, 0, 0.4 - sag)) @ Matrix.Rotation(r.uniform(-0.05, 0.05), 4, 'Z'))
+    return make("Planked", bm, ["Planks"], at=at, smooth=20)
+
+
 # Name in the game (Resources/Caves/<Name>) to builder, by group.
 GENERIC = {
     "rock": {
@@ -373,6 +555,13 @@ GENERIC = {
         "Throat": throat, "ThroatCleft": lambda at=(0, 0, 0): throat(at=at, kind="cleft"),
         "ThroatLow": lambda at=(0, 0, 0): throat(at=at, kind="low"),
         "ThroatSquare": lambda at=(0, 0, 0): throat(at=at, kind="square"),
+        "ThroatSqueeze": lambda at=(0, 0, 0): throat(at=at, kind="squeeze"),
+        "ThroatBurrow": lambda at=(0, 0, 0): throat(at=at, kind="burrow"),
+    },
+    "descents": {
+        "Pit": pit, "Sinkhole": sinkhole, "Fissure": fissure, "Shaft": shaft, "Stairwell": stairwell,
+        "Sump": sump, "Burrow": burrow,
+        "RopeAnchor": rope_anchor, "LadderTop": ladder_top, "Windlass": windlass, "Planked": planked,
     },
     "stone": {
         "Post": post, "PostBroken": lambda at=(0, 0, 0): post(at=at, broken=True),

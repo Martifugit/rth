@@ -3,7 +3,9 @@ what a place is (identity.py), built in Blender (see tools/art/blender/README.md
 
 This script is the board and the export. The board shows the same entrance dressed seven ways
 along the front (a plain cave, a mine, an overgrown mouth, a shrine, a lair, the makers' door, a
-sealed crypt), and every part behind them, one row per group.
+sealed crypt), the ways down and through behind them (a pit with a rope, a sinkhole, a fissure with
+a ladder, a shaft with a windlass, a stairwell, a squeeze, a sump, a burrow, a planked pit), and
+every part behind those, one row per group.
 
     import runpy; runpy.run_path(r"C:\\dev\\rth\\tools\\art\\blender\\caves\\entrances.py")
     runpy.run_path(path, init_globals={"EXPORT": True})   # every part to Resources/Caves/<Name>.fbx
@@ -28,7 +30,7 @@ import parts as P  # noqa: E402
 from identity import IDENTITY  # noqa: E402
 from parts import GENERIC, SPAN  # noqa: E402
 
-W, H = 64, 36
+W, H = 64, 52
 
 
 def ground():
@@ -123,8 +125,30 @@ def build():
     o["crypt_gate"] = P.gate(at=(x, y + 0.05, 0))
     o["crypt_grate"] = P.grate(at=(x + 2.2, y - 1.5, 0))
     o["crypt_rubble"] = P.masonry_rubble(at=(x - 2.4, y - 1.6, 0))
+    # The ways down and through.
+    y = 12.0
+    o["d_pit"] = P.pit(at=(4.0, y, 0))
+    o["d_rope"] = P.rope_anchor(at=(4.0, y - 2.0, 0))
+    o["d_sinkhole"] = P.sinkhole(at=(10.0, y, 0))
+    o["d_fissure"] = P.fissure(at=(16.5, y, 0))
+    o["d_ladder"] = P.ladder_top(at=(16.3, y, 0))
+    o["d_shaft"] = P.shaft(at=(23.0, y, 0))
+    o["d_windlass"] = P.windlass(at=(23.0, y, 0))
+    o["d_stairwell"] = P.stairwell(at=(28.5, y, 0))
+    o["d_stair_post"] = P.post(broken=True, at=(29.9, y - 1.2, 0))
+    x = 35.0
+    o["d_sq_l"] = P.rock_mass(seed=81, kind="tall", at=(x - 0.8, y + 0.3, 0))
+    o["d_sq_r"] = P.rock_mass(seed=82, kind="tall", at=(x + 0.85, y + 0.4, 0))
+    o["d_sq_back"] = P.rock_mass(seed=83, at=(x, y + 3.0, 0))
+    o["d_sq_lip"] = P.rock_lip(seed=84, height=2.0, at=(x, y + 0.6, 0))
+    o["d_squeeze"] = P.throat(kind="squeeze", at=(x, y, 0))
+    o["d_sump"] = P.sump(at=(41.0, y, 0))
+    o["d_burrow"] = P.burrow(at=(47.0, y, 0))
+    o["d_burrow_throat"] = P.throat(kind="burrow", at=(47.0, y - 0.1, 0))
+    o["d_planked_pit"] = P.pit(seed=5, at=(53.0, y, 0))
+    o["d_planked"] = P.planked(at=(53.0, y, 0))
     # Every part, a row per group.
-    row = 12.0
+    row = 17.5
     for group in list(GENERIC.values()) + list(IDENTITY.values()):
         for i, (name, fn) in enumerate(group.items()):
             o["part_" + name] = fn(at=(2.5 + 3.4 * i, row, 0))

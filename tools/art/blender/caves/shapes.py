@@ -101,3 +101,51 @@ def along_x(bm, verts, x0, z):
 
 def rng(seed):
     return random.Random(seed)
+
+
+def hole(bm, outline, rim_h, rnd, mats=(0, 1, 2, 3, 4), rim_w=0.45, rings=3, bottom_z=0.03):
+    """A hole in the ground, built up rather than dug (nothing can go below the terrain): a rim
+    rising from the ground outside `outline` (points round its middle) to a crest `rim_h` high, then
+    walls dropping inside it, narrowing, to a floor just above the ground. From the game's camera the
+    walls read as a drop and the floor as the dark. mats: the rim's outside, its crest, the walls'
+    upper ring, the deeper walls, the floor."""
+    c = Vector((sum(p[0] for p in outline) / len(outline), sum(p[1] for p in outline) / len(outline), 0))
+    n = len(outline)
+
+    def ring(scale, z, push=0.0, jit=0.0):
+        out = []
+        for x, y in outline:
+            d = Vector((x, y, 0)) - c
+            e = d.normalized() if d.length else Vector((0, 0, 0))
+            p = c + d * scale + e * push
+            out.append(bm.verts.new((p.x + rnd.uniform(-jit, jit), p.y + rnd.uniform(-jit, jit), z)))
+        return out
+
+    foot = ring(1.0, -0.05, rim_w, 0.05)
+    crest = ring(1.0, 0.0, 0.08, 0.03)
+    for v in crest:
+        v.co.z = rim_h * rnd.uniform(0.85, 1.12)
+    lip = ring(0.97, rim_h * 0.88)
+    walls = [ring(1.0 - 0.13 * k, rim_h * 0.88 * (1 - k / rings) + bottom_z * k / rings) for k in range(1, rings + 1)]
+    bands = [(foot, crest, mats[0], 1), (crest, lip, mats[1], -1)]
+    prev = lip
+    for k, w in enumerate(walls):
+        bands.append((prev, w, mats[2] if k == 0 else mats[3], -1))
+        prev = w
+    for a, b, m, side in bands:
+        for k in range(n):
+            q = (a[k], a[(k + 1) % n], b[(k + 1) % n], b[k])
+            f = bm.faces.new(q)
+            f.material_index = m
+            f.normal_update()
+            mid = f.calc_center_median()
+            want = (mid - c) * side
+            want.z = 0.6
+            if f.normal.dot(want) < 0:
+                f.normal_flip()
+    floor = bm.faces.new(prev)
+    floor.material_index = mats[4]
+    floor.normal_update()
+    if floor.normal.z < 0:
+        floor.normal_flip()
+    return c
