@@ -762,7 +762,12 @@ def outline_solid(bm, outline, push, rnd, coped=None, lamp_at=None):
         j = (k + 1) % m
         bm.faces.new((lo[k], lo[j], hi[j], hi[k])).material_index = STONE
     bm.faces.new(list(reversed(lo))).material_index = STONE
-    bm.faces.new(hi).material_index = PAVE
+    cap = [bm.verts.new((x, y, QUAY - 0.02)) for x, y in outline]    # the paving, as high as the piers'
+    for k in range(m):
+        j = (k + 1) % m
+        if any(push[i] != (0.0, 0.0) for i in (k, j)):                  # not where it meets another piece
+            bm.faces.new((hi[k], hi[j], cap[j], cap[k])).material_index = STONE
+    bm.faces.new(cap).material_index = PAVE
     coped = range(m) if coped is None else coped
     wl, wh = ring(WEED[0], 0.012), ring(WEED[1], 0.012)
     for k in coped:
