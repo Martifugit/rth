@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -8,19 +9,22 @@ namespace Rth.Client.Editor
 {
     /// <summary>
     /// The kit models made in Blender (Assets/Resources/Nature from tools/art/blender/nature/basin.py,
-    /// Assets/Resources/Caves from tools/art/blender/caves/entrances.py) get the game's materials by
-    /// name, as the scripts name them:
+    /// Assets/Resources/Caves from tools/art/blender/caves/entrances.py, Assets/Art/Buildings from the
+    /// building kits) get the game's materials by name, as the scripts name them:
     /// <list type="bullet">
     /// <item>a world texture's name (Assets/Art/Textures/&lt;name&gt;.png: Foliage, Thorn, Wattle...):
     /// that texture, alpha-clipped so leaf hems cut out, drawn on both sides, matte;</item>
     /// <item>a palette colour's name (Bark, Ash, Scree): that colour, matte, wearing its surface
     /// pattern when Resources/Art/surfaces.json gives it one (Stone: Fieldstone).</item>
     /// </list>
-    /// The materials are kept in Assets/Art/Materials/Nature and shared by every model.
+    /// The materials are kept in Assets/Art/Materials/Nature and shared by every model. Unity forbids
+    /// making assets while a model imports, so a model first imports with its own materials; once the
+    /// import is done the shared ones are made and the model's materials remapped onto them, which
+    /// imports it once more.
     /// </summary>
     public sealed class NatureImporter : AssetPostprocessor
     {
-        public static readonly string[] Folders = { "Assets/Resources/Nature/", "Assets/Resources/Caves/" };
+        public static readonly string[] Folders = { "Assets/Resources/Nature/", "Assets/Resources/Caves/", "Assets/Art/Buildings/" };
         private const string MaterialDir = "Assets/Art/Materials/Nature";
 
         private void OnPreprocessModel()
@@ -34,18 +38,32 @@ namespace Rth.Client.Editor
             importer.importBlendShapes = false;
             importer.importNormals = ModelImporterNormals.Import;
             importer.materialImportMode = ModelImporterMaterialImportMode.ImportStandard;
-            importer.materialLocation = ModelImporterMaterialLocation.External; // so OnAssignMaterialModel is asked
+            importer.materialLocation = ModelImporterMaterialLocation.InPrefab;
         }
 
-        private Material OnAssignMaterialModel(Material imported, Renderer renderer)
+        private static void OnPostprocessAllAssets(string[] imported, string[] deleted, string[] moved, string[] movedFrom)
         {
-            if (!Ours(assetPath)) return null;
-            return For(imported.name);
+            foreach (string path in imported)
+            {
+                if (!Ours(path) || !path.EndsWith(".fbx", System.StringComparison.OrdinalIgnoreCase)) continue;
+                if (!(AssetImporter.GetAtPath(path) is ModelImporter importer)) continue;
+                var remaps = importer.GetExternalObjectMap();
+                bool changed = false;
+                foreach (string name in AssetDatabase.LoadAllAssetsAtPath(path).OfType<Material>().Select(m => m.name).Distinct())
+                {
+                    var id = new AssetImporter.SourceAssetIdentifier(typeof(Material), name);
+                    Material shared = For(name);
+                    if (remaps.TryGetValue(id, out Object current) && current == shared) continue;
+                    importer.AddRemap(id, shared);
+                    changed = true;
+                }
+                if (changed) importer.SaveAndReimport();
+            }
         }
 
         private static bool Ours(string path) => System.Array.Exists(Folders, f => path.StartsWith(f));
 
-        /// <summary>The shared material for a name from the kits' scripts.</summary>
+        /// <summary>The shared material for a name from the kits' scripts (made, or brought up to date).</summary>
         public static Material For(string name)
         {
             name = name.Trim();
@@ -77,7 +95,7 @@ namespace Rth.Client.Editor
             {
                 if (!Palette.TryParse(name, out Color colour))
                 {
-                    Debug.LogWarning($"[R'th] nature material '{name}' is neither a world texture nor a palette colour.");
+                    Debug.LogWarning($"[R'th] kit material '{name}' is neither a world texture nor a palette colour.");
                     colour = Color.magenta;
                 }
                 material.SetColor("_BaseColor", colour);
@@ -98,6 +116,15 @@ namespace Rth.Client.Editor
             foreach (JProperty p in ((JObject)JObject.Parse(file.text)["surfaces"] ?? new JObject()).Properties())
                 if ((string)p.Value["texture"] is string texture) map[p.Name] = texture;
             return map;
+        }
+
+        /// <summary>Reimport every kit model, so each takes the shared materials.</summary>
+        [MenuItem("R'th/Art/Reimport Kit Models")]
+        public static void ReimportAll()
+        {
+            foreach (string folder in Folders)
+                foreach (string guid in AssetDatabase.FindAssets("t:Model", new[] { folder.TrimEnd('/') }))
+                    AssetDatabase.ImportAsset(AssetDatabase.GUIDToAssetPath(guid), ImportAssetOptions.ForceUpdate);
         }
     }
 }
