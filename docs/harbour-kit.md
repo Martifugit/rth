@@ -1,6 +1,6 @@
 # The harbour kit: design
 
-**Status:** design written 2026-10-27, blockout next. Owner's decisions: generic kit first (each
+**Status:** design written 2026-10-27; blockout passed for scale; first detail pass done (structures.py, vessels.py). Owner's decisions: generic kit first (each
 port's identity later, as a set on top, the way the caves kit works); everything people stand on is
 walkable (jetties, quays, stairs, decks); ships are walkable on their decks and below (a hold you go
 down into); ships are moored set pieces, and travel is a voyage between twin ships at two ports.
