@@ -698,35 +698,6 @@ def elm_stump(seed=8, at=(0, 0, 0)):
     return make("ElmStump", bm, ["Bark", "Ash"], smooth_angle=50, at=at)
 
 
-def seam(seed=31, at=(0, 0, 0), dug=False):
-    """A mining rock: a rounded stone with its ore showing as one vein running through it, a few
-    ore-coloured chips at its foot. The ore material is named CopperOre, so other ores are a
-    recolour (objects.json "recolor"). dug: the depleted rock, the vein dug out into a dark scar."""
-    rnd = random.Random(seed)
-    bm = bmesh.new()
-    faces = blob(bm, (0, 0, 0.36), (0.62, 0.55, 0.52), 2, rnd, jitter=(0.88, 1.1), squash_below=-0.05)
-    normal = Vector((rnd.uniform(-0.4, 0.4), 1.0, rnd.uniform(0.4, 0.8))).normalized()
-    centre = Vector((0, 0, 0.36))
-    for f in faces:
-        d = (f.calc_center_median() - centre).dot(normal)
-        if abs(d + 0.04 * math.sin(f.calc_center_median().x * 9)) < 0.11:
-            f.material_index = 1
-    for k in range(5):
-        a, dist = rnd.uniform(0, 2 * math.pi), rnd.uniform(0.75, 1.05)
-        c = Vector((dist * math.cos(a), dist * math.sin(a), 0))
-        s = rnd.uniform(0.05, 0.09)
-        A.hull(bm, [c + Vector((s * math.cos(t), s * math.sin(t), -0.01)) for t in
-                    (rnd.uniform(0, 1), rnd.uniform(2, 3), rnd.uniform(4, 5))] + [c + Vector((0, 0, s * 0.7))],
-               mat=1 if k < 3 else 0)
-    if dug:
-        for f in bm.faces:
-            if f.material_index == 1:
-                for v in f.verts:
-                    v.co = centre + (v.co - centre) * 0.93      # the vein dug back into the rock
-        return make("SeamDug", bm, ["Scree", "Cinder"], smooth_angle=40, at=at)
-    return make("Seam", bm, ["Scree", "CopperOre"], smooth_angle=40, at=at)
-
-
 def flax(seed=5, at=(0, 0, 0), picked=False):
     """A stand of flax (Foraging's fibre): slender upright stalks, each with a small pale-blue
     flower. picked: the stalks pulled, a few short broken stems left in the ground."""
@@ -1062,7 +1033,7 @@ def farm_cart(seed=1, at=(0, 0, 0), rot=0.0):
 
 # ---- the board --------------------------------------------------------------------------------
 
-W, H = 44, 26
+W, H = 44, 30
 WATER_Z = -0.18
 
 
@@ -1121,13 +1092,13 @@ def ground():
     return make("Ground", bm, ["Grass", "Mud", "Mere"], coll="Preview")
 
 
-ROW_TREES, ROW_BUSHES, ROW_STONE, ROW_BOUNDS, ROW_PLACES = 8.0, 12.5, 16.0, 19.5, 23.0
+ROW_TREES, ROW_BUSHES, ROW_STONE, ROW_BOUNDS, ROW_PLACES, ROW_MINING = 8.0, 12.5, 16.0, 19.5, 23.0, 27.0
 
 
 def build():
     """The board, in rows from the water back: the mere's edge; the trees, each with its felled
     state beside it; bushes and plants; stone; boundaries; places (the heath's stones, graves, the
-    farm)."""
+    farm); mining (nature/mining.py: each kind's variants in copper and iron, then worked out)."""
     A.reset()
     for c in list(bpy.data.collections):
         if c.name in ("Nature", "Preview"):
@@ -1174,12 +1145,7 @@ def build():
         "boulders_small": boulders(seed=17, at=(7.5, s_, 0), size=0.6),
         "boulders_large": boulders(seed=3, at=(11.5, s_, 0), size=1.4),
         "cairn": cairn(at=(15.5, s_, 0)),
-        "seam": seam(at=(20.0, s_, 0)),
-        "seam_iron": seam(seed=33, at=(22.5, s_, 0)),
-        "seam_dug": seam(at=(25.0, s_, 0), dug=True),
     })
-    iron = objs["seam_iron"].data                      # what objects.json "recolor" does in the game
-    iron.materials[1] = A.mat("IronOre")
     r = ROW_BOUNDS
     for i, x in enumerate((1, 2, 3, 4)):
         objs["buck_%d" % i] = buck_fence(seed=i + 1, at=(x, r, 0), end_post=(i == 3))
@@ -1201,7 +1167,18 @@ def build():
     })
     for i, x in enumerate(range(19, 25)):
         objs["hedge_%d" % i] = hedge(seed=i + 1, at=(x, r, 0))
+    objs.update(mining().row(ROW_MINING))
     return objs
+
+
+def mining():
+    """The mining nodes' module (it uses this one's helpers, so it is loaded once they exist)."""
+    sys.modules.pop("mining", None)
+    sys.modules.pop("basin", None)
+    if HERE not in sys.path:
+        sys.path.insert(0, HERE)
+    import mining as M
+    return M
 
 
 def rig():
@@ -1243,7 +1220,6 @@ ASSETS = {
     "Hurdle": span(hurdle), "HurdleEnd": span(hurdle, end_post=True),
     "WallSpan": span(wall_span), "Hedge": span(hedge),
     "Elm": elm, "ElmStump": elm_stump,
-    "Seam": seam, "SeamDug": lambda: seam(dug=True),
     "Flax": flax, "FlaxPicked": lambda: flax(picked=True),
     "Herb": herb, "HerbPicked": lambda: herb(picked=True),
     "Mushrooms": mushrooms, "MushroomsPicked": lambda: mushrooms(picked=True),
@@ -1262,7 +1238,7 @@ def export_all():
     world's."""
     import shutil
     out = {}
-    for name, builder in ASSETS.items():
+    for name, builder in list(ASSETS.items()) + list(mining().ASSETS.items()):
         A.reset()
         ob = builder()
         ob.name = ob.data.name = name
