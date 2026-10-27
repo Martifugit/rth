@@ -1251,6 +1251,7 @@
     "id": "copper_seam",
     "name": "Copper seam",
     "examine": "Green-stained rock with a glint of red in it.",
+    "depletedModel": "Nature/SeamDug",
     "actions": [ { "id": "gather", "label": "Mine" } ],
     "node": {
       "skill": "mining",
@@ -1273,6 +1274,8 @@
     "id": "ironstone_seam",
     "name": "Ironstone seam",
     "examine": "Rust streaks the rock like old blood.",
+    "depletedModel": "Nature/SeamDug",
+    "recolor": { "CopperOre": "IronOre" },
     "actions": [ { "id": "gather", "label": "Mine" } ],
     "node": {
       "skill": "mining",
