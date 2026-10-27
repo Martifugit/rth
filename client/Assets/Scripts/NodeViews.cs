@@ -7,8 +7,10 @@ namespace Rth.Client
 {
     /// <summary>
     /// Shows the state of gathering nodes the server says aren't ordinary (the "nodes" server
-    /// state): a depleted node sinks and dims, a surging one (a hungry fount) glows and pulses.
-    /// The nodes themselves are MapObjects in the streamed region scenes.
+    /// state): a depleted node shows its object type's depleted model (objects.json
+    /// "depletedModel": a felled tree's stump, a picked bush) or else sinks and dims; a surging
+    /// one (a hungry fount) glows and pulses. The nodes themselves are MapObjects in the streamed
+    /// region scenes.
     /// </summary>
     public sealed class NodeViews : MonoBehaviour
     {
@@ -37,6 +39,11 @@ namespace Rth.Client
             if (!rescan && session.StateVersion == _version) return;
             _version = session.StateVersion;
 
+            var depletedModels = new Dictionary<string, string>();
+            if (session.Content != null)
+                foreach (ObjectDef d in session.Content.Objects)
+                    if (!string.IsNullOrWhiteSpace(d.DepletedModel)) depletedModels[d.Id] = d.DepletedModel;
+
             var wanted = new Dictionary<MapObject, NodeState>();
             foreach (NodeState state in session.ServerState<List<NodeState>>("nodes"))
                 if (_objects.TryGetValue((state.Type, state.X, state.Y), out MapObject o) && o != null) wanted[o] = state;
@@ -51,12 +58,16 @@ namespace Rth.Client
             {
                 if (!_looks.TryGetValue(pair.Key, out NodeLook look) || look == null)
                     _looks[pair.Key] = look = pair.Key.gameObject.AddComponent<NodeLook>();
-                look.Show(pair.Value.Depleted, pair.Value.Surging);
+                depletedModels.TryGetValue(pair.Key.objectType, out string depletedModel);
+                look.Show(pair.Value.Depleted, pair.Value.Surging, depletedModel);
             }
         }
     }
 
-    /// <summary>One node's changed look, undone by <see cref="Restore"/>.</summary>
+    /// <summary>
+    /// One node's changed look, undone by <see cref="Restore"/>. A depleted node with a depleted
+    /// model hides its own renderers and shows that model in their place; one without sinks and dims.
+    /// </summary>
     public sealed class NodeLook : MonoBehaviour
     {
         private static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
@@ -67,8 +78,9 @@ namespace Rth.Client
         private bool _depleted;
         private bool _surging;
         private Vector3 _baseScale;
+        private GameObject _stand;      // the depleted model, while it stands in
 
-        public void Show(bool depleted, bool surging)
+        public void Show(bool depleted, bool surging, string depletedModel = null)
         {
             if (_renderers == null)
             {
@@ -77,7 +89,11 @@ namespace Rth.Client
             }
             _depleted = depleted;
             _surging = surging;
-            transform.localScale = depleted ? new Vector3(_baseScale.x, _baseScale.y * 0.7f, _baseScale.z) : _baseScale;
+            GameObject model = depleted && !string.IsNullOrWhiteSpace(depletedModel) ? Resources.Load<GameObject>(depletedModel) : null;
+            if (depleted && !string.IsNullOrWhiteSpace(depletedModel) && model == null)
+                Debug.LogWarning($"[R'th] depleted model '{depletedModel}' isn't under Resources.");
+            Swap(model);
+            transform.localScale = depleted && model == null ? new Vector3(_baseScale.x, _baseScale.y * 0.7f, _baseScale.z) : _baseScale;
             if (surging && _glow == null)
             {
                 var go = new GameObject("Hungry glow");
@@ -101,6 +117,24 @@ namespace Rth.Client
             if (_glow != null) _glow.intensity = 1.6f + Mathf.Sin(Time.time * 5f) * 0.8f;
         }
 
+        /// <summary>Show <paramref name="model"/> in place of the node's own renderers, or (null) the node again.</summary>
+        private void Swap(GameObject model)
+        {
+            if (_stand != null && (model == null || _stand.name != model.name))
+            {
+                Destroy(_stand);
+                _stand = null;
+            }
+            if (model != null && _stand == null)
+            {
+                _stand = Instantiate(model, transform, false);
+                _stand.name = model.name;
+            }
+            if (_renderers == null) return;
+            foreach (Renderer r in _renderers)
+                if (r != null) r.enabled = _stand == null;
+        }
+
         private void Tint()
         {
             var block = new MaterialPropertyBlock();
@@ -109,7 +143,7 @@ namespace Rth.Client
                 if (r == null) continue;
                 r.GetPropertyBlock(block);
                 Color baseColour = r.sharedMaterial != null && r.sharedMaterial.HasProperty(BaseColor) ? r.sharedMaterial.GetColor(BaseColor) : Color.white;
-                block.SetColor(BaseColor, _depleted ? baseColour * 0.45f : baseColour);
+                block.SetColor(BaseColor, _depleted && _stand == null ? baseColour * 0.45f : baseColour);
                 block.SetColor(Emission, _surging ? new Color(0.6f, 0.05f, 0.08f) : Color.black);
                 r.SetPropertyBlock(block);
             }
@@ -120,6 +154,7 @@ namespace Rth.Client
         {
             _depleted = false;
             _surging = false;
+            Swap(null);
             if (_renderers != null)
             {
                 transform.localScale = _baseScale;

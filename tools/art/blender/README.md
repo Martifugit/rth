@@ -172,6 +172,25 @@ Two kits so far. Start from the one that fits, and read its rules before adding 
   Fine detail and colour belong in dressing (banners, braziers, furniture), not in the shell.
 - **Don't** run ahead: dressing, plants and extras come after the buildings themselves are right.
 
+**Nature: what has passed** (the kit is `nature/basin.py`, its textures `nature/textures.py`)
+- **Do** take only the *technique* from reference images (few big faces, leaf textures with a
+  ragged hem, smooth light, flat-coloured crooked timber) and never their shapes. Copied cones,
+  skirts and rail fences were rejected; forms come from R'th (a worked, weathered land under a wind
+  off the spine: coppice stools, pollards, buck fences, hurdles, laid hedges).
+- **Do** give each species its own habit *and* its own leaf texture (round leaves, paired leaflets,
+  small dark leaves with haws, upright silvery shoots). One crown recipe with different trunks
+  reads as one tree.
+- **Do** build leaf masses as cushions (`clump`): the texture runs from the crown down to the rim, so
+  the ragged hem shows only along the bottom edge, with a dark underside. Closed 20-sided clumps read
+  as dice; flat shelves with skirts read as plates.
+- **Do** sink anything leafy that stands on the ground (`grounded`): the hem's transparent foot leaves
+  the visible leaves well above the rim, so a rim on the ground looks like it hovers.
+- **Do** grow every limb, leader and root out of one continuous trunk; a stitched-on piece of
+  another width shows. Roots are curved tapering flares that start below any cut.
+- **Do** give every gathered thing its depleted state: trees a stump at axe height, bushes the same
+  mesh with a picked (berry-free) texture. Name it in objects.json (`depletedModel`).
+- **Don't** let the triangle budget decide a shape; it is advisory.
+
 **Checking**
 - **Do** render two views every round: the game view (pitch about 40°) and a low side view
   (pitch about 8°). The game view hides gaps between parts; the side view shows them.

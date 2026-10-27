@@ -21,6 +21,12 @@ namespace Rth.Shared.World
         /// palette colour or #RRGGBB ({"Stone": "CopperOre"}), so one rock serves every ore.
         /// </summary>
         public Dictionary<string, string> Recolor = new Dictionary<string, string>();
+        /// <summary>
+        /// Client only: the model a depleted node shows in place of its own look, a path under
+        /// Resources ("Nature/AlderStool": a felled tree's stump, a picked bush). Without one, a
+        /// depleted node sinks and dims.
+        /// </summary>
+        public string? DepletedModel;
     }
 
     /// <summary>

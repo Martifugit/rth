@@ -1295,6 +1295,7 @@
     "id": "alder_tree",
     "name": "Alder",
     "examine": "A riverbank tree with dark, sticky buds.",
+    "depletedModel": "Nature/AlderStool",
     "actions": [ { "id": "gather", "label": "Chop" } ],
     "node": {
       "skill": "woodcutting",
@@ -1318,6 +1319,7 @@
     "id": "ash_tree",
     "name": "Ash",
     "examine": "Tall and grey-barked, with black buds like little hooves.",
+    "depletedModel": "Nature/AshStump",
     "actions": [ { "id": "gather", "label": "Chop" } ],
     "node": {
       "skill": "woodcutting",
