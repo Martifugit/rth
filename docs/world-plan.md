@@ -131,8 +131,8 @@ green west of the empire dries into Sere, just south of Tolling).
 | The spine's foothills, the high valleys, mesas | 4-8 |
 | The spine's crest, the volcano's cone | 9-14, peaks to 16 |
 
-Tolling and Palmerway are built flat at 0, so they sit in the low Wennow basin, and the land rises
-west to the foothills and south to Sere's plain.
+Tolling sits in the low Wennow basin (0-1.5), the town itself on a low knoll above the water
+meadows, and the land rises west to the foothills and south to Sere's plain.
 
 ### Areas
 
@@ -140,10 +140,10 @@ Each area: the shape you remember, what the land is like, and where its pockets 
 
 #### Venaria, the empire's heartland (Cruor's empire)
 
-- **Tolling and Wennow** (built). A low river basin where the green begins to dry. Tolling's
+- **Tolling and Wennow**. A low river basin where the green begins to dry. Tolling's
   river comes down from the foothills in the north-west, through Tolling, into the broad mere of
   Wennow, and on east.
-- **Palmerway** (built) and **the lake road.** Heath east of Tolling, the waygate, then the road
+- **Palmerway** and **the lake road.** Heath east of Tolling, the waygate, then the road
   runs east along the river's valley, past fields round the first villages, over a low rise where
   the whole of **Knellmere** (p-lake) opens out: a great lake with islands, reed fens on its west
   shore, a drowned belfry off its south shore. **p-lakeport** on the north shore.
@@ -272,7 +272,7 @@ The rule: **every settlement is sited for a reason a player can see.** Tiers as 
 
 | Town | Site | Role |
 | --- | --- | --- |
-| Tolling | The Wennow basin (built) | The start. |
+| Tolling | The Wennow basin, on a knoll | The start. |
 | p-lakeport | Knellmere's north shore, where the lake road meets the water | Boats on the lake, fishing, the first big market on the road to Cruor. |
 | p-forestgate | Eller's south edge, where the forest road enters the trees | Woodcutting and hunting; the way into the forest. |
 | p-riverhold | The gorge on Sere's river | The sluice fortress; the empire's salient. |

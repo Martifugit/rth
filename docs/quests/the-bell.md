@@ -40,7 +40,9 @@ is not decided). The quest must not answer it. It ends with more questions than 
   (death.json's dialogue, a flag set by this quest or by the first death).
 - **Someone comes looking**, later and elsewhere: not someone who knew the player, nor someone who
   wishes them well, but someone who knows a little more than they do and gives it out in pieces.
-- **The bell** itself: why it rang, who else it has rung for, the drowned belfry in Knellmere.
+- **The bell** itself: why it rang, who else it has rung for. At the end the bell-ringer mentions
+  that Tolling's bell was cast as one of a pair, and the other hangs in the belfry now drowned in
+  Knellmere (s-belfry, mid game): the first pull east (`docs/areas/tolling.md`, "Outwards").
 
 ## Needs
 

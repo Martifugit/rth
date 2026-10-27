@@ -1,6 +1,6 @@
 # The western march: the brief
 
-**Status:** draft (2026-10-26), waiting on the owner; the regions are taken over and have had a
+**Status:** agreed (2026-10-27); the regions are taken over and have had a
 first ground pass (below). Wave 1. Ground only this pass: no assets, buildings, people or objects. Template: [world-example.md](../world-example.md); the area next
 door, [tolling.md](tolling.md).
 
@@ -77,7 +77,8 @@ road was laid); cairns on the downs.
 
 **Something to find:** off the observatory lane; the cave itself is the obvious one.
 
-**Danger:** gentle by the town, emptier and harder towards the foothills and the cave.
+**Danger:** gentle by the town, emptier and harder towards the foothills and the cave (5 to 15,
+the edge of Tolling's first ring).
 
 ## Checklist ([world-guide.md](../world-guide.md) section 6)
 
@@ -119,10 +120,12 @@ road was laid); cairns on the downs.
    (2026-10-27): keep the approach (part of L4's approved stage 1) and move its river and road at the
    southern border to meet the march's, rather than scrapping and regenerating it.
 
-## Questions for the owner
+## Decided (2026-10-27)
 
-1. Is the march the dry high ground between two green river valleys, as above?
-
-Answered (2026-10-27): the cave (s-tolling-cave) stays as the first dungeon, close to the town, so
+The march is the dry high ground between two green river valleys, as above: the contrast is what
+makes leaving Tolling west feel like leaving. It is the west pull in Tolling's "Outwards" table
+(`tolling.md`): the spine and the observatory seen from the town, Corvin's errand to the cave, the
+observatory's watchers as the first, unexplained hint of moonfall (which belongs to later, higher
+content). The the cave (s-tolling-cave) stays as the first dungeon, close to the town, so
 players see early that dungeons exist; Selenfall's approach is fixed at the seam, not scrapped
 (finding 3).

@@ -1,7 +1,6 @@
 # Tolling and Wennow: the brief
 
-**Status:** draft (2026-10-26), waiting on the owner. Package 1.1 is ticked in `world/areas.json`
-once the questions at the end are answered and the brief agreed. **This pass is ground only**: no
+**Status:** agreed (2026-10-27; the owner left the open calls to the brief, decided at the end). **This pass is ground only**: no
 assets, buildings, people or objects; stage 3 puts the town's content back. Wave 1: the first area taken to
 stage 2 ([world-areas.md](../world-areas.md)). Template: [world-example.md](../world-example.md).
 
@@ -9,10 +8,10 @@ stage 2 ([world-areas.md](../world-areas.md)). Template: [world-example.md](../w
 
 | Region | Tiles | Now | Role in the area |
 | --- | --- | --- | --- |
-| `land_0_0` | x 0..95, y 0..95 | generated (was `tolling`) | the start: the town's square and fields, the river, the spawn (the layout's start place), Wennow's north-west shore |
-| `land_1_0` | x 96..191, y 0..95 | generated (was `palmerway`) | the heath road east along Wennow's north shore to the waygate's place |
-| `land_0_m1` | x 0..95, y -96..-1 | generated | south of the town: the Sere road leaving, meadow and grass rising gently to the first dry ground |
-| `land_1_m1` | x 96..191, y -96..-1 | generated | Wennow's south half, the Wenn leaving east for Knellmere, and the edge of the green: gravel rising to about 4 in the south-east |
+| `land_0_0` | x 0..95, y 0..95 | generated (was `tolling`); take over at 1.2 | the start: the town's square and fields, the river, the spawn (the layout's start place), Wennow's north-west shore |
+| `land_1_0` | x 96..191, y 0..95 | taken over (was `palmerway`) | the heath road east along Wennow's north shore to the waygate's place |
+| `land_0_m1` | x 0..95, y -96..-1 | taken over | south of the town: the Sere road leaving, meadow and grass rising gently to the first dry ground |
+| `land_1_m1` | x 96..191, y -96..-1 | taken over | Wennow's south half, the Wenn leaving east for Knellmere, and the edge of the green: gravel rising to about 4 in the south-east |
 
 **Neighbours, read-only:** the western march (`land_m1_0`, `land_m1_m1`) west; the great bridge
 and the dry valley (`land_0_1`, `land_1_1`) north; the lake road (`land_2_0`, `land_2_m1`) east;
@@ -20,7 +19,9 @@ Sere's river, the salient (`land_0_m2`, `land_1_m2`) and the Downs (`land_2_m2`)
 
 ## The brief
 
-**For:** every player's first hour. The town teaches the game (bank, apothecary, skinning yard,
+**For:** every player's first hour, and the feeling they keep of it: **calm, a little strange,
+and open on every side.** Nothing here hurries the player or threatens them; one odd thing waits
+down each road, and none of them is explained. The town teaches the game (bank, apothecary, skinning yard,
 the first quest, the first rocks and trees, rats and mites), Palmerway is the first walk out and
 the first monument, and the south is the first sight of where the green ends. Early only:
 nothing here should need more than level 10 to 15 in anything.
@@ -31,13 +32,16 @@ p-sworn's church (the clerk, the monument, the pledges), the occult houses (Corv
 Sallow), the Dreaming (Edda, the sleepers' graves), and Sere's trade coming up the Sere road
 (Corvin's saltfigs).
 
-**Shape:** a **low green basin round a mere.** Tolling's river comes down from the north-west,
-through the town and into **Wennow**, the broad mere that lies across the border between the
-built north and the generated south; the **Wenn** leaves it east for Knellmere. North and east
+**Shape:** a **low green basin round a mere, with the town on a knoll above it.** Tolling's river
+comes down from the north-west, past the town and into **Wennow**, the broad mere in the middle of
+the basin; the **Wenn** leaves it east for Knellmere. **Tolling stands on a low knoll** on the
+river's bank, about 1 to 1.5 above the water meadows (the mere at 0), with the chapel and its bell
+tower on the crown: high enough that the tower reads from anywhere in the basin and that the town
+looks out over Wennow, low enough to stay a gentle river town (decided 2026-10-27). North and east
 of the mere is heath; south of it the land rises very gently (0 to 1.5) through meadow, then
 turns to dry gravel in the south-east corner, rising to about 4: the rain shadow beginning.
 The one picture to remember: standing on the dry rise south of Wennow, the whole basin below
-you, green, with the town and the mill on the far side of the water.
+you, green, with the bell tower on its knoll and the mill on the far side of the water.
 
 **Ground (five, from eleven):** grass and meadow (the basin), heath (north and east of the
 mere), gravel (the dry edge), lake water; overlays: the Sere road and Palmerway, Tolling's
@@ -85,12 +89,30 @@ Wenn); everything else is open to its neighbours.
 | Widdermill (landmark) | (30, 80) | the mill and its pond, on the river |
 | The waygate (landmark) | (180, 48) | the wardens' gate on the road (finding 2) |
 | Palmerway's monument | on the road east | Cruor's monument, Brother Hollis (stage 3) |
-| **p-edge-farm** (hamlet, proposed) | the Sere road, about 60 tiles south of Tolling, where the meadow meets the gravel | the last green farm before Sere: the first beat on the Sere road (world-plan section 5, "the edge of the green") |
+| **p-edge-farm** (hamlet) | the Sere road, about 60 tiles south of Tolling, where the meadow meets the gravel | the last green farm before Sere: the first beat on the Sere road (world-plan section 5, "the edge of the green") |
 | **s-wennow-south** (site) | Wennow's south shore | early: where the fishers pulled the player out of the mere (The Bell's fourth step); something is still there |
-| **s-dry-rise** (site, proposed) | the gravel rise in `land_1_m1`, about (130, -70) | early, a lookout: the view back over the basin |
+| **s-dry-rise** (site) | the gravel rise in `land_1_m1`, about (130, -70) | early, a lookout: the view back over the basin |
 
-The area has no sites in the layout today (the nearest are s-heath-ruin north of Palmerway and
-s-reed-fens east of it, both in other areas).
+p-edge-farm, s-wennow-south and s-dry-rise go into `continent.json` with the area's 1.3 work (the
+area has no sites in the layout yet; the nearest are s-heath-ruin north of Palmerway and s-reed-fens
+east of it, both in other areas).
+
+**Outwards: how the player is nudged out.** Tolling is a home, not a pen. Every road leaves past
+something seen from the bell tower, every townsperson's work points down a different road, and
+each direction holds one quiet oddity that isn't explained. Nothing is forced: the pulls are
+sightlines, errands and curiosity.
+
+| Way | Seen from the town | The errand that sends you | The oddity | Leads on to |
+| --- | --- | --- | --- | --- |
+| **East**, Palmerway (the main pull) | the monument on the road, the heath, the waygate's flags | Brother Hollis (Religion, pledges); Wenna's fen rats at the reed fens; the bell-ringer, at The Bell's end: Tolling's bell was cast as a pair, and the other hangs in a belfry that is now in a lake | the old toll-house with no road to toll; the stones on the heath in a style nobody made (s-heath-ruin, seen from the road) | Knellmere, the drowned belfry, p-lakeport, Cruor |
+| **West**, the salt road | the spine, always; the observatory on its spur | Corvin wants something from the cave (s-tolling-cave), the first dungeon | the cave itself; cairns on the downs; the observatory's watchers looking at the moon (the first hint of moonfall, which is later content) | the march, the salt pass, Selenfall |
+| **South**, the Sere road | the dry rise, the gravel beyond the green | Corvin's saltfigs come up this road; the farm needs a hand | s-wennow-south, where you were found; field walls running out into the gravel | the edge of the green, the salient, Sere |
+| **North**, Hollow lane | Widdermill's wheel | the miller, the first and gentlest errand | the dry valley's bridge over nothing (s-dry-bridge, the next area): a river that isn't there any more | the dry valley, the great bridge |
+
+The ring round the town (about 60 tiles) is level 1 to 10 and walked in the first hour; the cave,
+the waygate and the dry rise are its edge (5 to 15); beyond them the next areas take over. The
+road east is the widest and best kept, so a player with no plan drifts towards Cruor; the other
+three are for the curious.
 
 **Counts** (stage 3 is checked against these; skeleton only, the kinds are filled in then):
 
@@ -103,7 +125,8 @@ s-reed-fens east of it, both in other areas).
 | People | 6 townsfolk, the wardens | the farm's people (p-edge-farm), when it is built |
 
 **History in the ground:** the old toll-house on Palmerway (the road was a toll road before the
-waygate); the sleepers' graves; at the edge of the green, field walls running out into the
+waygate); the churchyard under the bell tower, where the drowned from Wennow are buried (the old
+plan's sleepers' graves); at the edge of the green, field walls running out into the
 gravel where the farms used to reach further (the dry is spreading).
 
 **Something to find:** s-wennow-south (where you were found), and whatever is in Sour Hollow's cask.
@@ -118,10 +141,10 @@ before it bites: the dry ground is where it starts.
 | Clarity over clutter | The mere is the theme; the south stays sparse (a road, a farm, a rise). |
 | Wide and narrow | Wide; narrows at the bridge, the shore road and the waygate. |
 | Ground with character | Basin, mere, heath, dry rise: each walks differently. |
-| Landmarks shape the skyline | Wennow, the mill, the monument; the spine to the west. |
+| Landmarks shape the skyline | The bell tower on its knoll; Wennow, the mill, the monument; the spine to the west. |
 | Edges are scenery | **Fails today**: the waygate can be walked round (finding 2, stage 2). |
 | Few ground colours | Five, down from eleven in the south. |
-| Paint the RuneScape way | All four regions are generated and painted. |
+| Paint the RuneScape way | All four regions are painted (three taken over, `land_0_0` still generated). |
 | History in the ground | Toll-house, graves, field walls in the gravel. |
 | Something to find | s-wennow-south, Sour Hollow. |
 | Danger reads before it bites | Rats in town, harder things on the dry edge. |
@@ -146,9 +169,13 @@ before it bites: the dry ground is where it starts.
    over 40 tiles past their ends (`ReliefTests`).
 6. **Red stains on the gravel** (fixed): gravel no longer mixes in 3% red rock.
 
-## Questions for the owner
+## Decided (2026-10-27)
 
-1. **The farm and the dry rise:** keep p-edge-farm and s-dry-rise? (s-wennow-south is kept: it is
-   where the player was found, 2026-10-27.)
-2. **Height:** the basin is low (0 to 1.5) and rises only to the south and the dry edge. Right, or
-   should the town stand on a gentle rise above the river?
+1. **The farm and the dry rise stay.** p-edge-farm is the Sere road's first beat and a calm place to
+   lend a hand; s-dry-rise is where the basin is seen whole and the dry beyond it begins. With
+   s-wennow-south they give the south its three stops: a farm, where you were found, a view.
+2. **The town stands on a low knoll** (1 to 1.5 above the water meadows), the bell tower on its
+   crown, so the tower reads across the basin and the town looks out over Wennow. The rest of the
+   basin stays low (0 to 1.5) and rises to the south and the dry edge as before.
+3. **The basin stays calm:** no aggressive creatures inside it; danger starts at its edges (the
+   cave, the dry rise, beyond the waygate).
