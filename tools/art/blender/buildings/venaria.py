@@ -22,7 +22,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 import rth_art as A  # noqa: E402
 
 EXPORT = True
-STOREY = 2.3
+STOREY = 2.6                    # fits the player (1.9) with room over his head
+DOOR = 2.1                      # a doorway's clear height
+LIFT = STOREY - 2.3             # windows and fittings were placed for a 2.3 storey
 PITCH = 42.0
 RISE = math.tan(math.radians(PITCH))
 T = 0.22                        # wall thickness, centred on the grid line
@@ -170,7 +172,7 @@ def piece_wall_shuttered():
     """A poor house's window: a dark opening and plank shutters standing open."""
     bm = bmesh.new()
     wall_frame(bm)
-    w0, w1, s0, s1 = 0.32, 0.68, 1.05, 1.7
+    w0, w1, s0, s1 = 0.32, 0.68, 1.05 + LIFT, 1.7 + LIFT
     holed_wall(bm, w0, w1, s0, s1)
     box(bm, w0, w1, -0.02, 0.02, s0, s1, DARK)
     window_surround(bm, w0, w1, s0, s1)
@@ -183,7 +185,7 @@ def piece_wall_leaded():
     """A better house's window: two lights of leaded glass either side of a mullion."""
     bm = bmesh.new()
     wall_frame(bm)
-    w0, w1, s0, s1 = 0.24, 0.76, 0.95, 1.75
+    w0, w1, s0, s1 = 0.24, 0.76, 0.95 + LIFT, 1.75 + LIFT
     holed_wall(bm, w0, w1, s0, s1)
     mid = (w0 + w1) / 2
     for a, b in ((w0, mid - 0.025), (mid + 0.025, w1)):
@@ -205,7 +207,7 @@ def piece_wall_lancet():
     """The wound's shape: a narrow pointed window of leaded glass (red in a church, by recolour)."""
     bm = bmesh.new()
     wall_frame(bm)
-    w0, w1, s0, s1, apex = 0.36, 0.64, 0.8, 1.5, 1.92
+    w0, w1, s0, s1, apex = 0.36, 0.64, 0.8 + LIFT, 1.5 + LIFT, 1.92 + LIFT
     panel(bm, 0, w0, LO, HI)
     panel(bm, w1, 1, LO, HI)
     panel(bm, w0, w1, LO, s0)
@@ -239,7 +241,7 @@ def piece_wall_doorway():
     bm = bmesh.new()
     box(bm, 0, 0.12, -T / 2 - 0.02, T / 2 + 0.02, 0, PLINTH, STONE)
     box(bm, 0.88, 1, -T / 2 - 0.02, T / 2 + 0.02, 0, PLINTH, STONE)
-    d1 = 1.85
+    d1 = DOOR
     panel(bm, 0, 0.12, PLINTH, HI)
     panel(bm, 0.88, 1, PLINTH, HI)
     panel(bm, 0.12, 0.88, d1 + 0.1, HI)
@@ -254,7 +256,7 @@ def piece_wall_doorway():
 def piece_wall_barn_door():
     """A byre's opening: almost the whole tile, two plank leaves, a heavy lintel."""
     bm = bmesh.new()
-    d1 = 1.95
+    d1 = DOOR + 0.1
     for x0, x1 in ((0, 0.06), (0.94, 1)):
         box(bm, x0, x1, -T / 2 - 0.02, T / 2 + 0.02, 0, HI, TIMBER)
     panel(bm, 0.06, 0.94, d1 + 0.12, HI)
@@ -270,12 +272,12 @@ def piece_wall_barn_door():
 def piece_door():
     """Planks behind heavy iron: three straps and studs (the iron worn openly)."""
     bm = bmesh.new()
-    box(bm, 0.16, 0.84, -0.03, 0.03, 0.04, 1.85, PLANKS)
-    for z in (0.35, 0.95, 1.55):
+    box(bm, 0.16, 0.84, -0.03, 0.03, 0.04, DOOR, PLANKS)
+    for z in (0.35, 0.35 + (DOOR - 0.5) / 2, DOOR - 0.3):
         box(bm, 0.16, 0.78, -0.05, -0.03, z, z + 0.08, IRON)
         for x in (0.3, 0.5, 0.7):
             box(bm, x - 0.018, x + 0.018, -0.065, -0.05, z + 0.022, z + 0.058, IRON)
-    box(bm, 0.70, 0.75, -0.07, -0.03, 0.95, 1.02, IRON)
+    box(bm, 0.70, 0.75, -0.07, -0.03, DOOR / 2, DOOR / 2 + 0.07, IRON)
     return bm
 
 
@@ -404,6 +406,7 @@ def piece_banner():
     A.hull(bm, [(c + x, y, z) for x, z in ((-0.22, 1.7), (0.22, 1.7), (0.22, 0.75), (0.0, 0.62), (-0.22, 0.75))
                 for y in (-0.315, -0.30)], BANNER)
     box(bm, c - 0.05, c + 0.05, -0.32, -0.316, 1.22, 1.32, BRONZE)
+    bmesh.ops.translate(bm, verts=bm.verts, vec=(0, 0, LIFT))
     return bm
 
 
@@ -416,6 +419,7 @@ def piece_lantern():
     box(bm, x - 0.06, x + 0.06, -T / 2 - 0.31, -T / 2 - 0.19, 1.64, 1.80, CANDLE)
     A.hull(bm, [(x + dx, -T / 2 - 0.25 + dy, 1.80) for dx in (-0.08, 0.08) for dy in (-0.07, 0.07)]
            + [(x, -T / 2 - 0.25, 1.9)], IRON)
+    bmesh.ops.translate(bm, verts=bm.verts, vec=(0, 0, LIFT))
     return bm
 
 
