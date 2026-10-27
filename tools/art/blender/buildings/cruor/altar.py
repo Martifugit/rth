@@ -1,20 +1,20 @@
-"""The Altar of Martyrs: the centrepiece of Cruor's cathedral and the heart of Troth's church, for
-the dais the cathedral leaves at its east end (cathedral.py; 18 tiles across under a 22-tile nave).
+"""The Altar of Martyrs: the centrepiece of Cruor's cathedral and the heart of Troth's church,
+where the faithful honour the fallen martyrs; for the dais the cathedral leaves at its east end
+(cathedral.py; 18 tiles across under a 22-tile nave). Troth itself is not on it (the god is
+creatures/troth.py).
 
-Our reading of images/blood-altar-of-martyrs.jpg and images/troth.png, not a copy of either:
-- Troth stands on a tall pedestal in a round pool of blood: a towering dark figure, hooded and
-  faceless, crowned and shouldered with iron spikes, its arms open and lowered to the faithful.
-- The betrayers' blades are stabbed into its back, hilts out, fanned like a halo: the wound the
-  Untroth struck at the dawn of the world (docs/lore.md II). The wound in its chest never closes;
-  blood runs down its robe and down four grooves in the pedestal into the pool.
-- Five martyrs stand on the dais round the pool, hooded, heads bowed, facing out to the
-  congregation as its guardians, hands resting on swords held point down.
+Our reading of images/blood-altar-of-martyrs.jpg, not a copy of it:
+- Three martyrs stand back to back on a tall pedestal in a round pool of blood, larger than life
+  in pale stone: hooded, heads up, one hand on the heart (the oath), the other raising a sword up
+  and outwards, so the three blades fan out over the pool.
+- Faces of the fallen are carved round the pedestal's shaft, eyes closed, mouths open, each
+  pouring a stream of blood down the shaft into the pool.
 - Channels come in from the nave across the dais and down its steps to the pool: the faith's blood
-  going to its god. Four iron braziers stand at its corners.
+  going where the church gathers it. Four iron braziers stand at its corners.
 
 Red is the faith's and the blood's only (docs/regions/cruor-architecture.md): the pool, the
-channels, the wound. Stone is the cathedral's (painted CruorStone); the effigy is dark iron.
-Front is -Y (towards the nave); turn it to face west when it is set in the cathedral.
+channels, the streams. Stone is the cathedral's (painted CruorStone); the martyrs and the faces are
+paler, smooth stone. Front is -Y (towards the nave); turn it to face west in the cathedral.
 
     runpy.run_path(r"C:\\dev\\rth\\tools\\art\\blender\\buildings\\cruor\\altar.py")
 """
@@ -43,10 +43,9 @@ STONE, IRON, BLOOD, VOID, BLADE, BRONZE, COALS, FLOOR, DARKIRON, MARBLE, EYES, C
 TOP = 0.75                 # the dais's top, three steps up
 POOL_R, KERB_R = 3.0, 3.3  # the pool, and its kerb
 POOL_Z, KERB_Z = 0.9, 1.05
-PED_TOP = 3.9              # Troth stands here
+PED_TOP = 3.9              # the martyrs stand here
 CHANNELS = (270, 0, 180)   # degrees: from the nave (front), and from either side
-MARTYRS = (45, 90, 135, 225, 315)
-MARTYR_R = 3.9
+FACES = (270, 0, 90, 180)  # degrees: the faces of the fallen round the shaft
 
 
 def obj(name, bm, smooth=40):
@@ -78,16 +77,9 @@ def dais():
     A.prism(bm, 8, 1.55, 1.5, TOP, 1.3, (0, 0), rot=math.pi / 8, mat_index=STONE, cap_top=True)
     A.prism(bm, 8, 1.2, 1.0, 1.3, 3.6, (0, 0), rot=math.pi / 8, mat_index=STONE, cap_top=True)
     A.prism(bm, 8, 1.4, 1.4, 3.6, PED_TOP, (0, 0), rot=math.pi / 8, mat_index=STONE, cap_top=True)
-    # Four grooves of blood down the shaft, widening into the pool at its foot.
-    c = math.cos(math.pi / 8)
-    for deg in (0, 90, 180, 270):
-        before = set(bm.verts)
-        A.hull(bm, [(1.0 * c + 0.015, -0.09, 3.6), (1.0 * c + 0.015, 0.09, 3.6),
-                    (1.2 * c + 0.015, -0.12, 1.3), (1.2 * c + 0.015, 0.12, 1.3),
-                    (1.0 * c - 0.02, -0.09, 3.6), (1.2 * c - 0.02, 0.12, 1.3)], BLOOD)
-        A.hull(bm, [(1.5 * c + 0.01, -0.13, 1.3), (1.5 * c + 0.01, 0.13, 1.3), (1.52 * c + 0.2, -0.3, POOL_Z + 0.01),
-                    (1.52 * c + 0.2, 0.3, POOL_Z + 0.01), (1.5 * c - 0.05, 0, 1.3)], BLOOD)
-        turn(bm, new(bm, before), deg)
+    # The faces of the fallen, each pouring blood into the pool.
+    for deg in FACES:
+        fallen_face(bm, deg)
     # The channels: a gutter of stone kerbs with blood in it, from the nave across the floor, down
     # the steps and over the dais to the pool's kerb.
     profile = [(KERB_R, 10.0, 0.01), (5.6, 10.0, 0.01), (5.0, 5.6, 0.26), (4.4, 5.0, 0.51), (KERB_R, 4.4, TOP + 0.01)]
@@ -101,109 +93,76 @@ def dais():
     return obj("AltarDais", bm, smooth=20)
 
 
-# ---- Troth ------------------------------------------------------------------------------------
+# ---- the faces, the martyrs and the braziers ---------------------------------------------------
 
-def troth(z0=PED_TOP, name="AltarTroth", at=(0, 0, 0)):
-    """Troth, about six tiles tall: hooded and faceless but for two red eyes, crowned and shouldered
-    with iron spikes, its arms open and lowered, the betrayers' blades still in its back and its
-    wound still bleeding. Standing at z0: on the altar's pedestal, or (z0 0) wherever the god itself
-    comes."""
-    r = random.Random(7)
-    bm = bmesh.new()
-    secs = [(0.0, 1.3, 1.05), (0.35, 1.2, 0.95), (1.5, 0.85, 0.65), (2.5, 0.78, 0.58), (3.4, 1.05, 0.68),
-            (3.9, 1.18, 0.62), (4.2, 0.55, 0.5), (4.55, 0.62, 0.62), (5.15, 0.45, 0.48), (5.6, 0.16, 0.2), (5.75, 0, 0)]
-    loft = []
-    for z, w, d in secs:
-        fwd = -0.18 * max(0.0, (z - 4.2) / 1.5)               # the hood leans out over the faithful
-        loft.append(((0, fwd, z0 + z), w, d))
-    A.loft(bm, loft, sides=10, ref=(0, 1, 0), mats=IRON)
-    # The ragged hem: tongues of robe hanging over the pedestal's cap.
-    for k in range(12):
-        a = 2 * math.pi * k / 12 + r.uniform(-0.1, 0.1)
-        base = Vector((math.cos(a) * 1.15, math.sin(a) * 0.95, z0 + 0.3))
-        A.spike(bm, base, 0.22, base + Vector((math.cos(a) * 0.25, math.sin(a) * 0.2, -r.uniform(0.35, 0.6))), sides=3, mat=IRON)
-    # Spikes: a crown round the hood, three on each shoulder.
-    for k in range(9):
-        a = math.pi / 2 + 2 * math.pi * k / 9
-        base = Vector((math.cos(a) * 0.3, math.sin(a) * 0.32 - 0.15, z0 + 5.25))
-        length = (1.1 if k % 2 == 0 else 0.7) * r.uniform(0.85, 1.1)
-        A.spike(bm, base, 0.09, base + Vector((math.cos(a) * 0.35, math.sin(a) * 0.3, length)), sides=4, mat=IRON)
-    for s in (-1, 1):
-        for k, (dx, dz, l) in enumerate(((0.75, 4.0, 1.0), (0.98, 3.85, 0.8), (0.5, 4.05, 0.65))):
-            base = Vector((s * dx, 0.05, z0 + dz))
-            A.spike(bm, base, 0.12, base + Vector((s * l * 0.55, 0.1, l)), sides=4, mat=IRON)
-    # Arms open and lowered, hands turned out to the faithful.
-    for s in (-1, 1):
-        A.loft(bm, [((s * 0.95, 0.0, z0 + 3.75), 0.3, 0.28), ((s * 1.6, -0.3, z0 + 2.95), 0.24, 0.22),
-                    ((s * 2.0, -0.62, z0 + 2.4), 0.19, 0.17), ((s * 2.12, -0.7, z0 + 2.3), 0, 0)],
-                   sides=6, ref=(0, 0, 1), mats=IRON)
-        A.hull(bm, [(s * 2.0 + dx, -0.72 + dy, z0 + 2.32 + dz) for dx in (-0.14, 0.16) for dy in (-0.05, 0.05)
-                    for dz in (0.0, -0.4)] + [(s * 2.12, -0.75, z0 + 1.82)], IRON)
-    # The dark under the hood, two red eyes in it; the wound in the chest, and a ribbon of its blood
-    # running down the robe to the hem, all laid on the surface (cast from in front of it).
-    from mathutils.bvhtree import BVHTree
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    bm.normal_update()                   # the casts need the faces' normals
-    body = BVHTree.FromBMesh(bm)
-    A.decal(bm, [(-0.3, -2.0, z0 + 4.55), (0.3, -2.0, z0 + 4.55), (0.26, -2.0, z0 + 5.05), (0, -2.0, z0 + 5.25), (-0.26, -2.0, z0 + 5.05)],
-            (0, -1, 0.15), VOID, onto=body, facing=0.2)
-    for s in (-1, 1):
-        A.decal(bm, [(s * 0.06, -2.0, z0 + 4.86), (s * 0.2, -2.0, z0 + 4.9), (s * 0.19, -2.0, z0 + 4.95), (s * 0.06, -2.0, z0 + 4.93)],
-                (0, -1, 0.15), EYES, lift=0.02, onto=body, facing=0.2)
-    A.decal(bm, [(-0.13, -2.0, z0 + 3.05), (0.14, -2.0, z0 + 3.1), (0.08, -2.0, z0 + 3.7), (-0.06, -2.0, z0 + 3.75)], (0, -1, 0), EYES,
-            onto=body, facing=0.2)
-    zs = [3.1, 2.6, 2.1, 1.6, 1.1, 0.6, 0.2]
-    for za, zb in zip(zs, zs[1:]):
-        wa, wb = 0.07 + 0.03 * (3.1 - za), 0.07 + 0.03 * (3.1 - zb)
-        xa, xb = 0.05 * math.sin(za * 3), 0.05 * math.sin(zb * 3)
-        A.decal(bm, [(xa - wa, -2.0, z0 + za), (xa + wa, -2.0, z0 + za), (xb + wb, -2.0, z0 + zb), (xb - wb, -2.0, z0 + zb)],
-                (0, -1, 0), BLOOD, onto=body, facing=0.2)
-    # The betrayers' blades, stabbed into its back and fanned out like a halo, hilts out.
-    for k in range(7):
-        a = math.radians(-66 + 22 * k)
-        d = Vector((math.sin(a), 0.42, math.cos(a))).normalized()
-        root = Vector((math.sin(a) * 0.35, 0.25, z0 + 4.0 + math.cos(a) * 0.3))
-        guard = root + d * r.uniform(1.6, 2.0)
-        side = Vector((math.cos(a), 0, -math.sin(a)))
-        A.hull(bm, [root + side * 0.04, root - side * 0.04, guard + side * 0.12, guard - side * 0.12,
-                    guard + Vector((0, 0.03, 0)), guard - Vector((0, 0.03, 0))], BLADE)
-        A.hull(bm, [guard + side * 0.32 + Vector((0, dy, dz)) for dy in (-0.05, 0.05) for dz in (-0.03, 0.03)] +
-               [guard - side * 0.32 + Vector((0, dy, dz)) for dy in (-0.05, 0.05) for dz in (-0.03, 0.03)], BRONZE)
-        A.loft(bm, [(guard, 0.045, 0.045), (guard + d * 0.5, 0.045, 0.045)], sides=5, ref=(0, 0, 1), mats=DARKIRON)
-        A.loft(bm, [(guard + d * 0.48, 0, 0), (guard + d * 0.55, 0.09, 0.09), (guard + d * 0.68, 0, 0)], sides=6,
-               ref=(0, 0, 1), mats=BRONZE)
-    bmesh.ops.translate(bm, vec=Vector(at), verts=bm.verts)
-    return obj(name, bm, smooth=35)
+def fallen_face(bm, deg):
+    """A face of the fallen carved on the pedestal's shaft, on its side facing `deg`: pale stone, eyes
+    closed, mouth open, a stream of blood from the mouth down the shaft and into the pool."""
+    c = math.cos(math.pi / 8)
 
+    def out(z):                              # the shaft's face, this far out at height z
+        return (1.2 - 0.2 * (z - 1.3) / 2.3) * c
 
-# ---- the martyrs and the braziers ---------------------------------------------------------------
-
-def martyr(seed=1, at=(0, 0, 0), facing=270):
-    """A martyr on his plinth: a hooded figure in pale smooth stone, larger than life, head bowed
-    deep, hands resting on a sword held point down before him. Faces `facing` degrees (270 is -Y)."""
-    r = random.Random(seed)
-    bm = bmesh.new()
-    A.box(bm, (-0.48, -0.48, TOP - 0.02), (0.48, 0.48, TOP + 0.38), STONE)
-    z0 = TOP + 0.38
-    secs = [(0.0, 0.46, 0.38), (0.9, 0.36, 0.3), (1.55, 0.44, 0.3), (1.72, 0.22, 0.22), (1.98, 0.27, 0.29),
-            (2.28, 0.15, 0.17), (2.4, 0, 0)]
-    A.loft(bm, [((0, -0.24 * max(0.0, (z - 1.6) / 0.8), z0 + z), w, d) for z, w, d in secs], sides=8, ref=(0, 1, 0), mats=MARBLE)
+    before = set(bm.verts)
+    y = out(2.95)
+    A.hull(bm, [p for sx in (-1, 1) for p in ((sx * 0.22, y - 0.02, 3.38), (sx * 0.17, y + 0.15, 3.32),
+                                               (sx * 0.25, y - 0.02, 2.88), (sx * 0.2, y + 0.17, 2.92),
+                                               (sx * 0.1, y - 0.02, 2.55), (sx * 0.07, y + 0.14, 2.6))]
+           + [(0, y + 0.25, 3.05)], MARBLE)
+    A.hull(bm, [p for sx in (-1, 1) for p in ((sx * 0.31, y - 0.02, 3.5), (sx * 0.33, y - 0.02, 2.68),
+                                               (sx * 0.27, y + 0.12, 3.42), (sx * 0.29, y + 0.1, 2.72))]
+           + [(0, y - 0.02, 3.66), (0, y + 0.13, 3.55)], MARBLE)                 # the cowl round it
     from mathutils.bvhtree import BVHTree
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     bm.normal_update()
-    A.decal(bm, [(-0.14, -1.0, z0 + 1.82), (0.14, -1.0, z0 + 1.82), (0.12, -1.0, z0 + 2.12), (-0.12, -1.0, z0 + 2.12)], (0, -1, 0),
-            VOID, onto=BVHTree.FromBMesh(bm), facing=0.2)
-    for s in (-1, 1):
-        A.loft(bm, [((s * 0.34, -0.02, z0 + 1.5), 0.11, 0.11), ((s * 0.22, -0.32, z0 + 1.2), 0.1, 0.1),
-                    ((s * 0.07, -0.46, z0 + 1.12), 0.09, 0.09)], sides=5, ref=(0, 0, 1), mats=MARBLE)
-    tip, guard = Vector((0, -0.5, z0 + 0.04)), Vector((0, -0.5, z0 + 0.95))
-    A.hull(bm, [tip, guard + Vector((0.08, 0, 0)), guard - Vector((0.08, 0, 0)), guard + Vector((0, 0.02, 0)),
-                guard - Vector((0, 0.02, 0))], MARBLE)
-    A.box(bm, (-0.22, -0.54, z0 + 0.95), (0.22, -0.46, z0 + 1.01), MARBLE)
-    A.loft(bm, [(guard + Vector((0, 0, 0.06)), 0.035, 0.035), (guard + Vector((0, 0, 0.2)), 0.035, 0.035)], sides=4,
-           ref=(1, 0, 0), mats=MARBLE)
-    bmesh.ops.transform(bm, matrix=Matrix.Translation(at) @ Matrix.Rotation(math.radians(facing - 270), 4, 'Z'), verts=bm.verts)
-    return obj("AltarMartyr", bm, smooth=40)
+    face = BVHTree.FromBMesh(bm)
+    for sx in (-1, 1):                       # the eyes, closed in peace: dark slits, the outer ends low
+        A.decal(bm, [(sx * 0.03, y + 2, 3.1), (sx * 0.16, y + 2, 3.08), (sx * 0.15, y + 2, 3.11), (sx * 0.03, y + 2, 3.135)],
+                (0, 1, 0), VOID, onto=face, facing=0.2)
+    A.decal(bm, [(-0.08, y + 2, 2.66), (0.08, y + 2, 2.66), (0.06, y + 2, 2.78), (-0.06, y + 2, 2.78)], (0, 1, 0), VOID,
+            onto=face, facing=0.2)                                                # the open mouth
+    A.hull(bm, [(-0.05, y + 0.15, 2.7), (0.05, y + 0.15, 2.7), (-0.05, y + 0.12, 2.7), (0.05, y + 0.12, 2.7),
+                (-0.08, out(1.3) + 0.03, 1.3), (0.08, out(1.3) + 0.03, 1.3), (-0.08, out(1.3), 1.3), (0.08, out(1.3), 1.3)],
+           BLOOD)
+    A.hull(bm, [(-0.12, 1.5 * c + 0.01, 1.3), (0.12, 1.5 * c + 0.01, 1.3), (-0.28, 1.52 * c + 0.2, POOL_Z + 0.01),
+                (0.28, 1.52 * c + 0.2, POOL_Z + 0.01), (0, 1.5 * c - 0.05, 1.3)], BLOOD)
+    turn(bm, new(bm, before), deg - 90)
+
+
+def martyrs_raised():
+    """Three martyrs back to back on the pedestal, larger than life in pale stone: hooded, heads up,
+    one hand on the heart (the oath) and the other raising a sword up and outwards, so the three
+    blades fan out over the pool."""
+    bm = bmesh.new()
+    for k, facing in enumerate((270, 30, 150)):
+        before = set(bm.verts)
+        z0 = PED_TOP
+        secs = [(0.0, 0.55, 0.45), (1.1, 0.42, 0.34), (2.0, 0.54, 0.36), (2.2, 0.26, 0.26), (2.5, 0.32, 0.34),
+                (2.85, 0.17, 0.2), (3.0, 0, 0)]
+        A.loft(bm, [((0, -0.45 - 0.05 * max(0.0, z - 2.2), z0 + z), w, d) for z, w, d in secs], sides=8, ref=(0, 1, 0),
+               mats=MARBLE)
+        # The left hand on the heart; the right arm raised with the sword.
+        A.loft(bm, [((-0.5, -0.45, z0 + 1.95), 0.12, 0.12), ((-0.42, -0.82, z0 + 1.55), 0.11, 0.11),
+                    ((-0.05, -0.86, z0 + 1.72), 0.1, 0.1)], sides=5, ref=(0, 0, 1), mats=MARBLE)
+        hand = Vector((0.95, -0.75, z0 + 2.95))
+        A.loft(bm, [((0.5, -0.45, z0 + 1.95), 0.12, 0.12), ((0.85, -0.6, z0 + 2.45), 0.11, 0.11), (hand, 0.1, 0.1)],
+               sides=5, ref=(0, 0, 1), mats=MARBLE)
+        d = Vector((0.35, -0.45, 1.0)).normalized()
+        side = d.cross(Vector((0, 0, 1))).normalized()
+        guard = hand + d * 0.14
+        A.hull(bm, [guard + side * 0.09, guard - side * 0.09, guard + d * 1.7, guard + side * 0.07 + d * 0.15 + Vector((0, 0, 0.02)),
+                    guard - side * 0.07 + d * 0.15 - Vector((0, 0, 0.02))], BLADE)
+        A.hull(bm, [guard + side * s * 0.28 + d * dd for s in (-1, 1) for dd in (-0.03, 0.03)] +
+               [guard + Vector((0, 0, 0.04)), guard - Vector((0, 0, 0.04))], BRONZE)
+        A.loft(bm, [(hand - d * 0.12, 0.045, 0.045), (guard, 0.045, 0.045)], sides=5, ref=(0, 0, 1), mats=DARKIRON)
+        # The face in the hood's shadow.
+        from mathutils.bvhtree import BVHTree
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        bm.normal_update()
+        A.decal(bm, [(-0.16, -3.0, z0 + 2.32), (0.16, -3.0, z0 + 2.32), (0.13, -3.0, z0 + 2.7), (-0.13, -3.0, z0 + 2.7)],
+                (0, -1, 0), VOID, onto=BVHTree.FromBMesh(bm), facing=0.2)
+        turn(bm, new(bm, before), facing - 270)
+    return obj("AltarMartyrs", bm, smooth=40)
 
 
 def brazier(at=(0, 0, 0)):
@@ -235,19 +194,15 @@ def build():
         if c.name in ("Altar", "Preview"):
             bpy.data.collections.remove(c)
     bm = bmesh.new()
-    A.box(bm, (-13, -13, -0.1), (21, 13, 0.0), FLOOR)
+    A.box(bm, (-13, -13, -0.1), (13, 13, 0.0), FLOOR)
     floor = obj("Floor", bm, smooth=None)
     for c in list(floor.users_collection):
         c.objects.unlink(floor)
     A.collection("Preview").objects.link(floor)
-    objs = [dais(), troth()]
-    for k, deg in enumerate(MARTYRS):
-        a = math.radians(deg)
-        objs.append(martyr(seed=k + 1, at=(MARTYR_R * math.cos(a), MARTYR_R * math.sin(a), 0), facing=deg))
+    objs = [dais(), martyrs_raised()]
     for k in range(4):
         a = math.radians(45 + 90 * k)
         objs.append(brazier(at=(7.4 * math.cos(a), 7.4 * math.sin(a), 0)))
-    objs.append(troth(z0=0.0, name="Troth", at=(16.0, 0, 0)))       # the god itself, beside its altar
     K.paint(objs + [floor])
     return objs
 
