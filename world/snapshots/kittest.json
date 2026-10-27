@@ -1,0 +1,9 @@
+{
+  "note": "Written by Sync World from Assets/Scenes/KitTest.unity. Read-only: change world/regions/kittest.json, or the scene's Handmade root in Unity.",
+  "region": "kittest",
+  "origin": [1152, 1008], "size": [48, 48],
+  "dataPieces": { "building": 4, "fence": 5, "prop": 33, "spawn": 1, "tiles": 1, "tree": 7 },
+  "handmade": [
+
+  ]
+}
