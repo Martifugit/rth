@@ -742,6 +742,8 @@ namespace Rth.Server.Game
 
         public int TargetId { get; }
 
+        public override InteractionFocus? Focus(World world) => InteractionFocus.OnEntity(TargetId);
+
         public override bool Tick(World world, Player player) => world.Get<CombatSystem>().TickAttack(player, TargetId);
 
         /// <summary>

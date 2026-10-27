@@ -99,6 +99,7 @@ namespace Rth.Server.Game
             new InspectSystem(),
             new BossSystem(),
             new Encounters.UnquietSaintSystem(),
+            new FocusSystem(),
         };
 
         public ServerConfig Config => _config;

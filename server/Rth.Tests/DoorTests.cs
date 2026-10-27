@@ -67,6 +67,19 @@ public class DoorTests
     }
 
     [Fact]
+    public void TheDoorBeingWorkedIsTheFocusUntilItIsDone()
+    {
+        WorldFixture f = Fixture();
+        FakeConnection a = f.Login("Ada");
+        f.Player("Ada").Position = new TileCoord(4, 0);
+        Use(a, DoorSystem.OpenAction);
+        f.Ticks(1);
+        Assert.Contains("\"door\"", a.Sent.OfType<JsonStateMessage>().Last(m => m.Key == InteractionFocus.StateKey).Json);
+        f.Ticks(4);
+        Assert.DoesNotContain("\"door\"", a.Sent.OfType<JsonStateMessage>().Last(m => m.Key == InteractionFocus.StateKey).Json);
+    }
+
+    [Fact]
     public void AnOpenDoorSwingsShutByItself()
     {
         WorldFixture f = Fixture(closeAfter: 10);

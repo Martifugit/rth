@@ -154,8 +154,15 @@ namespace Rth.Shared.World.Data
         /// objects block their own tile unless this says otherwise; [0, 0, 0, 0] blocks nothing.
         /// </summary>
         public int[]? Footprint;
-        /// <summary>A model to draw (a prefab under Assets/), instead of or as well as its parts.</summary>
+        /// <summary>A model to draw (a prefab under Assets/), instead of or as well as its parts; for a fence, one span centred on its tile.</summary>
         public string? Model;
+        /// <summary>
+        /// A fence's post (a model standing on a grid corner: a stake, a buck, a wall's pier), stood
+        /// once on each corner, shared with any other fence meeting there, so corners close.
+        /// </summary>
+        public string? Post;
+        /// <summary>Where a fence's posts stand: "every" corner of its line (the default), or only the "ends" of its runs (a wall).</summary>
+        public string? Posts;
         /// <summary>What it looks like: primitives around the tile's centre.</summary>
         public List<Part>? Parts;
         /// <summary>A tiles piece's characters by what they are; a space is no ground at all.</summary>

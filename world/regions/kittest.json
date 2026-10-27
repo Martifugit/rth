@@ -206,10 +206,11 @@
     { "id": "font", "kind": "prop", "at": [1161, 1036], "footprint": [0, 0, 1, 1], "model": "Assets/Art/Buildings/Venaria/Font.fbx" },
     { "id": "graves-1", "kind": "prop", "at": [1156, 1043], "model": "Assets/Resources/Nature/Grave.fbx" },
     { "id": "graves-2", "kind": "prop", "at": [1158, 1043], "model": "Assets/Resources/Nature/GraveOld.fbx" },
-    { "id": "garden-south", "kind": "fence", "from": [1165, 1025], "to": [1174, 1025], "gaps": [1170], "model": "Assets/Resources/Nature/Hurdle.fbx" },
-    { "id": "garden-west", "kind": "fence", "from": [1165, 1025], "to": [1165, 1028], "model": "Assets/Resources/Nature/Hurdle.fbx" },
-    { "id": "garden-east", "kind": "fence", "from": [1174, 1025], "to": [1174, 1028], "model": "Assets/Resources/Nature/Hurdle.fbx" },
-    { "id": "yard-east", "kind": "fence", "from": [1189, 1020], "to": [1189, 1033], "model": "Assets/Resources/Nature/BuckFence.fbx" },
-    { "id": "churchyard-wall", "kind": "fence", "from": [1154, 1046], "to": [1164, 1046], "model": "Assets/Resources/Nature/WallSpan.fbx" }
+    { "id": "garden-south", "kind": "fence", "from": [1165, 1025], "to": [1174, 1025], "gaps": [1170], "model": "Assets/Resources/Nature/HurdlePanel.fbx", "post": "Assets/Resources/Nature/HurdleStake.fbx" },
+    { "id": "garden-west", "kind": "fence", "from": [1165, 1025], "to": [1165, 1028], "model": "Assets/Resources/Nature/HurdlePanel.fbx", "post": "Assets/Resources/Nature/HurdleStake.fbx" },
+    { "id": "garden-east", "kind": "fence", "from": [1174, 1025], "to": [1174, 1028], "model": "Assets/Resources/Nature/HurdlePanel.fbx", "post": "Assets/Resources/Nature/HurdleStake.fbx" },
+    { "id": "yard-east", "kind": "fence", "from": [1189, 1020], "to": [1189, 1033], "model": "Assets/Resources/Nature/BuckFenceRails.fbx", "post": "Assets/Resources/Nature/BuckFenceBuck.fbx" },
+    { "id": "churchyard-wall", "kind": "fence", "from": [1154, 1046], "to": [1164, 1046], "model": "Assets/Resources/Nature/WallSpan.fbx", "post": "Assets/Resources/Nature/WallPier.fbx", "posts": "ends" },
+    { "id": "churchyard-wall-west", "kind": "fence", "from": [1154, 1046], "to": [1154, 1042], "model": "Assets/Resources/Nature/WallSpan.fbx", "post": "Assets/Resources/Nature/WallPier.fbx", "posts": "ends" }
   ]
 }

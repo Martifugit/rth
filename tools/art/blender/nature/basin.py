@@ -460,29 +460,66 @@ def wobble(rnd, a, b, n, amount):
     return out
 
 
-def buck_fence(seed=1, at=(0, 0, 0), end_post=False):
+def buck_fence(seed=1, at=(0, 0, 0), end_post=False, bucks=True):
     """A buck fence, one tile along X: no posts dug in, a pair of poles crossed like an X at the
     span's start with the rail laid in their crotch, and a lower rail tied to the legs. Weathered
-    grey. end_post adds the closing buck."""
+    grey. end_post adds the closing buck; bucks=False leaves the rails alone (laid along a grid
+    line, the bucks stand at its corners: buck())."""
     rnd = random.Random(seed)
     bm = bmesh.new()
-    for x in ((0.0, 1.0) if end_post else (0.0,)):
-        for s in (-1, 1):
-            foot = Vector((x + s * 0.04, s * 0.32, -0.05))
-            head = Vector((x - s * 0.03, -s * 0.24, 1.1 + rnd.uniform(-0.05, 0.05)))
-            rod(bm, wobble(rnd, foot, head, 3, 0.03), 0.04, sides=4, taper=0.8)
+    for x in (((0.0, 1.0) if end_post else (0.0,)) if bucks else ()):
+        buck_legs(bm, rnd, x)
     crotch = 0.66
     rod(bm, wobble(rnd, (-0.08, 0.0, crotch + 0.03), (1.08, 0.0, crotch + 0.05), 4, 0.03), 0.045, sides=5)
     rod(bm, wobble(rnd, (-0.05, 0.17, 0.3), (1.05, 0.17, 0.32), 3, 0.03), 0.035, sides=4)
     return make("BuckFence", bm, ["Driftwood"], smooth_angle=50, at=at)
 
 
-def hurdle(seed=1, at=(0, 0, 0), end_post=False):
-    """A woven hurdle, one tile along X: a panel of woven rods (painted, not modelled) bowing a
-    little in the middle, hung on a round stake at the span's start, a binding rod along its top."""
+def buck_legs(bm, rnd, x=0.0):
+    """Two poles crossed like an X across the line at x, their crotch carrying the top rail."""
+    for s in (-1, 1):
+        foot = Vector((x + s * 0.04, s * 0.32, -0.05))
+        head = Vector((x - s * 0.03, -s * 0.24, 1.1 + rnd.uniform(-0.05, 0.05)))
+        rod(bm, wobble(rnd, foot, head, 3, 0.03), 0.04, sides=4, taper=0.8)
+
+
+def buck(seed=1, at=(0, 0, 0)):
+    """A buck fence's buck on its own, at the origin: where its rails meet, a corner or an end."""
     rnd = random.Random(seed)
     bm = bmesh.new()
-    for x in ((0.0, 1.0) if end_post else (0.0,)):
+    buck_legs(bm, rnd)
+    return make("BuckFenceBuck", bm, ["Driftwood"], smooth_angle=50, at=at)
+
+
+def hurdle_stake(seed=1, at=(0, 0, 0)):
+    """A hurdle's round stake on its own, at the origin: where hurdles meet, a corner or an end."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    rod(bm, wobble(rnd, (0, 0, -0.05), (rnd.uniform(-0.02, 0.02), 0, 1.0), 3, 0.02), 0.05, sides=5, taper=0.85, tip=(0, 0, 1.06))
+    return make("HurdleStake", bm, ["Driftwood"], smooth_angle=50, at=at)
+
+
+def wall_pier(seed=1, at=(0, 0, 0)):
+    """Where dry-stone walls meet, a corner or an end, at the origin: a square of the wall's body
+    as wide as it is thick, battered like it, under one flat cope stone."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    h, wb, wt = 0.92, 0.29, 0.19
+    A.hull(bm, [(x * w, y * w, z) for x in (-1, 1) for y in (-1, 1) for w, z in ((wb, -0.05), (wt, h))], mat=0)
+    c = wt + 0.03
+    A.hull(bm, [(x * c + rnd.uniform(-0.02, 0.02), y * c + rnd.uniform(-0.02, 0.02), z) for x in (-1, 1) for y in (-1, 1)
+                for z in (h - 0.03, h + 0.1)], mat=1)
+    return make("WallPier", bm, ["Stone", "Granite"], at=at)
+
+
+def hurdle(seed=1, at=(0, 0, 0), end_post=False, stakes=True):
+    """A woven hurdle, one tile along X: a panel of woven rods (painted, not modelled) bowing a
+    little in the middle, hung on a round stake at the span's start, a binding rod along its top.
+    stakes=False leaves the panel alone (laid along a grid line, the stakes stand at its corners:
+    hurdle_stake())."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    for x in (((0.0, 1.0) if end_post else (0.0,)) if stakes else ()):
         rod(bm, wobble(rnd, (x, 0, -0.05), (x + rnd.uniform(-0.03, 0.03), 0, 1.0), 3, 0.02), 0.045,
             sides=5, taper=0.85, tip=(x, 0, 1.06))
     uvs = {}
@@ -1234,6 +1271,11 @@ ASSETS = {
     "BuckFence": span(buck_fence), "BuckFenceEnd": span(buck_fence, end_post=True),
     "Hurdle": span(hurdle), "HurdleEnd": span(hurdle, end_post=True),
     "WallSpan": span(wall_span), "Hedge": span(hedge),
+    # Fences laid along grid lines (a region's fence piece): a span without its post, and the post
+    # standing once at every corner of the line, shared where lines meet.
+    "BuckFenceRails": span(buck_fence, bucks=False), "BuckFenceBuck": buck,
+    "HurdlePanel": span(hurdle, stakes=False), "HurdleStake": hurdle_stake,
+    "WallPier": wall_pier,
     "Elm": elm, "ElmStump": elm_stump,
     "Flax": flax, "FlaxPicked": lambda: flax(picked=True),
     "Herb": herb, "HerbPicked": lambda: herb(picked=True),

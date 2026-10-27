@@ -23,6 +23,7 @@ namespace Rth.Client.Editor
         {
             for (int i = root.transform.childCount - 1; i >= 0; i--) Object.DestroyImmediate(root.transform.GetChild(i).gameObject);
             root.builtIds.Clear();
+            _posts.Clear();
             var kit = new WorldKit(region.Seed);
             var levels = new Dictionary<int, Transform>();
             Heightfield terrain = TerrainText.Read(region); // null: flat
@@ -230,12 +231,16 @@ namespace Rth.Client.Editor
             return go;
         }
 
+        /// <summary>The fence posts stood so far in the region being built: one a grid corner, whichever fence comes first.</summary>
+        private static readonly HashSet<(int, int, string)> _posts = new HashSet<(int, int, string)>();
+
         /// <summary>
-        /// A fence of a kit's model (a span one tile long along its Blender +X from its origin: a
-        /// hurdle, a buck fence, a dry-stone wall) laid span by span along the piece's grid line, from
-        /// <c>from</c> towards <c>to</c>, standing on the terrain, skipping the gaps. Where a run of
-        /// spans ends, the model's "End" version is used if there is one (a closing post). Its
-        /// collision is the fence's edges (invisible walls that clicks pass through).
+        /// A fence of a kit's models laid along the piece's grid line from <c>from</c> towards
+        /// <c>to</c>, standing on the terrain: a span (centred on its tile, along its Blender +X: a
+        /// hurdle's panel, a buck fence's rails, a dry-stone wall) on every tile but the gaps, and the
+        /// <see cref="Piece.Post"/> (a stake, a buck, a pier) on the grid corners, at every one or at
+        /// the ends of each run, once a corner across all the region's fences so lines meeting share
+        /// it. Its collision is the fence's edges (invisible walls that clicks pass through).
         /// </summary>
         private static void ModelFence(Transform group, RegionData region, Piece piece, Heightfield terrain)
         {
@@ -245,26 +250,49 @@ namespace Rth.Client.Editor
                 Debug.LogError($"[R'th] {region.Id}: fence '{piece.Id}' names model '{piece.Model}', which isn't in the project.");
                 return;
             }
-            var end = AssetDatabase.LoadAssetAtPath<GameObject>(piece.Model.Substring(0, piece.Model.Length - 4) + "End.fbx") ?? prefab;
+            GameObject post = null;
+            if (!string.IsNullOrWhiteSpace(piece.Post))
+            {
+                post = AssetDatabase.LoadAssetAtPath<GameObject>(piece.Post);
+                if (post == null) Debug.LogError($"[R'th] {region.Id}: fence '{piece.Id}' names post '{piece.Post}', which isn't in the project.");
+            }
+            bool everyCorner = piece.Posts != "ends";
             int[] a = piece.From, b = piece.To;
             bool alongX = a[1] == b[1];
             int length = alongX ? b[0] - a[0] : b[1] - a[1], dir = length >= 0 ? 1 : -1;
             // Blender's anticlockwise turn for the direction, made Unity's (the import is a half turn).
-            float blenderRot = alongX ? (dir > 0 ? 0f : 180f) : (dir > 0 ? 90f : 270f);
+            float yaw = 180f - (alongX ? (dir > 0 ? 0f : 180f) : (dir > 0 ? 90f : 270f));
             var gaps = new HashSet<int>(piece.Gaps ?? new List<int>());
+            float H(float x, float y) => terrain != null ? terrain.Sample(x, y) : 0f;
+
+            void Post(int x, int y)
+            {
+                if (post == null || !_posts.Add((x, y, piece.Post))) return;
+                var p = (GameObject)PrefabUtility.InstantiatePrefab(post, group);
+                p.transform.position = new Vector3(x, H(x, y), y);
+                p.transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+                p.isStatic = true;
+            }
+
+            bool previousOpen = false;
             for (int k = 0; k < Mathf.Abs(length); k++)
             {
                 int sx = alongX ? a[0] + k * dir : a[0], sy = alongX ? a[1] : a[1] + k * dir;
                 int tile = alongX ? Mathf.Min(sx, sx + dir) : Mathf.Min(sy, sy + dir);   // the span's tile along the line
-                if (gaps.Contains(tile)) continue;
-                int nextTile = tile + dir;
-                bool last = k == Mathf.Abs(length) - 1 || gaps.Contains(nextTile);
-                float mx = alongX ? sx + dir * 0.5f : sx, my = alongX ? sy : sy + dir * 0.5f;
-                float h = terrain != null ? terrain.Sample(mx, my) : 0f;
-                var go = (GameObject)PrefabUtility.InstantiatePrefab(last ? end : prefab, group);
-                go.transform.position = new Vector3(sx, h, sy);
-                go.transform.rotation = Quaternion.Euler(0f, 180f - blenderRot, 0f);
-                go.isStatic = true;
+                bool open = gaps.Contains(tile);
+                int ex = alongX ? sx + dir : sx, ey = alongX ? sy : sy + dir;           // the span's far corner
+                if (!open)
+                {
+                    float mx = (sx + ex) / 2f, my = (sy + ey) / 2f;
+                    var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, group);
+                    go.transform.position = new Vector3(mx, H(mx, my), my);
+                    go.transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+                    go.isStatic = true;
+                    bool nextOpen = k == Mathf.Abs(length) - 1 || gaps.Contains(tile + dir);
+                    if (everyCorner || k == 0 || previousOpen) Post(sx, sy);
+                    if (everyCorner || nextOpen) Post(ex, ey);
+                }
+                previousOpen = open;
             }
             Transform collision = WorldKit.Group(group, "Collision");
             WorldKit.Wall(collision, "Fence", a[0], a[1], b[0], b[1], null, 1f, 0.08f, piece.Gaps?.ToArray() ?? new int[0]);

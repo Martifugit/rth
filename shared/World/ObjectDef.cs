@@ -134,6 +134,29 @@ namespace Rth.Shared.World
         public string Edge = "";
     }
 
+    /// <summary>
+    /// What a player's current interaction is aimed at, as clients are told ("focus" in the
+    /// player's server state), so the client can mark it: an object on a tile, or an entity (an NPC
+    /// talked to or fought). Empty <see cref="Kind"/>: nothing.
+    /// </summary>
+    public sealed class InteractionFocus
+    {
+        public const string StateKey = "focus", Object = "object", Entity = "entity";
+
+        public string Kind = "";
+        /// <summary>An object's type, plane and tile.</summary>
+        public string? Type;
+        public int Plane;
+        public int X;
+        public int Y;
+        /// <summary>An entity's id.</summary>
+        public int Id;
+
+        public static InteractionFocus OnObject(PlacedObject o) => new InteractionFocus { Kind = Object, Type = o.Type, Plane = o.Plane, X = o.X, Y = o.Y };
+
+        public static InteractionFocus OnEntity(int id) => new InteractionFocus { Kind = Entity, Id = id };
+    }
+
     /// <summary>A node that isn't in its ordinary state, as clients are told ("nodes" in the player's server state).</summary>
     public sealed class NodeState
     {

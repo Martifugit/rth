@@ -114,6 +114,8 @@ namespace Rth.Server.Game
             _sides = new[] { door.Tile, door.Tile.Offset(dx, dy) };
         }
 
+        public override InteractionFocus? Focus(World world) => InteractionFocus.OnObject(_door);
+
         public override bool Tick(World world, Player player)
         {
             if (player.Plane != _door.Plane) return false;

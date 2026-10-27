@@ -195,6 +195,10 @@ namespace Rth.Client
             DoorViews doors = GetComponent<DoorViews>();
             if (doors == null) doors = gameObject.AddComponent<DoorViews>();
             doors.session = this;
+            FocusHighlight focus = GetComponent<FocusHighlight>();
+            if (focus == null) focus = gameObject.AddComponent<FocusHighlight>();
+            focus.session = this;
+            focus.world = world;
             Ui.UiRoot ui = GetComponent<Ui.UiRoot>();
             if (ui == null) ui = gameObject.AddComponent<Ui.UiRoot>();
             ui.session = this;

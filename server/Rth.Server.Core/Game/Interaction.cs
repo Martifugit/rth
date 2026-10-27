@@ -16,6 +16,9 @@ namespace Rth.Server.Game
 
         /// <summary>Called once when the interaction ends for any reason.</summary>
         public virtual void End(World world, Player player) { }
+
+        /// <summary>What it is aimed at, for the client to mark (<see cref="FocusSystem"/>); null for nothing in particular.</summary>
+        public virtual InteractionFocus? Focus(World world) => null;
     }
 
     /// <summary>
@@ -69,6 +72,8 @@ namespace Rth.Server.Game
         public PlacedObject Object { get; }
 
         protected override (int Plane, TileCoord Tile)? Target(World world) => (Object.Plane, Object.Tile);
+
+        public override InteractionFocus? Focus(World world) => InteractionFocus.OnObject(Object);
     }
 
     /// <summary>Approaches a fixed world object and then does one thing.</summary>
@@ -100,6 +105,8 @@ namespace Rth.Server.Game
         }
 
         public int NpcId { get; }
+
+        public override InteractionFocus? Focus(World world) => InteractionFocus.OnEntity(NpcId);
 
         protected override (int Plane, TileCoord Tile)? Target(World world) =>
             world.FindEntity(NpcId) is Npc npc && !npc.IsDead ? (npc.Plane, npc.Position) : ((int, TileCoord)?)null;
