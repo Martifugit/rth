@@ -187,7 +187,7 @@
 -3,-1   x  -288.. -193  y   -96..   -1  land 100%  core  40%  frontier  open heath
 -2,-1   x  -192..  -97  y   -96..   -1  land 100%  core 100%  range     village p-high-valley (road, river)
 -1,-1   x   -96..   -1  y   -96..   -1  land 100%  core 100%  empire    built: land_m1_m1 (road, river)
-0,-1    x     0..   95  y   -96..   -1  land  93%  core  93%  empire    built: land_0_m1 (road, lake)
+0,-1    x     0..   95  y   -96..   -1  land  93%  core  93%  empire    built: land_0_m1; hamlet p-edge-farm (road, lake)
 1,-1    x    96..  191  y   -96..   -1  land  85%  core  85%  empire    built: land_1_m1 (river, lake)
 2,-1    x   192..  287  y   -96..   -1  land  91%  core  91%  empire    built: land_2_m1; village p-lake-south (road, river, lake)
 3,-1    x   288..  383  y   -96..   -1  land  98%  core  98%  empire    built: land_3_m1 (road, river, lake)

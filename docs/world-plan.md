@@ -355,6 +355,7 @@ them, every area with a few at each stage. Kinds:
 | `monument` | Room for one of the church's blood monuments along the empire's roads. |
 | `seal` | One of the deep's seals, kept by the dwarves. |
 | `thin` | A place where the Dreaming is close (sleepwalkers, the nightmare). |
+| `story` | A place in a quest's story, kept free for it (where the player was found). |
 | `spoil` | Where something leaks back from p-spoil. |
 | `boss` | An open-world boss arena. |
 | `lookout` | A view worth a climb (a reading, a clue, a teleport). |

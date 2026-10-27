@@ -1304,6 +1304,7 @@
     {"id": "p-dry-north", "name": "p-dry-north", "tier": "village", "at": [-60, 200], "note": "dry farmers at the foot of Selenfall's road"},
     {"id": "p-camp", "name": "p-camp", "tier": "village", "at": [457, -96], "note": "the empire's war camp below the Scarp, among burned farms"},
     {"id": "p-west-march", "name": "p-west-march", "tier": "hamlet", "at": [-30, 110], "note": "the last farm west of Tolling"},
+    {"id": "p-edge-farm", "name": "p-edge-farm", "tier": "hamlet", "at": [38, -50], "note": "the last green farm on the Sere road, where the meadow meets the gravel: the edge of the green"},
     {"id": "p-hollow", "name": "p-hollow", "tier": "hamlet", "at": [112, 238], "note": "by the dry valley's old bridge"},
     {"id": "p-wolds-farm", "name": "p-wolds-farm", "tier": "hamlet", "at": [603, 64], "note": "sheep on the Wolds"},
     {"id": "p-forest-deep", "name": "p-forest-deep", "tier": "hamlet", "at": [457, 440], "note": "foresters in Eller's old wood"},
@@ -1518,6 +1519,20 @@
       "at": [-18, 150],
       "stage": "early",
       "note": "a cave in the first foothills west of Tolling: the first dungeon"
+    },
+    {
+      "id": "s-wennow-south",
+      "kind": "story",
+      "at": [108, -38],
+      "stage": "early",
+      "note": "Wennow's south shore, where the fishers pulled the player out of the mere (The Bell, docs/quests/the-bell.md); something is still there"
+    },
+    {
+      "id": "s-dry-rise",
+      "kind": "lookout",
+      "at": [112, -72],
+      "stage": "early",
+      "note": "the top of the gravel rise south of Wennow: the basin seen whole, the bell tower on its knoll, and the dry beyond"
     },
     {
       "id": "s-heath-ruin",

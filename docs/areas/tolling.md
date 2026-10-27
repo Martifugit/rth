@@ -175,8 +175,19 @@ before it bites: the dry ground is where it starts.
    a tile, so no cliffs, and the roads out wind down off it. The roads were re-routed over it in
    `land_0_0`; on the world map Palmerway's line now bends slightly off the painted road in
    `land_1_0` (taken over earlier), which 2.1 Routes settles.
-8. **Tolling's river is ruler-straight** through `land_0_0`, unlike the march's, which meanders
-   now: 1.4 Water.
+8. **First ground pass** (2026-10-27, `world/strokes/tolling.json`, applied once; the tiles are the
+   truth now): Tolling's river, ruler-straight before, bends gently past the knoll (held off it, so
+   its bank never stands as a cliff: nothing steeper than 0.72 a tile) and meanders more freely
+   through the meadows to Wennow; Palmerway's bridge is where the new line crosses. Bracken went
+   to heath, dust to gravel, fen, reeds and mud away from the water and scraps of field to the
+   land round them: each region now has grass and meadow, heath, gravel (south), the lake and the
+   river, the roads and paths, and Tolling's fields.
+9. **Wennow is still the generator's round blob** (1.4, open): a mere this size wants an
+   irregular outline, a bay or two and a reedy corner where the Wenn leaves. Best shaped by hand
+   with **Shape and Paint Ground**.
+10. **The dry rise** reaches about 2.9, not 4; enough for the view. p-edge-farm (38, -50),
+    s-wennow-south (108, -38, a new site kind `story`) and s-dry-rise (112, -72) are in
+    `continent.json`.
 
 ## Decided (2026-10-27)
 

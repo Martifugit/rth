@@ -1,0 +1,56 @@
+{
+  "area": "tolling",
+  "takeOver": true,
+  "note": "First ground pass on Tolling and Wennow (2026-10-27): Tolling's river, ruler-straight in land_0_0, bends gently past the town's knoll (little, and held off it, so its bank never stands as a cliff) and meanders more freely below it to Wennow, entering where it did; Palmerway is laid again across it, its bridge where the new line crosses; the stray grounds go: bracken to the heath round it, dust to gravel (the dry edge), sand away from the shore, fen, reeds and mud away from the water, and scraps of field to the land round them. Left: grass and meadow, heath, gravel, the lake and the river, the roads and paths, Tolling's fields. Applied once with `tools/world strokes world/strokes/tolling.json`; the regions' tiles are the truth from then on.",
+  "strokes": [
+    {
+      "id": "tolling-river-town",
+      "ground": "river",
+      "seed": 51,
+      "points": [[39, 96], [41.5, 84], [43, 70], [45, 58], [48, 46]],
+      "width": [5, 5.5],
+      "wind": 1.5,
+      "wave": 34,
+      "bends": "meander",
+      "ragged": 0.12,
+      "erase": ["river", "sand", "bridge"],
+      "eraseReach": 6,
+      "banks": [{ "ground": "meadow", "share": 0.5, "scale": 7 }],
+      "bankReach": 2
+    },
+    {
+      "id": "tolling-river-meadows",
+      "ground": "river",
+      "seed": 52,
+      "points": [[48, 46], [52, 36], [58, 27], [66, 19], [74, 13], [80, 9]],
+      "width": [5.5, 8],
+      "wind": 6,
+      "wave": 40,
+      "bends": "meander",
+      "ragged": 0.14,
+      "erase": ["river", "sand", "bridge"],
+      "eraseReach": 10,
+      "banks": [{ "ground": "meadow", "share": 0.5, "scale": 7 }, { "ground": "sand", "share": 0.08, "scale": 3 }],
+      "bankReach": 2.5
+    },
+    {
+      "id": "palmerway-bridge",
+      "ground": "path",
+      "seed": 53,
+      "points": [[36, 47], [47, 46.5], [60, 46]],
+      "width": [3, 3],
+      "wind": 0,
+      "ragged": 0,
+      "erase": ["path", "bridge"],
+      "eraseReach": 2
+    }
+  ],
+  "swaps": [
+    { "from": ["bracken"], "nearWater": 0, "otherwise": "surround" },
+    { "from": ["dust"], "nearWater": 0, "otherwise": "gravel" },
+    { "from": ["sand"], "awayFromWater": 3, "nearWater": 0, "otherwise": "surround" },
+    { "from": ["fen", "reeds", "mud"], "awayFromWater": 3, "nearWater": 0, "otherwise": "surround" },
+    { "from": ["furrow"], "nearWater": 0, "smaller": 45, "otherwise": "surround" },
+    { "from": ["furrow", "ley", "wheat"], "nearWater": 0, "smaller": 25, "otherwise": "surround" }
+  ]
+}
