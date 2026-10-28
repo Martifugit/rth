@@ -6,23 +6,30 @@ namespace Rth.Client
 {
     /// <summary>
     /// Something that may stand between the camera and the player (a tree, a roof, a wall, a
-    /// tower). <see cref="CameraOcclusion"/> asks it to fade when it's in the way; it fades smoothly
-    /// to <see cref="minAlpha"/> and back, swapping to see-through copies of its materials only
-    /// while faded. Roofs can also be forced fully hidden (see <see cref="RoofHider"/>).
+    /// tower). <see cref="CameraOcclusion"/> tells it when it's in the way, and it opens a soft,
+    /// dithered hole round the player (Resources/Shaders/OccluderCutout.hlsl, the way Baldur's Gate 3
+    /// does it): only the part over them, nearer the camera than they are, dissolves; the rest stays
+    /// solid. The hole opens and closes smoothly, and its materials are swapped to the cut-out shader
+    /// (Rth/LitCutout, URP Lit plus the hole) only while it is open. A material that isn't URP Lit
+    /// fades as a whole to <see cref="minAlpha"/> instead. Roofs can also be forced fully hidden
+    /// (see <see cref="RoofHider"/>).
     /// </summary>
     public sealed class Occluder : MonoBehaviour
     {
         private static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
+        private static readonly int Cut = Shader.PropertyToID("_RthCut");
+        private static readonly int CutScale = Shader.PropertyToID("_RthCutScale");
+        private static Shader _cutout;
         private static readonly Dictionary<Material, Material> FadeCopies = new Dictionary<Material, Material>();
 
         /// <summary>Every active occluder, for <see cref="CameraOcclusion"/> to test.</summary>
         public static readonly List<Occluder> All = new List<Occluder>();
 
-        [Tooltip("How see-through it gets when blocking the view (0 = invisible).")]
+        [Tooltip("How see-through a material that can't cut a hole (not URP Lit) gets when blocking the view (0 = invisible).")]
         public float minAlpha = 0.25f;
-        [Tooltip("Alpha change per second; higher fades faster.")]
+        [Tooltip("How fast the hole opens and closes (or the fade goes); higher is faster.")]
         public float fadeSpeed = 3.5f;
-        [Tooltip("Also fade when hiding anything this far around the player, not just the player (arenas: the fight is all around you). 0 = only the player.")]
+        [Tooltip("Also open when hiding anything this far around the player, not just the player, with a wider hole (arenas: the fight is all around you). 0 = only the player.")]
         public float guardRadius;
 
         private Renderer[] _renderers;
@@ -67,11 +74,22 @@ namespace Rth.Client
             foreach (Renderer r in _renderers)
             {
                 if (r == null) continue;
-                Mesh mesh = r is MeshRenderer ? r.GetComponent<MeshFilter>()?.sharedMesh : null;
-                // The Editor can always read a mesh; a build only one imported with Read/Write.
-                if (mesh == null || (!mesh.isReadable && !Application.isEditor)) { _loose.Add(r.bounds); continue; }
-                Vector3[] v = mesh.vertices;
-                int[] t = mesh.triangles;
+                MeshFilter filter = r is MeshRenderer ? r.GetComponent<MeshFilter>() : null;
+                Mesh mesh = filter != null ? filter.sharedMesh : null;
+                Vector3[] v;
+                int[] t;
+                try
+                {
+                    // The Editor can read any mesh; a build only one imported with Read/Write.
+                    if (mesh == null || (!mesh.isReadable && !Application.isEditor)) throw new System.InvalidOperationException();
+                    v = mesh.vertices;
+                    t = mesh.triangles;
+                }
+                catch (System.Exception)
+                {
+                    _loose.Add(r.bounds);   // its box stands in
+                    continue;
+                }
                 Matrix4x4 m = r.localToWorldMatrix;
                 for (int i = 0; i < v.Length; i++) v[i] = m.MultiplyPoint3x4(v[i]);
                 foreach (int index in t) _triangles.Add(v[index]);
@@ -160,11 +178,22 @@ namespace Rth.Client
                 if (fade != _usingFade) r.sharedMaterials = fade ? _faded[i] : _opaque[i];
                 if (fade)
                 {
+                    // How open the hole is: closed at full alpha, wide open at minAlpha.
+                    float open = Mathf.Clamp01((1f - _alpha) / Mathf.Max(0.01f, 1f - minAlpha));
                     for (int m = 0; m < _opaque[i].Length; m++)
                     {
-                        Color c = _opaque[i][m] != null && _opaque[i][m].HasProperty(BaseColor) ? _opaque[i][m].GetColor(BaseColor) : Color.white;
-                        c.a = _alpha;
-                        _block.SetColor(BaseColor, c);
+                        _block.Clear();
+                        if (_faded[i][m] != null && _faded[i][m].shader == _cutout && _cutout != null)
+                        {
+                            _block.SetFloat(Cut, open);
+                            _block.SetFloat(CutScale, guardRadius > 0f ? 1f + guardRadius * 0.5f : 1f);
+                        }
+                        else
+                        {
+                            Color c = _opaque[i][m] != null && _opaque[i][m].HasProperty(BaseColor) ? _opaque[i][m].GetColor(BaseColor) : Color.white;
+                            c.a = _alpha;
+                            _block.SetColor(BaseColor, c);
+                        }
                         r.SetPropertyBlock(_block, m);
                     }
                 }
@@ -187,11 +216,24 @@ namespace Rth.Client
             All.Clear();
         }
 
-        /// <summary>A transparent twin of a URP Lit material, made once and shared.</summary>
+        /// <summary>
+        /// The twin a material is swapped for while the occluder is open, made once and shared: for
+        /// URP Lit, the same material on Rth/LitCutout (the hole); for anything else, a transparent copy.
+        /// </summary>
         private static Material FadeCopyOf(Material source)
         {
             if (source == null) return null;
             if (FadeCopies.TryGetValue(source, out Material copy) && copy != null) return copy; // != null: not destroyed
+            if (_cutout == null) _cutout = Resources.Load<Shader>("Shaders/LitCutout");
+            if (_cutout != null && _cutout.isSupported && source.shader != null && source.shader.name == "Universal Render Pipeline/Lit")
+            {
+                string[] keywords = source.shaderKeywords;
+                copy = new Material(source) { name = source.name + " (cut)", shader = _cutout };
+                copy.shaderKeywords = keywords;
+                copy.renderQueue = source.renderQueue;
+                FadeCopies[source] = copy;
+                return copy;
+            }
             copy = new Material(source) { name = source.name + " (fade)" };
             copy.SetFloat("_Surface", 1f);
             copy.SetFloat("_Blend", 0f);
