@@ -41,6 +41,8 @@ namespace Rth.Shared.Items
         public ToolDef? Tool;
         /// <summary>Water carried (a full waterskin, a bucket): what fire-setting douses with.</summary>
         public WaterDef? Water;
+        /// <summary>Worked on by itself, with no station (a grimy herb cleaned): see <see cref="ProcessDef"/>.</summary>
+        public ProcessDef? Process;
     }
 
     /// <summary>A number of one item: a cost, an ingredient, a reward.</summary>

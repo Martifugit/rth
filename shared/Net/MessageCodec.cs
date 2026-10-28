@@ -76,6 +76,7 @@ namespace Rth.Shared.Net
                     MessageType.JsonState => JsonStateMessage.Read(r),
                     MessageType.SetClientState => SetClientStateMessage.Read(r),
                     MessageType.Query => QueryMessage.Read(r),
+                    MessageType.Intent => IntentMessage.Read(r),
                     MessageType.QueryResult => QueryResultMessage.Read(r),
                     _ => throw new InvalidDataException("Unknown message type " + (int)type + "."),
                 };

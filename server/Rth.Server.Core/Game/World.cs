@@ -68,6 +68,7 @@ namespace Rth.Server.Game
         {
             new SkillSystem(),
             new QuerySystem(),
+            new IntentSystem(),
             new FlagSystem(),
             new ItemSystem(),
             new CombatSystem(),
@@ -79,6 +80,7 @@ namespace Rth.Server.Game
             new ClimbSystem(),
             new DoorSystem(),
             new ReligionSystem(),
+            new StationSystem(),
             new RecipeSystem(),
             new GatheringSystem(),
             new InterfaceSystem(),

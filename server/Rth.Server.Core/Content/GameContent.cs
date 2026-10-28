@@ -130,6 +130,34 @@ namespace Rth.Server.Content
         public double Xp;
         /// <summary>The character animation played for each one made (a clip or role in animations.json).</summary>
         public string Animation = "work";
+        /// <summary>A heading it sits under in the make window ("Daggers", "Bars"), or empty.</summary>
+        public string Group = "";
+        /// <summary>A chance it goes wrong (food burns), falling with level; null: it always succeeds.</summary>
+        public RecipeFailure? Failure;
+
+        /// <summary>The chance one goes wrong at this level, before the station's scale: <see cref="RecipeFailure.Chance"/> at the recipe's level, none <see cref="RecipeFailure.SafeLevels"/> above it.</summary>
+        public double FailChance(int level)
+        {
+            if (Failure == null || Failure.Chance <= 0) return 0;
+            double past = Math.Max(0, level - Level) / (double)Math.Max(1, Failure.SafeLevels);
+            return Math.Max(0, Math.Min(1, Failure.Chance * (1 - past)));
+        }
+    }
+
+    /// <summary>
+    /// How a recipe can go wrong (docs/skills.md 2.4: only where it reads naturally, like food
+    /// burning): <see cref="Chance"/> at the recipe's level, falling evenly to none
+    /// <see cref="SafeLevels"/> levels above it, scaled by the station (a range burns less). A
+    /// failure still uses the inputs, gives <see cref="Outputs"/> (burnt food) and <see cref="Xp"/>.
+    /// </summary>
+    public sealed class RecipeFailure
+    {
+        public double Chance = 0.5;
+        public int SafeLevels = 15;
+        public List<ItemAmount> Outputs = new List<ItemAmount>();
+        public double Xp;
+        /// <summary>Said when it goes wrong; {name} is the recipe's name.</summary>
+        public string Message = "You ruin the {name}.";
     }
 
     /// <summary>Damage dealt with a combat style trains a skill.</summary>
@@ -429,7 +457,15 @@ namespace Rth.Server.Content
                 foreach (ItemAmount a in r.Inputs.Concat(r.Outputs))
                     if (!items.ContainsKey(a.Item) || a.Count < 1) problems.Add(where + "bad item '" + a.Item + "' x" + a.Count + ".");
                 foreach (string tool in r.Tools)
-                    if (!items.ContainsKey(tool)) problems.Add(where + "tool '" + tool + "' doesn't exist.");
+                    if (tool.StartsWith("tag:") ? !parts.Items.Any(i => i.Tags.Contains(tool.Substring(4))) : !items.ContainsKey(tool))
+                        problems.Add(where + "tool '" + tool + "' doesn't exist.");
+                if (r.Failure != null)
+                {
+                    if (r.Failure.Chance < 0 || r.Failure.Chance > 1) problems.Add(where + "failure chance must be 0-1.");
+                    if (r.Failure.SafeLevels < 1) problems.Add(where + "failure safeLevels must be at least 1.");
+                    foreach (ItemAmount a in r.Failure.Outputs)
+                        if (!items.ContainsKey(a.Item) || a.Count < 1) problems.Add(where + "bad failure output '" + a.Item + "' x" + a.Count + ".");
+                }
                 if (r.OutputTable != null && !tables.ContainsKey(r.OutputTable)) problems.Add(where + "output table '" + r.OutputTable + "' doesn't exist.");
                 if (r.Ticks < 1) problems.Add(where + "ticks must be at least 1.");
             }
@@ -459,6 +495,21 @@ namespace Rth.Server.Content
             {
                 foreach (ActionDef a in o.Actions)
                     CheckRequirements(a.Requirements, "Object '" + o.Id + "' action '" + a.Id + "'");
+                if (o.Station is StationDef station)
+                {
+                    string at = "Object '" + o.Id + "' (station): ";
+                    if (station.TickScale <= 0 || station.FailScale < 0) problems.Add(at + "tickScale must be above 0 and failScale not negative.");
+                    if (station.Draw is DrawDef draw)
+                    {
+                        if (!skills.ContainsKey(draw.Skill)) problems.Add(at + "draw skill '" + draw.Skill + "' doesn't exist.");
+                        if (draw.Max < 1 || draw.Bellows < 0 || draw.BellowsTicks < 1) problems.Add(at + "draw needs max and bellowsTicks of at least 1.");
+                        if (draw.HotTickScale <= 0) problems.Add(at + "draw hotTickScale must be above 0.");
+                        foreach (DrawFuel f in draw.Fuel)
+                            if (f.Ticks < 1 || (f.Item.StartsWith("tag:") ? !parts.Items.Any(i => i.Tags.Contains(f.Item.Substring(4))) : !items.ContainsKey(f.Item)))
+                                problems.Add(at + "draw fuel '" + f.Item + "' isn't an item, or adds no ticks.");
+                        if (draw.Bellows > 0 && !o.Actions.Any(a => a.Id == DrawDef.BellowsAction)) problems.Add(at + "a draw with bellows needs a 'bellows' action.");
+                    }
+                }
                 NodeDef? node = o.Node;
                 if (node == null) continue;
                 string where = "Object '" + o.Id + "' (node): ";
@@ -560,6 +611,10 @@ namespace Rth.Server.Content
                 foreach (ItemCost item in a.Reward.Items)
                     if (!items.ContainsKey(item.Item)) problems.Add(where + "rewards unknown item '" + item.Item + "'.");
             }
+
+            foreach (ItemDef i in parts.Items)
+                if (i.Process != null && !parts.Recipes.Any(r => r.Station.Length == 0 && r.Inputs.Count > 0 && r.Inputs[0].Item == i.Id))
+                    problems.Add("Item '" + i.Id + "': it can be processed ('" + i.Process.Verb + "') but no recipe without a station starts with it.");
 
             foreach (NpcDef n in parts.Npcs)
             {

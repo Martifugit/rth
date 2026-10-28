@@ -39,6 +39,8 @@ namespace Rth.Shared.Items
         /// or another item and sends a UseItemMessage. Never sent as an item action itself.
         /// </summary>
         public const string Use = "use";
+        /// <summary>Works the item by itself (a <see cref="ProcessDef"/>): cleaning a herb.</summary>
+        public const string Process = "process";
         public const string Drop = "drop";
         public const string Examine = "examine";
 
@@ -49,6 +51,7 @@ namespace Rth.Shared.Items
                 ? new ItemAction(Equip, def.Equipment.Slot == EquipSlot.Weapon || def.Equipment.Slot == EquipSlot.Offhand ? "Wield" : "Wear")
                 : (ItemAction?)null,
             (def, where) => where == ContainerKind.Equipment ? new ItemAction(Unequip, "Remove") : (ItemAction?)null,
+            (def, where) => where == ContainerKind.Inventory && def.Process != null ? new ItemAction(Process, def.Process.Verb) : (ItemAction?)null,
             (def, where) => where == ContainerKind.Inventory ? new ItemAction(Use, "Use") : (ItemAction?)null,
             (def, where) => where == ContainerKind.Inventory ? new ItemAction(Drop, "Drop") : (ItemAction?)null,
             (def, where) => new ItemAction(Examine, "Examine"),

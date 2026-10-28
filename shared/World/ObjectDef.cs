@@ -18,6 +18,8 @@ namespace Rth.Shared.World
         public NodeDef? Node;
         /// <summary>Makes it a door: it closes an edge of its tile, and "open" and "close" swing it.</summary>
         public DoorDef? Door;
+        /// <summary>For a station (a "process" action): how it changes the recipes made at it (speed, failure, a draw).</summary>
+        public StationDef? Station;
         /// <summary>
         /// Client only: colours to swap on every placement's model, from a material name to a
         /// palette colour or #RRGGBB ({"Stone": "CopperOre"}), so one rock serves every ore.

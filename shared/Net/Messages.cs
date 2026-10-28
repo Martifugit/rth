@@ -11,7 +11,7 @@ namespace Rth.Shared.Net
     public static class Protocol
     {
         /// <summary>Bump whenever a message layout changes, so mismatched builds are refused at login.</summary>
-        public const int Version = 19;
+        public const int Version = 20;
         public const int DefaultPort = 43600;
         /// <summary>Sanity limits on a single frame's length, in bytes.</summary>
         public const int MaxClientFrame = 4 * 1024;
@@ -42,6 +42,7 @@ namespace Rth.Shared.Net
         SetClientState = 19,
         UseItem = 20,
         Query = 21,
+        Intent = 22,
 
         // Server to client: state.
         LoginOk = 100,
@@ -855,6 +856,29 @@ namespace Rth.Shared.Net
         public static JsonStateMessage Of(string key, object value) => new JsonStateMessage { Key = key, Json = JsonConvert.SerializeObject(value) };
 
         public T Parse<T>() where T : class, new() => JsonConvert.DeserializeObject<T>(Json) ?? new T();
+    }
+
+    /// <summary>
+    /// A general intent the client sends (a <see cref="Kind"/> and a short argument), handled by
+    /// whichever system registered that kind with the IntentSystem: picking a recipe and an amount
+    /// in the make window ("make"), closing it ("make-close"). New kinds need no codec change.
+    /// </summary>
+    public sealed class IntentMessage : Message
+    {
+        public const int MaxLength = 256;
+
+        public string Kind = "";
+        public string Arg = "";
+
+        public override MessageType Type => MessageType.Intent;
+
+        internal override void WriteBody(BinaryWriter w)
+        {
+            w.Write(Kind);
+            w.Write(Arg);
+        }
+
+        internal static IntentMessage Read(BinaryReader r) => new IntentMessage { Kind = r.ReadString(), Arg = r.ReadString() };
     }
 
     /// <summary>
