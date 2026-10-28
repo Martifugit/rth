@@ -402,9 +402,9 @@ namespace Rth.Client
             ParticleSystem.VelocityOverLifetimeModule velocity = motes.velocityOverLifetime;
             velocity.enabled = true;
             velocity.space = ParticleSystemSimulationSpace.Local;
-            velocity.x = new ParticleSystem.MinMaxCurve(0f);
+            velocity.x = new ParticleSystem.MinMaxCurve(0f, 0f);
             velocity.y = new ParticleSystem.MinMaxCurve(0.18f, 0.4f);
-            velocity.z = new ParticleSystem.MinMaxCurve(0f);
+            velocity.z = new ParticleSystem.MinMaxCurve(0f, 0f);
             velocity.orbitalX = new ParticleSystem.MinMaxCurve(0f);
             velocity.orbitalY = new ParticleSystem.MinMaxCurve(1.6f);
             velocity.orbitalZ = new ParticleSystem.MinMaxCurve(0f);
