@@ -1267,11 +1267,11 @@
       "animation": "mine",
       "tool": "pickaxe",
       "ticks": 4,
-      "progress": { "needed": 66, "perStrike": 20, "perLevel": 0.5, "strikeXp": 0.5 },
+      "progress": { "needed": 200, "perStrike": 20, "perLevel": 0.5, "strikeXp": 0.5 },
       "depleteChance": 0.15,
       "fire": { "logs": "tag:log", "logCount": 2, "burnTicks": 300, "riseTicks": 20, "peakTicks": 7, "fallTicks": 16,
                 "crackBonus": 1.0, "crackStrikes": 18, "douseXp": 8, "lightXp": 2 },
-      "xp": 9,
+      "xp": 8,
       "items": [ { "item": "raw_copper" } ],
       "extras": "low_rock_gems",
       "respawnTicks": 5, "minRespawnTicks": 3,
@@ -1293,11 +1293,11 @@
       "animation": "mine",
       "tool": "pickaxe",
       "ticks": 4,
-      "progress": { "needed": 80, "perStrike": 20, "perLevel": 0.5, "strikeXp": 0.5 },
+      "progress": { "needed": 270, "perStrike": 20, "perLevel": 0.5, "strikeXp": 0.5 },
       "depleteChance": 0.2,
       "fire": { "logs": "tag:log", "logCount": 2, "burnTicks": 300, "riseTicks": 20, "peakTicks": 7, "fallTicks": 16,
                 "crackBonus": 1.0, "crackStrikes": 18, "douseXp": 8, "lightXp": 2 },
-      "xp": 12,
+      "xp": 15,
       "items": [ { "item": "ironstone" } ],
       "extras": "low_rock_gems",
       "respawnTicks": 9, "minRespawnTicks": 5,
@@ -1470,10 +1470,10 @@
       "tool": "pickaxe",
       "ticks": 4,
       "progress": {
-        "needed": 120,
+        "needed": 350,
         "perStrike": 20,
         "perLevel": 0.5,
-        "strikeXp": 1
+        "strikeXp": 0.5
       },
       "depleteChance": 0.18,
       "fire": {
@@ -1488,7 +1488,7 @@
         "douseXp": 14,
         "lightXp": 2
       },
-      "xp": 24,
+      "xp": 22,
       "items": [
         {
           "item": "hematite"
@@ -1548,21 +1548,21 @@
       "animation": "fish_rod",
       "tool": "rod",
       "ticks": 5,
-      "baseChance": 0.4,
-      "perLevel": 0.01,
-      "maxChance": 0.85,
+      "baseChance": 0.12,
+      "perLevel": 0.002,
+      "maxChance": 0.35,
       "depleteChance": 0.05,
       "catches": [
         {
           "item": "raw_perch",
           "level": 1,
-          "xp": 8,
+          "xp": 14,
           "weight": 1
         },
         {
           "item": "raw_pike",
           "level": 20,
-          "xp": 14,
+          "xp": 18,
           "weight": 1
         }
       ],

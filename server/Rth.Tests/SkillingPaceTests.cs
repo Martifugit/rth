@@ -28,9 +28,23 @@ public class SkillingPaceTests
     [InlineData("reed_bed")]
     [InlineData("flax_patch")]
     [InlineData("berry_bush")]
-    [InlineData("river_spot")]
+    public void GatheringNodesKeepToTheTable(string id) =>
+        Assert.InRange(AfkXpPerHour(id), Target(Content.Objects[id].Node!.Level) * 0.8, Target(Content.Objects[id].Node!.Level) * 1.5);
+
+    /// <summary>
+    /// Mining and fishing are slow when left to themselves: AFK they give about half the table, and
+    /// their active layers (fire-setting; fishing's, to come) are what bring them up to it.
+    /// </summary>
+    [Theory]
+    [InlineData("copper_seam")]
+    [InlineData("ironstone_seam")]
     [InlineData("hematite_seam")]
-    public void GatheringNodesKeepToTheTable(string id)
+    [InlineData("river_spot")]
+    public void MiningAndFishingAreSlowWhenLeftAlone(string id) =>
+        Assert.InRange(AfkXpPerHour(id), Target(Content.Objects[id].Node!.Level) * 0.4, Target(Content.Objects[id].Node!.Level) * 0.65);
+
+    /// <summary>The XP an hour at a node's own level with the best shipped tool of its tier, nothing active.</summary>
+    private static double AfkXpPerHour(string id)
     {
         NodeDef def = Content.Objects[id].Node!;
         ToolDef? tool = def.Tool == null ? null : Content.Items.Values.Select(i => i.Tool).Where(t => t != null && t.Kind == def.Tool
@@ -45,8 +59,7 @@ public class SkillingPaceTests
             double xp = can.Count > 0 ? can.Sum(c => c.Xp * c.Weight) / can.Sum(c => c.Weight) : def.Xp;
             perAttempt = Math.Min(def.MaxChance, def.BaseChance + (tool?.Success ?? 0)) * xp;
         }
-        double xpPerHour = PerHour(def.Ticks) * perAttempt;
-        Assert.InRange(xpPerHour, Target(def.Level) * 0.8, Target(def.Level) * 1.5);
+        return PerHour(def.Ticks) * perAttempt;
     }
 
     [Fact]
@@ -54,8 +67,8 @@ public class SkillingPaceTests
     {
         NodeDef def = Content.Objects["river_spot"].Node!;
         double xp = def.Catches.Average(c => c.Xp);              // both perch and pike at level 20
-        double xpPerHour = PerHour(def.Ticks) * def.BaseChance * xp;
-        Assert.InRange(xpPerHour, Target(20) * 0.8, Target(20) * 1.5);
+        double xpPerHour = PerHour(def.Ticks) * Math.Min(def.MaxChance, def.BaseChance + def.PerLevel * (20 - def.Level)) * xp;
+        Assert.InRange(xpPerHour, Target(20) * 0.4, Target(20) * 0.65);     // AFK: half the table
     }
 
     [Fact]

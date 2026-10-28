@@ -257,8 +257,8 @@ public class ToolTests
 
     /// <summary>The XP per hour at a node's own level, with the shipped tool of its tier, against the pace table (skills.md 2.1).</summary>
     [Theory]
-    [InlineData("copper_seam", 4000)]
-    [InlineData("ironstone_seam", 5000)]
+    [InlineData("copper_seam", 4000 * 0.5)]                   // mining AFK: half the table (fire-setting brings the rest)
+    [InlineData("ironstone_seam", 5000 * 0.5)]
     [InlineData("alder_tree", 4000)]
     [InlineData("ash_tree", 5000)]
     public void ShippedRocksAndTreesKeepToThePaceTable(string node, double target)
@@ -274,6 +274,6 @@ public class ToolTests
             ? def.Progress.StrikeXp + def.Xp * Math.Min(1, def.Progress.PerStrike * (1 + tool.Success) / def.Progress.Needed)
             : Math.Min(def.MaxChance, def.BaseChance + tool.Success) * def.Xp;
         double xpPerHour = 3600 / (def.Ticks * 0.6) * perStrike;
-        Assert.InRange(xpPerHour, target * 0.8, target * 1.5);
+        Assert.InRange(xpPerHour, target * 0.8, target * 1.3);
     }
 }

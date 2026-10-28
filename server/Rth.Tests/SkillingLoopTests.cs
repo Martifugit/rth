@@ -71,7 +71,7 @@ public class SkillingLoopTests
         Assert.Equal(1, Count(fx, p, "fishing_rod"));
         Assert.Equal(1, Count(fx, p, "tinderbox"));
         fx.World.Get<ItemSystem>().Give(p, "alder_log", 1);
-        Act(fx, alice, "river_spot", "gather", 120);
+        Act(fx, alice, "river_spot", "gather", 500);              // slow when left alone: about one a 25 s
         int perch = Count(fx, p, "raw_perch");
         Assert.True(perch >= 3, "caught " + perch);
         Assert.True(fx.World.Get<SkillSystem>().Xp(p, "fishing") > 0);
