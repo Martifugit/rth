@@ -10,7 +10,15 @@
   "materials": {
     "KitGrass": "Grass",
     "KitPath": "Trodden",
-    "KitWater": "Mere"
+    "KitWater": "Mere",
+    "KitBrick": "Brick",
+    "KitIron": "#3a3a3e",
+    "KitEmber": "#c8501e",
+    "KitTimber": "Timber",
+    "KitTurf": "MossyStone",
+    "KitStake": "DeadWood",
+    "KitRipple": "#c8dce6",
+    "KitGlass": "#9fc4c8"
   },
   "seed": 7,
   "terrain": { "cliffStep": 1, "rows": [
@@ -166,9 +174,9 @@
         "W": ["Wall", "WallDoorway+Lantern", "Wall", "Wall"]
       }
     } },
-    { "id": "herbs-1", "kind": "prop", "at": [1167, 1026], "model": "Assets/Resources/Nature/Herb.fbx" },
-    { "id": "herbs-2", "kind": "prop", "at": [1168, 1026], "model": "Assets/Resources/Nature/Herb.fbx" },
-    { "id": "flax", "kind": "prop", "at": [1170, 1026], "model": "Assets/Resources/Nature/Flax.fbx" },
+    { "id": "herbs-1", "kind": "prop", "at": [1167, 1026], "model": "Assets/Resources/Nature/Herb.fbx", "object": "yarrow_patch" },
+    { "id": "herbs-2", "kind": "prop", "at": [1168, 1026], "model": "Assets/Resources/Nature/Herb.fbx", "object": "rue_patch" },
+    { "id": "flax", "kind": "prop", "at": [1170, 1026], "model": "Assets/Resources/Nature/Flax.fbx", "object": "flax_patch" },
     { "id": "skeps", "kind": "prop", "at": [1172, 1027], "footprint": [0, 0, 1, 1], "model": "Assets/Resources/Nature/Skeps.fbx" },
     { "id": "chopping", "kind": "prop", "at": [1166, 1030], "footprint": [0, 0, 1, 1], "model": "Assets/Resources/Nature/ChoppingBlock.fbx" },
     { "id": "barrel-1", "kind": "prop", "at": [1173, 1028], "footprint": [0, 0, 1, 1], "model": "Assets/Resources/Nature/Barrel.fbx" },
@@ -178,7 +186,7 @@
     { "id": "trough", "kind": "prop", "at": [1187, 1027], "rot": 90, "footprint": [0, 0, 1, 1], "model": "Assets/Resources/Nature/Trough.fbx", "object": "trough" },
     { "id": "crate-1", "kind": "prop", "at": [1181, 1031], "footprint": [0, 0, 1, 1], "model": "Assets/Resources/Nature/Crate.fbx" },
     { "id": "sacks", "kind": "prop", "at": [1180, 1031], "footprint": [0, 0, 1, 1], "model": "Assets/Resources/Nature/Sacks.fbx" },
-    { "id": "tree-0", "kind": "tree", "at": [1160, 1028], "model": "Assets/Resources/Nature/Ash.fbx" },
+    { "id": "tree-0", "kind": "tree", "at": [1160, 1028], "model": "Assets/Resources/Nature/Ash.fbx", "object": "ash_tree" },
     { "id": "tree-1", "kind": "tree", "at": [1163, 1022], "rot": 47, "model": "Assets/Resources/Nature/Alder.fbx", "object": "alder_tree" },
     { "id": "tree-2", "kind": "tree", "at": [1192, 1040], "rot": 94, "model": "Assets/Resources/Nature/Elm.fbx" },
     { "id": "tree-3", "kind": "tree", "at": [1164, 1045], "rot": 141, "model": "Assets/Resources/Nature/Birch.fbx" },
@@ -191,8 +199,8 @@
     { "id": "plant-3", "kind": "prop", "at": [1180, 1042], "rot": 213, "model": "Assets/Resources/Nature/Wildflowers.fbx" },
     { "id": "plant-4", "kind": "prop", "at": [1160, 1031], "rot": 284, "model": "Assets/Resources/Nature/Bracken.fbx" },
     { "id": "plant-5", "kind": "prop", "at": [1162, 1025], "rot": 355, "model": "Assets/Resources/Nature/Bramble.fbx" },
-    { "id": "plant-6", "kind": "prop", "at": [1187, 1012], "rot": 66, "model": "Assets/Resources/Nature/Reeds.fbx" },
-    { "id": "plant-7", "kind": "prop", "at": [1194, 1013], "rot": 137, "model": "Assets/Resources/Nature/Reeds.fbx" },
+    { "id": "plant-6", "kind": "prop", "at": [1187, 1012], "rot": 66, "model": "Assets/Resources/Nature/Reeds.fbx", "object": "reed_bed" },
+    { "id": "plant-7", "kind": "prop", "at": [1194, 1013], "rot": 137, "model": "Assets/Resources/Nature/Reeds.fbx", "object": "reed_bed" },
     { "id": "plant-8", "kind": "prop", "at": [1189, 1019], "rot": 208, "model": "Assets/Resources/Nature/Reeds.fbx" },
     { "id": "plant-9", "kind": "prop", "at": [1185, 1018], "rot": 279, "model": "Assets/Resources/Nature/Dock.fbx" },
     { "id": "plant-10", "kind": "prop", "at": [1157, 1022], "rot": 350, "model": "Assets/Resources/Nature/Thistles.fbx" },
@@ -209,10 +217,24 @@
     { "id": "garden-south", "kind": "fence", "from": [1165, 1025], "to": [1174, 1025], "gaps": [1170], "model": "Assets/Resources/Nature/HurdlePanel.fbx", "post": "Assets/Resources/Nature/HurdleStake.fbx" },
     { "id": "garden-west", "kind": "fence", "from": [1165, 1025], "to": [1165, 1028], "model": "Assets/Resources/Nature/HurdlePanel.fbx", "post": "Assets/Resources/Nature/HurdleStake.fbx" },
     { "id": "garden-east", "kind": "fence", "from": [1174, 1025], "to": [1174, 1028], "model": "Assets/Resources/Nature/HurdlePanel.fbx", "post": "Assets/Resources/Nature/HurdleStake.fbx" },
-    { "id": "yard-east", "kind": "fence", "from": [1189, 1020], "to": [1189, 1033], "model": "Assets/Resources/Nature/BuckFenceRails.fbx", "post": "Assets/Resources/Nature/BuckFenceBuck.fbx" },
+    { "id": "yard-east", "kind": "fence", "from": [1189, 1020], "to": [1189, 1033], "model": "Assets/Resources/Nature/BuckFenceRails.fbx", "post": "Assets/Resources/Nature/BuckFenceBuck.fbx"  },
     { "id": "churchyard-wall", "kind": "fence", "from": [1154, 1046], "to": [1164, 1046], "model": "Assets/Resources/Nature/WallSpan.fbx", "post": "Assets/Resources/Nature/WallPier.fbx", "posts": "ends" },
     { "id": "churchyard-wall-west", "kind": "fence", "from": [1154, 1046], "to": [1154, 1042], "model": "Assets/Resources/Nature/WallSpan.fbx", "post": "Assets/Resources/Nature/WallPier.fbx", "posts": "ends" },
     { "id": "copper-1", "kind": "rock", "at": [1160, 1017], "model": "Assets/Resources/Nature/MiningBoulderA.fbx", "object": "copper_seam" },
-    { "id": "copper-2", "kind": "rock", "at": [1163, 1015], "rot": 120, "model": "Assets/Resources/Nature/MiningOutcropA.fbx", "object": "copper_seam" }
+    { "id": "copper-2", "kind": "rock", "at": [1163, 1015], "rot": 120, "model": "Assets/Resources/Nature/MiningOutcropA.fbx", "object": "copper_seam" },
+    { "id": "yard-forge", "kind": "prop", "at": [1180, 1048], "object": "forge", "parts": [{"shape": "box", "at": [0, 0.35, 0], "size": [0.9, 0.7, 0.9], "material": "KitBrick", "name": "Hearth"}, {"shape": "box", "at": [0, 0.72, 0], "size": [0.6, 0.05, 0.6], "material": "KitEmber", "name": "Coals"}, {"shape": "box", "at": [0.32, 0.55, -0.42], "size": [0.25, 0.18, 0.12], "material": "KitTimber", "name": "Bellows"}, {"shape": "box", "at": [-0.3, 0.88, -0.25], "size": [0.35, 0.14, 0.16], "material": "KitIron", "name": "Anvil"}] },
+    { "id": "yard-furnace", "kind": "prop", "at": [1183, 1048], "object": "furnace", "parts": [{"shape": "cylinder", "at": [0, 0.6, 0], "size": [0.8, 0.6, 0.8], "material": "KitBrick", "name": "Body"}, {"shape": "cylinder", "at": [0, 1.45, 0], "size": [0.32, 0.3, 0.32], "material": "KitBrick", "name": "Stack"}, {"shape": "box", "at": [0, 0.3, -0.39], "size": [0.3, 0.22, 0.04], "material": "KitEmber", "name": "Mouth"}] },
+    { "id": "yard-kiln", "kind": "prop", "at": [1186, 1048], "object": "charcoal_kiln", "parts": [{"shape": "cylinder", "at": [0, 0.3, 0], "size": [0.9, 0.3, 0.9], "material": "KitTurf", "name": "Mound"}, {"shape": "cylinder", "at": [0, 0.62, 0], "size": [0.5, 0.06, 0.5], "material": "KitTurf", "name": "Crown"}, {"shape": "cylinder", "at": [0.2, 0.72, 0.1], "size": [0.08, 0.06, 0.08], "material": "KitIron", "name": "Vent"}] },
+    { "id": "yard-range", "kind": "prop", "at": [1180, 1044], "object": "range", "parts": [{"shape": "box", "at": [0, 0.4, 0], "size": [0.9, 0.8, 0.7], "material": "KitIron", "name": "Range"}, {"shape": "box", "at": [0, 0.3, -0.36], "size": [0.4, 0.25, 0.03], "material": "KitEmber", "name": "Firebox"}, {"shape": "cylinder", "at": [0.25, 1.1, 0.15], "size": [0.15, 0.3, 0.15], "material": "KitIron", "name": "Flue"}] },
+    { "id": "yard-bench", "kind": "prop", "at": [1183, 1044], "object": "apothecary_bench", "parts": [{"shape": "box", "at": [0, 0.75, 0], "size": [0.95, 0.08, 0.6], "material": "KitTimber", "name": "Top"}, {"shape": "box", "at": [-0.4, 0.36, 0], "size": [0.08, 0.72, 0.5], "material": "KitTimber", "name": "Leg"}, {"shape": "box", "at": [0.4, 0.36, 0], "size": [0.08, 0.72, 0.5], "material": "KitTimber", "name": "Leg"}, {"shape": "cylinder", "at": [-0.2, 0.86, 0.1], "size": [0.08, 0.08, 0.08], "material": "KitGlass", "name": "Vial"}, {"shape": "cylinder", "at": [-0.05, 0.86, 0.12], "size": [0.08, 0.08, 0.08], "material": "KitGlass", "name": "Vial"}, {"shape": "cylinder", "at": [0.25, 0.84, -0.05], "size": [0.16, 0.06, 0.16], "material": "KitIron", "name": "Mortar"}] },
+    { "id": "yard-tinker", "kind": "npc", "at": [1186, 1044], "npc": "tinker", "wander": 0 },
+    { "id": "hematite-1", "kind": "rock", "at": [1157, 1013], "rot": 200, "model": "Assets/Resources/Nature/MiningCragA.fbx", "object": "hematite_seam" },
+    { "id": "herbs-3", "kind": "prop", "at": [1172, 1026], "model": "Assets/Resources/Nature/Herb.fbx", "object": "feverfew_patch" },
+    { "id": "berries-1", "kind": "prop", "at": [1160, 1023], "model": "Assets/Resources/Nature/BerryBushLow.fbx", "object": "berry_bush" },
+    { "id": "fishing-spot-1", "kind": "prop", "at": [1193, 1015], "object": "river_spot", "parts": [{"shape": "cylinder", "at": [0, 0.02, 0], "size": [0.7, 0.01, 0.7], "material": "KitRipple", "name": "Ring"}, {"shape": "cylinder", "at": [0.12, 0.03, 0.08], "size": [0.32, 0.01, 0.32], "material": "KitRipple", "name": "Ring"}] },
+    { "id": "fishing-spot-2", "kind": "prop", "at": [1190, 1012], "object": "river_spot", "parts": [{"shape": "cylinder", "at": [0, 0.02, 0], "size": [0.7, 0.01, 0.7], "material": "KitRipple", "name": "Ring"}, {"shape": "cylinder", "at": [0.12, 0.03, 0.08], "size": [0.32, 0.01, 0.32], "material": "KitRipple", "name": "Ring"}] },
+    { "id": "fishing-spot-3", "kind": "prop", "at": [1188, 1013], "object": "river_spot", "parts": [{"shape": "cylinder", "at": [0, 0.02, 0], "size": [0.7, 0.01, 0.7], "material": "KitRipple", "name": "Ring"}, {"shape": "cylinder", "at": [0.12, 0.03, 0.08], "size": [0.32, 0.01, 0.32], "material": "KitRipple", "name": "Ring"}] },
+    { "id": "eel-weir-1", "kind": "prop", "at": [1191, 1018], "object": "eel_weir", "parts": [{"shape": "cylinder", "at": [-0.35, 0.25, -0.35], "size": [0.06, 0.35, 0.06], "material": "KitStake", "name": "Stake"}, {"shape": "cylinder", "at": [-0.12, 0.25, -0.38], "size": [0.06, 0.3, 0.06], "material": "KitStake", "name": "Stake"}, {"shape": "cylinder", "at": [0.12, 0.25, -0.38], "size": [0.06, 0.32, 0.06], "material": "KitStake", "name": "Stake"}, {"shape": "cylinder", "at": [0.35, 0.25, -0.35], "size": [0.06, 0.35, 0.06], "material": "KitStake", "name": "Stake"}] },
+    { "id": "eel-weir-2", "kind": "prop", "at": [1192, 1017], "object": "eel_weir", "parts": [{"shape": "cylinder", "at": [-0.35, 0.25, -0.35], "size": [0.06, 0.35, 0.06], "material": "KitStake", "name": "Stake"}, {"shape": "cylinder", "at": [-0.12, 0.25, -0.38], "size": [0.06, 0.3, 0.06], "material": "KitStake", "name": "Stake"}, {"shape": "cylinder", "at": [0.12, 0.25, -0.38], "size": [0.06, 0.32, 0.06], "material": "KitStake", "name": "Stake"}, {"shape": "cylinder", "at": [0.35, 0.25, -0.35], "size": [0.06, 0.35, 0.06], "material": "KitStake", "name": "Stake"}] }
   ]
 }
