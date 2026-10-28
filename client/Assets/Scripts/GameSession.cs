@@ -660,11 +660,19 @@ namespace Rth.Client
                 TileCoord tile = new TileCoord(mapObject.Tile.x, mapObject.Tile.y);
                 // A door offers Open or Close, whichever it isn't.
                 bool doorOpen = objectDef.Door != null && DoorViews.IsOpen(this, floor, tile.X, tile.Y);
+                // A tree offers Tend only while it needs it, and then first (the left click).
+                bool tendable = objectDef.Node?.Tending != null;
+                bool needsTending = tendable && SkillingViews.NeedsTending(this, type, floor, tile.X, tile.Y);
+                int first = options.Count;
                 foreach (ActionDef action in objectDef.Actions)
                 {
                     if (objectDef.Door != null && (action.Id == DoorDef.OpenAction ? doorOpen : action.Id == DoorDef.CloseAction && !doorOpen)) continue;
+                    bool tend = tendable && action.Id == NodeTendingDef.Action;
+                    if (tend && !needsTending) continue;
                     string actionId = action.Id;
-                    options.Add((action.Label + " " + objectDef.Name, () => ObjectAction(type, tile, actionId, floor)));
+                    var option = (action.Label + " " + objectDef.Name, (Action)(() => ObjectAction(type, tile, actionId, floor)));
+                    if (tend) options.Insert(first, option);
+                    else options.Add(option);
                 }
                 options.Add(("Examine " + objectDef.Name, () => ObjectAction(type, tile, "examine", floor)));
             }

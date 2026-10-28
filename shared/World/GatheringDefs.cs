@@ -68,7 +68,7 @@ namespace Rth.Shared.World
         public double SuccessBonus = 0.15;
         public double DepleteScale = 0.25;
         public double Xp = 10;
-        /// <summary>Said to players near it when a node starts needing tending, or null.</summary>
+        /// <summary>Said to players near it when a node starts needing tending, or null. {where}: which way it lies from them.</summary>
         public string? NeedMessage;
         public string TendedMessage = "You clear the suckers and brambles from its foot.";
         /// <summary>Client only: what grows at its foot while it needs tending (a path under Resources).</summary>

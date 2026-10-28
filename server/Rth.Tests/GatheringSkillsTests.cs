@@ -61,7 +61,7 @@ public class GatheringSkillsTests
             {
                 Skill = "butchering", Ticks = 1, BaseChance = 0, PerLevel = 0, MinChance = 0, MaxChance = 1, Items = { new ItemCost { Item = "log" } },
                 DepleteChance = 1, YieldsMin = 1000, YieldsMax = 1000,
-                Tending = new NodeTendingDef { GroupRadius = 6, EveryTicks = 20, NeedTicks = 30, TendedTicks = 50, SuccessBonus = 1, DepleteScale = 0, Xp = 9, NeedMessage = "A tree needs tending." },
+                Tending = new NodeTendingDef { GroupRadius = 6, EveryTicks = 20, NeedTicks = 30, TendedTicks = 50, SuccessBonus = 1, DepleteScale = 0, Xp = 9, NeedMessage = "A tree {where} needs tending." },
             },
         });
         return parts;
@@ -167,6 +167,17 @@ public class GatheringSkillsTests
         Assert.Null(NodeOf(fx, weir).TrapOwner);
     }
 
+    [Theory]
+    [InlineData(10, 10, "beside you")]
+    [InlineData(11, 11, "beside you")]
+    [InlineData(10, 20, "to your north")]
+    [InlineData(18, 18, "to your north-east")]
+    [InlineData(2, 10, "to your west")]
+    [InlineData(12, 2, "to your south")]                         // mostly south: the nearer compass point
+    [InlineData(14, 2, "to your south-east")]
+    public void TheTendingMessageSaysWhichWayTheTreeLies(int x, int y, string words) =>
+        Assert.Equal(words, GatheringSystem.Where(new TileCoord(10, 10), new TileCoord(x, y)));
+
     [Fact]
     public void OneTreeOfAClusterNeedsTendingAndTendingHelpsEveryone()
     {
@@ -176,7 +187,7 @@ public class GatheringSkillsTests
         List<GatheringSystem.Node> trees = gathering.Nodes.Where(n => n.Placed.Type == "tree").ToList();
         GatheringSystem.Node? needy = trees.SingleOrDefault(n => n.NeedsTending(fx.World.CurrentTick));
         Assert.NotNull(needy);                                    // one at a time in the cluster
-        Assert.Contains(alice.Texts, t => t == "A tree needs tending.");
+        Assert.Contains(alice.Texts, t => t == "A tree " + GatheringSystem.Where(fx.Player("Alice").Position, needy!.Placed.Tile) + " needs tending.");
         Assert.Single(State(alice).NeedsTending);
 
         GatheringSystem.Node other = trees.First(n => !ReferenceEquals(n, needy));

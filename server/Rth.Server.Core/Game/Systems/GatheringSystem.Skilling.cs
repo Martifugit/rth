@@ -93,7 +93,8 @@ namespace Rth.Server.Game
                     chosen.NeedsTendingUntil = now + (uint)Math.Max(1, tending.NeedTicks);
                     if (tending.NeedMessage != null)
                         foreach (Player p in World.Players)
-                            if (World.CanSee(p, chosen.Placed.Plane, chosen.Placed.Tile)) World.Tell(p, TextKind.Info, tending.NeedMessage);
+                            if (World.CanSee(p, chosen.Placed.Plane, chosen.Placed.Tile))
+                                World.Tell(p, TextKind.Info, tending.NeedMessage.Replace("{where}", Where(p.Position, chosen.Placed.Tile)));
                 }
             }
         }
@@ -141,6 +142,17 @@ namespace Rth.Server.Game
         }
 
         // ------------------------------------------------------------------ tending
+
+        private static readonly string[] Compass = { "east", "north-east", "north", "north-west", "west", "south-west", "south", "south-east" };
+
+        /// <summary>Where a tile lies from a player, in words: "beside you", "to your north-east".</summary>
+        public static string Where(TileCoord from, TileCoord to)
+        {
+            int dx = to.X - from.X, dy = to.Y - from.Y;
+            if (Math.Max(Math.Abs(dx), Math.Abs(dy)) <= 1) return "beside you";
+            int octant = (int)Math.Round(Math.Atan2(dy, dx) / (Math.PI / 4));
+            return "to your " + Compass[(octant + 8) % 8];
+        }
 
         /// <summary>Tends a node that needs it, for everyone working it.</summary>
         public void Tend(Player player, PlacedObject placed)

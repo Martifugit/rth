@@ -102,8 +102,16 @@ namespace Rth.Client
             if (target != null) Outline(mark, target);
         }
 
-        private void Outline(Mark mark, Transform target)
+        private void Outline(Mark mark, Transform target) => mark.Outlines.AddRange(Outlines(target, mark.Material, _block));
+
+        /// <summary>
+        /// Outlines a thing with a highlight material (Resources/Shaders/Highlight): a copy of each of
+        /// its showing meshes, parented to them, which the caller destroys to take the outline off.
+        /// Other views use it for their own marks (SkillingViews: a tree that needs tending).
+        /// </summary>
+        public static List<GameObject> Outlines(Transform target, Material material, MaterialPropertyBlock block)
         {
+            var made = new List<GameObject>();
             foreach (Renderer r in target.GetComponentsInChildren<Renderer>())
             {
                 if (!r.enabled || r.name == "Outline" || r.name == "Ember" || MiningView.UnderFire(r.transform)) continue;
@@ -134,7 +142,7 @@ namespace Rth.Client
                     continue;
                 }
                 var materials = new Material[Mathf.Max(1, subMeshes)];
-                for (int i = 0; i < materials.Length; i++) materials[i] = mark.Material;
+                for (int i = 0; i < materials.Length; i++) materials[i] = material;
                 copy.sharedMaterials = materials;
                 copy.shadowCastingMode = ShadowCastingMode.Off;
                 copy.receiveShadows = false;
@@ -145,19 +153,20 @@ namespace Rth.Client
                 for (int i = 0; i < materials.Length; i++)
                 {
                     Material m = i < source.Length ? source[i] : null;
-                    _block.Clear();
-                    _block.SetFloat("_Smooth", skinnedBody ? 0f : 1f);
+                    block.Clear();
+                    block.SetFloat("_Smooth", skinnedBody ? 0f : 1f);
                     bool cutout = m != null && m.HasProperty("_AlphaClip") && m.GetFloat("_AlphaClip") > 0.5f && m.HasProperty("_BaseMap") && m.GetTexture("_BaseMap") != null;
                     if (cutout)
                     {
-                        _block.SetTexture("_BaseMap", m.GetTexture("_BaseMap"));
-                        _block.SetVector("_BaseMap_ST", m.GetVector("_BaseMap_ST"));
-                        _block.SetFloat("_Cutoff", m.HasProperty("_Cutoff") ? m.GetFloat("_Cutoff") : 0.5f);
+                        block.SetTexture("_BaseMap", m.GetTexture("_BaseMap"));
+                        block.SetVector("_BaseMap_ST", m.GetVector("_BaseMap_ST"));
+                        block.SetFloat("_Cutoff", m.HasProperty("_Cutoff") ? m.GetFloat("_Cutoff") : 0.5f);
                     }
-                    copy.SetPropertyBlock(_block, i);
+                    copy.SetPropertyBlock(block, i);
                 }
-                mark.Outlines.Add(outline);
+                made.Add(outline);
             }
+            return made;
         }
 
         private void OnDisable()
