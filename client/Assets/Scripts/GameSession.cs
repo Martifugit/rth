@@ -201,6 +201,9 @@ namespace Rth.Client
             if (focus == null) focus = gameObject.AddComponent<FocusHighlight>();
             focus.session = this;
             focus.world = world;
+            SkillingViews skilling = GetComponent<SkillingViews>();
+            if (skilling == null) skilling = gameObject.AddComponent<SkillingViews>();
+            skilling.session = this;
             MiningView mining = GetComponent<MiningView>();
             if (mining == null) mining = gameObject.AddComponent<MiningView>();
             mining.session = this;
