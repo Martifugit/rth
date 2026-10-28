@@ -250,8 +250,10 @@ namespace Rth.Shared.World
         public int Y;
         public bool Depleted;
         public bool Surging;
-        /// <summary>A fire set against it is burning (fire-setting).</summary>
+        /// <summary>A fire set against it is burning (fire-setting), laid towards tile (<see cref="FireX"/>, <see cref="FireY"/>).</summary>
         public bool Burning;
+        public int FireX;
+        public int FireY;
     }
 
     public sealed class ActionDef

@@ -862,7 +862,7 @@ namespace Rth.Client
             if (_state == State.InGame) _client.Send(message);
         }
 
-        private ObjectDef ObjectDefFor(string type)
+        public ObjectDef ObjectDefFor(string type)
         {
             if (Content == null) return null;
             foreach (ObjectDef d in Content.Objects)

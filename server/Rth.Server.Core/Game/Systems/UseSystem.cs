@@ -16,6 +16,15 @@ namespace Rth.Server.Game
     /// ops, a recipe, a conversation. Anything unlisted says "Nothing interesting happens."
     /// Quests and achievements count a use by its id (kind "use"), through <see cref="ItemUsedOn"/>.
     /// </summary>
+    /// <summary>
+    /// A system with its own item-on-object uses (GatheringSystem: logs on a rock lay a fire, water
+    /// douses it), asked when no entry in uses.json matches. Return true if the use was handled.
+    /// </summary>
+    public interface IObjectUseHandler
+    {
+        bool OnObjectUse(Player player, ItemDef item, PlacedObject placed, ObjectDef def);
+    }
+
     public sealed class UseSystem : GameSystem
     {
         public const string Nothing = "Nothing interesting happens.";
@@ -76,6 +85,10 @@ namespace Rth.Server.Game
         {
             if (!Still(player, item)) return;
             var matches = World.Content.Uses.Where(u => u.OnObject == def.Id && Matches(u.Item, item)).Select(u => (u, item, (ItemDef?)null)).ToList();
+            // Data first, so content can always override; then any system's own use of the pair.
+            if (matches.Count == 0)
+                foreach (IObjectUseHandler handler in World.Implementing<IObjectUseHandler>())
+                    if (handler.OnObjectUse(player, item, placed, def)) return;
             Resolve(player, matches, "object:" + def.Id, null, def.Name, placed.Tile);
         }
 

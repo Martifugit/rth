@@ -620,18 +620,21 @@ back after its respawn time.
   the rest when the ore comes. Higher ores fill slower and pay more, so the best XP and value an
   hour are always at the highest ore you can work (no power-mining low tiers).
 - **Fire-setting**, an old miner's way of cracking hard rock, is the active layer:
-  1. **Set a fire** at the rock with a few logs. The fire is the rock's (global) and burns for a
-     few minutes: anyone mining it can use it.
-  2. **The stone heats** while it burns, its cracks glowing brighter, in a cycle.
-  3. **Douse it** with water you carry (a waterskin or bucket, filled at any water; better
+  1. **Set a fire** by using logs on the rock: they are laid against the face you stand at, and
+     you go on mining. The fire is the rock's (global) and burns for a few minutes: anyone mining
+     it can use it.
+  2. **The stone heats** while it burns, its cracks glowing brighter round the fire, in a cycle;
+     the bar over the rock warms with it and beats at the peak.
+  3. **Douse it** by using water you carry on the rock (a waterskin or bucket, filled at any water; better
      carriers later make it easier). Dousing is **per player**: your douse cracks the face for
      you alone. Dousing at the glow's peak (the sweet spot) cracks it fully; early or late, less.
   4. **A cracked face** multiplies your progress per strike, and each strike wears the crack
-     down. You go on mining while the fire burns, so the cycle has no downtime; it is tuned to
-     need dousing about once a minute.
+     down. Your face only heats again once the crack is worked out (a douse before then is
+     refused, so no water is wasted). You go on mining throughout, so the cycle has no downtime;
+     it is tuned to need dousing about once a minute.
 - So the rate **ramps with activity**: AFK is the base rate, the odd douse better, a well-timed
-  douse every cycle best. Heat shows on the rock (its glow, and the outline on the rock you work
-  warming towards red), the crack as fissures fading as they wear.
+  douse every cycle best. Heat shows on the rock (cracks glowing round the fire, the bar's rim
+  warming), the crack as dark fissures fading as they wear, and a douse as a puff of steam.
 
 **Ores.** Most ores are plain; a few tiers have a quirk that makes them different to mine, built
 from mechanics that already exist (nodes, tools, world events). Quirks are kept to three or four

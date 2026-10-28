@@ -18,11 +18,9 @@ namespace Rth.Server.Game
     /// lowest tier): the best usable one in the pack or worn is used, and its effects (success,
     /// conservation, extras, transformations) apply (docs/skills.md 2.3).
     /// </summary>
-    public sealed class GatheringSystem : GameSystem
+    public sealed class GatheringSystem : GameSystem, IObjectUseHandler
     {
         public const string GatherAction = "gather";
-        public const string SetFireAction = "set-fire";
-        public const string DouseAction = "douse";
         public const string StateKey = "nodes";
 
         /// <summary>A player's work on one progress node (Mining): the bar, their crack, when their side's heat cycle began.</summary>
@@ -49,6 +47,8 @@ namespace Rth.Server.Game
             /// <summary>Fire-setting: when a fire set against it was lit, and until when it burns.</summary>
             public uint FireLitAt;
             public uint FireUntil;
+            /// <summary>The tile the fire was laid towards (where its setter stood): it burns at that face.</summary>
+            public TileCoord FireTowards;
 
             public bool IsBurning(uint now) => now < FireUntil;
 
@@ -79,10 +79,17 @@ namespace Rth.Server.Game
                 }
                 World.StartInteraction(player, new GatherInteraction(placed));
             });
-            objects.RegisterAction(SetFireAction, (player, placed, _) =>
-                World.StartInteraction(player, new ObjectOnceInteraction(placed, p => SetFire(p, placed))));
-            objects.RegisterAction(DouseAction, (player, placed, _) =>
-                World.StartInteraction(player, new ObjectOnceInteraction(placed, p => Douse(p, placed))));
+        }
+
+        /// <summary>Fire-setting is done by using things on the rock: logs lay a fire, water douses it.</summary>
+        public bool OnObjectUse(Player player, ItemDef item, PlacedObject placed, ObjectDef def)
+        {
+            FireSettingDef? fire = def.Node?.Fire;
+            if (fire == null) return false;
+            if (Matches(fire.Logs, item)) SetFire(player, placed);
+            else if (item.Water != null) Douse(player, placed);
+            else return false;
+            return true;
         }
 
         public override void OnContentChanged() => Regroup();
@@ -293,7 +300,11 @@ namespace Rth.Server.Game
             double crack = miner.CrackLeft > 0 && def.Fire != null ? 1 + miner.Crack * miner.CrackLeft / Math.Max(1, def.Fire.CrackStrikes) : 1;
             double add = (progress.PerStrike + progress.PerLevel * Math.Max(0, level - def.Level))
                          * (1 + (tool?.Success ?? 0)) * (1 + player.Stats.Get(Rth.Shared.Combat.StatIds.GatherSuccess) / 100.0) * crack;
-            if (miner.CrackLeft > 0 && --miner.CrackLeft == 0) miner.Crack = 0;
+            if (miner.CrackLeft > 0 && --miner.CrackLeft == 0)
+            {
+                miner.Crack = 0;
+                miner.HeatFrom = World.CurrentTick;     // worked out: the fire heats this face again from now
+            }
             if (progress.StrikeXp > 0) skills?.AddXp(player, def.Skill, progress.StrikeXp);
             miner.Progress += add;
             if (miner.Progress < progress.Needed) return true;
@@ -322,17 +333,22 @@ namespace Rth.Server.Game
             return miner;
         }
 
-        /// <summary>This player's side of the stone's heat now (0..1), or -1 with no fire burning.</summary>
+        /// <summary>
+        /// This player's side of the stone's heat now (0..1), or -1 with no fire burning. A face still
+        /// cracked from their last douse doesn't heat (0) until they have worked the crack out.
+        /// </summary>
         public double HeatFor(Player player, Node node, NodeDef def)
         {
             uint now = World.CurrentTick;
             if (def.Fire == null || !node.IsBurning(now)) return -1;
             Miner miner = player.Component<Miner>();
-            uint from = ReferenceEquals(miner.Node, node.Placed) ? Math.Max(miner.HeatFrom, node.FireLitAt) : node.FireLitAt;
+            bool mine = ReferenceEquals(miner.Node, node.Placed);
+            if (mine && miner.CrackLeft > 0) return 0;
+            uint from = mine ? Math.Max(miner.HeatFrom, node.FireLitAt) : node.FireLitAt;
             return def.Fire.Heat(now - from);
         }
 
-        /// <summary>Sets a fire against the node, from the player's logs; it burns for everyone.</summary>
+        /// <summary>Sets a fire against the node, from the player's logs (it burns for everyone), then mines on.</summary>
         public void SetFire(Player player, PlacedObject placed)
         {
             Node? node = NodeAt(placed);
@@ -368,9 +384,11 @@ namespace Rth.Server.Game
             }
             node.FireLitAt = now;
             node.FireUntil = now + (uint)Math.Max(1, fire.BurnTicks);
+            node.FireTowards = player.Position;
             World.Animate(player, "work", placed.Tile);
             if (fire.LightXp > 0) World.Find<SkillSystem>()?.AddXp(player, def.Skill, fire.LightXp);
             World.Tell(player, TextKind.Info, "You stack the logs against the rock and set them burning.");
+            World.StartInteraction(player, new GatherInteraction(placed));   // and go on mining while it heats
         }
 
         /// <summary>
@@ -393,6 +411,12 @@ namespace Rth.Server.Game
             if (water == null)
             {
                 World.Tell(player, TextKind.Warning, "You need water to douse the stone: fill something at a trough or a well.");
+                return;
+            }
+            Miner had = player.Component<Miner>();
+            if (ReferenceEquals(had.Node, placed) && had.CrackLeft > 0)
+            {
+                World.Tell(player, TextKind.Info, "Your face of the rock is still cracked. Work it, and let the fire heat it again.");
                 return;
             }
             double heat = Math.Max(0, HeatFor(player, node, def));
@@ -506,7 +530,11 @@ namespace Rth.Server.Game
             {
                 bool depleted = n.IsDepleted(now), surging = n.IsSurging(now), burning = n.IsBurning(now);
                 if ((!depleted && !surging && !burning) || !World.CanSee(player, n.Placed.Plane, n.Placed.Tile)) continue;
-                states.Add(new NodeState { Type = n.Placed.Type, Plane = n.Placed.Plane, X = n.Placed.X, Y = n.Placed.Y, Depleted = depleted, Surging = surging, Burning = burning });
+                states.Add(new NodeState
+                {
+                    Type = n.Placed.Type, Plane = n.Placed.Plane, X = n.Placed.X, Y = n.Placed.Y, Depleted = depleted, Surging = surging, Burning = burning,
+                    FireX = burning ? n.FireTowards.X : 0, FireY = burning ? n.FireTowards.Y : 0,
+                });
             }
             JsonStateMessage message = JsonStateMessage.Of(StateKey, states);
             SentNodes sent = player.Component<SentNodes>();
@@ -550,6 +578,8 @@ namespace Rth.Server.Game
 
         public GatherInteraction(PlacedObject node) : base(node) { }
 
+        public override void End(World world, Player player) => world.RecalculateStats(player);   // the weapon back in hand
+
         protected override bool Work(World world, Player player)
         {
             GatheringSystem gathering = world.Get<GatheringSystem>();
@@ -567,6 +597,9 @@ namespace Rth.Server.Game
                 }
                 _started = true;
                 _nextAttempt = world.CurrentTick + (uint)Math.Max(1, def.Ticks);
+                // The tool in hand while it works (the swing is made for it); the weapon comes back after.
+                string? tool = gathering.BestTool(player, def)?.Id;
+                if (tool != null) player.SetHeld(tool);
                 gathering.Begin(player, node, def);
                 return true;
             }
