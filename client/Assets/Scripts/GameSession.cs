@@ -465,7 +465,11 @@ namespace Rth.Client
                         if (Ui.ActionBars.MainKeys[i] != Key.None && keyboard[Ui.ActionBars.MainKeys[i]].wasPressedThisFrame) Bars.Use(this, 0, i);
                 }
                 if (keyboard.escapeKey.wasPressedThisFrame && IsUsingItem) CancelUse();
-                else if (keyboard.escapeKey.wasPressedThisFrame && !Ui.UiRoot.IsModalOpen && (Dialogue != null || OpenInterface != InterfaceKind.None)) CloseInterface();
+                else if (keyboard.escapeKey.wasPressedThisFrame && !Ui.UiRoot.IsModalOpen && (Dialogue != null || OpenInterface != InterfaceKind.None || Make.IsOpen))
+                {
+                    if (Make.IsOpen) Intent(MakeState.CloseIntent);
+                    if (Dialogue != null || OpenInterface != InterfaceKind.None) CloseInterface();
+                }
             }
 
             // The item picked up for "use" has left its slot (eaten, dropped, moved): put it down.
@@ -730,6 +734,16 @@ namespace Rth.Client
             if (_state != State.InGame || Dialogue == null) return;
             _client.Send(new DialogueChoiceMessage { Option = option });
         }
+
+        /// <summary>Sends a general intent (see <see cref="IntentMessage"/>): "make" in the make window.</summary>
+        public void Intent(string kind, string arg = "")
+        {
+            if (_state != State.InGame) return;
+            _client.Send(new IntentMessage { Kind = kind, Arg = arg ?? "" });
+        }
+
+        /// <summary>The make window the server has open (closed when it has no options).</summary>
+        public MakeState Make => ServerState<MakeState>(MakeState.StateKey);
 
         public void CloseInterface()
         {
