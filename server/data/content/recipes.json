@@ -115,7 +115,7 @@
       }
     ],
     "ticks": 4,
-    "xp": 2.0
+    "xp": 1.4
   },
   {
     "id": "smith_copper_gauntlets",
@@ -142,7 +142,7 @@
       }
     ],
     "ticks": 4,
-    "xp": 2.0
+    "xp": 1.4
   },
   {
     "id": "smith_copper_boots",
@@ -169,7 +169,7 @@
       }
     ],
     "ticks": 4,
-    "xp": 2.0
+    "xp": 1.4
   },
   {
     "id": "smith_copper_mace",
@@ -195,8 +195,8 @@
         "count": 1
       }
     ],
-    "ticks": 4,
-    "xp": 4.0
+    "ticks": 7,
+    "xp": 2.8
   },
   {
     "id": "smith_copper_sword",
@@ -222,8 +222,8 @@
         "count": 1
       }
     ],
-    "ticks": 4,
-    "xp": 4.0
+    "ticks": 7,
+    "xp": 2.8
   },
   {
     "id": "smith_copper_helm",
@@ -249,8 +249,8 @@
         "count": 1
       }
     ],
-    "ticks": 4,
-    "xp": 4.0
+    "ticks": 7,
+    "xp": 2.8
   },
   {
     "id": "smith_copper_shield",
@@ -276,8 +276,8 @@
         "count": 1
       }
     ],
-    "ticks": 4,
-    "xp": 6.0
+    "ticks": 10,
+    "xp": 4.2
   },
   {
     "id": "smith_copper_legs",
@@ -303,8 +303,8 @@
         "count": 1
       }
     ],
-    "ticks": 4,
-    "xp": 6.0
+    "ticks": 10,
+    "xp": 4.2
   },
   {
     "id": "smith_copper_body",
@@ -330,8 +330,8 @@
         "count": 1
       }
     ],
-    "ticks": 4,
-    "xp": 10.0
+    "ticks": 16,
+    "xp": 7.0
   },
   {
     "id": "smelt_iron",
@@ -382,7 +382,7 @@
       }
     ],
     "ticks": 4,
-    "xp": 2.5
+    "xp": 1.75
   },
   {
     "id": "smith_iron_gauntlets",
@@ -409,7 +409,7 @@
       }
     ],
     "ticks": 4,
-    "xp": 2.5
+    "xp": 1.75
   },
   {
     "id": "smith_iron_boots",
@@ -436,7 +436,7 @@
       }
     ],
     "ticks": 4,
-    "xp": 2.5
+    "xp": 1.75
   },
   {
     "id": "smith_iron_mace",
@@ -462,8 +462,8 @@
         "count": 1
       }
     ],
-    "ticks": 4,
-    "xp": 5.0
+    "ticks": 7,
+    "xp": 3.5
   },
   {
     "id": "smith_iron_sword",
@@ -489,8 +489,8 @@
         "count": 1
       }
     ],
-    "ticks": 4,
-    "xp": 5.0
+    "ticks": 7,
+    "xp": 3.5
   },
   {
     "id": "smith_iron_helm",
@@ -516,8 +516,8 @@
         "count": 1
       }
     ],
-    "ticks": 4,
-    "xp": 5.0
+    "ticks": 7,
+    "xp": 3.5
   },
   {
     "id": "smith_iron_shield",
@@ -543,8 +543,8 @@
         "count": 1
       }
     ],
-    "ticks": 4,
-    "xp": 7.5
+    "ticks": 10,
+    "xp": 5.25
   },
   {
     "id": "smith_iron_legs",
@@ -570,8 +570,8 @@
         "count": 1
       }
     ],
-    "ticks": 4,
-    "xp": 7.5
+    "ticks": 10,
+    "xp": 5.25
   },
   {
     "id": "smith_iron_body",
@@ -597,8 +597,8 @@
         "count": 1
       }
     ],
-    "ticks": 4,
-    "xp": 12.5
+    "ticks": 16,
+    "xp": 8.75
   },
   {
     "id": "smelt_steel",
@@ -653,7 +653,7 @@
       }
     ],
     "ticks": 4,
-    "xp": 3.0
+    "xp": 2.1
   },
   {
     "id": "smith_steel_gauntlets",
@@ -680,7 +680,7 @@
       }
     ],
     "ticks": 4,
-    "xp": 3.0
+    "xp": 2.1
   },
   {
     "id": "smith_steel_boots",
@@ -707,7 +707,7 @@
       }
     ],
     "ticks": 4,
-    "xp": 3.0
+    "xp": 2.1
   },
   {
     "id": "smith_steel_mace",
@@ -733,8 +733,8 @@
         "count": 1
       }
     ],
-    "ticks": 4,
-    "xp": 6.0
+    "ticks": 7,
+    "xp": 4.2
   },
   {
     "id": "smith_steel_sword",
@@ -760,8 +760,8 @@
         "count": 1
       }
     ],
-    "ticks": 4,
-    "xp": 6.0
+    "ticks": 7,
+    "xp": 4.2
   },
   {
     "id": "smith_steel_helm",
@@ -787,8 +787,8 @@
         "count": 1
       }
     ],
-    "ticks": 4,
-    "xp": 6.0
+    "ticks": 7,
+    "xp": 4.2
   },
   {
     "id": "smith_steel_shield",
@@ -814,8 +814,8 @@
         "count": 1
       }
     ],
-    "ticks": 4,
-    "xp": 9.0
+    "ticks": 10,
+    "xp": 6.3
   },
   {
     "id": "smith_steel_legs",
@@ -841,8 +841,8 @@
         "count": 1
       }
     ],
-    "ticks": 4,
-    "xp": 9.0
+    "ticks": 10,
+    "xp": 6.3
   },
   {
     "id": "smith_steel_body",
@@ -868,8 +868,8 @@
         "count": 1
       }
     ],
-    "ticks": 4,
-    "xp": 15.0
+    "ticks": 16,
+    "xp": 10.5
   },
   {
     "id": "smith_copper_hatchet",
@@ -896,7 +896,7 @@
       }
     ],
     "ticks": 4,
-    "xp": 2.0
+    "xp": 1.4
   },
   {
     "id": "smith_copper_pickaxe",
@@ -922,8 +922,8 @@
         "count": 1
       }
     ],
-    "ticks": 4,
-    "xp": 4.0
+    "ticks": 7,
+    "xp": 2.8
   },
   {
     "id": "smith_ironshod_hatchet",
@@ -950,7 +950,7 @@
       }
     ],
     "ticks": 4,
-    "xp": 2.5
+    "xp": 1.75
   },
   {
     "id": "smith_ironshod_pickaxe",
@@ -976,8 +976,8 @@
         "count": 1
       }
     ],
-    "ticks": 4,
-    "xp": 5.0
+    "ticks": 7,
+    "xp": 3.5
   },
   {
     "id": "smith_steel_hatchet",
@@ -1004,7 +1004,7 @@
       }
     ],
     "ticks": 4,
-    "xp": 3.0
+    "xp": 2.1
   },
   {
     "id": "smith_steel_pickaxe",
@@ -1030,8 +1030,8 @@
         "count": 1
       }
     ],
-    "ticks": 4,
-    "xp": 6.0
+    "ticks": 7,
+    "xp": 4.2
   },
   {
     "id": "char_alder",
@@ -1377,8 +1377,8 @@
         "count": 1
       }
     ],
-    "ticks": 1,
-    "xp": 1.5
+    "ticks": 2,
+    "xp": 0.5
   },
   {
     "id": "unf_yarrow",
@@ -1425,8 +1425,8 @@
         "count": 1
       }
     ],
-    "ticks": 1,
-    "xp": 2.5
+    "ticks": 2,
+    "xp": 0.8
   },
   {
     "id": "unf_rue",
@@ -1473,8 +1473,8 @@
         "count": 1
       }
     ],
-    "ticks": 1,
-    "xp": 3.5
+    "ticks": 2,
+    "xp": 1.1
   },
   {
     "id": "unf_feverfew",
@@ -1527,8 +1527,8 @@
         "count": 1
       }
     ],
-    "ticks": 3,
-    "xp": 4
+    "ticks": 4,
+    "xp": 3
   },
   {
     "id": "brew_melee_draught",
@@ -1554,8 +1554,8 @@
         "count": 1
       }
     ],
-    "ticks": 3,
-    "xp": 5.5
+    "ticks": 4,
+    "xp": 4
   },
   {
     "id": "brew_occult_draught",
@@ -1581,8 +1581,8 @@
         "count": 1
       }
     ],
-    "ticks": 3,
-    "xp": 6
+    "ticks": 4,
+    "xp": 4.2
   },
   {
     "id": "brew_defence_draught",
@@ -1608,7 +1608,7 @@
         "count": 1
       }
     ],
-    "ticks": 3,
-    "xp": 7
+    "ticks": 4,
+    "xp": 5
   }
 ]

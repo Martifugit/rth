@@ -1556,13 +1556,13 @@
         {
           "item": "raw_perch",
           "level": 1,
-          "xp": 6,
+          "xp": 8,
           "weight": 1
         },
         {
           "item": "raw_pike",
           "level": 20,
-          "xp": 12,
+          "xp": 14,
           "weight": 1
         }
       ],
@@ -1599,7 +1599,7 @@
       "perLevel": 0.015,
       "maxChance": 0.95,
       "depleteChance": 0,
-      "xp": 10,
+      "xp": 11,
       "items": [
         {
           "item": "raw_eel"
@@ -1638,7 +1638,7 @@
       "maxChance": 0.9,
       "tool": "sickle",
       "toolOptional": true,
-      "xp": 5,
+      "xp": 4.5,
       "items": [
         {
           "item": "grimy_yarrow"
@@ -1675,7 +1675,7 @@
       "maxChance": 0.9,
       "tool": "sickle",
       "toolOptional": true,
-      "xp": 8,
+      "xp": 5.5,
       "items": [
         {
           "item": "grimy_rue"
@@ -1712,7 +1712,7 @@
       "maxChance": 0.9,
       "tool": "sickle",
       "toolOptional": true,
-      "xp": 11,
+      "xp": 6.5,
       "items": [
         {
           "item": "grimy_feverfew"
@@ -1785,7 +1785,7 @@
       "maxChance": 0.9,
       "tool": "sickle",
       "toolOptional": true,
-      "xp": 9,
+      "xp": 6,
       "items": [
         {
           "item": "flax"
