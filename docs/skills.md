@@ -199,6 +199,11 @@ One mechanism for ore, trees, fishing spots, herb patches and dream orbs (data o
 Every making skill uses the **recipe system** that already exists (inputs, tools, a station,
 outputs, an output table, extra rolls per levels, XP). Rules on top of it:
 
+*Built (2026-10-28, E4): make-X with the make window, failure scaled by the station, stations'
+`tickScale`/`failScale`, the forge's draw, items processed by themselves (cleaning), campfires
+from logs, gear stats by tier and family (gear.json), and skill boosts. "Better outputs" are not
+built.*
+
 - **Make-X:** choose an amount and it runs semi-AFK until done or interrupted. A batch of 28
   takes roughly a minute at most stations.
 - **Stations** are objects with a `process` action: furnace, anvil, range, campfire, tannery
@@ -578,6 +583,9 @@ is how most materials enter the world, and the carcass is where combat and skill
 - **Trained by** butchering carcasses (main) and task completions.
 
 ## 6. Medicine
+*Built (2026-10-28, E4): cleaning, vials of water, unfinished potions, and the bracing tonic and
+melee, occult and defence draughts (4 doses, skill boosts) at an apothecary bench.*
+
 The herblore. Not for healing (food does that), apart from one mild tick-heal.
 
 - **Potions** are made at an apothecary bench: a herb (Foraging) into a vial of water, then a
@@ -678,7 +686,7 @@ and the higher rites ask for the purer salts.
 and Religion (reliquary casings), and charcoal for Smithing. Tool: hatchet (Smithing). Trees
 are cut back to a stump by chance (2.3) and regrow; they don't fall.
 
-**Tending the stool (decided 2026-10-28).** The basin's trees are coppiced and pollarded, and
+**Tending the stool (decided 2026-10-28; built in E4 on the alder and the ash).** The basin's trees are coppiced and pollarded, and
 Woodcutting's active layer is caring for them. Every so often one tree in a cluster of trees of
 the same kind needs its stool tending (it shows: suckers and brambles round its foot). Tending it
 (a short act at the tree) makes it give logs more often and greatly lowers its chance to be cut
@@ -709,6 +717,9 @@ eye out for the cluster's tree that needs you.
 - **Trained by** cutting.
 
 ### Fishing
+*Built (2026-10-28, E4): catches by level, spots that roam instead of depleting, eel traps; perch,
+eel and pike. The rod is a starter-kit and tinker's item until Artifice makes it.*
+
 **Decided (2026-10-21).** Fish for Cooking, brine for rites, and extras for Medicine. Tools: rod,
 net, trap and lantern (Artifice: they're fine work); a spot offers one or two methods. Spots move
 instead of depleting. Quirks are kept to a few tiers, so most fishing is plain.
@@ -738,6 +749,10 @@ cause are placed with the new map (A4).*
 - **Trained by** fishing.
 
 ### Foraging
+*Built (2026-10-28, E4): patches of yarrow, rue and feverfew (grimy, cleaned with Medicine), reeds,
+flax and berries; a sickle helps but isn't needed. Hellebore's roaming uses the fishing spots'
+`roam` when it comes.*
+
 **Decided (2026-10-21).** Herbs for Medicine, fibres for Tailoring, food for Cooking. Foraging is
 what fills the roadsides and the sparse land between places, so it is **the most widespread
 resource in the game**: every herb is common in two kinds of place and turns up sparsely in more.
@@ -799,6 +814,10 @@ before that.
 ## 8. Making
 
 ### Smithing
+*Built (2026-10-28, E4): copper, iron and steel bars (steel with charcoal from a kiln), smithed
+weapons, plate and tools with stats from their tier, and the forge's draw. A piece takes
+3 x bars + 1 ticks. No jewellery yet.*
+
 **Decided (2026-10-21).** The craft of melee weapons and plate. Everything else it does is
 supplying: bars, the plain metal tools of gathering, and metal parts other skills ask for (those
 skills define them).
@@ -864,6 +883,9 @@ content.
 - **Trained by** making leathers and robes.
 
 ### Cooking
+*Built (2026-10-28, E4): perch, eel, pike and rat haunch on a range or a campfire, burning by
+level. Its active layer and combined foods are still to design.*
+
 - **Fish and meat** on a range (in town) or a campfire (anywhere, burns more often). Meat comes
   from Butchering, so killing things can feed you.
 - **Heals scale with tier:** a tier-N fish or cut heals roughly `100 + 150 x (N − 1)` blood

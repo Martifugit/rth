@@ -13,7 +13,8 @@ skills rework: Religion's hymns replace breath, the v1 skill roster) and 10 (mel
 styles, melee abilities, Cruor's verses, gathering nodes and the first monument) are done, and
 death v1 (D1 and D2 in `docs/plan.md`: the ferryman holds what you die with, on a dark landing
 built as region data) and workstreams E1 (gathering tools, the first Mining and Woodcutting) and
-E3 (using an item on an object, an NPC or another item) have landed. The v1 skills are
+E3 (using an item on an object, an NPC or another item) and E4 (the skilling loops: Smithing,
+Cooking, Fishing, Foraging, Medicine, Woodcutting's tending, tiers 1-3) have landed. The v1 skills are
 designed in `docs/skills.md`; most of them exist only as a skill and a level so far.
 
 **Build everything as extensible systems.** New features plug into the mechanisms under
@@ -430,6 +431,46 @@ seller for tools (Smithing makes them later), mining/chopping animations (nodes 
 Not yet: a highlight on the picked-up slot (waits on the UI framework, U1), using items on
 players or ground items.
 
+## E4: the skilling loops (done, on `claude/skilling-loops`)
+
+The making and gathering skills that existed only as a level, built as mechanisms plus a thin,
+provisional slice of content (tiers 1-3) so each loop plays end to end (`docs/skills.md` 7-8).
+
+- [x] **Make-X** (`RecipeSystem`): a station's action (or an item's own `process` action, e.g.
+      Clean) starts the one recipe in reach, or opens the **make window** ("make" server state,
+      `MakePanel`): pick a recipe and an amount (1, 5, 10, X, all), sent as the "make" intent.
+      Using an input on a station offers its recipes. Recipe `tools` can be `tag:x`; recipes have
+      a `group` heading.
+- [x] **General intents**: `IntentMessage` / `IntentSystem` (protocol 20), a kind and an argument
+      handled by whichever system registered it, so new client intents need no codec change.
+- [x] **Recipes that go wrong** (`failure`: chance at the recipe's level, none `safeLevels` above,
+      burnt outputs), scaled by the station; `RecipeFailed` event.
+- [x] **Stations** (`station` on an object): `tickScale`, `failScale`, and a **draw** (Smithing's
+      active layer, `StationSystem`): shared by everyone at the forge, built up by the bellows or
+      fuel, burning down; recipes there are faster while it roars ("draw" state, `ForgeGlow`).
+- [x] **Gear by tier** (gear.json, `GearRules`): `equipment.family` + `tier` fill in an item's
+      stats and its requirement (plate: Defence, swords: Melee, at the tier's level).
+- [x] **Skill boosts** (`boostSkill` effect op): `SkillSystem.Level` is the working level, which
+      requirements and chances read; `BaseLevel` is what a player is (combat level, inspect,
+      achievements). "boosts" state; the skills panel shows a boosted level in green.
+- [x] **Gathering**: `catches` by level (perch, then pike), `toolOptional` (a sickle), `roam`
+      (fishing spots move instead of running out), `trap` (eel traps: set, leave, collect) and
+      `tending` (Woodcutting: one tree of a cluster at a time needs tending, then gives more for
+      everyone). "gathering" state; `SkillingViews` hides moved spots, shows traps and brambles.
+- [x] **Set-down objects** (`place` on an item, `PlacingSystem`): logs lit as a campfire, an
+      ordinary cooking station for a while ("placed" state, drawn from the object's `model`).
+- [x] Content (provisional names and numbers): copper, iron and steel bars and smithed gear and
+      tools; charcoal; hematite; perch, eel, pike and rat haunch cooked on a range or a fire;
+      yarrow, rue and feverfew (grimy, cleaned), reeds, flax, berries; vials of water, unfinished
+      potions and four 4-dose draughts. Starter kit: tinderbox, rod, hammer. The tinker sells tools.
+- [x] A skilling yard in `kittest` (stand-in stations from parts) to try it all.
+- [x] Tests: `MakingTests`, `GearAndBoostTests`, `GatheringSkillsTests`, `PlacingTests`,
+      `SkillingPaceTests` (the shipped content against the pace table) and `SkillingLoopTests`
+      (each loop end to end from the starter kit).
+
+Not yet: Tailoring and Artifice content, Cooking's active layer, combined foods, the quirk tiers
+(elm, bog iron), real station models, the make window's look checked in the Editor.
+
 **Death v1, server (D1, done):** `FerrySystem` and death.json. Everything carried and worn goes
 to the ferryman's hold; the player wakes at death.json's `wake` tile and his conversation opens
 (dialogue `ferryman`, no NPC needed).
@@ -516,8 +557,8 @@ area's folder, then the blockout), and the neighbours' rings of tiles follow. Th
 character a tile), not a Unity splat map: `docs/world-guide.md` section 4. Water is one flat surface
 (`Water.shader`: shallows, glints, flow) with the banks dipping under it (`Shore`), so shores curve.
 
-**Next: not chosen yet.** Candidates: ranged, an art pass on Tolling, more quests and
-achievements.
+**Next: not chosen yet.** Candidates: ranged, Defence's abilities, an art pass on Tolling, more
+quests and achievements, Tailoring and Artifice content.
 
 ---
 
@@ -556,7 +597,15 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | A skill that replaced another | `retired` in skills.json (old id: new id); saves move the XP on login. |
 | A skill | An entry in skills.json; award XP with `SkillSystem.AddXp`, check with `Level`/`Check`; react to `LevelUp`. |
 | A level requirement | A `requirements` list (`SkillRequirement`) on the def, checked with `SkillSystem.Check`. |
-| A processing skill (distilling, brewing, cooking) | Recipes in recipes.json and a station in objects.json with a `process` action; place the station in the scene with `MapObject` + `MapBlocker`. No code. |
+| A processing skill (distilling, brewing, cooking) | Recipes in recipes.json and a station in objects.json with a `process` action; place the station in a region's data as a piece with `"object"`. No code. Several recipes in reach open the make window; `group` heads them there. |
+| A recipe that can go wrong (food that burns) | `failure` on the recipe (chance at its level, `safeLevels`, outputs, XP, message); a station's `failScale` changes it (a range burns less). |
+| A station that changes its recipes (faster, safer) | `station` on the object: `tickScale`, `failScale`; a shared `draw` (bellows action, `fuel` items, `hotTickScale`) is `StationSystem`'s. |
+| Something made from an item with no station (clean a herb) | `process` (`verb`) on the item, and recipes with no `station` whose first input is it. |
+| An item set down as an object for a while (a campfire) | `place` on the item (`object`, `ticks`, `tool`); the object type gives what it does, its `model` (and `glow`) how it looks. `PlacingSystem`. |
+| Gear stats by tier | `family` and `tier` on the item's `equipment`; the family's slot shares and skill are in gear.json (`GearRules`). |
+| A skill boost (a draught) | The `boostSkill` effect op (`skill`, `amount`, `percent`, `ticks`); `SkillSystem.Level` sees it, `BaseLevel` doesn't. |
+| A gathering node that gives different things by level, moves, takes a trap or wants tending | `catches`, `roam`, `trap`, `tending` on the node (`shared/World/GatheringDefs.cs`, `GatheringSystem.Skilling.cs`). Tending needs a `tend` action. |
+| A client intent (a choice in a window) | `IntentSystem.Register(kind, handler)` on the server, `GameSession.Intent(kind, arg)` on the client. No protocol change. |
 | A new object behaviour (mine, open, pray) | An action on the object def, a handler via `ObjectSystem.RegisterAction`, usually starting an `ObjectInteraction`. |
 | An NPC menu option (pickpocket, follow) | An action on the NPC def; a handler via `NpcSystem.RegisterAction` (runs once the player is beside the NPC). |
 | Something said or done in dialogue | `DialogueSystem.RegisterCondition` / `RegisterAction` / `RegisterToken`. Conversations themselves are data. |
