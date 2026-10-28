@@ -158,10 +158,10 @@ namespace Rth.Server.Game
                 else World.Tell(player, TextKind.Info, "You have nothing to " + verb + " here.");
                 return null;
             }
-            // Straight to work when only one recipe here touches what the player carries (a carcass
-            // at the rack); a choice (bars at the anvil: a dagger or a sword?) opens the window.
-            int touched = recipes.Count(r => r.Inputs.Any(i => Items.CountOf(player, i.Item) > 0));
-            if (withInputs.Count == 1 && touched == 1)
+            // Straight to work when only one recipe here can be made and no other is within reach
+            // (some of every input: a sword wants more of the dagger's bars); a choice opens the window.
+            int inReach = recipes.Count(r => r.Inputs.All(i => Items.CountOf(player, i.Item) > 0));
+            if (withInputs.Count == 1 && inReach == 1)
             {
                 RecipeDef only = withInputs[0];
                 string? blocked = Blocker(player, only);
