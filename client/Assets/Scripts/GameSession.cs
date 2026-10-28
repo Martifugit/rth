@@ -88,6 +88,10 @@ namespace Rth.Client
         public int Level(string skill) =>
             Content == null ? 1 : Content.XpCurve.LevelForXp(SkillXp.TryGetValue(skill, out long xp) ? xp : 0, Content.XpCurve.MaxFor(Skill(skill)));
 
+        /// <summary>Levels a draught has boosted a skill by now (the "boosts" server state), 0 for none.</summary>
+        public int Boost(string skill) =>
+            ServerState<Dictionary<string, int>>("boosts").TryGetValue(skill, out int b) ? b : 0;
+
         public SkillDef Skill(string id)
         {
             if (Content != null)

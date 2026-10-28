@@ -37,6 +37,8 @@ namespace Rth.Shared.World
         /// the regions are drawn by their scenes and don't need one.
         /// </summary>
         public string? Model;
+        /// <summary>Client only: a light the object gives off while set down (#RRGGBB, a campfire's orange), or null.</summary>
+        public string? Glow;
     }
 
     /// <summary>

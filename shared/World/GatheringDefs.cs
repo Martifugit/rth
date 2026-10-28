@@ -46,6 +46,8 @@ namespace Rth.Shared.World
         public string Item = "";
         public int Ticks = 50;
         public int Max = 5;
+        /// <summary>Client only: the model shown on the node while a trap is set (a path under Resources).</summary>
+        public string Model = "Nature/EelTraps";
     }
 
     /// <summary>
@@ -69,6 +71,8 @@ namespace Rth.Shared.World
         /// <summary>Said to players near it when a node starts needing tending, or null.</summary>
         public string? NeedMessage;
         public string TendedMessage = "You clear the suckers and brambles from its foot.";
+        /// <summary>Client only: what grows at its foot while it needs tending (a path under Resources).</summary>
+        public string NeedModel = "Nature/Bramble";
     }
 
     /// <summary>

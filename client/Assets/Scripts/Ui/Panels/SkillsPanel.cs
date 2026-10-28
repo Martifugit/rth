@@ -75,7 +75,10 @@ namespace Rth.Client.Ui.Panels
                 total += level;
                 long from = content.XpCurve.XpForLevel(level, cap);
                 long to = content.XpCurve.XpForLevel(level + 1, cap);
-                tile.Level.text = level.ToString();
+                // A boost (a draught) shows as the working level, in green.
+                int boost = Session.Boost(tile.Skill);
+                tile.Level.text = (level + boost).ToString();
+                tile.Level.style.color = boost > 0 ? UiKit.Good : StyleKeyword.Null;
                 tile.Progress.style.width = Length.Percent(to > from ? (xp - from) * 100f / (to - from) : 100f);
 
                 // The target bar runs from the start of this level to the goal.
@@ -166,6 +169,8 @@ namespace Rth.Client.Ui.Panels
             int cap = curve.MaxFor(skill);
             int level = Session.Level(skill.Id);
             var lines = new List<string> { UiKit.Title(skill.Name + " " + level) };
+            int boost = Session.Boost(skill.Id);
+            if (boost > 0) lines.Add(UiKit.Colour("Boosted to " + (level + boost) + " for now", UiKit.Good));
             if (!string.IsNullOrEmpty(skill.Description)) lines.Add(skill.Description);
             lines.Add("");
             lines.Add("XP: " + UiKit.Colour(xp.ToString("N0"), UiKit.Value));
