@@ -148,6 +148,7 @@
   { "name": "CopperOre", "hex": "#9e5c33", "group": "ore" },
   { "name": "TinOre", "hex": "#a8a89e", "group": "ore" },
   { "name": "IronOre", "hex": "#704233", "group": "ore" },
+  { "name": "HematiteOre", "hex": "#7a2a24", "group": "ore" },
   { "name": "Coal", "hex": "#211f1f", "group": "ore" },
   { "name": "SaltOre", "hex": "#e0dbd1", "group": "ore" },
   { "name": "Gall", "hex": "#b2992e", "group": "ore" },

@@ -443,5 +443,23 @@
     "shape": "Capsule",
     "color": "#2b2a33",
     "scale": 1.1
+  },
+  {
+    "id": "tinker",
+    "name": "Tinker",
+    "examine": "A tinker with a cart of tools, vials and traps. Everything is slightly used.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 0,
+    "actions": [
+      {
+        "id": "trade",
+        "label": "Trade"
+      }
+    ],
+    "shop": "tinkers_cart",
+    "shape": "Capsule",
+    "color": "#6a5a3a"
   }
 ]

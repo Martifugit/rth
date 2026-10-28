@@ -60,5 +60,61 @@
       { "item": "watchmans_sword", "price": 50, "quantity": 5, "restockTicks": 300 },
       { "item": "penitents_mace", "price": 350, "quantity": 2, "restockTicks": 600 }
     ]
+  },
+  {
+    "id": "tinkers_cart",
+    "name": "The Tinker's Cart",
+    "currency": "marks",
+    "sellPercent": 30,
+    "stock": [
+      {
+        "item": "empty_vial",
+        "price": 2,
+        "quantity": 100,
+        "restockTicks": 10
+      },
+      {
+        "item": "tinderbox",
+        "price": 4,
+        "quantity": 10,
+        "restockTicks": 100
+      },
+      {
+        "item": "fishing_rod",
+        "price": 12,
+        "quantity": 5,
+        "restockTicks": 200
+      },
+      {
+        "item": "eel_trap",
+        "price": 10,
+        "quantity": 10,
+        "restockTicks": 100
+      },
+      {
+        "item": "sickle",
+        "price": 18,
+        "quantity": 5,
+        "restockTicks": 200
+      },
+      {
+        "item": "smiths_hammer",
+        "price": 15,
+        "quantity": 5,
+        "restockTicks": 200
+      },
+      {
+        "item": "copper_pickaxe",
+        "price": 25,
+        "quantity": 3,
+        "restockTicks": 300
+      },
+      {
+        "item": "copper_hatchet",
+        "price": 25,
+        "quantity": 3,
+        "restockTicks": 300
+      }
+    ]
   }
 ]

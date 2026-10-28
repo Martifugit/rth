@@ -12,7 +12,10 @@
     { "item": "melancholic_tincture", "count": 15 },
     { "item": "copper_pickaxe", "count": 1 },
     { "item": "copper_hatchet", "count": 1 },
-    { "item": "waterskin_4", "count": 1 }
+    { "item": "waterskin_4", "count": 1 },
+    { "item": "tinderbox", "count": 1 },
+    { "item": "fishing_rod", "count": 1 },
+    { "item": "smiths_hammer", "count": 1 }
   ],
   "starterEquipment": [ "apprentice_athame", "occultist_robe" ]
 }

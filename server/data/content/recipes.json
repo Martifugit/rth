@@ -65,5 +65,1550 @@
     "outputs": [ { "item": "melancholic_tincture", "count": 3 } ],
     "ticks": 3,
     "xp": 10
+  },
+  {
+    "id": "smelt_copper",
+    "name": "copper bar",
+    "verb": "smelt",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 1,
+    "station": "furnace",
+    "group": "Bars",
+    "inputs": [
+      {
+        "item": "raw_copper",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "copper_bar",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 0.6
+  },
+  {
+    "id": "smith_copper_dagger",
+    "name": "copper dagger",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 1,
+    "station": "forge",
+    "group": "Weapons",
+    "inputs": [
+      {
+        "item": "copper_bar",
+        "count": 1
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "copper_dagger",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 2.0
+  },
+  {
+    "id": "smith_copper_gauntlets",
+    "name": "copper gauntlets",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 2,
+    "station": "forge",
+    "group": "Armour",
+    "inputs": [
+      {
+        "item": "copper_bar",
+        "count": 1
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "copper_gauntlets",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 2.0
+  },
+  {
+    "id": "smith_copper_boots",
+    "name": "copper boots",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 3,
+    "station": "forge",
+    "group": "Armour",
+    "inputs": [
+      {
+        "item": "copper_bar",
+        "count": 1
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "copper_boots",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 2.0
+  },
+  {
+    "id": "smith_copper_mace",
+    "name": "copper mace",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 3,
+    "station": "forge",
+    "group": "Weapons",
+    "inputs": [
+      {
+        "item": "copper_bar",
+        "count": 2
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "copper_mace",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 4.0
+  },
+  {
+    "id": "smith_copper_sword",
+    "name": "copper sword",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 5,
+    "station": "forge",
+    "group": "Weapons",
+    "inputs": [
+      {
+        "item": "copper_bar",
+        "count": 2
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "copper_sword",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 4.0
+  },
+  {
+    "id": "smith_copper_helm",
+    "name": "copper helm",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 6,
+    "station": "forge",
+    "group": "Armour",
+    "inputs": [
+      {
+        "item": "copper_bar",
+        "count": 2
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "copper_helm",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 4.0
+  },
+  {
+    "id": "smith_copper_shield",
+    "name": "copper shield",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 7,
+    "station": "forge",
+    "group": "Armour",
+    "inputs": [
+      {
+        "item": "copper_bar",
+        "count": 3
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "copper_shield",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 6.0
+  },
+  {
+    "id": "smith_copper_legs",
+    "name": "copper plate legs",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 8,
+    "station": "forge",
+    "group": "Armour",
+    "inputs": [
+      {
+        "item": "copper_bar",
+        "count": 3
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "copper_legs",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 6.0
+  },
+  {
+    "id": "smith_copper_body",
+    "name": "copper plate body",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 9,
+    "station": "forge",
+    "group": "Armour",
+    "inputs": [
+      {
+        "item": "copper_bar",
+        "count": 5
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "copper_body",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 10.0
+  },
+  {
+    "id": "smelt_iron",
+    "name": "iron bar",
+    "verb": "smelt",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 10,
+    "station": "furnace",
+    "group": "Bars",
+    "inputs": [
+      {
+        "item": "ironstone",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "iron_bar",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 0.8
+  },
+  {
+    "id": "smith_iron_dagger",
+    "name": "iron dagger",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 10,
+    "station": "forge",
+    "group": "Weapons",
+    "inputs": [
+      {
+        "item": "iron_bar",
+        "count": 1
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "iron_dagger",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 2.5
+  },
+  {
+    "id": "smith_iron_gauntlets",
+    "name": "iron gauntlets",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 11,
+    "station": "forge",
+    "group": "Armour",
+    "inputs": [
+      {
+        "item": "iron_bar",
+        "count": 1
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "iron_gauntlets",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 2.5
+  },
+  {
+    "id": "smith_iron_boots",
+    "name": "iron boots",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 12,
+    "station": "forge",
+    "group": "Armour",
+    "inputs": [
+      {
+        "item": "iron_bar",
+        "count": 1
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "iron_boots",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 2.5
+  },
+  {
+    "id": "smith_iron_mace",
+    "name": "iron mace",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 12,
+    "station": "forge",
+    "group": "Weapons",
+    "inputs": [
+      {
+        "item": "iron_bar",
+        "count": 2
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "iron_mace",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 5.0
+  },
+  {
+    "id": "smith_iron_sword",
+    "name": "iron sword",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 14,
+    "station": "forge",
+    "group": "Weapons",
+    "inputs": [
+      {
+        "item": "iron_bar",
+        "count": 2
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "iron_sword",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 5.0
+  },
+  {
+    "id": "smith_iron_helm",
+    "name": "iron helm",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 15,
+    "station": "forge",
+    "group": "Armour",
+    "inputs": [
+      {
+        "item": "iron_bar",
+        "count": 2
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "iron_helm",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 5.0
+  },
+  {
+    "id": "smith_iron_shield",
+    "name": "iron shield",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 16,
+    "station": "forge",
+    "group": "Armour",
+    "inputs": [
+      {
+        "item": "iron_bar",
+        "count": 3
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "iron_shield",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 7.5
+  },
+  {
+    "id": "smith_iron_legs",
+    "name": "iron plate legs",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 17,
+    "station": "forge",
+    "group": "Armour",
+    "inputs": [
+      {
+        "item": "iron_bar",
+        "count": 3
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "iron_legs",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 7.5
+  },
+  {
+    "id": "smith_iron_body",
+    "name": "iron plate body",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 18,
+    "station": "forge",
+    "group": "Armour",
+    "inputs": [
+      {
+        "item": "iron_bar",
+        "count": 5
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "iron_body",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 12.5
+  },
+  {
+    "id": "smelt_steel",
+    "name": "steel bar",
+    "verb": "smelt",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 20,
+    "station": "furnace",
+    "group": "Bars",
+    "inputs": [
+      {
+        "item": "hematite",
+        "count": 1
+      },
+      {
+        "item": "charcoal",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "steel_bar",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 1.0
+  },
+  {
+    "id": "smith_steel_dagger",
+    "name": "steel dagger",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 20,
+    "station": "forge",
+    "group": "Weapons",
+    "inputs": [
+      {
+        "item": "steel_bar",
+        "count": 1
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "steel_dagger",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 3.0
+  },
+  {
+    "id": "smith_steel_gauntlets",
+    "name": "steel gauntlets",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 21,
+    "station": "forge",
+    "group": "Armour",
+    "inputs": [
+      {
+        "item": "steel_bar",
+        "count": 1
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "steel_gauntlets",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 3.0
+  },
+  {
+    "id": "smith_steel_boots",
+    "name": "steel boots",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 22,
+    "station": "forge",
+    "group": "Armour",
+    "inputs": [
+      {
+        "item": "steel_bar",
+        "count": 1
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "steel_boots",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 3.0
+  },
+  {
+    "id": "smith_steel_mace",
+    "name": "steel mace",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 22,
+    "station": "forge",
+    "group": "Weapons",
+    "inputs": [
+      {
+        "item": "steel_bar",
+        "count": 2
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "steel_mace",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 6.0
+  },
+  {
+    "id": "smith_steel_sword",
+    "name": "steel sword",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 24,
+    "station": "forge",
+    "group": "Weapons",
+    "inputs": [
+      {
+        "item": "steel_bar",
+        "count": 2
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "steel_sword",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 6.0
+  },
+  {
+    "id": "smith_steel_helm",
+    "name": "steel helm",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 25,
+    "station": "forge",
+    "group": "Armour",
+    "inputs": [
+      {
+        "item": "steel_bar",
+        "count": 2
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "steel_helm",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 6.0
+  },
+  {
+    "id": "smith_steel_shield",
+    "name": "steel shield",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 26,
+    "station": "forge",
+    "group": "Armour",
+    "inputs": [
+      {
+        "item": "steel_bar",
+        "count": 3
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "steel_shield",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 9.0
+  },
+  {
+    "id": "smith_steel_legs",
+    "name": "steel plate legs",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 27,
+    "station": "forge",
+    "group": "Armour",
+    "inputs": [
+      {
+        "item": "steel_bar",
+        "count": 3
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "steel_legs",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 9.0
+  },
+  {
+    "id": "smith_steel_body",
+    "name": "steel plate body",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 28,
+    "station": "forge",
+    "group": "Armour",
+    "inputs": [
+      {
+        "item": "steel_bar",
+        "count": 5
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "steel_body",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 15.0
+  },
+  {
+    "id": "smith_copper_hatchet",
+    "name": "copper hatchet",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 2,
+    "station": "forge",
+    "group": "Tools",
+    "inputs": [
+      {
+        "item": "copper_bar",
+        "count": 1
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "copper_hatchet",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 2.0
+  },
+  {
+    "id": "smith_copper_pickaxe",
+    "name": "copper pickaxe",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 4,
+    "station": "forge",
+    "group": "Tools",
+    "inputs": [
+      {
+        "item": "copper_bar",
+        "count": 2
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "copper_pickaxe",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 4.0
+  },
+  {
+    "id": "smith_ironshod_hatchet",
+    "name": "ironshod hatchet",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 11,
+    "station": "forge",
+    "group": "Tools",
+    "inputs": [
+      {
+        "item": "iron_bar",
+        "count": 1
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "ironshod_hatchet",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 2.5
+  },
+  {
+    "id": "smith_ironshod_pickaxe",
+    "name": "ironshod pickaxe",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 13,
+    "station": "forge",
+    "group": "Tools",
+    "inputs": [
+      {
+        "item": "iron_bar",
+        "count": 2
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "ironshod_pickaxe",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 5.0
+  },
+  {
+    "id": "smith_steel_hatchet",
+    "name": "steel hatchet",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 21,
+    "station": "forge",
+    "group": "Tools",
+    "inputs": [
+      {
+        "item": "steel_bar",
+        "count": 1
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "steel_hatchet",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 3.0
+  },
+  {
+    "id": "smith_steel_pickaxe",
+    "name": "steel pickaxe",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 23,
+    "station": "forge",
+    "group": "Tools",
+    "inputs": [
+      {
+        "item": "steel_bar",
+        "count": 2
+      }
+    ],
+    "tools": [
+      "tag:hammer"
+    ],
+    "outputs": [
+      {
+        "item": "steel_pickaxe",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 6.0
+  },
+  {
+    "id": "char_alder",
+    "name": "alder log",
+    "verb": "burn",
+    "skill": "woodcutting",
+    "level": 1,
+    "station": "charcoal_kiln",
+    "group": "Charcoal",
+    "inputs": [
+      {
+        "item": "alder_log",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "charcoal",
+        "count": 1
+      }
+    ],
+    "ticks": 3,
+    "xp": 1
+  },
+  {
+    "id": "char_ash",
+    "name": "ash log",
+    "verb": "burn",
+    "skill": "woodcutting",
+    "level": 10,
+    "station": "charcoal_kiln",
+    "group": "Charcoal",
+    "inputs": [
+      {
+        "item": "ash_log",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "charcoal",
+        "count": 2
+      }
+    ],
+    "ticks": 3,
+    "xp": 2
+  },
+  {
+    "id": "cook_perch",
+    "name": "perch",
+    "verb": "cook",
+    "animation": "work",
+    "skill": "cooking",
+    "level": 1,
+    "station": "range",
+    "group": "Fish",
+    "inputs": [
+      {
+        "item": "raw_perch",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "perch",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 3.5,
+    "failure": {
+      "chance": 0.5,
+      "safeLevels": 15,
+      "outputs": [
+        {
+          "item": "burnt_fish",
+          "count": 1
+        }
+      ],
+      "message": "You burn the {name}."
+    }
+  },
+  {
+    "id": "cook_perch_fire",
+    "name": "perch",
+    "verb": "cook",
+    "animation": "work",
+    "skill": "cooking",
+    "level": 1,
+    "station": "campfire",
+    "group": "Fish",
+    "inputs": [
+      {
+        "item": "raw_perch",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "perch",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 3.5,
+    "failure": {
+      "chance": 0.5,
+      "safeLevels": 15,
+      "outputs": [
+        {
+          "item": "burnt_fish",
+          "count": 1
+        }
+      ],
+      "message": "You burn the {name}."
+    }
+  },
+  {
+    "id": "cook_rat_haunch",
+    "name": "rat haunch",
+    "verb": "cook",
+    "animation": "work",
+    "skill": "cooking",
+    "level": 1,
+    "station": "range",
+    "group": "Meat",
+    "inputs": [
+      {
+        "item": "raw_rat_haunch",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "rat_haunch",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 3.5,
+    "failure": {
+      "chance": 0.5,
+      "safeLevels": 15,
+      "outputs": [
+        {
+          "item": "burnt_meat",
+          "count": 1
+        }
+      ],
+      "message": "You burn the {name}."
+    }
+  },
+  {
+    "id": "cook_rat_haunch_fire",
+    "name": "rat haunch",
+    "verb": "cook",
+    "animation": "work",
+    "skill": "cooking",
+    "level": 1,
+    "station": "campfire",
+    "group": "Meat",
+    "inputs": [
+      {
+        "item": "raw_rat_haunch",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "rat_haunch",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 3.5,
+    "failure": {
+      "chance": 0.5,
+      "safeLevels": 15,
+      "outputs": [
+        {
+          "item": "burnt_meat",
+          "count": 1
+        }
+      ],
+      "message": "You burn the {name}."
+    }
+  },
+  {
+    "id": "cook_eel",
+    "name": "eel",
+    "verb": "cook",
+    "animation": "work",
+    "skill": "cooking",
+    "level": 10,
+    "station": "range",
+    "group": "Fish",
+    "inputs": [
+      {
+        "item": "raw_eel",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "eel",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 4.5,
+    "failure": {
+      "chance": 0.5,
+      "safeLevels": 15,
+      "outputs": [
+        {
+          "item": "burnt_fish",
+          "count": 1
+        }
+      ],
+      "message": "You burn the {name}."
+    }
+  },
+  {
+    "id": "cook_eel_fire",
+    "name": "eel",
+    "verb": "cook",
+    "animation": "work",
+    "skill": "cooking",
+    "level": 10,
+    "station": "campfire",
+    "group": "Fish",
+    "inputs": [
+      {
+        "item": "raw_eel",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "eel",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 4.5,
+    "failure": {
+      "chance": 0.5,
+      "safeLevels": 15,
+      "outputs": [
+        {
+          "item": "burnt_fish",
+          "count": 1
+        }
+      ],
+      "message": "You burn the {name}."
+    }
+  },
+  {
+    "id": "cook_pike",
+    "name": "pike",
+    "verb": "cook",
+    "animation": "work",
+    "skill": "cooking",
+    "level": 20,
+    "station": "range",
+    "group": "Fish",
+    "inputs": [
+      {
+        "item": "raw_pike",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "pike",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 5.5,
+    "failure": {
+      "chance": 0.5,
+      "safeLevels": 15,
+      "outputs": [
+        {
+          "item": "burnt_fish",
+          "count": 1
+        }
+      ],
+      "message": "You burn the {name}."
+    }
+  },
+  {
+    "id": "cook_pike_fire",
+    "name": "pike",
+    "verb": "cook",
+    "animation": "work",
+    "skill": "cooking",
+    "level": 20,
+    "station": "campfire",
+    "group": "Fish",
+    "inputs": [
+      {
+        "item": "raw_pike",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "pike",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 5.5,
+    "failure": {
+      "chance": 0.5,
+      "safeLevels": 15,
+      "outputs": [
+        {
+          "item": "burnt_fish",
+          "count": 1
+        }
+      ],
+      "message": "You burn the {name}."
+    }
+  },
+  {
+    "id": "clean_yarrow",
+    "name": "grimy yarrow",
+    "verb": "clean",
+    "skill": "medicine",
+    "level": 1,
+    "inputs": [
+      {
+        "item": "grimy_yarrow",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "yarrow",
+        "count": 1
+      }
+    ],
+    "ticks": 1,
+    "xp": 1.5
+  },
+  {
+    "id": "unf_yarrow",
+    "name": "yarrow potion (unf)",
+    "verb": "mix",
+    "skill": "medicine",
+    "level": 1,
+    "station": "apothecary_bench",
+    "group": "Unfinished",
+    "inputs": [
+      {
+        "item": "yarrow",
+        "count": 1
+      },
+      {
+        "item": "vial_of_water",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "yarrow_potion_unf",
+        "count": 1
+      }
+    ],
+    "ticks": 2,
+    "xp": 1
+  },
+  {
+    "id": "clean_rue",
+    "name": "grimy rue",
+    "verb": "clean",
+    "skill": "medicine",
+    "level": 10,
+    "inputs": [
+      {
+        "item": "grimy_rue",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "rue",
+        "count": 1
+      }
+    ],
+    "ticks": 1,
+    "xp": 2.5
+  },
+  {
+    "id": "unf_rue",
+    "name": "rue potion (unf)",
+    "verb": "mix",
+    "skill": "medicine",
+    "level": 10,
+    "station": "apothecary_bench",
+    "group": "Unfinished",
+    "inputs": [
+      {
+        "item": "rue",
+        "count": 1
+      },
+      {
+        "item": "vial_of_water",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "rue_potion_unf",
+        "count": 1
+      }
+    ],
+    "ticks": 2,
+    "xp": 1
+  },
+  {
+    "id": "clean_feverfew",
+    "name": "grimy feverfew",
+    "verb": "clean",
+    "skill": "medicine",
+    "level": 20,
+    "inputs": [
+      {
+        "item": "grimy_feverfew",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "feverfew",
+        "count": 1
+      }
+    ],
+    "ticks": 1,
+    "xp": 3.5
+  },
+  {
+    "id": "unf_feverfew",
+    "name": "feverfew potion (unf)",
+    "verb": "mix",
+    "skill": "medicine",
+    "level": 20,
+    "station": "apothecary_bench",
+    "group": "Unfinished",
+    "inputs": [
+      {
+        "item": "feverfew",
+        "count": 1
+      },
+      {
+        "item": "vial_of_water",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "feverfew_potion_unf",
+        "count": 1
+      }
+    ],
+    "ticks": 2,
+    "xp": 1
+  },
+  {
+    "id": "brew_bracing_tonic",
+    "name": "bracing tonic",
+    "verb": "mix",
+    "skill": "medicine",
+    "level": 1,
+    "station": "apothecary_bench",
+    "group": "Potions",
+    "inputs": [
+      {
+        "item": "yarrow_potion_unf",
+        "count": 1
+      },
+      {
+        "item": "perch_scale",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "bracing_tonic_4",
+        "count": 1
+      }
+    ],
+    "ticks": 3,
+    "xp": 4
+  },
+  {
+    "id": "brew_melee_draught",
+    "name": "melee draught",
+    "verb": "mix",
+    "skill": "medicine",
+    "level": 10,
+    "station": "apothecary_bench",
+    "group": "Potions",
+    "inputs": [
+      {
+        "item": "rue_potion_unf",
+        "count": 1
+      },
+      {
+        "item": "rough_garnet",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "melee_draught_4",
+        "count": 1
+      }
+    ],
+    "ticks": 3,
+    "xp": 5.5
+  },
+  {
+    "id": "brew_occult_draught",
+    "name": "occult draught",
+    "verb": "mix",
+    "skill": "medicine",
+    "level": 12,
+    "station": "apothecary_bench",
+    "group": "Potions",
+    "inputs": [
+      {
+        "item": "rue_potion_unf",
+        "count": 1
+      },
+      {
+        "item": "rat_gall",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "occult_draught_4",
+        "count": 1
+      }
+    ],
+    "ticks": 3,
+    "xp": 6
+  },
+  {
+    "id": "brew_defence_draught",
+    "name": "defence draught",
+    "verb": "mix",
+    "skill": "medicine",
+    "level": 20,
+    "station": "apothecary_bench",
+    "group": "Potions",
+    "inputs": [
+      {
+        "item": "feverfew_potion_unf",
+        "count": 1
+      },
+      {
+        "item": "eel_slime",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "defence_draught_4",
+        "count": 1
+      }
+    ],
+    "ticks": 3,
+    "xp": 7
   }
 ]

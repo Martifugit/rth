@@ -32,5 +32,31 @@
     "consume": true,
     "actions": [ { "type": "giveItem", "item": "waterskin_4" } ],
     "message": "You fill the waterskin."
+  },
+  {
+    "id": "vial_on_trough",
+    "item": "empty_vial",
+    "onObject": "trough",
+    "consume": true,
+    "actions": [
+      {
+        "type": "giveItem",
+        "item": "vial_of_water"
+      }
+    ],
+    "message": "You fill the vial."
+  },
+  {
+    "id": "vial_on_well",
+    "item": "empty_vial",
+    "onObject": "well",
+    "consume": true,
+    "actions": [
+      {
+        "type": "giveItem",
+        "item": "vial_of_water"
+      }
+    ],
+    "message": "You fill the vial."
   }
 ]

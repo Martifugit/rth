@@ -5,7 +5,7 @@
   },
   {
     "id": "fen_rat_yield",
-    "always": [ { "item": "rat_pelt" }, { "item": "rat_gall" } ],
+    "always": [ { "item": "rat_pelt" }, { "item": "rat_gall" }, { "item": "raw_rat_haunch" } ],
     "rolls": 1,
     "entries": [
       { "item": "marks", "min": 2, "max": 12, "weight": 40 },
@@ -70,5 +70,38 @@
     "rolls": 1,
     "entries": [ { "item": "tree_resin", "weight": 1 } ],
     "nothingWeight": 49
+  },
+  {
+    "id": "river_fish_extras",
+    "rolls": 1,
+    "entries": [
+      {
+        "item": "perch_scale",
+        "weight": 1
+      }
+    ],
+    "nothingWeight": 9
+  },
+  {
+    "id": "eel_extras",
+    "rolls": 1,
+    "entries": [
+      {
+        "item": "eel_slime",
+        "weight": 1
+      }
+    ],
+    "nothingWeight": 3
+  },
+  {
+    "id": "forage_extras",
+    "rolls": 1,
+    "entries": [
+      {
+        "item": "hedge_berries",
+        "weight": 1
+      }
+    ],
+    "nothingWeight": 24
   }
 ]

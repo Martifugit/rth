@@ -1310,8 +1310,9 @@
     "name": "Alder",
     "examine": "A riverbank tree with dark, sticky buds.",
     "depletedModel": "Nature/AlderStool",
-    "actions": [ { "id": "gather", "label": "Chop" } ],
+    "actions": [ { "id": "gather", "label": "Chop" }, { "id": "tend", "label": "Tend" } ],
     "node": {
+      "tending": { "groupRadius": 8, "everyTicks": 90, "needTicks": 100, "tendedTicks": 250, "successBonus": 0.15, "depleteScale": 0.3, "xp": 6, "needMessage": "Suckers and brambles are choking the foot of one of the trees." },
       "skill": "woodcutting",
       "level": 1,
       "verb": "chop",
@@ -1335,8 +1336,9 @@
     "name": "Ash",
     "examine": "Tall and grey-barked, with black buds like little hooves.",
     "depletedModel": "Nature/AshStump",
-    "actions": [ { "id": "gather", "label": "Chop" } ],
+    "actions": [ { "id": "gather", "label": "Chop" }, { "id": "tend", "label": "Tend" } ],
     "node": {
+      "tending": { "groupRadius": 8, "everyTicks": 90, "needTicks": 100, "tendedTicks": 250, "successBonus": 0.15, "depleteScale": 0.3, "xp": 9, "needMessage": "Suckers and brambles are choking the foot of one of the trees." },
       "skill": "woodcutting",
       "level": 10,
       "verb": "chop",
@@ -1370,5 +1372,478 @@
     "id": "well",
     "name": "Well",
     "examine": "A well with a bucket on a rope. Good for filling a waterskin."
+  },
+  {
+    "id": "forge",
+    "name": "Forge",
+    "examine": "A hearth of firebrick with a leather bellows, and an anvil beside it. Hotter is faster.",
+    "actions": [
+      {
+        "id": "process",
+        "label": "Smith"
+      },
+      {
+        "id": "bellows",
+        "label": "Work the bellows"
+      }
+    ],
+    "station": {
+      "draw": {
+        "skill": "smithing",
+        "max": 200,
+        "bellows": 30,
+        "bellowsTicks": 3,
+        "hotAbove": 0,
+        "hotTickScale": 0.5,
+        "xp": 0.5,
+        "fuel": [
+          {
+            "item": "charcoal",
+            "ticks": 120
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "furnace",
+    "name": "Furnace",
+    "examine": "A squat clay furnace with a bellows at its foot.",
+    "actions": [
+      {
+        "id": "process",
+        "label": "Smelt"
+      },
+      {
+        "id": "bellows",
+        "label": "Work the bellows"
+      }
+    ],
+    "station": {
+      "draw": {
+        "skill": "smithing",
+        "max": 200,
+        "bellows": 30,
+        "bellowsTicks": 3,
+        "hotAbove": 0,
+        "hotTickScale": 0.5,
+        "xp": 0.5,
+        "fuel": [
+          {
+            "item": "charcoal",
+            "ticks": 120
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "charcoal_kiln",
+    "name": "Charcoal kiln",
+    "examine": "A turf-covered mound, smoking at its vents. Logs go in; charcoal comes out.",
+    "actions": [
+      {
+        "id": "process",
+        "label": "Burn logs"
+      }
+    ]
+  },
+  {
+    "id": "hematite_seam",
+    "name": "Hematite seam",
+    "examine": "Rust-red streaks in dark rock, as if the stone had bled.",
+    "depletedModel": "Nature/MiningBoulderADug",
+    "recolor": {
+      "CopperOre": "HematiteOre"
+    },
+    "actions": [
+      {
+        "id": "gather",
+        "label": "Mine"
+      }
+    ],
+    "node": {
+      "skill": "mining",
+      "level": 20,
+      "verb": "mine",
+      "animation": "mine",
+      "tool": "pickaxe",
+      "ticks": 4,
+      "progress": {
+        "needed": 120,
+        "perStrike": 20,
+        "perLevel": 0.5,
+        "strikeXp": 1
+      },
+      "depleteChance": 0.18,
+      "fire": {
+        "logs": "tag:log",
+        "logCount": 2,
+        "burnTicks": 300,
+        "riseTicks": 20,
+        "peakTicks": 7,
+        "fallTicks": 16,
+        "crackBonus": 1.0,
+        "crackStrikes": 18,
+        "douseXp": 14,
+        "lightXp": 2
+      },
+      "xp": 24,
+      "items": [
+        {
+          "item": "hematite"
+        }
+      ],
+      "extras": "low_rock_gems",
+      "respawnTicks": 12,
+      "minRespawnTicks": 6,
+      "startMessage": "You swing your pickaxe at the rock.",
+      "depletedMessage": "The seam is worked out for now."
+    }
+  },
+  {
+    "id": "range",
+    "name": "Range",
+    "examine": "An iron range with a steady fire. Food burns less on it than on an open flame.",
+    "actions": [
+      {
+        "id": "process",
+        "label": "Cook"
+      }
+    ],
+    "station": {
+      "failScale": 0.6
+    }
+  },
+  {
+    "id": "campfire",
+    "name": "Campfire",
+    "examine": "A small fire of logs. It will not last.",
+    "model": "Nature/Campfire",
+    "glow": "#ff8a33",
+    "actions": [
+      {
+        "id": "process",
+        "label": "Cook"
+      }
+    ],
+    "station": {
+      "failScale": 1.0
+    }
+  },
+  {
+    "id": "river_spot",
+    "name": "Fishing spot",
+    "examine": "Rings spread on the water where something feeds.",
+    "actions": [
+      {
+        "id": "gather",
+        "label": "Fish"
+      }
+    ],
+    "node": {
+      "skill": "fishing",
+      "level": 1,
+      "verb": "fish",
+      "animation": "work",
+      "tool": "rod",
+      "ticks": 5,
+      "baseChance": 0.4,
+      "perLevel": 0.01,
+      "maxChance": 0.85,
+      "depleteChance": 0.05,
+      "catches": [
+        {
+          "item": "raw_perch",
+          "level": 1,
+          "xp": 6,
+          "weight": 1
+        },
+        {
+          "item": "raw_pike",
+          "level": 20,
+          "xp": 12,
+          "weight": 1
+        }
+      ],
+      "extras": "river_fish_extras",
+      "roam": {
+        "active": 2,
+        "groupRadius": 10,
+        "minTicks": 200,
+        "maxTicks": 500,
+        "message": "The fish move off."
+      },
+      "respawnTicks": 1,
+      "startMessage": "You cast your line.",
+      "depletedMessage": "The fish move off."
+    }
+  },
+  {
+    "id": "eel_weir",
+    "name": "Eel weir",
+    "examine": "A line of stakes across the shallows, with a gap where a trap sits.",
+    "actions": [
+      {
+        "id": "gather",
+        "label": "Set or lift a trap"
+      }
+    ],
+    "node": {
+      "skill": "fishing",
+      "level": 10,
+      "verb": "trap eels at",
+      "animation": "work",
+      "ticks": 1,
+      "baseChance": 0.5,
+      "perLevel": 0.015,
+      "maxChance": 0.95,
+      "depleteChance": 0,
+      "xp": 10,
+      "items": [
+        {
+          "item": "raw_eel"
+        }
+      ],
+      "extras": "eel_extras",
+      "trap": {
+        "item": "tag:trap",
+        "ticks": 50,
+        "max": 5,
+        "model": "Nature/EelTraps"
+      },
+      "noToolMessage": "You need an eel trap to set here.",
+      "respawnTicks": 1
+    }
+  },
+  {
+    "id": "yarrow_patch",
+    "name": "Yarrow",
+    "examine": "A patch of yarrow among the grass.",
+    "depletedModel": "Nature/HerbPicked",
+    "actions": [
+      {
+        "id": "gather",
+        "label": "Pick"
+      }
+    ],
+    "node": {
+      "skill": "foraging",
+      "level": 1,
+      "verb": "pick",
+      "animation": "work",
+      "ticks": 3,
+      "baseChance": 0.5,
+      "perLevel": 0.01,
+      "maxChance": 0.9,
+      "tool": "sickle",
+      "toolOptional": true,
+      "xp": 5,
+      "items": [
+        {
+          "item": "grimy_yarrow"
+        }
+      ],
+      "extras": "forage_extras",
+      "depleteChance": 1,
+      "yieldsMin": 3,
+      "yieldsMax": 6,
+      "respawnTicks": 120,
+      "minRespawnTicks": 60,
+      "depletedMessage": "You have picked the patch bare."
+    }
+  },
+  {
+    "id": "rue_patch",
+    "name": "Rue",
+    "examine": "A patch of rue among the grass.",
+    "depletedModel": "Nature/HerbPicked",
+    "actions": [
+      {
+        "id": "gather",
+        "label": "Pick"
+      }
+    ],
+    "node": {
+      "skill": "foraging",
+      "level": 10,
+      "verb": "pick",
+      "animation": "work",
+      "ticks": 3,
+      "baseChance": 0.5,
+      "perLevel": 0.01,
+      "maxChance": 0.9,
+      "tool": "sickle",
+      "toolOptional": true,
+      "xp": 8,
+      "items": [
+        {
+          "item": "grimy_rue"
+        }
+      ],
+      "extras": "forage_extras",
+      "depleteChance": 1,
+      "yieldsMin": 3,
+      "yieldsMax": 6,
+      "respawnTicks": 120,
+      "minRespawnTicks": 60,
+      "depletedMessage": "You have picked the patch bare."
+    }
+  },
+  {
+    "id": "feverfew_patch",
+    "name": "Feverfew",
+    "examine": "A patch of feverfew among the grass.",
+    "depletedModel": "Nature/HerbPicked",
+    "actions": [
+      {
+        "id": "gather",
+        "label": "Pick"
+      }
+    ],
+    "node": {
+      "skill": "foraging",
+      "level": 20,
+      "verb": "pick",
+      "animation": "work",
+      "ticks": 3,
+      "baseChance": 0.5,
+      "perLevel": 0.01,
+      "maxChance": 0.9,
+      "tool": "sickle",
+      "toolOptional": true,
+      "xp": 11,
+      "items": [
+        {
+          "item": "grimy_feverfew"
+        }
+      ],
+      "extras": "forage_extras",
+      "depleteChance": 1,
+      "yieldsMin": 3,
+      "yieldsMax": 6,
+      "respawnTicks": 120,
+      "minRespawnTicks": 60,
+      "depletedMessage": "You have picked the patch bare."
+    }
+  },
+  {
+    "id": "reed_bed",
+    "name": "Reeds",
+    "examine": "Tall reeds at the water's edge.",
+    "depletedModel": "Nature/Reeds",
+    "actions": [
+      {
+        "id": "gather",
+        "label": "Pick"
+      }
+    ],
+    "node": {
+      "skill": "foraging",
+      "level": 1,
+      "verb": "pick",
+      "animation": "work",
+      "ticks": 3,
+      "baseChance": 0.55,
+      "perLevel": 0.01,
+      "maxChance": 0.9,
+      "tool": "sickle",
+      "toolOptional": true,
+      "xp": 4,
+      "items": [
+        {
+          "item": "reed"
+        }
+      ],
+      "depleteChance": 1,
+      "yieldsMin": 4,
+      "yieldsMax": 8,
+      "respawnTicks": 100,
+      "minRespawnTicks": 50,
+      "depletedMessage": "There is nothing left to pick for now."
+    }
+  },
+  {
+    "id": "flax_patch",
+    "name": "Flax",
+    "examine": "Blue-flowered flax, gone a little wild.",
+    "depletedModel": "Nature/FlaxPicked",
+    "actions": [
+      {
+        "id": "gather",
+        "label": "Pick"
+      }
+    ],
+    "node": {
+      "skill": "foraging",
+      "level": 20,
+      "verb": "pick",
+      "animation": "work",
+      "ticks": 3,
+      "baseChance": 0.55,
+      "perLevel": 0.01,
+      "maxChance": 0.9,
+      "tool": "sickle",
+      "toolOptional": true,
+      "xp": 9,
+      "items": [
+        {
+          "item": "flax"
+        }
+      ],
+      "depleteChance": 1,
+      "yieldsMin": 4,
+      "yieldsMax": 8,
+      "respawnTicks": 100,
+      "minRespawnTicks": 50,
+      "depletedMessage": "There is nothing left to pick for now."
+    }
+  },
+  {
+    "id": "berry_bush",
+    "name": "Berry bush",
+    "examine": "A bramble heavy with dark berries.",
+    "depletedModel": "Nature/BerryBushLowPicked",
+    "actions": [
+      {
+        "id": "gather",
+        "label": "Pick"
+      }
+    ],
+    "node": {
+      "skill": "foraging",
+      "level": 1,
+      "verb": "pick",
+      "animation": "work",
+      "ticks": 3,
+      "baseChance": 0.55,
+      "perLevel": 0.01,
+      "maxChance": 0.9,
+      "tool": "sickle",
+      "toolOptional": true,
+      "xp": 3,
+      "items": [
+        {
+          "item": "hedge_berries"
+        }
+      ],
+      "depleteChance": 1,
+      "yieldsMin": 4,
+      "yieldsMax": 8,
+      "respawnTicks": 100,
+      "minRespawnTicks": 50,
+      "depletedMessage": "There is nothing left to pick for now."
+    }
+  },
+  {
+    "id": "apothecary_bench",
+    "name": "Apothecary bench",
+    "examine": "A scarred bench with a mortar, a rack of vials and a ledger of what not to mix.",
+    "actions": [
+      {
+        "id": "process",
+        "label": "Mix"
+      }
+    ]
   }
 ]

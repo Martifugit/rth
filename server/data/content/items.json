@@ -487,7 +487,8 @@
     "examine": "Pale wood that turns orange where it's cut. It burns fast.",
     "value": 3,
     "color": "#c79b6a",
-    "tags": [ "log", "tier1" ]
+    "tags": [ "log", "tier1" ],
+    "place": { "verb": "Light", "object": "campfire", "ticks": 150, "tool": "tag:tinderbox", "message": "The logs catch, and a small fire takes hold." }
   },
   {
     "id": "ash_log",
@@ -495,7 +496,8 @@
     "examine": "Straight-grained and springy. Fletchers want it for shafts.",
     "value": 8,
     "color": "#d8c6a0",
-    "tags": [ "log", "tier2" ]
+    "tags": [ "log", "tier2" ],
+    "place": { "verb": "Light", "object": "campfire", "ticks": 200, "tool": "tag:tinderbox", "message": "The logs catch, and a small fire takes hold." }
   },
   {
     "id": "rough_garnet",
@@ -533,5 +535,1511 @@
     "value": 6,
     "color": "#b5822c",
     "tags": [ "resin" ]
+  },
+  {
+    "id": "hematite",
+    "name": "Hematite",
+    "icon": "mining",
+    "examine": "Heavy red-black ore. Miners say the rock bleeds where it runs.",
+    "value": 22,
+    "color": "#6e2b26",
+    "tags": [
+      "ore",
+      "tier3"
+    ]
+  },
+  {
+    "id": "charcoal",
+    "name": "Charcoal",
+    "icon": "salts",
+    "examine": "Wood burnt slow and starved of air. It burns hotter than the log ever did.",
+    "value": 6,
+    "color": "#2a2626",
+    "tags": [
+      "charcoal",
+      "fuel"
+    ]
+  },
+  {
+    "id": "smiths_hammer",
+    "name": "Smith's hammer",
+    "icon": "mace",
+    "examine": "A short, square-faced hammer, worn bright where the thumb goes.",
+    "value": 12,
+    "color": "#6f6a64",
+    "tags": [
+      "tool",
+      "hammer",
+      "smithing"
+    ]
+  },
+  {
+    "id": "copper_bar",
+    "name": "Copper bar",
+    "icon": "note",
+    "examine": "A bar of copper, ready for the anvil.",
+    "value": 8,
+    "color": "#b87333",
+    "tags": [
+      "bar",
+      "tier1"
+    ]
+  },
+  {
+    "id": "copper_dagger",
+    "name": "Copper dagger",
+    "icon": "dagger",
+    "examine": "A short copper blade with a plain cross-guard.",
+    "value": 11,
+    "color": "#b87333",
+    "tags": [
+      "melee",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Weapon",
+      "family": "melee-1h",
+      "tier": 1,
+      "style": "Melee"
+    }
+  },
+  {
+    "id": "copper_gauntlets",
+    "name": "Copper gauntlets",
+    "icon": "gloves",
+    "examine": "Jointed copper plates riveted over leather.",
+    "value": 11,
+    "color": "#b87333",
+    "tags": [
+      "plate",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Hands",
+      "family": "plate",
+      "tier": 1
+    }
+  },
+  {
+    "id": "copper_boots",
+    "name": "Copper boots",
+    "icon": "boots",
+    "examine": "Copper-shod boots. Heavy, and loud on stone.",
+    "value": 11,
+    "color": "#b87333",
+    "tags": [
+      "plate",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Feet",
+      "family": "plate",
+      "tier": 1
+    }
+  },
+  {
+    "id": "copper_mace",
+    "name": "Copper mace",
+    "icon": "mace",
+    "examine": "A flanged copper head on an ash haft.",
+    "value": 22,
+    "color": "#b87333",
+    "tags": [
+      "melee",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Weapon",
+      "family": "melee-1h",
+      "tier": 1,
+      "style": "Melee"
+    },
+    "model": "Mace"
+  },
+  {
+    "id": "copper_sword",
+    "name": "Copper sword",
+    "icon": "sword",
+    "examine": "A straight copper sword, good for most things.",
+    "value": 22,
+    "color": "#b87333",
+    "tags": [
+      "melee",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Weapon",
+      "family": "melee-1h",
+      "tier": 1,
+      "style": "Melee"
+    },
+    "model": "Sword"
+  },
+  {
+    "id": "copper_helm",
+    "name": "Copper helm",
+    "icon": "hood",
+    "examine": "An open-faced copper helm.",
+    "value": 22,
+    "color": "#b87333",
+    "tags": [
+      "plate",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Head",
+      "family": "plate",
+      "tier": 1
+    }
+  },
+  {
+    "id": "copper_shield",
+    "name": "Copper shield",
+    "icon": "shield",
+    "examine": "A round copper-faced shield.",
+    "value": 34,
+    "color": "#b87333",
+    "tags": [
+      "plate",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Offhand",
+      "family": "plate",
+      "tier": 1
+    }
+  },
+  {
+    "id": "copper_legs",
+    "name": "Copper plate legs",
+    "icon": "legs",
+    "examine": "Jointed copper plates for the legs.",
+    "value": 34,
+    "color": "#b87333",
+    "tags": [
+      "plate",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Legs",
+      "family": "plate",
+      "tier": 1
+    }
+  },
+  {
+    "id": "copper_body",
+    "name": "Copper plate body",
+    "icon": "worn",
+    "examine": "A copper plate body. It takes a while to get into.",
+    "value": 56,
+    "color": "#b87333",
+    "tags": [
+      "plate",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Body",
+      "family": "plate",
+      "tier": 1
+    }
+  },
+  {
+    "id": "iron_bar",
+    "name": "Iron bar",
+    "icon": "note",
+    "examine": "A bar of iron, ready for the anvil.",
+    "value": 20,
+    "color": "#8a8d91",
+    "tags": [
+      "bar",
+      "tier2"
+    ]
+  },
+  {
+    "id": "iron_dagger",
+    "name": "Iron dagger",
+    "icon": "dagger",
+    "examine": "A short iron blade with a plain cross-guard.",
+    "value": 28,
+    "color": "#8a8d91",
+    "tags": [
+      "melee",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Weapon",
+      "family": "melee-1h",
+      "tier": 2,
+      "style": "Melee"
+    }
+  },
+  {
+    "id": "iron_gauntlets",
+    "name": "Iron gauntlets",
+    "icon": "gloves",
+    "examine": "Jointed iron plates riveted over leather.",
+    "value": 28,
+    "color": "#8a8d91",
+    "tags": [
+      "plate",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Hands",
+      "family": "plate",
+      "tier": 2
+    }
+  },
+  {
+    "id": "iron_boots",
+    "name": "Iron boots",
+    "icon": "boots",
+    "examine": "Iron-shod boots. Heavy, and loud on stone.",
+    "value": 28,
+    "color": "#8a8d91",
+    "tags": [
+      "plate",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Feet",
+      "family": "plate",
+      "tier": 2
+    }
+  },
+  {
+    "id": "iron_mace",
+    "name": "Iron mace",
+    "icon": "mace",
+    "examine": "A flanged iron head on an ash haft.",
+    "value": 56,
+    "color": "#8a8d91",
+    "tags": [
+      "melee",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Weapon",
+      "family": "melee-1h",
+      "tier": 2,
+      "style": "Melee"
+    },
+    "model": "Mace",
+    "recolor": {
+      "Copper": "Iron"
+    }
+  },
+  {
+    "id": "iron_sword",
+    "name": "Iron sword",
+    "icon": "sword",
+    "examine": "A straight iron sword, good for most things.",
+    "value": 56,
+    "color": "#8a8d91",
+    "tags": [
+      "melee",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Weapon",
+      "family": "melee-1h",
+      "tier": 2,
+      "style": "Melee"
+    },
+    "model": "Sword",
+    "recolor": {
+      "Copper": "Iron"
+    }
+  },
+  {
+    "id": "iron_helm",
+    "name": "Iron helm",
+    "icon": "hood",
+    "examine": "An open-faced iron helm.",
+    "value": 56,
+    "color": "#8a8d91",
+    "tags": [
+      "plate",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Head",
+      "family": "plate",
+      "tier": 2
+    }
+  },
+  {
+    "id": "iron_shield",
+    "name": "Iron shield",
+    "icon": "shield",
+    "examine": "A round iron-faced shield.",
+    "value": 84,
+    "color": "#8a8d91",
+    "tags": [
+      "plate",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Offhand",
+      "family": "plate",
+      "tier": 2
+    }
+  },
+  {
+    "id": "iron_legs",
+    "name": "Iron plate legs",
+    "icon": "legs",
+    "examine": "Jointed iron plates for the legs.",
+    "value": 84,
+    "color": "#8a8d91",
+    "tags": [
+      "plate",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Legs",
+      "family": "plate",
+      "tier": 2
+    }
+  },
+  {
+    "id": "iron_body",
+    "name": "Iron plate body",
+    "icon": "worn",
+    "examine": "A iron plate body. It takes a while to get into.",
+    "value": 140,
+    "color": "#8a8d91",
+    "tags": [
+      "plate",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Body",
+      "family": "plate",
+      "tier": 2
+    }
+  },
+  {
+    "id": "steel_bar",
+    "name": "Steel bar",
+    "icon": "note",
+    "examine": "A bar of steel, ready for the anvil.",
+    "value": 45,
+    "color": "#a9b3bd",
+    "tags": [
+      "bar",
+      "tier3"
+    ]
+  },
+  {
+    "id": "steel_dagger",
+    "name": "Steel dagger",
+    "icon": "dagger",
+    "examine": "A short steel blade with a plain cross-guard.",
+    "value": 63,
+    "color": "#a9b3bd",
+    "tags": [
+      "melee",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Weapon",
+      "family": "melee-1h",
+      "tier": 3,
+      "style": "Melee"
+    }
+  },
+  {
+    "id": "steel_gauntlets",
+    "name": "Steel gauntlets",
+    "icon": "gloves",
+    "examine": "Jointed steel plates riveted over leather.",
+    "value": 63,
+    "color": "#a9b3bd",
+    "tags": [
+      "plate",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Hands",
+      "family": "plate",
+      "tier": 3
+    }
+  },
+  {
+    "id": "steel_boots",
+    "name": "Steel boots",
+    "icon": "boots",
+    "examine": "Steel-shod boots. Heavy, and loud on stone.",
+    "value": 63,
+    "color": "#a9b3bd",
+    "tags": [
+      "plate",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Feet",
+      "family": "plate",
+      "tier": 3
+    }
+  },
+  {
+    "id": "steel_mace",
+    "name": "Steel mace",
+    "icon": "mace",
+    "examine": "A flanged steel head on an ash haft.",
+    "value": 126,
+    "color": "#a9b3bd",
+    "tags": [
+      "melee",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Weapon",
+      "family": "melee-1h",
+      "tier": 3,
+      "style": "Melee"
+    },
+    "model": "Mace",
+    "recolor": {
+      "Copper": "Steel"
+    }
+  },
+  {
+    "id": "steel_sword",
+    "name": "Steel sword",
+    "icon": "sword",
+    "examine": "A straight steel sword, good for most things.",
+    "value": 126,
+    "color": "#a9b3bd",
+    "tags": [
+      "melee",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Weapon",
+      "family": "melee-1h",
+      "tier": 3,
+      "style": "Melee"
+    },
+    "model": "Sword",
+    "recolor": {
+      "Copper": "Steel"
+    }
+  },
+  {
+    "id": "steel_helm",
+    "name": "Steel helm",
+    "icon": "hood",
+    "examine": "An open-faced steel helm.",
+    "value": 126,
+    "color": "#a9b3bd",
+    "tags": [
+      "plate",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Head",
+      "family": "plate",
+      "tier": 3
+    }
+  },
+  {
+    "id": "steel_shield",
+    "name": "Steel shield",
+    "icon": "shield",
+    "examine": "A round steel-faced shield.",
+    "value": 189,
+    "color": "#a9b3bd",
+    "tags": [
+      "plate",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Offhand",
+      "family": "plate",
+      "tier": 3
+    }
+  },
+  {
+    "id": "steel_legs",
+    "name": "Steel plate legs",
+    "icon": "legs",
+    "examine": "Jointed steel plates for the legs.",
+    "value": 189,
+    "color": "#a9b3bd",
+    "tags": [
+      "plate",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Legs",
+      "family": "plate",
+      "tier": 3
+    }
+  },
+  {
+    "id": "steel_body",
+    "name": "Steel plate body",
+    "icon": "worn",
+    "examine": "A steel plate body. It takes a while to get into.",
+    "value": 315,
+    "color": "#a9b3bd",
+    "tags": [
+      "plate",
+      "smithed"
+    ],
+    "equipment": {
+      "slot": "Body",
+      "family": "plate",
+      "tier": 3
+    }
+  },
+  {
+    "id": "steel_pickaxe",
+    "name": "Steel pickaxe",
+    "icon": "mining",
+    "model": "Pickaxe",
+    "recolor": {
+      "Copper": "Steel"
+    },
+    "examine": "A steel-headed pick, keen enough to bite hematite.",
+    "value": 260,
+    "color": "#a9b3bd",
+    "tags": [
+      "tool",
+      "mining"
+    ],
+    "equipment": {
+      "slot": "Weapon",
+      "style": "Melee",
+      "family": "tool",
+      "tier": 3,
+      "requirements": [
+        {
+          "skill": "melee",
+          "level": 20
+        }
+      ]
+    },
+    "tool": {
+      "kind": "pickaxe",
+      "tier": 3,
+      "success": 0.16,
+      "requirements": [
+        {
+          "skill": "mining",
+          "level": 20
+        }
+      ]
+    }
+  },
+  {
+    "id": "steel_hatchet",
+    "name": "Steel hatchet",
+    "icon": "woodcutting",
+    "model": "Hatchet",
+    "recolor": {
+      "Copper": "Steel"
+    },
+    "examine": "A steel hatchet that holds its edge through elm.",
+    "value": 260,
+    "color": "#a9b3bd",
+    "tags": [
+      "tool",
+      "woodcutting"
+    ],
+    "equipment": {
+      "slot": "Weapon",
+      "style": "Melee",
+      "family": "tool",
+      "tier": 3,
+      "requirements": [
+        {
+          "skill": "melee",
+          "level": 20
+        }
+      ]
+    },
+    "tool": {
+      "kind": "hatchet",
+      "tier": 3,
+      "success": 0.16,
+      "requirements": [
+        {
+          "skill": "woodcutting",
+          "level": 20
+        }
+      ]
+    }
+  },
+  {
+    "id": "fishing_rod",
+    "name": "Fishing rod",
+    "icon": "fishing",
+    "examine": "Ash, horsehair line and a bent copper hook.",
+    "value": 10,
+    "color": "#8a6a40",
+    "tags": [
+      "tool",
+      "fishing"
+    ],
+    "tool": {
+      "kind": "rod",
+      "tier": 1
+    }
+  },
+  {
+    "id": "eel_trap",
+    "name": "Eel trap",
+    "icon": "pouch",
+    "examine": "A willow basket that eels go into and forget how to leave.",
+    "value": 8,
+    "color": "#8b7a4a",
+    "tags": [
+      "trap",
+      "fishing"
+    ]
+  },
+  {
+    "id": "raw_perch",
+    "name": "Raw perch",
+    "icon": "fish",
+    "examine": "Striped and spiny. It needs cooking.",
+    "value": 3,
+    "color": "#7a8c5a",
+    "tags": [
+      "raw-fish",
+      "tier1"
+    ]
+  },
+  {
+    "id": "raw_eel",
+    "name": "Raw eel",
+    "icon": "fish",
+    "examine": "Still twitching. It needs cooking.",
+    "value": 7,
+    "color": "#4a4a3a",
+    "tags": [
+      "raw-fish",
+      "tier2"
+    ]
+  },
+  {
+    "id": "raw_pike",
+    "name": "Raw pike",
+    "icon": "fish",
+    "examine": "All teeth and grudge. It needs cooking.",
+    "value": 12,
+    "color": "#6a7a50",
+    "tags": [
+      "raw-fish",
+      "tier3"
+    ]
+  },
+  {
+    "id": "raw_rat_haunch",
+    "name": "Raw rat haunch",
+    "icon": "carcass",
+    "examine": "Lean and dark. Cooked, it is meat like any other.",
+    "value": 2,
+    "color": "#8a4a44",
+    "tags": [
+      "raw-meat",
+      "tier1"
+    ]
+  },
+  {
+    "id": "perch_scale",
+    "name": "Perch scale",
+    "icon": "bead",
+    "examine": "A hard, clear scale. Apothecaries grind them for tonics.",
+    "stackable": true,
+    "value": 4,
+    "color": "#c8d0b0",
+    "tags": [
+      "secondary"
+    ]
+  },
+  {
+    "id": "eel_slime",
+    "name": "Eel slime",
+    "icon": "vial",
+    "examine": "A twist of paper holding eel slime. Disgusting, and useful.",
+    "stackable": true,
+    "value": 9,
+    "color": "#5a6a3a",
+    "tags": [
+      "secondary"
+    ]
+  },
+  {
+    "id": "burnt_fish",
+    "name": "Burnt fish",
+    "icon": "fish",
+    "examine": "Charcoal with a tail.",
+    "value": 0,
+    "color": "#2a2420",
+    "tags": [
+      "burnt"
+    ]
+  },
+  {
+    "id": "burnt_meat",
+    "name": "Burnt meat",
+    "icon": "carcass",
+    "examine": "It was meat once.",
+    "value": 0,
+    "color": "#2a2018",
+    "tags": [
+      "burnt"
+    ]
+  },
+  {
+    "id": "tinderbox",
+    "name": "Tinderbox",
+    "icon": "spark",
+    "examine": "Flint, steel and dry tinder in a tin box.",
+    "value": 3,
+    "color": "#6a5a48",
+    "tags": [
+      "tool",
+      "tinderbox"
+    ]
+  },
+  {
+    "id": "perch",
+    "name": "Perch",
+    "icon": "fish",
+    "examine": "Cooked through. It heals 100 blood.",
+    "value": 5,
+    "color": "#b08a50",
+    "tags": [
+      "food",
+      "cooked"
+    ],
+    "consumable": {
+      "verb": "Eat",
+      "cooldownGroup": "food",
+      "cooldownTicks": 2,
+      "attackDelayTicks": 2,
+      "effects": [
+        {
+          "op": "healBlood",
+          "amount": 100
+        }
+      ]
+    }
+  },
+  {
+    "id": "rat_haunch",
+    "name": "Roast rat haunch",
+    "icon": "bread",
+    "examine": "Cooked through. It heals 100 blood.",
+    "value": 5,
+    "color": "#b08a50",
+    "tags": [
+      "food",
+      "cooked"
+    ],
+    "consumable": {
+      "verb": "Eat",
+      "cooldownGroup": "food",
+      "cooldownTicks": 2,
+      "attackDelayTicks": 2,
+      "effects": [
+        {
+          "op": "healBlood",
+          "amount": 100
+        }
+      ]
+    }
+  },
+  {
+    "id": "eel",
+    "name": "Eel",
+    "icon": "fish",
+    "examine": "Cooked through. It heals 250 blood.",
+    "value": 12,
+    "color": "#b08a50",
+    "tags": [
+      "food",
+      "cooked"
+    ],
+    "consumable": {
+      "verb": "Eat",
+      "cooldownGroup": "food",
+      "cooldownTicks": 2,
+      "attackDelayTicks": 2,
+      "effects": [
+        {
+          "op": "healBlood",
+          "amount": 250
+        }
+      ]
+    }
+  },
+  {
+    "id": "pike",
+    "name": "Pike",
+    "icon": "fish",
+    "examine": "Cooked through. It heals 400 blood.",
+    "value": 20,
+    "color": "#b08a50",
+    "tags": [
+      "food",
+      "cooked"
+    ],
+    "consumable": {
+      "verb": "Eat",
+      "cooldownGroup": "food",
+      "cooldownTicks": 2,
+      "attackDelayTicks": 2,
+      "effects": [
+        {
+          "op": "healBlood",
+          "amount": 400
+        }
+      ]
+    }
+  },
+  {
+    "id": "sickle",
+    "name": "Sickle",
+    "icon": "hook",
+    "examine": "A curved copper blade. It speeds the picking.",
+    "value": 15,
+    "color": "#c07a4a",
+    "tags": [
+      "tool",
+      "foraging"
+    ],
+    "tool": {
+      "kind": "sickle",
+      "tier": 1,
+      "success": 0.1
+    }
+  },
+  {
+    "id": "reed",
+    "name": "Reed",
+    "icon": "note",
+    "examine": "A green reed stem, for weaving.",
+    "value": 1,
+    "color": "#8a9a50",
+    "tags": [
+      "fibre",
+      "tier1"
+    ]
+  },
+  {
+    "id": "flax",
+    "name": "Flax",
+    "icon": "note",
+    "examine": "A bundle of blue-flowered flax, for spinning.",
+    "value": 4,
+    "color": "#7a8ab0",
+    "tags": [
+      "fibre",
+      "tier3"
+    ]
+  },
+  {
+    "id": "hedge_berries",
+    "name": "Hedge berries",
+    "icon": "fig",
+    "examine": "A handful of dark berries. Sharp, but they fill a gap.",
+    "value": 2,
+    "color": "#4a2a4a",
+    "tags": [
+      "food",
+      "foraged"
+    ],
+    "consumable": {
+      "verb": "Eat",
+      "cooldownGroup": "food",
+      "cooldownTicks": 2,
+      "attackDelayTicks": 1,
+      "effects": [
+        {
+          "op": "healBlood",
+          "amount": 50
+        }
+      ]
+    }
+  },
+  {
+    "id": "vial_of_water",
+    "name": "Vial of water",
+    "icon": "vial",
+    "examine": "A glass vial of clean water, ready for a herb.",
+    "value": 2,
+    "color": "#8ab0c8",
+    "tags": [
+      "container"
+    ]
+  },
+  {
+    "id": "grimy_yarrow",
+    "name": "Grimy yarrow",
+    "icon": "medicine",
+    "examine": "Muddy yarrow, fresh from the ground. Clean it before use.",
+    "value": 4,
+    "color": "#6a5a3a",
+    "tags": [
+      "herb",
+      "grimy"
+    ],
+    "process": {
+      "verb": "Clean"
+    }
+  },
+  {
+    "id": "yarrow",
+    "name": "Yarrow",
+    "icon": "medicine",
+    "examine": "Clean yarrow, ready for a vial.",
+    "value": 5,
+    "color": "#9aa86a",
+    "tags": [
+      "herb"
+    ]
+  },
+  {
+    "id": "yarrow_potion_unf",
+    "name": "Yarrow potion (unf)",
+    "icon": "potion",
+    "examine": "Yarrow steeping in water. It needs a secondary to finish it.",
+    "value": 7,
+    "color": "#9aa86a",
+    "tags": [
+      "potion-unf"
+    ]
+  },
+  {
+    "id": "grimy_rue",
+    "name": "Grimy rue",
+    "icon": "medicine",
+    "examine": "Muddy rue, fresh from the ground. Clean it before use.",
+    "value": 13,
+    "color": "#6a5a3a",
+    "tags": [
+      "herb",
+      "grimy"
+    ],
+    "process": {
+      "verb": "Clean"
+    }
+  },
+  {
+    "id": "rue",
+    "name": "Rue",
+    "icon": "medicine",
+    "examine": "Clean rue, ready for a vial.",
+    "value": 14,
+    "color": "#6a9a5a",
+    "tags": [
+      "herb"
+    ]
+  },
+  {
+    "id": "rue_potion_unf",
+    "name": "Rue potion (unf)",
+    "icon": "potion",
+    "examine": "Rue steeping in water. It needs a secondary to finish it.",
+    "value": 16,
+    "color": "#6a9a5a",
+    "tags": [
+      "potion-unf"
+    ]
+  },
+  {
+    "id": "grimy_feverfew",
+    "name": "Grimy feverfew",
+    "icon": "medicine",
+    "examine": "Muddy feverfew, fresh from the ground. Clean it before use.",
+    "value": 23,
+    "color": "#6a5a3a",
+    "tags": [
+      "herb",
+      "grimy"
+    ],
+    "process": {
+      "verb": "Clean"
+    }
+  },
+  {
+    "id": "feverfew",
+    "name": "Feverfew",
+    "icon": "medicine",
+    "examine": "Clean feverfew, ready for a vial.",
+    "value": 24,
+    "color": "#c8c070",
+    "tags": [
+      "herb"
+    ]
+  },
+  {
+    "id": "feverfew_potion_unf",
+    "name": "Feverfew potion (unf)",
+    "icon": "potion",
+    "examine": "Feverfew steeping in water. It needs a secondary to finish it.",
+    "value": 26,
+    "color": "#c8c070",
+    "tags": [
+      "potion-unf"
+    ]
+  },
+  {
+    "id": "bracing_tonic_4",
+    "name": "Bracing tonic (4)",
+    "icon": "draught",
+    "examine": "A bitter tonic: you start a fight already braced.",
+    "value": 14,
+    "color": "#8a5ac8",
+    "tags": [
+      "potion",
+      "bracing_tonic"
+    ],
+    "consumable": {
+      "verb": "Drink",
+      "cooldownGroup": "potion",
+      "cooldownTicks": 2,
+      "attackDelayTicks": 1,
+      "animation": "drink",
+      "effects": [
+        {
+          "op": "addPhlegm",
+          "amount": 10
+        }
+      ],
+      "leaves": "bracing_tonic_3"
+    }
+  },
+  {
+    "id": "bracing_tonic_3",
+    "name": "Bracing tonic (3)",
+    "icon": "draught",
+    "examine": "A bitter tonic: you start a fight already braced.",
+    "value": 13,
+    "color": "#8a5ac8",
+    "tags": [
+      "potion",
+      "bracing_tonic"
+    ],
+    "consumable": {
+      "verb": "Drink",
+      "cooldownGroup": "potion",
+      "cooldownTicks": 2,
+      "attackDelayTicks": 1,
+      "animation": "drink",
+      "effects": [
+        {
+          "op": "addPhlegm",
+          "amount": 10
+        }
+      ],
+      "leaves": "bracing_tonic_2"
+    }
+  },
+  {
+    "id": "bracing_tonic_2",
+    "name": "Bracing tonic (2)",
+    "icon": "draught",
+    "examine": "A bitter tonic: you start a fight already braced.",
+    "value": 12,
+    "color": "#8a5ac8",
+    "tags": [
+      "potion",
+      "bracing_tonic"
+    ],
+    "consumable": {
+      "verb": "Drink",
+      "cooldownGroup": "potion",
+      "cooldownTicks": 2,
+      "attackDelayTicks": 1,
+      "animation": "drink",
+      "effects": [
+        {
+          "op": "addPhlegm",
+          "amount": 10
+        }
+      ],
+      "leaves": "bracing_tonic_1"
+    }
+  },
+  {
+    "id": "bracing_tonic_1",
+    "name": "Bracing tonic (1)",
+    "icon": "draught",
+    "examine": "A bitter tonic: you start a fight already braced.",
+    "value": 11,
+    "color": "#8a5ac8",
+    "tags": [
+      "potion",
+      "bracing_tonic"
+    ],
+    "consumable": {
+      "verb": "Drink",
+      "cooldownGroup": "potion",
+      "cooldownTicks": 2,
+      "attackDelayTicks": 1,
+      "animation": "drink",
+      "effects": [
+        {
+          "op": "addPhlegm",
+          "amount": 10
+        }
+      ],
+      "leaves": "empty_vial"
+    }
+  },
+  {
+    "id": "melee_draught_4",
+    "name": "Melee draught (4)",
+    "icon": "draught",
+    "examine": "Red and warm. It steadies the sword arm.",
+    "value": 50,
+    "color": "#8a5ac8",
+    "tags": [
+      "potion",
+      "melee_draught"
+    ],
+    "consumable": {
+      "verb": "Drink",
+      "cooldownGroup": "potion",
+      "cooldownTicks": 2,
+      "attackDelayTicks": 1,
+      "animation": "drink",
+      "effects": [
+        {
+          "op": "boostSkill",
+          "skill": "melee",
+          "amount": 3,
+          "percent": 5,
+          "ticks": 500
+        }
+      ],
+      "leaves": "melee_draught_3"
+    }
+  },
+  {
+    "id": "melee_draught_3",
+    "name": "Melee draught (3)",
+    "icon": "draught",
+    "examine": "Red and warm. It steadies the sword arm.",
+    "value": 40,
+    "color": "#8a5ac8",
+    "tags": [
+      "potion",
+      "melee_draught"
+    ],
+    "consumable": {
+      "verb": "Drink",
+      "cooldownGroup": "potion",
+      "cooldownTicks": 2,
+      "attackDelayTicks": 1,
+      "animation": "drink",
+      "effects": [
+        {
+          "op": "boostSkill",
+          "skill": "melee",
+          "amount": 3,
+          "percent": 5,
+          "ticks": 500
+        }
+      ],
+      "leaves": "melee_draught_2"
+    }
+  },
+  {
+    "id": "melee_draught_2",
+    "name": "Melee draught (2)",
+    "icon": "draught",
+    "examine": "Red and warm. It steadies the sword arm.",
+    "value": 30,
+    "color": "#8a5ac8",
+    "tags": [
+      "potion",
+      "melee_draught"
+    ],
+    "consumable": {
+      "verb": "Drink",
+      "cooldownGroup": "potion",
+      "cooldownTicks": 2,
+      "attackDelayTicks": 1,
+      "animation": "drink",
+      "effects": [
+        {
+          "op": "boostSkill",
+          "skill": "melee",
+          "amount": 3,
+          "percent": 5,
+          "ticks": 500
+        }
+      ],
+      "leaves": "melee_draught_1"
+    }
+  },
+  {
+    "id": "melee_draught_1",
+    "name": "Melee draught (1)",
+    "icon": "draught",
+    "examine": "Red and warm. It steadies the sword arm.",
+    "value": 20,
+    "color": "#8a5ac8",
+    "tags": [
+      "potion",
+      "melee_draught"
+    ],
+    "consumable": {
+      "verb": "Drink",
+      "cooldownGroup": "potion",
+      "cooldownTicks": 2,
+      "attackDelayTicks": 1,
+      "animation": "drink",
+      "effects": [
+        {
+          "op": "boostSkill",
+          "skill": "melee",
+          "amount": 3,
+          "percent": 5,
+          "ticks": 500
+        }
+      ],
+      "leaves": "empty_vial"
+    }
+  },
+  {
+    "id": "occult_draught_4",
+    "name": "Occult draught (4)",
+    "icon": "draught",
+    "examine": "Black-green and sharp. The humours run quicker for it.",
+    "value": 58,
+    "color": "#8a5ac8",
+    "tags": [
+      "potion",
+      "occult_draught"
+    ],
+    "consumable": {
+      "verb": "Drink",
+      "cooldownGroup": "potion",
+      "cooldownTicks": 2,
+      "attackDelayTicks": 1,
+      "animation": "drink",
+      "effects": [
+        {
+          "op": "boostSkill",
+          "skill": "occultism",
+          "amount": 3,
+          "percent": 5,
+          "ticks": 500
+        }
+      ],
+      "leaves": "occult_draught_3"
+    }
+  },
+  {
+    "id": "occult_draught_3",
+    "name": "Occult draught (3)",
+    "icon": "draught",
+    "examine": "Black-green and sharp. The humours run quicker for it.",
+    "value": 46,
+    "color": "#8a5ac8",
+    "tags": [
+      "potion",
+      "occult_draught"
+    ],
+    "consumable": {
+      "verb": "Drink",
+      "cooldownGroup": "potion",
+      "cooldownTicks": 2,
+      "attackDelayTicks": 1,
+      "animation": "drink",
+      "effects": [
+        {
+          "op": "boostSkill",
+          "skill": "occultism",
+          "amount": 3,
+          "percent": 5,
+          "ticks": 500
+        }
+      ],
+      "leaves": "occult_draught_2"
+    }
+  },
+  {
+    "id": "occult_draught_2",
+    "name": "Occult draught (2)",
+    "icon": "draught",
+    "examine": "Black-green and sharp. The humours run quicker for it.",
+    "value": 34,
+    "color": "#8a5ac8",
+    "tags": [
+      "potion",
+      "occult_draught"
+    ],
+    "consumable": {
+      "verb": "Drink",
+      "cooldownGroup": "potion",
+      "cooldownTicks": 2,
+      "attackDelayTicks": 1,
+      "animation": "drink",
+      "effects": [
+        {
+          "op": "boostSkill",
+          "skill": "occultism",
+          "amount": 3,
+          "percent": 5,
+          "ticks": 500
+        }
+      ],
+      "leaves": "occult_draught_1"
+    }
+  },
+  {
+    "id": "occult_draught_1",
+    "name": "Occult draught (1)",
+    "icon": "draught",
+    "examine": "Black-green and sharp. The humours run quicker for it.",
+    "value": 22,
+    "color": "#8a5ac8",
+    "tags": [
+      "potion",
+      "occult_draught"
+    ],
+    "consumable": {
+      "verb": "Drink",
+      "cooldownGroup": "potion",
+      "cooldownTicks": 2,
+      "attackDelayTicks": 1,
+      "animation": "drink",
+      "effects": [
+        {
+          "op": "boostSkill",
+          "skill": "occultism",
+          "amount": 3,
+          "percent": 5,
+          "ticks": 500
+        }
+      ],
+      "leaves": "empty_vial"
+    }
+  },
+  {
+    "id": "defence_draught_4",
+    "name": "Defence draught (4)",
+    "icon": "draught",
+    "examine": "Thick and grey. The skin feels like leather after.",
+    "value": 90,
+    "color": "#8a5ac8",
+    "tags": [
+      "potion",
+      "defence_draught"
+    ],
+    "consumable": {
+      "verb": "Drink",
+      "cooldownGroup": "potion",
+      "cooldownTicks": 2,
+      "attackDelayTicks": 1,
+      "animation": "drink",
+      "effects": [
+        {
+          "op": "boostSkill",
+          "skill": "defence",
+          "amount": 3,
+          "percent": 5,
+          "ticks": 500
+        }
+      ],
+      "leaves": "defence_draught_3"
+    }
+  },
+  {
+    "id": "defence_draught_3",
+    "name": "Defence draught (3)",
+    "icon": "draught",
+    "examine": "Thick and grey. The skin feels like leather after.",
+    "value": 70,
+    "color": "#8a5ac8",
+    "tags": [
+      "potion",
+      "defence_draught"
+    ],
+    "consumable": {
+      "verb": "Drink",
+      "cooldownGroup": "potion",
+      "cooldownTicks": 2,
+      "attackDelayTicks": 1,
+      "animation": "drink",
+      "effects": [
+        {
+          "op": "boostSkill",
+          "skill": "defence",
+          "amount": 3,
+          "percent": 5,
+          "ticks": 500
+        }
+      ],
+      "leaves": "defence_draught_2"
+    }
+  },
+  {
+    "id": "defence_draught_2",
+    "name": "Defence draught (2)",
+    "icon": "draught",
+    "examine": "Thick and grey. The skin feels like leather after.",
+    "value": 50,
+    "color": "#8a5ac8",
+    "tags": [
+      "potion",
+      "defence_draught"
+    ],
+    "consumable": {
+      "verb": "Drink",
+      "cooldownGroup": "potion",
+      "cooldownTicks": 2,
+      "attackDelayTicks": 1,
+      "animation": "drink",
+      "effects": [
+        {
+          "op": "boostSkill",
+          "skill": "defence",
+          "amount": 3,
+          "percent": 5,
+          "ticks": 500
+        }
+      ],
+      "leaves": "defence_draught_1"
+    }
+  },
+  {
+    "id": "defence_draught_1",
+    "name": "Defence draught (1)",
+    "icon": "draught",
+    "examine": "Thick and grey. The skin feels like leather after.",
+    "value": 30,
+    "color": "#8a5ac8",
+    "tags": [
+      "potion",
+      "defence_draught"
+    ],
+    "consumable": {
+      "verb": "Drink",
+      "cooldownGroup": "potion",
+      "cooldownTicks": 2,
+      "attackDelayTicks": 1,
+      "animation": "drink",
+      "effects": [
+        {
+          "op": "boostSkill",
+          "skill": "defence",
+          "amount": 3,
+          "percent": 5,
+          "ticks": 500
+        }
+      ],
+      "leaves": "empty_vial"
+    }
   }
 ]
