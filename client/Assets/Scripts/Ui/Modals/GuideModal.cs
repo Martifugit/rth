@@ -250,19 +250,51 @@ namespace Rth.Client.Ui.Modals
                                 Text = item.Name, Tooltip = GameText.Describe(item, 1),
                             });
             foreach (Rth.Shared.World.ObjectDef obj in content.Objects)
-                if (obj.Node != null && obj.Node.Skill == skill)
+            {
+                Rth.Shared.World.NodeDef node = obj.Node;
+                if (node == null || node.Skill != skill) continue;
+                Texture2D skillIcon = IconLibrary.Get(content.Skills.FirstOrDefault(s => s.Id == skill)?.Icon ?? skill);
+                string how = node.Tool == null ? ""
+                    : node.ToolOptional ? "\nA " + node.Tool + " helps."
+                    : "\nNeeds " + (node.ToolTier > 1 ? "a tier-" + node.ToolTier + " " : "a ") + node.Tool + ".";
+                if (node.Trap != null) how += "\nSet a trap, leave it, and come back to empty it.";
+                if (node.Roam != null) how += "\nThe spot moves now and then.";
+                if (node.Catches.Count > 0)
+                {
+                    // One line for each thing the node gives by level (perch at 1, pike at 20).
+                    foreach (Rth.Shared.World.NodeCatch c in node.Catches)
+                    {
+                        ItemDef item = Session.Item(c.Item);
+                        unlocks.Add(new Unlock
+                        {
+                            Level = Mathf.Max(c.Level, node.Level), Kind = Kind.Gathering, Badge = "Gathering",
+                            Icon = item != null ? IconLibrary.ForItem(item) : skillIcon, Tint = item != null ? IconLibrary.ItemTint(item) : UiKit.IconTint,
+                            Text = Capitalise(node.Verb) + " " + (item?.Name.ToLowerInvariant() ?? c.Item) + " at the " + obj.Name.ToLowerInvariant(),
+                            Tooltip = UiKit.Title(obj.Name) + how + "\n" + UiKit.Colour(c.Xp.ToString("0.#") + " XP each", UiKit.Value),
+                        });
+                    }
+                }
+                else
                     unlocks.Add(new Unlock
                     {
-                        Level = obj.Node.Level, Kind = Kind.Gathering, Badge = "Gathering", Icon = IconLibrary.Get(content.Skills.FirstOrDefault(s => s.Id == skill)?.Icon ?? skill), Tint = UiKit.IconTint,
-                        Text = Capitalise(obj.Node.Verb) + " " + obj.Name.ToLowerInvariant(),
-                        Tooltip = UiKit.Title(obj.Name) + (obj.Node.Tool != null ? "\nNeeds " + (obj.Node.ToolTier > 1 ? "a tier-" + obj.Node.ToolTier + " " : "a ") + obj.Node.Tool + "." : "")
-                            + "\n" + UiKit.Colour(obj.Node.Xp.ToString("0.#") + " XP each", UiKit.Value),
+                        Level = node.Level, Kind = Kind.Gathering, Badge = "Gathering", Icon = skillIcon, Tint = UiKit.IconTint,
+                        Text = Capitalise(node.Verb) + " " + obj.Name.ToLowerInvariant(),
+                        Tooltip = UiKit.Title(obj.Name) + how + "\n" + UiKit.Colour(node.Xp.ToString("0.#") + " XP each", UiKit.Value),
                     });
+                if (node.Tending != null)
+                    unlocks.Add(new Unlock
+                    {
+                        Level = node.Level, Kind = Kind.Gathering, Badge = "Tending", Icon = skillIcon, Tint = UiKit.IconTint,
+                        Text = "Tend the " + obj.Name.ToLowerInvariant(),
+                        Tooltip = UiKit.Title("Tending") + "\nNow and then one " + obj.Name.ToLowerInvariant() + " of a stand needs its foot cleared. Tend it, and for a while it gives more and is cut back less, for everyone.\n"
+                            + UiKit.Colour(node.Tending.Xp.ToString("0.#") + " XP", UiKit.Value),
+                    });
+            }
             foreach (RecipeInfo recipe in content.Recipes)
                 if (recipe.Skill == skill)
                 {
                     ItemDef input = recipe.Inputs.Count > 0 ? Session.Item(recipe.Inputs[0].Item) : null;
-                    string station = content.Objects.FirstOrDefault(o => o.Id == recipe.Station)?.Name ?? recipe.Station;
+                    string station = string.IsNullOrEmpty(recipe.Station) ? null : content.Objects.FirstOrDefault(o => o.Id == recipe.Station)?.Name ?? recipe.Station;
                     unlocks.Add(new Unlock
                     {
                         Level = recipe.Level,
@@ -271,7 +303,7 @@ namespace Rth.Client.Ui.Modals
                         Icon = input != null ? IconLibrary.ForItem(input) : IconLibrary.Get("pouch"),
                         Tint = input != null ? IconLibrary.ItemTint(input) : UiKit.IconTint,
                         Text = Capitalise(recipe.Verb) + " " + recipe.Name,
-                        Tooltip = UiKit.Title(Capitalise(recipe.Verb) + " " + recipe.Name) + "\nAt the " + station.ToLowerInvariant() + ".\n" + UiKit.Colour(recipe.Xp.ToString("0.#") + " XP each", UiKit.Value),
+                        Tooltip = UiKit.Title(Capitalise(recipe.Verb) + " " + recipe.Name) + (station != null ? "\nAt the " + station.ToLowerInvariant() + "." : "\nFrom your pack.") + "\n" + UiKit.Colour(recipe.Xp.ToString("0.#") + " XP each", UiKit.Value),
                     });
                 }
             return unlocks;
