@@ -196,6 +196,7 @@ public class GatheringSkillsTests
 
         Act(fx, alice, needy!.Placed, "tend", 6);
         Assert.True(needy.IsTended(fx.World.CurrentTick));
+        Assert.Null(fx.Player("Alice").Interaction);                      // tending is its own act: no chopping after
         Assert.Equal(9, fx.World.Get<SkillSystem>().Xp(fx.Player("Alice"), "butchering"));
         Assert.Contains(State(alice).Tended, t => t.X == needy.Placed.X);
 

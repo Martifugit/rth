@@ -394,13 +394,13 @@ namespace Rth.Server.Game
             node.FireTowards = player.Position;
             World.Animate(player, "work", placed.Tile);
             if (fire.LightXp > 0) World.Find<SkillSystem>()?.AddXp(player, def.Skill, fire.LightXp);
+            // Its own act: the XP, and the miner clicks the rock to work it again (as tending is).
             World.Tell(player, TextKind.Info, "You stack the logs against the rock and set them burning.");
-            World.StartInteraction(player, new GatherInteraction(placed));   // and go on mining while it heats
         }
 
         /// <summary>
         /// Douses the burning stone with water the player carries: their side cracks as hot as it is
-        /// now (the sweet spot is the peak of its glow), then they go on mining.
+        /// now (the sweet spot is the peak of its glow). Then they click the rock to work it.
         /// </summary>
         public void Douse(Player player, PlacedObject placed)
         {
@@ -438,7 +438,6 @@ namespace Rth.Server.Game
                 : heat >= 0.6 ? "The stone cracks in a cloud of steam."
                 : "The water hisses; the stone was barely warm.");
             World.Animate(player, "work", placed.Tile);
-            World.StartInteraction(player, new GatherInteraction(placed));
         }
 
         private static bool Matches(string spec, ItemDef item) =>

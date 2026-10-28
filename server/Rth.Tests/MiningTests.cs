@@ -83,6 +83,8 @@ public class MiningTests
         fx.World.Get<ItemSystem>().Give(fx.Player("Alice"), "log", 2);
         Use(fx, alice, "Alice", "log");
         Assert.Equal(1, fx.World.Get<ItemSystem>().CountOf(fx.Player("Alice"), "log"));
+        fx.Ticks(3);
+        Assert.Null(fx.Player("Alice").Interaction);                      // laying it is its own act: no mining after
         FakeConnection bob = fx.Login("Bob");
         fx.Ticks(1);
         Assert.True(bob.Sent.OfType<JsonStateMessage>().Last(m => m.Key == GatheringSystem.StateKey).Parse<List<NodeState>>().Single().Burning);
@@ -106,8 +108,10 @@ public class MiningTests
         Assert.True(Xp(fx, "Alice") - before >= 8);                       // the douse's XP, at full heat
         GatheringSystem.Miner miner = fx.Player("Alice").Component<GatheringSystem.Miner>();
         Assert.Equal(1, miner.Crack, 6);
-        miner.Progress = 0;                                               // she has been mining while it heated; count from here
-        fx.Ticks(6);                                                      // she goes on mining: two cracked strikes
+        Assert.Null(fx.Player("Alice").Interaction);                      // dousing is its own act: it doesn't mine
+        Act(fx, alice, "gather");                                         // she works the rock again
+        miner.Progress = 0;                                               // count from here
+        fx.Ticks(4);                                                      // two cracked strikes
         Assert.True(miner.Progress > 2 * 20);                              // more than two plain strikes would give
         Assert.True(gathering.HeatFor(fx.Player("Alice"), node, def) < 0.7); // her side cooled when she doused it, and is climbing again
 
