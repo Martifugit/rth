@@ -36,6 +36,9 @@ namespace Rth.Client.Editor
 
         private const string Catalog = Root + "animations.json";
 
+        // The body whose avatar our own clips share (both sexes have the same skeleton).
+        private const string Body = Root + "HumanMale.fbx";
+
         // The catalog's entry for a clip file (an empty one if it has none).
         private ClipAnimator.ClipTuning Entry(string name)
         {
@@ -71,6 +74,16 @@ namespace Rth.Client.Editor
             // OnPostprocessModel records it and imports again.
             HumanDescription description = importer.humanDescription;
             if (!HasOurSkeleton(description.skeleton?.Select(b => b.name))) return;
+
+            // A clip made on our skeleton (animate.py) reads its axes as the body does: a different
+            // axis conversion turns the Rig half round. (Its T-pose comes from the body too; see
+            // OnPostprocessModel.)
+            if (animation && AssetImporter.GetAtPath(Body) is ModelImporter body)
+            {
+                context.DependsOnSourceAsset(Body);
+                importer.bakeAxisConversion = body.bakeAxisConversion;
+            }
+
             description.human = Map.Select(m => new HumanBone
             {
                 boneName = m.bone,
@@ -85,11 +98,15 @@ namespace Rth.Client.Editor
             if (!assetPath.StartsWith(Root)) return;
             if (!HasOurSkeleton(root.GetComponentsInChildren<Transform>(true).Select(t => t.name))) return;
             var importer = (ModelImporter)assetImporter;
+            // A clip's file holds a posed frame where the rest pose should be, and an avatar made
+            // from that turns every bone by the pose (the pickaxe's second hand let go). Its bones
+            // are the body's, laid out the same way, so the body's recorded T-pose stands in.
+            Dictionary<string, Quaternion> tPose = assetPath.StartsWith(Animations) ? BodyRest() : null;
             SkeletonBone[] skeleton = root.GetComponentsInChildren<Transform>(true).Select(t => new SkeletonBone
             {
                 name = t.name,
                 position = t.localPosition,
-                rotation = t.localRotation,
+                rotation = tPose != null && tPose.TryGetValue(t.name, out Quaternion rest) ? rest : t.localRotation,
                 scale = t.localScale,
             }).ToArray();
             if (Same(importer.humanDescription.skeleton, skeleton)) return;
@@ -105,6 +122,16 @@ namespace Rth.Client.Editor
                 AssetDatabase.WriteImportSettingsIfDirty(path);
                 AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
             };
+        }
+
+        /// <summary>The body's T-pose by bone (local rotations), or null before it has been imported.</summary>
+        private static Dictionary<string, Quaternion> BodyRest()
+        {
+            SkeletonBone[] bones = (AssetImporter.GetAtPath(Body) as ModelImporter)?.humanDescription.skeleton;
+            if (bones == null || !HasOurSkeleton(bones.Select(b => b.name))) return null;
+            var rest = new Dictionary<string, Quaternion>();
+            foreach (SkeletonBone b in bones) rest[b.name] = b.rotation;
+            return rest;
         }
 
         private static bool HasOurSkeleton(IEnumerable<string> names)

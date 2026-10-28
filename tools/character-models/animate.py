@@ -5,7 +5,8 @@ Run inside Blender (5.x), through the Blender MCP or:
     blender --background --python tools/character-models/animate.py
 
 It opens the built HumanMale.blend (run build_humanoid.py first), poses the Rig frame by frame and
-exports each clip as client/Assets/Resources/Characters/Animations/<name>.fbx: the armature only,
+exports each clip as client/Assets/Resources/Characters/Animations/<name>.fbx: the armature and one
+small body part (so the file is laid out as the body's, see export()),
 with the same axis settings as the body, so CharacterImporter maps it as one of our own skeletons.
 Every clip needs an entry in animations.json (the catalog). Set CLIPS (names) to build only some,
 EXPORT = False to pose without writing, and PREVIEW = True to stand a copy of the character per
@@ -1010,9 +1011,15 @@ def export(rig, clip):
         bpy.ops.object.mode_set(mode="OBJECT")
     bpy.ops.object.select_all(action="DESELECT")
     rig.select_set(True)
+    # One small skinned part goes along, so the file is laid out as the body's is: alone, the Rig
+    # becomes the file's root in Unity, turned and facing the other way, with no bind pose to say
+    # where the T-pose is. CharacterImporter then gives the clip the body's avatar.
+    hands = bpy.data.objects.get("body_hands")
+    if hands is not None:
+        hands.select_set(True)
     bpy.context.view_layer.objects.active = rig
     bpy.ops.export_scene.fbx(
-        filepath=path, use_selection=True, object_types={"ARMATURE"},
+        filepath=path, use_selection=True, object_types={"ARMATURE", "MESH"},
         apply_scale_options="FBX_SCALE_ALL", axis_forward="-Z", axis_up="Y",
         add_leaf_bones=False, use_armature_deform_only=False, bake_space_transform=True,
         bake_anim=True, bake_anim_use_all_actions=False, bake_anim_use_nla_strips=False,
