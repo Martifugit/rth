@@ -18,7 +18,7 @@ namespace Rth.Server.Game
     /// out. A recipe can go wrong (food burns) by level and station; a station can make recipes
     /// faster (its tick scale and its draw, see <see cref="StationSystem"/>).
     /// </summary>
-    public sealed class RecipeSystem : GameSystem
+    public sealed class RecipeSystem : GameSystem, IObjectUseHandler
     {
         public const string Process = "process";
 
@@ -121,6 +121,14 @@ namespace Rth.Server.Game
             if (!World.Content.Objects.TryGetValue(station.Type, out ObjectDef? def)) return;
             List<RecipeDef> recipes = RecipesAt(station.Type).Where(r => item == null || r.Inputs.Any(i => i.Item == item)).ToList();
             OfferRecipes(player, recipes, station, def.Name, (recipes.FirstOrDefault()?.Verb ?? "work on"));
+        }
+
+        /// <summary>An item used on a station offers the recipes there that take it (ore on a furnace).</summary>
+        public bool OnObjectUse(Player player, ItemDef item, PlacedObject placed, ObjectDef def)
+        {
+            if (!RecipesAt(placed.Type).Any(r => r.Inputs.Any(i => i.Item == item.Id))) return false;
+            Offer(player, placed, item.Id);
+            return true;
         }
 
         /// <summary>Offers the recipes with no station that start with this item (cleaning a herb).</summary>

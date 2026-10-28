@@ -17,7 +17,7 @@ namespace Rth.Server.Game
     /// smithy where people take turns at the bellows runs hot for all. Clients near a burning
     /// station get it as the "draw" server state.
     /// </summary>
-    public sealed class StationSystem : GameSystem
+    public sealed class StationSystem : GameSystem, IObjectUseHandler
     {
         /// <summary>One placed station's draw: ticks of burning left.</summary>
         private sealed class Draw
@@ -115,6 +115,10 @@ namespace Rth.Server.Game
             World.Tell(player, TextKind.Info, "You feed the " + item.Name.ToLowerInvariant() + " to the fire, and it draws hard.");
             return true;
         }
+
+        /// <summary>Fuel used on a station with a draw feeds it.</summary>
+        public bool OnObjectUse(Player player, ItemDef item, PlacedObject placed, ObjectDef def) =>
+            def.Station?.Draw != null && FuelFor(placed, item) != null && Feed(player, placed, item);
 
         public override void SendState(Player player)
         {

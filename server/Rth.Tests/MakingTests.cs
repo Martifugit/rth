@@ -251,6 +251,32 @@ public class MakingTests
         Assert.False(stations.Feed(fx.Player("Alice"), Placed[0], fx.World.Content.Items["bar"]));  // not fuel
     }
 
+    private static void UseOn(WorldFixture fx, FakeConnection c, string item, string type)
+    {
+        Rth.Server.Items.ItemContainer pack = fx.World.Get<ItemSystem>().Of(fx.Player("Alice")).Inventory;
+        int slot = Enumerable.Range(0, pack.Size).First(i => !pack.IsEmpty(i) && pack[i].ItemId == item);
+        PlacedObject o = Placed.First(p => p.Type == type);
+        c.FromClient(new UseItemMessage { Slot = slot, ItemId = item, Target = UseTarget.Object, ObjectType = type, Plane = 0, X = o.X, Y = o.Y });
+        fx.Ticks(2);
+    }
+
+    [Fact]
+    public void UsingAnInputOnAStationOffersItsRecipesAndFuelFeedsTheDraw()
+    {
+        var (fx, alice) = World();
+        Give(fx, "hammer");
+        Give(fx, "bar", 3);
+        Give(fx, "charcoal", 2);
+        UseOn(fx, alice, "bar", "forge");
+        Assert.True(Window(alice).IsOpen);
+        UseOn(fx, alice, "charcoal", "forge");
+        Assert.Equal(1, Count(fx, "charcoal"));
+        Assert.True(fx.World.Get<StationSystem>().IsHot(Placed[0]));
+        Give(fx, "gem");
+        UseOn(fx, alice, "gem", "forge");
+        Assert.Contains(alice.Texts, t => t == UseSystem.Nothing);
+    }
+
     [Fact]
     public void AnItemCanBeProcessedByItself()
     {
