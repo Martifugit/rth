@@ -1,6 +1,7 @@
 using Rth.Server;
 using Rth.Server.Content;
 using Rth.Server.Game;
+using Rth.Shared.Combat;
 using Rth.Shared.Items;
 using Rth.Shared.Net;
 using Rth.Shared.World;
@@ -19,6 +20,7 @@ public class GatheringSkillsTests
     private static ContentParts Parts()
     {
         ContentParts parts = TestContent.Parts();
+        parts.Statuses.Add(new StatusDef { Id = "whisperer", Name = "Whisperer" });
         parts.Items.Add(new ItemDef { Id = "perch", Name = "Perch" });
         parts.Items.Add(new ItemDef { Id = "pike", Name = "Pike" });
         parts.Items.Add(new ItemDef { Id = "herb", Name = "Herb" });
@@ -33,7 +35,8 @@ public class GatheringSkillsTests
             {
                 Skill = "butchering", Ticks = 1, BaseChance = 1, MinChance = 1, MaxChance = 1, DepleteChance = 0,
                 Catches = { new NodeCatch { Item = "perch", Level = 1, Xp = 5 }, new NodeCatch { Item = "pike", Level = 20, Xp = 20, Weight = 1000 } },
-                Roam = new NodeRoamDef { Active = 1, GroupRadius = 6, MinTicks = 1000, MaxTicks = 1000 },
+                Roam = new NodeRoamDef { MinTicks = 1000, MaxTicks = 1000, AwayMinTicks = 1000, AwayMaxTicks = 1000, BubbleChance = 0, BubbleTicks = 10,
+                    Reading = new NodeReadingDef { Status = "whisperer", PerStack = 0.2, MaxStacks = 3, DecayTicks = 20, Message = "Read it." } },
             },
         });
         parts.Objects.Add(new ObjectDef
@@ -94,39 +97,114 @@ public class GatheringSkillsTests
     private static GatheringWorldState State(FakeConnection c) =>
         c.Sent.OfType<JsonStateMessage>().LastOrDefault(m => m.Key == GatheringWorldState.StateKey)?.Parse<GatheringWorldState>() ?? new GatheringWorldState();
 
-    [Fact]
-    public void ARoamingGroupHasOneSpotAndTheRestAreDormant()
+    /// <summary>Sets a spot's state by hand: here (or gone, maybe bubbling), with its next change far off.</summary>
+    private static GatheringSystem.Node Spot(WorldFixture fx, int index, bool here, bool bubbling = false, int changeIn = 1000)
     {
-        var (fx, alice) = World();
-        var spots = fx.World.Get<GatheringSystem>().Nodes.Where(n => n.Placed.Type == "spot").ToList();
-        Assert.Equal(1, spots.Count(n => !n.Dormant));
-        Assert.Equal(2, State(alice).Dormant.Count(d => d.Type == "spot"));
-        GatheringSystem.Node asleep = spots.First(n => n.Dormant);
-        Act(fx, alice, asleep.Placed, ticks: 3);
-        Assert.Contains(alice.Texts, t => t == "There's nothing here now.");
+        GatheringSystem.Node n = NodeOf(fx, Placed[index]);
+        uint now = fx.World.CurrentTick;
+        n.Dormant = !here;
+        n.NextChange = now + (uint)changeIn;
+        n.BubbleFrom = !here && bubbling ? now : 0;
+        return n;
     }
 
     [Fact]
-    public void CatchesFollowLevelAndUsedUpSpotsMove()
+    public void SpotsComeAndGoEachOnItsOwnTimer()
+    {
+        var parts = Parts();
+        NodeRoamDef roam = parts.Objects.Single(o => o.Id == "spot").Node!.Roam!;
+        roam.MinTicks = 20; roam.MaxTicks = 60; roam.AwayMinTicks = 15; roam.AwayMaxTicks = 40;
+        var fx = new WorldFixture(Maps.Open(30, 30, Spawn), new ServerConfig(), GameContent.Create(parts), null, Placed);
+        fx.Login("Alice");
+        var spots = fx.World.Get<GatheringSystem>().Nodes.Where(n => n.Placed.Type == "spot").ToList();
+        var changes = new int[spots.Count];
+        var seen = new HashSet<string>();
+        bool[] was = spots.Select(n => n.Dormant).ToArray();
+        for (int t = 0; t < 600; t++)
+        {
+            fx.Ticks(1);
+            for (int k = 0; k < spots.Count; k++)
+                if (spots[k].Dormant != was[k]) { changes[k]++; was[k] = spots[k].Dormant; }
+            seen.Add(string.Concat(spots.Select(n => n.Dormant ? "0" : "1")));
+        }
+        Assert.All(changes, c => Assert.True(c >= 4, "changed " + c));   // each came and went, many times
+        Assert.True(seen.Count >= 5);                                      // in many mixes: no spot waits on another
+    }
+
+    [Fact]
+    public void AGoneSpotCantBeFishedButABubblingOneCanAndReadsTheWater()
     {
         var (fx, alice) = World();
-        GatheringSystem.Node spot = fx.World.Get<GatheringSystem>().Nodes.First(n => n.Placed.Type == "spot" && !n.Dormant);
-        Act(fx, alice, spot.Placed, ticks: 8);
+        Player p = fx.Player("Alice");
+        GatheringSystem gathering = fx.World.Get<GatheringSystem>();
+        Spot(fx, 0, here: false);
+        Act(fx, alice, Placed[0], ticks: 3);
+        Assert.Contains(alice.Texts, t => t == "There's nothing here now.");
+
+        GatheringSystem.Node n = Spot(fx, 0, here: false, bubbling: true, changeIn: 8);
+        Act(fx, alice, Placed[0], ticks: 3);
+        Assert.Contains(alice.Texts, t => t.Contains("bubbling"));
+        Assert.Contains(State(alice).Bubbling, b => b.X == Placed[0].X);
+        Assert.Equal(0, Count(fx, "Alice", "perch"));              // waiting: nothing yet
+        Assert.NotNull(p.Interaction);
+        fx.Ticks(8);                                               // the fish arrive while she waits
+        Assert.False(n.Dormant);
+        Assert.Equal(1, gathering.ReadingStacks(p, "whisperer"));
+        Assert.Contains(alice.Texts, t => t == "Read it.");
+        fx.Ticks(4);
+        Assert.True(Count(fx, "Alice", "perch") > 0);              // and she fishes on
+        Assert.Contains(fx.World.StatusesOf(p), st => st.Id == "whisperer" && st.Magnitude == 20);
+    }
+
+    [Fact]
+    public void StacksRaiseTheCatchAndWearOffOneAtATime()
+    {
+        var parts = Parts();
+        parts.Objects.Single(o => o.Id == "spot").Node!.BaseChance = 0.25;
+        parts.Objects.Single(o => o.Id == "spot").Node!.MinChance = 0;
+        var fx = new WorldFixture(Maps.Open(30, 30, Spawn), new ServerConfig(), GameContent.Create(parts), null, Placed);
+        FakeConnection alice = fx.Login("Alice");
+        Player p = fx.Player("Alice");
+        GatheringSystem gathering = fx.World.Get<GatheringSystem>();
+        NodeDef def = parts.Objects.Single(o => o.Id == "spot").Node!;
+        for (int i = 0; i < 4; i++)                                 // four reads; the cap is three
+        {
+            Spot(fx, 0, here: false, bubbling: true, changeIn: 4);
+            Act(fx, alice, Placed[0], ticks: 6);
+        }
+        Assert.Equal(3, gathering.ReadingStacks(p, "whisperer"));
+        Assert.Equal(0.6, gathering.ReadingBonus(p, def), 6);       // a fifth more a stack
+        alice.FromClient(new WalkToMessage { X = 20, Y = 20 });     // she stops fishing
+        fx.Ticks(21);
+        Assert.Equal(2, gathering.ReadingStacks(p, "whisperer"));   // one wears off every 20 ticks
+        fx.Ticks(20);
+        Assert.Equal(1, gathering.ReadingStacks(p, "whisperer"));
+        fx.Ticks(20);
+        Assert.Equal(0, gathering.ReadingStacks(p, "whisperer"));
+        Assert.DoesNotContain(fx.World.StatusesOf(p), st => st.Id == "whisperer");
+    }
+
+    [Fact]
+    public void CatchesFollowLevelAndAUsedUpSpotGoes()
+    {
+        var (fx, alice) = World();
+        Spot(fx, 0, here: true);
+        Act(fx, alice, Placed[0], ticks: 8);
         Assert.True(Count(fx, "Alice", "perch") > 0);
         Assert.Equal(0, Count(fx, "Alice", "pike"));             // pike needs level 20
         fx.World.Get<SkillSystem>().AddXp(fx.Player("Alice"), "butchering", fx.World.Content.XpCurve.XpForLevel(20));
         fx.Ticks(6);
         Assert.True(Count(fx, "Alice", "pike") > 0);               // the heavy weight wins
 
-        // A spot that is used up moves to another of its group.
         var parts = Parts();
         parts.Objects.Single(o => o.Id == "spot").Node!.DepleteChance = 1;
         var fx2 = new WorldFixture(Maps.Open(30, 30, Spawn), new ServerConfig(), GameContent.Create(parts), null, Placed);
         FakeConnection bob = fx2.Login("Bob");
-        GatheringSystem.Node first = fx2.World.Get<GatheringSystem>().Nodes.First(n => n.Placed.Type == "spot" && !n.Dormant);
-        Act(fx2, bob, first.Placed, ticks: 4);
-        Assert.True(first.Dormant);
-        Assert.Equal(1, fx2.World.Get<GatheringSystem>().Nodes.Count(n => n.Placed.Type == "spot" && !n.Dormant));
+        GatheringSystem.Node first = Spot(fx2, 0, here: true);
+        Spot(fx2, 1, here: true);
+        Act(fx2, bob, Placed[0], ticks: 4);
+        Assert.True(first.Dormant);                                // used up: gone at once
+        Assert.False(NodeOf(fx2, Placed[1]).Dormant);              // the others don't care
     }
 
     [Fact]
@@ -202,7 +280,7 @@ public class GatheringSkillsTests
 
         // Base chance 0: only tending (+1) gives logs, and a tended tree isn't cut back (scale 0).
         FakeConnection bob = fx.Login("Bob");
-        Act(fx, bob, needy.Placed, ticks: 8);
+        Act(fx, bob, needy.Placed, ticks: 12);                    // either tree: time to walk there and chop
         Assert.True(Count(fx, "Bob", "log") >= 3);
         Assert.Equal(1000, needy.YieldsLeft);                     // never cut back while tended
         Act(fx, bob, other.Placed, ticks: 8);

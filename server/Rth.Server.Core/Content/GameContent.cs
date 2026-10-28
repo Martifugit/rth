@@ -543,8 +543,17 @@ namespace Rth.Server.Content
                 foreach (NodeCatch c in node.Catches)
                     if (!items.ContainsKey(c.Item) || c.Count < 1 || c.Weight < 0) problems.Add(where + "bad catch '" + c.Item + "' x" + c.Count + ".");
                 if (node.ToolOptional && node.Tool == null) problems.Add(where + "toolOptional needs a tool kind.");
-                if (node.Roam != null && (node.Roam.Active < 1 || node.Roam.MinTicks < 1 || node.Roam.MaxTicks < node.Roam.MinTicks))
-                    problems.Add(where + "roam needs active and minTicks of at least 1, and maxTicks at least minTicks.");
+                if (node.Roam is NodeRoamDef roam)
+                {
+                    if (roam.MinTicks < 1 || roam.MaxTicks < roam.MinTicks || roam.AwayMinTicks < 1 || roam.AwayMaxTicks < roam.AwayMinTicks)
+                        problems.Add(where + "roam needs minTicks and awayMinTicks of at least 1, and each max at least its min.");
+                    if (roam.BubbleChance < 0 || roam.BubbleChance > 1 || roam.BubbleTicks < 1 || roam.BubbleTicks >= roam.AwayMinTicks)
+                        problems.Add(where + "roam's bubbleChance must be 0-1, and bubbleTicks at least 1 and shorter than awayMinTicks.");
+                    if (roam.Reading is NodeReadingDef reading && (reading.MaxStacks < 1 || reading.DecayTicks < 1 || reading.PerStack <= 0))
+                        problems.Add(where + "roam's reading needs maxStacks and decayTicks of at least 1 and a perStack above 0.");
+                    if (roam.Reading is NodeReadingDef r && !parts.Statuses.Any(st => st.Id == r.Status))
+                        problems.Add(where + "roam's reading status '" + r.Status + "' isn't in statuses.json.");
+                }
                 if (node.Trap is NodeTrapDef trap)
                 {
                     bool tagged = trap.Item.StartsWith("tag:");

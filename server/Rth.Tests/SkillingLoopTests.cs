@@ -71,7 +71,13 @@ public class SkillingLoopTests
         Assert.Equal(1, Count(fx, p, "fishing_rod"));
         Assert.Equal(1, Count(fx, p, "tinderbox"));
         fx.World.Get<ItemSystem>().Give(p, "alder_log", 1);
-        Act(fx, alice, "river_spot", "gather", 500);              // slow when left alone: about one a 25 s
+        // A player at the pond: fish while the spot is there, cast again when it comes back.
+        GatheringSystem.Node spot = fx.World.Get<GatheringSystem>().Nodes.Single(n => n.Placed.Type == "river_spot");
+        for (int t = 0; t < 3000 && Count(fx, p, "raw_perch") < 3; t += 5)
+        {
+            if (p.Interaction == null && (!spot.Dormant || spot.IsBubbling(fx.World.CurrentTick))) Act(fx, alice, "river_spot", "gather", 5);
+            else fx.Ticks(5);
+        }
         int perch = Count(fx, p, "raw_perch");
         Assert.True(perch >= 3, "caught " + perch);
         Assert.True(fx.World.Get<SkillSystem>().Xp(p, "fishing") > 0);

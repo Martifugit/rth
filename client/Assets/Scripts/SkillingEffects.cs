@@ -8,13 +8,14 @@ namespace Rth.Client
     /// Particle effects that show the state of a gathering node (drawn by <see cref="SkillingViews"/>):
     /// a tree that needs tending sheds withered leaves that tumble down out of its crown; one that has
     /// been tended glows with slow-rising pollen and a faint warm light; tending it gives a short
-    /// burst of sparks and fresh leaves. All drawn with Resources/Shaders/Particle and textures made
-    /// here (a soft glow, a leaf), so they need no assets.
+    /// burst of sparks and fresh leaves; water where the fish are about to come back bubbles, with
+    /// rings spreading. All drawn with Resources/Shaders/Particle and textures made here (a soft
+    /// glow, a leaf, a ring), so they need no assets.
     /// </summary>
     public static class SkillingEffects
     {
-        private static Texture2D _glow, _leaf;
-        private static Material _additive, _blended;
+        private static Texture2D _glow, _leaf, _ring;
+        private static Material _additive, _blended, _rings;
 
         /// <summary>The crown of a tree: the upper part of what it draws (outlines and effects left out).</summary>
         public static Bounds Crown(MapObject tree)
@@ -227,6 +228,68 @@ namespace Rth.Client
             Object.Destroy(go, 3.5f);
         }
 
+        /// <summary>Water about to hold fish: bubbles breaking the surface, rings spreading from them.</summary>
+        public static GameObject Bubbles(MapObject spot)
+        {
+            GameObject go = Holder("Bubbles", spot, spot.transform.position + Vector3.up * 0.04f);
+
+            ParticleSystem bubbles = go.AddComponent<ParticleSystem>();
+            bubbles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            ParticleSystem.MainModule main = bubbles.main;
+            main.loop = true;
+            main.prewarm = true;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.35f, 0.8f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.15f, 0.45f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.1f, 0.2f);
+            main.startColor = new ParticleSystem.MinMaxGradient(new Color(0.8f, 0.95f, 1f, 0.8f), new Color(0.65f, 0.85f, 0.95f, 0.8f));
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.maxParticles = 40;
+            ParticleSystem.EmissionModule emission = bubbles.emission;
+            emission.rateOverTime = 22f;
+            ParticleSystem.ShapeModule shape = bubbles.shape;
+            shape.shapeType = ParticleSystemShapeType.Circle;
+            shape.radius = 0.55f;
+            shape.rotation = new Vector3(-90f, 0f, 0f);            // flat on the water, bubbles rising
+            ParticleSystem.SizeOverLifetimeModule size = bubbles.sizeOverLifetime;
+            size.enabled = true;
+            size.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.4f), new Keyframe(0.8f, 1f), new Keyframe(1f, 1.4f)));
+            ParticleSystem.ColorOverLifetimeModule colour = bubbles.colorOverLifetime;
+            colour.enabled = true;
+            colour.color = Fade(0.1f, 0.75f, 1f);
+            Render(bubbles, Additive(), 0.05f);
+            bubbles.Play();
+
+            var ringsGo = new GameObject("Rings") { hideFlags = HideFlags.DontSave };
+            ringsGo.transform.SetParent(go.transform, false);
+            ParticleSystem rings = ringsGo.AddComponent<ParticleSystem>();
+            rings.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            ParticleSystem.MainModule rm = rings.main;
+            rm.loop = true;
+            rm.prewarm = true;
+            rm.startLifetime = new ParticleSystem.MinMaxCurve(1.1f, 1.6f);
+            rm.startSpeed = 0f;
+            rm.startSize = new ParticleSystem.MinMaxCurve(0.6f, 1.1f);
+            rm.startColor = new Color(0.85f, 0.95f, 1f, 0.7f);
+            rm.simulationSpace = ParticleSystemSimulationSpace.World;
+            rm.maxParticles = 12;
+            ParticleSystem.EmissionModule re = rings.emission;
+            re.rateOverTime = 4.5f;
+            ParticleSystem.ShapeModule rs = rings.shape;
+            rs.shapeType = ParticleSystemShapeType.Circle;
+            rs.radius = 0.5f;
+            rs.rotation = new Vector3(-90f, 0f, 0f);
+            ParticleSystem.SizeOverLifetimeModule rsize = rings.sizeOverLifetime;
+            rsize.enabled = true;
+            rsize.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.15f, 0f, 2f), new Keyframe(1f, 1f, 0.3f, 0f)));
+            ParticleSystem.ColorOverLifetimeModule rc = rings.colorOverLifetime;
+            rc.enabled = true;
+            rc.color = Fade(0.08f, 0.35f, 1f);
+            Render(rings, Rings(), 0.05f);
+            rings.GetComponent<ParticleSystemRenderer>().renderMode = ParticleSystemRenderMode.HorizontalBillboard;   // lying on the water
+            rings.Play();
+            return go;
+        }
+
         // ------------------------------------------------------------------ pieces
 
         private static GameObject Holder(string name, MapObject tree, Vector3 at)
@@ -288,6 +351,13 @@ namespace Rth.Client
             return _blended;
         }
 
+        private static Material Rings()
+        {
+            if (_rings != null) return _rings;
+            _rings = Make(Ring(), BlendMode.One, BlendMode.One);
+            return _rings;
+        }
+
         private static Material Make(Texture2D texture, BlendMode src, BlendMode dst)
         {
             Shader shader = Resources.Load<Shader>("Shaders/Particle");
@@ -317,6 +387,26 @@ namespace Rth.Client
             _glow.SetPixels(px);
             _glow.Apply(true);
             return _glow;
+        }
+
+        /// <summary>A thin soft ring, brightest on its rim: a ripple seen from above.</summary>
+        private static Texture2D Ring()
+        {
+            if (_ring != null) return _ring;
+            const int n = 64;
+            _ring = new Texture2D(n, n, TextureFormat.RGBA32, true) { hideFlags = HideFlags.DontSave, wrapMode = TextureWrapMode.Clamp, name = "Ring" };
+            var px = new Color[n * n];
+            for (int y = 0; y < n; y++)
+                for (int x = 0; x < n; x++)
+                {
+                    float dx = (x + 0.5f) / n * 2f - 1f, dy = (y + 0.5f) / n * 2f - 1f;
+                    float r = Mathf.Sqrt(dx * dx + dy * dy);
+                    float a = Mathf.Exp(-Mathf.Pow((r - 0.85f) / 0.06f, 2f)) + 0.25f * Mathf.Exp(-Mathf.Pow((r - 0.7f) / 0.05f, 2f));
+                    px[y * n + x] = new Color(1f, 1f, 1f, Mathf.Clamp01(a));
+                }
+            _ring.SetPixels(px);
+            _ring.Apply(true);
+            return _ring;
         }
 
         /// <summary>A leaf: pointed at both ends, a little asymmetric, with a darker midrib and a stalk.</summary>

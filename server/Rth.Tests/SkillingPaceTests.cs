@@ -43,6 +43,20 @@ public class SkillingPaceTests
     public void MiningAndFishingAreSlowWhenLeftAlone(string id) =>
         Assert.InRange(AfkXpPerHour(id), Target(Content.Objects[id].Node!.Level) * 0.4, Target(Content.Objects[id].Node!.Level) * 0.65);
 
+    /// <summary>Chopping a tended tree (Woodcutting's active layer) brings the AFK half up to about the table.</summary>
+    [Theory]
+    [InlineData("alder_tree")]
+    [InlineData("ash_tree")]
+    public void TendedTreesGiveAboutTheTable(string id)
+    {
+        NodeDef def = Content.Objects[id].Node!;
+        ToolDef tool = Content.Items.Values.Select(i => i.Tool).Where(t => t != null && t.Kind == def.Tool
+                && t.Requirements.All(r => r.Level <= def.Level)).OrderByDescending(t => t!.Tier).First()!;
+        double chance = Math.Min(def.MaxChance, def.BaseChance + tool.Success) + def.Tending!.SuccessBonus;
+        double xpPerHour = PerHour(def.Ticks) * chance * def.Xp;
+        Assert.InRange(xpPerHour, Target(def.Level) * 0.9, Target(def.Level) * 1.5);
+    }
+
     /// <summary>The XP an hour at a node's own level with the best shipped tool of its tier, nothing active.</summary>
     private static double AfkXpPerHour(string id)
     {

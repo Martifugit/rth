@@ -259,8 +259,8 @@ public class ToolTests
     [Theory]
     [InlineData("copper_seam", 4000 * 0.5)]                   // mining AFK: half the table (fire-setting brings the rest)
     [InlineData("ironstone_seam", 5000 * 0.5)]
-    [InlineData("alder_tree", 4000)]
-    [InlineData("ash_tree", 5000)]
+    [InlineData("alder_tree", 4000 * 0.5)]                    // woodcutting AFK too: tending brings the rest
+    [InlineData("ash_tree", 5000 * 0.5)]
     public void ShippedRocksAndTreesKeepToThePaceTable(string node, double target)
     {
         GameContent content = GameContent.Load(Repo.ContentDirectory);

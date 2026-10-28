@@ -9,17 +9,24 @@ namespace Rth.Server.Game
 {
     /// <summary>
     /// The gathering skills' own ways of working a node (docs/skills.md 7), on top of the one node
-    /// mechanism: catches by level (a fishing spot's perch and pike), nodes that roam instead of
-    /// running out (fishing spots, hellebore), traps left to fill (eels), and tending (Woodcutting's
+    /// mechanism: catches by level (a fishing spot's perch and pike), nodes that come and go instead
+    /// of running out (fishing spots, each on its own timer, bubbling before some returns: reading
+    /// the water, Fishing's active layer), traps left to fill (eels), and tending (Woodcutting's
     /// active layer: one tree of a cluster at a time needs its stool tended, and then gives more,
-    /// for everyone). Clients see the roaming, traps and tending as the "gathering" server state.
+    /// for everyone). Clients see the comings and goings, bubbles, traps and tending as the
+    /// "gathering" server state, and reading's stacks as a status.
     /// </summary>
-    public sealed partial class GatheringSystem
+    public sealed partial class GatheringSystem : IStatusSource
     {
         public sealed partial class Node
         {
-            /// <summary>A roaming node that isn't here now (unseen, unworkable).</summary>
+            /// <summary>A node that comes and goes and isn't here now (unseen, unworkable unless bubbling).</summary>
             public bool Dormant;
+            /// <summary>When it next comes or goes (0: not started yet), and when it starts bubbling before it comes (0: it won't).</summary>
+            public uint NextChange;
+            public uint BubbleFrom;
+
+            public bool IsBubbling(uint now) => Dormant && BubbleFrom != 0 && now >= BubbleFrom;
             /// <summary>Who has a trap set on it, and when it was set.</summary>
             public string? TrapOwner;
             public uint TrapSetAt;
@@ -31,7 +38,14 @@ namespace Rth.Server.Game
             public bool IsTended(uint now) => now < TendedUntil;
         }
 
-        private readonly Dictionary<int, uint> _nextRoam = new Dictionary<int, uint>();
+        /// <summary>Players with reading stacks (Fish whisperer), for their decay and status.</summary>
+        private readonly HashSet<Player> _readers = new HashSet<Player>();
+
+        /// <summary>A player's reading-the-water stacks, by status.</summary>
+        public sealed class Reading
+        {
+            public readonly Dictionary<string, (int Stacks, uint NextDecay, NodeReadingDef Def)> Stacks = new Dictionary<string, (int, uint, NodeReadingDef)>();
+        }
         private readonly Dictionary<int, uint> _nextTending = new Dictionary<int, uint>();
 
         private sealed class SentGathering
@@ -43,43 +57,18 @@ namespace Rth.Server.Game
         {
             World.Get<ObjectSystem>().RegisterAction(NodeTendingDef.Action, (player, placed, def) =>
                 World.StartInteraction(player, new ObjectOnceInteraction(placed, p => Tend(p, placed))));
-            SpreadRoamers();
         }
 
-        /// <summary>The radius a node type's nodes are grouped by: its surge's, roam's or tending's.</summary>
-        private static int GroupRadius(NodeDef def) => def.Surge?.GroupRadius ?? def.Roam?.GroupRadius ?? def.Tending?.GroupRadius ?? 0;
-
-        /// <summary>Wakes <see cref="NodeRoamDef.Active"/> nodes of each roaming group, at random, and puts the rest to sleep.</summary>
-        private void SpreadRoamers()
-        {
-            foreach (IGrouping<int, Node> group in _nodes.Where(n => n.Group >= 0).GroupBy(n => n.Group))
-            {
-                NodeRoamDef? roam = Def(group.First())?.Roam;
-                if (roam == null)
-                {
-                    foreach (Node n in group) n.Dormant = false;
-                    continue;
-                }
-                List<Node> shuffled = group.OrderBy(_ => World.Random.Next()).ToList();
-                for (int i = 0; i < shuffled.Count; i++) shuffled[i].Dormant = i >= Math.Max(1, roam.Active);
-            }
-        }
+        /// <summary>The radius a node type's nodes are grouped by: its surge's or tending's.</summary>
+        private static int GroupRadius(NodeDef def) => def.Surge?.GroupRadius ?? def.Tending?.GroupRadius ?? 0;
 
         private void SkillingTimers(uint now)
         {
+            ComingsAndGoings(now);
+            DecayReading(now);
             foreach (IGrouping<int, Node> group in _nodes.Where(n => n.Group >= 0).GroupBy(n => n.Group))
             {
                 NodeDef? def = Def(group.First());
-                if (def?.Roam is NodeRoamDef roam)
-                {
-                    if (!_nextRoam.TryGetValue(group.Key, out uint at)) _nextRoam[group.Key] = at = now + NextRoam(roam);
-                    if (now >= at)
-                    {
-                        _nextRoam[group.Key] = now + NextRoam(roam);
-                        List<Node> awake = group.Where(n => !n.Dormant).ToList();
-                        if (awake.Count > 0) Move(awake[World.Random.Next(awake.Count)], group, roam);
-                    }
-                }
                 if (def?.Tending is NodeTendingDef tending)
                 {
                     if (!_nextTending.TryGetValue(group.Key, out uint at)) _nextTending[group.Key] = at = now + (uint)World.Random.Next(tending.EveryTicks / 2, tending.EveryTicks + 1);
@@ -99,27 +88,104 @@ namespace Rth.Server.Game
             }
         }
 
-        private uint NextRoam(NodeRoamDef roam) => (uint)World.Random.Next(Math.Max(1, roam.MinTicks), Math.Max(roam.MinTicks, roam.MaxTicks) + 1);
+        // ------------------------------------------------------------------ coming and going, reading the water
 
-        /// <summary>A roaming node goes dormant and a dormant one of its group wakes (it "moves").</summary>
-        private void Move(Node node, IEnumerable<Node> group, NodeRoamDef roam)
+        /// <summary>Each node that comes and goes, on its own timer: it starts at random in its cycle.</summary>
+        private void ComingsAndGoings(uint now)
         {
-            List<Node> asleep = group.Where(n => n.Dormant && !ReferenceEquals(n, node)).ToList();
-            if (asleep.Count == 0) return;     // nowhere to go: it stays
+            foreach (Node node in _nodes)
+            {
+                NodeRoamDef? roam = Def(node)?.Roam;
+                if (roam == null) continue;
+                if (node.NextChange == 0)
+                {
+                    double stay = (roam.MinTicks + roam.MaxTicks) / 2.0, away = (roam.AwayMinTicks + roam.AwayMaxTicks) / 2.0;
+                    if (World.Random.NextDouble() < away / (stay + away)) GoAway(node, roam, now, quietly: true);
+                    else node.NextChange = now + (uint)World.Random.Next(1, roam.MaxTicks + 1);
+                    continue;
+                }
+                if (now < node.NextChange) continue;
+                if (node.Dormant) ComeBack(node, roam, now);
+                else GoAway(node, roam, now);
+            }
+        }
+
+        private static uint Between(Random random, int min, int max) => (uint)random.Next(Math.Max(1, min), Math.Max(min, max) + 1);
+
+        private void GoAway(Node node, NodeRoamDef roam, uint now, bool quietly = false)
+        {
             node.Dormant = true;
             node.YieldsLeft = 0;
             node.SurgingUntil = 0;
-            asleep[World.Random.Next(asleep.Count)].Dormant = false;
+            node.NextChange = now + Between(World.Random, roam.AwayMinTicks, roam.AwayMaxTicks);
+            node.BubbleFrom = World.Random.NextDouble() < roam.BubbleChance ? node.NextChange - (uint)roam.BubbleTicks : 0;
+            if (quietly) return;
             foreach (Player p in World.Players)
                 if (p.Interaction is GatherInteraction g && ReferenceEquals(g.Object, node.Placed))
                     World.Tell(p, TextKind.Info, roam.Message);
         }
 
-        /// <summary>Moves a roaming node that was used up. Returns false if it doesn't roam.</summary>
+        /// <summary>It comes back: whoever cast into its bubbles is there first, and reads the water.</summary>
+        private void ComeBack(Node node, NodeRoamDef roam, uint now)
+        {
+            node.Dormant = false;
+            node.BubbleFrom = 0;
+            node.NextChange = now + Between(World.Random, roam.MinTicks, roam.MaxTicks);
+            if (roam.Reading == null) return;
+            foreach (Player p in World.Players)
+                if (p.Interaction is GatherInteraction g && ReferenceEquals(g.Object, node.Placed)) AddReading(p, roam.Reading, now);
+        }
+
+        private void AddReading(Player player, NodeReadingDef reading, uint now)
+        {
+            Reading r = player.Component<Reading>();
+            int had = r.Stacks.TryGetValue(reading.Status, out var was) ? was.Stacks : 0;
+            r.Stacks[reading.Status] = (Math.Min(reading.MaxStacks, had + 1), now + (uint)reading.DecayTicks, reading);
+            _readers.Add(player);
+            World.Tell(player, TextKind.Info, reading.Message);
+        }
+
+        /// <summary>A stack wears off every decayTicks without a new one.</summary>
+        private void DecayReading(uint now)
+        {
+            foreach (Player p in _readers.ToList())
+            {
+                Reading r = p.Component<Reading>();
+                foreach (string status in r.Stacks.Keys.ToList())
+                {
+                    var (stacks, next, def) = r.Stacks[status];
+                    if (now < next) continue;
+                    if (stacks <= 1) r.Stacks.Remove(status);
+                    else r.Stacks[status] = (stacks - 1, now + (uint)def.DecayTicks, def);
+                }
+                if (r.Stacks.Count == 0) _readers.Remove(p);
+            }
+        }
+
+        /// <summary>The share more a player's reading stacks add to this node's catch chance (0: none).</summary>
+        public double ReadingBonus(Player player, NodeDef def)
+        {
+            NodeReadingDef? reading = def.Roam?.Reading;
+            if (reading == null || !_readers.Contains(player)) return 0;
+            return player.Component<Reading>().Stacks.TryGetValue(reading.Status, out var s) ? s.Stacks * reading.PerStack : 0;
+        }
+
+        /// <summary>How many reading stacks the player has of a status.</summary>
+        public int ReadingStacks(Player player, string status) =>
+            _readers.Contains(player) && player.Component<Reading>().Stacks.TryGetValue(status, out var s) ? s.Stacks : 0;
+
+        public void AddStatuses(Player player, List<StatusState> statuses)
+        {
+            if (!_readers.Contains(player)) return;
+            foreach (var pair in player.Component<Reading>().Stacks)
+                statuses.Add(new StatusState { Id = pair.Key, Magnitude = (int)Math.Round(pair.Value.Stacks * pair.Value.Def.PerStack * 100), EndTick = pair.Value.NextDecay });
+        }
+
+        /// <summary>A node that comes and goes and was used up goes at once. Returns false if it doesn't come and go.</summary>
         private bool MoveUsedUp(Node node, NodeDef def)
         {
             if (def.Roam == null) return false;
-            Move(node, _nodes.Where(n => n.Group == node.Group), def.Roam);
+            GoAway(node, def.Roam, World.CurrentTick);
             return true;
         }
 
@@ -250,6 +316,7 @@ namespace Rth.Server.Game
         /// <summary>A player leaving lifts their traps and takes them along (the catch is let go), so no weir stays blocked.</summary>
         public override void OnLeaving(Player player)
         {
+            _readers.Remove(player);
             ItemSystem? items = World.Find<ItemSystem>();
             foreach (Node node in _nodes.Where(n => n.TrapOwner == player.Name))
             {
@@ -272,6 +339,7 @@ namespace Rth.Server.Game
                 if ((!dormant && !trap && !needs && !tended) || !World.CanSee(player, n.Placed.Plane, n.Placed.Tile)) continue;
                 var at = new NodeRef { Type = n.Placed.Type, Plane = n.Placed.Plane, X = n.Placed.X, Y = n.Placed.Y };
                 if (dormant) state.Dormant.Add(at);
+                if (n.IsBubbling(now)) state.Bubbling.Add(at);
                 if (needs) state.NeedsTending.Add(at);
                 if (tended) state.Tended.Add(at);
                 if (trap)

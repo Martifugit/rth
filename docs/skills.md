@@ -720,6 +720,15 @@ eye out for the cluster's tree that needs you.
 - **Trained by** cutting.
 
 ### Fishing
+**Reading the water (decided 2026-10-28), Fishing's active layer.** Every fishing spot comes and
+goes on its own timer (with some randomness; no spot knows about any other). About 10 s before a
+spot comes back, it may bubble. Cast into the bubbles and wait: if you're there when the fish
+arrive, you gain a stack of **Fish whisperer**, +20% catch chance each, up to 5. Stacks wear off
+quickly (one every ~36 s without a new one), so keeping them high means watching for bubbles and
+moving to them. XP is per catch, so more catches is more XP. AFK, you fish a spot until it goes, at
+half the pace table. *Built the same day: shipped numbers are provisional (a spot stays 30-60 s,
+is gone 15-30 s, bubbles 80% of the time).*
+
 *Built (2026-10-28, E4): catches by level, spots that roam instead of depleting, eel traps; perch,
 eel and pike. The rod is a starter-kit and tinker's item until Artifice makes it.*
 

@@ -108,6 +108,13 @@
     "description": "While you're below 30% blood you deal {value}% more damage."
   },
   {
+    "id": "fish_whisperer",
+    "name": "Fish whisperer",
+    "icon": "fishing",
+    "color": "#7fb8c8",
+    "description": "You read the water: {value}% more catches. Cast into bubbling water before the fish arrive to keep it up; it fades quickly."
+  },
+  {
     "id": "braced",
     "name": "Braced",
     "icon": "shield",

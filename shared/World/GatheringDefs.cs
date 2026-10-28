@@ -18,20 +18,41 @@ namespace Rth.Shared.World
     }
 
     /// <summary>
-    /// A node that moves instead of running out (docs/skills.md: fishing spots move; hellebore
-    /// regrows somewhere else nearby): of each group (nodes of a type within
-    /// <see cref="GroupRadius"/> of each other) only <see cref="Active"/> are there at a time, the
-    /// rest dormant (unseen, unworkable). Every <see cref="MinTicks"/> to <see cref="MaxTicks"/> one
-    /// moves, and one that is used up moves at once.
+    /// A node that comes and goes (docs/skills.md: fishing spots): each on its own, knowing nothing
+    /// of any other, is there for <see cref="MinTicks"/> to <see cref="MaxTicks"/>, then gone (dormant:
+    /// unseen, unworkable) for <see cref="AwayMinTicks"/> to <see cref="AwayMaxTicks"/>, and one used
+    /// up goes at once. Before it comes back it may (<see cref="BubbleChance"/>) bubble for
+    /// <see cref="BubbleTicks"/>: a player can cast into the bubbles and wait, and is there when the
+    /// fish arrive, which <see cref="Reading"/> rewards.
     /// </summary>
     public sealed class NodeRoamDef
     {
-        public int Active = 1;
-        public int GroupRadius = 8;
         public int MinTicks = 100;
         public int MaxTicks = 300;
-        /// <summary>Said to whoever was working it when it moves.</summary>
+        public int AwayMinTicks = 50;
+        public int AwayMaxTicks = 150;
+        public double BubbleChance = 0.5;
+        public int BubbleTicks = 16;
+        /// <summary>Said to whoever was working it when it goes.</summary>
         public string Message = "The fish move off.";
+        /// <summary>Said on casting into the bubbles before the fish are there.</summary>
+        public string BubbleMessage = "You cast into the bubbling water and wait.";
+        public NodeReadingDef? Reading;
+    }
+
+    /// <summary>
+    /// Reading the water (Fishing's active layer): whoever is already working a node when it comes
+    /// back gains a stack of <see cref="Status"/>, each <see cref="PerStack"/> more on the chance of a
+    /// catch (a share of it: 0.2 is a fifth more), up to <see cref="MaxStacks"/>. A stack wears off
+    /// every <see cref="DecayTicks"/> without a new one, so keeping them high means finding bubbles.
+    /// </summary>
+    public sealed class NodeReadingDef
+    {
+        public string Status = "fish_whisperer";
+        public double PerStack = 0.2;
+        public int MaxStacks = 5;
+        public int DecayTicks = 60;
+        public string Message = "The fish come to your line: you read the water right.";
     }
 
     /// <summary>
@@ -85,6 +106,8 @@ namespace Rth.Shared.World
         public List<NodeRef> Dormant = new List<NodeRef>();
         public List<TrapState> Traps = new List<TrapState>();
         public List<NodeRef> NeedsTending = new List<NodeRef>();
+        /// <summary>Dormant nodes bubbling: about to come back, workable already (cast and wait).</summary>
+        public List<NodeRef> Bubbling = new List<NodeRef>();
         public List<NodeRef> Tended = new List<NodeRef>();
     }
 

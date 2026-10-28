@@ -10,7 +10,7 @@ namespace Rth.Client
     /// Shows the skilling states the server sends: a station's draw ("draw": the forge glows,
     /// brighter and flickering while it roars); objects set down while the game runs ("placed": a
     /// campfire, drawn from its type's model, clickable like any MapObject); and the gathering
-    /// states ("gathering": roaming spots that aren't there are hidden, a trap shows on its node; a
+    /// states ("gathering": fishing spots that aren't there are hidden, or bubble just before they come back, a trap shows on its node; a
     /// tree that needs tending sheds withered leaves under a slow amber outline, one that has been
     /// tended glows with rising pollen while it lasts, and tending it gives a burst (SkillingEffects)).
     /// Region objects are MapObjects
@@ -30,6 +30,7 @@ namespace Rth.Client
         private readonly Dictionary<MapObject, List<GameObject>> _needOutlines = new Dictionary<MapObject, List<GameObject>>();
         private readonly Dictionary<MapObject, GameObject> _withering = new Dictionary<MapObject, GameObject>();
         private readonly Dictionary<MapObject, GameObject> _thriving = new Dictionary<MapObject, GameObject>();
+        private readonly Dictionary<MapObject, GameObject> _bubbles = new Dictionary<MapObject, GameObject>();
         private Material _needMaterial;
         private MaterialPropertyBlock _block;
 
@@ -175,6 +176,17 @@ namespace Rth.Client
                 if (o == null || !dormant.Contains(o)) Show(o);
             foreach (MapObject o in dormant)
                 if (!_hidden.ContainsKey(o)) Hide(o);
+            // Water bubbling where fish are about to come: the spot still unseen, but there to cast into.
+            var bubbling = new HashSet<MapObject>();
+            foreach (NodeRef r in state.Bubbling)
+            {
+                MapObject o = Find(r.Type, r.X, r.Y);
+                if (o != null) bubbling.Add(o);
+            }
+            foreach (KeyValuePair<MapObject, (Renderer[] Renderers, Collider[] Colliders)> pair in _hidden)
+                foreach (Collider c in pair.Value.Colliders)
+                    if (c != null) c.enabled = bubbling.Contains(pair.Key);
+            Keep(_bubbles, bubbling, SkillingEffects.Bubbles);
 
             var extras = new Dictionary<(MapObject, string), string>();
             foreach (TrapState t in state.Traps)

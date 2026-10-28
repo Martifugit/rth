@@ -95,8 +95,7 @@ namespace Rth.Server.Game
 
         public override void OnContentChanged()
         {
-            Regroup();
-            SpreadRoamers();
+            Regroup();    // nodes that come and go keep their own timers
         }
 
         /// <summary>Groups each node type's nodes into clusters (chains within the surge's radius), one surge per cluster.</summary>
@@ -168,7 +167,7 @@ namespace Rth.Server.Game
         public string? Problem(Player player, Node node, NodeDef def)
         {
             if (node.IsDepleted(World.CurrentTick)) return def.DepletedMessage;
-            if (node.Dormant) return "There's nothing here now.";
+            if (node.Dormant && !node.IsBubbling(World.CurrentTick)) return "There's nothing here now.";
             SkillSystem? skills = World.Find<SkillSystem>();
             if (skills == null) return null;
             string what = What(node, def);
@@ -270,7 +269,8 @@ namespace Rth.Server.Game
         internal void Begin(Player player, Node node, NodeDef def)
         {
             World.Animate(player, def.Animation, node.Placed.Tile);
-            if (def.StartMessage != null) World.Tell(player, TextKind.Info, def.StartMessage);
+            string? start = node.Dormant && def.Roam != null ? def.Roam.BubbleMessage : def.StartMessage;   // casting into the bubbles
+            if (start != null) World.Tell(player, TextKind.Info, start);
             if (def.StartSay != null) World.Find<ChatSystem>()?.Say(player, def.StartSay);
             if (def.StartDamage > 0 && player.Blood > 1)
                 World.Find<CombatSystem>()?.Damage(player, Math.Min(def.StartDamage, player.Blood - 1), null, HitKind.Normal);
@@ -289,7 +289,9 @@ namespace Rth.Server.Game
             ToolDef? tool = BestTool(player, def)?.Tool;
             World.Animate(player, def.Animation, node.Placed.Tile);
             if (def.Progress != null) return Strike(player, node, def, tool);
-            if (World.Random.NextDouble() >= SuccessChance(player, def, tool) + TendingBonus(node, def)) return true;
+            // Reading the water multiplies the chance (a fifth more a stack); tending adds to it.
+            double chance = (SuccessChance(player, def, tool) + TendingBonus(node, def)) * (1 + ReadingBonus(player, def));
+            if (World.Random.NextDouble() >= chance) return true;
             return Yield(player, node, def, tool);
         }
 
@@ -626,7 +628,17 @@ namespace Rth.Server.Game
                 world.Tell(player, TextKind.Info, def.DepletedMessage);
                 return false;
             }
-            if (node.Dormant) return false;     // it moved off (the player was told)
+            if (node.Dormant)
+            {
+                // Waiting at the bubbles for the fish to come; once they've gone (and it isn't bubbling), stop.
+                if (!node.IsBubbling(world.CurrentTick)) return false;
+                if (world.CurrentTick >= _nextAttempt)
+                {
+                    _nextAttempt = world.CurrentTick + (uint)Math.Max(1, def.Ticks);
+                    world.Animate(player, def.Animation, node.Placed.Tile);
+                }
+                return true;
+            }
             if (world.CurrentTick < _nextAttempt) return true;
             _nextAttempt = world.CurrentTick + (uint)Math.Max(1, def.Ticks);
             return gathering.Attempt(player, node, def);
