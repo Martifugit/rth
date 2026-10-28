@@ -86,6 +86,7 @@ namespace Rth.Server.Game
 
             CombatSystem Combat() => World.Get<CombatSystem>();
             RegisterEffectOp(EffectOp.HealBlood, (p, op) => Combat().Heal(p, op.Amount));
+            RegisterEffectOp(EffectOp.BoostSkill, (p, op) => World.Find<SkillSystem>()?.AddBoost(p, op.Skill ?? "", op.Amount, op.Percent, op.Ticks));
             RegisterEffectOp(EffectOp.HealBloodPercent, (p, op) => Combat().Heal(p, p.MaxBlood * op.Amount / 100));
             RegisterEffectOp(EffectOp.AddPhlegm, (p, op) => Combat().AddPhlegm(p, op.Amount));
             RegisterEffectOp(EffectOp.ShiftBile, (p, op) => Combat().ShiftBile(p, op.Amount));

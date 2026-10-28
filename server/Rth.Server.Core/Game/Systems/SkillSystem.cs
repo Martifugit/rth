@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Rth.Server.Content;
 using Rth.Server.Persistence;
 using Rth.Shared.Combat;
@@ -12,7 +13,17 @@ namespace Rth.Server.Game
     public sealed class PlayerSkills
     {
         public Dictionary<string, double> Xp = new Dictionary<string, double>();
+        /// <summary>Temporary boosts (a draught): levels added to a skill until a tick. Not saved.</summary>
+        public Dictionary<string, SkillBoost> Boosts = new Dictionary<string, SkillBoost>();
         public bool Dirty = true;
+        public string? SentBoosts;
+    }
+
+    /// <summary>Levels added to a skill for a while (docs/skills.md 2.5: requirements check the boosted level).</summary>
+    public sealed class SkillBoost
+    {
+        public int Amount;
+        public uint Until;
     }
 
     /// <summary>Published when a player gains a level, so others can react (unlock messages, achievements...).</summary>
@@ -40,6 +51,8 @@ namespace Rth.Server.Game
     public sealed class SkillSystem : GameSystem, IStatContributor
     {
         private const string SaveSection = "skills";
+        /// <summary>The server state listing boosted skills and by how many levels ("boosts": {skill: levels}).</summary>
+        public const string BoostsKey = "boosts";
 
         private XpCurve Curve => World.Content.XpCurve;
 
@@ -49,8 +62,52 @@ namespace Rth.Server.Game
 
         public double Xp(Player player, string skill) => Of(player).Xp.TryGetValue(skill, out double xp) ? xp : 0;
 
-        public int Level(Player player, string skill) =>
+        /// <summary>
+        /// The level the player works at: their real level plus any boost (a draught). Requirements,
+        /// chances and stats read this (docs/skills.md 2.5); what a player *is* (combat level,
+        /// totals, achievements) reads <see cref="BaseLevel"/>.
+        /// </summary>
+        public int Level(Player player, string skill) => BaseLevel(player, skill) + Boost(player, skill);
+
+        /// <summary>The level their XP gives, with no boost.</summary>
+        public int BaseLevel(Player player, string skill) =>
             Curve.LevelForXp((long)Xp(player, skill), Curve.MaxFor(World.Content.Skills.TryGetValue(skill, out SkillDef? def) ? def : null));
+
+        /// <summary>Levels boosted in a skill now (0 for none).</summary>
+        public int Boost(Player player, string skill) =>
+            Of(player).Boosts.TryGetValue(skill, out SkillBoost? b) && World.CurrentTick < b.Until ? b.Amount : 0;
+
+        /// <summary>
+        /// Boosts a skill by <paramref name="amount"/> levels plus <paramref name="percent"/>% of its
+        /// real level, for <paramref name="ticks"/>. Boosts don't stack: a bigger one replaces a
+        /// smaller, an equal one renews it, a smaller one does nothing.
+        /// </summary>
+        public void AddBoost(Player player, string skill, int amount, int percent, int ticks)
+        {
+            if (!World.Content.Skills.ContainsKey(skill) || ticks <= 0) return;
+            int levels = amount + BaseLevel(player, skill) * percent / 100;
+            if (levels <= 0 || Boost(player, skill) > levels) return;
+            Of(player).Boosts[skill] = new SkillBoost { Amount = levels, Until = World.CurrentTick + (uint)ticks };
+            World.Tell(player, TextKind.Info, "Your " + Name(skill).ToLowerInvariant() + " is boosted to " + Level(player, skill) + ".");
+            World.RecalculateStats(player);
+        }
+
+        public override void OnTimers()
+        {
+            foreach (Player player in World.Players)
+            {
+                Dictionary<string, SkillBoost> boosts = Of(player).Boosts;
+                if (boosts.Count == 0) continue;
+                List<string> over = boosts.Where(b => World.CurrentTick >= b.Value.Until).Select(b => b.Key).ToList();
+                if (over.Count == 0) continue;
+                foreach (string skill in over)
+                {
+                    boosts.Remove(skill);
+                    World.Tell(player, TextKind.Info, "Your " + Name(skill).ToLowerInvariant() + " boost wears off.");
+                }
+                World.RecalculateStats(player);
+            }
+        }
 
         public string Name(string skill) => World.Content.SkillName(skill);
 
@@ -62,11 +119,11 @@ namespace Rth.Server.Game
         {
             if (amount <= 0 || !World.Content.Skills.ContainsKey(skill)) return;
             PlayerSkills skills = Of(player);
-            int before = Level(player, skill);
+            int before = BaseLevel(player, skill);
             skills.Xp[skill] = Math.Min(XpCurve.MaxXp, Xp(player, skill) + amount);
             skills.Dirty = true;
 
-            int after = Level(player, skill);
+            int after = BaseLevel(player, skill);
             if (after <= before) return;
             World.Tell(player, TextKind.Info, "Your " + Name(skill).ToLowerInvariant() + " is now level " + after + ".");
             World.RecalculateStats(player);
@@ -117,6 +174,13 @@ namespace Rth.Server.Game
         public override void SendState(Player player)
         {
             PlayerSkills skills = Of(player);
+            var boosted = skills.Boosts.Where(b => World.CurrentTick < b.Value.Until).ToDictionary(b => b.Key, b => b.Value.Amount);
+            JsonStateMessage boostState = JsonStateMessage.Of(BoostsKey, boosted);
+            if (boostState.Json != skills.SentBoosts)
+            {
+                skills.SentBoosts = boostState.Json;
+                player.Connection.Send(boostState);
+            }
             if (!skills.Dirty) return;
             skills.Dirty = false;
             var message = new SkillsMessage();

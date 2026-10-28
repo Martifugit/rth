@@ -86,6 +86,14 @@ namespace Rth.Shared.Items
         public CombatStyle Style;
         /// <summary>For a weapon: its own auto-attack (an Auto ability), instead of its style's.</summary>
         public string? AutoAttack;
+        /// <summary>
+        /// A gear family in the server's gear.json ("plate", "melee-1h"): with <see cref="Tier"/>, it
+        /// fills in this item's stats and its requirement by tier (docs/skills.md 2.2). Null: the
+        /// stats listed are all it has.
+        /// </summary>
+        public string? Family;
+        /// <summary>Its rung on the tier ladder, for <see cref="Family"/>.</summary>
+        public int Tier;
     }
 
     /// <summary>Something eaten or drunk: applies its effect operations, then is used up.</summary>
@@ -120,12 +128,17 @@ namespace Rth.Shared.Items
         public const string ShiftBile = "shiftBile";
         public const string SettleBile = "settleBile";
         public const string ApplyEffect = "applyEffect";
+        /// <summary>Boosts <see cref="Skill"/> by <see cref="Amount"/> levels plus <see cref="Percent"/>% for <see cref="Ticks"/> (a draught).</summary>
+        public const string BoostSkill = "boostSkill";
 
         public string Op = "";
         public int Amount;
         /// <summary>For <see cref="ApplyEffect"/>.</summary>
         public EffectType Effect;
         public int Ticks;
+        /// <summary>For <see cref="BoostSkill"/>: the skill, and a share of its level added on top of <see cref="Amount"/>.</summary>
+        public string? Skill;
+        public int Percent;
     }
 
     /// <summary>

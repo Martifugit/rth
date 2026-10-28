@@ -36,7 +36,7 @@ namespace Rth.Server.Game
         protected override void OnAttach()
         {
             World.Get<ObjectSystem>().RegisterAction(Process, (player, placed, def) =>
-                World.StartInteraction(player, new ObjectOnceInteraction(placed, p => Offer(p, placed, null))));
+                World.StartInteraction(player, new ProcessInteraction(placed, null, 0)));
             World.Get<ItemSystem>().RegisterAction(ItemActions.Process, (player, use) => OfferItem(player, use.Def));
             IntentSystem? intents = World.Find<IntentSystem>();
             intents?.Register(MakeState.Intent, Make);
@@ -116,18 +116,20 @@ namespace Rth.Server.Game
         /// Offers what can be made at a station (only the recipes taking <paramref name="item"/>, if
         /// given: ore used on a furnace): starts the one the pack can make, or opens the make window.
         /// </summary>
-        public void Offer(Player player, PlacedObject station, string? item)
+        /// <returns>The recipe to start straight away, or null (the window opened, or there is nothing to make).</returns>
+        public RecipeDef? Offer(Player player, PlacedObject station, string? item)
         {
-            if (!World.Content.Objects.TryGetValue(station.Type, out ObjectDef? def)) return;
+            if (!World.Content.Objects.TryGetValue(station.Type, out ObjectDef? def)) return null;
             List<RecipeDef> recipes = RecipesAt(station.Type).Where(r => item == null || r.Inputs.Any(i => i.Item == item)).ToList();
-            OfferRecipes(player, recipes, station, def.Name, (recipes.FirstOrDefault()?.Verb ?? "work on"));
+            return OfferRecipes(player, recipes, station, def.Name, (recipes.FirstOrDefault()?.Verb ?? "work on"));
         }
 
         /// <summary>An item used on a station offers the recipes there that take it (ore on a furnace).</summary>
         public bool OnObjectUse(Player player, ItemDef item, PlacedObject placed, ObjectDef def)
         {
             if (!RecipesAt(placed.Type).Any(r => r.Inputs.Any(i => i.Item == item.Id))) return false;
-            Offer(player, placed, item.Id);
+            RecipeDef? only = Offer(player, placed, item.Id);
+            if (only != null) Start(player, only, placed, 0);
             return true;
         }
 
@@ -136,16 +138,17 @@ namespace Rth.Server.Game
         {
             List<RecipeDef> recipes = World.Content.Recipes.Values
                 .Where(r => r.Station.Length == 0 && r.Inputs.Count > 0 && r.Inputs[0].Item == item.Id).ToList();
-            OfferRecipes(player, recipes, null, item.Process?.Verb ?? "Make", recipes.FirstOrDefault()?.Verb ?? "make");
+            RecipeDef? only = OfferRecipes(player, recipes, null, item.Process?.Verb ?? "Make", recipes.FirstOrDefault()?.Verb ?? "make");
+            if (only != null) Start(player, only, null, 0);
         }
 
-        private void OfferRecipes(Player player, List<RecipeDef> recipes, PlacedObject? station, string title, string verb)
+        private RecipeDef? OfferRecipes(Player player, List<RecipeDef> recipes, PlacedObject? station, string title, string verb)
         {
             CloseMake(player);
             if (recipes.Count == 0)
             {
                 World.Tell(player, TextKind.Info, "You can't make anything here.");
-                return;
+                return null;
             }
             List<RecipeDef> withInputs = recipes.Where(r => HasInputs(player, r)).ToList();
             if (withInputs.Count == 0)
@@ -153,7 +156,7 @@ namespace Rth.Server.Game
                 // Nothing to work on: open the window anyway when there is a choice, so the player can see what it takes.
                 if (recipes.Count > 1) OpenMake(player, recipes, station, title, verb);
                 else World.Tell(player, TextKind.Info, "You have nothing to " + verb + " here.");
-                return;
+                return null;
             }
             // Straight to work when only one recipe here touches what the player carries (a carcass
             // at the rack); a choice (bars at the anvil: a dagger or a sword?) opens the window.
@@ -162,11 +165,12 @@ namespace Rth.Server.Game
             {
                 RecipeDef only = withInputs[0];
                 string? blocked = Blocker(player, only);
-                if (blocked != null) World.Tell(player, TextKind.Warning, blocked);
-                else Start(player, only, station, 0);
-                return;
+                if (blocked == null) return only;
+                World.Tell(player, TextKind.Warning, blocked);
+                return null;
             }
             OpenMake(player, recipes, station, title, verb);
+            return null;
         }
 
         private void OpenMake(Player player, List<RecipeDef> recipes, PlacedObject? station, string title, string verb)
@@ -333,13 +337,14 @@ namespace Rth.Server.Game
     /// <summary>Standing at a station, making one recipe until the amount is made or the inputs run out.</summary>
     public sealed class ProcessInteraction : ObjectInteraction
     {
-        private readonly RecipeDef _recipe;
+        private RecipeDef? _recipe;
         private int _left;
         private bool _started;
         private uint _readyAt;
 
+        /// <param name="recipe">What to make, or null to offer the station's recipes on arrival (one starts at once, a choice opens the make window).</param>
         /// <param name="count">How many to make; 0 for as many as the inputs allow.</param>
-        public ProcessInteraction(PlacedObject station, RecipeDef recipe, int count) : base(station)
+        public ProcessInteraction(PlacedObject station, RecipeDef? recipe, int count) : base(station)
         {
             _recipe = recipe;
             _left = count;
@@ -348,6 +353,11 @@ namespace Rth.Server.Game
         protected override bool Work(World world, Player player)
         {
             RecipeSystem recipes = world.Get<RecipeSystem>();
+            if (_recipe == null)
+            {
+                _recipe = recipes.Offer(player, Object, null);
+                if (_recipe == null) return false;
+            }
             if (!_started)
             {
                 if (!recipes.CanMake(player, _recipe, out string? problem, out _))

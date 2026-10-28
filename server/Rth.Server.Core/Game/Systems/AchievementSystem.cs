@@ -75,7 +75,7 @@ namespace Rth.Server.Game
             foreach (AchievementDef a in World.Content.Achievements.Values)
             {
                 if (a.Objective.Kind != "level" || IsDone(player, a.Id)) continue;
-                int level = skills.Level(player, a.Objective.Target);
+                int level = skills.BaseLevel(player, a.Objective.Target);
                 AchievementProgress state = Of(player).State;
                 if (!state.Progress.TryGetValue(a.Id, out int was) || was != level)
                 {

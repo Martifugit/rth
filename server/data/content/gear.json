@@ -1,0 +1,30 @@
+{
+  "_comment": "Gear stats by tier (docs/skills.md 2.2): an item with equipment.family and equipment.tier gets base + perTier x (tier - 1), times its slot's share of each stat, and the family's skill at (tier - 1) x levelsPerTier. Provisional numbers, for tuning by play.",
+  "base": 10,
+  "perTier": 6,
+  "levelsPerTier": 10,
+  "families": {
+    "melee-1h": {
+      "requires": "melee",
+      "slots": {
+        "Weapon": { "abilityDamage": 1.0, "meleeAccuracy": 0.2 }
+      }
+    },
+    "plate": {
+      "requires": "defence",
+      "slots": {
+        "Head": { "ward": 0.25, "maxBlood": 3 },
+        "Body": { "ward": 0.5, "maxBlood": 6 },
+        "Legs": { "ward": 0.4, "maxBlood": 5 },
+        "Hands": { "ward": 0.1, "meleeAccuracy": 0.1 },
+        "Feet": { "ward": 0.1, "maxBlood": 1.5 },
+        "Offhand": { "ward": 0.4, "maxBlood": 2 }
+      }
+    },
+    "tool": {
+      "slots": {
+        "Weapon": { "abilityDamage": 0.3 }
+      }
+    }
+  }
+}

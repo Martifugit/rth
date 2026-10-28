@@ -45,8 +45,8 @@ namespace Rth.Server.Game
             var inspect = new PlayerInspect { EntityId = player.Id, Name = player.Name };
             if (World.Find<SkillSystem>() is SkillSystem skills)
             {
-                inspect.CombatLevel = World.Content.CombatLevel.Of(s => skills.Level(player, s));
-                inspect.TotalLevel = World.Content.Skills.Keys.Sum(s => skills.Level(player, s));
+                inspect.CombatLevel = World.Content.CombatLevel.Of(s => skills.BaseLevel(player, s));
+                inspect.TotalLevel = World.Content.Skills.Keys.Sum(s => skills.BaseLevel(player, s));
             }
             if (World.Find<ItemSystem>() is ItemSystem items)
             {
@@ -62,12 +62,12 @@ namespace Rth.Server.Game
         {
             if (!(World.Find<SkillSystem>() is SkillSystem skills)) yield break;
             IEnumerable<SkillDef> best = World.Content.Skills.Values
-                .Where(s => skills.Level(player, s.Id) > 1)
+                .Where(s => skills.BaseLevel(player, s.Id) > 1)
                 .OrderByDescending(s => skills.Xp(player, s.Id))
                 .ThenBy(s => s.Name, StringComparer.Ordinal)
                 .Take(BestSkills);
             foreach (SkillDef s in best)
-                yield return new InspectLine { Label = s.Name, Value = skills.Level(player, s.Id).ToString(CultureInfo.InvariantCulture), Icon = s.Icon };
+                yield return new InspectLine { Label = s.Name, Value = skills.BaseLevel(player, s.Id).ToString(CultureInfo.InvariantCulture), Icon = s.Icon };
         }
 
         /// <summary>Quests and achievements done, out of how many there are.</summary>

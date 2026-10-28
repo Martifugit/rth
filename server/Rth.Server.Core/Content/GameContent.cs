@@ -216,6 +216,8 @@ namespace Rth.Server.Content
         public HymnsFile Hymns = new HymnsFile();
         public List<Rth.Shared.Progress.BossDef> Bosses = new List<Rth.Shared.Progress.BossDef>();
         public List<UseDef> Uses = new List<UseDef>();
+        /// <summary>Gear stats by tier and family (gear.json).</summary>
+        public GearRules Gear = new GearRules();
     }
 
     /// <summary>
@@ -312,6 +314,7 @@ namespace Rth.Server.Content
                 Hymns = ReadJson<HymnsFile>(directory, "hymns.json"),
                 Bosses = ReadJson<List<Rth.Shared.Progress.BossDef>>(directory, "bosses.json"),
                 Uses = ReadJson<List<UseDef>>(directory, "uses.json"),
+                Gear = ReadJson<GearRules>(directory, "gear.json"),
             });
         }
 
@@ -359,6 +362,8 @@ namespace Rth.Server.Content
                 else if (a.Type == AbilityType.Verse) problems.Add("Action bar ability '" + id + "' is a verse; the default bar holds abilities.");
             }
 
+            // Gear by tier first, so the stats it fills in are validated like any other.
+            problems.AddRange((parts.Gear ?? new GearRules()).Apply(parts.Items, new HashSet<string>(parts.Skills.Skills.Select(s => s.Id))));
             Dictionary<string, ItemDef> items = Index(parts.Items, i => i.Id, "item", problems);
             foreach (ItemDef item in parts.Items) ValidateItem(item, items, problems);
 
@@ -736,7 +741,7 @@ namespace Rth.Server.Content
         private static readonly HashSet<string> KnownEffectOps = new HashSet<string>
         {
             EffectOp.HealBlood, EffectOp.HealBloodPercent, EffectOp.RestoreDevotion, EffectOp.RestoreDevotionPercent, EffectOp.AddPhlegm,
-            EffectOp.ShiftBile, EffectOp.SettleBile, EffectOp.ApplyEffect,
+            EffectOp.ShiftBile, EffectOp.SettleBile, EffectOp.ApplyEffect, EffectOp.BoostSkill,
         };
 
         private static void ValidateItem(ItemDef item, Dictionary<string, ItemDef> items, List<string> problems)
@@ -753,7 +758,10 @@ namespace Rth.Server.Content
             if (item.Consumable != null)
             {
                 foreach (EffectOp op in item.Consumable.Effects)
+                {
                     if (!KnownEffectOps.Contains(op.Op)) problems.Add(where + "unknown effect op '" + op.Op + "'.");
+                    if (op.Op == EffectOp.BoostSkill && (string.IsNullOrEmpty(op.Skill) || op.Ticks < 1)) problems.Add(where + "boostSkill needs a skill and ticks.");
+                }
                 if (item.Consumable.Leaves != null && !items.ContainsKey(item.Consumable.Leaves))
                     problems.Add(where + "leaves '" + item.Consumable.Leaves + "', which doesn't exist.");
             }
