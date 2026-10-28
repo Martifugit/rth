@@ -635,6 +635,10 @@ namespace Rth.Server.Content
             }
 
             foreach (ItemDef i in parts.Items)
+                foreach (EffectOp op in i.Consumable?.Effects ?? new List<EffectOp>())
+                    if (op.Op == EffectOp.BoostSkill && op.Skill != null && !skills.ContainsKey(op.Skill))
+                        problems.Add("Item '" + i.Id + "': boostSkill names unknown skill '" + op.Skill + "'.");
+            foreach (ItemDef i in parts.Items)
             {
                 if (i.Place == null) continue;
                 if (!objects.ContainsKey(i.Place.Object)) problems.Add("Item '" + i.Id + "': it is set down as '" + i.Place.Object + "', which isn't an object.");

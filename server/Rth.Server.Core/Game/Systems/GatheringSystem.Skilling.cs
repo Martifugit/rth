@@ -107,6 +107,7 @@ namespace Rth.Server.Game
             if (asleep.Count == 0) return;     // nowhere to go: it stays
             node.Dormant = true;
             node.YieldsLeft = 0;
+            node.SurgingUntil = 0;
             asleep[World.Random.Next(asleep.Count)].Dormant = false;
             foreach (Player p in World.Players)
                 if (p.Interaction is GatherInteraction g && ReferenceEquals(g.Object, node.Placed))
@@ -211,6 +212,12 @@ namespace Rth.Server.Game
                 World.Tell(player, TextKind.Info, "Your trap is still empty. Give it time.");
                 return;
             }
+            List<string> gives = def.Catches.Count > 0 ? def.Catches.Select(c => c.Item).ToList() : def.Items.Select(i => i.Item).ToList();
+            if (gives.Any(item => !items.CanGive(player, item, filled)))
+            {
+                World.Tell(player, TextKind.Warning, "You don't have room for what's in your trap. Leave it set and come back.");
+                return;
+            }
             int caught = 0;
             for (int i = 0; i < filled; i++)
             {
@@ -227,6 +234,19 @@ namespace Rth.Server.Game
         }
 
         private readonly Dictionary<Node, string> _trapItems = new Dictionary<Node, string>();
+
+        /// <summary>A player leaving lifts their traps and takes them along (the catch is let go), so no weir stays blocked.</summary>
+        public override void OnLeaving(Player player)
+        {
+            ItemSystem? items = World.Find<ItemSystem>();
+            foreach (Node node in _nodes.Where(n => n.TrapOwner == player.Name))
+            {
+                node.TrapOwner = null;
+                if (_trapItems.TryGetValue(node, out string? id) && items != null && items.Give(player, id, 1) > 0)
+                    World.Log(player.Name + "'s " + id + " was lost: no room to carry it home.");
+                _trapItems.Remove(node);
+            }
+        }
 
         // ------------------------------------------------------------------ what clients see
 

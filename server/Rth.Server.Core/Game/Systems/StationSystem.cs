@@ -117,8 +117,13 @@ namespace Rth.Server.Game
         }
 
         /// <summary>Fuel used on a station with a draw feeds it.</summary>
-        public bool OnObjectUse(Player player, ItemDef item, PlacedObject placed, ObjectDef def) =>
-            def.Station?.Draw != null && FuelFor(placed, item) != null && Feed(player, placed, item);
+        public bool OnObjectUse(Player player, ItemDef item, PlacedObject placed, ObjectDef def)
+        {
+            if (def.Station?.Draw == null || FuelFor(placed, item) == null) return false;
+            // Something the station also makes things from is offered as a recipe instead (RecipeSystem).
+            if (World.Content.Recipes.Values.Any(r => r.Station == placed.Type && r.Inputs.Any(i => i.Item == item.Id))) return false;
+            return Feed(player, placed, item);
+        }
 
         public override void SendState(Player player)
         {

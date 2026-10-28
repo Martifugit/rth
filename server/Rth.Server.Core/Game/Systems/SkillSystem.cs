@@ -86,7 +86,12 @@ namespace Rth.Server.Game
         {
             if (!World.Content.Skills.ContainsKey(skill) || ticks <= 0) return;
             int levels = amount + BaseLevel(player, skill) * percent / 100;
-            if (levels <= 0 || Boost(player, skill) > levels) return;
+            if (levels <= 0) return;
+            if (Boost(player, skill) > levels)
+            {
+                World.Tell(player, TextKind.Info, "Your " + Name(skill).ToLowerInvariant() + " is already boosted higher than that.");
+                return;
+            }
             Of(player).Boosts[skill] = new SkillBoost { Amount = levels, Until = World.CurrentTick + (uint)ticks };
             World.Tell(player, TextKind.Info, "Your " + Name(skill).ToLowerInvariant() + " is boosted to " + Level(player, skill) + ".");
             World.RecalculateStats(player);

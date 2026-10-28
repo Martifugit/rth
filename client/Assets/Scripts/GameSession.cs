@@ -92,6 +92,9 @@ namespace Rth.Client
         public int Boost(string skill) =>
             ServerState<Dictionary<string, int>>("boosts").TryGetValue(skill, out int b) ? b : 0;
 
+        /// <summary>The level the player works at now (with any boost), as the server checks requirements.</summary>
+        public int WorkingLevel(string skill) => Level(skill) + Boost(skill);
+
         public SkillDef Skill(string id)
         {
             if (Content != null)

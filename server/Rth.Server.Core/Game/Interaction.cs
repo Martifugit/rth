@@ -71,7 +71,9 @@ namespace Rth.Server.Game
 
         public PlacedObject Object { get; }
 
-        protected override (int Plane, TileCoord Tile)? Target(World world) => (Object.Plane, Object.Tile);
+        // An object that has gone (a campfire burnt out) ends the interaction.
+        protected override (int Plane, TileCoord Tile)? Target(World world) =>
+            world.Find<ObjectSystem>()?.IsPlaced(Object) == false ? ((int, TileCoord)?)null : (Object.Plane, Object.Tile);
 
         public override InteractionFocus? Focus(World world) => InteractionFocus.OnObject(Object);
     }

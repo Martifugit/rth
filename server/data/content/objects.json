@@ -1430,8 +1430,8 @@
         "xp": 0.5,
         "fuel": [
           {
-            "item": "charcoal",
-            "ticks": 120
+            "item": "tag:log",
+            "ticks": 60
           }
         ]
       }

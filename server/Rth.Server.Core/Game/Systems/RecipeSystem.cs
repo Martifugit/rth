@@ -136,6 +136,7 @@ namespace Rth.Server.Game
         /// <summary>Offers the recipes with no station that start with this item (cleaning a herb).</summary>
         public void OfferItem(Player player, ItemDef item)
         {
+            World.StopInteraction(player);
             List<RecipeDef> recipes = World.Content.Recipes.Values
                 .Where(r => r.Station.Length == 0 && r.Inputs.Count > 0 && r.Inputs[0].Item == item.Id).ToList();
             RecipeDef? only = OfferRecipes(player, recipes, null, item.Process?.Verb ?? "Make", recipes.FirstOrDefault()?.Verb ?? "make");
@@ -187,7 +188,9 @@ namespace Rth.Server.Game
                 Plane = station?.Plane ?? player.Plane,
                 X = station?.X ?? 0,
                 Y = station?.Y ?? 0,
-                Options = recipes.OrderBy(r => r.Level).ThenBy(r => r.Group).Select(r => Option(player, r, station)).ToList(),
+                // Each heading once: groups in the order of their lowest level, level order within.
+                Options = recipes.GroupBy(r => r.Group).OrderBy(g => g.Min(r => r.Level)).ThenBy(g => g.Key)
+                    .SelectMany(g => g.OrderBy(r => r.Level).ThenBy(r => r.Name)).Select(r => Option(player, r, station)).ToList(),
             };
         }
 
@@ -231,6 +234,7 @@ namespace Rth.Server.Game
             if (!open.State.IsOpen || !open.State.Options.Any(o => o.Recipe == id) || !World.Content.Recipes.TryGetValue(id, out RecipeDef? recipe)) return;
             PlacedObject? station = open.Station;
             CloseMake(player);
+            if (station != null && !World.Get<ObjectSystem>().IsPlaced(station)) return;
             if (!CanMake(player, recipe, out string? problem, out _))
             {
                 World.Tell(player, TextKind.Warning, problem ?? "You can't make that.");
@@ -306,7 +310,8 @@ namespace Rth.Server.Game
         {
             MakeWindowOf open = player.Component<MakeWindowOf>();
             // Walking off (or starting something else) closes the window.
-            if (open.State.IsOpen && (player.Position != open.OpenedAt || player.Interaction != null)) CloseMake(player);
+            if (open.State.IsOpen && (player.Position != open.OpenedAt || player.Interaction != null
+                || (open.Station != null && !World.Get<ObjectSystem>().IsPlaced(open.Station)))) CloseMake(player);
             if (open.State.IsOpen)
                 foreach (MakeOption option in open.State.Options)
                     if (World.Content.Recipes.TryGetValue(option.Recipe, out RecipeDef? r))

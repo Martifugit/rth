@@ -68,7 +68,7 @@ namespace Rth.Client.Ui.Panels
                 AbilityDef a = Session.Ability(id);
                 if (a == null) continue;
                 int needed = LevelNeeded(a);
-                bool locked = needed > Session.Level(SkillOf(a));
+                bool locked = needed > Session.WorkingLevel(SkillOf(a));
                 slot.EnableInClassList("slot--locked", locked);
                 level.text = locked ? needed.ToString() : "";
             }

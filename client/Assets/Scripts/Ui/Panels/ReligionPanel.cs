@@ -111,7 +111,7 @@ namespace Rth.Client.Ui.Panels
             {
                 AbilityDef verse = Session.Ability(id);
                 if (verse == null) continue;
-                bool locked = verse.Requirements.Any(r => Session.Level(r.Skill) < r.Level);
+                bool locked = verse.Requirements.Any(r => Session.WorkingLevel(r.Skill) < r.Level);
                 slot.EnableInClassList("slot--locked", locked);
                 level.text = locked ? AbilityBookPanel.LevelNeeded(verse).ToString() : "";
             }

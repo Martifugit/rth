@@ -17,12 +17,17 @@ namespace Rth.Server.Game
         public const string Examine = "examine";
 
         private readonly List<PlacedObject> _placed;
+        private readonly HashSet<PlacedObject> _present;
         private readonly Dictionary<string, Action<Player, PlacedObject, ObjectDef>> _actions = new Dictionary<string, Action<Player, PlacedObject, ObjectDef>>();
 
         public ObjectSystem(IEnumerable<PlacedObject> placed)
         {
             _placed = placed.ToList();
+            _present = new HashSet<PlacedObject>(_placed);
         }
+
+        /// <summary>Whether the object is in the world now (one added while the game runs may have gone).</summary>
+        public bool IsPlaced(PlacedObject placed) => _present.Contains(placed);
 
         public IReadOnlyList<PlacedObject> Placed => _placed;
 
@@ -43,12 +48,17 @@ namespace Rth.Server.Game
         }
 
         /// <summary>Adds an object to the world while the server runs (a campfire); it works like any placed one.</summary>
-        public void Add(PlacedObject placed) => _placed.Add(placed);
+        public void Add(PlacedObject placed)
+        {
+            _placed.Add(placed);
+            _present.Add(placed);
+        }
 
         /// <summary>Takes away an object added with <see cref="Add"/>; anyone working it stops.</summary>
         public void Remove(PlacedObject placed)
         {
             if (!_placed.Remove(placed)) return;
+            _present.Remove(placed);
             foreach (Player p in World.Players)
                 if (p.Interaction is ObjectInteraction o && ReferenceEquals(o.Object, placed)) World.StopInteraction(p);
         }

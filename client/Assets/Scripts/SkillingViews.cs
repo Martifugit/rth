@@ -204,8 +204,9 @@ namespace Rth.Client
 
         private void Hide(MapObject o)
         {
-            Renderer[] renderers = o.GetComponentsInChildren<Renderer>();
-            Collider[] colliders = o.GetComponentsInChildren<Collider>();
+            // Only what is showing now: another view (NodeViews' stand-ins) may have hidden the rest.
+            Renderer[] renderers = System.Array.FindAll(o.GetComponentsInChildren<Renderer>(), r => r.enabled);
+            Collider[] colliders = System.Array.FindAll(o.GetComponentsInChildren<Collider>(), c => c.enabled);
             foreach (Renderer r in renderers) r.enabled = false;
             foreach (Collider c in colliders) c.enabled = false;
             _hidden[o] = (renderers, colliders);

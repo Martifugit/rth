@@ -151,7 +151,7 @@ namespace Rth.Server.Game
                 // About every EveryTicks, give or take a fifth, so a monument's rhythm isn't a metronome.
                 int spread = Math.Max(1, surge.EveryTicks / 5);
                 _nextSurge[group.Key] = now + (uint)(surge.EveryTicks + World.Random.Next(-spread, spread + 1));
-                List<Node> awake = group.Where(n => !n.IsDepleted(now) && !n.IsSurging(now)).ToList();
+                List<Node> awake = group.Where(n => !n.IsDepleted(now) && !n.IsSurging(now) && !n.Dormant).ToList();
                 if (awake.Count == 0) continue;
                 Node chosen = awake[World.Random.Next(awake.Count)];
                 chosen.SurgingUntil = now + (uint)surge.Ticks;
