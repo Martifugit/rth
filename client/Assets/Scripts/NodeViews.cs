@@ -59,7 +59,7 @@ namespace Rth.Client
                 if (!_looks.TryGetValue(pair.Key, out NodeLook look) || look == null)
                     _looks[pair.Key] = look = pair.Key.gameObject.AddComponent<NodeLook>();
                 depletedModels.TryGetValue(pair.Key.objectType, out string depletedModel);
-                look.Show(pair.Value.Depleted, pair.Value.Surging, depletedModel, pair.Value.Burning);
+                look.Show(pair.Value.Depleted, pair.Value.Surging, depletedModel, pair.Value.Burning, new Vector2Int(pair.Value.FireX, pair.Value.FireY));
             }
         }
     }
@@ -83,7 +83,7 @@ namespace Rth.Client
         private GameObject _fire;
         private Light _fireLight;
 
-        public void Show(bool depleted, bool surging, string depletedModel = null, bool burning = false)
+        public void Show(bool depleted, bool surging, string depletedModel = null, bool burning = false, Vector2Int fireTowards = default)
         {
             if (_renderers == null)
             {
@@ -112,27 +112,39 @@ namespace Rth.Client
                 Destroy(_glow.gameObject);
                 _glow = null;
             }
-            Fire(burning && !depleted);
+            Fire(burning, fireTowards);
             Tint();
         }
 
-        /// <summary>A small fire against the rock's foot (the side towards the south), or none.</summary>
-        private void Fire(bool burning)
+        /// <summary>
+        /// A fire set against the rock (fire-setting), or none: logs burning on the ground at the face
+        /// it was laid from (just outside the rock, towards that tile), with flames, a thread of
+        /// smoke and a flickering light.
+        /// </summary>
+        private void Fire(bool burning, Vector2Int towards)
         {
             if (burning && _fire == null)
             {
+                Vector3 centre = transform.position;
+                var dir = new Vector3(towards.x + 0.5f - Mathf.Floor(centre.x) - 0.5f, 0f, towards.y + 0.5f - Mathf.Floor(centre.z) - 0.5f);
+                if (dir.sqrMagnitude < 0.01f) dir = Vector3.back;
+                Vector3 at = new Vector3(Mathf.Floor(centre.x) + 0.5f, 0f, Mathf.Floor(centre.z) + 0.5f) + dir.normalized * 0.5f;
+                int plane = Rth.MapTools.MapLevel.Of(this);
+                at.y = GroundHeight.At(at.x, at.z, plane, centre.y);
                 _fire = new GameObject("Fire-setting");
-                _fire.transform.SetParent(transform, false);
-                _fire.transform.position = transform.position + new Vector3(0.05f, 0f, -0.42f);
+                _fire.transform.SetParent(transform, true);
+                _fire.transform.position = at;
+                _fire.transform.rotation = Quaternion.LookRotation(-dir.normalized);
                 GameObject model = Resources.Load<GameObject>("Nature/Campfire");
                 if (model != null)
                 {
                     GameObject logs = Instantiate(model, _fire.transform, false);
-                    logs.transform.localScale = Vector3.one * 0.55f;
+                    logs.transform.localScale = Vector3.one * 0.42f;
                 }
+                Flames(_fire.transform);
                 var light = new GameObject("Firelight");
                 light.transform.SetParent(_fire.transform, false);
-                light.transform.localPosition = Vector3.up * 0.5f;
+                light.transform.localPosition = Vector3.up * 0.45f;
                 _fireLight = light.AddComponent<Light>();
                 _fireLight.type = LightType.Point;
                 _fireLight.color = new Color(1f, 0.55f, 0.2f);
@@ -144,6 +156,90 @@ namespace Rth.Client
                 _fire = null;
                 _fireLight = null;
             }
+        }
+
+        private static Material _flameMaterial, _smokeMaterial;
+
+        /// <summary>Flames licking up off the logs, and a thin smoke above them.</summary>
+        private static void Flames(Transform parent)
+        {
+            if (_flameMaterial == null)
+            {
+                _flameMaterial = Particles(true);
+                _smokeMaterial = Particles(false);
+            }
+            Emit(parent, "Flames", _flameMaterial, 22f, 0.35f, 0.6f, 0.12f, 0.26f, 0.5f, 1.0f, new Color(1f, 0.62f, 0.2f, 0.9f), new Color(1f, 0.25f, 0.05f, 0f), 0.08f);
+            Emit(parent, "Smoke", _smokeMaterial, 5f, 1.6f, 2.6f, 0.25f, 0.5f, 0.35f, 0.7f, new Color(0.35f, 0.33f, 0.31f, 0.35f), new Color(0.5f, 0.5f, 0.5f, 0f), 0.12f, 0.35f);
+        }
+
+        private static void Emit(Transform parent, string name, Material material, float rate, float lifeMin, float lifeMax, float sizeMin, float sizeMax,
+            float speedMin, float speedMax, Color start, Color end, float radius, float lift = 0.05f)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = Vector3.up * lift;
+            go.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
+            var ps = go.AddComponent<ParticleSystem>();
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            var main = ps.main;
+            main.loop = true;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(lifeMin, lifeMax);
+            main.startSize = new ParticleSystem.MinMaxCurve(sizeMin, sizeMax);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(speedMin, speedMax);
+            main.startColor = start;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            var emission = ps.emission;
+            emission.rateOverTime = rate;
+            var shape = ps.shape;
+            shape.shapeType = ParticleSystemShapeType.Cone;
+            shape.angle = 8f;
+            shape.radius = radius;
+            var colour = ps.colorOverLifetime;
+            colour.enabled = true;
+            var g = new Gradient();
+            g.SetKeys(new[] { new GradientColorKey(start, 0f), new GradientColorKey(end, 1f) },
+                new[] { new GradientAlphaKey(start.a, 0f), new GradientAlphaKey(start.a * 0.8f, 0.4f), new GradientAlphaKey(0f, 1f) });
+            colour.color = g;
+            var size = ps.sizeOverLifetime;
+            size.enabled = true;
+            size.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 1f, 1f, name == "Flames" ? 0.2f : 2.2f));
+            go.GetComponent<ParticleSystemRenderer>().sharedMaterial = material;
+            ps.Play();
+        }
+
+        /// <summary>A soft particle material: added light for flames, blended for smoke.</summary>
+        private static Material Particles(bool additive)
+        {
+            Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
+            var m = new Material(shader) { hideFlags = HideFlags.DontSave };
+            m.SetFloat("_Surface", 1f);
+            m.SetFloat("_Blend", additive ? 2f : 0f);
+            m.SetOverrideTag("RenderType", "Transparent");
+            m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            m.SetInt("_DstBlend", (int)(additive ? UnityEngine.Rendering.BlendMode.One : UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha));
+            m.SetInt("_ZWrite", 0);
+            m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            m.SetTexture("_BaseMap", SoftDot());
+            return m;
+        }
+
+        private static Texture2D _soft;
+
+        private static Texture2D SoftDot()
+        {
+            if (_soft != null) return _soft;
+            const int n = 32;
+            _soft = new Texture2D(n, n, TextureFormat.RGBA32, false) { hideFlags = HideFlags.DontSave, wrapMode = TextureWrapMode.Clamp };
+            for (int y = 0; y < n; y++)
+                for (int x = 0; x < n; x++)
+                {
+                    float d = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), new Vector2(n / 2f, n / 2f)) / (n / 2f);
+                    float a = Mathf.Clamp01(1f - d);
+                    _soft.SetPixel(x, y, new Color(1f, 1f, 1f, a * a));
+                }
+            _soft.Apply();
+            return _soft;
         }
 
         private void Update()
@@ -197,7 +293,7 @@ namespace Rth.Client
                     if (r != null) r.SetPropertyBlock(null);
             }
             if (_glow != null) Destroy(_glow.gameObject);
-            Fire(false);
+            Fire(false, default);
             Destroy(this);
         }
     }

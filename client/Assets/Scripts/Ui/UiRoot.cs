@@ -31,6 +31,8 @@ namespace Rth.Client.Ui
         private UIDocument _document;
         private PanelSettings _settings;
         private VisualElement _root;
+        /// <summary>Under every window: widgets pinned to things in the world (a mining bar over its rock).</summary>
+        public VisualElement WorldLayer { get; private set; }
         private VisualElement _windowLayer;
         private VisualElement _floatLayer;
         private VisualElement _landingLayer;
@@ -131,6 +133,7 @@ namespace Rth.Client.Ui
                 e.StopPropagation();
             }, TrickleDown.TrickleDown);
 
+            WorldLayer = Layer();
             _windowLayer = Layer();
             _floatLayer = Layer();
             _landingLayer = Layer();

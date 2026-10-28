@@ -15,8 +15,10 @@ namespace Rth.Client
     /// next step always arrives before this one ends and a walker never stops between tiles;</item>
     /// <item>it speeds up by how far behind it is: 1.5 times with more than two steps to go, twice
     /// with more than three; running doubles it;</item>
-    /// <item>it turns at a fixed rate and walks at half speed while turning, so doubling back eases
-    /// round instead of snapping (click behind you and back, in rhythm, and it never stops);</item>
+    /// <item>it turns at a fixed rate, so doubling back eases round instead of snapping (click
+    /// behind you and back, in rhythm, and it never stops). The old client also walks at half speed
+    /// while it turns, but it has turning animations to hide that; without them it reads as a limp
+    /// at every bend, so this one keeps its pace;</item>
     /// <item>it moves along each axis on its own, so a diagonal step takes as long as a straight one;</item>
     /// <item>more than two tiles from its next step, it jumps there.</item>
     /// </list>
@@ -40,6 +42,7 @@ namespace Rth.Client
         private bool _moving;
         private Vector3 _from;
         private Vector3 _to;
+        private float _pace = 1f;
         private EntityBody _body;
         private Quaternion _facing = Quaternion.identity;
         private float _deathTime = -1f;
@@ -172,7 +175,6 @@ namespace Rth.Client
 
             Vector3 before = transform.position;
             float dt = Time.deltaTime;
-            bool turning = Quaternion.Angle(transform.rotation, _facing) > 0.5f;
             while (dt > 0f)
             {
                 if (!_moving)
@@ -182,7 +184,6 @@ namespace Rth.Client
                     _to = _pending.Dequeue();
                     _moving = true;
                     Face(_to - _from);
-                    turning = Quaternion.Angle(transform.rotation, _facing) > 0.5f;
                     if (Mathf.Abs(_to.x - _from.x) > 2.01f || Mathf.Abs(_to.z - _from.z) > 2.01f)
                     {
                         transform.position = _to; // too far behind to walk it
@@ -195,10 +196,11 @@ namespace Rth.Client
                 float cycle = CycleSeconds * _tickSeconds / 0.6f;
                 float tilesPerSecond = 1f / (CyclesPerTileWalking * cycle);
                 int pathLength = _pending.Count + 1;
-                float pace = turning ? 0.5f : 1f;
+                float pace = 1f;
                 if (pathLength > 2) pace = 1.5f;
                 if (pathLength > 3) pace = 2f;
                 if (_stepsPerTick == 2) pace *= 2f;
+                _pace = pace;
                 float stepLength = tilesPerSecond * pace * dt;
 
                 // Each axis moves on its own (a diagonal step takes as long as a straight one).
@@ -226,7 +228,8 @@ namespace Rth.Client
             moved.y = 0f;
             float speed = Time.deltaTime > 0f ? moved.magnitude / Time.deltaTime : 0f;
             _body.InCombat = Time.time - LastHitTime < CombatStanceSeconds;
-            _body.Animate(speed, _stepsPerTick == 2, Time.deltaTime);
+            // Catching up at double pace or more looks like running, as the old client shows it.
+            _body.Animate(speed, _stepsPerTick == 2 || (_moving && _pace >= 2f), Time.deltaTime);
         }
 
         private void Face(Vector3 direction)

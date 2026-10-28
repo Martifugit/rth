@@ -137,6 +137,9 @@ namespace Rth.Server.Game
 
         public T? Find<T>() where T : GameSystem => _systems.OfType<T>().FirstOrDefault();
 
+        /// <summary>Every installed system implementing an interface (a hook other systems ask: IObjectUseHandler, IStatusSource).</summary>
+        public IEnumerable<T> Implementing<T>() => _systems.OfType<T>();
+
         /// <summary>Handles a client message type. One handler per type; later registrations replace earlier ones.</summary>
         public void OnMessage<T>(Action<Player, T> handler) where T : Message =>
             _messageHandlers[typeof(T)] = (player, message) => handler(player, (T)message);

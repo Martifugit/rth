@@ -26,7 +26,6 @@ namespace Rth.Client
             public readonly List<GameObject> Outlines = new List<GameObject>();
         }
 
-        private static readonly Color Gold = new Color(1f, 0.84f, 0.42f), Ember = new Color(1f, 0.32f, 0.08f);
         private Mark _focus, _hover;
         private int _version = -1;
         private float _nextCheck;
@@ -48,12 +47,6 @@ namespace Rth.Client
                 _focusTarget = Find(session.ServerState<InteractionFocus>(InteractionFocus.StateKey));
             }
             Set(_focus, _focusTarget);
-            // Fire-setting: the rock being mined glows hotter in its outline as your side of the stone heats.
-            MiningState mining = session.ServerState<MiningState>(MiningState.StateKey);
-            float heat = _focusTarget != null && !string.IsNullOrEmpty(mining.Type) && mining.Heat >= 0 ? (float)mining.Heat : 0f;
-            _focus.Material.SetColor("_Color", Color.Lerp(Gold, Ember, heat));
-            _focus.Material.SetFloat("_Halo", Mathf.Lerp(0.75f, 1f, heat));
-            _focus.Material.SetFloat("_Width", Mathf.Lerp(0.05f, 0.075f, heat));
 
             Transform hovered = session.HoveredObject != null ? session.HoveredObject.transform
                 : world != null && world.HoveredId != 0 && world.Find(world.HoveredId) is EntityView e && !e.IsDying ? e.transform : null;
@@ -65,14 +58,16 @@ namespace Rth.Client
             if (_focus != null) return true;
             Shader shader = Resources.Load<Shader>("Shaders/Highlight");
             if (shader == null) return false;
+            // One steady colour, thin: a line round the thing, not a glow over it.
             var focus = new Material(shader) { hideFlags = HideFlags.DontSave };
-            focus.SetFloat("_Halo", 0.75f);
-            focus.SetFloat("_Width", 0.05f);
-            focus.SetFloat("_Breathe", 0.35f);
+            focus.SetColor("_Color", new Color(1f, 0.86f, 0.5f, 1f));
+            focus.SetFloat("_Halo", 0.8f);
+            focus.SetFloat("_Width", 0.028f);
+            focus.SetFloat("_Breathe", 0.15f);
             var hover = new Material(shader) { hideFlags = HideFlags.DontSave };
-            hover.SetColor("_Color", new Color(1f, 0.95f, 0.8f, 1f));
-            hover.SetFloat("_Halo", 0.32f);
-            hover.SetFloat("_Width", 0.035f);
+            hover.SetColor("_Color", new Color(1f, 0.96f, 0.86f, 1f));
+            hover.SetFloat("_Halo", 0.4f);
+            hover.SetFloat("_Width", 0.02f);
             hover.SetFloat("_Breathe", 0f);
             _focus = new Mark { Material = focus };
             _hover = new Mark { Material = hover };
@@ -111,7 +106,7 @@ namespace Rth.Client
         {
             foreach (Renderer r in target.GetComponentsInChildren<Renderer>())
             {
-                if (!r.enabled || r.name == "Outline") continue;
+                if (!r.enabled || r.name == "Outline" || r.name == "Ember" || MiningView.UnderFire(r.transform)) continue;
                 var outline = new GameObject("Outline") { hideFlags = HideFlags.DontSave };
                 outline.transform.SetParent(r.transform, false);
                 Renderer copy;
@@ -144,19 +139,22 @@ namespace Rth.Client
                 copy.shadowCastingMode = ShadowCastingMode.Off;
                 copy.receiveShadows = false;
                 // Cut-out leaves keep their shapes: each sub-mesh takes its source's texture and threshold.
+                // Skinned bodies push out along their own normals (the baked ones don't follow the bones).
+                bool skinnedBody = copy is SkinnedMeshRenderer;
                 Material[] source = r.sharedMaterials;
-                for (int i = 0; i < materials.Length && i < source.Length; i++)
+                for (int i = 0; i < materials.Length; i++)
                 {
-                    Material m = source[i];
+                    Material m = i < source.Length ? source[i] : null;
                     _block.Clear();
+                    _block.SetFloat("_Smooth", skinnedBody ? 0f : 1f);
                     bool cutout = m != null && m.HasProperty("_AlphaClip") && m.GetFloat("_AlphaClip") > 0.5f && m.HasProperty("_BaseMap") && m.GetTexture("_BaseMap") != null;
                     if (cutout)
                     {
                         _block.SetTexture("_BaseMap", m.GetTexture("_BaseMap"));
                         _block.SetVector("_BaseMap_ST", m.GetVector("_BaseMap_ST"));
                         _block.SetFloat("_Cutoff", m.HasProperty("_Cutoff") ? m.GetFloat("_Cutoff") : 0.5f);
-                        copy.SetPropertyBlock(_block, i);
                     }
+                    copy.SetPropertyBlock(_block, i);
                 }
                 mark.Outlines.Add(outline);
             }

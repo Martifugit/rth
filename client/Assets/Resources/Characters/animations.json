@@ -99,6 +99,14 @@
     "use": "Role: eating or drinking anything (items name their own with 'animation'; this is the default). The swig from 'drink', about 1.25 s."
   },
   "dig": { "source": "Mixamo: Digging", "loop": true, "use": "Digging with a spade." },
+  "mine": {
+    "source": "Our own: tools/character-models/animate.py (mine)", "stopOnMove": true,
+    "use": "Mining: two strikes of a pickaxe held two-handed, one attempt's 2.4 s (rocks name it)."
+  },
+  "chop": {
+    "source": "Our own: tools/character-models/animate.py (chop)", "stopOnMove": true,
+    "use": "Woodcutting: two chops into a trunk, one-handed, one attempt's 2.4 s (trees name it)."
+  },
   "sit": { "source": "Mixamo: Sitting", "loop": true, "use": "Sitting on a chair or bench." },
   "rest": {
     "source": "Mixamo: Sitting Idle", "loop": true,
