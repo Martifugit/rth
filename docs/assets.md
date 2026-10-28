@@ -207,11 +207,7 @@ One entry per asset or part, so how finished it is is written down, not remember
 
 ```json
 {
-  "id": "furniture/village/bier",
-  "layer": "assets",
-  "kind": "furniture",
-  "style": "village",
-  "name": "Bier",
+  "id": "assets/furniture/village/Bier",
   "status": "missing",
   "note": "The dead-house's bier, where every player first wakes; a shroud over it.",
   "usedBy": ["tolling/dead-house"]
@@ -222,5 +218,5 @@ One entry per asset or part, so how finished it is is written down, not remember
 place) → `first pass` (modelled, not reviewed) → `in review` (shown to the owner) → `approved`.
 Only the owner sets `approved`. Everything that exists today starts at `first pass` or `blockout`.
 
-`usedBy` names sets and areas. An area's asset list (`docs/areas/<area>-assets.md`) is then what its
+The id is the family's path and the model's name, so it says where the script and the export are. `usedBy` names what uses it: places in areas (`tolling/dead-house`) for what is still to make, and for what exists the regions, object types, items, NPCs and kits that name it. An area's asset list (`docs/areas/<area>-assets.md`) is then what its
 sets and pieces need, read from the catalogue, instead of a hand-kept list that goes stale.
