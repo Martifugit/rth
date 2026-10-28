@@ -468,6 +468,11 @@ provisional slice of content (tiers 1-3) so each loop plays end to end (`docs/sk
       `SkillingPaceTests` (the shipped content against the pace table) and `SkillingLoopTests`
       (each loop end to end from the starter kit).
 
+Also on this branch, **Defence's abilities** (`docs/skills.md` 3.6): Brace, Steel the Flesh,
+Riposte and Unyielding, spenders of no style (any weapon, the book's "Defence" tab) used on
+yourself, with two new stats combat reads, `reflectMelee` and `surviveLethal` (`DefenceTests`).
+Defence XP from damage prevented is not built.
+
 Not yet: Tailoring and Artifice content, Cooking's active layer, combined foods, the quirk tiers
 (elm, bog iron), real station models, the make window's look checked in the Editor.
 
@@ -557,7 +562,7 @@ area's folder, then the blockout), and the neighbours' rings of tiles follow. Th
 character a tile), not a Unity splat map: `docs/world-guide.md` section 4. Water is one flat surface
 (`Water.shader`: shallows, glints, flow) with the banks dipping under it (`Shore`), so shores curve.
 
-**Next: not chosen yet.** Candidates: ranged, Defence's abilities, an art pass on Tolling, more
+**Next: not chosen yet.** Candidates: ranged, an art pass on Tolling, more
 quests and achievements, Tailoring and Artifice content.
 
 ---
