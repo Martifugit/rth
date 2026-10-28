@@ -8,9 +8,10 @@ using UnityEngine;
 namespace Rth.Client.Editor
 {
     /// <summary>
-    /// The kit models made in Blender (Assets/Resources/Nature from tools/art/blender/nature/basin.py,
-    /// Assets/Resources/Caves from tools/art/blender/caves/entrances.py, Assets/Art/Buildings from the
-    /// building kits) get the game's materials by name, as the scripts name them:
+    /// The kit models made in Blender (Assets/Resources/Art/&lt;Layer&gt;/&lt;Kind&gt;/&lt;Style&gt;, each folder exported
+    /// by its family script under tools/art/blender, docs/assets.md section 10) get the game's materials
+    /// by name, as the scripts name them. Held items and creatures are left alone: their bodies colour
+    /// them by palette name as they're drawn (HeldItemArt, CreatureBody).
     /// <list type="bullet">
     /// <item>a world texture's name (Assets/Art/Textures/&lt;name&gt;.png: Foliage, Thorn, Wattle...):
     /// that texture, alpha-clipped so leaf hems cut out, drawn on both sides, matte;</item>
@@ -24,7 +25,8 @@ namespace Rth.Client.Editor
     /// </summary>
     public sealed class NatureImporter : AssetPostprocessor
     {
-        public static readonly string[] Folders = { "Assets/Resources/Nature/", "Assets/Resources/Caves/", "Assets/Art/Buildings/" };
+        public static readonly string[] Folders = { "Assets/Resources/Art/Parts/", "Assets/Resources/Art/Assets/" };
+        private static readonly string[] Except = { "Assets/Resources/Art/Assets/Held/", "Assets/Resources/Art/Assets/Creatures/" };
         private const string MaterialDir = "Assets/Art/Materials/Nature";
 
         private void OnPreprocessModel()
@@ -61,7 +63,8 @@ namespace Rth.Client.Editor
             }
         }
 
-        private static bool Ours(string path) => System.Array.Exists(Folders, f => path.StartsWith(f));
+        private static bool Ours(string path) =>
+            System.Array.Exists(Folders, f => path.StartsWith(f)) && !System.Array.Exists(Except, f => path.StartsWith(f));
 
         /// <summary>The shared material for a name from the kits' scripts (made, or brought up to date).</summary>
         public static Material For(string name)

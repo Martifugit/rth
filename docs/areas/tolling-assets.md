@@ -1,6 +1,6 @@
 # Tolling and Wennow: what the art kits cover
 
-**Status:** inventory (2026-10-27). For the starter scenes in [tolling.md](tolling.md): what each place
+**Status:** inventory (2026-10-27; script paths updated 2026-10-28 for the families, `docs/assets.md` section 10). For the starter scenes in [tolling.md](tolling.md): what each place
 needs, what the Blender kits already make, and what is missing, in art and in the pipeline that puts
 art into a region. Nothing here is placed yet; the area is at stage 1 (ground).
 
@@ -17,17 +17,17 @@ The trees keep the reference's squat look (4 to 5.4).
 
 | Kit | Script | In the game? | What it makes |
 | --- | --- | --- | --- |
-| Nature | `tools/art/blender/nature/basin.py`, `mining.py`, `wilds.py` | yes, `Resources/Nature` (89 models) | trees (alder, ash, hawthorn, pollard willow, birch, elm, pine, snag) and their stumps; bushes and berry bushes; reeds, lily pads, tussocks, dock, bracken, heather, gorse, thistles, wildflowers, flax, herbs, mushrooms; boulders, scree, cairn, standing stones; buck fence, hurdles, dry-stone wall and stile, hedge, field gate; graves; hay stook, farm cart, scarecrow, skeps, trough, eel traps, woodpile, chopping block, campfire, lean-to; punt, a timber jetty span, mooring post, stepping stones, footbridge; fingerpost, milestone; barrel, crate, sacks; the mining nodes (three kinds, two variants each, depleted) |
-| Caves | `tools/art/blender/caves/entrances.py` | yes, `Resources/Caves` | cave and dungeon mouths dressed seven ways (plain, mine, overgrown, shrine, lair, the makers', a sealed crypt), ways down (pit, sinkhole, fissure, shaft, stairwell, squeeze, sump, burrow), doors, gates, rubble, a hide rack, candles, bones |
-| Village (Venaria) | `tools/art/blender/buildings/venaria.py` | pieces only, `Art/Buildings/Venaria` | tile pieces for timber-framed and stone buildings: walls (plain, braced, shuttered, leaded, lancet), doorway and door, barn door, jettied storey, thatch and slate roofs, gables, chimneys, font, bellcote, banner, lantern, bench; assembled in Blender into a cottage, a longhouse, a village chapel and a townhouse |
+| Nature | the families `assets/trees`, `plants`, `rocks`, `nodes`, `lights` (common) and `parts/fences`, `parts/waterfront`, `assets/containers`, `dressing`, `ways`, `vessels` (village); board `boards/basin.py` | first passes, in the game | trees (alder, ash, hawthorn, pollard willow, birch, elm, pine, snag) and their stumps; bushes and berry bushes; reeds, lily pads, tussocks, dock, bracken, heather, gorse, thistles, wildflowers, flax, herbs, mushrooms; boulders, scree, cairn, standing stones; buck fence, hurdles, dry-stone wall and stile, hedge, field gate; graves; hay stook, farm cart, scarecrow, skeps, trough, eel traps, woodpile, chopping block, campfire, lean-to; punt, a timber jetty span, mooring post, stepping stones, footbridge; fingerpost, milestone; barrel, crate, sacks; the mining nodes (three kinds, two variants each, depleted) |
+| Caves | the families `parts/rockwork`, `parts/walls`, `parts/floors`, `assets/openings`, `assets/dressing` (common, makers, mine); board `boards/caves.py` | first passes, exported | cave and dungeon mouths dressed seven ways (plain, mine, overgrown, shrine, lair, the makers', a sealed crypt), ways down (pit, sinkhole, fissure, shaft, stairwell, squeeze, sump, burrow), doors, gates, rubble, a hide rack, candles, bones |
+| Village (Venaria) | the families `parts/walls`, `parts/roofs`, `parts/fixtures`, `assets/openings` (village); board `boards/village.py` | first passes; buildings from data | tile pieces for timber-framed and stone buildings: walls (plain, braced, shuttered, leaded, lancet), doorway and door, barn door, jettied storey, thatch and slate roofs, gables, chimneys, font, bellcote, banner, lantern, bench; assembled in Blender into a cottage, a longhouse, a village chapel and a townhouse |
 | Cruor | `tools/art/blender/buildings/cruor/` | no | the capital's stone architecture: walls, towers with belfries and spires, halls, a gatehouse, townhouses; the cathedral and the altar |
 | Harbour | `tools/art/blender/harbour/` | no | timber jetties, stairs, pontoon, gangplank, slipway; stone quays and piers; worn and broken timber; bollards, capstan, crane, net rack, lamps, markers, fish crates, lobster pots; rowing boat, fishing boat, river barge, a walkable ship |
-| Creatures | `tools/art/blender/creatures/` | the fen rat | |
+| Creatures | `tools/art/blender/assets/creatures/` | the fen rat (first pass) | |
 | Characters | `tools/character-models/` | a male and a female body, hair | townsfolk wear the player's body for now |
 
 ## The places
 
-Kit: what exists. **Missing** is art still to make. Pieces marked *(V)* can be put together from the
+Kit: what a first pass exists for (none of it is approved yet: see `tools/art/catalogue.json`). **Missing** is art still to make. Pieces marked *(V)* can be put together from the
 village kit's pieces without new art.
 
 ### Tolling, the town on the knoll

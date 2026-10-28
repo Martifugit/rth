@@ -9,7 +9,7 @@ namespace Rth.Client.Editor
 {
     /// <summary>
     /// Draws a <see cref="PieceKind.Building"/> piece from its kit's models, piece by piece as the
-    /// kit's Blender script puts a building together (tools/art/blender/buildings/venaria.py,
+    /// kit's Blender board puts a building together (tools/art/blender/boards/village.py,
     /// volume()): wall tiles along every face and storey, posts at the corners, gables, roof slabs
     /// and verges, a bellcote and a chimney, recoloured per storey. It stands level on the highest
     /// corner of the terrain under it, on a stone foundation, with a floor inside. The walls and
@@ -165,17 +165,21 @@ namespace Rth.Client.Editor
                 return worldSide == "E" ? "S" : worldSide == "W" ? "N" : worldSide == "S" ? "W" : "E";
             }
 
+            /// <summary>Where a kit piece's model is: the kit's own path for it, or else its models folder.</summary>
+            private string ModelPath(string name) =>
+                _kit.Paths.TryGetValue(name, out string path) ? path : _kit.Models + "/" + name + ".fbx";
+
             /// <summary>Puts a kit piece at (lx, ly) in the local frame, turned rot degrees anticlockwise as in Blender, z up from the floor.</summary>
             private GameObject Place(Transform parent, string name, float lx, float ly, float rot, float z, Dictionary<string, string> colours, float scaleX = 1f)
             {
                 if (!_models.TryGetValue(name, out GameObject model))
                 {
-                    model = AssetDatabase.LoadAssetAtPath<GameObject>(_kit.Models + "/" + name + ".fbx");
+                    model = AssetDatabase.LoadAssetAtPath<GameObject>(ModelPath(name));
                     _models[name] = model;
                 }
                 if (model == null)
                 {
-                    Debug.LogError($"[R'th] building kit '{_kit.Id}': no model {_kit.Models}/{name}.fbx; export the kit from Blender.");
+                    Debug.LogError($"[R'th] building kit '{_kit.Id}': no model {ModelPath(name)}; export its family from Blender.");
                     return null;
                 }
                 float wx, wy, turn;

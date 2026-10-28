@@ -4,8 +4,8 @@ using UnityEngine;
 namespace Rth.Client.Characters
 {
     /// <summary>
-    /// What a character holds: the item's model (Resources/Items/&lt;model&gt;, made in
-    /// tools/art/blender/items) coloured by its palette-named materials and the item's recolours,
+    /// What a character holds: the item's model (a path under Resources, "Art/Assets/Held/Common/Sword",
+    /// made in tools/art/blender/assets/held) coloured by its palette-named materials and the item's recolours,
     /// or for items without one a stand-in of a few boxes in the shape of the item's kind (its
     /// icon: sword, dagger, knife, mace), tinted by the item's colour. Both follow the held-art
     /// convention (tools/character-models): origin at the grip, the handle running along +Z, so
@@ -33,7 +33,7 @@ namespace Rth.Client.Characters
             if (item == null) return null;
             bool weapon = item.Equipment != null && item.Equipment.Slot == EquipSlot.Weapon;
             if (!weapon && !(item.Tool != null && HasModel(item))) return null;
-            GameObject model = HasModel(item) ? Resources.Load<GameObject>("Items/" + item.Model) : null;
+            GameObject model = HasModel(item) ? Resources.Load<GameObject>(item.Model) : null;
             if (model != null)
             {
                 GameObject copy = Object.Instantiate(model);
@@ -87,7 +87,7 @@ namespace Rth.Client.Characters
         /// </summary>
         public static void Tint(GameObject held, ItemDef item, CharacterModel model)
         {
-            if (HasModel(item) && Resources.Load<GameObject>("Items/" + item.Model) != null)
+            if (HasModel(item) && Resources.Load<GameObject>(item.Model) != null)
             {
                 model.ColorAttached(held, material => ModelColour(item, material));
                 return;

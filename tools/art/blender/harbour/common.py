@@ -16,11 +16,10 @@ from mathutils import Matrix, Vector
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ART = os.path.join(HERE, "..")
-for p in (ART, os.path.join(ART, "nature")):
-    if p not in sys.path:
-        sys.path.insert(0, p)
+if ART not in sys.path:
+    sys.path.insert(0, ART)
 import rth_art as A  # noqa: E402
-import basin as N  # noqa: E402
+import artlib.nature as N  # noqa: E402
 
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
 WALK_DIR = os.path.join(REPO, "world", "walk")

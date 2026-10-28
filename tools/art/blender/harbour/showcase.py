@@ -24,7 +24,8 @@ import bmesh
 import bpy
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-for name in ("rth_art", "basin", "common", "structures", "vessels", "layout", "styles"):
+for name in [m for m in sys.modules if m in ("rth_art", "common", "structures", "vessels", "layout", "styles")
+             or m.split(".")[0] in ("artlib", "assets", "parts")]:
     sys.modules.pop(name, None)
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
@@ -33,8 +34,11 @@ import layout as Lay  # noqa: E402
 import structures as S  # noqa: E402
 import vessels as V  # noqa: E402
 from styles import STYLES  # noqa: E402
-sys.modules.pop("wilds", None)
-import wilds as Wd  # noqa: E402  (the nature kit's things people leave about)
+import assets.containers.village as containers  # noqa: E402  (the things people leave about)
+import assets.dressing.village as dressing  # noqa: E402
+import assets.plants.common as plants  # noqa: E402
+import assets.trees.common as trees  # noqa: E402
+import assets.ways.village as ways  # noqa: E402
 
 A, N = C.A, C.N
 A._palette = None
@@ -211,24 +215,24 @@ def build():
     # a fingerpost where the road leaves the quay, firewood stacked behind
     Q = C.QUAY
     for k, (x, y) in enumerate(((34.9, 32.2), (35.5, 32.75), (34.6, 32.85))):
-        o["barrel_%d" % k] = Wd.barrel(seed=k + 1, at=(x, y, Q))
-    o["sacks"] = Wd.sacks(at=(39.4, 32.6, Q))
-    o["crate_0"] = Wd.crate(seed=2, at=(42.4, 32.5, Q))
-    o["crate_1"] = Wd.crate(seed=3, at=(42.5, 32.55, Q + 0.6))
-    o["crate_2"] = Wd.crate(seed=4, at=(43.1, 33.2, Q))
-    o["cart"] = Wd.N.farm_cart(at=(31.5, 35.2, Q), rot=0.5)
-    o["fingerpost"] = Wd.fingerpost(at=(8.4, 34.9, ground_z(8.4, 34.9)), arms=(0, 90, 200))
-    o["woodpile"] = Wd.woodpile(at=(23.0, 36.0, Q))
-    o["trough"] = Wd.trough(at=(33.5, 36.6, Q))
+        o["barrel_%d" % k] = containers.barrel(seed=k + 1, at=(x, y, Q))
+    o["sacks"] = containers.sacks(at=(39.4, 32.6, Q))
+    o["crate_0"] = containers.crate(seed=2, at=(42.4, 32.5, Q))
+    o["crate_1"] = containers.crate(seed=3, at=(42.5, 32.55, Q + 0.6))
+    o["crate_2"] = containers.crate(seed=4, at=(43.1, 33.2, Q))
+    o["cart"] = dressing.farm_cart(at=(31.5, 35.2, Q), rot=0.5)
+    o["fingerpost"] = ways.fingerpost(at=(8.4, 34.9, ground_z(8.4, 34.9)), arms=(0, 90, 200))
+    o["woodpile"] = dressing.woodpile(at=(23.0, 36.0, Q))
+    o["trough"] = containers.trough(at=(33.5, 36.6, Q))
     # the nature kit: reeds along the shore, trees and rough grass behind
     for k, x in enumerate((-7.0, -5.2, -0.4, 1.8, 3.0)):
         y = shore_y(x) - 0.4
-        o["reeds_%d" % k] = N.reeds(seed=3 + k, at=(x, y, ground_z(x, y) + 0.2))
-    for k, (fn, x, y) in enumerate(((N.alder, -6.0, 37.0), (N.ash, -1.0, 40.0), (N.hawthorn, 4.0, 38.5), (N.alder, 58.0, 38.0),
-                                    (N.ash, 62.0, 41.0))):
+        o["reeds_%d" % k] = plants.reeds(seed=3 + k, at=(x, y, ground_z(x, y) + 0.2))
+    for k, (fn, x, y) in enumerate(((trees.alder, -6.0, 37.0), (trees.ash, -1.0, 40.0), (trees.hawthorn, 4.0, 38.5), (trees.alder, 58.0, 38.0),
+                                    (trees.ash, 62.0, 41.0))):
         o["tree_%d" % k] = fn(at=(x, y, ground_z(x, y)))
     for k, (x, y) in enumerate(((-3.5, 32.0), (2.5, 33.0), (6.5, 35.0), (-7.0, 31.0))):
-        o["tussock_%d" % k] = N.tussock(seed=k + 1, at=(x, y, ground_z(x, y)))
+        o["tussock_%d" % k] = plants.tussock(seed=k + 1, at=(x, y, ground_z(x, y)))
     return o
 
 

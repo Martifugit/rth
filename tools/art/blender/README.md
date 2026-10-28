@@ -5,6 +5,27 @@ R'th's models built as Python scripts in Blender 5.x (through the Blender MCP or
 the art must follow are in [docs/assets.md](../../../docs/assets.md). **Read the dos and don'ts
 below before making anything**: they are what the owner has passed and rejected so far.
 
+How the art is organised (decided 2026-10-28) is [docs/assets.md](../../../docs/assets.md)
+section 10: **parts** (pieces only placed joined to their kind), **assets** (placed alone) and
+**sets** (arrangements, kept as data), each made by **families**, one kind in one style:
+
+```
+<layer>/<kind>/<style>.py      one family: its builders and ASSETS (name in the game -> builder)
+  e.g. assets/trees/common.py, parts/walls/village.py, assets/containers/village.py
+assets/<kind>/<style>/<asset>.py   one-offs (creatures, landmarks): a script each
+artlib/                        helpers shared by families: nature.py, caves.py, village.py, family.py
+boards/                        style boards: families placed together on the ground (basin, caves,
+                               village); they build nothing of their own and export nothing
+textures/                      texture painters and their images (textures/nature.py)
+buildings/cruor/, harbour/, armour/   not split into families yet; buildings/lab/ is history
+```
+
+A family exports to `client/Assets/Resources/Art/<Layer>/<Kind>/<Style>/<Name>.fbx` and owns that
+folder (an export removes what the family no longer makes). Every model the game uses is named by
+that path: `"model": "Assets/Resources/Art/Assets/Trees/Common/Alder.fbx"` on a region's piece,
+`"Art/Assets/Trees/Common/AlderStool"` (a Resources path) in objects.json, items.json and npcs.json,
+and the village kit's pieces in `world/kits/venaria.json`'s `paths`.
+
 - `rth_art.py`: shared helpers.
   - **Materials:** palette colours (`mat("Stone")`, from `client/Assets/Resources/Art/palette.json`).
   - **Geometry:** `prism`, `box`, `loft`, `hull`, `decal`, `finish`.
@@ -12,38 +33,53 @@ below before making anything**: they are what the owner has passed and rejected 
     player for scale; `figures` adds more players.
   - **Checks:** `report` (triangles and colours, against `client/Assets/Art/art-budgets.json`) and
     `floating_parts` (pieces hanging in the air).
-- `props/well.py`: the first test prop, a village well (172 triangles, 4 colours).
-- `buildings/venaria.py`: the village kit, the plain reference (cottage, longhouse, village chapel,
-  townhouse).
+- `artlib/family.py`: runs a family script. Run plainly, it lays the family out in a row beside
+  the player in Material Preview; with `SAVE` it also saves the working `.blend` beside the script
+  (git-ignored: the script is the truth); with `EXPORT` it writes the FBXs.
+- `boards/village.py`: the village kit (Venaria) put together into a cottage, a longhouse, a
+  village chapel and a townhouse, the plain reference; with `EXPORT` it writes
+  `world/kits/venaria.json`. Its pieces are the families `parts/walls/village`,
+  `parts/roofs/village`, `parts/fixtures/village` and `assets/openings/village` (the door).
+- `boards/basin.py`: the nature board, a patch of Tolling's basin with one of each nature model.
+- `boards/caves.py`: cave entrances dressed seven ways, and every cave model a row per family.
 - `buildings/cruor/`: **Cruor's architecture, the chosen style for the empire's capital.** The kit
   (`kit.py`), the cathedral built from it (`cathedral.py`), a scene with every part
   (`showcase.py`) and its textures (`textures.py`). Its rules are in
   [docs/regions/cruor-architecture.md](../../../docs/regions/cruor-architecture.md).
 - `buildings/painting.py`: the pixel painters every building texture script uses.
 - `buildings/lab/`: experiments and history (the paint lab, the first monumental passes). Not
-  the chosen style; see its README for what each round taught and where it went.
-- `creatures/fen_rat.py`: the fen rat (136 triangles, 3 colours), in the game.
-- `items/held.py`: held weapons and tools. The smithed roster (all tier-1 copper, one metal
+  the chosen style; see its README for what each round taught and where it went. Its scripts
+  predate the families and may not run.
+- `assets/landmarks/village/well.py`: the first test prop, a village well (172 triangles, 4 colours).
+- `assets/creatures/common/fen_rat.py`: the fen rat (136 triangles, 3 colours), in the game.
+- `assets/held/common.py`: held weapons and tools. The smithed roster (all tier-1 copper, one metal
   material): knife, sword (a gladius), falcata, longsword (a claymore with a church hilt),
   warhammer, hatchet, pickaxe. Plus the athame and the penitent's mace. Origin at the grip,
   handle along -Y, blades in the vertical plane. A variant in another metal is `"recolor"` on
   the item in items.json, not a new model. `strip` builds curved and wavy blades.
+  `assets/held/relics.py` is the Sealbreaker.
 
-Run a prop from the MCP:
+Run a family, a board or a one-off from the MCP:
 
 ```python
-import runpy, sys; sys.path.insert(0, r"C:\dev\rth\tools\art\blender")
-ns = runpy.run_path(r"C:\dev\rth\tools\art\blender\props\well.py"); result = ns["result"]
+import runpy
+ns = runpy.run_path(r"C:\dev\rth\tools\art\blender\assets\trees\common.py"); result = ns["result"]
+ns = runpy.run_path(r"C:\dev\rth\tools\art\blender\assets\trees\common.py", init_globals={"EXPORT": True})
 ```
 
 then `rth_art.render(path)` for the game view, or pass `focus`, `distance`, `pitch` and `yaw`
 for another angle.
 
-**Into the game:** `rth_art.export(objs, "Resources/Creatures/FenRat.fbx")` writes the FBX into the
-client (the model faces Blender -Y, which becomes Unity +Z; its origin is the middle of its
-tile). Name the NPC's model in `server/data/content/npcs.json` (`"model": "FenRat"`) and the
-client's `CreatureBody` draws it, colouring each material by the palette colour it is named
-after. `creatures/fen_rat.py` exports itself when run.
+**A new asset:** a builder in its family (at the origin, the middle of its tile; one call to
+`make` or `mesh_from`) and a line in the family's `ASSETS`. A new kind or style is a new family
+script at its path. A model a family no longer makes disappears from its folder at the next
+export, so rename with care: regions and content name models by path.
+
+**Into the game:** a family's export writes the FBXs into the client (the model faces Blender -Y,
+which becomes Unity +Z; its origin is the middle of its tile). A creature's model is named in
+`server/data/content/npcs.json` (`"model": "Art/Assets/Creatures/Common/FenRat"`) and the client's
+`CreatureBody` draws it, colouring each material by the palette colour it is named after.
+`assets/creatures/common/fen_rat.py` exports itself when run.
 
 ## Dos and don'ts
 
@@ -99,7 +135,7 @@ Learned by making the well with the owner. Add to this list as more props are ma
 - **Do** push a special piece's outline to the extreme first (a split head, spikes, chain): a
   safe shape with carving on it reads as "a sledgehammer with a sign".
 - **Do** build a special weapon as the pieces it drops as, and assemble it from them
-  (`items/special.py`), so every piece is a real part and the drops show progress.
+  (`assets/held/relics.py`), so every piece is a real part and the drops show progress.
 - **Do** cast anything that sits on a surface onto it (`decal`, links cast per piece), and let a
   mark that would hang off an edge be dropped rather than placed.
 - **Do** give ornament contrast in brightness, not just in shape: a black iron boss on a black
@@ -112,7 +148,7 @@ Learned by making the well with the owner. Add to this list as more props are ma
 **Buildings: what has passed**
 
 Two kits so far. Start from the one that fits, and read its rules before adding to it:
-- the village kit (`buildings/venaria.py`), for humble country buildings;
+- the village kit (`boards/village.py` and the `village` part families), for humble country buildings;
 - Cruor's kit (`buildings/cruor/`, rules in `docs/regions/cruor-architecture.md`), for the
   capital's civic, military and religious buildings and its houses.
 
@@ -172,7 +208,7 @@ Two kits so far. Start from the one that fits, and read its rules before adding 
   Fine detail and colour belong in dressing (banners, braziers, furniture), not in the shell.
 - **Don't** run ahead: dressing, plants and extras come after the buildings themselves are right.
 
-**Nature: what has passed** (the kit is `nature/basin.py`, its textures `nature/textures.py`)
+**Nature: what has passed** (the board is `boards/basin.py`, its textures `textures/nature.py`)
 - **Do** take only the *technique* from reference images (few big faces, leaf textures with a
   ragged hem, smooth light, flat-coloured crooked timber) and never their shapes. Copied cones,
   skirts and rail fences were rejected; forms come from R'th (a worked, weathered land under a wind

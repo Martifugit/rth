@@ -13,7 +13,8 @@ import bmesh
 import bpy
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-for name in ("rth_art", "basin", "common", "structures", "vessels", "layout", "styles"):
+for name in [m for m in sys.modules if m in ("rth_art", "common", "structures", "vessels", "layout", "styles")
+             or m.split(".")[0] in ("artlib", "assets", "parts")]:
     sys.modules.pop(name, None)
 if HERE not in sys.path:
     sys.path.insert(0, HERE)

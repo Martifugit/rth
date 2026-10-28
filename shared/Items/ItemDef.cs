@@ -22,8 +22,8 @@ namespace Rth.Shared.Items
         public string Color = "#a0a0a0";
         /// <summary>Icon id (the client's icon library); empty means a guess from what the item is.</summary>
         public string Icon = "";
-        /// <summary>Its model under the client's Resources/Items (held or worn art, made in
-        /// tools/art/blender/items); empty draws a stand-in.</summary>
+        /// <summary>Its model, a path under the client's Resources ("Art/Assets/Held/Common/Sword": held or worn
+        /// art, made in tools/art/blender/assets/held); empty draws a stand-in.</summary>
         public string Model = "";
         /// <summary>Colours swapped on the model: a material's palette name to another palette name
         /// or #RRGGBB ("Copper": "Iron"), so one model serves every metal.</summary>

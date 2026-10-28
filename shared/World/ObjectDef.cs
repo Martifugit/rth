@@ -27,13 +27,13 @@ namespace Rth.Shared.World
         public Dictionary<string, string> Recolor = new Dictionary<string, string>();
         /// <summary>
         /// Client only: the model a depleted node shows in place of its own look, a path under
-        /// Resources ("Nature/AlderStool": a felled tree's stump, a picked bush). Without one, a
+        /// Resources ("Art/Assets/Trees/Common/AlderStool": a felled tree's stump, a picked bush). Without one, a
         /// depleted node sinks and dims.
         /// </summary>
         public string? DepletedModel;
         /// <summary>
         /// Client only: the model drawn when this object is set down while the game runs (a
-        /// campfire lit from logs), a path under Resources ("Nature/Campfire"). Objects placed in
+        /// campfire lit from logs), a path under Resources ("Art/Assets/Lights/Common/Campfire"). Objects placed in
         /// the regions are drawn by their scenes and don't need one.
         /// </summary>
         public string? Model;

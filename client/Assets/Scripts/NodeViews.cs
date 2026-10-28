@@ -135,7 +135,7 @@ namespace Rth.Client
                 _fire.transform.SetParent(transform, true);
                 _fire.transform.position = at;
                 _fire.transform.rotation = Quaternion.LookRotation(-dir.normalized);
-                GameObject model = Resources.Load<GameObject>("Nature/Campfire");
+                GameObject model = Resources.Load<GameObject>("Art/Assets/Lights/Common/Campfire");
                 if (model != null)
                 {
                     GameObject logs = Instantiate(model, _fire.transform, false);

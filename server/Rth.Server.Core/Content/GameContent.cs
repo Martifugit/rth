@@ -60,7 +60,7 @@ namespace Rth.Server.Content
         public string? Shop;
 
         public EntityShape Shape = EntityShape.Capsule;
-        /// <summary>The client's model for it (Resources/Creatures/&lt;model&gt;); empty draws <see cref="Shape"/>.</summary>
+        /// <summary>The client's model for it (a path under its Resources, "Art/Assets/Creatures/Common/FenRat"); empty draws <see cref="Shape"/>.</summary>
         public string Model = "";
         public string Color = "#888888";
         public double Scale = 1.0;

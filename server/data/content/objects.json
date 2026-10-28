@@ -1258,7 +1258,7 @@
     "id": "copper_seam",
     "name": "Copper seam",
     "examine": "Green-stained rock with a glint of red in it.",
-    "depletedModel": "Nature/MiningBoulderADug",
+    "depletedModel": "Art/Assets/Nodes/Common/MiningBoulderADug",
     "actions": [ { "id": "gather", "label": "Mine" } ],
     "node": {
       "skill": "mining",
@@ -1283,7 +1283,7 @@
     "id": "ironstone_seam",
     "name": "Ironstone seam",
     "examine": "Rust streaks the rock like old blood.",
-    "depletedModel": "Nature/MiningBoulderADug",
+    "depletedModel": "Art/Assets/Nodes/Common/MiningBoulderADug",
     "recolor": { "CopperOre": "IronOre" },
     "actions": [ { "id": "gather", "label": "Mine" } ],
     "node": {
@@ -1309,7 +1309,7 @@
     "id": "alder_tree",
     "name": "Alder",
     "examine": "A riverbank tree with dark, sticky buds.",
-    "depletedModel": "Nature/AlderStool",
+    "depletedModel": "Art/Assets/Trees/Common/AlderStool",
     "actions": [ { "id": "gather", "label": "Chop" }, { "id": "tend", "label": "Tend" } ],
     "node": {
       "tending": { "groupRadius": 8, "everyTicks": 220, "needTicks": 35, "tendedTicks": 120, "status": "well_tended", "successBonus": 0.25, "depleteScale": 0.3, "xp": 6, "needMessage": "Suckers and brambles are choking the foot of the alder {where}." },
@@ -1335,7 +1335,7 @@
     "id": "ash_tree",
     "name": "Ash",
     "examine": "Tall and grey-barked, with black buds like little hooves.",
-    "depletedModel": "Nature/AshStump",
+    "depletedModel": "Art/Assets/Trees/Common/AshStump",
     "actions": [ { "id": "gather", "label": "Chop" }, { "id": "tend", "label": "Tend" } ],
     "node": {
       "tending": { "groupRadius": 8, "everyTicks": 220, "needTicks": 35, "tendedTicks": 120, "status": "well_tended", "successBonus": 0.2, "depleteScale": 0.3, "xp": 9, "needMessage": "Suckers and brambles are choking the foot of the ash {where}." },
@@ -1452,7 +1452,7 @@
     "id": "hematite_seam",
     "name": "Hematite seam",
     "examine": "Rust-red streaks in dark rock, as if the stone had bled.",
-    "depletedModel": "Nature/MiningBoulderADug",
+    "depletedModel": "Art/Assets/Nodes/Common/MiningBoulderADug",
     "recolor": {
       "CopperOre": "HematiteOre"
     },
@@ -1519,7 +1519,7 @@
     "id": "campfire",
     "name": "Campfire",
     "examine": "A small fire of logs. It will not last.",
-    "model": "Nature/Campfire",
+    "model": "Art/Assets/Lights/Common/Campfire",
     "glow": "#ff8a33",
     "actions": [
       {
@@ -1614,7 +1614,7 @@
         "item": "tag:trap",
         "ticks": 50,
         "max": 5,
-        "model": "Nature/EelTraps"
+        "model": "Art/Assets/Dressing/Village/EelTraps"
       },
       "noToolMessage": "You need an eel trap to set here.",
       "respawnTicks": 1
@@ -1624,7 +1624,7 @@
     "id": "yarrow_patch",
     "name": "Yarrow",
     "examine": "A patch of yarrow among the grass.",
-    "depletedModel": "Nature/HerbPicked",
+    "depletedModel": "Art/Assets/Plants/Common/HerbPicked",
     "actions": [
       {
         "id": "gather",
@@ -1661,7 +1661,7 @@
     "id": "rue_patch",
     "name": "Rue",
     "examine": "A patch of rue among the grass.",
-    "depletedModel": "Nature/HerbPicked",
+    "depletedModel": "Art/Assets/Plants/Common/HerbPicked",
     "actions": [
       {
         "id": "gather",
@@ -1698,7 +1698,7 @@
     "id": "feverfew_patch",
     "name": "Feverfew",
     "examine": "A patch of feverfew among the grass.",
-    "depletedModel": "Nature/HerbPicked",
+    "depletedModel": "Art/Assets/Plants/Common/HerbPicked",
     "actions": [
       {
         "id": "gather",
@@ -1735,7 +1735,7 @@
     "id": "reed_bed",
     "name": "Reeds",
     "examine": "Tall reeds at the water's edge.",
-    "depletedModel": "Nature/Reeds",
+    "depletedModel": "Art/Assets/Plants/Common/Reeds",
     "actions": [
       {
         "id": "gather",
@@ -1771,7 +1771,7 @@
     "id": "flax_patch",
     "name": "Flax",
     "examine": "Blue-flowered flax, gone a little wild.",
-    "depletedModel": "Nature/FlaxPicked",
+    "depletedModel": "Art/Assets/Plants/Common/FlaxPicked",
     "actions": [
       {
         "id": "gather",
@@ -1807,7 +1807,7 @@
     "id": "berry_bush",
     "name": "Berry bush",
     "examine": "A bramble heavy with dark berries.",
-    "depletedModel": "Nature/BerryBushLowPicked",
+    "depletedModel": "Art/Assets/Plants/Common/BerryBushLowPicked",
     "actions": [
       {
         "id": "gather",

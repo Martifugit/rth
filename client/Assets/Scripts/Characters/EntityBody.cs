@@ -30,7 +30,7 @@ namespace Rth.Client.Characters
         /// <summary>Shows what it holds (null for nothing). Bodies without hands ignore it.</summary>
         public virtual void SetHeld(Rth.Shared.Items.ItemDef item) { }
 
-        /// <param name="model">The creature's model under Resources/Creatures (NPCs; empty for none).</param>
+        /// <param name="model">The creature's model, a path under Resources (NPCs; empty for none).</param>
         public static EntityBody Create(EntityAdded added, Color color, Transform parent, string model = "")
         {
             var go = new GameObject("Body");

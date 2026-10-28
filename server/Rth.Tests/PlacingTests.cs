@@ -17,7 +17,7 @@ public class PlacingTests
         parts.Items.Add(new ItemDef { Id = "logs", Name = "Logs", Place = new PlaceDef { Verb = "Light", Object = "campfire", Ticks = 30, Tool = "tag:tinderbox" } });
         parts.Items.Add(new ItemDef { Id = "raw", Name = "Raw meat" });
         parts.Items.Add(new ItemDef { Id = "meat", Name = "Meat" });
-        parts.Objects.Add(new ObjectDef { Id = "campfire", Name = "Campfire", Model = "Nature/Campfire", Actions = { new ActionDef { Id = "process", Label = "Cook" } } });
+        parts.Objects.Add(new ObjectDef { Id = "campfire", Name = "Campfire", Model = "Art/Assets/Lights/Common/Campfire", Actions = { new ActionDef { Id = "process", Label = "Cook" } } });
         parts.Recipes.Add(new RecipeDef
         {
             Id = "cook", Name = "meat", Verb = "cook", Skill = "butchering", Station = "campfire", Ticks = 2, Xp = 5,

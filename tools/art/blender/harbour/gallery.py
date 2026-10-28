@@ -20,7 +20,8 @@ from mathutils import Vector
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 runpy.run_path(os.path.join(HERE, "showcase.py"), run_name="__main__")      # the preview, from a clean scene
-for name in ("common", "structures", "vessels", "styles"):
+for name in [m for m in sys.modules if m in ("common", "structures", "vessels", "styles")
+             or m.split(".")[0] in ("artlib", "assets", "parts")]:
     sys.modules.pop(name, None)
 import common as C  # noqa: E402
 import structures as S  # noqa: E402

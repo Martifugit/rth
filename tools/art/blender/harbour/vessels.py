@@ -14,7 +14,7 @@ import bmesh
 from mathutils import Vector
 
 import rth_art as A
-import basin as N
+import artlib.nature as N
 import common as C
 from common import (STOREY, Walk, base_name, beam, make, rope_coil)
 

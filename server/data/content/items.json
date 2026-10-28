@@ -78,7 +78,7 @@
 
   {
     "id": "apprentice_athame",
-    "model": "Athame",
+    "model": "Art/Assets/Held/Common/Athame",
     "name": "Apprentice's athame",
     "icon": "dagger",
     "examine": "A ritual knife, blunt on purpose. The point is where you put it.",
@@ -89,7 +89,7 @@
   },
   {
     "id": "watchmans_sword",
-    "model": "Sword",
+    "model": "Art/Assets/Held/Common/Sword",
     "recolor": { "Copper": "Steel" },
     "name": "Watchman's sword",
     "icon": "sword",
@@ -101,7 +101,7 @@
   },
   {
     "id": "penitents_mace",
-    "model": "Mace",
+    "model": "Art/Assets/Held/Common/Mace",
     "recolor": { "Copper": "Iron" },
     "name": "Penitent's mace",
     "icon": "mace",
@@ -417,7 +417,7 @@
   },
   {
     "id": "copper_pickaxe",
-    "model": "Pickaxe",
+    "model": "Art/Assets/Held/Common/Pickaxe",
     "name": "Copper pickaxe",
     "icon": "mining",
     "examine": "Soft metal on an alder haft. It will see you through the first seams, and bend on the rest.",
@@ -429,7 +429,7 @@
   },
   {
     "id": "ironshod_pickaxe",
-    "model": "Pickaxe",
+    "model": "Art/Assets/Held/Common/Pickaxe",
     "recolor": { "Copper": "Iron" },
     "name": "Ironshod pickaxe",
     "icon": "mining",
@@ -442,7 +442,7 @@
   },
   {
     "id": "copper_hatchet",
-    "model": "Hatchet",
+    "model": "Art/Assets/Held/Common/Hatchet",
     "name": "Copper hatchet",
     "icon": "woodcutting",
     "examine": "A soft blade that wants sharpening every other tree. Good enough for alder.",
@@ -454,7 +454,7 @@
   },
   {
     "id": "ironshod_hatchet",
-    "model": "Hatchet",
+    "model": "Art/Assets/Held/Common/Hatchet",
     "recolor": { "Copper": "Iron" },
     "name": "Ironshod hatchet",
     "icon": "woodcutting",
@@ -654,7 +654,7 @@
       "tier": 1,
       "style": "Melee"
     },
-    "model": "Mace"
+    "model": "Art/Assets/Held/Common/Mace"
   },
   {
     "id": "copper_sword",
@@ -673,7 +673,7 @@
       "tier": 1,
       "style": "Melee"
     },
-    "model": "Sword"
+    "model": "Art/Assets/Held/Common/Sword"
   },
   {
     "id": "copper_helm",
@@ -824,7 +824,7 @@
       "tier": 2,
       "style": "Melee"
     },
-    "model": "Mace",
+    "model": "Art/Assets/Held/Common/Mace",
     "recolor": {
       "Copper": "Iron"
     }
@@ -846,7 +846,7 @@
       "tier": 2,
       "style": "Melee"
     },
-    "model": "Sword",
+    "model": "Art/Assets/Held/Common/Sword",
     "recolor": {
       "Copper": "Iron"
     }
@@ -1000,7 +1000,7 @@
       "tier": 3,
       "style": "Melee"
     },
-    "model": "Mace",
+    "model": "Art/Assets/Held/Common/Mace",
     "recolor": {
       "Copper": "Steel"
     }
@@ -1022,7 +1022,7 @@
       "tier": 3,
       "style": "Melee"
     },
-    "model": "Sword",
+    "model": "Art/Assets/Held/Common/Sword",
     "recolor": {
       "Copper": "Steel"
     }
@@ -1099,7 +1099,7 @@
     "id": "steel_pickaxe",
     "name": "Steel pickaxe",
     "icon": "mining",
-    "model": "Pickaxe",
+    "model": "Art/Assets/Held/Common/Pickaxe",
     "recolor": {
       "Copper": "Steel"
     },
@@ -1138,7 +1138,7 @@
     "id": "steel_hatchet",
     "name": "Steel hatchet",
     "icon": "woodcutting",
-    "model": "Hatchet",
+    "model": "Art/Assets/Held/Common/Hatchet",
     "recolor": {
       "Copper": "Steel"
     },
@@ -1175,7 +1175,7 @@
   },
   {
     "id": "fishing_rod",
-    "model": "FishingRod",
+    "model": "Art/Assets/Held/Common/FishingRod",
     "name": "Fishing rod",
     "icon": "fishing",
     "examine": "Ash, horsehair line and a bent copper hook.",

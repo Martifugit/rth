@@ -14,7 +14,7 @@ namespace Rth.Client.Editor
     {
         private static readonly string[] Folders =
         {
-            "Assets/Resources/Nature/", "Assets/Resources/Caves/", "Assets/Art/Buildings/", "Assets/Resources/Items/", "Assets/Resources/Creatures/",
+            "Assets/Resources/Art/Parts/", "Assets/Resources/Art/Assets/",
         };
 
         public const int Channel = 3;

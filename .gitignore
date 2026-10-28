@@ -50,5 +50,8 @@ __pycache__/
 # Character-model experiments (logs, test exports)
 tools/character-models/experiments/
 
-# Enlarged copies of the nature kit textures, for looking at (tools/art/blender/nature/textures.py --preview)
-tools/art/blender/nature/textures/*.preview.png
+# Enlarged copies of the nature textures, for looking at (tools/art/blender/textures/nature.py --preview)
+tools/art/blender/textures/*/*.preview.png
+
+# Art families' working files, rebuilt by their scripts (docs/assets.md section 10)
+tools/art/blender/**/*.blend

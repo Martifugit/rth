@@ -9,7 +9,7 @@ namespace Rth.Shared.World.Data
     /// <summary>
     /// What a <see cref="PieceKind.Building"/> piece is: a gabled block on its <see cref="Piece.Rect"/>
     /// put together from a building kit's tile pieces (walls, doorways, windows, roof slabs, gables),
-    /// as tools/art/blender/buildings/venaria.py's volume() puts one together in Blender. Its walls run
+    /// as tools/art/blender/boards/village.py's volume() puts one together in Blender. Its walls run
     /// along the rectangle's edges, so the tiles inside are its floor; doorways leave the edge open.
     /// </summary>
     public sealed class BuildingSpec
@@ -50,7 +50,12 @@ namespace Rth.Shared.World.Data
     public sealed class BuildingKit
     {
         public string Id = "";
-        /// <summary>The folder of its models in the Unity project ("Assets/Art/Buildings/Venaria").</summary>
+        /// <summary>
+        /// Each piece's model in the Unity project ("Wall": "Assets/Resources/Art/Parts/Walls/Village/Wall.fbx"):
+        /// a kit's pieces come from several families (walls, roofs, fixtures, the door), each in its own folder.
+        /// </summary>
+        public Dictionary<string, string> Paths = new Dictionary<string, string>();
+        /// <summary>A folder holding every piece not in <see cref="Paths"/> (older kits; "" for none).</summary>
         public string Models = "";
         public float Storey = 2.6f;
         /// <summary>The roof's rise per tile run, its base over a storey, how far the verge and an upper storey's jetty reach, a roof slab's thickness.</summary>

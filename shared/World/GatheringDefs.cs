@@ -68,7 +68,7 @@ namespace Rth.Shared.World
         public int Ticks = 50;
         public int Max = 5;
         /// <summary>Client only: the model shown on the node while a trap is set (a path under Resources).</summary>
-        public string Model = "Nature/EelTraps";
+        public string Model = "Art/Assets/Dressing/Village/EelTraps";
     }
 
     /// <summary>

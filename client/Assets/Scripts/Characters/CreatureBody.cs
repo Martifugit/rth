@@ -3,8 +3,8 @@ using UnityEngine;
 namespace Rth.Client.Characters
 {
     /// <summary>
-    /// A creature drawn from its model (Resources/Creatures/&lt;model&gt;, made in
-    /// tools/art/blender), moved as one rigid shape until it has animations. Each material is
+    /// A creature drawn from its model (a path under Resources, "Art/Assets/Creatures/Common/FenRat",
+    /// made in tools/art/blender/assets/creatures), moved as one rigid shape until it has animations. Each material is
     /// named after a palette colour and drawn in that colour with the shared matte material.
     /// </summary>
     public sealed class CreatureBody : ShapeBody
@@ -14,7 +14,7 @@ namespace Rth.Client.Characters
         /// <summary>False when there is no such model (the caller falls back to a primitive).</summary>
         public bool Build(string model, float scale)
         {
-            var prefab = Resources.Load<GameObject>("Creatures/" + model);
+            var prefab = Resources.Load<GameObject>(model);
             if (prefab == null) return false;
 
             var shape = new GameObject("Shape").transform;

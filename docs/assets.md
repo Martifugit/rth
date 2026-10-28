@@ -134,3 +134,93 @@ Nothing existing has been changed. When the sizes in `world-scale.md` are decide
   props with 2–4 palette colours each, recolourable;
 - the ground moves from flat patches to `MapTerrain` colours (see
   [world-building.md](world-building.md)).
+
+## 10. How assets are organised
+
+**Status:** decided (owner, 2026-10-28). The existing kits were split into families and their models
+moved the same day; every model built identically before and after. The harbour kit, Cruor's kit
+and the armour are not split yet.
+The aim: everything of one kind in one style is made, looked at and tuned together, and every
+path follows one rule.
+
+### Three layers
+
+| Layer | What it is | Test | Examples |
+| --- | --- | --- | --- |
+| **Parts** | Modular pieces, a tile wide, that only make sense joined to copies of themselves | Never placed alone | wall spans, roof slabs, gables, fence spans, jetty spans, cave rock masses |
+| **Assets** | Standalone models a region places on their own | Placed alone | a barrel, a tree, a skinning rack, the bell tower, the fen rat |
+| **Sets** | Arrangements of parts and assets | An arrangement | a cottage, the skinning yard, the apothecary's shop floor, a farmstead |
+
+Sets are **data**, never models: the `building` piece is the first kind (`docs/workflow.md`), and
+yards, interiors and farmsteads follow it. A set says which assets it needs, so the same rack and vat
+furnish the next skinner somewhere else. Areas and roles are views over sets and assets, never where
+files live: an area uses assets, it doesn't own them.
+
+### Families: a kind in a style
+
+A **family** is one kind in one style, for example *furniture, village*, *walls, cruor* or
+*trees, common*. It is the unit of work: one script makes the whole family, one working `.blend`
+shows it, and one export folder holds it.
+
+**Styles:** `common` (no style: trees, rocks, plants, most creatures), `village` (the Wennow basin's
+timber and stone), `cruor`, `harbour`, `makers` (the old stonework under the world), and one per power
+as each is designed. A family is only split by style when the style shows.
+
+**Kinds:**
+
+| Layer | Kinds |
+| --- | --- |
+| Parts | `walls`, `roofs`, `floors` (floors, stairs, decks), `fixtures` (what hangs on a wall tile: banners, lanterns, a bench or woodpile against it), `fences` (fences, hurdles, field walls, hedges), `waterfront` (jetty spans, quays, piers), `rockwork` (cave rock masses, lips, throats) |
+| Assets | `trees`, `plants` (undergrowth, crops, flowers, reeds), `rocks` (boulders, scree, standing stones, cairns), `nodes` (gatherable, with their worked-out states), `stations` (where recipes happen), `furniture`, `containers`, `dressing` (carts, tools left about, scarecrows, woodpiles), `ways` (fingerposts, milestones, bridges, stepping stones), `openings` (doors, gates, cave mouths, ladders, trapdoors), `lights` (lanterns, candles, braziers, fires), `landmarks` (one-off buildings and monuments), `vessels`, `creatures`, `held` (weapons and tools in the hand) |
+
+**One-offs.** Creatures and landmarks are made one at a time, so each gets its own script in its
+style's folder (`assets/creatures/common/fen_rat.py`, `assets/landmarks/village/bell_tower.py`), and
+exports to the same kind of folder as a family (`Art/Assets/Creatures/Common/FenRat.fbx`).
+
+Characters (bodies, hair, garments) keep their own pipeline and contract
+(`tools/character-models/README.md`) and are not moved.
+
+### Where things live
+
+| What | Path |
+| --- | --- |
+| A family's script | `tools/art/blender/<layer>/<kind>/<style>.py`, e.g. `assets/furniture/village.py` |
+| Its working file | the same path with `.blend`, rebuilt by the script; git-ignored |
+| Its exports | `client/Assets/Resources/Art/<Layer>/<Kind>/<Style>/<Name>.fbx`, e.g. `Art/Assets/Furniture/Village/Bier.fbx`; the family owns the folder |
+| How the game names one | the path: `Assets/Resources/Art/.../Alder.fbx` on a region's piece, `Art/Assets/.../AlderStool` (under Resources) in objects.json, items.json and npcs.json, a kit's `paths` in `world/kits/<kit>.json` |
+| Shared helpers | `tools/art/blender/rth_art.py`, and `artlib/` (helpers shared by families of one domain: `nature.py`, `caves.py`, `village.py`; `family.py` runs a family) |
+| Boards | `tools/art/blender/boards/`: families placed together on the ground to judge a style (`basin`, `caves`, `village`); they make nothing of their own |
+| Textures | `tools/art/blender/textures/<set>.py` paints `textures/<set>/*.png` and copies them to `client/Assets/Art/Textures` |
+| The catalogue | `tools/art/catalogue.json` |
+
+**The script is the truth.** The `.blend` is where the owner looks and tunes vertices by hand; edits
+are read back into the script's tables (as with the hair and the bodies), and re-running the script
+rebuilds the file. So a lost `.blend` costs nothing, and none goes in git.
+
+A family's script builds every member side by side in its `.blend`, laid out in a row with the player
+for scale, and exports them all. Making a new asset in the family means adding a function and a line
+in its catalogue entry.
+
+### The catalogue
+
+One entry per asset or part, so how finished it is is written down, not remembered:
+
+```json
+{
+  "id": "furniture/village/bier",
+  "layer": "assets",
+  "kind": "furniture",
+  "style": "village",
+  "name": "Bier",
+  "status": "missing",
+  "note": "The dead-house's bier, where every player first wakes; a shroud over it.",
+  "usedBy": ["tolling/dead-house"]
+}
+```
+
+**Status**, in order: `missing` (needed, nothing made) → `blockout` (a stand-in for size and
+place) → `first pass` (modelled, not reviewed) → `in review` (shown to the owner) → `approved`.
+Only the owner sets `approved`. Everything that exists today starts at `first pass` or `blockout`.
+
+`usedBy` names sets and areas. An area's asset list (`docs/areas/<area>-assets.md`) is then what its
+sets and pieces need, read from the catalogue, instead of a hand-kept list that goes stale.
