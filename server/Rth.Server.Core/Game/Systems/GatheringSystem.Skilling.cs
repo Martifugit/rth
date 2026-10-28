@@ -46,11 +46,12 @@ namespace Rth.Server.Game
         {
             public readonly Dictionary<string, (int Stacks, uint NextDecay, NodeReadingDef Def)> Stacks = new Dictionary<string, (int, uint, NodeReadingDef)>();
         }
-        private readonly Dictionary<int, uint> _nextTending = new Dictionary<int, uint>();
 
         private sealed class SentGathering
         {
             public string Last = "";
+            /// <summary>The group of the node the player last gathered at (-1: none): theirs to see tending in, even while walking to tend.</summary>
+            public int Stand = -1;
         }
 
         private void AttachSkilling()
@@ -66,27 +67,34 @@ namespace Rth.Server.Game
         {
             ComingsAndGoings(now);
             DecayReading(now);
+            // Tending: a stand only rolls while someone chops in it (it's theirs to notice), on average
+            // once every everyTicks of chopping, and never while one of its trees needs or enjoys it.
             foreach (IGrouping<int, Node> group in _nodes.Where(n => n.Group >= 0).GroupBy(n => n.Group))
             {
                 NodeDef? def = Def(group.First());
-                if (def?.Tending is NodeTendingDef tending)
-                {
-                    if (!_nextTending.TryGetValue(group.Key, out uint at)) _nextTending[group.Key] = at = now + (uint)World.Random.Next(tending.EveryTicks / 2, tending.EveryTicks + 1);
-                    if (now < at) continue;
-                    _nextTending[group.Key] = now + (uint)Math.Max(1, tending.EveryTicks);
-                    // One at a time: not while another of the cluster still waits.
-                    if (group.Any(n => n.NeedsTending(now))) continue;
-                    List<Node> candidates = group.Where(n => !n.IsDepleted(now) && !n.Dormant && !n.IsTended(now)).ToList();
-                    if (candidates.Count == 0) continue;
-                    Node chosen = candidates[World.Random.Next(candidates.Count)];
-                    chosen.NeedsTendingUntil = now + (uint)Math.Max(1, tending.NeedTicks);
-                    if (tending.NeedMessage != null)
-                        foreach (Player p in World.Players)
-                            if (World.CanSee(p, chosen.Placed.Plane, chosen.Placed.Tile))
-                                World.Tell(p, TextKind.Info, tending.NeedMessage.Replace("{where}", Where(p.Position, chosen.Placed.Tile)));
-                }
+                if (!(def?.Tending is NodeTendingDef tending)) continue;
+                if (group.Any(n => n.NeedsTending(now) || n.IsTended(now))) continue;
+                List<Player> choppers = WorkingIn(group.Key).ToList();
+                if (choppers.Count == 0 || World.Random.NextDouble() >= 1.0 / Math.Max(1, tending.EveryTicks)) continue;
+                List<Node> candidates = group.Where(n => !n.IsDepleted(now) && !n.Dormant).ToList();
+                if (candidates.Count == 0) continue;
+                Node chosen = candidates[World.Random.Next(candidates.Count)];
+                chosen.NeedsTendingUntil = now + (uint)Math.Max(1, tending.NeedTicks);
+                if (tending.NeedMessage != null)
+                    foreach (Player p in choppers)
+                        World.Tell(p, TextKind.Info, tending.NeedMessage.Replace("{where}", Where(p.Position, chosen.Placed.Tile)));
             }
         }
+
+        /// <summary>The players gathering at a node of this group now.</summary>
+        private IEnumerable<Player> WorkingIn(int group)
+        {
+            foreach (Player p in World.Players)
+                if (p.Interaction is GatherInteraction g && NodeAt(g.Object) is Node n && n.Group == group) yield return p;
+        }
+
+        /// <summary>The node a player is gathering at now, or null.</summary>
+        private Node? WorkingAt(Player player) => player.Interaction is GatherInteraction g ? NodeAt(g.Object) : null;
 
         // ------------------------------------------------------------------ coming and going, reading the water
 
@@ -176,6 +184,9 @@ namespace Rth.Server.Game
 
         public void AddStatuses(Player player, List<StatusState> statuses)
         {
+            // Chopping a tended tree: its status, with the chance it adds.
+            if (WorkingAt(player) is Node at && Def(at)?.Tending is NodeTendingDef tending && tending.Status != null && at.IsTended(World.CurrentTick))
+                statuses.Add(new StatusState { Id = tending.Status, Magnitude = (int)Math.Round(tending.SuccessBonus * 100), EndTick = at.TendedUntil });
             if (!_readers.Contains(player)) return;
             foreach (var pair in player.Component<Reading>().Stacks)
                 statuses.Add(new StatusState { Id = pair.Key, Magnitude = (int)Math.Round(pair.Value.Stacks * pair.Value.Def.PerStack * 100), EndTick = pair.Value.NextDecay });
@@ -333,9 +344,13 @@ namespace Rth.Server.Game
         {
             uint now = World.CurrentTick;
             var state = new GatheringWorldState();
+            SentGathering sent = player.Component<SentGathering>();
+            if (WorkingAt(player) is Node working) sent.Stand = working.Group;
             foreach (Node n in _nodes)
             {
-                bool dormant = n.Dormant, trap = n.TrapOwner != null, needs = n.NeedsTending(now), tended = n.IsTended(now);
+                // A tree wanting tending shows only to those working its stand: nobody else is
+                // drawn to a tree of another kind, or one they aren't chopping by.
+                bool dormant = n.Dormant, trap = n.TrapOwner != null, needs = n.NeedsTending(now) && n.Group >= 0 && n.Group == sent.Stand, tended = n.IsTended(now);
                 if ((!dormant && !trap && !needs && !tended) || !World.CanSee(player, n.Placed.Plane, n.Placed.Tile)) continue;
                 var at = new NodeRef { Type = n.Placed.Type, Plane = n.Placed.Plane, X = n.Placed.X, Y = n.Placed.Y };
                 if (dormant) state.Dormant.Add(at);
@@ -351,7 +366,6 @@ namespace Rth.Server.Game
                 }
             }
             JsonStateMessage message = JsonStateMessage.Of(GatheringWorldState.StateKey, state);
-            SentGathering sent = player.Component<SentGathering>();
             if (message.Json == sent.Last) return;
             sent.Last = message.Json;
             player.Connection.Send(message);

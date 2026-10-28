@@ -139,6 +139,9 @@ namespace Rth.Client
         /// walking its last steps is held until it stands: the client walks a little behind the
         /// server, so the swing comes in before the walk ends, and would be cut off at once.
         /// </summary>
+        /// <summary>Whether it is still walking steps it has been sent.</summary>
+        public bool IsWalking => _moving || _pending.Count > 0;
+
         public void PlayAction(string animation)
         {
             if (_body == null) return;

@@ -115,6 +115,13 @@
     "description": "You read the water: {value}% more catches. Cast into bubbling water before the fish arrive to keep it up; it fades quickly."
   },
   {
+    "id": "well_tended",
+    "name": "Well tended",
+    "icon": "woodcutting",
+    "color": "#c8b46a",
+    "description": "This tree has been tended: +{value}% chance of a log, and it is cut back far less often. Lasts while it thrives."
+  },
+  {
     "id": "braced",
     "name": "Braced",
     "icon": "shield",

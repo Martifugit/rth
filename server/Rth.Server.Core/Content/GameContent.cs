@@ -565,6 +565,8 @@ namespace Rth.Server.Content
                 {
                     if (tending.EveryTicks < 1 || tending.NeedTicks < 1 || tending.TendedTicks < 1) problems.Add(where + "tending needs everyTicks, needTicks and tendedTicks of at least 1.");
                     if (!o.Actions.Any(a => a.Id == NodeTendingDef.Action)) problems.Add(where + "tending needs a 'tend' action.");
+                    if (tending.Status != null && !parts.Statuses.Any(st => st.Id == tending.Status))
+                        problems.Add(where + "tending's status '" + tending.Status + "' isn't in statuses.json.");
                 }
                 if (node.ToolTier < 0) problems.Add(where + "toolTier can't be negative.");
                 if (node.DepleteChance < 0 || node.DepleteChance > 1) problems.Add(where + "depleteChance must be 0-1.");

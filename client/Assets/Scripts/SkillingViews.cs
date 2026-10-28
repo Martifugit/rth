@@ -10,7 +10,9 @@ namespace Rth.Client
     /// Shows the skilling states the server sends: a station's draw ("draw": the forge glows,
     /// brighter and flickering while it roars); objects set down while the game runs ("placed": a
     /// campfire, drawn from its type's model, clickable like any MapObject); and the gathering
-    /// states ("gathering": fishing spots bubble while they're there, are hidden while they aren't, and shimmer just before they come back, a trap shows on its node; a
+    /// states ("gathering": a fishing spot is only its effects (its scene parts, if any, are an Editor
+    /// marker and hidden in play): it bubbles while it's there, is gone while it isn't, shimmers just
+    /// before it comes back, and flares when you cast into the shimmer; a trap shows on its node; a
     /// tree that needs tending sheds withered leaves under a slow amber outline, one that has been
     /// tended glows with rising pollen while it lasts, and tending it gives a burst (SkillingEffects)).
     /// Region objects are MapObjects
@@ -32,6 +34,8 @@ namespace Rth.Client
         private readonly Dictionary<MapObject, GameObject> _thriving = new Dictionary<MapObject, GameObject>();
         private readonly Dictionary<MapObject, GameObject> _bubbles = new Dictionary<MapObject, GameObject>();
         private readonly Dictionary<MapObject, GameObject> _arriving = new Dictionary<MapObject, GameObject>();
+        private readonly HashSet<MapObject> _lookless = new HashSet<MapObject>();
+        private (string, int, int) _castAt;
         private Material _needMaterial;
         private MaterialPropertyBlock _block;
 
@@ -50,6 +54,7 @@ namespace Rth.Client
                     _objects[(o.objectType, Mathf.FloorToInt(p.x), Mathf.FloorToInt(p.z))] = o;
                 }
             }
+            Cast();
             if (!rescan && session.StateVersion == _version) return;
             _version = session.StateVersion;
             Draws();
@@ -167,6 +172,17 @@ namespace Rth.Client
         {
             GatheringWorldState state = session.ServerState<GatheringWorldState>(GatheringWorldState.StateKey);
 
+            // A node that comes and goes is drawn by its effects alone.
+            foreach (MapObject o in _objects.Values)
+                if (o != null && !_lookless.Contains(o) && Def(o.objectType)?.Node?.Roam != null)
+                {
+                    Transform look = o.transform.Find("Look");
+                    if (look != null)
+                        foreach (Renderer r in look.GetComponentsInChildren<Renderer>()) r.enabled = false;
+                    _lookless.Add(o);
+                }
+            _lookless.RemoveWhere(o => o == null);
+
             var dormant = new HashSet<MapObject>();
             foreach (NodeRef r in state.Dormant)
             {
@@ -221,6 +237,30 @@ namespace Rth.Client
                 if (_withering.ContainsKey(o) && !needy.Contains(o)) SkillingEffects.TendedBurst(o);
             Keep(_withering, needy, SkillingEffects.Withering);
             Keep(_thriving, tended, SkillingEffects.Thriving);
+        }
+
+        /// <summary>
+        /// The moment the player casts into shimmering water (their interaction is on a spot about to
+        /// come, and they have stopped beside it): a flare, once per spot, so they know it took.
+        /// </summary>
+        private void Cast()
+        {
+            InteractionFocus focus = session.ServerState<InteractionFocus>(InteractionFocus.StateKey);
+            if (focus == null || focus.Kind != InteractionFocus.Object || focus.Type == null)
+            {
+                _castAt = default;
+                return;
+            }
+            var key = (focus.Type, focus.X, focus.Y);
+            if (key == _castAt) return;
+            MapObject spot = Find(focus.Type, focus.X, focus.Y);
+            if (spot == null || !_arriving.ContainsKey(spot)) return;
+            EntityView me = session.world != null ? session.world.Find(session.LocalPlayerId) : null;
+            if (me == null || me.IsWalking) return;
+            Vector3 d = me.transform.position - spot.transform.position;
+            if (Mathf.Max(Mathf.Abs(d.x), Mathf.Abs(d.z)) > 2.2f) return;
+            _castAt = key;
+            SkillingEffects.Cast(spot);
         }
 
         private HashSet<MapObject> Tending(List<NodeRef> refs)

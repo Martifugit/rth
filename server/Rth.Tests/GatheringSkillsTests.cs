@@ -21,6 +21,7 @@ public class GatheringSkillsTests
     {
         ContentParts parts = TestContent.Parts();
         parts.Statuses.Add(new StatusDef { Id = "whisperer", Name = "Whisperer" });
+        parts.Statuses.Add(new StatusDef { Id = "tended", Name = "Tended" });
         parts.Items.Add(new ItemDef { Id = "perch", Name = "Perch" });
         parts.Items.Add(new ItemDef { Id = "pike", Name = "Pike" });
         parts.Items.Add(new ItemDef { Id = "herb", Name = "Herb" });
@@ -64,7 +65,7 @@ public class GatheringSkillsTests
             {
                 Skill = "butchering", Ticks = 1, BaseChance = 0, PerLevel = 0, MinChance = 0, MaxChance = 1, Items = { new ItemCost { Item = "log" } },
                 DepleteChance = 1, YieldsMin = 1000, YieldsMax = 1000,
-                Tending = new NodeTendingDef { GroupRadius = 6, EveryTicks = 20, NeedTicks = 30, TendedTicks = 50, SuccessBonus = 1, DepleteScale = 0, Xp = 9, NeedMessage = "A tree {where} needs tending." },
+                Tending = new NodeTendingDef { GroupRadius = 6, EveryTicks = 20, NeedTicks = 30, TendedTicks = 50, SuccessBonus = 1, DepleteScale = 0, Xp = 9, NeedMessage = "A tree {where} needs tending.", Status = "tended" },
             },
         });
         return parts;
@@ -261,12 +262,20 @@ public class GatheringSkillsTests
     {
         var (fx, alice) = World();
         GatheringSystem gathering = fx.World.Get<GatheringSystem>();
-        fx.Ticks(25);
         List<GatheringSystem.Node> trees = gathering.Nodes.Where(n => n.Placed.Type == "tree").ToList();
+        fx.Ticks(300);                                            // nobody chopping: no tree wants tending
+        Assert.DoesNotContain(trees, n => n.NeedsTending(fx.World.CurrentTick));
+
+        FakeConnection carol = fx.Login("Carol");                 // stands about, chops nothing
+        Act(fx, alice, trees[0].Placed);
+        for (int i = 0; i < 300 && !trees.Any(n => n.NeedsTending(fx.World.CurrentTick)); i++) fx.Ticks(1);
         GatheringSystem.Node? needy = trees.SingleOrDefault(n => n.NeedsTending(fx.World.CurrentTick));
         Assert.NotNull(needy);                                    // one at a time in the cluster
-        Assert.Contains(alice.Texts, t => t == "A tree " + GatheringSystem.Where(fx.Player("Alice").Position, needy!.Placed.Tile) + " needs tending.");
+        fx.Ticks(1);
+        Assert.Contains(alice.Texts, t => t.StartsWith("A tree ") && t.EndsWith(" needs tending."));   // which way: TheTendingMessageSaysWhichWayTheTreeLies
         Assert.Single(State(alice).NeedsTending);
+        Assert.DoesNotContain(carol.Texts, t => t.Contains("needs tending"));   // only those chopping by are told
+        Assert.Empty(State(carol).NeedsTending);
 
         GatheringSystem.Node other = trees.First(n => !ReferenceEquals(n, needy));
         Act(fx, alice, other.Placed, "tend", 6);
@@ -282,6 +291,7 @@ public class GatheringSkillsTests
         FakeConnection bob = fx.Login("Bob");
         Act(fx, bob, needy.Placed, ticks: 12);                    // either tree: time to walk there and chop
         Assert.True(Count(fx, "Bob", "log") >= 3);
+        Assert.Contains(fx.World.StatusesOf(fx.Player("Bob")), st => st.Id == "tended" && st.Magnitude == 100);   // he sees why
         Assert.Equal(1000, needy.YieldsLeft);                     // never cut back while tended
         Act(fx, bob, other.Placed, ticks: 8);
         int before = Count(fx, "Bob", "log");

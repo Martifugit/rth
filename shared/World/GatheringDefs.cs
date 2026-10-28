@@ -83,6 +83,7 @@ namespace Rth.Shared.World
         public const string Action = "tend";
 
         public int GroupRadius = 8;
+        /// <summary>On average, ticks of someone chopping in the stand before one of its trees needs tending (none while one needs or enjoys it).</summary>
         public int EveryTicks = 100;
         public int NeedTicks = 80;
         public int TendedTicks = 200;
@@ -92,6 +93,8 @@ namespace Rth.Shared.World
         /// <summary>Said to players near it when a node starts needing tending, or null. {where}: which way it lies from them.</summary>
         public string? NeedMessage;
         public string TendedMessage = "You clear the suckers and brambles from its foot.";
+        /// <summary>A status (statuses.json) shown while chopping a tended tree, {value}: the chance it adds in percent; null: none.</summary>
+        public string? Status;
     }
 
     /// <summary>

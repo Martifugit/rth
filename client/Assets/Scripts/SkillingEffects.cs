@@ -228,6 +228,87 @@ namespace Rth.Client
             Object.Destroy(go, 3.5f);
         }
 
+        /// <summary>
+        /// Casting into shimmering water: a ring of light running out over the surface, a second
+        /// behind it, motes leaping up and settling, and a flash that fades. It says: that took.
+        /// </summary>
+        public static void Cast(MapObject spot)
+        {
+            GameObject go = Holder("Cast", spot, spot.transform.position + Vector3.up * 0.06f);
+
+            ParticleSystem rings = go.AddComponent<ParticleSystem>();
+            rings.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            ParticleSystem.MainModule rm = rings.main;
+            rm.loop = false;
+            rm.duration = 0.4f;
+            rm.startLifetime = 1.1f;
+            rm.startSpeed = 0f;
+            rm.startSize = 0.5f;
+            rm.startColor = new Color(0.6f, 0.95f, 1f, 1f);
+            rm.simulationSpace = ParticleSystemSimulationSpace.World;
+            ParticleSystem.EmissionModule re = rings.emission;
+            re.rateOverTime = 0f;
+            re.SetBursts(new[] { new ParticleSystem.Burst(0f, 1), new ParticleSystem.Burst(0.22f, 1) });
+            ParticleSystem.ShapeModule rs = rings.shape;
+            rs.enabled = false;
+            ParticleSystem.SizeOverLifetimeModule rsize = rings.sizeOverLifetime;
+            rsize.enabled = true;
+            rsize.size = new ParticleSystem.MinMaxCurve(5f, new AnimationCurve(new Keyframe(0f, 0.1f, 0f, 2.5f), new Keyframe(1f, 1f, 0.2f, 0f)));
+            ParticleSystem.ColorOverLifetimeModule rc = rings.colorOverLifetime;
+            rc.enabled = true;
+            rc.color = Fade(0.02f, 0.3f, 1f);
+            Render(rings, Rings(), 0.05f);
+            rings.GetComponent<ParticleSystemRenderer>().renderMode = ParticleSystemRenderMode.HorizontalBillboard;   // running out over the water
+            rings.Play();
+
+            var motesGo = new GameObject("Motes") { hideFlags = HideFlags.DontSave };
+            motesGo.transform.SetParent(go.transform, false);
+            ParticleSystem motes = motesGo.AddComponent<ParticleSystem>();
+            motes.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            ParticleSystem.MainModule mm = motes.main;
+            mm.loop = false;
+            mm.duration = 0.3f;
+            mm.startLifetime = new ParticleSystem.MinMaxCurve(1f, 1.7f);
+            mm.startSpeed = new ParticleSystem.MinMaxCurve(1.4f, 2.8f);
+            mm.startSize = new ParticleSystem.MinMaxCurve(0.1f, 0.2f);
+            mm.startColor = new ParticleSystem.MinMaxGradient(new Color(0.6f, 0.95f, 1f), new Color(0.9f, 0.85f, 1f));
+            mm.gravityModifier = 0.12f;
+            mm.simulationSpace = ParticleSystemSimulationSpace.World;
+            ParticleSystem.EmissionModule me = motes.emission;
+            me.rateOverTime = 0f;
+            me.SetBursts(new[] { new ParticleSystem.Burst(0f, 28) });
+            ParticleSystem.ShapeModule ms = motes.shape;
+            ms.shapeType = ParticleSystemShapeType.Cone;
+            ms.angle = 30f;
+            ms.radius = 0.3f;
+            ms.rotation = new Vector3(-90f, 0f, 0f);             // up out of the water
+            ParticleSystem.LimitVelocityOverLifetimeModule limit = motes.limitVelocityOverLifetime;
+            limit.enabled = true;
+            limit.limit = 0.5f;
+            limit.dampen = 0.1f;
+            ParticleSystem.NoiseModule noise = motes.noise;
+            noise.enabled = true;
+            noise.strength = 0.25f;
+            noise.frequency = 0.8f;
+            ParticleSystem.ColorOverLifetimeModule mc = motes.colorOverLifetime;
+            mc.enabled = true;
+            mc.color = Fade(0.02f, 0.6f, 1f);
+            Render(motes, Additive(), 0.05f);
+            motes.Play();
+
+            var lightGo = new GameObject("Flash") { hideFlags = HideFlags.DontSave };
+            lightGo.transform.SetParent(go.transform, false);
+            lightGo.transform.localPosition = Vector3.up * 0.6f;
+            Light l = lightGo.AddComponent<Light>();
+            l.type = LightType.Point;
+            l.color = new Color(0.55f, 0.9f, 1f);
+            l.range = 4.5f;
+            l.shadows = LightShadows.None;
+            lightGo.AddComponent<Flash>().Set(l, 1.6f, 0.8f);
+
+            Object.Destroy(go, 2.5f);
+        }
+
         /// <summary>A fishing spot: bubbles breaking the surface, rings spreading from them.</summary>
         public static GameObject Bubbles(MapObject spot)
         {
@@ -520,6 +601,29 @@ namespace Rth.Client
             _leaf.SetPixels(px);
             _leaf.Apply(true);
             return _leaf;
+        }
+    }
+
+    /// <summary>A light that starts bright and fades out.</summary>
+    public sealed class Flash : MonoBehaviour
+    {
+        private Light _light;
+        private float _from, _seconds, _start;
+
+        public void Set(Light light, float intensity, float seconds)
+        {
+            _light = light;
+            _from = intensity;
+            _seconds = Mathf.Max(0.05f, seconds);
+            _start = Time.time;
+            light.intensity = intensity;
+        }
+
+        private void Update()
+        {
+            if (_light == null) return;
+            float t = Mathf.Clamp01((Time.time - _start) / _seconds);
+            _light.intensity = _from * (1f - t) * (1f - t);
         }
     }
 

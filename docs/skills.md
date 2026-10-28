@@ -696,6 +696,11 @@ the same kind needs its stool tending (it shows: suckers and brambles round its 
 back, for a while. It is **global**: whoever chops that tree gets it, which is fair, since the
 tree still runs out. Attempts stay a chance every few ticks (2.3); the rate ramps with keeping an
 eye out for the cluster's tree that needs you.
+*Refined the same day:* a stand only wants tending while someone is chopping in it (a stand
+nobody works is left alone), on average once every ~2.2 min of chopping, and never while one of
+its trees still needs or enjoys it. Only those chopping in the stand are told and see the withered
+leaves, so a stand of another kind never draws you off; anyone sees a tended tree thriving, and
+chopping one shows a **Well tended** status with its bonus.
 
 **Trees.** Mostly plain, with a quirk on a few tiers, as with Mining's ores.
 

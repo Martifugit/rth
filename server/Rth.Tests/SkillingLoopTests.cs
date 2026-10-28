@@ -155,7 +155,12 @@ public class SkillingLoopTests
         var (fx, alice, p) = World();
         GatheringSystem gathering = fx.World.Get<GatheringSystem>();
         GatheringSystem.Node alder = gathering.Nodes.Single(n => n.Placed.Type == "alder_tree");
-        for (int i = 0; i < 300 && !alder.NeedsTending(fx.World.CurrentTick); i++) fx.Ticks(1);
+        Act(fx, alice, "alder_tree", "gather", 1);                 // a tree only wants tending while someone chops by it
+        for (int i = 0; i < 3000 && !alder.NeedsTending(fx.World.CurrentTick); i++)
+        {
+            if (p.Interaction == null) Act(fx, alice, "alder_tree", "gather", 1);   // back to it if it was cut down
+            fx.Ticks(1);
+        }
         Assert.True(alder.NeedsTending(fx.World.CurrentTick));
         Act(fx, alice, "alder_tree", "tend", 10);
         Assert.True(alder.IsTended(fx.World.CurrentTick));
