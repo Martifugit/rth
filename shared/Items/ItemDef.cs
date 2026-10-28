@@ -43,6 +43,8 @@ namespace Rth.Shared.Items
         public WaterDef? Water;
         /// <summary>Worked on by itself, with no station (a grimy herb cleaned): see <see cref="ProcessDef"/>.</summary>
         public ProcessDef? Process;
+        /// <summary>Set down as an object for a while (logs lit as a campfire): see <see cref="PlaceDef"/>.</summary>
+        public PlaceDef? Place;
     }
 
     /// <summary>A number of one item: a cost, an ingredient, a reward.</summary>

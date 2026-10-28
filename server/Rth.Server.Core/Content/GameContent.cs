@@ -635,6 +635,15 @@ namespace Rth.Server.Content
             }
 
             foreach (ItemDef i in parts.Items)
+            {
+                if (i.Place == null) continue;
+                if (!objects.ContainsKey(i.Place.Object)) problems.Add("Item '" + i.Id + "': it is set down as '" + i.Place.Object + "', which isn't an object.");
+                string? tool = i.Place.Tool;
+                if (tool != null && (tool.StartsWith("tag:") ? !parts.Items.Any(x => x.Tags.Contains(tool.Substring(4))) : !items.ContainsKey(tool)))
+                    problems.Add("Item '" + i.Id + "': its place tool '" + tool + "' isn't an item.");
+                if (i.Place.Ticks < 1) problems.Add("Item '" + i.Id + "': place ticks must be at least 1.");
+            }
+            foreach (ItemDef i in parts.Items)
                 if (i.Process != null && !parts.Recipes.Any(r => r.Station.Length == 0 && r.Inputs.Count > 0 && r.Inputs[0].Item == i.Id))
                     problems.Add("Item '" + i.Id + "': it can be processed ('" + i.Process.Verb + "') but no recipe without a station starts with it.");
 

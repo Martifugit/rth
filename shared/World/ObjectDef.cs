@@ -31,6 +31,12 @@ namespace Rth.Shared.World
         /// depleted node sinks and dims.
         /// </summary>
         public string? DepletedModel;
+        /// <summary>
+        /// Client only: the model drawn when this object is set down while the game runs (a
+        /// campfire lit from logs), a path under Resources ("Nature/Campfire"). Objects placed in
+        /// the regions are drawn by their scenes and don't need one.
+        /// </summary>
+        public string? Model;
     }
 
     /// <summary>

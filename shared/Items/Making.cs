@@ -14,6 +14,33 @@ namespace Rth.Shared.Items
     }
 
     /// <summary>
+    /// An item set down as an object for a while (docs/skills.md: anyone can light a fire): its
+    /// <see cref="Verb"/> ("Light") uses one up and puts <see cref="Object"/> on the player's tile
+    /// for <see cref="Ticks"/>, if they carry <see cref="Tool"/> (an id or "tag:x", or none) and the
+    /// tile is free. The object is an ordinary object type: a campfire is a cooking station.
+    /// </summary>
+    public sealed class PlaceDef
+    {
+        public string Verb = "Light";
+        public string Object = "";
+        public int Ticks = 200;
+        public string? Tool;
+        /// <summary>Said when it is set down.</summary>
+        public string Message = "The fire catches.";
+    }
+
+    /// <summary>An object set down for a while (a campfire), as clients near it are told ("placed" in the server state).</summary>
+    public sealed class PlacedState
+    {
+        public const string StateKey = "placed";
+
+        public string Type = "";
+        public int Plane;
+        public int X;
+        public int Y;
+    }
+
+    /// <summary>
     /// The make window (docs/skills.md 2.4, make-X), as the server sends it ("make" in the player's
     /// server state): what can be made here, how many of each the pack allows, and why not. Empty
     /// <see cref="Options"/>: closed. The client answers with the intent "make" ("recipe|count",

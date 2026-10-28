@@ -42,6 +42,20 @@ namespace Rth.Server.Game
             return false;
         }
 
+        /// <summary>Adds an object to the world while the server runs (a campfire); it works like any placed one.</summary>
+        public void Add(PlacedObject placed) => _placed.Add(placed);
+
+        /// <summary>Takes away an object added with <see cref="Add"/>; anyone working it stops.</summary>
+        public void Remove(PlacedObject placed)
+        {
+            if (!_placed.Remove(placed)) return;
+            foreach (Player p in World.Players)
+                if (p.Interaction is ObjectInteraction o && ReferenceEquals(o.Object, placed)) World.StopInteraction(p);
+        }
+
+        /// <summary>Every object on a tile.</summary>
+        public IEnumerable<PlacedObject> AllAt(int plane, TileCoord tile) => _placed.Where(o => o.Plane == plane && o.X == tile.X && o.Y == tile.Y);
+
         public PlacedObject? At(int plane, TileCoord tile, string type) =>
             _placed.FirstOrDefault(o => o.Plane == plane && o.X == tile.X && o.Y == tile.Y && o.Type == type);
 

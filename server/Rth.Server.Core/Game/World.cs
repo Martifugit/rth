@@ -81,6 +81,7 @@ namespace Rth.Server.Game
             new DoorSystem(),
             new ReligionSystem(),
             new StationSystem(),
+            new PlacingSystem(),
             new RecipeSystem(),
             new GatheringSystem(),
             new InterfaceSystem(),
