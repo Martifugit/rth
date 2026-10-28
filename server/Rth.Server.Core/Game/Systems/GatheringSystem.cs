@@ -18,7 +18,7 @@ namespace Rth.Server.Game
     /// lowest tier): the best usable one in the pack or worn is used, and its effects (success,
     /// conservation, extras, transformations) apply (docs/skills.md 2.3).
     /// </summary>
-    public sealed class GatheringSystem : GameSystem, IObjectUseHandler
+    public sealed partial class GatheringSystem : GameSystem, IObjectUseHandler
     {
         public const string GatherAction = "gather";
         public const string StateKey = "nodes";
@@ -35,7 +35,7 @@ namespace Rth.Server.Game
         }
 
         /// <summary>One placed node's live state.</summary>
-        public sealed class Node
+        public sealed partial class Node
         {
             public Node(PlacedObject placed) => Placed = placed;
 
@@ -79,6 +79,7 @@ namespace Rth.Server.Game
                 }
                 World.StartInteraction(player, new GatherInteraction(placed));
             });
+            AttachSkilling();
         }
 
         /// <summary>Fire-setting is done by using things on the rock: logs lay a fire, water douses it.</summary>
@@ -92,7 +93,11 @@ namespace Rth.Server.Game
             return true;
         }
 
-        public override void OnContentChanged() => Regroup();
+        public override void OnContentChanged()
+        {
+            Regroup();
+            SpreadRoamers();
+        }
 
         /// <summary>Groups each node type's nodes into clusters (chains within the surge's radius), one surge per cluster.</summary>
         private void Regroup()
@@ -103,7 +108,7 @@ namespace Rth.Server.Game
             {
                 NodeDef? def = Def(seed);
                 if (seed.Group >= 0 || def == null) continue;
-                int radius = def.Surge?.GroupRadius ?? 0;
+                int radius = GroupRadius(def);
                 seed.Group = next;
                 var open = new Queue<Node>(new[] { seed });
                 while (open.Count > 0)
@@ -154,6 +159,7 @@ namespace Rth.Server.Game
                     foreach (Player p in World.Players)
                         if (World.CanSee(p, chosen.Placed.Plane, chosen.Placed.Tile)) World.Tell(p, TextKind.Info, surge.Message);
             }
+            SkillingTimers(now);
         }
 
         // ------------------------------------------------------------------ working a node
@@ -162,6 +168,7 @@ namespace Rth.Server.Game
         public string? Problem(Player player, Node node, NodeDef def)
         {
             if (node.IsDepleted(World.CurrentTick)) return def.DepletedMessage;
+            if (node.Dormant) return "There's nothing here now.";
             SkillSystem? skills = World.Find<SkillSystem>();
             if (skills == null) return null;
             string what = What(node, def);
@@ -209,7 +216,7 @@ namespace Rth.Server.Game
         /// <summary>Why the player's tools won't do for this node, or null.</summary>
         public string? ToolProblem(Player player, Node node, NodeDef def)
         {
-            if (def.Tool == null || BestTool(player, def) != null) return null;
+            if (def.Tool == null || def.ToolOptional || BestTool(player, def) != null) return null;
             string what = What(node, def);
             List<ItemDef> owned = ToolsOfKind(player, def.Tool).ToList();
             ItemDef? goodEnough = owned.Where(t => t.Tool!.Tier >= def.ToolTier).OrderBy(t => t.Tool!.Tier).FirstOrDefault();
@@ -282,7 +289,7 @@ namespace Rth.Server.Game
             ToolDef? tool = BestTool(player, def)?.Tool;
             World.Animate(player, def.Animation, node.Placed.Tile);
             if (def.Progress != null) return Strike(player, node, def, tool);
-            if (World.Random.NextDouble() >= SuccessChance(player, def, tool)) return true;
+            if (World.Random.NextDouble() >= SuccessChance(player, def, tool) + TendingBonus(node, def)) return true;
             return Yield(player, node, def, tool);
         }
 
@@ -443,7 +450,9 @@ namespace Rth.Server.Game
             uint now = World.CurrentTick;
             ItemSystem? items = World.Find<ItemSystem>();
             SkillSystem? skills = World.Find<SkillSystem>();
-            if (items != null && def.Items.Any(i => !items.CanGive(player, i.Item, i.Count)))
+            NodeCatch? caught = PickCatch(player, def);
+            List<ItemCost> giving = caught != null ? new List<ItemCost> { new ItemCost { Item = caught.Item, Count = caught.Count } } : def.Items;
+            if (items != null && giving.Any(i => !items.CanGive(player, i.Item, i.Count)))
             {
                 World.Tell(player, TextKind.Warning, "You don't have enough inventory space.");
                 return false;
@@ -451,12 +460,12 @@ namespace Rth.Server.Game
 
             bool surging = node.IsSurging(now);
             NodeSurgeDef? surge = def.Surge;
-            skills?.AddXp(player, def.Skill, def.Xp * (surging && surge != null ? surge.XpMultiplier : 1));
+            skills?.AddXp(player, def.Skill, (caught?.Xp ?? def.Xp) * (surging && surge != null ? surge.XpMultiplier : 1));
 
             var gained = new List<Drop>();
             if (items != null)
             {
-                foreach (ItemCost item in Transformed(player, def, tool, skills))
+                foreach (ItemCost item in Transformed(player, giving, tool, skills))
                 {
                     items.Give(player, item.Item, item.Count);
                     gained.Add(new Drop(item.Item, item.Count));
@@ -485,8 +494,9 @@ namespace Rth.Server.Game
             }
 
             if (node.YieldsLeft <= 0) node.YieldsLeft = World.Random.Next(Math.Max(1, def.YieldsMin), Math.Max(def.YieldsMin, def.YieldsMax) + 1);
-            if (!Conserved(player, tool) && World.Random.NextDouble() < def.DepleteChance) node.YieldsLeft--;
+            if (!Conserved(player, tool) && World.Random.NextDouble() < DepleteChance(node, def)) node.YieldsLeft--;
             if (node.YieldsLeft > 0) return true;
+            if (MoveUsedUp(node, def)) return false;    // a roaming node moves on instead of running out
             node.DepletedUntil = now + (uint)RespawnTicks(node.Placed.Plane, node.Placed.Tile, def);
             node.SurgingUntil = 0;
             World.Tell(player, TextKind.Info, def.DepletedMessage);
@@ -497,10 +507,10 @@ namespace Rth.Server.Game
         /// What one success gives, after the tool's transformations: each item rolls once; a
         /// transformation needs its skill's level and gives that skill's XP.
         /// </summary>
-        private List<ItemCost> Transformed(Player player, NodeDef def, ToolDef? tool, SkillSystem? skills)
+        private List<ItemCost> Transformed(Player player, List<ItemCost> giving, ToolDef? tool, SkillSystem? skills)
         {
             var result = new List<ItemCost>();
-            foreach (ItemCost item in def.Items)
+            foreach (ItemCost item in giving)
             {
                 ToolTransform? change = tool?.Transforms.FirstOrDefault(t => t.From == item.Item
                     && (t.Skill == null || skills == null || skills.Level(player, t.Skill) >= t.Level)
@@ -544,6 +554,7 @@ namespace Rth.Server.Game
                 player.Connection.Send(message);
             }
             SendMining(player);
+            SendSkilling(player);
         }
 
         /// <summary>The player's own work on a progress node ("mining"): sent while they work one, empty otherwise.</summary>
@@ -586,6 +597,14 @@ namespace Rth.Server.Game
             GatheringSystem.Node? node = gathering.NodeAt(Object);
             NodeDef? def = node == null ? null : gathering.Def(node);
             if (node == null || def == null) return false;
+            if (def.Trap != null)
+            {
+                // A trap is set or collected in one act; the trap does the waiting.
+                string? trapProblem = node.TrapOwner == null ? gathering.Problem(player, node, def) : null;
+                if (trapProblem != null) world.Tell(player, TextKind.Warning, trapProblem);
+                else gathering.WorkTrap(player, node, def);
+                return false;
+            }
 
             if (!_started)
             {
@@ -608,6 +627,7 @@ namespace Rth.Server.Game
                 world.Tell(player, TextKind.Info, def.DepletedMessage);
                 return false;
             }
+            if (node.Dormant) return false;     // it moved off (the player was told)
             if (world.CurrentTick < _nextAttempt) return true;
             _nextAttempt = world.CurrentTick + (uint)Math.Max(1, def.Ticks);
             return gathering.Attempt(player, node, def);

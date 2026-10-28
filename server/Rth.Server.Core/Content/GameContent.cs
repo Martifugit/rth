@@ -540,6 +540,23 @@ namespace Rth.Server.Content
                         problems.Add(where + "no item is fire logs '" + fire.Logs + "'.");
                     if (node.Progress == null) problems.Add(where + "fire-setting works on a progress node.");
                 }
+                foreach (NodeCatch c in node.Catches)
+                    if (!items.ContainsKey(c.Item) || c.Count < 1 || c.Weight < 0) problems.Add(where + "bad catch '" + c.Item + "' x" + c.Count + ".");
+                if (node.ToolOptional && node.Tool == null) problems.Add(where + "toolOptional needs a tool kind.");
+                if (node.Roam != null && (node.Roam.Active < 1 || node.Roam.MinTicks < 1 || node.Roam.MaxTicks < node.Roam.MinTicks))
+                    problems.Add(where + "roam needs active and minTicks of at least 1, and maxTicks at least minTicks.");
+                if (node.Trap is NodeTrapDef trap)
+                {
+                    bool tagged = trap.Item.StartsWith("tag:");
+                    if (!items.Values.Any(i => tagged ? i.Tags.Contains(trap.Item.Substring(4)) : i.Id == trap.Item)) problems.Add(where + "no item is the trap '" + trap.Item + "'.");
+                    if (trap.Ticks < 1 || trap.Max < 1) problems.Add(where + "trap ticks and max must be at least 1.");
+                    if (node.Progress != null) problems.Add(where + "a trap node can't also be worked by progress.");
+                }
+                if (node.Tending is NodeTendingDef tending)
+                {
+                    if (tending.EveryTicks < 1 || tending.NeedTicks < 1 || tending.TendedTicks < 1) problems.Add(where + "tending needs everyTicks, needTicks and tendedTicks of at least 1.");
+                    if (!o.Actions.Any(a => a.Id == NodeTendingDef.Action)) problems.Add(where + "tending needs a 'tend' action.");
+                }
                 if (node.ToolTier < 0) problems.Add(where + "toolTier can't be negative.");
                 if (node.DepleteChance < 0 || node.DepleteChance > 1) problems.Add(where + "depleteChance must be 0-1.");
                 if (node.Surge != null && (node.Surge.EveryTicks < 1 || node.Surge.Ticks < 1)) problems.Add(where + "surge everyTicks and ticks must be at least 1.");

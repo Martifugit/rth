@@ -111,6 +111,16 @@ namespace Rth.Shared.World
         public NodeProgressDef? Progress;
         /// <summary>Fire-setting on it (Mining's active layer), or null.</summary>
         public FireSettingDef? Fire;
+        /// <summary>What it gives by level (a fishing spot's perch and pike), instead of <see cref="Items"/> and <see cref="Xp"/>; empty: those.</summary>
+        public List<NodeCatch> Catches = new List<NodeCatch>();
+        /// <summary>Its <see cref="Tool"/> helps but isn't needed (a sickle speeds picking up).</summary>
+        public bool ToolOptional;
+        /// <summary>It moves instead of running out (fishing spots), or null.</summary>
+        public NodeRoamDef? Roam;
+        /// <summary>It is worked by leaving a trap (eels), or null.</summary>
+        public NodeTrapDef? Trap;
+        /// <summary>Tending (Woodcutting's active layer), or null.</summary>
+        public NodeTendingDef? Tending;
     }
 
     /// <summary>
