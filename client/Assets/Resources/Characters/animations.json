@@ -107,6 +107,10 @@
     "source": "Our own: tools/character-models/animate.py (chop)", "stopOnMove": true,
     "use": "Woodcutting: two chops into a trunk, one-handed, one attempt's 2.4 s (trees name it)."
   },
+  "fish_rod": {
+    "source": "Our own: tools/character-models/animate.py (fish_rod)", "stopOnMove": true, "speed": 0.8,
+    "use": "Fishing with a rod, both hands: back, a flick that casts, the line settling, a twitch. Slowed to one attempt's 3.0 s (fishing spots name it)."
+  },
   "sit": { "source": "Mixamo: Sitting", "loop": true, "use": "Sitting on a chair or bench." },
   "rest": {
     "source": "Mixamo: Sitting Idle", "loop": true,

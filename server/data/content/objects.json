@@ -1545,7 +1545,7 @@
       "skill": "fishing",
       "level": 1,
       "verb": "fish",
-      "animation": "work",
+      "animation": "fish_rod",
       "tool": "rod",
       "ticks": 5,
       "baseChance": 0.4,

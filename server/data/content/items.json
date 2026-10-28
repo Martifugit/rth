@@ -1175,6 +1175,7 @@
   },
   {
     "id": "fishing_rod",
+    "model": "FishingRod",
     "name": "Fishing rod",
     "icon": "fishing",
     "examine": "Ash, horsehair line and a bent copper hook.",

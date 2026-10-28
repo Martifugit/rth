@@ -24,10 +24,15 @@ namespace Rth.Client.Characters
         /// </summary>
         public static readonly Quaternion Hold = Quaternion.Euler(0f, 0f, -90f);
 
-        /// <summary>A new, unparented object for the item, or null if it has nothing to hold.</summary>
+        /// <summary>
+        /// A new, unparented object for the item, or null if it has nothing to hold: a weapon, or a
+        /// tool with a model (a rod is held while fishing, though it is never wielded).
+        /// </summary>
         public static GameObject Build(ItemDef item)
         {
-            if (item?.Equipment == null || item.Equipment.Slot != EquipSlot.Weapon) return null;
+            if (item == null) return null;
+            bool weapon = item.Equipment != null && item.Equipment.Slot == EquipSlot.Weapon;
+            if (!weapon && !(item.Tool != null && HasModel(item))) return null;
             GameObject model = HasModel(item) ? Resources.Load<GameObject>("Items/" + item.Model) : null;
             if (model != null)
             {

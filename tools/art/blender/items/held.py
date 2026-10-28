@@ -220,6 +220,21 @@ def pickaxe():
     return bm, "Pickaxe", HAFTED
 
 
+def fishing_rod():
+    """An ash rod, longer than the fisher is tall, tapering to a whippy tip; a wrapped grip for both
+    hands (the left fist closes 0.24 below the right, animate.py fish_rod) with a small reel seat
+    between them. The line is not part of the model."""
+    bm = bmesh.new()
+    rod(bm, -0.34, 0.10, 0.019, sides=6, mat=1)                  # the wrapped grip
+    rod(bm, -0.36, -0.34, 0.022, sides=6, mat=1)                 # the butt cap
+    box(bm, -0.16, -0.08, -0.045, -0.015, 0.016, mat=1)          # the reel seat, under the rod
+    A.loft(bm, [(F(0.10), 0.016, 0.016), (F(0.80), 0.011, 0.011), (F(1.45), 0.007, 0.007), (F(1.75), 0.004, 0.004)],
+           sides=5, ref=(0, 0, 1), mats=0)                       # the rod, tapering
+    for along in (0.55, 1.05, 1.45):                             # line guides under the rod
+        box(bm, along - 0.008, along + 0.008, -0.03, -0.006, 0.004, mat=1)
+    return bm, "FishingRod", ["Ash", "Umber"]
+
+
 # ---- one-offs (not smithed) ----
 
 def knife():
@@ -237,7 +252,7 @@ def athame():
     return bm, "Athame", ["Steel", "Sable"]
 
 
-MODELS = [knife, sword, longsword, falcata, warhammer, hatchet, pickaxe, mace, athame]
+MODELS = [knife, sword, longsword, falcata, warhammer, hatchet, pickaxe, fishing_rod, mace, athame]
 # The line-up shown in the preview: the smithed roster.
 PREVIEW = ["Knife", "Sword", "Falcata", "Longsword", "Warhammer", "Hatchet", "Pickaxe"]
 
