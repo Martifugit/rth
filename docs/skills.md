@@ -160,9 +160,22 @@ One mechanism for ore, trees, fishing spots, herb patches and dream orbs (data o
 - **Every attempt** (every `ticks`, usually 4 ticks, 2.4 s) succeeds with chance
   `clamp(base + perLevel x (level − nodeLevel) + the tool's success bonus, min, max)`.
 - **Depletion:** each success depletes the node with `depleteChance` (ore 1/1, trees 1/8,
-  fishing spots move instead, herb patches after `yields` picks). It comes back after
-  `respawnTicks`. Nodes are **shared**: with at most ~200 players, competing for a rock is part
-  of the world, and dense spots stop it being a problem.
+  fishing spots move instead, herb patches after `yields` picks). A depleted tree shows its stump
+  (trees don't fall). Nodes are **shared**: with at most ~200 players, competing for a rock is
+  part of the world, and dense spots stop it being a problem.
+- **Respawn** (decided 2026-10-28): `respawnTicks`, longer for higher tiers; each other player
+  within 15 tiles takes `respawnPerPlayer` (15%) off it, never below `minRespawnTicks`, so a busy
+  spot doesn't starve.
+- **Effects** (decided 2026-10-28): anything can change the chances. Besides the tool's own
+  effects (below), two stats are read on every attempt, so gear, buffs, hymns and consumables
+  can raise them with no new code: `gatherSuccess` (points on the success chance) and
+  `gatherConservation` (a chance a success uses nothing up).
+- **Activity** (decided 2026-10-28): every gathering and making skill can be done AFK at a base
+  rate, and pays more for being worked actively. The active part is each skill's own, relaxed
+  rather than twitchy, and comes from **working with the place**: something about the node or
+  station that a periodic, unhurried act keeps right. Not stamina, not spots to click, not
+  rhythm. Mining's fire-setting, Woodcutting's tending and Smithing's draw (below) are the first
+  three; who it helps (you alone, or everyone there) is decided per skill by what is fair.
 - **Rare extras** roll on each success from a drop table on the node (gems from ore, galls from
   trees, shells from fish), with the existing nested drop tables.
 - **Tools** are carried in the pack or worn (a pickaxe or hatchet can be wielded), and the best
@@ -596,6 +609,29 @@ The herblore. Not for healing (food does that), apart from one mild tick-heal.
 **Decided (2026-10-21).** Ore, gems, salt and stone. Tool: pickaxe (Smithing); no station. Ore
 rocks deplete on every success (2.3) and come back after their respawn time.
 
+**How a rock is worked (decided 2026-10-28).** Mining is the one gathering skill that works by
+**progress**, not a chance per attempt:
+
+- **Strikes fill a bar.** Each strike (every few ticks) adds progress towards the next ore, by
+  level and pickaxe; when it fills, the ore comes off and the rock may deplete (2.3). A small
+  bar over the rock shows the progress, to the miner only.
+- **XP three ways:** a little for every strike, a little more for fire-setting done well, and
+  the rest when the ore comes. Higher ores fill slower and pay more, so the best XP and value an
+  hour are always at the highest ore you can work (no power-mining low tiers).
+- **Fire-setting**, an old miner's way of cracking hard rock, is the active layer:
+  1. **Set a fire** at the rock with a few logs. The fire is the rock's (global) and burns for a
+     few minutes: anyone mining it can use it.
+  2. **The stone heats** while it burns, its cracks glowing brighter, in a cycle.
+  3. **Douse it** with water you carry (a waterskin or bucket, filled at any water; better
+     carriers later make it easier). Dousing is **per player**: your douse cracks the face for
+     you alone. Dousing at the glow's peak (the sweet spot) cracks it fully; early or late, less.
+  4. **A cracked face** multiplies your progress per strike, and each strike wears the crack
+     down. You go on mining while the fire burns, so the cycle has no downtime; it is tuned to
+     need dousing about once a minute.
+- So the rate **ramps with activity**: AFK is the base rate, the odd douse better, a well-timed
+  douse every cycle best. Heat shows on the rock (its glow, and the outline on the rock you work
+  warming towards red), the crack as fissures fading as they wear.
+
 **Ores.** Most ores are plain; a few tiers have a quirk that makes them different to mine, built
 from mechanics that already exist (nodes, tools, world events). Quirks are kept to three or four
 per gathering skill so they stay special. "Where it tends to be" is the kind of place, not a
@@ -636,7 +672,15 @@ and the higher rites ask for the purer salts.
 ### Woodcutting
 **Decided (2026-10-21).** Logs for Artifice (crossbow stocks, bolt shafts), Cooking (campfires)
 and Religion (reliquary casings), and charcoal for Smithing. Tool: hatchet (Smithing). Trees
-fall by chance (2.3) and regrow.
+are cut back to a stump by chance (2.3) and regrow; they don't fall.
+
+**Tending the stool (decided 2026-10-28).** The basin's trees are coppiced and pollarded, and
+Woodcutting's active layer is caring for them. Every so often one tree in a cluster of trees of
+the same kind needs its stool tending (it shows: suckers and brambles round its foot). Tending it
+(a short act at the tree) makes it give logs more often and greatly lowers its chance to be cut
+back, for a while. It is **global**: whoever chops that tree gets it, which is fair, since the
+tree still runs out. Attempts stay a chance every few ticks (2.3); the rate ramps with keeping an
+eye out for the cluster's tree that needs you.
 
 **Trees.** Mostly plain, with a quirk on a few tiers, as with Mining's ores.
 
@@ -644,9 +688,9 @@ fall by chance (2.3) and regrow.
 |---|---|---|---|
 | 1 | **Alder** | Venaria's riverbanks | none |
 | 2 | **Ash** | Venaria's hedgerows and woods | none: the staple (bolt shafts) |
-| 3 | **Elm** | Venaria's old fields and roadsides | **a big shared tree**: many players chop one, and it falls when their total is reached |
+| 3 | **Elm** | Venaria's old fields and roadsides | **a big shared tree**: many players chop one, and it is cut back when their total is reached |
 | 4 | **Black poplar** | Slough's fens | none |
-| 5 | **Sere cedar** | Sere's dry hills | **the AFK tree**: slow attempts, but it almost never falls |
+| 5 | **Sere cedar** | Sere's dry hills | **the AFK tree**: slow attempts, but it is almost never cut back |
 | 6 | **Tamarisk** | Calcinia's coast | none |
 | 7 | **Pale pine** | Candora's high forests | none (resin is a common extra) |
 | 8 | **Moonbark** | the Veilwood's edges, old moonfall scars | none |
@@ -756,7 +800,13 @@ supplying: bars, the plain metal tools of gathering, and metal parts other skill
 skills define them).
 
 - **The loop:** smelt ore into bars at a furnace (charcoal from tier 3), then smith bars into
-  items at an anvil, make-X, like other processing. Bars per item scale with its size (a dagger
+  items at an anvil, make-X, like other processing.
+- **The forge's draw (decided 2026-10-28)** is the active layer. A forge's fire has a draw that
+  slowly dies down; working its bellows or feeding it charcoal now and then keeps it roaring,
+  and **everyone** working at that forge smiths faster while it does. Better charcoal (from
+  better logs) holds it longer. Alone and AFK you smith at the base rate; a busy smithy where
+  people take turns at the bellows runs hot for all. The state is the shared station's, not the
+  item's: nothing in the pack heats or cools. Bars per item scale with its size (a dagger
   takes 1, a plate body 5), and the big pieces give the big XP. **No better outputs:** a sword is
   a sword wherever it's made. A more involved smithing process can come later.
 - **Melee weapons:** one-handed (main hand, or dual-wielded) and two-handed, of **every kind**:
