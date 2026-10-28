@@ -127,12 +127,45 @@ namespace Rth.Client
             }
         }
 
-        public void FaceTowards(Vector3 point) => Face(point - transform.position);
+        public void FaceTowards(Vector3 point)
+        {
+            _facePoint = point;
+            Face(point - transform.position);
+        }
 
-        /// <summary>It attacked or used an ability; <paramref name="animation"/> is the clip or role to play.</summary>
+        /// <summary>
+        /// It attacked or used an ability; <paramref name="animation"/> is the clip or role to play.
+        /// A clip that stops when its player moves (a swing at a tree) arriving while it is still
+        /// walking its last steps is held until it stands: the client walks a little behind the
+        /// server, so the swing comes in before the walk ends, and would be cut off at once.
+        /// </summary>
         public void PlayAction(string animation)
         {
-            if (_body != null) _body.PlayAction(animation);
+            if (_body == null) return;
+            if ((_moving || _pending.Count > 0) && ClipAnimator.Tuning(animation).StopOnMove)
+            {
+                _heldAction = animation;
+                _heldFace = _facePoint;
+                _heldUntil = Time.time + 1.5f;
+                return;
+            }
+            _body.PlayAction(animation);
+        }
+
+        private string _heldAction;
+        private Vector3? _facePoint, _heldFace;
+        private float _heldUntil;
+
+        /// <summary>Plays a held action once it stands still (turned to what it acts on), if it isn't stale.</summary>
+        private void PlayHeldAction()
+        {
+            if (_heldAction == null || _moving || _pending.Count > 0) return;
+            if (Time.time <= _heldUntil)
+            {
+                if (_heldFace.HasValue) Face(_heldFace.Value - transform.position);
+                _body.PlayAction(_heldAction);
+            }
+            _heldAction = null;
         }
 
         /// <summary>It took a hit.</summary>
@@ -224,9 +257,11 @@ namespace Rth.Client
             // Turn at the old client's fixed rate, snapping the last few degrees.
             if (Quaternion.Angle(transform.rotation, _facing) < 5.7f) transform.rotation = _facing;
             else transform.rotation = Quaternion.RotateTowards(transform.rotation, _facing, TurnDegreesPerSecond * Time.deltaTime);
+            PlayHeldAction();
+            // Speed in steps, as the game moves: a diagonal step is one step, as long as a straight
+            // one, so it mustn't play the walk faster (its distance is 1.4 tiles).
             Vector3 moved = transform.position - before;
-            moved.y = 0f;
-            float speed = Time.deltaTime > 0f ? moved.magnitude / Time.deltaTime : 0f;
+            float speed = Time.deltaTime > 0f ? Mathf.Max(Mathf.Abs(moved.x), Mathf.Abs(moved.z)) / Time.deltaTime : 0f;
             _body.InCombat = Time.time - LastHitTime < CombatStanceSeconds;
             // Catching up at double pace or more looks like running, as the old client shows it.
             _body.Animate(speed, _stepsPerTick == 2 || (_moving && _pace >= 2f), Time.deltaTime);

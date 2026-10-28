@@ -8,8 +8,8 @@ namespace Rth.Client
     /// Particle effects that show the state of a gathering node (drawn by <see cref="SkillingViews"/>):
     /// a tree that needs tending sheds withered leaves that tumble down out of its crown; one that has
     /// been tended glows with slow-rising pollen and a faint warm light; tending it gives a short
-    /// burst of sparks and fresh leaves; water where the fish are about to come back bubbles, with
-    /// rings spreading. All drawn with Resources/Shaders/Particle and textures made here (a soft
+    /// burst of sparks and fresh leaves; a fishing spot bubbles, with rings spreading; water where
+    /// fish are about to come shimmers (motes swirling up over it, a soft pulsing light). All drawn with Resources/Shaders/Particle and textures made here (a soft
     /// glow, a leaf, a ring), so they need no assets.
     /// </summary>
     public static class SkillingEffects
@@ -45,31 +45,31 @@ namespace Rth.Client
             ParticleSystem.MainModule main = ps.main;
             main.loop = true;
             main.prewarm = true;
-            main.startLifetime = new ParticleSystem.MinMaxCurve(6f, 8f);
+            main.startLifetime = new ParticleSystem.MinMaxCurve(4f, 5.5f);
             main.startSpeed = 0f;
-            main.startSize = new ParticleSystem.MinMaxCurve(0.24f, 0.34f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.13f, 0.19f);
             main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
             main.startColor = new ParticleSystem.MinMaxGradient(new Color(0.62f, 0.44f, 0.18f), new Color(0.38f, 0.27f, 0.13f));
             main.gravityModifier = 0.05f;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
-            main.maxParticles = 60;
+            main.maxParticles = 40;
 
             ParticleSystem.EmissionModule emission = ps.emission;
-            emission.rateOverTime = 5f;
+            emission.rateOverTime = 6f;
 
             ParticleSystem.ShapeModule shape = ps.shape;
             shape.shapeType = ParticleSystemShapeType.Box;
-            shape.scale = new Vector3(crown.size.x * 0.7f, crown.size.y * 0.5f, crown.size.z * 0.7f);
+            shape.scale = new Vector3(crown.size.x * 0.5f, crown.size.y * 0.4f, crown.size.z * 0.5f);   // from the crown's middle, so they fall under it
 
             // They don't drop like stones: a slow terminal speed, a drifting flutter, a spin.
             ParticleSystem.LimitVelocityOverLifetimeModule limit = ps.limitVelocityOverLifetime;
             limit.enabled = true;
-            limit.limit = 0.75f;
-            limit.dampen = 0.25f;
+            limit.limit = 0.7f;
+            limit.dampen = 0.3f;
             ParticleSystem.NoiseModule noise = ps.noise;
             noise.enabled = true;
-            noise.strength = 0.3f;
-            noise.frequency = 0.5f;
+            noise.strength = 0.12f;
+            noise.frequency = 0.6f;
             noise.scrollSpeed = 0.25f;
             noise.damping = true;
             ParticleSystem.RotationOverLifetimeModule spin = ps.rotationOverLifetime;
@@ -228,7 +228,7 @@ namespace Rth.Client
             Object.Destroy(go, 3.5f);
         }
 
-        /// <summary>Water about to hold fish: bubbles breaking the surface, rings spreading from them.</summary>
+        /// <summary>A fishing spot: bubbles breaking the surface, rings spreading from them.</summary>
         public static GameObject Bubbles(MapObject spot)
         {
             GameObject go = Holder("Bubbles", spot, spot.transform.position + Vector3.up * 0.04f);
@@ -287,6 +287,92 @@ namespace Rth.Client
             Render(rings, Rings(), 0.05f);
             rings.GetComponent<ParticleSystemRenderer>().renderMode = ParticleSystemRenderMode.HorizontalBillboard;   // lying on the water
             rings.Play();
+            return go;
+        }
+
+        /// <summary>
+        /// Water where fish are about to come: pale aqua and silver motes swirling in a slow ring just
+        /// over it and drifting up, a few faint glows hanging on the surface, and a soft light that
+        /// breathes. Something unseen gathering, the way the tended tree glows.
+        /// </summary>
+        public static GameObject Arriving(MapObject spot)
+        {
+            GameObject go = Holder("Arriving", spot, spot.transform.position + Vector3.up * 0.08f);
+
+            ParticleSystem motes = go.AddComponent<ParticleSystem>();
+            motes.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            ParticleSystem.MainModule main = motes.main;
+            main.loop = true;
+            main.prewarm = true;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(1.6f, 2.6f);
+            main.startSpeed = 0f;
+            main.startSize = new ParticleSystem.MinMaxCurve(0.09f, 0.18f);
+            main.startColor = new ParticleSystem.MinMaxGradient(new Color(0.6f, 0.95f, 1f, 0.9f), new Color(0.85f, 0.8f, 1f, 0.9f));
+            main.simulationSpace = ParticleSystemSimulationSpace.Local;
+            main.maxParticles = 60;
+            ParticleSystem.EmissionModule emission = motes.emission;
+            emission.rateOverTime = 20f;
+            ParticleSystem.ShapeModule shape = motes.shape;
+            shape.shapeType = ParticleSystemShapeType.Circle;
+            shape.radius = 0.75f;
+            shape.radiusThickness = 0.3f;
+            shape.rotation = new Vector3(-90f, 0f, 0f);
+            // Round and round, drawing in a little, rising.
+            ParticleSystem.VelocityOverLifetimeModule velocity = motes.velocityOverLifetime;
+            velocity.enabled = true;
+            velocity.space = ParticleSystemSimulationSpace.Local;
+            velocity.x = new ParticleSystem.MinMaxCurve(0f);
+            velocity.y = new ParticleSystem.MinMaxCurve(0.18f, 0.4f);
+            velocity.z = new ParticleSystem.MinMaxCurve(0f);
+            velocity.orbitalX = new ParticleSystem.MinMaxCurve(0f);
+            velocity.orbitalY = new ParticleSystem.MinMaxCurve(1.6f);
+            velocity.orbitalZ = new ParticleSystem.MinMaxCurve(0f);
+            velocity.radial = new ParticleSystem.MinMaxCurve(-0.15f);
+            ParticleSystem.SizeOverLifetimeModule size = motes.sizeOverLifetime;
+            size.enabled = true;
+            size.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.3f), new Keyframe(0.25f, 1f), new Keyframe(0.5f, 0.7f),
+                new Keyframe(0.7f, 1f), new Keyframe(1f, 0.2f)));
+            ParticleSystem.ColorOverLifetimeModule colour = motes.colorOverLifetime;
+            colour.enabled = true;
+            colour.color = Fade(0.2f, 0.65f, 1f);
+            Render(motes, Additive(), 0.05f);
+            motes.Play();
+
+            var hazeGo = new GameObject("Haze") { hideFlags = HideFlags.DontSave };
+            hazeGo.transform.SetParent(go.transform, false);
+            ParticleSystem haze = hazeGo.AddComponent<ParticleSystem>();
+            haze.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            ParticleSystem.MainModule hm = haze.main;
+            hm.loop = true;
+            hm.prewarm = true;
+            hm.startLifetime = new ParticleSystem.MinMaxCurve(1.8f, 2.6f);
+            hm.startSpeed = 0f;
+            hm.startSize = new ParticleSystem.MinMaxCurve(0.9f, 1.4f);
+            hm.startColor = new Color(0.55f, 0.85f, 1f, 0.22f);
+            hm.simulationSpace = ParticleSystemSimulationSpace.Local;
+            hm.maxParticles = 8;
+            ParticleSystem.EmissionModule he = haze.emission;
+            he.rateOverTime = 3f;
+            ParticleSystem.ShapeModule hs = haze.shape;
+            hs.shapeType = ParticleSystemShapeType.Circle;
+            hs.radius = 0.3f;
+            hs.rotation = new Vector3(-90f, 0f, 0f);
+            ParticleSystem.ColorOverLifetimeModule hc = haze.colorOverLifetime;
+            hc.enabled = true;
+            hc.color = Fade(0.35f, 0.6f, 1f);
+            Render(haze, Additive(), 0.3f);
+            haze.GetComponent<ParticleSystemRenderer>().renderMode = ParticleSystemRenderMode.HorizontalBillboard;   // a glow lying on the water
+            haze.Play();
+
+            var lightGo = new GameObject("Glow") { hideFlags = HideFlags.DontSave };
+            lightGo.transform.SetParent(go.transform, false);
+            lightGo.transform.localPosition = Vector3.up * 0.5f;
+            Light l = lightGo.AddComponent<Light>();
+            l.type = LightType.Point;
+            l.color = new Color(0.55f, 0.9f, 1f);
+            l.range = 3.5f;
+            l.shadows = LightShadows.None;
+            lightGo.AddComponent<Breathe>().Set(l, 0.35f, 1.1f, 1.4f);
             return go;
         }
 
@@ -434,6 +520,29 @@ namespace Rth.Client
             _leaf.SetPixels(px);
             _leaf.Apply(true);
             return _leaf;
+        }
+    }
+
+    /// <summary>A light that swells and fades slowly between two strengths.</summary>
+    public sealed class Breathe : MonoBehaviour
+    {
+        private Light _light;
+        private float _low, _high, _seconds, _phase;
+
+        public void Set(Light light, float low, float high, float seconds)
+        {
+            _light = light;
+            _low = low;
+            _high = high;
+            _seconds = Mathf.Max(0.1f, seconds);
+            _phase = Random.value * Mathf.PI * 2f;
+        }
+
+        private void Update()
+        {
+            if (_light == null) return;
+            float t = 0.5f + 0.5f * Mathf.Sin(Time.time * Mathf.PI * 2f / _seconds + _phase);
+            _light.intensity = Mathf.Lerp(_low, _high, t);
         }
     }
 }

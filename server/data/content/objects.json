@@ -1312,7 +1312,7 @@
     "depletedModel": "Nature/AlderStool",
     "actions": [ { "id": "gather", "label": "Chop" }, { "id": "tend", "label": "Tend" } ],
     "node": {
-      "tending": { "groupRadius": 8, "everyTicks": 90, "needTicks": 100, "tendedTicks": 250, "successBonus": 0.25, "depleteScale": 0.3, "xp": 6, "needMessage": "Suckers and brambles are choking the foot of the alder {where}." },
+      "tending": { "groupRadius": 8, "everyTicks": 220, "needTicks": 35, "tendedTicks": 120, "successBonus": 0.25, "depleteScale": 0.3, "xp": 6, "needMessage": "Suckers and brambles are choking the foot of the alder {where}." },
       "skill": "woodcutting",
       "level": 1,
       "verb": "chop",
@@ -1338,7 +1338,7 @@
     "depletedModel": "Nature/AshStump",
     "actions": [ { "id": "gather", "label": "Chop" }, { "id": "tend", "label": "Tend" } ],
     "node": {
-      "tending": { "groupRadius": 8, "everyTicks": 90, "needTicks": 100, "tendedTicks": 250, "successBonus": 0.2, "depleteScale": 0.3, "xp": 9, "needMessage": "Suckers and brambles are choking the foot of the ash {where}." },
+      "tending": { "groupRadius": 8, "everyTicks": 220, "needTicks": 35, "tendedTicks": 120, "successBonus": 0.2, "depleteScale": 0.3, "xp": 9, "needMessage": "Suckers and brambles are choking the foot of the ash {where}." },
       "skill": "woodcutting",
       "level": 10,
       "verb": "chop",
