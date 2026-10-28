@@ -82,6 +82,43 @@ public class GatheringTests
     }
 
     [Fact]
+    public void AConservationStatKeepsANodeFromRunningOut()
+    {
+        var (fx, client, alice) = World(Fount(n => { n.YieldsMin = n.YieldsMax = 1; n.Points = null; }));
+        alice.Stats.Add(Rth.Shared.Combat.StatIds.GatherConservation, 100);
+        Gather(fx, client);
+        fx.Ticks(12);
+        Assert.Equal(60, fx.World.Get<SkillSystem>().Xp(alice, "religion")); // six attempts, none used it up
+        Assert.NotNull(alice.Interaction);
+    }
+
+    [Fact]
+    public void ASuccessStatRaisesTheChance()
+    {
+        var (fx, _, alice) = World(Fount(n => { n.BaseChance = 0.3; n.MaxChance = 0.95; }));
+        GatheringSystem gathering = fx.World.Get<GatheringSystem>();
+        NodeDef def = fx.World.Content.Objects["fount"].Node!;
+        double before = gathering.SuccessChance(alice, def);
+        alice.Stats.Add(Rth.Shared.Combat.StatIds.GatherSuccess, 20);
+        Assert.Equal(before + 0.2, gathering.SuccessChance(alice, def), 6);
+    }
+
+    [Fact]
+    public void ACrowdShortensTheRespawnButNotBelowItsMinimum()
+    {
+        var (fx, _, _) = World(Fount(n => { n.RespawnTicks = 20; n.MinRespawnTicks = 12; n.RespawnPerPlayer = 0.2; }));
+        GatheringSystem gathering = fx.World.Get<GatheringSystem>();
+        NodeDef def = fx.World.Content.Objects["fount"].Node!;
+        Assert.Equal(20, gathering.RespawnTicks(0, new TileCoord(6, 5), def)); // Alice alone
+        fx.Login("Bob");
+        Assert.Equal(16, gathering.RespawnTicks(0, new TileCoord(6, 5), def));
+        fx.Login("Carol");
+        fx.Login("Dan");
+        Assert.Equal(12, gathering.RespawnTicks(0, new TileCoord(6, 5), def)); // 20 x 0.4 = 8, held at 12
+        Assert.Equal(20, gathering.RespawnTicks(0, new TileCoord(39, 39), def)); // nobody near that one
+    }
+
+    [Fact]
     public void ANodeNeedsItsLevel()
     {
         var (fx, client, alice) = World(Fount(n => n.Level = 10));

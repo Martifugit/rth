@@ -1272,7 +1272,7 @@
       "xp": 9,
       "items": [ { "item": "raw_copper" } ],
       "extras": "low_rock_gems",
-      "respawnTicks": 5,
+      "respawnTicks": 5, "minRespawnTicks": 3,
       "startMessage": "You swing your pickaxe at the rock.",
       "depletedMessage": "The seam is worked out for now."
     }
@@ -1296,7 +1296,7 @@
       "xp": 12,
       "items": [ { "item": "ironstone" } ],
       "extras": "low_rock_gems",
-      "respawnTicks": 9,
+      "respawnTicks": 9, "minRespawnTicks": 5,
       "startMessage": "You swing your pickaxe at the rock.",
       "depletedMessage": "The seam is worked out for now."
     }
@@ -1320,7 +1320,7 @@
       "items": [ { "item": "alder_log" } ],
       "extras": "tree_extras",
       "depleteChance": 0.125,
-      "respawnTicks": 15,
+      "respawnTicks": 15, "minRespawnTicks": 8,
       "startMessage": "You swing your hatchet at the tree.",
       "depletedMessage": "The alder comes down."
     }
@@ -1344,7 +1344,7 @@
       "items": [ { "item": "ash_log" } ],
       "extras": "tree_extras",
       "depleteChance": 0.125,
-      "respawnTicks": 25,
+      "respawnTicks": 25, "minRespawnTicks": 13,
       "startMessage": "You swing your hatchet at the tree.",
       "depletedMessage": "The ash comes down."
     }

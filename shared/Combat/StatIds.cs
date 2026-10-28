@@ -54,12 +54,19 @@ namespace Rth.Shared.Combat
         /// <summary>Percent of max blood that each ability you use costs (never your last point).</summary>
         public const string BloodPerAbility = "bloodPerAbility";
 
+        // Gathering (rocks, trees, founts): read on every attempt, on top of the tool's own effects.
+        /// <summary>Added to every gathering attempt's success chance, in percentage points.</summary>
+        public const string GatherSuccess = "gatherSuccess";
+        /// <summary>Percent chance that a success uses nothing up (the node's depletion roll is skipped).</summary>
+        public const string GatherConservation = "gatherConservation";
+
         public static readonly IReadOnlyList<string> All = new[]
         {
             AbilityDamage, Accuracy, DamageBonus, Ward, MaxBlood, MaxDevotion, DevotionBonus, Lifesteal,
             MeleeAccuracy, RangedAccuracy, OccultAccuracy, MeleeDamage, RangedDamage, OccultDamage,
             DeflectMelee, DeflectRanged, DeflectOccult, MeleePower, RangedPower, OccultPower,
             DeferDamage, BlockHit, BlockedPhlegm, ScarOnHit, BuilderPhlegm, BloodPerAbility,
+            GatherSuccess, GatherConservation,
         };
 
         public static bool IsKnown(string id)

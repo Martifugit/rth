@@ -56,6 +56,8 @@ namespace Rth.Client
         private int _reconnectAttempts;
         private float _nextReconnectTime;
         private TileMarker _clickMarker;
+        // The click marker's colours: a walk, an action on something, a word with someone.
+        private static readonly Color WalkMarker = new Color(1f, 0.9f, 0.62f), ActionMarker = new Color(1f, 0.45f, 0.32f), TalkMarker = new Color(1f, 0.8f, 0.4f);
         private TileCoord _flagLastTile;
         private float _flagLastMove;
         private float _tickSeconds = 0.6f;
@@ -545,7 +547,7 @@ namespace Rth.Client
             m.Y = tile.Y;
             Send(m);
             CancelUse();
-            ShowClickMarker(tile, new Color(0.9f, 0.15f, 0.1f));
+            ShowClickMarker(tile, ActionMarker);
         }
 
         public void UseOnNpc(int npcId)
@@ -556,7 +558,7 @@ namespace Rth.Client
             Send(m);
             CancelUse();
             EntityView view = world.Find(npcId);
-            if (view != null) ShowClickMarker(view.Tile, new Color(0.9f, 0.85f, 0.2f));
+            if (view != null) ShowClickMarker(view.Tile, TalkMarker);
         }
 
         /// <summary>Uses the picked-up item on another pack item; on itself it just puts it down.</summary>
@@ -716,7 +718,7 @@ namespace Rth.Client
             if (_state != State.InGame) return;
             _client.Send(new NpcActionMessage { NpcId = npcId, ActionId = actionId });
             EntityView view = world.Find(npcId);
-            if (view != null && actionId != "examine") ShowClickMarker(view.Tile, new Color(0.9f, 0.85f, 0.2f));
+            if (view != null && actionId != "examine") ShowClickMarker(view.Tile, TalkMarker);
         }
 
         /// <summary>Picks a dialogue option, or continues with -1.</summary>
@@ -870,7 +872,7 @@ namespace Rth.Client
         {
             if (_state != State.InGame) return;
             _client.Send(new ObjectActionMessage { ObjectType = objectType, Plane = plane, X = tile.X, Y = tile.Y, ActionId = actionId });
-            if (actionId != "examine") ShowClickMarker(tile, new Color(0.9f, 0.15f, 0.1f));
+            if (actionId != "examine") ShowClickMarker(tile, ActionMarker);
         }
 
         public void Pickup(int groundItemId)
@@ -878,7 +880,7 @@ namespace Rth.Client
             if (_state != State.InGame) return;
             _client.Send(new PickupMessage { GroundItemId = groundItemId });
             GroundItemView view = world.FindGroundItem(groundItemId);
-            if (view != null) ShowClickMarker(view.Tile, new Color(0.9f, 0.15f, 0.1f));
+            if (view != null) ShowClickMarker(view.Tile, ActionMarker);
         }
 
         /// <summary>Uses one of an item's actions (see <see cref="ItemActions"/>).</summary>
@@ -912,7 +914,7 @@ namespace Rth.Client
         {
             if (_state != State.InGame) return;
             _client.Send(new WalkToMessage { X = tile.X, Y = tile.Y, Run = Running });
-            ShowClickMarker(tile, new Color(1f, 0.85f, 0.1f));
+            ShowClickMarker(tile, WalkMarker);
         }
 
         public void Attack(int entityId)
@@ -920,7 +922,7 @@ namespace Rth.Client
             if (_state != State.InGame) return;
             _client.Send(new AttackMessage { TargetId = entityId });
             EntityView target = world.Find(entityId);
-            if (target != null) ShowClickMarker(target.Tile, new Color(0.9f, 0.15f, 0.1f));
+            if (target != null) ShowClickMarker(target.Tile, ActionMarker);
         }
 
         public void UseAbility(string abilityId)

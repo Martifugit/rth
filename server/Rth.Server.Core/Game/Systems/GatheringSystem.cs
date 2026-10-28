@@ -200,8 +200,34 @@ namespace Rth.Server.Game
         private double SuccessChance(Player player, NodeDef def, ToolDef? tool)
         {
             int level = World.Find<SkillSystem>()?.Level(player, def.Skill) ?? 1;
-            double chance = def.BaseChance + def.PerLevel * (level - def.Level) + (tool?.Success ?? 0);
+            // Gear, buffs and hymns add to it through the gatherSuccess stat, on top of the tool.
+            double chance = def.BaseChance + def.PerLevel * (level - def.Level) + (tool?.Success ?? 0)
+                            + player.Stats.Get(Rth.Shared.Combat.StatIds.GatherSuccess) / 100.0;
             return Math.Max(def.MinChance, Math.Min(def.MaxChance, chance));
+        }
+
+        /// <summary>
+        /// Whether a success uses nothing up: the tool's conservation and the gatherConservation
+        /// stat (gear, buffs, hymns) each get their own roll.
+        /// </summary>
+        private bool Conserved(Player player, ToolDef? tool)
+        {
+            if (tool != null && tool.Conservation > 0 && World.Random.NextDouble() < tool.Conservation) return true;
+            int stat = player.Stats.Get(Rth.Shared.Combat.StatIds.GatherConservation);
+            return stat > 0 && World.Random.NextDouble() < stat / 100.0;
+        }
+
+        /// <summary>
+        /// How long a node stays depleted: its respawn time, less a share for every other player
+        /// near it, never under its minimum.
+        /// </summary>
+        public int RespawnTicks(int plane, TileCoord tile, NodeDef def)
+        {
+            int full = Math.Max(1, def.RespawnTicks);
+            if (def.MinRespawnTicks is not int min) return full;
+            int others = Math.Max(0, World.EntitiesNear(plane, tile, NodeDef.CrowdRadius).OfType<Player>().Count() - 1);
+            double ticks = full * Math.Max(0, 1 - def.RespawnPerPlayer * others);
+            return Math.Max(Math.Max(1, min), (int)Math.Round(ticks));
         }
 
         /// <summary>The player starts working a node: its message, its words, its cut.</summary>
@@ -272,10 +298,9 @@ namespace Rth.Server.Game
             }
 
             if (node.YieldsLeft <= 0) node.YieldsLeft = World.Random.Next(Math.Max(1, def.YieldsMin), Math.Max(def.YieldsMin, def.YieldsMax) + 1);
-            bool conserved = tool != null && tool.Conservation > 0 && World.Random.NextDouble() < tool.Conservation;
-            if (!conserved && World.Random.NextDouble() < def.DepleteChance) node.YieldsLeft--;
+            if (!Conserved(player, tool) && World.Random.NextDouble() < def.DepleteChance) node.YieldsLeft--;
             if (node.YieldsLeft > 0) return true;
-            node.DepletedUntil = now + (uint)Math.Max(1, def.RespawnTicks);
+            node.DepletedUntil = now + (uint)RespawnTicks(node.Placed.Plane, node.Placed.Tile, def);
             node.SurgingUntil = 0;
             World.Tell(player, TextKind.Info, def.DepletedMessage);
             return false;

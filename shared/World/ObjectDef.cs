@@ -81,8 +81,17 @@ namespace Rth.Shared.World
         /// </summary>
         public int YieldsMin = 1;
         public int YieldsMax = 1;
-        /// <summary>How long it stays depleted.</summary>
+        /// <summary>
+        /// How long it stays depleted with nobody else about (higher tiers longer). Every other
+        /// player near it (within <see cref="NodeDef.CrowdRadius"/>) takes <see cref="RespawnPerPlayer"/>
+        /// of it off, down to <see cref="MinRespawnTicks"/>: a busy spot doesn't starve.
+        /// </summary>
         public int RespawnTicks = 10;
+        /// <summary>The shortest it stays depleted however many are about (null: <see cref="RespawnTicks"/>, no crowd effect).</summary>
+        public int? MinRespawnTicks;
+        /// <summary>The share of <see cref="RespawnTicks"/> each other player nearby takes off (0.15: 15%).</summary>
+        public double RespawnPerPlayer = 0.15;
+        public const int CrowdRadius = 15;
         /// <summary>Said when you start working it, or null.</summary>
         public string? StartMessage;
         /// <summary>What your character says out loud as they start, or null.</summary>

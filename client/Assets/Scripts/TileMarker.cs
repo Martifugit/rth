@@ -1,18 +1,20 @@
+using System.Collections.Generic;
 using Rth.Shared.World;
 using UnityEngine;
 
 namespace Rth.Client
 {
     /// <summary>
-    /// The marker on the tile a click sends the player to: four corner brackets and a dot, draped
-    /// over the ground there (hills, steps, a floor), drawn by Resources/Shaders/Marker. It settles in
-    /// from a little larger when placed, then stays, fading only as the player closes on it, and goes
-    /// once they arrive or stop (the walk flag clears). Yellow for a walk, red for an action.
+    /// The marker on the tile a click sends the player to: a rounded outline round the tile with a
+    /// soft glow, a ripple when it is placed and a slow breath while it waits (Resources/Shaders/Marker),
+    /// on a finely divided mesh draped over the ground there (hills, steps, a floor). It stays until
+    /// the player is close, fading as they come within two tiles, and goes once they arrive or stop
+    /// (the walk flag clears). Warm white for a walk, red for an action.
     /// </summary>
     public sealed class TileMarker : MonoBehaviour
     {
-        private const float Settle = 0.18f;          // seconds to settle in
-        private const float FadeOut = 0.25f;
+        private const int Cells = 6;                 // the drape's divisions across the tile
+        private const float FadeOut = 0.3f;
 
         public GameSession session;
         public WorldView world;
@@ -21,11 +23,13 @@ namespace Rth.Client
         private MeshRenderer _renderer;
         private MaterialPropertyBlock _block;
         private Color _color;
-        private float _shownAt = -10f, _alpha, _hideFrom = -1f;
+        private float _shownAt = -10f, _hideFrom = -1f;
         private Vector3 _centre;
         private bool _visible;
 
         private static readonly int ColorId = Shader.PropertyToID("_Color");
+        private static readonly int AlphaId = Shader.PropertyToID("_Alpha");
+        private static readonly int AgeId = Shader.PropertyToID("_Age");
 
         public static TileMarker Create(GameSession session, WorldView world)
         {
@@ -49,7 +53,7 @@ namespace Rth.Client
         {
             _color = color;
             _centre = GroundHeight.Centre(tile, plane);
-            Build(tile, plane);
+            Drape(tile, plane);
             _shownAt = Time.unscaledTime;
             _hideFrom = -1f;
             _visible = true;
@@ -68,68 +72,48 @@ namespace Rth.Client
             {
                 Vector3 d = local.transform.position - _centre;
                 d.y = 0f;
-                near = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.35f, 2f, d.magnitude));
+                near = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.3f, 2f, d.magnitude));
             }
-            float settle = Mathf.Clamp01((now - _shownAt) / Settle);
             float leaving = _hideFrom < 0f ? 1f : 1f - Mathf.Clamp01((now - _hideFrom) / FadeOut);
-            _alpha = near * leaving * Mathf.Lerp(0.4f, 1f, settle);
+            float alpha = near * leaving;
             if (leaving <= 0f)
             {
                 _visible = false;
                 _renderer.enabled = false;
                 return;
             }
-            float grow = 1f + 0.35f * (1f - settle) * (1f - settle);
             transform.position = _centre;
-            transform.localScale = new Vector3(grow, 1f, grow);
-            Color c = _color;
-            c.a = _alpha;
-            _block.SetColor(ColorId, c);
+            _block.SetColor(ColorId, _color);
+            _block.SetFloat(AlphaId, alpha);
+            _block.SetFloat(AgeId, now - _shownAt);
             _renderer.SetPropertyBlock(_block);
-            _renderer.enabled = _alpha > 0.01f;
+            _renderer.enabled = alpha > 0.01f;
         }
 
-        /// <summary>Corner brackets and a centre dot, each a strip of small quads lying on the ground's height (relative to the tile's centre).</summary>
-        private void Build(TileCoord tile, int plane)
+        /// <summary>A tile-sized grid lying on the ground's height there (relative to the tile's centre), uv 0..1 across it.</summary>
+        private void Drape(TileCoord tile, int plane)
         {
-            var verts = new System.Collections.Generic.List<Vector3>();
-            var tris = new System.Collections.Generic.List<int>();
-            float cx = tile.X + 0.5f, cz = tile.Y + 0.5f;
-
-            void Quad(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
-            {
-                int i = verts.Count;
-                foreach (Vector2 p in new[] { a, b, c, d })
+            var verts = new List<Vector3>();
+            var uvs = new List<Vector2>();
+            var tris = new List<int>();
+            for (int j = 0; j <= Cells; j++)
+                for (int i = 0; i <= Cells; i++)
                 {
-                    float y = GroundHeight.At(cx + p.x, cz + p.y, plane, _centre.y) - _centre.y + 0.035f;
-                    verts.Add(new Vector3(p.x, y, p.y));
+                    float u = (float)i / Cells, v = (float)j / Cells;
+                    float x = tile.X + u, z = tile.Y + v;
+                    float y = GroundHeight.At(x, z, plane, _centre.y) - _centre.y + 0.03f;
+                    verts.Add(new Vector3(u - 0.5f, y, v - 0.5f));
+                    uvs.Add(new Vector2(u, v));
                 }
-                tris.AddRange(new[] { i, i + 2, i + 1, i, i + 3, i + 2 });
-            }
-
-            // A bracket arm from p along dir, split in pieces so it follows the ground.
-            void Arm(Vector2 p, Vector2 dir, Vector2 side, float length, float width)
-            {
-                const int pieces = 3;
-                for (int k = 0; k < pieces; k++)
+            for (int j = 0; j < Cells; j++)
+                for (int i = 0; i < Cells; i++)
                 {
-                    Vector2 a = p + dir * (length * k / pieces), b = p + dir * (length * (k + 1) / pieces);
-                    Quad(a, b, b + side * width, a + side * width);
+                    int a = j * (Cells + 1) + i, b = a + 1, c = a + Cells + 1, d = c + 1;
+                    tris.AddRange(new[] { a, c, b, b, c, d });
                 }
-            }
-
-            const float edge = 0.45f, arm = 0.26f, w = 0.1f;
-            foreach (Vector2 corner in new[] { new Vector2(-1, -1), new Vector2(1, -1), new Vector2(1, 1), new Vector2(-1, 1) })
-            {
-                Vector2 p = corner * edge;
-                Arm(p, new Vector2(-corner.x, 0), new Vector2(0, -corner.y), arm, w);
-                Arm(p + new Vector2(0, -corner.y * w), new Vector2(0, -corner.y), new Vector2(-corner.x, 0), arm - w, w);
-            }
-            const float dot = 0.1f;
-            Quad(new Vector2(0, -dot), new Vector2(dot, 0), new Vector2(0, dot), new Vector2(-dot, 0));
-
             _mesh.Clear();
             _mesh.SetVertices(verts);
+            _mesh.SetUVs(0, uvs);
             _mesh.SetTriangles(tris, 0);
             _mesh.RecalculateBounds();
         }
