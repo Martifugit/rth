@@ -407,10 +407,93 @@ def flags(rnd):
     return coarse(g)
 
 
+def value_noise(rnd, cells):
+    """Smooth noise that tiles: random values on a cells x cells lattice, smoothly interpolated."""
+    lat = [[rnd.random() for _ in range(cells)] for _ in range(cells)]
+    step = SIZE / cells
+
+    def f(x, y):
+        gx, gy = x / step, y / step
+        x0, y0 = int(gx) % cells, int(gy) % cells
+        x1, y1 = (x0 + 1) % cells, (y0 + 1) % cells
+        tx, ty = gx - int(gx), gy - int(gy)
+        tx, ty = tx * tx * (3 - 2 * tx), ty * ty * (3 - 2 * ty)
+        a = lat[y0][x0] + (lat[y0][x1] - lat[y0][x0]) * tx
+        b = lat[y1][x0] + (lat[y1][x1] - lat[y1][x0]) * tx
+        return a + (b - a) * ty
+    return f
+
+
+def soft_coursed(rnd, course=(15, 20), length=(36, 64), weathered=False):
+    """Coursed stone painted soft, after images/wall-texture.png: long flat stones in thin courses
+    (a 1 m repeat: courses about 15 cm, stones 30-50 cm), each its own shade and mottled inside, with
+    ragged light-grey joints, a lit top and a shadowed foot and right side, the odd speck; weathered
+    adds a little moss, mostly in the joints, and lichen. Painted at full resolution rather than on
+    the chunky grid: the chunky stones read as pixel-drawn (the owner, 2026-10-28)."""
+    big, mid, fine = value_noise(rnd, 4), value_noise(rnd, 16), value_noise(rnd, 64)
+    edge = value_noise(rnd, 32)
+    moss_map = value_noise(rnd, 8)
+    stone_id = [[-1] * SIZE for _ in range(SIZE)]
+    shade, rows = [], []
+    y = 0
+    for h in split(SIZE, course[0], course[1], rnd):
+        x = rnd.randrange(SIZE)
+        total = 0
+        while total < SIZE:
+            w = min(rnd.randint(length[0], length[1]), SIZE - total)
+            if SIZE - total - w < length[0] // 2:
+                w = SIZE - total
+            k = len(shade)
+            shade.append(rnd.uniform(-0.15, 0.12))
+            rows.append((x, y, w, h))
+            for dx in range(w):
+                for dy in range(h):
+                    stone_id[(y + dy) % SIZE][(x + dx) % SIZE] = k
+            x += w
+            total += w
+        y += h
+    px = []
+    for py in range(SIZE):
+        for qx in range(SIZE):
+            k = stone_id[py][qx]
+            sx, sy, w, h = rows[k]
+            dx, dy = (qx - sx) % SIZE, (py - sy) % SIZE
+            gap = 1.6 + 1.6 * edge(qx, py)                            # ragged joints, 1.6-3.2 px
+            d = min(dx + 0.5, w - dx - 0.5, dy + 0.5, h - dy - 0.5)
+            m = 0.5 * mid(qx, py) + 0.35 * fine(qx, py) + 0.15 * big(qx, py)
+            if d < gap:                                               # joint: a light, dull grey
+                v = 0.66 + 0.08 * (m - 0.5)
+            else:
+                v = 0.88 + shade[k] + 0.18 * (m - 0.5)
+                top, foot = dy - gap, (h - 1 - dy) - gap
+                if top < 2.0:
+                    v += 0.10 * (1 - top / 2.0)                       # lit top edge
+                if foot < 3.0:
+                    v -= 0.12 * (1 - foot / 3.0)                      # shadowed foot
+                if (w - 1 - dx) - gap < 2.0:
+                    v -= 0.05                                         # shadowed right side
+                if rnd.random() < 0.06:
+                    v -= rnd.uniform(0.03, 0.08)                      # speckle
+            v = max(0.45, min(1.0, v))
+            r = g = b = v
+            if weathered:
+                moss = max(0.0, moss_map(qx, py) - 0.72) * 2.0          # moss gathers in patches...
+                if d < gap + 1.5:
+                    moss *= 1.5                                       # ...and in the joints
+                moss = min(0.35, moss)
+                r, g, b = r * (1 - 0.32 * moss), g * (1 - 0.12 * moss), b * (1 - 0.40 * moss)
+                if d >= gap and fine(qx * 3 % SIZE, py * 3 % SIZE) > 0.86:
+                    r, g, b = min(1, r + 0.08), min(1, g + 0.08), min(1, b + 0.03)   # lichen
+            px.append((r, g, b))
+    c = Canvas()
+    c.px = px
+    return c
+
+
 TEXTURES = {
     "Thatch": lambda r: chunky(thatch(r)),
     "Slate": lambda r: chunky(slate(r)),
-    "Fieldstone": lambda r: coursed(r, (3, 5), (3, 7)),
+    "Fieldstone": lambda r: soft_coursed(random.Random(11), weathered=True),   # the seed the owner chose it at
     "Ashlar": lambda r: coursed(r, (4, 4), (7, 9)),
     "Planks": lambda r: chunky(planks(r)),
     "Plaster": lambda r: chunky(plaster(r)),

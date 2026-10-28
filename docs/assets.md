@@ -61,7 +61,10 @@ else guessed from its name.
 ## 4. Textures
 
 - **At most about 40** world textures, **128 × 128** (64 for small things), **16–32 colours**,
-  pixel art rather than painted.
+  pixel art rather than painted. Stone walls are the exception (owner, 2026-10-28, after `images/wall-texture.png`):
+  `Fieldstone` is painted soft at full resolution (long flat stones in thin courses, mottled, ragged
+  light joints, a little moss), still point filtered, because stones drawn as crisp blocks on the
+  chunky grid read as pixel-drawn. `tools/art/surface_textures.py` (`soft_coursed`).
 - Only for **leaves** (cut-out), roofs and thatch, planks, brick and stone courses, water, and a
   few signature surfaces. Everything else is flat colour.
 - They live in **`client/Assets/Art/Textures/`**, where `ArtTextureImporter` imports them point
