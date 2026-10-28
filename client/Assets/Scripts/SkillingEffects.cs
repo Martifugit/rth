@@ -372,7 +372,7 @@ namespace Rth.Client
             l.color = new Color(0.55f, 0.9f, 1f);
             l.range = 3.5f;
             l.shadows = LightShadows.None;
-            lightGo.AddComponent<Breathe>().Set(l, 0.35f, 1.1f, 1.4f);
+            lightGo.AddComponent<Breathe>().Set(l, 0.25f, 0.75f, 1.4f);
             return go;
         }
 
