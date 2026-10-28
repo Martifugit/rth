@@ -49,7 +49,13 @@ namespace Rth.Client.Ui
             || stat == StatIds.BuilderPhlegm ? "" : "%";
 
         /// <summary>A style as players say it: "Occultism", "Melee".</summary>
-        public static string StyleName(CombatStyle style) => style == CombatStyle.Occult ? "Occultism" : style.ToString();
+        public static string StyleName(CombatStyle style) => style switch
+        {
+            CombatStyle.Occult => "Occultism",
+            // Abilities of no style work with any weapon: Defence's (docs/skills.md 3.6).
+            CombatStyle.None => "Defence",
+            _ => style.ToString(),
+        };
 
         /// <summary>A tooltip card for an item (rich text).</summary>
         public static string Describe(ItemDef def, int count)

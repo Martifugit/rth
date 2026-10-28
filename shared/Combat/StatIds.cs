@@ -54,6 +54,12 @@ namespace Rth.Shared.Combat
         /// <summary>Percent of max blood that each ability you use costs (never your last point).</summary>
         public const string BloodPerAbility = "bloodPerAbility";
 
+        // Defence's abilities (docs/skills.md 3.6), usable with any weapon.
+        /// <summary>Percent of each melee hit taken that is dealt back to the attacker (Riposte).</summary>
+        public const string ReflectMelee = "reflectMelee";
+        /// <summary>Above 0, a blow that would kill leaves 1 blood instead, and the buff giving it ends (Unyielding).</summary>
+        public const string SurviveLethal = "surviveLethal";
+
         // Gathering (rocks, trees, founts): read on every attempt, on top of the tool's own effects.
         /// <summary>Added to every gathering attempt's success chance, in percentage points.</summary>
         public const string GatherSuccess = "gatherSuccess";
@@ -66,6 +72,7 @@ namespace Rth.Shared.Combat
             MeleeAccuracy, RangedAccuracy, OccultAccuracy, MeleeDamage, RangedDamage, OccultDamage,
             DeflectMelee, DeflectRanged, DeflectOccult, MeleePower, RangedPower, OccultPower,
             DeferDamage, BlockHit, BlockedPhlegm, ScarOnHit, BuilderPhlegm, BloodPerAbility,
+            ReflectMelee, SurviveLethal,
             GatherSuccess, GatherConservation,
         };
 

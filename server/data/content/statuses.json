@@ -106,5 +106,33 @@
     "icon": "stigmata",
     "color": "#ff4050",
     "description": "While you're below 30% blood you deal {value}% more damage."
+  },
+  {
+    "id": "braced",
+    "name": "Braced",
+    "icon": "shield",
+    "color": "#c8b080",
+    "description": "The next blow you take is {value}% lighter."
+  },
+  {
+    "id": "steeled",
+    "name": "Steeled",
+    "icon": "defence",
+    "color": "#a0a8b0",
+    "description": "You take {value}% less damage."
+  },
+  {
+    "id": "riposte",
+    "name": "Riposte",
+    "icon": "deflect_melee",
+    "color": "#d0a060",
+    "description": "{value}% of each melee blow you take goes back to the striker."
+  },
+  {
+    "id": "unyielding",
+    "name": "Unyielding",
+    "icon": "status_ward",
+    "color": "#e0c060",
+    "description": "A blow that would kill you leaves you on 1 blood instead."
   }
 ]

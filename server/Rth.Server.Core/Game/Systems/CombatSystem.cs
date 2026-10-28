@@ -537,6 +537,7 @@ namespace Rth.Server.Game
         {
             if (target.IsDead) return 0;
 
+            int reflected = 0;
             if (target is Player defender && amount > 0 && kind != HitKind.Bleed)
             {
                 // Warding and wards lower it; choleric raises it (a negative ward).
@@ -549,9 +550,13 @@ namespace Rth.Server.Game
                     kind = HitKind.Deflected;
                 }
                 amount = TakeBlow(defender, (int)Math.Round(scaled), ref kind);
+                // Riposte: part of a melee blow goes back to whoever struck it.
+                int reflect = style == CombatStyle.Melee && source != null ? Math.Min(100, defender.Stats.Get(StatIds.ReflectMelee)) : 0;
+                if (reflect > 0) reflected = amount * reflect / 100;
             }
 
             amount = Math.Min(amount, target.Blood);
+            if (target is Player stubborn && amount > 0 && amount >= stubborn.Blood) amount = Unyielding(stubborn, amount);
             target.Blood -= amount;
             target.HealthChanged |= amount > 0;
             World.AddHit(new HitEvent { TargetId = target.Id, SourceId = source?.Id ?? 0, Amount = amount, Kind = kind });
@@ -569,7 +574,21 @@ namespace Rth.Server.Game
             }
 
             if (target.Blood <= 0) Kill(target, source);
+            if (reflected > 0 && source != null && !source.IsDead) Damage(source, reflected, target, HitKind.Normal, CombatStyle.None);
             return amount;
+        }
+
+        /// <summary>
+        /// A blow that would kill a player holding Unyielding (the surviveLethal stat) leaves them on
+        /// 1 blood instead, and the buff that gave it ends. Returns the damage to take.
+        /// </summary>
+        private int Unyielding(Player player, int amount)
+        {
+            if (player.Stats.Get(StatIds.SurviveLethal) <= 0) return amount;
+            player.Effects.RemoveAll(e => e.Buff != null && e.Buff.Stats.ContainsKey(StatIds.SurviveLethal));
+            World.RecalculateStats(player);
+            World.Tell(player, TextKind.Info, "You should have fallen. You don't.");
+            return Math.Max(0, player.Blood - 1);
         }
 
         /// <summary>Being hit makes NPCs fight back, and idle players auto-retaliate (even with a kept target).</summary>

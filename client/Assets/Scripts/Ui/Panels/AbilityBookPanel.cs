@@ -92,6 +92,7 @@ namespace Rth.Client.Ui.Panels
         {
             CombatStyle.Melee => "melee",
             CombatStyle.Ranged => "ranged",
+            CombatStyle.None => "defence",
             _ => "occultism",
         };
 

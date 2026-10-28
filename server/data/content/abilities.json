@@ -394,5 +394,104 @@
     "buff": { "status": "stigmata", "ticks": 20, "whileBloodBelow": 30, "stats": { "damageBonus": 30 } },
     "xp": [ { "skill": "religion", "amount": 20 } ],
     "requirements": [ { "skill": "religion", "level": 90 } ]
+  },
+  {
+    "id": "brace",
+    "style": "None",
+    "animation": "power_up_sword_shield",
+    "name": "Brace",
+    "icon": "shield",
+    "description": "Set your feet. The next blow within six seconds is half as heavy.",
+    "type": "Spender",
+    "keepsStall": true,
+    "cooldownTicks": 20,
+    "phlegmRequired": 20,
+    "phlegmCost": 10,
+    "buff": {
+      "status": "braced",
+      "ticks": 10,
+      "endsOnHitTaken": true,
+      "stats": {
+        "blockHit": 50
+      }
+    }
+  },
+  {
+    "id": "steel_the_flesh",
+    "style": "None",
+    "animation": "power_up_sword_shield",
+    "name": "Steel the Flesh",
+    "icon": "defence",
+    "description": "For five seconds every blow you take is two fifths lighter.",
+    "type": "Spender",
+    "keepsStall": true,
+    "cooldownTicks": 50,
+    "phlegmRequired": 40,
+    "phlegmCost": 20,
+    "buff": {
+      "status": "steeled",
+      "ticks": 8,
+      "stats": {
+        "ward": 40
+      }
+    },
+    "requirements": [
+      {
+        "skill": "defence",
+        "level": 20
+      }
+    ]
+  },
+  {
+    "id": "riposte",
+    "style": "None",
+    "animation": "power_up_sword_shield",
+    "name": "Riposte",
+    "icon": "deflect_melee",
+    "description": "For seven seconds, half of every melee blow you take goes back to whoever struck it.",
+    "type": "Spender",
+    "keepsStall": true,
+    "cooldownTicks": 50,
+    "phlegmRequired": 40,
+    "phlegmCost": 20,
+    "buff": {
+      "status": "riposte",
+      "ticks": 12,
+      "stats": {
+        "reflectMelee": 50
+      }
+    },
+    "requirements": [
+      {
+        "skill": "defence",
+        "level": 40
+      }
+    ]
+  },
+  {
+    "id": "unyielding",
+    "style": "None",
+    "animation": "power_up_sword_shield",
+    "name": "Unyielding",
+    "icon": "status_ward",
+    "description": "For thirty seconds, a blow that would kill you leaves you standing on your last drop of blood instead. Once.",
+    "type": "Spender",
+    "keepsStall": true,
+    "cooldownTicks": 500,
+    "phlegmRequired": 60,
+    "phlegmCost": 30,
+    "buff": {
+      "status": "unyielding",
+      "ticks": 50,
+      "stats": {
+        "surviveLethal": 1
+      }
+    },
+    "requirements": [
+      {
+        "skill": "defence",
+        "level": 70
+      }
+    ]
   }
 ]
