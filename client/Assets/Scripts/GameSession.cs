@@ -624,6 +624,7 @@ namespace Rth.Client
                     if (item == null) item = g;
                     continue;
                 }
+                if (CameraOcclusion.SeesThrough(h, pointer)) continue;   // clicked through the hole round the player
                 if (Rth.MapTools.MapLevel.Of(h.collider) != floor) continue;
                 Rth.MapTools.MapObject o = h.collider.GetComponentInParent<Rth.MapTools.MapObject>();
                 if (o != null)

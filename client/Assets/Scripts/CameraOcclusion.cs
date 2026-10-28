@@ -55,6 +55,29 @@ namespace Rth.Client
 
         private const int GuardPoints = 12;
 
+        /// <summary>The hole as last drawn: round this point (the player's chest), this radius (a fraction of the screen's height).</summary>
+        private static Vector3 _holePoint;
+        private static float _holeRadius;
+        private static Camera _holeCamera;
+
+        /// <summary>
+        /// Whether a click went through the hole an occluder has opened, so it should reach what is
+        /// seen there instead (the ground, a door beyond the wall): the hit is on an open occluder, in
+        /// front of the player, inside the hole's solid middle. A hidden roof lets every click through.
+        /// </summary>
+        public static bool SeesThrough(RaycastHit hit, Vector2 pointer)
+        {
+            Occluder o = hit.collider != null ? hit.collider.GetComponentInParent<Occluder>() : null;
+            if (o == null || o.Openness < 0.5f) return false;
+            if (o.ForceHidden) return true;
+            if (_holeCamera == null || _holeRadius <= 0f) return false;
+            Vector3 player = _holeCamera.WorldToViewportPoint(_holePoint);
+            Vector3 at = _holeCamera.ScreenToViewportPoint(pointer);
+            if (player.z <= 0f || _holeCamera.WorldToViewportPoint(hit.point).z > player.z - 0.4f) return false;   // behind the player: solid
+            Vector2 d = new Vector2((at.x - player.x) * _holeCamera.aspect, at.y - player.y);
+            return d.magnitude < _holeRadius * 0.6f;                                                           // the open middle, not the dithered rim
+        }
+
         private void TellShader(EntityView local)
         {
             if (_camera == null) _camera = GetComponent<Camera>();
@@ -64,7 +87,11 @@ namespace Rth.Client
             float tall = 0.15f;
             if (_camera != null)
                 tall = Mathf.Abs(_camera.WorldToViewportPoint(head).y - _camera.WorldToViewportPoint(feet).y);
-            Shader.SetGlobalVector(CutSize, new Vector4(Mathf.Clamp(tall * holeSize, 0.05f, 0.35f), 0f, 0f, 0f));
+            float radius = Mathf.Clamp(tall * holeSize, 0.05f, 0.35f);
+            Shader.SetGlobalVector(CutSize, new Vector4(radius, 0f, 0f, 0f));
+            _holePoint = feet + Vector3.up * (local.Height * 0.55f);
+            _holeRadius = radius;
+            _holeCamera = _camera;
         }
 
         private bool Crosses(Occluder o, Vector3 from, Vector3 to)

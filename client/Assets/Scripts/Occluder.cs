@@ -48,6 +48,9 @@ namespace Rth.Client
 
         public void SetBlocking(bool blocking) => _blocking = blocking;
 
+        /// <summary>How open its hole is (0 closed, 1 fully open); hidden roofs count as fully open.</summary>
+        public float Openness => ForceHidden ? 1f : Mathf.Clamp01((1f - _alpha) / Mathf.Max(0.01f, 1f - minAlpha));
+
         private List<Vector3> _triangles;   // world space, three corners each; built on first need
         private List<Bounds> _loose;          // renderers whose mesh can't be read: their bounds stand in
 
