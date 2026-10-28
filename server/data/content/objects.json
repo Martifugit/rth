@@ -1259,16 +1259,17 @@
     "name": "Copper seam",
     "examine": "Green-stained rock with a glint of red in it.",
     "depletedModel": "Nature/MiningBoulderADug",
-    "actions": [ { "id": "gather", "label": "Mine" } ],
+    "actions": [ { "id": "gather", "label": "Mine" }, { "id": "set-fire", "label": "Set a fire against" }, { "id": "douse", "label": "Douse" } ],
     "node": {
       "skill": "mining",
       "level": 1,
       "verb": "mine",
       "tool": "pickaxe",
       "ticks": 4,
-      "baseChance": 0.3,
-      "perLevel": 0.01,
-      "maxChance": 0.9,
+      "progress": { "needed": 66, "perStrike": 20, "perLevel": 0.5, "strikeXp": 0.5 },
+      "depleteChance": 0.15,
+      "fire": { "logs": "tag:log", "logCount": 2, "burnTicks": 300, "riseTicks": 80, "peakTicks": 10, "fallTicks": 20,
+                "crackBonus": 1.0, "crackStrikes": 25, "douseXp": 8, "lightXp": 2 },
       "xp": 9,
       "items": [ { "item": "raw_copper" } ],
       "extras": "low_rock_gems",
@@ -1283,16 +1284,17 @@
     "examine": "Rust streaks the rock like old blood.",
     "depletedModel": "Nature/MiningBoulderADug",
     "recolor": { "CopperOre": "IronOre" },
-    "actions": [ { "id": "gather", "label": "Mine" } ],
+    "actions": [ { "id": "gather", "label": "Mine" }, { "id": "set-fire", "label": "Set a fire against" }, { "id": "douse", "label": "Douse" } ],
     "node": {
       "skill": "mining",
       "level": 10,
       "verb": "mine",
       "tool": "pickaxe",
       "ticks": 4,
-      "baseChance": 0.22,
-      "perLevel": 0.01,
-      "maxChance": 0.85,
+      "progress": { "needed": 80, "perStrike": 20, "perLevel": 0.5, "strikeXp": 0.5 },
+      "depleteChance": 0.2,
+      "fire": { "logs": "tag:log", "logCount": 2, "burnTicks": 300, "riseTicks": 80, "peakTicks": 10, "fallTicks": 20,
+                "crackBonus": 1.0, "crackStrikes": 25, "douseXp": 8, "lightXp": 2 },
       "xp": 12,
       "items": [ { "item": "ironstone" } ],
       "extras": "low_rock_gems",
@@ -1354,5 +1356,15 @@
     "name": "Grave chest",
     "examine": "A black chest on the landing, dry inside though the water laps at it. Whatever you banked among the living is somehow in here too.",
     "actions": [ { "id": "bank", "label": "Bank" } ]
+  },
+  {
+    "id": "trough",
+    "name": "Trough",
+    "examine": "A stone trough of rainwater. Good for filling a waterskin."
+  },
+  {
+    "id": "well",
+    "name": "Well",
+    "examine": "A well with a bucket on a rope. Good for filling a waterskin."
   }
 ]

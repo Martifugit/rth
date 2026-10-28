@@ -102,6 +102,13 @@ namespace Rth.Shared.World
         public string DepletedMessage = "There's nothing more to get here for now.";
         /// <summary>Now and then one node of a group wakes for a while and gives more (a hungry fount), or null.</summary>
         public NodeSurgeDef? Surge;
+        /// <summary>
+        /// Worked by progress instead of a chance per attempt (Mining, docs/skills.md): every
+        /// strike fills a bar towards the next yield. Null: the chance per attempt above.
+        /// </summary>
+        public NodeProgressDef? Progress;
+        /// <summary>Fire-setting on it (Mining's active layer), or null.</summary>
+        public FireSettingDef? Fire;
     }
 
     /// <summary>
@@ -118,6 +125,72 @@ namespace Rth.Shared.World
         public double PointsMultiplier = 4;
         /// <summary>Said to players nearby when one wakes, or null.</summary>
         public string? Message;
+    }
+
+    /// <summary>
+    /// A node worked by progress (docs/skills.md, Mining): each strike adds
+    /// <c>(PerStrike + PerLevel x levels above the node) x (1 + the tool's success) x (1 + gatherSuccess%)
+    /// x the crack</c> towards <see cref="Needed"/>; when it fills the node gives what it gives
+    /// (<see cref="NodeDef.Items"/>, extras, <see cref="NodeDef.Xp"/>) and may deplete. Every strike
+    /// also gives <see cref="StrikeXp"/>.
+    /// </summary>
+    public sealed class NodeProgressDef
+    {
+        public double Needed = 100;
+        public double PerStrike = 20;
+        public double PerLevel = 0.5;
+        public double StrikeXp;
+    }
+
+    /// <summary>
+    /// Fire-setting (docs/skills.md, Mining): <see cref="LogCount"/> logs (<see cref="Logs"/>: an id
+    /// or "tag:x") set a fire against the node that burns <see cref="BurnTicks"/> for everyone. While
+    /// it burns, each player's side of the stone heats in a cycle from when they last doused it (or
+    /// from the lighting): rising over <see cref="RiseTicks"/>, at its peak for <see cref="PeakTicks"/>,
+    /// cooling over <see cref="FallTicks"/>, then again. Dousing (a water item) is per player: the
+    /// heat then (0..1, the sweet spot is the peak) cracks the face, multiplying their progress by
+    /// <c>1 + heat x CrackBonus</c>, fading over <see cref="CrackStrikes"/> strikes, and gives
+    /// <c>heat x DouseXp</c>.
+    /// </summary>
+    public sealed class FireSettingDef
+    {
+        public string Logs = "tag:log";
+        public int LogCount = 2;
+        public int BurnTicks = 300;
+        public int RiseTicks = 10;
+        public int PeakTicks = 3;
+        public int FallTicks = 8;
+        public double CrackBonus = 1;
+        public int CrackStrikes = 15;
+        public double DouseXp = 4;
+        public double LightXp = 1;
+
+        public int CycleTicks => System.Math.Max(1, RiseTicks + PeakTicks + FallTicks);
+
+        /// <summary>The stone's heat (0..1) <paramref name="ticks"/> after its cycle began: rising, at its peak, cooling to a fifth.</summary>
+        public double Heat(long ticks)
+        {
+            long t = ticks % CycleTicks;
+            if (t < RiseTicks) return (double)t / System.Math.Max(1, RiseTicks);
+            if (t < RiseTicks + PeakTicks) return 1;
+            return 1 - 0.8 * (t - RiseTicks - PeakTicks) / System.Math.Max(1, FallTicks);
+        }
+    }
+
+    /// <summary>What a player mining a progress node sees ("mining" in their server state): the node, the bar, their heat and crack.</summary>
+    public sealed class MiningState
+    {
+        public const string StateKey = "mining";
+        public string Type = "";
+        public int Plane;
+        public int X;
+        public int Y;
+        /// <summary>Towards the next yield, 0..1.</summary>
+        public double Progress;
+        /// <summary>Their side of the stone's heat, 0..1, or -1 with no fire.</summary>
+        public double Heat = -1;
+        /// <summary>What is left of their crack, 0..1.</summary>
+        public double Crack;
     }
 
     /// <summary>
@@ -175,6 +248,8 @@ namespace Rth.Shared.World
         public int Y;
         public bool Depleted;
         public bool Surging;
+        /// <summary>A fire set against it is burning (fire-setting).</summary>
+        public bool Burning;
     }
 
     public sealed class ActionDef

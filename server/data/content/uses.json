@@ -16,5 +16,21 @@
     "item": "rat_gall",
     "onNpc": "corvin_sallow",
     "message": "Corvin sniffs the gall. \"Fresh enough. Bring it to the still, not to me.\""
+  },
+  {
+    "id": "waterskin_on_trough",
+    "item": "tag:waterskin",
+    "onObject": "trough",
+    "consume": true,
+    "actions": [ { "type": "giveItem", "item": "waterskin_4" } ],
+    "message": "You fill the waterskin."
+  },
+  {
+    "id": "waterskin_on_well",
+    "item": "tag:waterskin",
+    "onObject": "well",
+    "consume": true,
+    "actions": [ { "type": "giveItem", "item": "waterskin_4" } ],
+    "message": "You fill the waterskin."
   }
 ]

@@ -26,6 +26,7 @@ namespace Rth.Client
             public readonly List<GameObject> Outlines = new List<GameObject>();
         }
 
+        private static readonly Color Gold = new Color(1f, 0.84f, 0.42f), Ember = new Color(1f, 0.32f, 0.08f);
         private Mark _focus, _hover;
         private int _version = -1;
         private float _nextCheck;
@@ -47,6 +48,12 @@ namespace Rth.Client
                 _focusTarget = Find(session.ServerState<InteractionFocus>(InteractionFocus.StateKey));
             }
             Set(_focus, _focusTarget);
+            // Fire-setting: the rock being mined glows hotter in its outline as your side of the stone heats.
+            MiningState mining = session.ServerState<MiningState>(MiningState.StateKey);
+            float heat = _focusTarget != null && !string.IsNullOrEmpty(mining.Type) && mining.Heat >= 0 ? (float)mining.Heat : 0f;
+            _focus.Material.SetColor("_Color", Color.Lerp(Gold, Ember, heat));
+            _focus.Material.SetFloat("_Halo", Mathf.Lerp(0.75f, 1f, heat));
+            _focus.Material.SetFloat("_Width", Mathf.Lerp(0.05f, 0.075f, heat));
 
             Transform hovered = session.HoveredObject != null ? session.HoveredObject.transform
                 : world != null && world.HoveredId != 0 && world.Find(world.HoveredId) is EntityView e && !e.IsDying ? e.transform : null;

@@ -21,7 +21,20 @@ namespace Rth.Server.Game
     public sealed class GatheringSystem : GameSystem
     {
         public const string GatherAction = "gather";
+        public const string SetFireAction = "set-fire";
+        public const string DouseAction = "douse";
         public const string StateKey = "nodes";
+
+        /// <summary>A player's work on one progress node (Mining): the bar, their crack, when their side's heat cycle began.</summary>
+        public sealed class Miner
+        {
+            public PlacedObject? Node;
+            public double Progress;
+            public double Crack;
+            public int CrackLeft;
+            public uint HeatFrom;
+            public string? LastSent;
+        }
 
         /// <summary>One placed node's live state.</summary>
         public sealed class Node
@@ -33,6 +46,11 @@ namespace Rth.Server.Game
             public uint DepletedUntil;
             public uint SurgingUntil;
             public int Group;
+            /// <summary>Fire-setting: when a fire set against it was lit, and until when it burns.</summary>
+            public uint FireLitAt;
+            public uint FireUntil;
+
+            public bool IsBurning(uint now) => now < FireUntil;
 
             public bool IsDepleted(uint now) => now < DepletedUntil;
             public bool IsSurging(uint now) => now < SurgingUntil;
@@ -61,6 +79,10 @@ namespace Rth.Server.Game
                 }
                 World.StartInteraction(player, new GatherInteraction(placed));
             });
+            objects.RegisterAction(SetFireAction, (player, placed, _) =>
+                World.StartInteraction(player, new ObjectOnceInteraction(placed, p => SetFire(p, placed))));
+            objects.RegisterAction(DouseAction, (player, placed, _) =>
+                World.StartInteraction(player, new ObjectOnceInteraction(placed, p => Douse(p, placed))));
         }
 
         public override void OnContentChanged() => Regroup();
@@ -252,8 +274,149 @@ namespace Rth.Server.Game
             }
             ToolDef? tool = BestTool(player, def)?.Tool;
             World.Animate(player, def.Animation, node.Placed.Tile);
+            if (def.Progress != null) return Strike(player, node, def, tool);
             if (World.Random.NextDouble() >= SuccessChance(player, def, tool)) return true;
+            return Yield(player, node, def, tool);
+        }
 
+        /// <summary>
+        /// One strike on a progress node: a little XP, and progress towards the next yield by level,
+        /// tool, gatherSuccess and the player's crack (which each strike wears down); a full bar
+        /// yields. Returns false when the player should stop.
+        /// </summary>
+        private bool Strike(Player player, Node node, NodeDef def, ToolDef? tool)
+        {
+            NodeProgressDef progress = def.Progress!;
+            Miner miner = MinerOn(player, node);
+            SkillSystem? skills = World.Find<SkillSystem>();
+            int level = skills?.Level(player, def.Skill) ?? 1;
+            double crack = miner.CrackLeft > 0 && def.Fire != null ? 1 + miner.Crack * miner.CrackLeft / Math.Max(1, def.Fire.CrackStrikes) : 1;
+            double add = (progress.PerStrike + progress.PerLevel * Math.Max(0, level - def.Level))
+                         * (1 + (tool?.Success ?? 0)) * (1 + player.Stats.Get(Rth.Shared.Combat.StatIds.GatherSuccess) / 100.0) * crack;
+            if (miner.CrackLeft > 0 && --miner.CrackLeft == 0) miner.Crack = 0;
+            if (progress.StrikeXp > 0) skills?.AddXp(player, def.Skill, progress.StrikeXp);
+            miner.Progress += add;
+            if (miner.Progress < progress.Needed) return true;
+            miner.Progress -= progress.Needed;
+            bool goOn = Yield(player, node, def, tool);
+            if (node.IsDepleted(World.CurrentTick)) miner.Progress = 0;
+            return goOn;
+        }
+
+        /// <summary>A player's work on this node, started afresh if they were working another.</summary>
+        public Miner MinerOn(Player player, Node node)
+        {
+            Miner miner = player.Component<Miner>();
+            if (!ReferenceEquals(miner.Node, node.Placed)) miner = Reset(player, node.Placed);
+            return miner;
+        }
+
+        private static Miner Reset(Player player, PlacedObject placed)
+        {
+            Miner miner = player.Component<Miner>();
+            miner.Node = placed;
+            miner.Progress = 0;
+            miner.Crack = 0;
+            miner.CrackLeft = 0;
+            miner.HeatFrom = 0;
+            return miner;
+        }
+
+        /// <summary>This player's side of the stone's heat now (0..1), or -1 with no fire burning.</summary>
+        public double HeatFor(Player player, Node node, NodeDef def)
+        {
+            uint now = World.CurrentTick;
+            if (def.Fire == null || !node.IsBurning(now)) return -1;
+            Miner miner = player.Component<Miner>();
+            uint from = ReferenceEquals(miner.Node, node.Placed) ? Math.Max(miner.HeatFrom, node.FireLitAt) : node.FireLitAt;
+            return def.Fire.Heat(now - from);
+        }
+
+        /// <summary>Sets a fire against the node, from the player's logs; it burns for everyone.</summary>
+        public void SetFire(Player player, PlacedObject placed)
+        {
+            Node? node = NodeAt(placed);
+            NodeDef? def = node == null ? null : Def(node);
+            FireSettingDef? fire = def?.Fire;
+            ItemSystem? items = World.Find<ItemSystem>();
+            if (node == null || def == null || fire == null || items == null) return;
+            uint now = World.CurrentTick;
+            if (node.IsDepleted(now))
+            {
+                World.Tell(player, TextKind.Info, def.DepletedMessage);
+                return;
+            }
+            if (node.IsBurning(now))
+            {
+                World.Tell(player, TextKind.Info, "A fire is already burning against the rock.");
+                return;
+            }
+            List<ItemDef> logs = World.Content.Items.Values.Where(i => Matches(fire.Logs, i)).ToList();
+            int have = logs.Sum(l => items.CountOf(player, l.Id));
+            if (have < fire.LogCount)
+            {
+                World.Tell(player, TextKind.Warning, "You need " + fire.LogCount + " logs to set a fire against the rock.");
+                return;
+            }
+            int left = fire.LogCount;
+            foreach (ItemDef log in logs)
+            {
+                int take = Math.Min(left, items.CountOf(player, log.Id));
+                if (take > 0) items.Take(player, log.Id, take);
+                left -= take;
+                if (left == 0) break;
+            }
+            node.FireLitAt = now;
+            node.FireUntil = now + (uint)Math.Max(1, fire.BurnTicks);
+            World.Animate(player, "work", placed.Tile);
+            if (fire.LightXp > 0) World.Find<SkillSystem>()?.AddXp(player, def.Skill, fire.LightXp);
+            World.Tell(player, TextKind.Info, "You stack the logs against the rock and set them burning.");
+        }
+
+        /// <summary>
+        /// Douses the burning stone with water the player carries: their side cracks as hot as it is
+        /// now (the sweet spot is the peak of its glow), then they go on mining.
+        /// </summary>
+        public void Douse(Player player, PlacedObject placed)
+        {
+            Node? node = NodeAt(placed);
+            NodeDef? def = node == null ? null : Def(node);
+            FireSettingDef? fire = def?.Fire;
+            ItemSystem? items = World.Find<ItemSystem>();
+            if (node == null || def == null || fire == null || items == null) return;
+            if (!node.IsBurning(World.CurrentTick))
+            {
+                World.Tell(player, TextKind.Info, "There's no fire against the rock to douse.");
+                return;
+            }
+            ItemDef? water = World.Content.Items.Values.FirstOrDefault(i => i.Water != null && items.CountOf(player, i.Id) > 0);
+            if (water == null)
+            {
+                World.Tell(player, TextKind.Warning, "You need water to douse the stone: fill something at a trough or a well.");
+                return;
+            }
+            double heat = Math.Max(0, HeatFor(player, node, def));
+            items.Take(player, water.Id, 1);
+            if (water.Water!.Leaves != null) items.Give(player, water.Water.Leaves, 1);
+            Miner miner = MinerOn(player, node);
+            miner.Crack = heat * fire.CrackBonus;
+            miner.CrackLeft = fire.CrackStrikes;
+            miner.HeatFrom = World.CurrentTick;
+            if (fire.DouseXp > 0) World.Find<SkillSystem>()?.AddXp(player, def.Skill, fire.DouseXp * heat);
+            World.Tell(player, TextKind.Info, heat >= 0.95 ? "The stone splits with a roar of steam."
+                : heat >= 0.6 ? "The stone cracks in a cloud of steam."
+                : "The water hisses; the stone was barely warm.");
+            World.Animate(player, "work", placed.Tile);
+            World.StartInteraction(player, new GatherInteraction(placed));
+        }
+
+        private static bool Matches(string spec, ItemDef item) =>
+            spec.StartsWith("tag:", StringComparison.Ordinal) ? item.Tags.Contains(spec.Substring(4)) : item.Id == spec;
+
+        /// <summary>What a success gives: XP, items, extras, points; then the node may deplete. Returns false when the player should stop.</summary>
+        private bool Yield(Player player, Node node, NodeDef def, ToolDef? tool)
+        {
+            uint now = World.CurrentTick;
             ItemSystem? items = World.Find<ItemSystem>();
             SkillSystem? skills = World.Find<SkillSystem>();
             if (items != null && def.Items.Any(i => !items.CanGive(player, i.Item, i.Count)))
@@ -341,14 +504,40 @@ namespace Rth.Server.Game
             var states = new List<NodeState>();
             foreach (Node n in _nodes)
             {
-                bool depleted = n.IsDepleted(now), surging = n.IsSurging(now);
-                if ((!depleted && !surging) || !World.CanSee(player, n.Placed.Plane, n.Placed.Tile)) continue;
-                states.Add(new NodeState { Type = n.Placed.Type, Plane = n.Placed.Plane, X = n.Placed.X, Y = n.Placed.Y, Depleted = depleted, Surging = surging });
+                bool depleted = n.IsDepleted(now), surging = n.IsSurging(now), burning = n.IsBurning(now);
+                if ((!depleted && !surging && !burning) || !World.CanSee(player, n.Placed.Plane, n.Placed.Tile)) continue;
+                states.Add(new NodeState { Type = n.Placed.Type, Plane = n.Placed.Plane, X = n.Placed.X, Y = n.Placed.Y, Depleted = depleted, Surging = surging, Burning = burning });
             }
             JsonStateMessage message = JsonStateMessage.Of(StateKey, states);
             SentNodes sent = player.Component<SentNodes>();
-            if (message.Json == sent.Last) return;
-            sent.Last = message.Json;
+            if (message.Json != sent.Last)
+            {
+                sent.Last = message.Json;
+                player.Connection.Send(message);
+            }
+            SendMining(player);
+        }
+
+        /// <summary>The player's own work on a progress node ("mining"): sent while they work one, empty otherwise.</summary>
+        private void SendMining(Player player)
+        {
+            Miner miner = player.Component<Miner>();
+            var state = new MiningState();
+            Node? node = miner.Node != null && player.Interaction is GatherInteraction g && ReferenceEquals(g.Object, miner.Node) ? NodeAt(miner.Node) : null;
+            NodeDef? def = node == null ? null : Def(node);
+            if (node != null && def?.Progress != null)
+            {
+                state.Type = node.Placed.Type;
+                state.Plane = node.Placed.Plane;
+                state.X = node.Placed.X;
+                state.Y = node.Placed.Y;
+                state.Progress = Math.Min(1, miner.Progress / Math.Max(1, def.Progress.Needed));
+                state.Heat = HeatFor(player, node, def);
+                state.Crack = def.Fire != null && miner.CrackLeft > 0 ? (double)miner.CrackLeft / Math.Max(1, def.Fire.CrackStrikes) : 0;
+            }
+            JsonStateMessage message = JsonStateMessage.Of(MiningState.StateKey, state);
+            if (message.Json == miner.LastSent) return;
+            miner.LastSent = message.Json;
             player.Connection.Send(message);
         }
     }

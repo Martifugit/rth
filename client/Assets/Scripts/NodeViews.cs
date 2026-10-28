@@ -59,7 +59,7 @@ namespace Rth.Client
                 if (!_looks.TryGetValue(pair.Key, out NodeLook look) || look == null)
                     _looks[pair.Key] = look = pair.Key.gameObject.AddComponent<NodeLook>();
                 depletedModels.TryGetValue(pair.Key.objectType, out string depletedModel);
-                look.Show(pair.Value.Depleted, pair.Value.Surging, depletedModel);
+                look.Show(pair.Value.Depleted, pair.Value.Surging, depletedModel, pair.Value.Burning);
             }
         }
     }
@@ -67,6 +67,7 @@ namespace Rth.Client
     /// <summary>
     /// One node's changed look, undone by <see cref="Restore"/>. A depleted node with a depleted
     /// model hides its own renderers and shows that model in their place; one without sinks and dims.
+    /// A fire set against it (fire-setting) burns at its foot, with a flickering light.
     /// </summary>
     public sealed class NodeLook : MonoBehaviour
     {
@@ -79,8 +80,10 @@ namespace Rth.Client
         private bool _surging;
         private Vector3 _baseScale;
         private GameObject _stand;      // the depleted model, while it stands in
+        private GameObject _fire;
+        private Light _fireLight;
 
-        public void Show(bool depleted, bool surging, string depletedModel = null)
+        public void Show(bool depleted, bool surging, string depletedModel = null, bool burning = false)
         {
             if (_renderers == null)
             {
@@ -109,12 +112,44 @@ namespace Rth.Client
                 Destroy(_glow.gameObject);
                 _glow = null;
             }
+            Fire(burning && !depleted);
             Tint();
+        }
+
+        /// <summary>A small fire against the rock's foot (the side towards the south), or none.</summary>
+        private void Fire(bool burning)
+        {
+            if (burning && _fire == null)
+            {
+                _fire = new GameObject("Fire-setting");
+                _fire.transform.SetParent(transform, false);
+                _fire.transform.position = transform.position + new Vector3(0.05f, 0f, -0.42f);
+                GameObject model = Resources.Load<GameObject>("Nature/Campfire");
+                if (model != null)
+                {
+                    GameObject logs = Instantiate(model, _fire.transform, false);
+                    logs.transform.localScale = Vector3.one * 0.55f;
+                }
+                var light = new GameObject("Firelight");
+                light.transform.SetParent(_fire.transform, false);
+                light.transform.localPosition = Vector3.up * 0.5f;
+                _fireLight = light.AddComponent<Light>();
+                _fireLight.type = LightType.Point;
+                _fireLight.color = new Color(1f, 0.55f, 0.2f);
+                _fireLight.range = 3f;
+            }
+            if (!burning && _fire != null)
+            {
+                Destroy(_fire);
+                _fire = null;
+                _fireLight = null;
+            }
         }
 
         private void Update()
         {
             if (_glow != null) _glow.intensity = 1.6f + Mathf.Sin(Time.time * 5f) * 0.8f;
+            if (_fireLight != null) _fireLight.intensity = 1.4f + Mathf.PerlinNoise(Time.time * 6f, 0.3f) * 1.2f;
         }
 
         /// <summary>Show <paramref name="model"/> in place of the node's own renderers, or (null) the node again.</summary>
@@ -162,6 +197,7 @@ namespace Rth.Client
                     if (r != null) r.SetPropertyBlock(null);
             }
             if (_glow != null) Destroy(_glow.gameObject);
+            Fire(false);
             Destroy(this);
         }
     }

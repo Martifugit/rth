@@ -268,8 +268,12 @@ public class ToolTests
         ToolDef tool = content.Items.Values.Select(i => i.Tool).Where(t => t != null && t.Kind == def.Tool
                 && t.Requirements.All(r => r.Level <= def.Level))
             .OrderByDescending(t => t!.Tier).First()!;
-        double chance = Math.Min(def.MaxChance, def.BaseChance + tool.Success);
-        double xpPerHour = 3600 / (def.Ticks * 0.6) * chance * def.Xp;
+        // A progress node (Mining) yields once its bar fills, and pays a little for every strike;
+        // this is its AFK base, with no fire-setting.
+        double perStrike = def.Progress != null
+            ? def.Progress.StrikeXp + def.Xp * Math.Min(1, def.Progress.PerStrike * (1 + tool.Success) / def.Progress.Needed)
+            : Math.Min(def.MaxChance, def.BaseChance + tool.Success) * def.Xp;
+        double xpPerHour = 3600 / (def.Ticks * 0.6) * perStrike;
         Assert.InRange(xpPerHour, target * 0.8, target * 1.5);
     }
 }

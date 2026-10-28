@@ -39,9 +39,17 @@ namespace Rth.Shared.Items
         public ConsumableDef? Consumable;
         /// <summary>A gathering tool (pickaxe, hatchet), used from the pack or worn.</summary>
         public ToolDef? Tool;
+        /// <summary>Water carried (a full waterskin, a bucket): what fire-setting douses with.</summary>
+        public WaterDef? Water;
     }
 
     /// <summary>A number of one item: a cost, an ingredient, a reward.</summary>
+    /// <summary>Water carried for dousing (fire-setting): using it leaves <see cref="Leaves"/> (the empty carrier), or nothing.</summary>
+    public sealed class WaterDef
+    {
+        public string? Leaves;
+    }
+
     public sealed class ItemCost
     {
         public string Item = "";

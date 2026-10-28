@@ -175,11 +175,11 @@
     { "id": "hay-1", "kind": "prop", "at": [1180, 1024], "footprint": [0, 0, 1, 1], "model": "Assets/Resources/Nature/HayStook.fbx" },
     { "id": "hay-2", "kind": "prop", "at": [1180, 1023], "rot": 30, "footprint": [0, 0, 1, 1], "model": "Assets/Resources/Nature/HayStook.fbx" },
     { "id": "cart", "kind": "prop", "at": [1179, 1029], "rot": 90, "footprint": [0, 0, 1, 2], "model": "Assets/Resources/Nature/FarmCart.fbx" },
-    { "id": "trough", "kind": "prop", "at": [1187, 1027], "rot": 90, "footprint": [0, 0, 1, 1], "model": "Assets/Resources/Nature/Trough.fbx" },
+    { "id": "trough", "kind": "prop", "at": [1187, 1027], "rot": 90, "footprint": [0, 0, 1, 1], "model": "Assets/Resources/Nature/Trough.fbx", "object": "trough" },
     { "id": "crate-1", "kind": "prop", "at": [1181, 1031], "footprint": [0, 0, 1, 1], "model": "Assets/Resources/Nature/Crate.fbx" },
     { "id": "sacks", "kind": "prop", "at": [1180, 1031], "footprint": [0, 0, 1, 1], "model": "Assets/Resources/Nature/Sacks.fbx" },
     { "id": "tree-0", "kind": "tree", "at": [1160, 1028], "model": "Assets/Resources/Nature/Ash.fbx" },
-    { "id": "tree-1", "kind": "tree", "at": [1163, 1022], "rot": 47, "model": "Assets/Resources/Nature/Alder.fbx" },
+    { "id": "tree-1", "kind": "tree", "at": [1163, 1022], "rot": 47, "model": "Assets/Resources/Nature/Alder.fbx", "object": "alder_tree" },
     { "id": "tree-2", "kind": "tree", "at": [1192, 1040], "rot": 94, "model": "Assets/Resources/Nature/Elm.fbx" },
     { "id": "tree-3", "kind": "tree", "at": [1164, 1045], "rot": 141, "model": "Assets/Resources/Nature/Birch.fbx" },
     { "id": "tree-4", "kind": "tree", "at": [1186, 1015], "rot": 188, "model": "Assets/Resources/Nature/Pollard.fbx" },
@@ -211,6 +211,8 @@
     { "id": "garden-east", "kind": "fence", "from": [1174, 1025], "to": [1174, 1028], "model": "Assets/Resources/Nature/HurdlePanel.fbx", "post": "Assets/Resources/Nature/HurdleStake.fbx" },
     { "id": "yard-east", "kind": "fence", "from": [1189, 1020], "to": [1189, 1033], "model": "Assets/Resources/Nature/BuckFenceRails.fbx", "post": "Assets/Resources/Nature/BuckFenceBuck.fbx" },
     { "id": "churchyard-wall", "kind": "fence", "from": [1154, 1046], "to": [1164, 1046], "model": "Assets/Resources/Nature/WallSpan.fbx", "post": "Assets/Resources/Nature/WallPier.fbx", "posts": "ends" },
-    { "id": "churchyard-wall-west", "kind": "fence", "from": [1154, 1046], "to": [1154, 1042], "model": "Assets/Resources/Nature/WallSpan.fbx", "post": "Assets/Resources/Nature/WallPier.fbx", "posts": "ends" }
+    { "id": "churchyard-wall-west", "kind": "fence", "from": [1154, 1046], "to": [1154, 1042], "model": "Assets/Resources/Nature/WallSpan.fbx", "post": "Assets/Resources/Nature/WallPier.fbx", "posts": "ends" },
+    { "id": "copper-1", "kind": "rock", "at": [1160, 1017], "model": "Assets/Resources/Nature/MiningBoulderA.fbx", "object": "copper_seam" },
+    { "id": "copper-2", "kind": "rock", "at": [1163, 1015], "rot": 120, "model": "Assets/Resources/Nature/MiningOutcropA.fbx", "object": "copper_seam" }
   ]
 }

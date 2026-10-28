@@ -473,6 +473,17 @@ namespace Rth.Server.Content
                 if (node.Points != null && !pools.ContainsKey(node.Points)) problems.Add(where + "points pool '" + node.Points + "' doesn't exist.");
                 if (!o.Actions.Any(a => a.Id == "gather")) problems.Add(where + "needs a 'gather' action to be worked.");
                 if (node.Tool != null && !toolKinds.Contains(node.Tool)) problems.Add(where + "no item is a '" + node.Tool + "' tool.");
+                if (node.Progress != null && (node.Progress.Needed <= 0 || node.Progress.PerStrike <= 0))
+                    problems.Add(where + "progress needs needed and perStrike above 0.");
+                if (node.Fire is FireSettingDef fire)
+                {
+                    if (fire.LogCount < 1 || fire.BurnTicks < 1 || fire.CrackStrikes < 1 || fire.RiseTicks < 1)
+                        problems.Add(where + "fire needs logCount, burnTicks, riseTicks and crackStrikes of at least 1.");
+                    bool tag = fire.Logs.StartsWith("tag:");
+                    if (!items.Values.Any(i => tag ? i.Tags.Contains(fire.Logs.Substring(4)) : i.Id == fire.Logs))
+                        problems.Add(where + "no item is fire logs '" + fire.Logs + "'.");
+                    if (node.Progress == null) problems.Add(where + "fire-setting works on a progress node.");
+                }
                 if (node.ToolTier < 0) problems.Add(where + "toolTier can't be negative.");
                 if (node.DepleteChance < 0 || node.DepleteChance > 1) problems.Add(where + "depleteChance must be 0-1.");
                 if (node.Surge != null && (node.Surge.EveryTicks < 1 || node.Surge.Ticks < 1)) problems.Add(where + "surge everyTicks and ticks must be at least 1.");
@@ -691,6 +702,8 @@ namespace Rth.Server.Content
                 if (item.Consumable.Leaves != null && !items.ContainsKey(item.Consumable.Leaves))
                     problems.Add(where + "leaves '" + item.Consumable.Leaves + "', which doesn't exist.");
             }
+            if (item.Water?.Leaves != null && !items.ContainsKey(item.Water.Leaves))
+                problems.Add(where + "water leaves '" + item.Water.Leaves + "', which doesn't exist.");
         }
 
         /// <summary>

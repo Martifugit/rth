@@ -2,5 +2,9 @@
   { "type": "door", "plane": 0, "x": 1169, "y": 1028, "edge": "S" },
   { "type": "door", "plane": 0, "x": 1182, "y": 1028, "edge": "W" },
   { "type": "door", "plane": 0, "x": 1172, "y": 1038, "edge": "S" },
-  { "type": "door", "plane": 0, "x": 1157, "y": 1038, "edge": "W" }
+  { "type": "door", "plane": 0, "x": 1157, "y": 1038, "edge": "W" },
+  { "type": "trough", "plane": 0, "x": 1187, "y": 1027 },
+  { "type": "alder_tree", "plane": 0, "x": 1163, "y": 1022 },
+  { "type": "copper_seam", "plane": 0, "x": 1160, "y": 1017 },
+  { "type": "copper_seam", "plane": 0, "x": 1163, "y": 1015 }
 ]

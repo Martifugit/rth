@@ -159,7 +159,7 @@ One mechanism for ore, trees, fishing spots, herb patches and dream orbs (data o
 
 - **Every attempt** (every `ticks`, usually 4 ticks, 2.4 s) succeeds with chance
   `clamp(base + perLevel x (level − nodeLevel) + the tool's success bonus, min, max)`.
-- **Depletion:** each success depletes the node with `depleteChance` (ore 1/1, trees 1/8,
+- **Depletion:** each success depletes the node with `depleteChance` (ore about 1 in 6, trees 1/8,
   fishing spots move instead, herb patches after `yields` picks). A depleted tree shows its stump
   (trees don't fall). Nodes are **shared**: with at most ~200 players, competing for a rock is
   part of the world, and dense spots stop it being a problem.
@@ -606,8 +606,9 @@ The herblore. Not for healing (food does that), apart from one mild tick-heal.
 ## 7. Gathering
 
 ### Mining
-**Decided (2026-10-21).** Ore, gems, salt and stone. Tool: pickaxe (Smithing); no station. Ore
-rocks deplete on every success (2.3) and come back after their respawn time.
+**Decided (2026-10-21).** Ore, gems, salt and stone. Tool: pickaxe (Smithing); no station. Each
+ore that comes off a rock has a chance to work it out (2.3; about 1 in 6 for copper), and it comes
+back after its respawn time.
 
 **How a rock is worked (decided 2026-10-28).** Mining is the one gathering skill that works by
 **progress**, not a chance per attempt:

@@ -372,6 +372,50 @@
     "tags": [ "obol" ]
   },
   {
+    "id": "waterskin",
+    "name": "Waterskin",
+    "examine": "A goatskin with a wooden stopper, empty. Any trough or well will fill it.",
+    "value": 4,
+    "color": "#7a5a3a",
+    "tags": [ "waterskin" ]
+  },
+  {
+    "id": "waterskin_4",
+    "name": "Waterskin (4)",
+    "examine": "Enough water to douse a hot rock four times.",
+    "value": 4,
+    "color": "#5a7a8a",
+    "tags": [ "waterskin", "water" ],
+    "water": { "leaves": "waterskin_3" }
+  },
+  {
+    "id": "waterskin_3",
+    "name": "Waterskin (3)",
+    "examine": "Enough water to douse a hot rock three times.",
+    "value": 4,
+    "color": "#5a7a8a",
+    "tags": [ "waterskin", "water" ],
+    "water": { "leaves": "waterskin_2" }
+  },
+  {
+    "id": "waterskin_2",
+    "name": "Waterskin (2)",
+    "examine": "Enough water to douse a hot rock twice.",
+    "value": 4,
+    "color": "#5a7a8a",
+    "tags": [ "waterskin", "water" ],
+    "water": { "leaves": "waterskin_1" }
+  },
+  {
+    "id": "waterskin_1",
+    "name": "Waterskin (1)",
+    "examine": "Enough water to douse a hot rock once more.",
+    "value": 4,
+    "color": "#5a7a8a",
+    "tags": [ "waterskin", "water" ],
+    "water": { "leaves": "waterskin" }
+  },
+  {
     "id": "copper_pickaxe",
     "model": "Pickaxe",
     "name": "Copper pickaxe",
