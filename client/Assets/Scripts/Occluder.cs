@@ -41,6 +41,62 @@ namespace Rth.Client
 
         public void SetBlocking(bool blocking) => _blocking = blocking;
 
+        private List<Vector3> _triangles;   // world space, three corners each; built on first need
+        private List<Bounds> _loose;          // renderers whose mesh can't be read: their bounds stand in
+
+        /// <summary>
+        /// Whether the ray meets what it actually draws (its triangles, not the box round it) closer
+        /// than <paramref name="within"/>: a tree's canopy box reaches down beside its trunk, where
+        /// there is only air. Occluders don't move, so the triangles are taken once.
+        /// </summary>
+        public bool Hits(Ray ray, float within)
+        {
+            if (!Bounds.IntersectRay(ray, out float enter) || enter >= within) return false;
+            if (_triangles == null) TakeTriangles();
+            foreach (Bounds b in _loose)
+                if (b.IntersectRay(ray, out float d) && d < within) return true;
+            for (int i = 0; i < _triangles.Count; i += 3)
+                if (RayTriangle(ray, _triangles[i], _triangles[i + 1], _triangles[i + 2], out float d) && d < within) return true;
+            return false;
+        }
+
+        private void TakeTriangles()
+        {
+            _triangles = new List<Vector3>();
+            _loose = new List<Bounds>();
+            foreach (Renderer r in _renderers)
+            {
+                if (r == null) continue;
+                Mesh mesh = r is MeshRenderer ? r.GetComponent<MeshFilter>()?.sharedMesh : null;
+                // The Editor can always read a mesh; a build only one imported with Read/Write.
+                if (mesh == null || (!mesh.isReadable && !Application.isEditor)) { _loose.Add(r.bounds); continue; }
+                Vector3[] v = mesh.vertices;
+                int[] t = mesh.triangles;
+                Matrix4x4 m = r.localToWorldMatrix;
+                for (int i = 0; i < v.Length; i++) v[i] = m.MultiplyPoint3x4(v[i]);
+                foreach (int index in t) _triangles.Add(v[index]);
+            }
+        }
+
+        /// <summary>Möller–Trumbore, both faces.</summary>
+        private static bool RayTriangle(Ray ray, Vector3 a, Vector3 b, Vector3 c, out float distance)
+        {
+            distance = 0f;
+            Vector3 e1 = b - a, e2 = c - a;
+            Vector3 p = Vector3.Cross(ray.direction, e2);
+            float det = Vector3.Dot(e1, p);
+            if (det > -1e-7f && det < 1e-7f) return false;
+            float inv = 1f / det;
+            Vector3 s = ray.origin - a;
+            float u = Vector3.Dot(s, p) * inv;
+            if (u < 0f || u > 1f) return false;
+            Vector3 q = Vector3.Cross(s, e1);
+            float w = Vector3.Dot(ray.direction, q) * inv;
+            if (w < 0f || u + w > 1f) return false;
+            distance = Vector3.Dot(e2, q) * inv;
+            return distance > 0f;
+        }
+
         private void Awake()
         {
             _renderers = GetComponentsInChildren<Renderer>();
