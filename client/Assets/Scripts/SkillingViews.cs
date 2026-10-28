@@ -11,8 +11,9 @@ namespace Rth.Client
     /// brighter and flickering while it roars); objects set down while the game runs ("placed": a
     /// campfire, drawn from its type's model, clickable like any MapObject); and the gathering
     /// states ("gathering": roaming spots that aren't there are hidden, a trap shows on its node; a
-    /// tree that needs tending has brambles round its trunk and a slow green-gold outline, and one
-    /// that has been tended gives off drifting motes while it lasts). Region objects are MapObjects
+    /// tree that needs tending sheds withered leaves under a slow amber outline, one that has been
+    /// tended glows with rising pollen while it lasts, and tending it gives a burst (SkillingEffects)).
+    /// Region objects are MapObjects
     /// in the streamed scenes, found by type and tile as NodeViews finds nodes.
     /// </summary>
     public sealed class SkillingViews : MonoBehaviour
@@ -27,7 +28,8 @@ namespace Rth.Client
         private readonly Dictionary<MapObject, (Renderer[] Renderers, Collider[] Colliders)> _hidden = new Dictionary<MapObject, (Renderer[], Collider[])>();
         private readonly Dictionary<(MapObject, string), GameObject> _extras = new Dictionary<(MapObject, string), GameObject>();
         private readonly Dictionary<MapObject, List<GameObject>> _needOutlines = new Dictionary<MapObject, List<GameObject>>();
-        private readonly Dictionary<MapObject, GameObject> _motes = new Dictionary<MapObject, GameObject>();
+        private readonly Dictionary<MapObject, GameObject> _withering = new Dictionary<MapObject, GameObject>();
+        private readonly Dictionary<MapObject, GameObject> _thriving = new Dictionary<MapObject, GameObject>();
         private Material _needMaterial;
         private MaterialPropertyBlock _block;
 
@@ -181,12 +183,6 @@ namespace Rth.Client
                 NodeDef node = Def(t.Type)?.Node;
                 if (o != null && node?.Trap != null) extras[(o, "trap")] = node.Trap.Model;
             }
-            foreach (NodeRef r in state.NeedsTending)
-            {
-                MapObject o = Find(r.Type, r.X, r.Y);
-                NodeDef node = Def(r.Type)?.Node;
-                if (o != null && node?.Tending != null) extras[(o, "tend")] = node.Tending.NeedModel;
-            }
             foreach (KeyValuePair<(MapObject, string), GameObject> pair in new List<KeyValuePair<(MapObject, string), GameObject>>(_extras))
                 if (pair.Key.Item1 == null || !extras.ContainsKey(pair.Key))
                 {
@@ -196,33 +192,44 @@ namespace Rth.Client
             foreach (KeyValuePair<(MapObject, string), string> pair in extras)
             {
                 if (_extras.TryGetValue(pair.Key, out GameObject had) && had != null) continue;
-                bool tend = pair.Key.Item2 == "tend";
-                // Brambles wrap the trunk itself, big enough to see under the canopy; a trap sits at the foot.
-                _extras[pair.Key] = Extra(pair.Key.Item1, pair.Value, tend ? 1.15f : 0.7f, tend ? Vector3.zero : new Vector3(0.05f, 0f, -0.45f));
+                _extras[pair.Key] = Extra(pair.Key.Item1, pair.Value, 0.7f, new Vector3(0.05f, 0f, -0.45f));   // a trap at the foot
             }
 
-            var needy = new HashSet<MapObject>();
-            foreach (KeyValuePair<(MapObject, string), string> pair in extras)
-                if (pair.Key.Item2 == "tend") needy.Add(pair.Key.Item1);
+            HashSet<MapObject> needy = Tending(state.NeedsTending);
+            HashSet<MapObject> tended = Tending(state.Tended);
             NeedOutlines(needy);
-
-            var tended = new HashSet<MapObject>();
-            foreach (NodeRef r in state.Tended)
-            {
-                MapObject o = Find(r.Type, r.X, r.Y);
-                if (o != null && Def(r.Type)?.Node?.Tending != null) tended.Add(o);
-            }
-            foreach (MapObject o in new List<MapObject>(_motes.Keys))
-                if (o == null || !tended.Contains(o))
-                {
-                    if (_motes[o] != null) Destroy(_motes[o]);
-                    _motes.Remove(o);
-                }
+            // A tree that needed tending and now has had it: the moment it was tended.
             foreach (MapObject o in tended)
-                if (!_motes.TryGetValue(o, out GameObject m) || m == null) _motes[o] = Motes(o);
+                if (_withering.ContainsKey(o) && !needy.Contains(o)) SkillingEffects.TendedBurst(o);
+            Keep(_withering, needy, SkillingEffects.Withering);
+            Keep(_thriving, tended, SkillingEffects.Thriving);
         }
 
-        /// <summary>A slow, breathing green-gold outline on each tree that needs tending (FocusHighlight's outlines).</summary>
+        private HashSet<MapObject> Tending(List<NodeRef> refs)
+        {
+            var found = new HashSet<MapObject>();
+            foreach (NodeRef r in refs)
+            {
+                MapObject o = Find(r.Type, r.X, r.Y);
+                if (o != null && Def(r.Type)?.Node?.Tending != null) found.Add(o);
+            }
+            return found;
+        }
+
+        /// <summary>One effect on each wanted object: made where it's missing, taken off where it's no longer wanted.</summary>
+        private static void Keep(Dictionary<MapObject, GameObject> shown, HashSet<MapObject> wanted, System.Func<MapObject, GameObject> make)
+        {
+            foreach (MapObject o in new List<MapObject>(shown.Keys))
+                if (o == null || !wanted.Contains(o))
+                {
+                    if (shown[o] != null) Destroy(shown[o]);
+                    shown.Remove(o);
+                }
+            foreach (MapObject o in wanted)
+                if (!shown.TryGetValue(o, out GameObject g) || g == null) shown[o] = make(o);
+        }
+
+        /// <summary>A slow, breathing amber outline on each tree that needs tending (FocusHighlight's outlines).</summary>
         private void NeedOutlines(HashSet<MapObject> needy)
         {
             foreach (MapObject o in new List<MapObject>(_needOutlines.Keys))
@@ -237,7 +244,7 @@ namespace Rth.Client
                 Shader shader = Resources.Load<Shader>("Shaders/Highlight");
                 if (shader == null) return;
                 _needMaterial = new Material(shader) { hideFlags = HideFlags.DontSave };
-                _needMaterial.SetColor("_Color", new Color(0.72f, 0.95f, 0.45f, 1f));
+                _needMaterial.SetColor("_Color", new Color(1f, 0.72f, 0.32f, 1f));
                 _needMaterial.SetFloat("_Halo", 0.9f);
                 _needMaterial.SetFloat("_Width", 0.03f);
                 _needMaterial.SetFloat("_Breathe", 0.7f);
@@ -251,51 +258,7 @@ namespace Rth.Client
                 }
         }
 
-        /// <summary>Pale green-gold motes drifting up through a tended tree's crown.</summary>
-        private static GameObject Motes(MapObject tree)
-        {
-            var bounds = new Bounds(tree.transform.position + Vector3.up * 2f, Vector3.one * 2f);
-            bool first = true;
-            foreach (Renderer r in tree.GetComponentsInChildren<Renderer>())
-            {
-                if (!r.enabled || r.name == "Outline") continue;
-                if (first) { bounds = r.bounds; first = false; }
-                else bounds.Encapsulate(r.bounds);
-            }
-            var go = new GameObject("Tended motes") { hideFlags = HideFlags.DontSave };
-            go.transform.SetParent(tree.transform, false);
-            go.transform.position = bounds.center + Vector3.up * bounds.extents.y * 0.2f;
-            ParticleSystem ps = go.AddComponent<ParticleSystem>();
-            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            ParticleSystem.MainModule main = ps.main;
-            main.loop = true;
-            main.startLifetime = new ParticleSystem.MinMaxCurve(2.5f, 4f);
-            main.startSpeed = new ParticleSystem.MinMaxCurve(0.05f, 0.2f);
-            main.startSize = new ParticleSystem.MinMaxCurve(0.05f, 0.09f);
-            main.startColor = new ParticleSystem.MinMaxGradient(new Color(0.85f, 1f, 0.55f, 0.9f), new Color(1f, 0.92f, 0.5f, 0.9f));
-            main.gravityModifier = -0.015f;
-            main.simulationSpace = ParticleSystemSimulationSpace.World;
-            main.maxParticles = 40;
-            ParticleSystem.EmissionModule emission = ps.emission;
-            emission.rateOverTime = 7f;
-            ParticleSystem.ShapeModule shape = ps.shape;
-            shape.shapeType = ParticleSystemShapeType.Sphere;
-            shape.radius = Mathf.Max(0.6f, Mathf.Min(bounds.extents.x, bounds.extents.z) * 0.8f);
-            ParticleSystem.ColorOverLifetimeModule fade = ps.colorOverLifetime;
-            fade.enabled = true;
-            var gradient = new Gradient();
-            gradient.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
-                new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.25f), new GradientAlphaKey(1f, 0.7f), new GradientAlphaKey(0f, 1f) });
-            fade.color = gradient;
-            var renderer = go.GetComponent<ParticleSystemRenderer>();
-            Shader unlit = Shader.Find("Universal Render Pipeline/Particles/Unlit");
-            if (unlit != null) renderer.sharedMaterial = new Material(unlit) { hideFlags = HideFlags.DontSave };
-            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            ps.Play();
-            return go;
-        }
-
-        /// <summary>A model set on a node (a trap at its foot, brambles round a trunk), or a small marker if the model is missing.</summary>
+        /// <summary>A model set on a node (a trap at its foot), or a small marker if the model is missing.</summary>
         private static GameObject Extra(MapObject on, string path, float scale, Vector3 offset)
         {
             GameObject model = string.IsNullOrWhiteSpace(path) ? null : Resources.Load<GameObject>(path);

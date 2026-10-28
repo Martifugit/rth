@@ -71,8 +71,6 @@ namespace Rth.Shared.World
         /// <summary>Said to players near it when a node starts needing tending, or null. {where}: which way it lies from them.</summary>
         public string? NeedMessage;
         public string TendedMessage = "You clear the suckers and brambles from its foot.";
-        /// <summary>Client only: what grows at its foot while it needs tending (a path under Resources).</summary>
-        public string NeedModel = "Nature/Bramble";
     }
 
     /// <summary>
