@@ -171,7 +171,8 @@ def quadruped(spec, skin=0, claw=1, sides=12):
     grown from a body tube (`torso` rings); the neck and head out of its front (`head`, ending at
     `nose`), the tail out of its back (`tail`, ending at `tail_tip`), each leg from a 2x2 patch of the
     body's faces (`fore_patch`, `hind_patch`) through its rings (`fore`, `hind`) into a four-toed paw
-    (`fore_paw`, `hind_paw`, `paw_size`), the ears out of the skull (`ear`: at, keep, rings, tip, blunt).
+    (`fore_paw`, `hind_paw`, `paw_size`; `feet`: paw or hoof), the ears out of the skull (`ear`) and any
+    `growths` (tusks, antlers, tines): see grow_out.
     Side parts are grown on the left only, then the mesh is made symmetric. Returns the Grow."""
     from artlib.grow import Grow
     g = Grow(sides=sides)
@@ -180,13 +181,63 @@ def quadruped(spec, skin=0, claw=1, sides=12):
     g.extrude(torso.caps["end"], spec["head"], skin, tip=nose, blunt=blunt)
     tip, tblunt = spec["tail_tip"]
     g.extrude(torso.caps["start"], spec["tail"], skin, tip=tip, blunt=tblunt)
+    feet = spec.get("feet", "paw")
     for patch, rings, at, way in (("fore_patch", "fore", "fore_paw", (0, 0.5, -1)),
                                   ("hind_patch", "hind", "hind_paw", (0, 0.6, -1))):
         leg = g.patch(spec[patch], spec.get(patch + "_toward", way))
         ankle = g.extrude(leg, spec[rings], skin)
-        paw(g, ankle, spec[at][0], spec[at][1], 1, skin, claw, size=spec.get(at + "_size", spec["paw_size"]))
-    e = spec["ear"]
-    face = g.inset(g.face(e["at"], e.get("toward", (0.2, 0.4, 1))), e["keep"])
-    g.extrude([face], e["rings"], skin, tip=e["tip"], blunt=e.get("blunt", 0.004))
+        size = spec.get(at + "_size", spec["paw_size"])
+        if feet == "hoof":
+            hoof(g, ankle, spec[at][0], spec[at][1], claw, size=size)
+        else:
+            paw(g, ankle, spec[at][0], spec[at][1], 1, skin, claw, size=size)
+    for e in [spec["ear"]] + list(spec.get("growths", [])):
+        grow_out(g, e, skin)
     symmetric(g.bm)
     return g
+
+
+def grow_out(g, e, default_mat):
+    """Something grown out of the surface (an ear, a tusk, an antler and its tines), the left one: the
+    face nearest `at` (facing `toward`) shrunk to a slim base (`keep` wide, `thin` deep: an ear is flat)
+    and extruded through `rings` to `tip`. A ring's thickness (its top/bottom) lies along `up`
+    (forward by default: an ear's flat faces look forward and back). Grown in order, so a tine can grow
+    out of a beam grown before it."""
+    face = g.face(e["at"], e.get("toward", (0.2, 0.4, 1)))
+    if face is None:
+        return
+    g.inset(face, e["keep"])
+    thin = e.get("thin")
+    if thin:                                       # flatten the base along `up`: a slim slot, not a square
+        from artlib.grow import P
+        u = P(*e.get("up", (1, 0, 0))).normalized()
+        c = face.calc_center_median()
+        for v in face.verts:
+            d = v.co - c
+            along = d.dot(u)
+            v.co = c + (d - u * along) + u * along * (thin / max(e["keep"], 1e-6))
+    g.extrude([face], e["rings"], e.get("mat", default_mat), tip=e["tip"], blunt=e.get("blunt", 0.004),
+              up=e.get("up", (1, 0, 0)))
+
+
+def hoof(g, ankle, f, w, mat, size=1.0):
+    """A hoof out of the ankle's end: a short dark block widening to a flat sole, closed with quads."""
+    k = size
+    g.extrude(ankle, [(f, w, 0.06 * k, 0.034 * k, 0.034 * k, 0.03 * k),
+                      (f + 0.008 * k, w, 0.02 * k, 0.04 * k, 0.042 * k, 0.034 * k)], mat,
+              tip=(f + 0.01 * k, w, 0.0), blunt=0.036 * k)
+
+
+def scaled(spec, k):
+    """A copy of a spec with every length scaled by k (a smaller breed from a larger one)."""
+    def sc(x):
+        if isinstance(x, (int, float)) and not isinstance(x, bool):
+            return x * k
+        if isinstance(x, tuple):
+            return tuple(sc(y) for y in x)
+        if isinstance(x, list):
+            return [sc(y) for y in x]
+        if isinstance(x, dict):
+            return {key: (v if key in ("colours", "feet", "mat", "toward", "up") else sc(v)) for key, v in x.items()}
+        return x
+    return sc(spec)

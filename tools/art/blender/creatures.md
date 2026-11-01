@@ -187,3 +187,11 @@ only a spec of numbers for one shared builder (StrayDog, Wolf): add a breed by a
   leg is only the shin and the long foot, one rounded hairpin at the hock.
 - **`beast.quadruped(spec)`** builds any four-legged animal from a spec of numbers (the canines, the
   rat, the hare): a new animal is a new spec, checked by the crossing test, not new code.
+- **Ears and growths** (`beast.grow_out`): an ear starts from a slim slot (`thin`), not a square
+  inset, and its thickness is pinned front to back (`up`), so it reads as a flap. Tusks, antlers and
+  tines are growths too, grown in order so a tine grows out of the beam before it. A growth that turns
+  sharply needs a ring partway round the turn, or it crosses itself.
+- **A leg leaves the body from the underside**, not the flank, when it folds close under the body:
+  otherwise the first ring sweeps through the belly face beside it.
+- **Hooves** are a foot type (`feet: "hoof"`): a dark block widening to a flat sole, closed with quads.
+- **`beast.scaled(spec, k)`** makes a smaller animal from a larger one's spec (the fox from the dog).

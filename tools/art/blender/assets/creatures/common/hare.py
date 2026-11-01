@@ -46,21 +46,21 @@ HARE = dict(
           (0.08, 0.065, 0.07, 0.017, 0.017, 0.017),  # the foreleg, long and thin
           (0.085, 0.065, 0.03, 0.016, 0.015, 0.015)],
     fore_paw=(0.1, 0.065),
-    hind_patch=[(-0.08, 0.12, 0.14), (-0.17, 0.11, 0.14), (-0.08, 0.13, 0.19), (-0.17, 0.12, 0.19)],
-    hind_patch_toward=(0, 1, -0.6),
+    hind_patch=[(-0.08, 0.1, 0.11), (-0.17, 0.09, 0.11), (-0.08, 0.12, 0.15), (-0.17, 0.11, 0.15)],
+    hind_patch_toward=(0, 0.7, -1),                  # out of the haunch's underside: the leg never sweeps the belly
     # the thigh is the haunch itself (the torso's big round ring): the leg is the shin and the foot,
     # with one hairpin, at the hock, rounded by two rings
-    hind=[(-0.1, 0.15, 0.11, 0.05, 0.055, 0.055),   # the knee, under the haunch
-          (-0.16, 0.145, 0.06, 0.03, 0.03, 0.03),    # the shin, back and down
-          (-0.2, 0.12, 0.03, 0.024, 0.024, 0.024),   # the hock: two rings round the hairpin
-          (-0.17, 0.095, 0.02, 0.022, 0.018, 0.018),
-          (-0.1, 0.085, 0.02, 0.022, 0.017, 0.017)],  # the long foot, flat, inside the shin
-    hind_paw=(-0.03, 0.085),
+    hind=[(-0.1, 0.138, 0.115, 0.05, 0.055, 0.055),  # the knee, tucked in under the haunch
+          (-0.16, 0.12, 0.06, 0.03, 0.03, 0.03),     # the shin, back and down
+          (-0.2, 0.105, 0.03, 0.024, 0.024, 0.024),  # the hock: two rings round the hairpin
+          (-0.17, 0.085, 0.02, 0.022, 0.018, 0.018),
+          (-0.1, 0.08, 0.02, 0.022, 0.017, 0.017)],  # the long foot, flat, inside the shin
+    hind_paw=(-0.03, 0.08),
     paw_size=0.35,
     hind_paw_size=0.5,
-    ear=dict(at=(0.2, 0.03, 0.5), keep=0.045,
-             rings=[(0.195, 0.035, 0.55, 0.03, 0.01, 0.01), (0.18, 0.045, 0.62, 0.032, 0.009, 0.009),
-                    (0.16, 0.05, 0.68, 0.022, 0.007, 0.007)],
+    ear=dict(at=(0.2, 0.03, 0.5), keep=0.045, thin=0.012,
+             rings=[(0.195, 0.035, 0.55, 0.026, 0.005, 0.005), (0.18, 0.045, 0.62, 0.03, 0.004, 0.004),
+                    (0.16, 0.05, 0.68, 0.021, 0.004, 0.004)],
              tip=(0.14, 0.05, 0.72), blunt=0.006),  # tall, standing up and a little back
 )
 
