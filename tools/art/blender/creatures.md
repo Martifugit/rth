@@ -160,3 +160,17 @@ for the current list.
   nose horns read as a dinosaur at once. Check the silhouette against what else it could be.
 - **Ask the owner for the family sheet** (`images/dragon-families.jpg` for dragon-kin) and take the
   family's style and signatures from it, never its shapes.
+
+## Mammals (first pass, the grey wolf)
+
+`assets/creatures/common/grey_wolf.py`, built in three rounds, all quads and closed from the first.
+- **The masses that make a mammal, as numbers:** a level back (haunch top = withers), a deep but
+  narrow keeled chest (0.3 m across, 0.4 m deep for a wolf), a tucked waist, a thick neck (wider than
+  the head's back: a ruff) carrying the head just above the back, and a defined stop where the brow
+  drops to a flat-topped muzzle.
+- **Legs from four faces** (a 2x2 patch): the ankle's ring has ten corners, so `beast.paw` splits the
+  paw into four toes. Toes are sized from their real spacing, so neighbours never touch.
+- **Front leg:** the elbow tucked behind the chest, the forearm straight down. **Hind leg:** a big
+  thigh, the stifle forward, the hock back, a long foot. Bend-tested both ways at the elbow and hock.
+- **Keep the torso short.** The first round's body was a dachshund's; a wolf's nose-to-rump is about
+  1.8x its withers.

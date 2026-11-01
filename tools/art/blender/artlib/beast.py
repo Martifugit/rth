@@ -137,3 +137,30 @@ def knobs(g, mat, spots, height=0.15, base=0.14):
         a, tip = c + n * (height * k * 0.5), c + n * (height * k)
         g.extrude([face], [(-a.y, a.x, a.z, base * k * 0.42, base * k * 0.42, base * k * 0.42)], mat,
                   tip=(-tip.y, tip.x, tip.z), blunt=base * k * 0.18)
+
+
+def paw(g, ankle, f, w, s, mat, claw=None, size=1.0, toe=0.03):
+    """A mammal's paw out of the ankle's end: a short low pad forward, its end split into a row of toes
+    (as many as the ankle's ring allows: a ring of 10 gives four), each a short rounded toe extruded
+    from its own quad, placed from that quad (no positions by hand), with a small claw if `claw`."""
+    k = size
+    ring = Grow_boundary(ankle)
+    toes = len(ring) // 2 - 1
+    pad = g.extrude(ankle, [(f, w, 0.032 * k, 0.048 * k, 0.028 * k, 0.022 * k)], mat)
+    quads = g.split_cap(pad, (1, 0, -0.35), (0, s, 0), toes)
+    centres = [q.calc_center_median() for q in quads]
+    gap = min((a - b).length for a, b in zip(centres, centres[1:])) if len(centres) > 1 else toe * k
+    r = 0.42 * gap                                  # each toe narrower than its spacing: neighbours never touch
+    for q, c in zip(quads, centres):
+        cf, cs = -c.y, c.x
+        a = (cf + toe * 0.55 * k, cs, 0.024 * k, r, r * 1.1, r * 0.9)
+        if claw is None:
+            g.extrude([q], [a], mat, tip=(cf + toe * 1.2 * k, cs, 0.012 * k), blunt=0.4 * r)
+        else:
+            end = g.extrude([q], [a, (cf + toe * 1.05 * k, cs, 0.017 * k, r * 0.7, r * 0.7, r * 0.6)], mat)
+            g.extrude(end, [], claw, tip=(cf + toe * 1.55 * k, cs, 0.006 * k), blunt=0.15 * r)
+
+
+def Grow_boundary(faces):
+    from artlib.grow import Grow
+    return Grow.boundary(faces)
