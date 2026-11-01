@@ -45,7 +45,7 @@ CROWN = [((2.42, 0.13, 1.68), 0.62), ((2.38, 0.23, 1.62), 0.5), ((2.38, 0.28, 1.
 SKULL = (2.4, 0.0, 1.48)                    # the skull's middle there: each spike leans out from it
 
 
-def body():
+def body(crown=True, spine=True):
     g = Grow(sides=12)
     torso = g.tube([
         (-1.6, 0, 1.05, 0.3, 0.3, 0.3),              # the root of the tail
@@ -73,7 +73,8 @@ def body():
         (-3.3, 0, 0.62, 0.13, 0.13, 0.13), (-3.9, 0, 0.46, 0.095, 0.095, 0.095),
         (-4.5, 0, 0.34, 0.068, 0.068, 0.068), (-5.1, 0, 0.26, 0.05, 0.05, 0.05),
         (-5.6, 0, 0.21, 0.04, 0.04, 0.04)], SKIN, tip=(-6.0, 0, 0.18), blunt=0.012)
-    spines(g, HORN, start=-3.8, end=-4.9, peak=(-3.8, -4.0), step=0.28, tallest=0.16)   # past the last tail plate
+    if spine:
+        spines(g, HORN, start=-3.8, end=-4.9, peak=(-3.8, -4.0), step=0.28, tallest=0.16)   # past the last tail plate
     skull = P(*SKULL)
     for s in (1, -1):
         # the hind legs, crouched: a heavy thigh, the knee forward, the hock back. The segments are long
@@ -98,7 +99,7 @@ def body():
         foot(g, wrist, 0.9, s * 0.8, s, SKIN, HORN)
         # the crown: each spike out of the head, swept back and leaning out from the skull; every face
         # found before any grows (growing changes the mesh)
-        picked = [(g.face((f, s * w, u), (0, s * w, u - SKULL[2])), L) for (f, w, u), L in CROWN]
+        picked = [(g.face((f, s * w, u), (0, s * w, u - SKULL[2])), L) for (f, w, u), L in CROWN] if crown else []
         picked = [p for i, p in enumerate(picked) if p[0] not in [q[0] for q in picked[:i]]]   # each face once
         for face, L in picked:
             base = g.inset(face, min(0.14, 0.22 * L)).calc_center_median()

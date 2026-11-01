@@ -14,12 +14,12 @@ from mathutils.bvhtree import BVHTree
 from artlib.grow import P
 
 
-def to_object(bm, name, colours, coll, parent=None, mirror=True, clip=False):
+def to_object(bm, name, colours, coll, parent=None, mirror=True, clip=False, smooth=60):
     """A part as its own object (under `parent`), with a Mirror modifier on X: edit the +X half and
     the other follows. clip: the half's centre line is clipped and merged (a body, not a limb)."""
     import rth_art as A
     A.finish(bm)
-    ob = A.mesh_from(name, bm, colours, coll=coll, smooth_angle=60)
+    ob = A.mesh_from(name, bm, colours, coll=coll, smooth_angle=smooth)
     if parent is not None:
         ob.parent = parent
     if mirror:

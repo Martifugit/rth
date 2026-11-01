@@ -234,3 +234,30 @@ body hasn't got it; an overlay needs nothing from the body.
   body is cut in half (its BVH), like the wing.
 - **Chunky, few, overlapping:** the reference look (OSRS's drake) is a handful of big domed plates in
   a darker bone colour, overlapping like shingles, not many small tiles.
+
+## Plating study (2026-11-01, `boards/plating_study.py`, `artlib/plates.py`)
+
+Six plated drakes, built in rounds, all quads, closed, no crossings. What they taught:
+- **A plate is rings of one outline** (`plates.slab`): a rim sunk under the skin, a steep bevel up to
+  the edge, a top rising to a crown, every point cast onto the body. Outline points: 14 (chunky
+  facets); point 0 the front tip and n/2 the back, so a centre-line plate splits for the Mirror.
+- **Shade plates nearly flat** (smooth angle 20): their facets catch the light like the reference's
+  slabs. Smooth-shaded, the same plates read as rubber.
+- **Outlines with intent** (`plates.outline`): pointed or round ends, `square`, `bulge`, and `lobes` (a
+  symmetric scalloped edge) for broken, chunky slabs. No random jitter.
+- **Faceted tops** (`facets`, `facet`): the top stepped into raised and sunken facets. With lobes, this
+  is what moved the plates from "rubber tiles" toward the reference.
+- **Features grow from a plate, out of a big inner ring** (`horn=`): the plate thickens into a horn, one
+  surface. Started from a pinhole in the middle, a horn looks stuck on and folds. `r` sets the base
+  radius for a boss on a big plate; `length`/`rake`/`spread` measure the horn from its own plate
+  (absolute end points can land inside the plate and fold it).
+- **Horn rings are spaced by arc length**, about half the base radius apart, the first ones keeping the
+  base's outline before rounding off, the section frame carried ring to ring (it flipped otherwise).
+- **Short features are profile, not horns:** a low knob (osteoderm) is the plate's profile rising
+  (`plates.KNOB`); a horn shorter than its base folds.
+- **Stacked plates** (`lift`): a boss on a saddle is a second plate lifted onto the first, its rim
+  sunk into it.
+- **What reads best:** few, large, faceted plates (F: a shoulder saddle and a hip saddle, neck and tail
+  plates, lobed, faceted, a horned boss and a row of spike plates along the saddle's rear edge); then a
+  ridge of keeled plates each thickening into a spike (B). Many small scales (C) read as texture at game
+  distance, good for flanks, not the main read. A head crown of spike plates (D) is striking but heavy.
