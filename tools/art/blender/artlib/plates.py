@@ -88,7 +88,7 @@ class Frame:
 
 
 def slab(bm, frame, centre, along, length, width, shape, thickness, profile=PROFILE, ridge=0.0, tilt=0.0,
-         lift=0.0, mat=0, horn=None, facets=0, facet=0.0):
+         lift=0.0, mat=0, horn=None, facets=0, facet=0.0, lip_back=0.0, lip_down=0.0):
     """One plate as a closed piece of quads. centre (f, s, u): a point toward which the plate lies on the
     body; along (f, s, u): the way its length runs; shape: an outline() of n points; profile: its rings.
     ridge: a keel down its middle (in thicknesses); tilt: the rear edge raised (shingles), the front
@@ -113,6 +113,7 @@ def slab(bm, frame, centre, along, length, width, shape, thickness, profile=PROF
     side = d0.cross(al).normalized()
     if c.x > 1e-6 and side.x < 0:
         side = -side
+    down = 1.0 if side.z < 0 else -1.0             # which way across the plate (b) faces the ground
     rings = []
     for k_ring, (sc, h) in enumerate(profile):
         ring = []
@@ -121,10 +122,11 @@ def slab(bm, frame, centre, along, length, width, shape, thickness, profile=PROF
             if c.x > 1e-6 and p.x < 0.006:            # a side plate stops at the centre line
                 p.x = 0.006
             surf, d = frame.cast(p)
+            lip = (lip_back * max(0.0, -a) ** 1.5 + lip_down * max(0.0, b * down) ** 1.5) * thickness
             if k_ring == 0:
-                off = h * thickness
+                off = h * thickness + lip                 # the whole back lifts together: rings keep their order
             else:
-                off = (h + ridge * (1 - abs(b)) * (1 - sc) - tilt * a * sc * 0.5) * thickness + lift
+                off = (h + ridge * (1 - abs(b)) * (1 - sc) - tilt * a * sc * 0.5) * thickness + lift + lip
                 if facets and 0 < sc < 0.99:
                     ang = math.atan2(b, a)
                     off += facet * thickness * math.cos(facets * ang) * min(1.0, (1 - sc) * 3)

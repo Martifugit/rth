@@ -261,3 +261,44 @@ Six plated drakes, built in rounds, all quads, closed, no crossings. What they t
   plates, lobed, faceted, a horned boss and a row of spike plates along the saddle's rear edge); then a
   ridge of keeled plates each thickening into a spike (B). Many small scales (C) read as texture at game
   distance, good for flanks, not the main read. A head crown of spike plates (D) is striking but heavy.
+
+## Armour (capability tests, 2026-11-01: `boards/armour_tests.py`, `artlib/armour.py`)
+
+Seven hard cases on the drake's bare body, each checked by `armour.report` (plate topology, crossings
+within a plate, visible collisions between plates, floating plates, coverage by region).
+
+| Test | Result | What it needed |
+|---|---|---|
+| T1 limbs (cuff, bracer, elbow/knee/hock caps, thigh plate) | pass, clean | an axis per leg; one straight local frame per plate |
+| T2 wrap (neck collars, tail rings) | pass, clean | `band`: a closed ring of the profile; a lip for shingling |
+| T3 flow (ridge down the curving neck and back) | pass (1 visible touch) | plates along the axis tangent; lip on keeled plates |
+| T4 head (horned brow, cheek, jaw row with teeth, snout band) | pass (3 touches) | the spine axis through the head; plates at angles round it |
+| T5 belly scutes between the legs | partial: reads right, some folds | radii limited and blended; still folds over the waist crease |
+| T6 whole armour from rules | pass: cohesive | rows sized by girth, rows as wide as the arc between them, stagger, lips |
+| T7 bent neck, tail and knees | pass: nothing floats or tears | `bend` moves body and plates together |
+
+What the tests taught:
+- **Plate a part from its own axis** (`armour.Axis`: a polyline with a carried frame; angle 0 up for the
+  spine, forward for a leg). Projecting from the spine can't reach a leg, the jaw or the belly.
+- **One straight local frame per plate** (`Frame.local`): casting each point from its own nearest axis
+  segment folds a plate wherever the axis bends (every leg plate crossed itself until this).
+- **Wrapping is a band, not a draped patch** (`armour.band`): rings of the profile round the axis, closed
+  for a collar or tail ring, ends closed for a bracer or scute. Its radii are limited (a ray that slips
+  past the body onto a leg is an outlier), smoothed round the band, and sampled only at its front and
+  back and blended, so a crease under it can't fold it.
+- **Shingles need a lip** (`lip`, `lip_back`, `lip_down`): the overlapping edge rests on the next plate.
+  Without it every overlapping edge cuts down through the next plate. The lip lifts the whole back of
+  the plate (raising only the rim folds it). Tail rings went from 23 visible collisions to none.
+- **Cohesion comes from rules, not hand placement** (`armour.row`): each plate sized by the girth where
+  it lies, overlapping the next by a quarter; flank rows each as wide as the arc to the next row, so they
+  meet; alternate rows staggered half a plate; rows overlap downward (`lip_down`) like roof tiles. This
+  turned F's scattered plates into armour (a pangolin's back).
+- **Check what shows** (`visible_collisions`): shingles meeting under the skin are fine; only faces both
+  outside the body count.
+
+Still open:
+- belly scutes over the waist and hip creases still fold a little (the body's own creases there);
+- the thigh plate is cast partly onto the torso (the hind axis's first stretch runs inside the body);
+- plates are one colour and similar in size; a design language (which plates are larger, where the
+  armour stops, colour bands) is the next layer, built on these tools;
+- joints aren't segmented: the plates bend with the skin; real armour would split at the joint.
