@@ -30,11 +30,14 @@ if __name__ in ("__main__", "<run_path>"):          # run as a script: pick up e
 from mathutils import Vector  # noqa: E402
 
 from artlib import family  # noqa: E402
-from artlib.beast import foot, keep_left, spines, symmetric, to_object, tune, tuning  # noqa: E402
+import bmesh  # noqa: E402
+from mathutils.bvhtree import BVHTree  # noqa: E402
+
+from artlib.beast import foot, keep_left, plate, spines, symmetric, to_object, tune, tuning  # noqa: E402
 from artlib.grow import Grow, P  # noqa: E402
 
-COLOURS = ["Russet", "SaintBone"]           # untextured, one colour a part until the topology is passed
-SKIN, HORN = range(2)
+COLOURS = ["Russet", "SaintBone", "Charcoal"]   # untextured; the plates a dark bone
+SKIN, HORN, PLATE = range(3)
 
 # The crown: spikes round the back of the skull and down the jaw, (where on the head, length).
 CROWN = [((2.42, 0.13, 1.68), 0.62), ((2.38, 0.23, 1.62), 0.5), ((2.38, 0.28, 1.5), 0.42),
@@ -70,7 +73,7 @@ def body():
         (-3.3, 0, 0.62, 0.13, 0.13, 0.13), (-3.9, 0, 0.46, 0.095, 0.095, 0.095),
         (-4.5, 0, 0.34, 0.068, 0.068, 0.068), (-5.1, 0, 0.26, 0.05, 0.05, 0.05),
         (-5.6, 0, 0.21, 0.04, 0.04, 0.04)], SKIN, tip=(-6.0, 0, 0.18), blunt=0.012)
-    spines(g, HORN, start=2.1, end=-4.9, peak=(0.9, -1.4), step=0.28, tallest=0.24)
+    spines(g, HORN, start=-3.8, end=-4.9, peak=(-3.8, -4.0), step=0.28, tallest=0.16)   # past the last tail plate
     skull = P(*SKULL)
     for s in (1, -1):
         # the hind legs, crouched: a heavy thigh, the knee forward, the hock back. The segments are long
@@ -118,11 +121,46 @@ def body():
     return g
 
 
+# The plating, an overlay part: chunky bone plates laid over the body (beast.plate), each cast onto
+# its surface from the centre line, sunk at the rim, closed: a skull cap, plates down the neck, paired
+# scutes over the shoulders and back overlapping like shingles, smaller ones down the tail.
+AXIS = [(-6.0, 0.18), (-5.1, 0.26), (-3.9, 0.46), (-2.7, 0.8), (-1.6, 1.05), (-0.7, 1.08), (0.4, 1.06),
+        (1.2, 1.26), (1.8, 1.43), (2.36, 1.48), (2.82, 1.39), (3.26, 1.27)]
+
+
+def axis(f):
+    if f <= AXIS[0][0]:
+        return AXIS[0][1]
+    for (f0, u0), (f1, u1) in zip(AXIS, AXIS[1:]):
+        if f <= f1:
+            return u0 + (u1 - u0) * (f - f0) / (f1 - f0)
+    return AXIS[-1][1]
+
+
+def plating(bvh):
+    g = Grow()
+    bm = g.bm
+    plate(bm, bvh, axis, (2.5, 0, 1.75), (1, 0, -0.1), 0.46, 0.4, 0.06, rows=3, cols=4, dome=1.4, ridge=0.08, mat=PLATE)  # skull cap
+    for f, ln, w in ((2.05, 0.3, 0.36), (1.76, 0.31, 0.4), (1.47, 0.32, 0.44)):       # down the neck
+        plate(bm, bvh, axis, (f, 0, 1.75), (1, 0, 0), ln, w, 0.06, rows=3, cols=3, dome=1.4, ridge=0.08, tilt=0.5, mat=PLATE)
+    for f, k in ((1.02, 1.0), (0.56, 1.12), (0.08, 1.1), (-0.42, 1.0), (-0.9, 0.88)):  # paired scutes
+        plate(bm, bvh, axis, (f, 0.22 * k, 1.7), (1, 0, 0), 0.46 * k, 0.36 * k, 0.11 * k, rows=3, cols=4,
+              dome=1.6, ridge=0.15, tilt=0.6, mat=PLATE)
+    for f, k in ((-1.42, 0.8), (-1.9, 0.7), (-2.4, 0.6), (-2.95, 0.5), (-3.5, 0.4)):  # down the tail
+        plate(bm, bvh, axis, (f, 0, 1.5), (1, 0, 0), 0.46 * k, 0.5 * k, 0.09 * k, rows=3, cols=3, dome=1.4,
+              ridge=0.1, tilt=0.5, mat=PLATE)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    return bm
+
+
 def build(name="Drake", coll="Creatures"):
     g = body()
+    over = plating(BVHTree.FromBMesh(g.bm))
     keep_left(g.bm)
     tune(g.bm, tuning(__file__, "Drake"))
-    return to_object(g.bm, name, COLOURS, coll, clip=True)
+    root = to_object(g.bm, name, COLOURS, coll, clip=True)
+    to_object(over, name + "_Plates", COLOURS, coll, root, clip=True)
+    return root
 
 
 ASSETS = {"Drake": build}

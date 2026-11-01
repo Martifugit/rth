@@ -296,3 +296,87 @@ def bone(g, mat, root, toward, across, path, r0, r1, rings=5, faces=2, ease=1.0,
     ring_list.insert(0, (c.x, c.y, c.z, r0 * 1.2, r0 * 1.2, r0 * 1.2))
     g.extrude(patch, ring_list, mat, tip=tip[:3], blunt=blunt if blunt is not None else max(0.002, r1 * 0.5))
     return tip[:3]
+
+
+# -- overlays: plates, scutes, caps ---------------------------------------------------------------
+
+def axis_of(*ring_lists):
+    """The body's centre line as a function f -> u, from ring lists ((f, s, u, ...) with s = 0): the
+    torso, head and tail rings of a spec. Plates are cast onto the body from this line."""
+    pts = sorted({(r[0], r[2]) for rings in ring_lists for r in rings})
+
+    def at(f):
+        if f <= pts[0][0]:
+            return pts[0][1]
+        for (f0, u0), (f1, u1) in zip(pts, pts[1:]):
+            if f <= f1:
+                return u0 + (u1 - u0) * (f - f0) / (f1 - f0)
+        return pts[-1][1]
+    return at
+
+
+def plate(bm, bvh, axis, centre, along, length, width, thickness, rows=2, cols=3, dome=1.0, ridge=0.0,
+          tilt=0.0, sink=None, mat=0, mirror_half=None):
+    """A chunky plate laid over the body (an overlay: a skull cap, a scute, a shoulder plate): a grid
+    of cols x rows quads over `length` (along `along`, f s u) by `width` (around the body), each point
+    cast onto the body's surface from its centre line (`axis`: f -> u; bvh: the body), raised by
+    `thickness` shaped by `dome` (fuller in the middle), `ridge` (a keel down its middle) and `tilt`
+    (> 0 raises the rear edge, for plates that overlap like shingles); its rim drops `sink` under the
+    skin and it is closed underneath: one closed piece of quads, no gap to the body. On the centre
+    line (`mirror_half`, default: when centre's s is 0) only the left half is built, its middle edge
+    left open on x = 0 for the Mirror modifier to close. Returns the top grid's faces by row."""
+    from mathutils import Vector
+    from artlib.grow import P
+    sink = thickness * 0.6 if sink is None else sink
+    half = (abs(centre[1]) < 1e-6) if mirror_half is None else mirror_half
+    c = P(*centre)
+
+    def axis_pt(p):
+        return Vector((0.0, p.y, axis(-p.y)))
+    d0 = (c - axis_pt(c)).normalized()
+    al = P(*along)
+    al = (al - d0 * al.dot(d0)).normalized()
+    side = d0.cross(al).normalized()
+    if half and side.x < 0:
+        side = -side
+    elif not half and side.dot(Vector((c.x, 0, 0))) < 0 and abs(c.x) > 1e-6:
+        side = -side
+    bs = [width * (j / rows) / 2 for j in range(rows + 1)] if half else \
+         [width * (j / rows - 0.5) for j in range(rows + 1)]
+    as_ = [length * (i / cols - 0.5) for i in range(cols + 1)]
+    top, bot = {}, {}
+    for i, a in enumerate(as_):
+        for j, b in enumerate(bs):
+            p = c + al * a + side * b
+            q = axis_pt(p)
+            d = (p - q).normalized()
+            hit = bvh.ray_cast(q + d * 4.0, -d)[0]
+            s = hit if hit is not None else p
+            u = 2 * a / length
+            v = (b / (width / 2)) if half else 2 * b / width
+            shape = (1 - 0.55 * u * u) * (1 - 0.7 * v * v)
+            off = thickness * (0.35 + 0.65 * (shape ** dome) + ridge * (1 - abs(v)) - tilt * u * 0.5)
+            t, bo = s + d * off, s - d * sink
+            if half and j == 0:
+                t.x = bo.x = 0.0
+            top[i, j], bot[i, j] = bm.verts.new(t), bm.verts.new(bo)
+    faces = []
+    for i in range(cols):
+        row = []
+        for j in range(rows):
+            f = bm.faces.new((top[i, j], top[i + 1, j], top[i + 1, j + 1], top[i, j + 1]))
+            f.material_index = mat
+            row.append(f)
+            bm.faces.new((bot[i, j + 1], bot[i + 1, j + 1], bot[i + 1, j], bot[i, j])).material_index = mat
+        faces.append(row)
+    if half:                                       # the walls on the three sides off the centre line
+        walk = [(0, j) for j in range(rows + 1)] + [(i, rows) for i in range(1, cols + 1)] + \
+               [(cols, j) for j in range(rows - 1, -1, -1)]
+        pairs = list(zip(walk, walk[1:]))
+    else:
+        walk = [(i, 0) for i in range(cols + 1)] + [(cols, j) for j in range(1, rows + 1)] + \
+               [(i, rows) for i in range(cols - 1, -1, -1)] + [(0, j) for j in range(rows - 1, -1, -1)]
+        pairs = list(zip(walk, walk[1:]))
+    for a, b in pairs:
+        bm.faces.new((top[a], bot[a], bot[b], top[b])).material_index = mat
+    return faces

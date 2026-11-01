@@ -28,7 +28,12 @@ if __name__ in ("__main__", "<run_path>"):          # run as a script: pick up e
 from artlib import family  # noqa: E402
 from mathutils import Vector  # noqa: E402
 
-from artlib.beast import bone, curve, keep_left, quadruped, scaled, spines, to_object, tune, tuning  # noqa: E402
+import bmesh  # noqa: E402
+from mathutils.bvhtree import BVHTree  # noqa: E402
+
+from artlib.beast import (axis_of, bone, curve, keep_left, plate, quadruped, scaled, spines,  # noqa: E402
+                          to_object, tune, tuning)
+from artlib.grow import Grow  # noqa: E402
 from assets.creatures.common import canine  # noqa: E402
 
 SKIN, CLAW, HORN = range(3)
@@ -127,23 +132,32 @@ STAG = dict(
     paw_size=0.7,
     ear=dict(at=(0.6, 0.06, 1.585), toward=(0, 1, 0.3), keep=0.04, thin=0.01,
              rings=[(0.595, 0.095, 1.605, 0.03, 0.005, 0.005)], tip=(0.585, 0.145, 1.625), blunt=0.006),
-    extra=lambda g: antlers(g),
+    overlay=lambda bvh: antlers(bvh),
 )
 
 # The stag's antlers, left side (f, s, u): a beam from the skull along a curve, tines out of it at a
 # fraction of its length, each pointing its own way. Every part is a bone (beast.bone): round, rooted
 # in a patch of faces, following a curve, tapering.
-BEAM = dict(root=(0.68, 0.055, 1.615), pull=(0.62, 0.15, 1.86), end=(0.47, 0.21, 2.13), r0=0.026, r1=0.009, rings=8)
-TINES = [(0.12, (1.0, 0.1, 0.35), 0.14, 0.012),     # brow tine: (where along the beam, way, length, root radius)
-         (0.34, (1.0, 0.3, 0.5), 0.12, 0.011),       # bez tine
-         (0.62, (0.8, 0.3, 0.6), 0.11, 0.009),       # trez tine
-         (0.84, (0.6, 0.35, 0.9), 0.1, 0.008)]       # the fork at the crown
+BEAM = dict(root=(0.68, 0.055, 1.615), pull=(0.62, 0.15, 1.86), end=(0.47, 0.22, 2.12), r0=0.017, r1=0.006, rings=8)
+TINES = [(0.14, (1.0, 0.1, 0.35), 0.13, 0.0078),    # brow tine: (where along the beam, way, length, root radius)
+         (0.36, (1.0, 0.3, 0.5), 0.11, 0.0072),      # bez tine
+         (0.62, (0.8, 0.3, 0.6), 0.1, 0.0065),       # trez tine
+         (0.84, (0.6, 0.35, 0.9), 0.09, 0.006)]      # the fork at the crown
 
 
-def antlers(g):
+def antlers(bvh):
+    """The antlers as an overlay: each rises from a small cap plate laid over the skull (so the head
+    needs no extra geometry where it attaches), the beam a bone out of the cap's faces, the tines bones
+    out of the beam."""
+    g = Grow()
+    head = axis_of(STAG["torso"], STAG["head"])
     b = BEAM
-    bone(g, HORN, b["root"], (0, 0.6, 1), (1, 0, 0), (b["pull"], b["end"]), b["r0"], b["r1"], rings=b["rings"], faces=4)
-    line = curve(b["root"], b["pull"], b["end"], b["r0"], b["r1"], 40)
+    plate(g.bm, bvh, head, b["root"], (1, 0, 0), 0.075, 0.07, 0.013, rows=3, cols=3, mat=SKIN)   # the furred pedicle
+    bmesh.ops.recalc_face_normals(g.bm, faces=g.bm.faces[:])
+    g.bm.normal_update()
+    lift = b["root"][:2] + (b["root"][2] + 0.012,)
+    bone(g, HORN, lift, (0, 0.6, 1), (1, 0, 0), (b["pull"], b["end"]), b["r0"], b["r1"], rings=b["rings"], faces=4)
+    line = curve(lift, b["pull"], b["end"], b["r0"], b["r1"], 40)
     for t, way, length, r0 in TINES:
         i = round(t * 40)
         c, r = Vector(line[i][:3]), line[i][3]
@@ -153,7 +167,9 @@ def antlers(g):
         root = c + out * r * 0.95
         end = root + w * length
         pull = root + out * length * 0.45 + w * length * 0.25
-        bone(g, HORN, tuple(root), tuple(out), tuple(tangent), (tuple(pull), tuple(end)), r0, 0.003, rings=4, faces=2)
+        bone(g, HORN, tuple(root), tuple(out), tuple(tangent), (tuple(pull), tuple(end)), r0, 0.0025, rings=4, faces=2)
+    bmesh.ops.recalc_face_normals(g.bm, faces=g.bm.faces[:])
+    return g.bm
 
 
 BEAR = dict(
@@ -197,10 +213,15 @@ BEAR = dict(
 
 
 def make(spec, name, coll="Creatures"):
+    """The body, and its overlay (plates, caps, antlers) as a second part if the spec has one."""
     g = quadruped(spec, SKIN, CLAW)
+    over = spec["overlay"](BVHTree.FromBMesh(g.bm)) if spec.get("overlay") else None
     keep_left(g.bm)
     tune(g.bm, tuning(__file__, name))
-    return to_object(g.bm, name, spec["colours"], coll, clip=True)
+    root = to_object(g.bm, name, spec["colours"], coll, clip=True)
+    if over is not None:
+        to_object(over, name + "_Plates", spec["colours"], coll, root, clip=True)
+    return root
 
 
 BEAR = scaled(BEAR, 1.35)                    # a big brown bear: the hump about 1.5 m

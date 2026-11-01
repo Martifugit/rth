@@ -213,3 +213,24 @@ read as stuck on.
 - **A left-side bone never takes a face on the centre line** (`Grow.patch(..., allow=)`): the mirror
   would cut it into triangles.
 - **Two growths never share a root area** (the stag's ear and antler fought for the same faces).
+
+## Surface features: overlays (first pass, the drake's plating and the stag's pedicles)
+
+Small or many features (plates, scutes, caps, armour, the root of an antler) are an **overlay part**:
+their own closed pieces laid over the body, not geometry cut into it. Growing an antler or a crown out
+of the body needs a dense patch of the body's faces exactly where it attaches, and painting showed the
+body hasn't got it; an overlay needs nothing from the body.
+- **`beast.plate`**: a grid of quads over a length and width of the body, each point cast onto the
+  body's surface from its centre line (`axis_of`, or a list of (f, u) points), raised by a thickness
+  shaped by `dome`, `ridge` (a keel) and `tilt` (the rear edge up, for shingles), its rim sunk under the
+  skin and closed underneath. One closed piece of quads, no gap to the body. On the centre line only
+  the left half is built and the part's Mirror closes it.
+- **Shingles:** plates overlap their neighbour by design; the crossing check is per piece, so count
+  crossings within one connected piece only.
+- **Things that grow from an overlay grow from the plate, not the skin:** the stag's antler is a bone
+  out of its pedicle cap (a plate in the fur's colour). Spines and horns that start under a plate punch
+  through it (the drake's crown, still to fix).
+- **The overlay is the second part** (`<Name>_Plates`, its own Mirror), built from the body before the
+  body is cut in half (its BVH), like the wing.
+- **Chunky, few, overlapping:** the reference look (OSRS's drake) is a handful of big domed plates in
+  a darker bone colour, overlapping like shingles, not many small tiles.
