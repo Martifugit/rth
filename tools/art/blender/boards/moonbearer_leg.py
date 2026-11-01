@@ -185,7 +185,7 @@ def build_leg(bm, base, u, v, start, turns):
 
 def reaching_start(base, u, v, turns, floor=0.0):
     """The first segment's angle that puts the needle's tip on the floor (bisection)."""
-    lo, hi = -10.0, 80.0
+    lo, hi = -40.0, 80.0
     for _ in range(40):
         mid = (lo + hi) / 2
         tip = chain(base, u, v, mid, turns)[0][-1]
