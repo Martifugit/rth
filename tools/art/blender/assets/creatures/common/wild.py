@@ -4,12 +4,12 @@ r"""Wild beasts (2026-11-01), each a spec for beast.quadruped, built by tools/ar
 - Boar   a heavy wedge: shoulders high, the back sloping to the rump, no neck, the head a long wedge
          down to a flat snout, tusks curving up from the jaw, short legs on hooves
 - Stag   a red deer: long legs on hooves, a slender deep body, the neck rising, a small head with ears
-         out to the sides, branched antlers (a beam and three tines, each grown out of the one before)
+         out to the sides, antlers of bones (beast.bone): a curved beam and four tines grown out of it
 - Bear   a brown bear: a massive body with a hump over the shoulders, a broad head low on a thick
          neck, small round ears, thick legs on big paws, a stub of a tail
 
 Proportions from the player (1.8 m): the fox 0.46 m at the withers, the boar 0.84 m, the stag 1.2 m
-(its antlers to about 2.1 m), the bear 1.1 m at the hump.
+(its antlers to about 2.1 m), the bear about 1.5 m at the hump.
 
 Each is one part, the left half (+X) with a Mirror modifier; growths and feet out of the body.
 
@@ -26,7 +26,9 @@ if __name__ in ("__main__", "<run_path>"):          # run as a script: pick up e
         del sys.modules[_m]
 
 from artlib import family  # noqa: E402
-from artlib.beast import keep_left, quadruped, scaled, to_object, tune, tuning  # noqa: E402
+from mathutils import Vector  # noqa: E402
+
+from artlib.beast import bone, curve, keep_left, quadruped, scaled, spines, to_object, tune, tuning  # noqa: E402
 from assets.creatures.common import canine  # noqa: E402
 
 SKIN, CLAW, HORN = range(3)
@@ -80,6 +82,7 @@ BOAR = dict(
     growths=[dict(at=(0.8, 0.075, 0.37), toward=(0.2, 1, -0.3), keep=0.03, mat=HORN, up=(0, 0, 1),
                   rings=[(0.81, 0.095, 0.375, 0.016, 0.016, 0.016), (0.83, 0.11, 0.41, 0.013, 0.013, 0.013)],
                   tip=(0.85, 0.11, 0.47), blunt=0.003)],
+    extra=lambda g: spines(g, CLAW, start=0.5, end=-0.4, peak=(0.3, -0.05), step=0.07, tallest=0.07, keep=0.02),
 )
 
 STAG = dict(
@@ -93,9 +96,9 @@ STAG = dict(
         (0.2, 0, 1.04, 0.15, 0.16, 0.22),            # the chest
         (0.33, 0, 1.1, 0.12, 0.13, 0.15)],           # the withers, the neck's root
     head=[
-        (0.42, 0, 1.22, 0.1, 0.1, 0.11),             # the neck, rising
-        (0.5, 0, 1.36, 0.08, 0.085, 0.09),
-        (0.56, 0, 1.48, 0.07, 0.07, 0.075),
+        (0.42, 0, 1.22, 0.125, 0.125, 0.135),        # the neck, rising, thick at its root
+        (0.5, 0, 1.36, 0.1, 0.105, 0.11),
+        (0.56, 0, 1.48, 0.08, 0.08, 0.085),
         (0.62, 0, 1.56, 0.065, 0.065, 0.07),         # the back of the skull
         (0.7, 0, 1.57, 0.065, 0.06, 0.065),          # the cheeks
         (0.79, 0, 1.52, 0.045, 0.045, 0.05),         # the muzzle, long and fine
@@ -122,21 +125,36 @@ STAG = dict(
           (-0.41, 0.13, 0.05, 0.022, 0.02, 0.02)],
     hind_paw=(-0.39, 0.13),
     paw_size=0.7,
-    ear=dict(at=(0.62, 0.055, 1.62), toward=(0, 1, 0.5), keep=0.04, thin=0.01,
-             rings=[(0.62, 0.09, 1.65, 0.03, 0.005, 0.005)], tip=(0.61, 0.14, 1.67), blunt=0.006),
-    growths=[
-        dict(at=(0.64, 0.03, 1.62), toward=(0, 0.3, 1), keep=0.035, mat=HORN, up=(1, 0, 0),
-             rings=[(0.63, 0.05, 1.7, 0.02, 0.02, 0.02), (0.6, 0.1, 1.82, 0.018, 0.018, 0.018),
-                    (0.55, 0.15, 1.95, 0.015, 0.015, 0.015), (0.5, 0.18, 2.05, 0.012, 0.012, 0.012)],
-             tip=(0.47, 0.2, 2.13), blunt=0.004),                   # the beam
-        dict(at=(0.635, 0.065, 1.74), toward=(1, 0, 0.3), keep=0.014, mat=HORN, up=(0, 0, 1),
-             rings=[(0.68, 0.07, 1.75, 0.009, 0.009, 0.009)], tip=(0.76, 0.08, 1.79), blunt=0.003),   # brow tine
-        dict(at=(0.59, 0.115, 1.86), toward=(1, 0.2, 0.5), keep=0.012, mat=HORN, up=(0, 0, 1),
-             rings=[(0.62, 0.13, 1.88, 0.008, 0.008, 0.008)], tip=(0.67, 0.16, 1.94), blunt=0.003),
-        dict(at=(0.53, 0.165, 1.99), toward=(0.4, 0.5, 1), keep=0.01, mat=HORN, up=(1, 0, 0),
-             rings=[(0.54, 0.19, 2.03, 0.007, 0.007, 0.007)], tip=(0.56, 0.24, 2.12), blunt=0.003),   # the fork
-    ],
+    ear=dict(at=(0.6, 0.06, 1.585), toward=(0, 1, 0.3), keep=0.04, thin=0.01,
+             rings=[(0.595, 0.095, 1.605, 0.03, 0.005, 0.005)], tip=(0.585, 0.145, 1.625), blunt=0.006),
+    extra=lambda g: antlers(g),
 )
+
+# The stag's antlers, left side (f, s, u): a beam from the skull along a curve, tines out of it at a
+# fraction of its length, each pointing its own way. Every part is a bone (beast.bone): round, rooted
+# in a patch of faces, following a curve, tapering.
+BEAM = dict(root=(0.68, 0.055, 1.615), pull=(0.62, 0.15, 1.86), end=(0.47, 0.21, 2.13), r0=0.026, r1=0.009, rings=8)
+TINES = [(0.12, (1.0, 0.1, 0.35), 0.14, 0.012),     # brow tine: (where along the beam, way, length, root radius)
+         (0.34, (1.0, 0.3, 0.5), 0.12, 0.011),       # bez tine
+         (0.62, (0.8, 0.3, 0.6), 0.11, 0.009),       # trez tine
+         (0.84, (0.6, 0.35, 0.9), 0.1, 0.008)]       # the fork at the crown
+
+
+def antlers(g):
+    b = BEAM
+    bone(g, HORN, b["root"], (0, 0.6, 1), (1, 0, 0), (b["pull"], b["end"]), b["r0"], b["r1"], rings=b["rings"], faces=4)
+    line = curve(b["root"], b["pull"], b["end"], b["r0"], b["r1"], 40)
+    for t, way, length, r0 in TINES:
+        i = round(t * 40)
+        c, r = Vector(line[i][:3]), line[i][3]
+        tangent = (Vector(line[min(i + 1, 40)][:3]) - Vector(line[max(i - 1, 0)][:3])).normalized()
+        w = Vector(way).normalized()
+        out = (w - tangent * w.dot(tangent)).normalized()
+        root = c + out * r * 0.95
+        end = root + w * length
+        pull = root + out * length * 0.45 + w * length * 0.25
+        bone(g, HORN, tuple(root), tuple(out), tuple(tangent), (tuple(pull), tuple(end)), r0, 0.003, rings=4, faces=2)
+
 
 BEAR = dict(
     colours=["Mud", "Sable", "SaintBone"],
@@ -144,8 +162,8 @@ BEAR = dict(
         (-0.6, 0, 0.72, 0.15, 0.15, 0.15),           # the rump
         (-0.5, 0, 0.75, 0.27, 0.24, 0.26),           # the haunches
         (-0.25, 0, 0.74, 0.3, 0.26, 0.3),            # the belly, massive
-        (0.0, 0, 0.76, 0.3, 0.28, 0.32),
-        (0.22, 0, 0.82, 0.28, 0.3, 0.32),            # the hump over the shoulders
+        (0.0, 0, 0.76, 0.3, 0.3, 0.32),
+        (0.22, 0, 0.82, 0.28, 0.37, 0.32),           # the hump over the shoulders, high
         (0.38, 0, 0.8, 0.22, 0.22, 0.24)],           # the neck's root
     head=[
         (0.5, 0, 0.78, 0.19, 0.18, 0.19),            # the neck, thick and low
@@ -173,8 +191,8 @@ BEAR = dict(
     hind_paw=(-0.38, 0.22),
     paw_size=1.8,
     hind_paw_size=1.9,
-    ear=dict(at=(0.6, 0.1, 0.9), keep=0.05, thin=0.014, rings=[(0.6, 0.12, 0.935, 0.04, 0.006, 0.006)],
-             tip=(0.59, 0.13, 0.97), blunt=0.025),                 # small and round
+    ear=dict(at=(0.6, 0.1, 0.9), keep=0.07, thin=0.018, rings=[(0.6, 0.12, 0.93, 0.05, 0.007, 0.007)],
+             tip=(0.595, 0.13, 0.96), blunt=0.03),                 # small, round and broad: no stalk
 )
 
 
@@ -184,6 +202,8 @@ def make(spec, name, coll="Creatures"):
     tune(g.bm, tuning(__file__, name))
     return to_object(g.bm, name, spec["colours"], coll, clip=True)
 
+
+BEAR = scaled(BEAR, 1.35)                    # a big brown bear: the hump about 1.5 m
 
 ASSETS = {"Fox": lambda: make(FOX, "Fox"), "Boar": lambda: make(BOAR, "Boar"),
           "Stag": lambda: make(STAG, "Stag"), "Bear": lambda: make(BEAR, "Bear")}

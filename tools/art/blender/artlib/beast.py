@@ -193,6 +193,8 @@ def quadruped(spec, skin=0, claw=1, sides=12):
             paw(g, ankle, spec[at][0], spec[at][1], 1, skin, claw, size=size)
     for e in [spec["ear"]] + list(spec.get("growths", [])):
         grow_out(g, e, skin)
+    if spec.get("extra"):                          # anything built by code (antlers, a bristle ridge)
+        spec["extra"](g)
     symmetric(g.bm)
     return g
 
@@ -241,3 +243,56 @@ def scaled(spec, k):
             return {key: (v if key in ("colours", "feet", "mat", "toward", "up") else sc(v)) for key, v in x.items()}
         return x
     return sc(spec)
+
+
+# -- bones: antlers, horns, tusks, spines, ribs ---------------------------------------------------
+
+def curve(p0, p1, p2, r0, r1, n, ease=1.0):
+    """n + 1 rings (f, s, u, r, r, r) along the quadratic curve p0 -> p2 (pulled toward p1), evenly
+    spaced by length, the radius easing from r0 to r1 (ease > 1 keeps it thick longer). The last ring
+    is the curve's end: pass it as a tip."""
+    from mathutils import Vector
+    a, b, c = Vector(p0), Vector(p1), Vector(p2)
+    fine = [a * (1 - t) ** 2 + b * (2 * t * (1 - t)) + c * t * t for t in (i / 200 for i in range(201))]
+    run = [0.0]
+    for p, q in zip(fine, fine[1:]):
+        run.append(run[-1] + (q - p).length)
+    out, j = [], 0
+    for i in range(n + 1):
+        want = run[-1] * i / n
+        while j < 200 and run[j + 1] < want:
+            j += 1
+        p = fine[j]
+        t = i / n
+        r = r0 + (r1 - r0) * (t ** ease)
+        out.append((p.x, p.y, p.z, r, r, r))
+    return out
+
+
+def bone(g, mat, root, toward, across, path, r0, r1, rings=5, faces=2, ease=1.0, blunt=None):
+    """A bone grown out of a surface (a horn, a tine out of a beam, a spine, a rib, a tusk): its root
+    is a patch of `faces` edge-joined faces at `root` facing `toward` (2: a six-sided bone, 4: eight
+    sided), laid out `across` (f, s, u: the way the patch runs), so it is round and flares where it
+    leaves; it follows the curve `path` (p1, p2: the pull point and the end, from `root`), tapering
+    from r0 to r1. Returns the end ring's centre."""
+    from mathutils import Vector
+    R, A = Vector(root), Vector(across).normalized()
+    if faces == 4:
+        up = Vector(toward).normalized().cross(A).normalized()
+        d = 0.5
+        pts = [tuple(R + A * x * d * r0 * 2 + up * y * d * r0 * 2) for x in (-1, 1) for y in (-1, 1)]
+    else:
+        pts = [tuple(R - A * r0), tuple(R + A * r0)]
+    left = lambda f: min(v.co.x for v in f.verts) > 1e-4   # noqa: E731  a left-side bone never takes a face
+    patch = g.patch(pts, toward, allow=left)                  # on the centre line (the mirror would cut it)
+    p1, p2 = path
+    ring_list = curve(root, p1, p2, r0, r1, rings, ease)[1:]
+    tip = ring_list.pop()
+    # a low, wide collar just off the surface first (a burr, a pedicle): the root's wall stays short
+    # and never folds over between the patch's outline and the bone
+    lift = Vector(toward).normalized() * (r0 * 0.5)
+    first = Vector(ring_list[0][:3]) if ring_list else Vector(tip[:3])
+    c = R + lift + (first - R) * 0.15
+    ring_list.insert(0, (c.x, c.y, c.z, r0 * 1.2, r0 * 1.2, r0 * 1.2))
+    g.extrude(patch, ring_list, mat, tip=tip[:3], blunt=blunt if blunt is not None else max(0.002, r1 * 0.5))
+    return tip[:3]

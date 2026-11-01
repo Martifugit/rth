@@ -195,3 +195,21 @@ only a spec of numbers for one shared builder (StrayDog, Wolf): add a breed by a
   otherwise the first ring sweeps through the belly face beside it.
 - **Hooves** are a foot type (`feet: "hoof"`): a dark block widening to a flat sole, closed with quads.
 - **`beast.scaled(spec, k)`** makes a smaller animal from a larger one's spec (the fox from the dog).
+
+## Bones: antlers, horns, tusks, spines, ribs (learned on the stag)
+
+Everything bone-like is one tool, `beast.bone`, so a horn, a tine, a spine and a rib are built the same
+way. The first antlers (one inset face, straight segments, tines pinned on) were square, kinked and
+read as stuck on.
+- **Root in a patch of faces, never one inset face:** two edge-joined faces give a six-sided bone,
+  a 2x2 patch an eight-sided one. It is round, and it flares where it leaves the surface.
+- **A low, wide collar just off the surface first** (a burr, a pedicle): without it the wall between the
+  patch's outline and the first ring folds over.
+- **It follows a curve** (`beast.curve`: three control points, rings evenly spaced by length) and tapers
+  from root to tip (`ease` keeps it thick longer). No hand-placed rings, no kinks.
+- **A branch is a bone grown out of its parent:** its root on the parent's surface at a fraction of the
+  parent's curve, its patch laid along the parent (so it leaves round), its way bent away from the
+  parent's line. A tine, a spine on a horn, a rib off a spine: the same call one level down.
+- **A left-side bone never takes a face on the centre line** (`Grow.patch(..., allow=)`): the mirror
+  would cut it into triangles.
+- **Two growths never share a root area** (the stag's ear and antler fought for the same faces).

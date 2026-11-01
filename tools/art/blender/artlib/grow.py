@@ -100,8 +100,9 @@ class Grow:
 
     # -- picking faces -----------------------------------------------------------------------------
 
-    def face(self, point, toward=None):
-        """The face nearest a point (f, s, u), turned toward a direction (f, s, u) if given."""
+    def face(self, point, toward=None, allow=None):
+        """The face nearest a point (f, s, u), turned toward a direction (f, s, u) if given, among the
+        faces `allow` accepts (all, by default)."""
         p = P(*point)
         want = P(*toward).normalized() if toward else None
         best, score = None, 1e9
@@ -112,6 +113,8 @@ class Grow:
             d = (f.calc_center_median() - p).length
             if want is not None and f.normal.dot(want) < 0.2:
                 continue
+            if allow is not None and not allow(f):
+                continue
             if d < score:
                 best, score = f, d
         return best
@@ -121,15 +124,16 @@ class Grow:
         (two faces side by side start a six-sided limb, not a four-sided plank)."""
         return [self.face(p, toward) for p in points]
 
-    def patch(self, points, toward=None):
+    def patch(self, points, toward=None, allow=None):
         """A region of faces to grow a limb from that is sure to hang together: the face nearest the
         first point, then for each further point the face sharing an edge with the region that is
         nearest it. (Faces picked one by one can meet only at a corner, and a region like that
         extrudes as two prongs: a split leg, a wing arm in two.)"""
-        region = [self.face(points[0], toward)]
+        region = [self.face(points[0], toward, allow)]
         for p in points[1:]:
             q = P(*p)
-            near = {nf for f in region for e in f.edges for nf in e.link_faces if nf not in region}
+            near = {nf for f in region for e in f.edges for nf in e.link_faces
+                    if nf not in region and (allow is None or allow(nf))}
             region.append(min(near, key=lambda f: (f.calc_center_median() - q).length))
         return region
 
