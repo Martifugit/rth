@@ -347,22 +347,23 @@ def chunk(bm, frame, d0, d1, theta0, theta1, thickness, shape, profile=CHUNK, do
     across) is laid in the part's own coordinates, distance along the axis from d0 to d1 and angle round
     it from theta0 to theta1, and every ring point is cast out from the axis there, so the plate curls
     round the body however far it reaches. Many rings (`profile`, scale and height) keep its middle on
-    the surface. dome: extra height toward the middle; ridge: a keel along its length; facets: a stepped
+    the surface; the underside is a sunken skin on the same rings (a flat closing across a plate that
+    wraps the body would cut through it). dome: extra height toward the middle; ridge: a keel along its length; facets: a stepped
     top; lip_back: its back edge lifted. A chunk symmetric about angle 0 or pi splits for the Mirror."""
     from artlib.plates import split_ladder
     dc, hd = (d0 + d1) / 2, (d1 - d0) / 2
     tc, ht = (theta0 + theta1) / 2, (theta1 - theta0) / 2
     n = len(shape)
     prev_rad = None
-    rings = []
-    for sc, h in profile:
-        ring, rads = [], []
+    rings, under = [], []
+    for ri, (sc, h) in enumerate(profile):
+        ring, rads, low = [], [], []
         for k, (a, b) in enumerate(shape):
             d = dc + a * sc * hd
             th = tc + b * sc * ht
             q, t, r, side = frame.axis.at(d)
             dirn = r * math.cos(th) + side * math.sin(th)
-            hit = frame.bvh.ray_cast(q, dirn, 2.0)[0]
+            hit = frame.bvh.ray_cast(q, dirn, 2.0 * (frame.girth(d, th) + 1.0))[0]
             rad = (hit - q).length if hit is not None else None
             if prev_rad is not None and (rad is None or rad > 1.5 * prev_rad[k]):
                 rad = prev_rad[k]                  # a ray that slips onto another part: keep the ring outside's
@@ -376,11 +377,18 @@ def chunk(bm, frame, d0, d1, theta0, theta1, thickness, shape, profile=CHUNK, do
             lift += lip_back * max(0.0, -a) ** 1.5
             off = (h + lift) * thickness
             ring.append(bm.verts.new(q + dirn * (rads[-1] + off)))
+            if ri > 0:                             # the underside: a sunken skin following the same rings
+                low.append(bm.verts.new(q + dirn * (rads[-1] - 0.6 * thickness)))
         prev_rad = rads
         rings.append(ring)
+        if ri > 0:
+            under.append(low)
     for r0, r1 in zip(rings, rings[1:]):
         for k in range(n):
             bm.faces.new((r0[k], r0[(k + 1) % n], r1[(k + 1) % n], r1[k])).material_index = mat
-    split_ladder(bm, rings[0], mat, flip=True)
+    for r0, r1 in zip([rings[0]] + under, under):  # the underside, from the rim inward, facing in
+        for k in range(n):
+            bm.faces.new((r1[k], r1[(k + 1) % n], r0[(k + 1) % n], r0[k])).material_index = mat
+    split_ladder(bm, under[-1], mat, flip=True)
     split_ladder(bm, rings[-1], mat)
     return rings

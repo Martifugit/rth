@@ -323,3 +323,19 @@ Still open:
 - the chunk's middle closes as a fan of long faces (a visible star on the limb guards); a grid closing
   would read cleaner;
 - a big plate is one surface: it can't bend at a joint (neck and tail plates are short for that reason).
+
+## A boss: the Moonfall Beast (2026-11-01, `assets/creatures/common/moonfall_beast.py`)
+
+A world boss built from everything above: a grown body, crater-rock chunks, crystal clusters. Body
+and overlay end all quads and closed, the body with no crossings; the overlay's visible collisions are
+crystals bursting through plates, by design.
+- **Scale breaks fixed numbers.** Tools tuned on drake-sized parts failed at three times the size: the
+  foot's pad must sit a scaled step ahead of the ankle (0.22 x size), a chunk's ray limit must grow
+  with the part's girth, and a leg ring may be no wider along the body than the patch it leaves from.
+- **A chunk that wraps the body needs a sunken underside skin** on the same rings: closing it with flat
+  faces across its rim cut through the body and the plate's own walls (57 crossings, then none).
+- **Crystals** (`crystal`, `cluster` in the beast's script): six-sided prisms sunk in the body, a short
+  faceted point closed with quads, gathered in clusters leaning out and back; on the centre line a
+  crystal has corners on the middle plane so the Mirror splits it. They belong in the kit next.
+- **A boss's head carries the menace:** the first (a long pointed snout) read as a rat; a massive blunt
+  skull lower than the shoulders, under a helm, with crystal tusks from the jaw, read as a boss.
