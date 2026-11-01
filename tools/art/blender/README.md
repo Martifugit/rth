@@ -93,6 +93,8 @@ Learned by making the well with the owner. Add to this list as more props are ma
 - **Do** centre hanging and symmetric details (rope, bucket, sign) on what carries them, unless
   there is a reason not to.
 
+**Creatures:** read `creatures.md` first: how to grow one, learned on the dragon.
+
 **Simplicity (learned on the fen rat)**
 - **Do** draw the silhouette, not the anatomy. The reference's rat is one hunched wedge, four
   spikes, a stick tail and two ear spikes. Find the 3–5 shapes that say "rat" and stop there.

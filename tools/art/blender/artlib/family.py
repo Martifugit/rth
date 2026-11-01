@@ -17,10 +17,16 @@ GAP = 0.6                                       # between members in the row
 
 
 def where(script):
-    """(layer, kind, style) of a family script, from its path."""
+    """(layer, kind, style) of a family script, from its path; a one-off
+    (<layer>/<kind>/<style>/<name>.py: a creature, a landmark) shares its style's folder."""
     rel = os.path.relpath(os.path.abspath(script), ROOT).replace("\\", "/")
-    layer, kind, style = rel[:-3].split("/")
+    layer, kind, style = rel[:-3].split("/")[:3]
     return layer, kind, style
+
+
+def one_off(script):
+    rel = os.path.relpath(os.path.abspath(script), ROOT).replace("\\", "/")
+    return rel.count("/") == 3
 
 
 def folder(script):
@@ -34,19 +40,25 @@ def build(name, builder):
     return ob
 
 
+def parts(ob):
+    """A model and the parts parented under it (a creature built in parts): exported and counted together."""
+    return [ob] + [c for c in ob.children_recursive if c.type == "MESH"]
+
+
 def export(script, assets):
-    """Every member to its own FBX; models the family no longer makes are removed from its folder."""
+    """Every member to its own FBX; models the family no longer makes are removed from its folder
+    (not for a one-off, which shares the folder with the style's other one-offs)."""
     rel = folder(script)
     path = os.path.join(A.REPO, "client", "Assets", *rel.split("/"))
-    for f in os.listdir(path) if os.path.isdir(path) else ():
+    for f in os.listdir(path) if os.path.isdir(path) and not one_off(script) else ():
         if f.endswith(".fbx") and f[:-4] not in assets:
             os.remove(os.path.join(path, f))
     out = {}
     for name, builder in assets.items():
         A.reset()
         ob = build(name, builder)
-        A.export([ob], "%s/%s.fbx" % (rel, name))
-        out[name] = A.report([ob])["triangles"]
+        A.export(parts(ob), "%s/%s.fbx" % (rel, name))
+        out[name] = A.report(parts(ob))["triangles"]
     return out
 
 
@@ -61,8 +73,8 @@ def show(script, assets, save=False):
         x += -min(xs)
         ob.location.x += x
         x += max(xs) + GAP
-        out[name] = A.report([ob])["triangles"]
-    A.preview_rig(focus=(x / 2, 0.0, 1.0), distance=max(8.0, x * 0.9), pitch=35, yaw=-15, ground=0,
+        out[name] = A.report(parts(ob))["triangles"]
+    A.preview_rig(focus=(x / 2, 0.0, 1.0), distance=max(8.0, x * 0.9), pitch=35, yaw=-15, ground=int(x) + 3,
                   human=True, human_at=(-1.0, 0.0))
     for area in bpy.context.screen.areas if bpy.context.screen else ():
         if area.type == "VIEW_3D":
