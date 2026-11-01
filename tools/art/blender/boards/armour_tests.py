@@ -21,8 +21,9 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
-for _m in [m for m in sys.modules if m == "rth_art" or m.split(".")[0] in ("artlib", "assets", "boards")]:
-    del sys.modules[_m]
+if not __name__.startswith("boards."):            # run directly (not imported): pick up edits to the kits
+    for _m in [m for m in sys.modules if m == "rth_art" or m.split(".")[0] in ("artlib", "assets", "boards")]:
+        del sys.modules[_m]
 
 import bmesh  # noqa: E402
 from mathutils.bvhtree import BVHTree  # noqa: E402

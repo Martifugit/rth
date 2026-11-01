@@ -302,3 +302,24 @@ Still open:
 - plates are one colour and similar in size; a design language (which plates are larger, where the
   armour stops, colour bands) is the next layer, built on these tools;
 - joints aren't segmented: the plates bend with the skin; real armour would split at the joint.
+
+## Large chunks (2026-11-01: `armour.chunk`, `boards/chunk_tests.py`)
+
+One plate covering a large part of the body: a carapace from shoulders to hips and down both flanks, a
+neck plate following its curve, a helm, long tail plates, limb guards.
+- **Lay a big plate in the body's coordinates, not a flat plane** (`armour.chunk`): its outline runs in
+  distance along the part's axis and angle round it, and every ring point is cast out from the axis, so
+  it curls round the body however far it reaches. A flat slab the same size (C0) sits on the back as a
+  stiff lid that can't come down the flanks.
+- **Many rings** (`armour.CHUNK`, nine) keep a big plate's middle on the surface; few rings let the body
+  push through its interior.
+- **A chunk on a limb starts where the limb leaves the body.** Starting where the limb's axis still runs
+  inside the torso folds it (101 crossings, then none).
+- Results: carapace, neck, helm, tail plates and limb guards all clean; the whole armour in eight pieces.
+
+Still open:
+- **one chunk spanning two parts** (a pauldron from the back down onto the arm): a chunk follows one axis;
+  spanning needs a blend between two axes across the plate;
+- the chunk's middle closes as a fan of long faces (a visible star on the limb guards); a grid closing
+  would read cleaner;
+- a big plate is one surface: it can't bend at a joint (neck and tail plates are short for that reason).

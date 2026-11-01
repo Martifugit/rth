@@ -333,3 +333,54 @@ def smooth(x, a, b):
     """0 before a, 1 after b, a smooth step between."""
     t = max(0.0, min(1.0, (x - a) / (b - a)))
     return t * t * (3 - 2 * t)
+
+
+# -- chunks: large plates laid in the body's own coordinates ---------------------------------------
+
+CHUNK = [(1.0, -0.6), (0.97, 0.45), (0.9, 0.8), (0.8, 0.95), (0.66, 1.0), (0.5, 1.0), (0.34, 1.0), (0.18, 1.0),
+         (0.06, 1.0)]
+
+
+def chunk(bm, frame, d0, d1, theta0, theta1, thickness, shape, profile=CHUNK, dome=0.0, ridge=0.0,
+          facets=0, facet=0.0, lip_back=0.0, mat=0):
+    """A large plate covering a stretch of a part: its outline (`shape`, plates.outline: a along, b
+    across) is laid in the part's own coordinates, distance along the axis from d0 to d1 and angle round
+    it from theta0 to theta1, and every ring point is cast out from the axis there, so the plate curls
+    round the body however far it reaches. Many rings (`profile`, scale and height) keep its middle on
+    the surface. dome: extra height toward the middle; ridge: a keel along its length; facets: a stepped
+    top; lip_back: its back edge lifted. A chunk symmetric about angle 0 or pi splits for the Mirror."""
+    from artlib.plates import split_ladder
+    dc, hd = (d0 + d1) / 2, (d1 - d0) / 2
+    tc, ht = (theta0 + theta1) / 2, (theta1 - theta0) / 2
+    n = len(shape)
+    prev_rad = None
+    rings = []
+    for sc, h in profile:
+        ring, rads = [], []
+        for k, (a, b) in enumerate(shape):
+            d = dc + a * sc * hd
+            th = tc + b * sc * ht
+            q, t, r, side = frame.axis.at(d)
+            dirn = r * math.cos(th) + side * math.sin(th)
+            hit = frame.bvh.ray_cast(q, dirn, 2.0)[0]
+            rad = (hit - q).length if hit is not None else None
+            if prev_rad is not None and (rad is None or rad > 1.5 * prev_rad[k]):
+                rad = prev_rad[k]                  # a ray that slips onto another part: keep the ring outside's
+            rads.append(rad if rad is not None else 0.1)
+            lift = 0.0
+            if sc < 0.99:
+                inner = 1 - sc
+                lift = dome * inner + ridge * (1 - abs(b)) * inner
+                if facets:
+                    lift += facet * math.cos(facets * math.atan2(b, a)) * min(1.0, inner * 3)
+            lift += lip_back * max(0.0, -a) ** 1.5
+            off = (h + lift) * thickness
+            ring.append(bm.verts.new(q + dirn * (rads[-1] + off)))
+        prev_rad = rads
+        rings.append(ring)
+    for r0, r1 in zip(rings, rings[1:]):
+        for k in range(n):
+            bm.faces.new((r0[k], r0[(k + 1) % n], r1[(k + 1) % n], r1[k])).material_index = mat
+    split_ladder(bm, rings[0], mat, flip=True)
+    split_ladder(bm, rings[-1], mat)
+    return rings
