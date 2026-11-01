@@ -163,7 +163,8 @@ for the current list.
 
 ## Mammals (first pass, the grey wolf)
 
-`assets/creatures/common/grey_wolf.py`, built in three rounds, all quads and closed from the first.
+`assets/creatures/common/canine.py`, built in three rounds, all quads and closed from the first. A breed is
+only a spec of numbers for one shared builder (StrayDog, Wolf): add a breed by adding a spec.
 - **The masses that make a mammal, as numbers:** a level back (haunch top = withers), a deep but
   narrow keeled chest (0.3 m across, 0.4 m deep for a wolf), a tucked waist, a thick neck (wider than
   the head's back: a ruff) carrying the head just above the back, and a defined stop where the brow
@@ -174,3 +175,8 @@ for the current list.
   thigh, the stifle forward, the hock back, a long foot. Bend-tested both ways at the elbow and hock.
 - **Keep the torso short.** The first round's body was a dachshund's; a wolf's nose-to-rump is about
   1.8x its withers.
+- **Menace is posture and mass, not new parts:** the wolf differs from the stray only in numbers: a
+  broader, deeper chest, hackles (taller rings over the neck and withers), the head carried low and
+  level with the back, a broad skull and heavy blunt muzzle, ears pricked forward, thick legs on big
+  paws, a thick tail held low and straight. The stray reads friendly because it is slender and carries
+  its head up.
