@@ -1,6 +1,6 @@
 r"""Canines (2026-11-01): one builder, a spec of numbers per breed, built by tools/art/blender/creatures.md.
 
-Every canine is the same construction: one closed mesh grown from a body tube; the neck and head out
+Every canine is the same construction (beast.quadruped): one closed mesh grown from a body tube; the neck and head out
 of its front, the tail out of its back, the legs from 2x2 patches into four-toed paws (beast.paw), the
 ears out of the skull. A breed is only its numbers: the rings of the torso, head and tail, the legs'
 joints, the ears, the paws.
@@ -28,8 +28,7 @@ if __name__ in ("__main__", "<run_path>"):          # run as a script: pick up e
         del sys.modules[_m]
 
 from artlib import family  # noqa: E402
-from artlib.beast import keep_left, paw, symmetric, to_object, tune, tuning  # noqa: E402
-from artlib.grow import Grow  # noqa: E402
+from artlib.beast import keep_left, quadruped, to_object, tune, tuning  # noqa: E402
 
 FUR, DARK = range(2)
 
@@ -75,7 +74,7 @@ STRAY_DOG = dict(
           (-0.37, 0.14, 0.06, 0.028, 0.028, 0.028)],  # the foot, down and a little forward
     hind_paw=(-0.34, 0.14),
     paw_size=1.0,
-    ear=dict(at=(0.69, 0.055, 1.0), keep=0.05, ring=(0.685, 0.07, 1.035, 0.025, 0.009, 0.009),
+    ear=dict(at=(0.69, 0.055, 1.0), keep=0.05, rings=[(0.685, 0.07, 1.035, 0.025, 0.009, 0.009)],
              tip=(0.68, 0.08, 1.085)),
 )
 
@@ -121,33 +120,13 @@ WOLF = dict(
           (-0.39, 0.17, 0.065, 0.036, 0.034, 0.034)],
     hind_paw=(-0.35, 0.17),
     paw_size=1.25,
-    ear=dict(at=(0.75, 0.065, 0.86), keep=0.065, ring=(0.765, 0.085, 0.9, 0.032, 0.011, 0.011),
+    ear=dict(at=(0.75, 0.065, 0.86), keep=0.065, rings=[(0.765, 0.085, 0.9, 0.032, 0.011, 0.011)],
              tip=(0.8, 0.095, 0.96)),                # big, pricked forward
 )
 
 
-def body(spec):
-    g = Grow(sides=12)
-    torso = g.tube(spec["torso"], FUR)
-    nose, blunt = spec["nose"]
-    g.extrude(torso.caps["end"], spec["head"], FUR, tip=nose, blunt=blunt)
-    tip, tblunt = spec["tail_tip"]
-    g.extrude(torso.caps["start"], spec["tail"], FUR, tip=tip, blunt=tblunt)
-    # the left side only: symmetric() copies it over
-    for patch, rings, at, fp in (("fore_patch", "fore", "fore_paw", (0, 0.5, -1)),
-                                 ("hind_patch", "hind", "hind_paw", (0, 0.6, -1))):
-        leg = g.patch(spec[patch], fp)
-        ankle = g.extrude(leg, spec[rings], FUR)
-        paw(g, ankle, spec[at][0], spec[at][1], 1, FUR, DARK, size=spec["paw_size"])
-    e = spec["ear"]
-    face = g.inset(g.face(e["at"], (0.2, 0.4, 1)), e["keep"])
-    g.extrude([face], [e["ring"]], FUR, tip=e["tip"], blunt=0.004)
-    symmetric(g.bm)
-    return g
-
-
 def make(spec, name, coll="Creatures"):
-    g = body(spec)
+    g = quadruped(spec, FUR, DARK)
     keep_left(g.bm)
     tune(g.bm, tuning(__file__, name))
     return to_object(g.bm, name, spec["colours"], coll, clip=True)

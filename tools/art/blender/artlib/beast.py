@@ -164,3 +164,29 @@ def paw(g, ankle, f, w, s, mat, claw=None, size=1.0, toe=0.03):
 def Grow_boundary(faces):
     from artlib.grow import Grow
     return Grow.boundary(faces)
+
+
+def quadruped(spec, skin=0, claw=1, sides=12):
+    """A four-legged animal from a spec of numbers (the canines, the rat, the hare): one closed mesh
+    grown from a body tube (`torso` rings); the neck and head out of its front (`head`, ending at
+    `nose`), the tail out of its back (`tail`, ending at `tail_tip`), each leg from a 2x2 patch of the
+    body's faces (`fore_patch`, `hind_patch`) through its rings (`fore`, `hind`) into a four-toed paw
+    (`fore_paw`, `hind_paw`, `paw_size`), the ears out of the skull (`ear`: at, keep, rings, tip, blunt).
+    Side parts are grown on the left only, then the mesh is made symmetric. Returns the Grow."""
+    from artlib.grow import Grow
+    g = Grow(sides=sides)
+    torso = g.tube(spec["torso"], skin)
+    nose, blunt = spec["nose"]
+    g.extrude(torso.caps["end"], spec["head"], skin, tip=nose, blunt=blunt)
+    tip, tblunt = spec["tail_tip"]
+    g.extrude(torso.caps["start"], spec["tail"], skin, tip=tip, blunt=tblunt)
+    for patch, rings, at, way in (("fore_patch", "fore", "fore_paw", (0, 0.5, -1)),
+                                  ("hind_patch", "hind", "hind_paw", (0, 0.6, -1))):
+        leg = g.patch(spec[patch], spec.get(patch + "_toward", way))
+        ankle = g.extrude(leg, spec[rings], skin)
+        paw(g, ankle, spec[at][0], spec[at][1], 1, skin, claw, size=spec.get(at + "_size", spec["paw_size"]))
+    e = spec["ear"]
+    face = g.inset(g.face(e["at"], e.get("toward", (0.2, 0.4, 1))), e["keep"])
+    g.extrude([face], e["rings"], skin, tip=e["tip"], blunt=e.get("blunt", 0.004))
+    symmetric(g.bm)
+    return g

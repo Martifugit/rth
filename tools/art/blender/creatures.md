@@ -180,3 +180,10 @@ only a spec of numbers for one shared builder (StrayDog, Wolf): add a breed by a
   level with the back, a broad skull and heavy blunt muzzle, ears pricked forward, thick legs on big
   paws, a thick tail held low and straight. The stray reads friendly because it is slender and carries
   its head up.
+- **Hairpin folds** (a sitting hare's leg: forward to the stifle, back to the hock, forward again):
+  a turn of about 150 degrees needs at least two rings round it, spaced more than the limb's radius,
+  or the inside of the bend crosses itself. If the fold is too tight for that, change the
+  construction: on the hare the thigh became part of the round haunch (a bigger torso ring) and the
+  leg is only the shin and the long foot, one rounded hairpin at the hock.
+- **`beast.quadruped(spec)`** builds any four-legged animal from a spec of numbers (the canines, the
+  rat, the hare): a new animal is a new spec, checked by the crossing test, not new code.
