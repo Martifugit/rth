@@ -73,6 +73,20 @@ namespace Rth.Client.Editor
             Directory.CreateDirectory(MaterialDir);
             string path = MaterialDir + "/" + name + ".mat";
             var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (Palette.IsSoul(name))
+            {
+                // The stuff of the dead: glowing and see-through (Soul.shader), whatever model wears it.
+                Shader soul = Shader.Find("Rth/Soul");
+                if (material == null)
+                {
+                    material = new Material(soul);
+                    AssetDatabase.CreateAsset(material, path);
+                }
+                material.shader = soul;
+                material.SetColor("_BaseColor", Palette.TryParse(name, out Color glow) ? glow : Color.white);
+                EditorUtility.SetDirty(material);
+                return material;
+            }
             if (material == null)
             {
                 material = new Material(Shader.Find("Universal Render Pipeline/Lit"));

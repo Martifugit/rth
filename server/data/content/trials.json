@@ -1,0 +1,20 @@
+[
+  {
+    "id": "long_way",
+    "title": "The long way back",
+    "regions": [ "realm_long_way" ],
+    "gate": "soul_gate",
+    "start": { "plane": 0, "x": 8208, "y": 8189 },
+    "exitTo": null,
+    "conditions": [ { "type": "ferryHolds" } ],
+    "lockedMessage": "The ferryman holds nothing of yours. There's nothing at the end of the way worth the walk.",
+    "emptyHanded": true,
+    "walkOnly": true,
+    "emptyHandedMessage": "The way back takes nothing with you. Leave it in the grave chest first.",
+    "drain": { "percent": 0.7, "everyTicks": 1 },
+    "status": "the_cold",
+    "startMessage": "You step between the stones. The cold comes up through your feet.",
+    "failMessage": "The way back lets go of you.",
+    "winMessage": "You walked the long way back in {time}. (Best: {best}.)"
+  }
+]

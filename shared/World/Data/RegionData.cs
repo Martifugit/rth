@@ -154,6 +154,8 @@ namespace Rth.Shared.World.Data
         /// objects block their own tile unless this says otherwise; [0, 0, 0, 0] blocks nothing.
         /// </summary>
         public int[]? Footprint;
+        /// <summary>Drawn by nothing: only its markers (a hidden trigger's object, a creature with no stand-in).</summary>
+        public bool? Hidden;
         /// <summary>A model to draw (a prefab under Assets/), instead of or as well as its parts; for a fence, one span centred on its tile.</summary>
         public string? Model;
         /// <summary>
@@ -204,6 +206,10 @@ namespace Rth.Shared.World.Data
         public string? Npc;
         /// <summary>Tiles it may wander from home; null for the creature's default.</summary>
         public int? Wander;
+        /// <summary>For a creature: tiles it walks between, [x, y] each (absolute, like <see cref="At"/>).</summary>
+        public List<int[]>? Patrol;
+        /// <summary>For a patrol: "loop" (default) or "bounce".</summary>
+        public string? PatrolMode;
 
         [JsonIgnore] public int X => At != null && At.Length > 0 ? At[0] : 0;
         [JsonIgnore] public int Y => At != null && At.Length > 1 ? At[1] : 0;
@@ -213,6 +219,7 @@ namespace Rth.Shared.World.Data
         {
             if (dx == 0 && dy == 0) return;
             if (At != null) At = new[] { At[0] + dx, At[1] + dy };
+            if (Patrol != null) Patrol = Patrol.ConvertAll(p => new[] { p[0] + dx, p[1] + dy });
             if (Rect != null) Rect = new[] { Rect[0] + dx, Rect[1] + dy, Rect[2] + dx, Rect[3] + dy };
             if (From != null) From = new[] { From[0] + dx, From[1] + dy };
             if (To != null) To = new[] { To[0] + dx, To[1] + dy };

@@ -77,6 +77,7 @@ namespace Rth.Server.Game
             new GroundItemSystem(),
             new LootSystem(),
             new ObjectSystem(placements.Objects),
+            new TriggerSystem(),
             new ClimbSystem(),
             new DoorSystem(),
             new ReligionSystem(),
@@ -88,6 +89,7 @@ namespace Rth.Server.Game
             new DialogueSystem(),
             new BankSystem(),
             new FerrySystem(),
+            new TrialSystem(),
             new ShopSystem(),
             new PointsSystem(),
             new TaskSystem(),
@@ -274,6 +276,7 @@ namespace Rth.Server.Game
         /// <summary>Walks up to one tick's worth of steps; <paramref name="stopWhen"/> is checked before each step.</summary>
         public void ProcessMovement(Entity entity, Func<bool>? stopWhen = null)
         {
+            if (entity.RootedUntilTick > CurrentTick) return;
             int steps = entity.Running ? 2 : 1;
             for (int i = 0; i < steps && entity.Waypoints.Count > 0; i++)
             {

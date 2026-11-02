@@ -1889,5 +1889,39 @@
     "name": "Bank chest",
     "examine": "An iron-bound chest with the Synod's seal on the lock. Whatever you bank anywhere is in here too.",
     "actions": [ { "id": "bank", "label": "Bank" } ]
+  },
+  {
+    "id": "soul_gate",
+    "name": "Leaning stones",
+    "examine": "Two pale stones lean together over the start of a causeway. Beyond them the dark goes on a long way.",
+    "actions": [ { "id": "trial", "label": "Walk the long way" } ]
+  },
+  {
+    "id": "soul_lantern",
+    "name": "Soul lantern",
+    "examine": "Something pale burns in an iron cage on a drowned post. It gives a little warmth, once.",
+    "depletedModel": "Art/Assets/Lights/Dead/SoulLanternSpent",
+    "actions": [
+      {
+        "id": "kindle", "label": "Warm your hands", "animation": "work",
+        "effects": [ { "op": "healBloodPercent", "amount": 35 } ],
+        "oncePer": "trial",
+        "usedMessage": "The lantern has given you what warmth it had."
+      }
+    ]
+  },
+  {
+    "id": "grasping_hands",
+    "name": "Grasping hands",
+    "examine": "",
+    "trigger": {
+      "hidden": true,
+      "holdTicks": 4,
+      "damagePercent": 8,
+      "rearmTicks": 30,
+      "showTicks": 5,
+      "message": "Hands come up out of the ash and hold you fast.",
+      "model": "Art/Assets/Dressing/Dead/GraspingHands"
+    }
   }
 ]

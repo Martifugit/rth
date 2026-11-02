@@ -67,6 +67,10 @@
    "texture": "Beam",
    "tiles": 1
   },
+  "DrownedWood": {
+   "texture": "Beam",
+   "tiles": 1
+  },
   "Fence": {
    "texture": "Beam",
    "tiles": 1

@@ -9,6 +9,7 @@
   "music": "",
   "atmosphere": { "sunIntensity": 0.02, "sun": "#8C9AB8", "ambientSky": "#262838", "ambientEquator": "#16171E", "ambientGround": "#050506", "fog": "#020203", "fogStart": 18, "fogEnd": 45 },
   "materials": {
+    "BonePale": "#B8B2A2",
     "DeadAsh": "#2E2C2B",
     "DeadBoat": "#2B221A",
     "DeadChest": "#1C1714",
@@ -25,7 +26,10 @@
     { "id": "patch-landing-west", "kind": "patch", "rect": [8198, 8202, 8200, 8209], "material": "DeadAsh" },
     { "id": "patch-landing-east", "kind": "patch", "rect": [8216, 8200, 8219, 8206], "material": "DeadAsh" },
     { "id": "patch-jetty", "kind": "patch", "rect": [8207, 8212, 8209, 8221], "material": "DeadPlank" },
-    { "id": "water-1", "kind": "water", "rect": [8192, 8192, 8224, 8196], "material": "DeadWater" },
+    { "id": "water-1", "kind": "water", "rect": [8192, 8192, 8206, 8196], "material": "DeadWater" },
+    { "id": "water-1b", "kind": "water", "rect": [8211, 8192, 8224, 8196], "material": "DeadWater" },
+    { "id": "water-1c", "kind": "water", "rect": [8206, 8192, 8211, 8193], "material": "DeadWater" },
+    { "id": "patch-gate-spit", "kind": "patch", "rect": [8206, 8193, 8211, 8196], "material": "DeadAsh" },
     { "id": "water-2", "kind": "water", "rect": [8192, 8196, 8202, 8198], "material": "DeadWater" },
     { "id": "water-3", "kind": "water", "rect": [8212, 8196, 8224, 8198], "material": "DeadWater" },
     { "id": "water-4", "kind": "water", "rect": [8192, 8198, 8200, 8202], "material": "DeadWater" },
@@ -75,6 +79,7 @@
       { "shape": "box", "name": "Leg", "at": [-0.25, 0.2, 0], "size": [0.12, 0.4, 0.4], "material": "DeadWetWood" },
       { "shape": "box", "name": "Leg", "at": [1.25, 0.2, 0], "size": [0.12, 0.4, 0.4], "material": "DeadWetWood" }
     ] },
+    { "id": "prop-soul-gate", "kind": "prop", "at": [8208, 8193], "object": "soul_gate", "footprint": [-1, 0, 2, 1], "model": "Assets/Resources/Art/Assets/Ways/Dead/SoulGate.fbx" },
     { "id": "prop-grave-chest", "kind": "prop", "at": [8203, 8205], "rot": 90, "object": "grave_chest", "parts": [
       { "shape": "box", "name": "Chest", "at": [0, 0.3, 0], "size": [0.95, 0.6, 0.65], "material": "DeadChest" },
       { "shape": "box", "name": "Lid", "at": [0, 0.66, 0], "size": [1, 0.12, 0.7], "material": "DeadChest" },

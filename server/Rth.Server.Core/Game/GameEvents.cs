@@ -40,6 +40,49 @@ namespace Rth.Server.Game
         public Entity? Killer { get; }
     }
 
+    /// <summary>A player began a trial (trials.json).</summary>
+    public sealed class TrialStarted
+    {
+        public TrialStarted(Player player, string trial)
+        {
+            Player = player;
+            Trial = trial;
+        }
+
+        public Player Player { get; }
+        public string Trial { get; }
+    }
+
+    /// <summary>A player's run at a trial ended: won, or lost (died, left, logged out).</summary>
+    public sealed class TrialEnded
+    {
+        public TrialEnded(Player player, string trial, bool won, int ticks)
+        {
+            Player = player;
+            Trial = trial;
+            Won = won;
+            Ticks = ticks;
+        }
+
+        public Player Player { get; }
+        public string Trial { get; }
+        public bool Won { get; }
+        public int Ticks { get; }
+    }
+
+    /// <summary>A tile trigger (grasping hands, a snare) sprang on a player.</summary>
+    public sealed class TriggerSprung
+    {
+        public TriggerSprung(Player player, Rth.Shared.World.PlacedObject trigger)
+        {
+            Player = player;
+            Trigger = trigger;
+        }
+
+        public Player Player { get; }
+        public Rth.Shared.World.PlacedObject Trigger { get; }
+    }
+
     /// <summary>A dead player has woken (in the realm of the dead): back on their feet, humours restored.</summary>
     public sealed class PlayerRespawned
     {

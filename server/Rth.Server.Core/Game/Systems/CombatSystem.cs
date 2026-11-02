@@ -600,8 +600,10 @@ namespace Rth.Server.Game
                 npc.TargetId = source.Id;
                 npc.ChaseGoal = null;
             }
-            else if (target is Player player && player.Interaction == null && player.Waypoints.Count == 0)
+            else if (target is Player player && player.Interaction == null && player.Waypoints.Count == 0
+                     && !(source is Npc { Def: { Attackable: false } }))
             {
+                // (Nobody strikes back at something that can't be fought: a shade, a hazard.)
                 StartAttack(player, source);
             }
         }
@@ -691,7 +693,7 @@ namespace Rth.Server.Game
             // Out of combat the body settles: bile drifts back, phlegm fades, blood returns.
             SettleBile(player, rules.BileDecayPerTick);
             AddPhlegm(player, -rules.PhlegmDecayPerTick);
-            if (player.Blood < player.MaxBlood)
+            if (player.Blood < player.MaxBlood && player.BloodRegenHeldUntilTick <= World.CurrentTick)
             {
                 int regen = Math.Max(1, (int)Math.Round(player.MaxBlood * rules.BloodRegenPercentPerTick / 100.0));
                 player.Blood = Math.Min(player.MaxBlood, player.Blood + regen);

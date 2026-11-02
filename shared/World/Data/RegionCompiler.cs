@@ -208,7 +208,17 @@ namespace Rth.Shared.World.Data
                     break;
                 case PieceKind.Npc:
                     NeedPair(piece.At, "at");
-                    result.Npcs.Add(new NpcEntry { Npc = Need(piece.Npc, "npc"), Plane = plane, X = piece.X, Y = piece.Y, Wander = piece.Wander ?? -1 });
+                    if (piece.Patrol != null)
+                        foreach (int[] step in piece.Patrol)
+                            if (step == null || step.Length != 2) throw new PieceException("a patrol is a list of [x, y] tiles.");
+                    if (piece.PatrolMode != null && piece.PatrolMode != "loop" && piece.PatrolMode != "bounce")
+                        throw new PieceException("patrolMode is \"loop\" or \"bounce\".");
+                    result.Npcs.Add(new NpcEntry
+                    {
+                        Npc = Need(piece.Npc, "npc"), Plane = plane, X = piece.X, Y = piece.Y, Wander = piece.Wander ?? -1,
+                        Patrol = piece.Patrol != null && piece.Patrol.Count > 0 ? piece.Patrol.Select(p => new[] { p[0], p[1] }).ToList() : null,
+                        PatrolMode = piece.Patrol != null && piece.Patrol.Count > 0 && piece.PatrolMode != "loop" ? piece.PatrolMode : null,
+                    });
                     break;
                 case PieceKind.Spawn:
                     NeedPair(piece.At, "at");
@@ -447,8 +457,15 @@ namespace Rth.Shared.World.Data
                   .Append("\", \"plane\": ").Append(n.Plane)
                   .Append(", \"x\": ").Append(n.X)
                   .Append(", \"y\": ").Append(n.Y)
-                  .Append(", \"wander\": ").Append(n.Wander)
-                  .Append(" }");
+                  .Append(", \"wander\": ").Append(n.Wander);
+                if (n.Patrol != null && n.Patrol.Count > 0)
+                {
+                    sb.Append(", \"patrol\": [")
+                      .Append(string.Join(", ", n.Patrol.Select(p => "[" + p[0] + ", " + p[1] + "]")))
+                      .Append("]");
+                    if (n.PatrolMode != null) sb.Append(", \"patrolMode\": \"").Append(n.PatrolMode).Append("\"");
+                }
+                sb.Append(" }");
             }
             return sb.Append("\n]\n").ToString();
         }

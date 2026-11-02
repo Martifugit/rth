@@ -33,6 +33,13 @@ namespace Rth.Server.Game
         /// <summary>Leashed: walking home and ignoring everyone until it gets there.</summary>
         public bool Returning { get; set; }
 
+        /// <summary>For a patrolling creature: the index of the patrol tile it is heading for.</summary>
+        public int PatrolIndex { get; set; }
+        /// <summary>For a "bounce" patrol: +1 walking the tiles forward, -1 back.</summary>
+        public int PatrolStep { get; set; } = 1;
+        /// <summary>For a patrolling creature: where it left its route to chase someone (it leashes from, and returns to, there).</summary>
+        public TileCoord? EngagedAt { get; set; }
+
         /// <summary>Holds still (no wandering) until this tick, e.g. while someone talks to it.</summary>
         public uint BusyUntilTick { get; set; }
 

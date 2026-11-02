@@ -26,6 +26,12 @@ namespace Rth.Server.Content
         public int AttackRange = 1;
         public int AttackTicks = 4;
         public int MaxHit = 10;
+        /// <summary>
+        /// Above 0, a hit that lands takes this percentage of the target's max blood instead of
+        /// <see cref="MinHit"/>-<see cref="MaxHit"/> (the shades of the long way back: as hard on
+        /// everyone, whatever their level).
+        /// </summary>
+        public double HitPercent;
         /// <summary>The least a hit that lands can do; below 0 means a quarter of <see cref="MaxHit"/>, so blows aren't specks.</summary>
         public int MinHit = -1;
 
@@ -77,6 +83,12 @@ namespace Rth.Server.Content
         public int Y;
         /// <summary>Overrides the creature's wander radius when 0 or more.</summary>
         public int Wander = -1;
+        /// <summary>Tiles it walks between, [x, y] each, in order; null or empty: it wanders instead.</summary>
+        public List<int[]>? Patrol;
+        /// <summary>"loop" (default: back to the first tile) or "bounce" (back the way it came).</summary>
+        public string? PatrolMode;
+
+        public bool Patrols => Patrol != null && Patrol.Count > 0;
     }
 
     public sealed class ItemAmount
@@ -220,6 +232,8 @@ namespace Rth.Server.Content
         public GearRules Gear = new GearRules();
         /// <summary>Trophy angling (angling.json, docs/fishing.md).</summary>
         public Rth.Shared.Angling.AnglingFile Angling = new Rth.Shared.Angling.AnglingFile();
+        /// <summary>Timed runs through regions (trials.json): the long way back.</summary>
+        public List<TrialDef> Trials = new List<TrialDef>();
     }
 
     /// <summary>
@@ -277,6 +291,8 @@ namespace Rth.Server.Content
         public IReadOnlyDictionary<string, string> RetiredSkills { get; private set; } = new Dictionary<string, string>();
         /// <summary>Trophy angling: species, size classes and rules (angling.json).</summary>
         public Rth.Shared.Angling.AnglingFile Angling { get; private set; } = new Rth.Shared.Angling.AnglingFile();
+        /// <summary>Trials by id (trials.json).</summary>
+        public IReadOnlyDictionary<string, TrialDef> Trials { get; private set; } = new Dictionary<string, TrialDef>();
 
         public ItemDef? Item(string? id) => id != null && Items.TryGetValue(id, out ItemDef? def) ? def : null;
 
@@ -320,6 +336,7 @@ namespace Rth.Server.Content
                 Uses = ReadJson<List<UseDef>>(directory, "uses.json"),
                 Gear = ReadJson<GearRules>(directory, "gear.json"),
                 Angling = ReadJson<Rth.Shared.Angling.AnglingFile>(directory, "angling.json"),
+                Trials = ReadJson<List<TrialDef>>(directory, "trials.json"),
             });
         }
 
@@ -720,6 +737,23 @@ namespace Rth.Server.Content
             if (death.Dialogue != null && !dialogues.ContainsKey(death.Dialogue)) problems.Add("Death: dialogue '" + death.Dialogue + "' doesn't exist.");
             if (death.FeePercent < 0 || death.FreeBelow < 0 || death.HoldHours <= 0) problems.Add("Death: feePercent and freeBelow can't be negative, and holdHours must be positive.");
 
+            Dictionary<string, TrialDef> trials = Index(parts.Trials ?? new List<TrialDef>(), t => t.Id, "trial", problems);
+            foreach (TrialDef t in trials.Values)
+            {
+                string where = "Trial '" + t.Id + "'";
+                if (string.IsNullOrWhiteSpace(t.Title)) problems.Add(where + ": needs a title.");
+                if (t.Regions.Count == 0) problems.Add(where + ": needs at least one region.");
+                if (!objects.TryGetValue(t.Gate, out ObjectDef? gate)) problems.Add(where + ": gate '" + t.Gate + "' isn't an object.");
+                else if (!gate.Actions.Any(a => a.Id == "trial")) problems.Add(where + ": gate '" + t.Gate + "' has no \"trial\" action.");
+                if (t.Status != null && !statuses.ContainsKey(t.Status)) problems.Add(where + ": status '" + t.Status + "' doesn't exist.");
+                if (t.Drain != null && (t.Drain.Percent < 0 || t.Drain.EveryTicks < 1)) problems.Add(where + ": drain needs a percent of 0 or more and everyTicks of 1 or more.");
+            }
+            foreach (ObjectDef o in objects.Values)
+                if (o.Trigger != null && (o.Trigger.HoldTicks < 0 || o.Trigger.DamagePercent < 0 || o.Trigger.RearmTicks < 1))
+                    problems.Add("Object '" + o.Id + "': a trigger can't hold or hurt negatively, and re-arms after 1 tick or more.");
+            foreach (NpcDef n in npcs.Values)
+                if (n.HitPercent < 0 || n.HitPercent > 100) problems.Add("NPC '" + n.Id + "': hitPercent is between 0 and 100.");
+
             AnglingContent.Validate(angling, items, objects, new HashSet<string>(skills.Keys), problems);
 
             if (problems.Count > 0) throw new ContentException(string.Join(Environment.NewLine, problems));
@@ -754,6 +788,7 @@ namespace Rth.Server.Content
                 Hymns = hymns,
                 HymnSettings = hymnFile,
                 Bosses = bosses,
+                Trials = trials,
                 Uses = parts.Uses.ToList(),
                 DefenceSkill = parts.Skills.DefenceSkill,
                 RetiredSkills = parts.Skills.Retired,

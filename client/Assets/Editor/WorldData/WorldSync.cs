@@ -371,7 +371,7 @@ namespace Rth.Client.Editor
             if (unity.Spawn.X != data.Spawn.X || unity.Spawn.Y != data.Spawn.Y || unity.SpawnPlane != data.SpawnPlane)
                 differences.Add($"spawn: scene {unity.Spawn}, data {data.Spawn}");
             string Key(ObjectEntry o) => $"{o.Type}@{o.Plane},{o.X},{o.Y}>{o.ToPlane},{o.ToX},{o.ToY}|{o.Edge}";
-            string NKey(NpcEntry n) => $"{n.Npc}@{n.Plane},{n.X},{n.Y}~{n.Wander}";
+            string NKey(NpcEntry n) => $"{n.Npc}@{n.Plane},{n.X},{n.Y}~{n.Wander}/{n.PatrolKey()}";
             if (!Same(MapExporter.Objects(area, area.transform).Select(Key), entry.Compiled.Objects.Select(Key))) differences.Add("objects differ");
             if (!Same(MapExporter.Npcs(area, area.transform).Select(NKey), entry.Compiled.Npcs.Select(NKey))) differences.Add("creatures differ");
             if (differences.Count == 0) return;
