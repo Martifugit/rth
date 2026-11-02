@@ -420,6 +420,25 @@ Each owns its own system files and adds content entries; all of them touch `item
 
 ---
 
+## Track AN: Fishing in depth (trophy angling)
+
+The design is `docs/fishing.md` (decided with the owner 2026-11-02). New systems are prefixed
+`Angling` (shared types too) so they can't collide with parallel work. Branch `claude/fishing-depth`.
+
+| Id | What | Depends on | Status |
+| --- | --- | --- | --- |
+| **AN1** | **The fight simulation** (shared): `AnglingFight`, integer maths on 50 ms steps, species fight patterns, the rig's stats, inputs, outcomes and what was seen; `AnglingBot` (a player that reacts to tells, for tests and pacing); `AnglingInputs` (the run-length input batches). Tests: fight lengths per size class, a bad rig loses, idle loses, replay is exact. | nothing | |
+| **AN2** | **Tackle**: `tackle` on items (slot, stats, bites, wear, repair); `AnglingTackleSystem` (the rig as player state and save section, "tackle" intent to rig and unrig, wear from a fight's result, mending at a tackle bench or from a tackle-maker); "tackle" state. | AN1 | |
+| **AN3** | **Trophy spots**: `angling.json` (species, size classes, rules); `AnglingSpotSystem`: each species' pool of placed spots, 2 active at a time on 20-40 min timers, per-player spooking, time-left phase, spots seen; "anglingSpots" state. | AN1 | |
+| **AN4** | **Casting and the fight on the server**: `AnglingSystem`: the `cast` action, level and lure checks, the bite, the fish rolled (weight, class, revised, seed), "anglingFight" state, the "angling" intent stepping the server's fight, the catch (trophy item, XP by size, wear), events `FishHooked` / `FishLanded` / `FishLost`; trophy items generated from species. | AN1-AN3 | |
+| **AN5** | **The fishing log**: `AnglingLogSystem`: trophies (PBs, revised), spots seen, angler's notes (moves seen, lures landed on, notes unlocked by catches or dialogue), "anglingLog" state; dialogue action `anglingNote` and condition `anglingCaught`. | AN4 | |
+| **AN6** | **Markets and the collector**: fish boxes generated per species and class, opened from the pack; the `hand-in` NPC action; the `{anglingLead:species}` token; collector trades as uses.json entries. | AN4, AN5 | |
+| **AN7** | **Client**: the reeling panel (plays `AnglingFight` live, sends input batches), trophy ripples per species and time-left, the rig panel, the log tab in the journal. | AN1-AN6; checked locally in the Editor | |
+| **AN8** | **Content, tiers 1-3**: perch, eel and pike as trophy species; tier 1-3 tackle parts and their recipes (Artifice, Smithing, Tailoring, Butchering feathers); boxes; a fishmonger, a tackle-maker and the collector, and trophy spots in `kittest` to try it all. `AnglingPaceTests` against the pace table. | AN2-AN6 | |
+| **AN9** | **The ties**: phlegm potions from fish extracts (Medicine), gutting big fish (Butchering), bait for ordinary spots (`gatherSuccess`), the higher species (4-10) and their quirks as the regions arrive, Tolling's fishers' quest at Tolling's stage 3. | AN8; regions; A4 | |
+
+---
+
 ## Track U: the interface framework
 
 ### U1. A robust UI framework
