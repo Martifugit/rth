@@ -27,7 +27,7 @@ namespace Rth.Client.Ui.Panels
         public override string DefaultWindow => UiDefaultLayout.Side;
         public override int Order => 5;
         public override Key Hotkey => Key.K;
-        public override Vector2 MinSize => UiKit.Chrome.Around(2 * TilePitch + UiKit.Slots.Slack, 120f);
+        public override Vector2 MinSize => new Vector2(2 * TilePitch + UiKit.Slots.Slack, 120f);
 
         private VisualElement _grid;
         private Label _total;

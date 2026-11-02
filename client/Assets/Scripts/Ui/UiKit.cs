@@ -320,20 +320,6 @@ namespace Rth.Client.Ui
             }
         }
 
-        /// <summary>
-        /// What a window adds around a panel (Rth.uss: the window's 3 px padding, the body's 8 px and
-        /// the 32 px title bar, and 2 px to spare), so a panel can ask for a minimum size that fits
-        /// its contents exactly.
-        /// </summary>
-        public static class Chrome
-        {
-            public const float Width = 2 * 3f + 2 * 8f + 2f;
-            public const float Height = 32f + 2 * 3f + 2 * 8f + 2f;
-
-            /// <summary>The window size that fits a panel's content of this size.</summary>
-            public static Vector2 Around(float contentWidth, float contentHeight) => new Vector2(contentWidth + Width, contentHeight + Height);
-        }
-
         // ------------------------------------------------------------------ inner tabs
 
         /// <summary>

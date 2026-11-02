@@ -23,7 +23,7 @@ namespace Rth.Client.Ui.Panels
         public override Key Hotkey => Key.B;
         // Standard slots, as many columns as the window is wide, centred. The smallest window is the
         // classic 4 x 7, so all 28 always show without scrolling.
-        public override Vector2 MinSize => UiKit.Chrome.Around(UiKit.Slots.Across(Columns), UiKit.Slots.Across(Rows));
+        public override Vector2 MinSize => new Vector2(UiKit.Slots.Across(Columns), UiKit.Slots.Across(Rows));
         public override bool Scrolls => false;
 
         private const int Columns = 4;

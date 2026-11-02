@@ -23,7 +23,7 @@ namespace Rth.Client.Ui.Panels
         public override int Order => 1;
         public override Key Hotkey => Key.E;
 
-        public override Vector2 MinSize => UiKit.Chrome.Around(3 * Figure.StandardCell, 5 * Figure.StandardCell + ButtonRowHeight);
+        public override Vector2 MinSize => new Vector2(3 * Figure.StandardCell, 5 * Figure.StandardCell + ButtonRowHeight);
         public override bool Scrolls => false;
 
         /// <summary>The footer row: its line, margin and padding, and a 30 px icon button with its margins.</summary>

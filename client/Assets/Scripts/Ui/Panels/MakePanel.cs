@@ -117,10 +117,7 @@ namespace Rth.Client.Ui.Panels
 
             VisualElement head = UiKit.El(_detail, "row");
             head.style.alignItems = Align.Center;
-            VisualElement slot = UiKit.El(head, "slot");
-            slot.style.width = slot.style.height = 48f;
-            VisualElement icon = UiKit.El(slot, "slot__icon");
-            icon.pickingMode = PickingMode.Ignore;
+            VisualElement slot = UiKit.Slots.Make(head, out VisualElement icon);
             UiKit.SetItem(icon, def);
             if (def != null) UiKit.Tooltip(slot, () => GameText.Describe(def, o.Count));
             VisualElement words = UiKit.El(head);

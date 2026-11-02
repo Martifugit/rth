@@ -95,12 +95,9 @@ namespace Rth.Client.Ui.Panels
             VisualElement column = UiKit.El(_slots);
             column.style.alignItems = Align.Center;
             UiKit.Text(column, s.Slot.ToString().ToUpperInvariant(), "small").style.color = UiKit.Muted;
-            VisualElement box = UiKit.El(column, "slot");
-            box.style.width = box.style.height = 48f;
+            VisualElement box = UiKit.Slots.Make(column, out VisualElement icon);
             box.style.marginTop = 2f;
             box.style.marginBottom = 2f;
-            VisualElement icon = UiKit.El(box, "slot__icon");
-            icon.pickingMode = PickingMode.Ignore;
             if (def != null)
             {
                 UiKit.SetItem(icon, def);
