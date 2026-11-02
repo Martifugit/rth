@@ -1,0 +1,42 @@
+{
+  "regions": ["land_0_0", "land_1_0", "land_0_m1", "land_1_m1", "land_2_0", "land_2_m1"],
+  "note": "Tolling's levels, second of two (2026-11-02): the roads, graded. Palmerway climbs from the bridge into the square through a cutting in the knoll's east bank; the lane goes down the bank to the skinning yard; Palmerway crosses the heath ridge through its saddle, where the waygate stands, cutting the pass through the ridge's face. Applied once after tolling-levels-a.json.",
+  "strokes": [
+    {
+      "id": "palmerway-cutting",
+      "ground": "path",
+      "seed": 141,
+      "points": [[45, 46.5], [40, 46.5], [33, 46.5]],
+      "width": [3, 3],
+      "wind": 0,
+      "ragged": 0,
+      "erase": ["path"],
+      "eraseReach": 2,
+      "grade": 0.45
+    },
+    {
+      "id": "yard-lane",
+      "ground": "dirttrack",
+      "seed": 142,
+      "points": [[35, 41], [39, 37], [43.5, 33.5]],
+      "width": [2, 2],
+      "wind": 0,
+      "ragged": 0,
+      "keep": ["path"],
+      "eraseReach": 0,
+      "grade": 0.45
+    },
+    {
+      "id": "palmerway-pass",
+      "ground": "path",
+      "seed": 143,
+      "points": [[156, 48], [166, 48], [176, 48], [188, 48], [198, 47.5], [207, 47], [216, 47]],
+      "width": [3, 3],
+      "wind": 0,
+      "ragged": 0,
+      "erase": ["path"],
+      "eraseReach": 2,
+      "grade": 0.35
+    }
+  ]
+}

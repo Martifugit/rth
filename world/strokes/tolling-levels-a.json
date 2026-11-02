@@ -1,0 +1,180 @@
+{
+  "regions": [
+    "land_0_0",
+    "land_1_0",
+    "land_0_m1",
+    "land_1_m1",
+    "land_m1_0",
+    "land_m1_1",
+    "land_m1_m1",
+    "land_2_0",
+    "land_2_m1"
+  ],
+  "note": "Tolling's levels, first of two (2026-11-02, docs/areas/tolling.md 'Levels'): the knoll raised under the whole town so its crown stands about 4.6 over the river, a steep bank (rock) down to the river on its east, long slopes elsewhere (the west easing into the march's floor); the heath ridge east of Wennow, about 6 high with a rock face towards the basin and a long slope down to the fens beyond, and a saddle in it where Palmerway passes and the waygate stands (the road cuts the pass through the face in tolling-levels-b.json). Applied once with `tools/world strokes world/strokes/tolling-levels-a.json`, then the roads in tolling-levels-b.json.",
+  "shapes": [
+    {
+      "id": "knoll",
+      "raise": 2.5,
+      "gentle": 9,
+      "ragged": 0.8,
+      "seed": 131,
+      "cliffSide": [
+        1,
+        0
+      ],
+      "rock": "scree",
+      "rockRise": 1.2,
+      "points": [
+        [
+          8,
+          20
+        ],
+        [
+          20,
+          19
+        ],
+        [
+          30,
+          20
+        ],
+        [
+          40,
+          24
+        ],
+        [
+          42,
+          34
+        ],
+        [
+          42,
+          44
+        ],
+        [
+          42,
+          52
+        ],
+        [
+          41,
+          60
+        ],
+        [
+          39,
+          66
+        ],
+        [
+          32,
+          72
+        ],
+        [
+          16,
+          74
+        ],
+        [
+          0,
+          72
+        ],
+        [
+          -8,
+          60
+        ],
+        [
+          -8,
+          40
+        ],
+        [
+          -4,
+          26
+        ]
+      ]
+    },
+    {
+      "id": "heath-ridge",
+      "raise": 6,
+      "gentle": 12,
+      "ragged": 1.5,
+      "seed": 132,
+      "cliffSide": [
+        -1,
+        0
+      ],
+      "rock": "scree",
+      "rockRise": 1.2,
+      "points": [
+        [
+          176,
+          -4
+        ],
+        [
+          172,
+          10
+        ],
+        [
+          171,
+          30
+        ],
+        [
+          172,
+          50
+        ],
+        [
+          170,
+          70
+        ],
+        [
+          174,
+          88
+        ],
+        [
+          186,
+          94
+        ],
+        [
+          206,
+          88
+        ],
+        [
+          212,
+          60
+        ],
+        [
+          211,
+          30
+        ],
+        [
+          208,
+          4
+        ],
+        [
+          192,
+          -10
+        ]
+      ]
+    },
+    {
+      "id": "waygate-saddle",
+      "raise": -3,
+      "gentle": 3,
+      "ragged": 0.4,
+      "seed": 133,
+      "points": [
+        [
+          175,
+          43
+        ],
+        [
+          212,
+          43
+        ],
+        [
+          212,
+          53
+        ],
+        [
+          175,
+          53
+        ]
+      ],
+      "level": 3.0
+    }
+  ]
+}

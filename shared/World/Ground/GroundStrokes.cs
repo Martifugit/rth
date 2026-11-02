@@ -148,7 +148,7 @@ namespace Rth.Shared.World.Ground
 
         // A body of water instead of land (a mere, a pond, a bay): "water": true.
 
-        /// <summary>The outline is water in <see cref="Ground"/> (a lake), its surface level at <see cref="Level"/> (or the lowest water near it).</summary>
+        /// <summary>The outline is water in <see cref="Ground"/> (a lake), its surface level at <see cref="Level"/> (or the lowest water near it). For a negative <see cref="Raise"/>, <see cref="Level"/> is the lowest it cuts to.</summary>
         public bool Water;
         public float? Level;
         /// <summary>Water: the old water of these grounds outside the new outline, within <see cref="DrainReach"/> tiles of it, becomes land.</summary>
@@ -555,7 +555,10 @@ namespace Rth.Shared.World.Ground
                     {
                         float d = Edge(cx, cy);
                         if (d <= 0f || !(g.Corner(cx, cy) is float h)) continue;
-                        raised[(cx, cy)] = h + sh.Raise * LandNoise.Smooth(Math.Min(1f, d / Shoulder(cx, cy)));
+                        float to = h + sh.Raise * LandNoise.Smooth(Math.Min(1f, d / Shoulder(cx, cy)));
+                        // Lowering stops at the shape's level (a saddle cut into a ridge, not a hole in the land beyond).
+                        if (sh.Raise < 0f && sh.Level is float floor) to = Math.Min(h, Math.Max(to, floor));
+                        raised[(cx, cy)] = to;
                     }
                 foreach (var r in raised) g.SetCorner(r.Key.Item1, r.Key.Item2, r.Value);
                 // Rock where it now rises steeply.
