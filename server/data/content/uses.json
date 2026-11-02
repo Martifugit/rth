@@ -58,5 +58,128 @@
       }
     ],
     "message": "You fill the vial."
+  },
+  {
+    "id": "collector_perch_first",
+    "item": "trophy_perch_revised",
+    "onNpc": "collector",
+    "conditions": [
+      {
+        "type": "flag",
+        "key": "collector_perch",
+        "not": true
+      }
+    ],
+    "consume": true,
+    "message": "The collector turns the fish over in both hands, very quietly, and writes for a long time. Then he hands you something from the back.",
+    "actions": [
+      {
+        "type": "giveItem",
+        "item": "lucky_float"
+      },
+      {
+        "type": "giveItem",
+        "item": "fishbox_perch_revised"
+      },
+      {
+        "type": "setFlag",
+        "key": "collector_perch"
+      }
+    ]
+  },
+  {
+    "id": "collector_perch_again",
+    "item": "trophy_perch_revised",
+    "onNpc": "collector",
+    "consume": true,
+    "message": "\"Another! Every one is different, you know.\" He pays you in fish.",
+    "actions": [
+      {
+        "type": "giveItem",
+        "item": "fishbox_perch_revised"
+      }
+    ]
+  },
+  {
+    "id": "collector_eel_first",
+    "item": "trophy_eel_revised",
+    "onNpc": "collector",
+    "conditions": [
+      {
+        "type": "flag",
+        "key": "collector_eel",
+        "not": true
+      }
+    ],
+    "consume": true,
+    "message": "The collector turns the fish over in both hands, very quietly, and writes for a long time. Then he hands you something from the back.",
+    "actions": [
+      {
+        "type": "giveItem",
+        "item": "slipping_reel"
+      },
+      {
+        "type": "giveItem",
+        "item": "fishbox_eel_revised"
+      },
+      {
+        "type": "setFlag",
+        "key": "collector_eel"
+      }
+    ]
+  },
+  {
+    "id": "collector_eel_again",
+    "item": "trophy_eel_revised",
+    "onNpc": "collector",
+    "consume": true,
+    "message": "\"Another! Every one is different, you know.\" He pays you in fish.",
+    "actions": [
+      {
+        "type": "giveItem",
+        "item": "fishbox_eel_revised"
+      }
+    ]
+  },
+  {
+    "id": "collector_pike_first",
+    "item": "trophy_pike_revised",
+    "onNpc": "collector",
+    "conditions": [
+      {
+        "type": "flag",
+        "key": "collector_pike",
+        "not": true
+      }
+    ],
+    "consume": true,
+    "message": "The collector turns the fish over in both hands, very quietly, and writes for a long time. Then he hands you something from the back.",
+    "actions": [
+      {
+        "type": "giveItem",
+        "item": "steel_trace_hook"
+      },
+      {
+        "type": "giveItem",
+        "item": "fishbox_pike_revised"
+      },
+      {
+        "type": "setFlag",
+        "key": "collector_pike"
+      }
+    ]
+  },
+  {
+    "id": "collector_pike_again",
+    "item": "trophy_pike_revised",
+    "onNpc": "collector",
+    "consume": true,
+    "message": "\"Another! Every one is different, you know.\" He pays you in fish.",
+    "actions": [
+      {
+        "type": "giveItem",
+        "item": "fishbox_pike_revised"
+      }
+    ]
   }
 ]

@@ -1,0 +1,113 @@
+{
+  "skill": "fishing",
+  "currency": "marks",
+  "mendPercent": 50,
+  "collectorMendTimes": 3,
+  "revisedChance": 0.0167,
+  "revisedEnergyPercent": 180,
+  "revisedXp": 3,
+  "revisedBoxRolls": 30,
+  "biteMinTicks": 4,
+  "biteMaxTicks": 14,
+  "reelBonusPerLevel": 15,
+  "reelBonusLevels": 10,
+  "quietTicks": 20,
+  "wornPercent": 60,
+  "bareRig": { "snapBuffer": 14, "strength": 85, "reelSpeed": 85, "runDrag": 85, "hookHold": 24 },
+  "sizeClasses": [
+    { "id": "small", "name": "small", "upTo": 300, "boxRolls": 5 },
+    { "id": "good", "name": "good", "upTo": 650, "boxRolls": 8 },
+    { "id": "great", "name": "great", "upTo": 920, "boxRolls": 13 },
+    { "id": "record", "name": "record", "upTo": 1001, "boxRolls": 20 }
+  ],
+  "species": [
+    {
+      "id": "perch",
+      "name": "Perch",
+      "tier": 1,
+      "level": 10,
+      "spotType": "perch_rise",
+      "active": 1,
+      "activeMinTicks": 2000,
+      "activeMaxTicks": 4000,
+      "spookAfter": 4,
+      "spookTicks": 1000,
+      "minGrams": 150,
+      "maxGrams": 2100,
+      "sizeSkew": 2,
+      "xp": 290,
+      "ripple": "quick",
+      "color": "#7a8c5a",
+      "fight": { "turn": 10, "tellSteps": 16, "moveMinSteps": 30, "moveMaxSteps": 55, "energy": 6600, "distance": 650 },
+      "box": [
+        { "item": "raw_perch", "min": 1, "max": 2, "weight": 8 },
+        { "item": "raw_eel", "min": 1, "max": 1, "weight": 2 },
+        { "item": "perch_scale", "min": 1, "max": 2, "weight": 1 }
+      ],
+      "notes": [
+        { "id": "turns", "catches": 1, "text": "A perch turns side to side and little else. Pull against it: right when it faces left, left when it faces right." },
+        { "id": "shoals", "catches": 5, "text": "Where one big perch rises there are usually more. They spook after a few, and drift on." },
+        { "id": "records", "catches": 25, "text": "The old perch, the ones over two pounds, sit deeper than the rest and turn slower. Patience." }
+      ]
+    },
+    {
+      "id": "eel",
+      "name": "Eel",
+      "tier": 2,
+      "level": 15,
+      "spotType": "eel_rise",
+      "active": 1,
+      "activeMinTicks": 2000,
+      "activeMaxTicks": 4000,
+      "spookAfter": 4,
+      "spookTicks": 1000,
+      "minGrams": 300,
+      "maxGrams": 3500,
+      "sizeSkew": 2,
+      "xp": 290,
+      "ripple": "bubbles",
+      "color": "#4a4a3a",
+      "fight": { "turn": 8, "dive": 5, "tellSteps": 14, "moveMinSteps": 28, "moveMaxSteps": 50, "energy": 6500, "distance": 700 },
+      "box": [
+        { "item": "raw_eel", "min": 1, "max": 2, "weight": 8 },
+        { "item": "raw_perch", "min": 1, "max": 1, "weight": 2 },
+        { "item": "eel_slime", "min": 1, "max": 2, "weight": 2 },
+        { "item": "raw_pike", "min": 1, "max": 1, "weight": 1 }
+      ],
+      "notes": [
+        { "id": "dives", "catches": 1, "text": "An eel dives for the mud. Pull up and keep it coming, or it rests down there and comes back fresh." },
+        { "id": "bait", "catches": 5, "text": "Eels feed on the bottom, by smell: a ledger with meat on it, not a fly." }
+      ]
+    },
+    {
+      "id": "pike",
+      "name": "Pike",
+      "tier": 3,
+      "level": 25,
+      "spotType": "pike_rise",
+      "active": 1,
+      "activeMinTicks": 2000,
+      "activeMaxTicks": 4000,
+      "spookAfter": 4,
+      "spookTicks": 1000,
+      "minGrams": 900,
+      "maxGrams": 12000,
+      "sizeSkew": 2.2,
+      "xp": 360,
+      "teeth": true,
+      "ripple": "line",
+      "color": "#6a7a50",
+      "fight": { "turn": 10, "dive": 2, "run": 4, "tellSteps": 11, "moveMinSteps": 20, "moveMaxSteps": 40, "breatherSteps": 45, "energy": 6100, "distance": 800, "runPull": 120 },
+      "box": [
+        { "item": "raw_pike", "min": 1, "max": 2, "weight": 8 },
+        { "item": "raw_eel", "min": 1, "max": 1, "weight": 3 },
+        { "item": "perch_scale", "min": 1, "max": 2, "weight": 1 }
+      ],
+      "notes": [
+        { "id": "runs", "catches": 1, "text": "A pike runs. Let go and give it line, or the line goes. After a run it swims slow for a moment: reel then." },
+        { "id": "teeth", "catches": 3, "text": "Pike teeth dull a hook twice as fast. A wire trace doesn't mind them." },
+        { "id": "monger", "text": "The fishmonger: wire them, and give them line when they run." }
+      ]
+    }
+  ]
+}

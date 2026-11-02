@@ -523,7 +523,8 @@
     "name": "Gear bench",
     "examine": "A long bench for rods, nets and traps, hung with twine.",
     "actions": [
-      {"id": "process", "label": "Craft"}
+      {"id": "process", "label": "Craft"},
+      {"id": "mend", "label": "Mend rig"}
     ]
   },
   {
@@ -1847,6 +1848,39 @@
       {
         "id": "process",
         "label": "Mix"
+      }
+    ]
+  },
+  {
+    "id": "perch_rise",
+    "name": "Perch rising",
+    "examine": "Small, quick rings: perch feeding near the top.",
+    "actions": [
+      {
+        "id": "cast",
+        "label": "Cast"
+      }
+    ]
+  },
+  {
+    "id": "eel_rise",
+    "name": "Eel rising",
+    "examine": "Rings with a string of bubbles: something on the bottom, stirring the mud.",
+    "actions": [
+      {
+        "id": "cast",
+        "label": "Cast"
+      }
+    ]
+  },
+  {
+    "id": "pike_rise",
+    "name": "Pike rising",
+    "examine": "A ripple drifting in a line, as if something long lay just under it.",
+    "actions": [
+      {
+        "id": "cast",
+        "label": "Cast"
       }
     ]
   }

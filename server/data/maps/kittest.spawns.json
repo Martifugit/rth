@@ -1,3 +1,6 @@
 [
-  { "npc": "tinker", "plane": 0, "x": 1186, "y": 1044, "wander": 0 }
+  { "npc": "tinker", "plane": 0, "x": 1186, "y": 1044, "wander": 0 },
+  { "npc": "fishmonger", "plane": 0, "x": 1184, "y": 1014, "wander": 0 },
+  { "npc": "tackle_maker", "plane": 0, "x": 1184, "y": 1012, "wander": 0 },
+  { "npc": "collector", "plane": 0, "x": 1196, "y": 1015, "wander": 0 }
 ]

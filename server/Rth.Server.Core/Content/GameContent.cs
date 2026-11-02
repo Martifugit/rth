@@ -218,6 +218,8 @@ namespace Rth.Server.Content
         public List<UseDef> Uses = new List<UseDef>();
         /// <summary>Gear stats by tier and family (gear.json).</summary>
         public GearRules Gear = new GearRules();
+        /// <summary>Trophy angling (angling.json, docs/fishing.md).</summary>
+        public Rth.Shared.Angling.AnglingFile Angling = new Rth.Shared.Angling.AnglingFile();
     }
 
     /// <summary>
@@ -273,6 +275,8 @@ namespace Rth.Server.Content
         public string? DefenceSkill { get; private set; }
         public CombatLevelDef CombatLevel { get; private set; } = new CombatLevelDef();
         public IReadOnlyDictionary<string, string> RetiredSkills { get; private set; } = new Dictionary<string, string>();
+        /// <summary>Trophy angling: species, size classes and rules (angling.json).</summary>
+        public Rth.Shared.Angling.AnglingFile Angling { get; private set; } = new Rth.Shared.Angling.AnglingFile();
 
         public ItemDef? Item(string? id) => id != null && Items.TryGetValue(id, out ItemDef? def) ? def : null;
 
@@ -315,6 +319,7 @@ namespace Rth.Server.Content
                 Bosses = ReadJson<List<Rth.Shared.Progress.BossDef>>(directory, "bosses.json"),
                 Uses = ReadJson<List<UseDef>>(directory, "uses.json"),
                 Gear = ReadJson<GearRules>(directory, "gear.json"),
+                Angling = ReadJson<Rth.Shared.Angling.AnglingFile>(directory, "angling.json"),
             });
         }
 
@@ -365,7 +370,9 @@ namespace Rth.Server.Content
             // Gear by tier first, so the stats it fills in are validated like any other.
             problems.AddRange((parts.Gear ?? new GearRules()).Apply(parts.Items, new HashSet<string>(parts.Skills.Skills.Select(s => s.Id))));
             Dictionary<string, ItemDef> items = Index(parts.Items, i => i.Id, "item", problems);
-            foreach (ItemDef item in parts.Items) ValidateItem(item, items, problems);
+            Rth.Shared.Angling.AnglingFile angling = parts.Angling ?? new Rth.Shared.Angling.AnglingFile();
+            AnglingContent.Generate(angling, items);
+            foreach (ItemDef item in items.Values) ValidateItem(item, items, problems);
 
             Dictionary<string, DropTableDef> tables = Index(parts.DropTables, t => t.Id, "drop table", problems);
             foreach (DropTableDef table in parts.DropTables) ValidateTable(table, items, tables, problems);
@@ -713,6 +720,8 @@ namespace Rth.Server.Content
             if (death.Dialogue != null && !dialogues.ContainsKey(death.Dialogue)) problems.Add("Death: dialogue '" + death.Dialogue + "' doesn't exist.");
             if (death.FeePercent < 0 || death.FreeBelow < 0 || death.HoldHours <= 0) problems.Add("Death: feePercent and freeBelow can't be negative, and holdHours must be positive.");
 
+            AnglingContent.Validate(angling, items, objects, new HashSet<string>(skills.Keys), problems);
+
             if (problems.Count > 0) throw new ContentException(string.Join(Environment.NewLine, problems));
 
             AddBankNotes(items);
@@ -749,6 +758,7 @@ namespace Rth.Server.Content
                 DefenceSkill = parts.Skills.DefenceSkill,
                 RetiredSkills = parts.Skills.Retired,
                 CombatLevel = parts.Skills.CombatLevel,
+                Angling = angling,
             };
         }
 
@@ -957,6 +967,7 @@ namespace Rth.Server.Content
             MaxPhlegm = Rules.MaxPhlegm,
             GlobalCooldownTicks = Rules.GlobalCooldownTicks,
             ScarsForFreeUltimate = Rules.ScarsForFreeUltimate,
+            Angling = Angling,
         });
     }
 }

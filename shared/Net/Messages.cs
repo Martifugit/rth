@@ -600,6 +600,8 @@ namespace Rth.Shared.Net
         public CombatLevelDef CombatLevel = new CombatLevelDef();
         /// <summary>The world map, drawn from the continent layout (null when the server has none).</summary>
         public Rth.Shared.World.Layout.WorldChart? Chart;
+        /// <summary>Trophy angling: species (their fights, for the reeling panel), size classes, rules.</summary>
+        public Rth.Shared.Angling.AnglingFile Angling = new Rth.Shared.Angling.AnglingFile();
     }
 
     /// <summary>

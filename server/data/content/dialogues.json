@@ -480,5 +480,104 @@
         ]
       }
     }
+  },
+  {
+    "id": "fishmonger",
+    "start": "start",
+    "nodes": {
+      "start": {
+        "text": "Trophies? I'll weigh them and pay you in boxes. Or are you after where the fish are rising?",
+        "options": [
+          {
+            "text": "Where are the perch rising?",
+            "next": "perch"
+          },
+          {
+            "text": "Where are the eels rising?",
+            "next": "eel"
+          },
+          {
+            "text": "Where are the pike rising?",
+            "next": "pike"
+          },
+          {
+            "text": "Any advice on pike?",
+            "next": "pike_tip",
+            "actions": [
+              {
+                "type": "anglingNote",
+                "id": "pike:monger"
+              }
+            ]
+          },
+          {
+            "text": "Goodbye."
+          }
+        ]
+      },
+      "perch": {
+        "text": "{anglingLead:perch}. Small quick rings; you can't miss them.",
+        "options": [
+          {
+            "text": "Thanks.",
+            "next": "start"
+          }
+        ]
+      },
+      "eel": {
+        "text": "{anglingLead:eel}. Look for the bubbles.",
+        "options": [
+          {
+            "text": "Thanks.",
+            "next": "start"
+          }
+        ]
+      },
+      "pike": {
+        "text": "{anglingLead:pike}. Mind your fingers.",
+        "options": [
+          {
+            "text": "Thanks.",
+            "next": "start"
+          }
+        ]
+      },
+      "pike_tip": {
+        "text": "They bite through anything soft. Wire them, and give them line when they run, or they'll have your rod in the water.",
+        "options": [
+          {
+            "text": "Thanks.",
+            "next": "start"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "collector",
+    "start": "start",
+    "nodes": {
+      "start": {
+        "text": "You fish? Then you'll see them before I do. Fish that are... not finished. A fin too many, scales the wrong colour. Bring me one and I'll make it worth your while.",
+        "options": [
+          {
+            "text": "What do you want them for?",
+            "next": "why"
+          },
+          {
+            "text": "Goodbye."
+          }
+        ]
+      },
+      "why": {
+        "text": "Proof. The world is being written again, and they're the ink still wet. Use one on me when you catch it.",
+        "options": [
+          {
+            "text": "I'll keep an eye out.",
+            "next": "start"
+          }
+        ]
+      }
+    }
   }
 ]

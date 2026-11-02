@@ -461,5 +461,71 @@
     "shop": "tinkers_cart",
     "shape": "Capsule",
     "color": "#6a5a3a"
+  },
+  {
+    "id": "fishmonger",
+    "name": "Fishmonger",
+    "examine": "Scales to the elbow, and a voice that carries across a market.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 0,
+    "actions": [
+      {
+        "id": "talk",
+        "label": "Talk-to"
+      },
+      {
+        "id": "hand-in",
+        "label": "Hand in trophies"
+      }
+    ],
+    "shape": "Capsule",
+    "color": "#5a6a7a",
+    "dialogue": "fishmonger"
+  },
+  {
+    "id": "tackle_maker",
+    "name": "Tackle-maker",
+    "examine": "Hooks in the hat, line round every finger.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 0,
+    "actions": [
+      {
+        "id": "trade",
+        "label": "Trade"
+      },
+      {
+        "id": "mend",
+        "label": "Mend rig"
+      }
+    ],
+    "shape": "Capsule",
+    "color": "#6a5a3a",
+    "shop": "tackle_stall"
+  },
+  {
+    "id": "collector",
+    "name": "Collector",
+    "examine": "A scholar with a ledger of things that shouldn't be, and a tank to keep them in.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 0,
+    "actions": [
+      {
+        "id": "talk",
+        "label": "Talk-to"
+      },
+      {
+        "id": "mend-rare",
+        "label": "Mend collector parts"
+      }
+    ],
+    "shape": "Capsule",
+    "color": "#4a3a5a",
+    "dialogue": "collector"
   }
 ]

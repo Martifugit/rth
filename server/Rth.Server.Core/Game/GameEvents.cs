@@ -159,3 +159,57 @@ namespace Rth.Server.Game
         public CombatStyle Style { get; }
     }
 }
+
+namespace Rth.Server.Game
+{
+    /// <summary>A trophy fish took the player's lure (docs/fishing.md 3).</summary>
+    public sealed class FishHooked
+    {
+        public FishHooked(Player player, string species, bool revised)
+        {
+            Player = player;
+            Species = species;
+            Revised = revised;
+        }
+
+        public Player Player { get; }
+        public string Species { get; }
+        public bool Revised { get; }
+    }
+
+    /// <summary>A trophy fish was landed: its weight, size class and whether it beat the player's best.</summary>
+    public sealed class FishLanded
+    {
+        public FishLanded(Player player, string species, int grams, string sizeClass, bool revised, bool personalBest)
+        {
+            Player = player;
+            Species = species;
+            Grams = grams;
+            SizeClass = sizeClass;
+            Revised = revised;
+            PersonalBest = personalBest;
+        }
+
+        public Player Player { get; }
+        public string Species { get; }
+        public int Grams { get; }
+        public string SizeClass { get; }
+        public bool Revised { get; }
+        public bool PersonalBest { get; }
+    }
+
+    /// <summary>A hooked trophy fish got away (snapped, hook free, escaped).</summary>
+    public sealed class FishLost
+    {
+        public FishLost(Player player, string species, Rth.Shared.Angling.AnglingOutcome outcome)
+        {
+            Player = player;
+            Species = species;
+            Outcome = outcome;
+        }
+
+        public Player Player { get; }
+        public string Species { get; }
+        public Rth.Shared.Angling.AnglingOutcome Outcome { get; }
+    }
+}

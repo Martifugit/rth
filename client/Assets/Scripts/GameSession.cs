@@ -211,6 +211,9 @@ namespace Rth.Client
             SkillingViews skilling = GetComponent<SkillingViews>();
             if (skilling == null) skilling = gameObject.AddComponent<SkillingViews>();
             skilling.session = this;
+            AnglingViews angling = GetComponent<AnglingViews>();
+            if (angling == null) angling = gameObject.AddComponent<AnglingViews>();
+            angling.session = this;
             MiningView mining = GetComponent<MiningView>();
             if (mining == null) mining = gameObject.AddComponent<MiningView>();
             mining.session = this;

@@ -765,6 +765,15 @@ cause are placed with the new map (A4).*
 - **Extras:** shells, eel slime, scales and lamprey teeth (Medicine).
 - **Trained by** fishing.
 
+**Trophy angling (decided 2026-11-02), Fishing's activity.** The full design is
+`docs/fishing.md`. In short: each species has trophy spots, a few active at a time, shown by its
+own ripple; you rig your own tackle (rod and reel from Artifice, line from Tailoring, hook from
+Smithing, lures from Tailoring with Butchering's feathers) for the species, and fight the fish in
+a reeling panel by reading its tells. Each tier teaches one new move. Catches go into the fishing
+log by weight; trophies go to fish markets for fish boxes; **revised** fish (the rare variants,
+partly remade by the revision) go to a collector, a scholar of the revision, for gear that removes
+a trade-off. Fish are phlegmatic, so fish extracts are Medicine's base for phlegm potions.
+
 ### Foraging
 *Built (2026-10-28, E4): patches of yarrow, rue and feverfew (grimy, cleaned with Medicine), reeds,
 flax and berries; a sickle helps but isn't needed. Hellebore's roaming uses the fishing spots'

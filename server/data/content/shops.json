@@ -116,5 +116,49 @@
         "restockTicks": 300
       }
     ]
+  },
+  {
+    "id": "tackle_stall",
+    "name": "Tackle stall",
+    "currency": "marks",
+    "sellPercent": 40,
+    "stock": [
+      {
+        "item": "alder_rod",
+        "price": 30,
+        "quantity": 5,
+        "restockTicks": 100
+      },
+      {
+        "item": "copper_reel",
+        "price": 35,
+        "quantity": 5,
+        "restockTicks": 100
+      },
+      {
+        "item": "reed_line",
+        "price": 12,
+        "quantity": 10,
+        "restockTicks": 100
+      },
+      {
+        "item": "copper_hook",
+        "price": 10,
+        "quantity": 10,
+        "restockTicks": 100
+      },
+      {
+        "item": "pelt_fly",
+        "price": 10,
+        "quantity": 10,
+        "restockTicks": 100
+      },
+      {
+        "item": "haunch_ledger",
+        "price": 14,
+        "quantity": 10,
+        "restockTicks": 100
+      }
+    ]
   }
 ]

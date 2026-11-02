@@ -18,7 +18,7 @@ namespace Rth.Client.Ui.Modals
         public override string Icon => "journal";
         public override Key Hotkey => Key.J;
 
-        protected override IEnumerable<ModalTab> CreateTabs() => new ModalTab[] { new QuestJournalTab(), new AchievementsTab(), new BestiaryTab() };
+        protected override IEnumerable<ModalTab> CreateTabs() => new ModalTab[] { new QuestJournalTab(), new AchievementsTab(), new BestiaryTab(), new FishingLogTab() };
     }
 
     /// <summary>Every quest: what it's about, what it needs and gives, and the story so far.</summary>
