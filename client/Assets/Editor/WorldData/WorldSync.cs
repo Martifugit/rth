@@ -279,6 +279,18 @@ namespace Rth.Client.Editor
             area.instanced = region.Instanced;
             area.music = region.Music ?? "";
             area.ownAtmosphere = region.Atmosphere != null;
+            RegionSurround surround = area.GetComponent<RegionSurround>();
+            if (region.Surround == null)
+            {
+                if (surround != null) Object.DestroyImmediate(surround);
+            }
+            else
+            {
+                if (surround == null) surround = area.gameObject.AddComponent<RegionSurround>();
+                surround.area = new RectInt(region.OriginX, region.OriginY, region.Width, region.Height);
+                surround.water = Hex(region.Surround.Water, surround.water);
+                surround.level = region.Surround.Level;
+            }
             RegionPostFx fx = area.GetComponent<RegionPostFx>();
             if (region.PostFx == null)
             {

@@ -1893,8 +1893,8 @@
   {
     "id": "soul_gate",
     "name": "Leaning stones",
-    "examine": "Two pale stones lean together over the start of a causeway. Beyond them the dark goes on a long way.",
-    "actions": [ { "id": "trial", "label": "Walk the long way" } ]
+    "examine": "Two pale stones lean together over the start of a causeway. Beyond them the dark goes on a long way. Walk through, and you walk home the long way.",
+    "actions": []
   },
   {
     "id": "soul_lantern",

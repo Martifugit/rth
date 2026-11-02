@@ -738,7 +738,9 @@ namespace Rth.Client
                 }
                 var m = new Material(_waterShader) { name = "Water", hideFlags = HideFlags.DontSave };
                 m.SetColor("_Color", deep);
-                m.SetColor("_Shallow", Color.Lerp(deep, new Color(0.62f, 0.74f, 0.66f), 0.45f));
+                // Shallows lighten toward a pale green, less so for dark water (a pale band over black water reads as mist).
+                float bright = Mathf.Clamp(deep.grayscale * 4f, 0.2f, 1f);
+                m.SetColor("_Shallow", Color.Lerp(deep, new Color(0.62f, 0.74f, 0.66f), 0.45f * bright));
                 _waterMaterials.Add(m);
                 mats[e.Value] = m;
             }

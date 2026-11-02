@@ -14,8 +14,13 @@ namespace Rth.Server.Content
         public string Title = "";
         /// <summary>The regions the run happens in. Stepping out of them ends it, lost.</summary>
         public List<string> Regions = new List<string>();
-        /// <summary>The object type whose "trial" action begins it (walked up to first).</summary>
+        /// <summary>The object type whose "trial" action begins it (walked up to first); empty for none.</summary>
         public string Gate = "";
+        /// <summary>
+        /// Walking into the trial's regions begins it (the causeway past the leaning stones), if its
+        /// conditions pass; if they don't, the player is turned back to <see cref="ExitTo"/>.
+        /// </summary>
+        public bool BeginOnEnter;
         /// <summary>Where the run starts: the player is moved here on beginning. Null: where they stand.</summary>
         public TilePlace? Start;
         /// <summary>Where someone found in the trial's regions without a run is sent (logged back in mid-run). Null: where the dead wake.</summary>

@@ -33,7 +33,9 @@ namespace Rth.Client
                 if (pair.Key == null || pair.Value == null) continue;
                 NodeLook look = pair.Key.GetComponent<NodeLook>();
                 bool spent = look != null && look.Depleted;
-                pair.Value.intensity = (spent ? Low : Intensity) * breath;
+                float fade = Flicker.DistanceFade(pair.Value.transform.position);
+                pair.Value.enabled = fade > 0.001f;
+                pair.Value.intensity = (spent ? Low : Intensity) * breath * fade;
             }
         }
 

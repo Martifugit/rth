@@ -2,19 +2,32 @@
   {
     "id": "long_way",
     "title": "The long way back",
-    "regions": [ "realm_long_way" ],
-    "gate": "soul_gate",
-    "start": { "plane": 0, "x": 8208, "y": 8189 },
-    "exitTo": null,
-    "conditions": [ { "type": "ferryHolds" } ],
-    "lockedMessage": "The ferryman holds nothing of yours. There's nothing at the end of the way worth the walk.",
+    "regions": [
+      "realm_long_way"
+    ],
+    "gate": "",
+    "exitTo": {
+      "plane": 0,
+      "x": 8208,
+      "y": 8195
+    },
+    "conditions": [
+      {
+        "type": "ferryHolds"
+      }
+    ],
+    "lockedMessage": "The cold turns you back at the stones. The ferryman holds nothing of yours; there's nothing at the end of the way worth the walk.",
     "emptyHanded": true,
     "walkOnly": true,
-    "emptyHandedMessage": "The way back takes nothing with you. Leave it in the grave chest first.",
-    "drain": { "percent": 1.8, "everyTicks": 3 },
+    "emptyHandedMessage": "The cold turns you back at the stones. The way takes nothing with you: leave it in the grave chest first.",
+    "drain": {
+      "percent": 1.8,
+      "everyTicks": 3
+    },
     "status": "the_cold",
     "startMessage": "You step between the stones. The cold comes up through your feet.",
     "failMessage": "The way back lets go of you.",
-    "winMessage": "You walked the long way back in {time}. (Best: {best}.)"
+    "winMessage": "You walked the long way back in {time}. (Best: {best}.)",
+    "beginOnEnter": true
   }
 ]

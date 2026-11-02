@@ -211,7 +211,7 @@ namespace Rth.Client.Editor
                 light.intensity = piece.Light.Intensity;
                 light.color = ColorUtility.TryParseHtmlString(piece.Light.Color, out Color lc) ? lc : Color.white;
                 light.shadows = LightShadows.None;
-                if (piece.Light.Flicker > 0f) glow.AddComponent<Flicker>().amount = piece.Light.Flicker;
+                glow.AddComponent<Flicker>().amount = piece.Light.Flicker; // flickers if asked, and fades with distance
             }
 
             // The look never collides or carries markers: the piece's data decides those.

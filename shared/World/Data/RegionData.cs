@@ -35,6 +35,11 @@ namespace Rth.Shared.World.Data
         /// colour grade), drawn as a local volume over the region (the client's RegionPostFx).
         /// </summary>
         public RegionPostFxDef? PostFx;
+        /// <summary>
+        /// Client only: what lies beyond the region's edges, for an instanced place set in water (the
+        /// realm of the dead): endless water following the player, so the world's edge never shows.
+        /// </summary>
+        public RegionSurroundDef? Surround;
         /// <summary>Flat ground over the whole rectangle in this material; null when the ground is hand-made or a terrain.</summary>
         public string? Ground;
         /// <summary>Materials by name: a colour ("#5C8C38") or a palette name. Pieces name these.</summary>
@@ -312,6 +317,15 @@ namespace Rth.Shared.World.Data
         public float Contrast;
         /// <summary>Post exposure in stops.</summary>
         public float Exposure;
+    }
+
+    /// <summary>What lies beyond a region's edges (<see cref="RegionData.Surround"/>).</summary>
+    public sealed class RegionSurroundDef
+    {
+        /// <summary>The endless water's colour (#RRGGBB): the region's own water's, usually.</summary>
+        public string Water = "#0a1719";
+        /// <summary>Its level (the region's water surface is at 0).</summary>
+        public float Level;
     }
 
     /// <summary>A point light carried by a placed piece (a candle heap, a brazier): drawn by the client only.</summary>

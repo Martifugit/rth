@@ -92,7 +92,12 @@ public class LongWayPaceTests
         fx.Ticks(fx.World.Rules.RespawnDelayTicks + 2);
         fx.World.Get<DialogueSystem>().End(alice);
         TrialSystem trials = fx.World.Get<TrialSystem>();
-        Assert.True(trials.Begin(alice, "soul_gate"), string.Join(" / ", client.Texts.TakeLast(3)));
+        // Out along the Landing's causeway, under the stones and over the threshold: that begins it.
+        fx.World.Get<DeathSystem>().Move(alice, 0, new TileCoord(8208, 8194));
+        fx.Ticks(1);
+        client.FromClient(new WalkToMessage { X = 8208, Y = 8189 });
+        fx.Ticks(8);
+        Assert.True(trials.Running(alice, "long_way"), "didn't begin: " + string.Join(" / ", client.Texts.TakeLast(3)) + " at " + alice.Position);
 
         var outcome = new Outcome();
         fx.World.Events.Subscribe<DamageDealt>(e => { if (e.Target == alice && e.Source is Npc) outcome.ShadeHits++; });

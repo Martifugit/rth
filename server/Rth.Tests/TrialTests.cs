@@ -134,6 +134,42 @@ public class TrialTests
         Assert.Contains("empty-handed", client.Texts);
     }
 
+    [Fact]
+    public void WalkingOverTheThresholdBeginsIt()
+    {
+        WorldFixture fx = Field(p =>
+        {
+            p.Trials[0].BeginOnEnter = true;
+            p.Trials[0].Start = null;
+            p.Trials[0].ExitTo = new TilePlace { X = 13, Y = 8 };
+        });
+        FakeConnection client = DeadAndAwake(fx);
+        fx.World.Get<DeathSystem>().Move(Alice(fx), 0, new TileCoord(14, 8));
+        fx.Ticks(1);
+        client.FromClient(new WalkToMessage { X = 18, Y = 8 });
+        fx.Ticks(6);
+        Assert.True(Trials(fx).Running(Alice(fx), "long_way"));
+        Assert.Equal(new TileCoord(18, 8), Alice(fx).Position);
+    }
+
+    [Fact]
+    public void TheWayTurnsBackThoseItWontHave()
+    {
+        WorldFixture fx = Field(p =>
+        {
+            p.Trials[0].BeginOnEnter = true;
+            p.Trials[0].ExitTo = new TilePlace { X = 13, Y = 8 };
+        });
+        FakeConnection client = fx.Login("Alice"); // holds nothing
+        fx.World.Get<DeathSystem>().Move(Alice(fx), 0, new TileCoord(14, 8));
+        fx.Ticks(1);
+        client.FromClient(new WalkToMessage { X = 18, Y = 8 });
+        fx.Ticks(6);
+        Assert.False(Trials(fx).Running(Alice(fx)));
+        Assert.Equal(new TileCoord(13, 8), Alice(fx).Position);
+        Assert.Contains("nothing to walk for", client.Texts);
+    }
+
     // ------------------------------------------------------------------ the cold
 
     [Fact]

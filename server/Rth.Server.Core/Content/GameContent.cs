@@ -743,8 +743,9 @@ namespace Rth.Server.Content
                 string where = "Trial '" + t.Id + "'";
                 if (string.IsNullOrWhiteSpace(t.Title)) problems.Add(where + ": needs a title.");
                 if (t.Regions.Count == 0) problems.Add(where + ": needs at least one region.");
-                if (!objects.TryGetValue(t.Gate, out ObjectDef? gate)) problems.Add(where + ": gate '" + t.Gate + "' isn't an object.");
-                else if (!gate.Actions.Any(a => a.Id == "trial")) problems.Add(where + ": gate '" + t.Gate + "' has no \"trial\" action.");
+                if (string.IsNullOrEmpty(t.Gate) && !t.BeginOnEnter) problems.Add(where + ": needs a gate or beginOnEnter.");
+                else if (!string.IsNullOrEmpty(t.Gate) && !objects.TryGetValue(t.Gate, out ObjectDef? gate)) problems.Add(where + ": gate '" + t.Gate + "' isn't an object.");
+                else if (!string.IsNullOrEmpty(t.Gate) && !objects[t.Gate].Actions.Any(a => a.Id == "trial")) problems.Add(where + ": gate '" + t.Gate + "' has no \"trial\" action.");
                 if (t.Status != null && !statuses.ContainsKey(t.Status)) problems.Add(where + ": status '" + t.Status + "' doesn't exist.");
                 if (t.Drain != null && (t.Drain.Percent < 0 || t.Drain.EveryTicks < 1)) problems.Add(where + ": drain needs a percent of 0 or more and everyTicks of 1 or more.");
             }

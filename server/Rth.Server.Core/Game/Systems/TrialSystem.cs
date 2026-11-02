@@ -79,10 +79,12 @@ namespace Rth.Server.Game
         public TrialDef? ByGate(string objectType) => World.Content.Trials.Values.FirstOrDefault(t => t.Gate == objectType);
 
         /// <summary>Begins the trial gated by an object type, if its conditions pass. Returns whether it began.</summary>
-        public bool Begin(Player player, string gateType)
+        public bool Begin(Player player, string gateType) => ByGate(gateType) is TrialDef def && Begin(player, def);
+
+        /// <summary>Begins a trial, if its conditions pass (telling the player why not if they don't). Returns whether it began.</summary>
+        public bool Begin(Player player, TrialDef def)
         {
-            TrialDef? def = ByGate(gateType);
-            if (def == null || player.IsDead) return false;
+            if (player.IsDead) return false;
             TrialRun run = Of(player);
             if (run.Running) return false;
 
@@ -156,6 +158,11 @@ namespace Rth.Server.Game
                 if (region == null) return;
                 TrialDef? holding = World.Content.Trials.Values.FirstOrDefault(t => t.Regions.Contains(region));
                 if (holding == null) return;
+                // Walked in over the threshold from outside (not logged back in mid-way): that begins
+                // it, if the way will have them. RegionSystem runs after this, so Current is last tick's.
+                string? cameFrom = player.Component<PlayerRegion>().Current;
+                bool walkedIn = cameFrom != null && !holding.Regions.Contains(cameFrom);
+                if (holding.BeginOnEnter && walkedIn && Begin(player, holding)) return;
                 DeathSystem death = World.Get<DeathSystem>();
                 (int plane, TileCoord tile) = holding.ExitTo != null ? death.PlaceOrSpawn(holding.ExitTo) : death.WakePlace;
                 death.Move(player, plane, tile);

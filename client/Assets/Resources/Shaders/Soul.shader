@@ -27,6 +27,7 @@ Shader "Rth/Soul"
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment Frag
+            #pragma multi_compile_fog
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
             CBUFFER_START(UnityPerMaterial)
@@ -38,13 +39,14 @@ Shader "Rth/Soul"
             CBUFFER_END
 
             struct Attributes { float4 positionOS : POSITION; float3 normalOS : NORMAL; };
-            struct Varyings { float4 positionCS : SV_POSITION; float3 normalWS : TEXCOORD0; float3 viewWS : TEXCOORD1; float height : TEXCOORD2; float seed : TEXCOORD3; };
+            struct Varyings { float4 positionCS : SV_POSITION; float3 normalWS : TEXCOORD0; float3 viewWS : TEXCOORD1; float height : TEXCOORD2; float seed : TEXCOORD3; float fog : TEXCOORD4; };
 
             Varyings Vert(Attributes a)
             {
                 Varyings v;
                 float3 positionWS = TransformObjectToWorld(a.positionOS.xyz);
                 v.positionCS = TransformWorldToHClip(positionWS);
+                v.fog = ComputeFogFactor(v.positionCS.z);
                 v.normalWS = TransformObjectToWorldNormal(a.normalOS);
                 v.viewWS = GetWorldSpaceViewDir(positionWS);
                 v.height = a.positionOS.y;
@@ -63,6 +65,9 @@ Shader "Rth/Soul"
                 half breath = 1 + _Breath * sin(_Time.y * 1.7 + v.seed * 6.2831);
                 half3 colour = _BaseColor.rgb * (0.7 + _Rim * rim) * breath;
                 half alpha = saturate((_Alpha + rim * 0.6) * foot) * _BaseColor.a;
+                // Additive: fog fades it to nothing (toward black), so souls and flames vanish into the
+                // fog with everything else instead of glowing through it.
+                colour = MixFogColor(colour, half3(0, 0, 0), v.fog);
                 return half4(colour, alpha);
             }
             ENDHLSL
