@@ -104,7 +104,7 @@ namespace Rth.Client.Ui.Panels
             UiKit.SetIcon(replyClose, IconLibrary.Get("close"));
             replyClose.RegisterCallback<ClickEvent>(_ => Ui.Close(this));
             _options = UiKit.Scroll(_reply);
-            _options.style.paddingTop = 4f;
+            _options.style.paddingTop = 2f;
         }
 
         public override void Refresh()
@@ -118,21 +118,18 @@ namespace Rth.Client.Ui.Panels
                 _speaker.text = line.Speaker.ToUpperInvariant();
                 _text.text = line.Text;
                 _options.Clear();
-                // Compact lines, not big buttons: one column for a few, two when there are more.
-                bool twoColumns = line.Options.Count > 3;
-                _options.contentContainer.style.flexDirection = FlexDirection.Row;
-                _options.contentContainer.style.flexWrap = Wrap.Wrap;
-                _options.contentContainer.style.justifyContent = Justify.Center;
+                // One column of even rows: a small gold chip with the number (the key), the words
+                // left-aligned beside it, a quiet highlight under the pointer.
+                _options.contentContainer.style.flexDirection = FlexDirection.Column;
+                _options.contentContainer.style.alignItems = Align.Center;
                 for (int i = 0; i < line.Options.Count; i++)
                 {
                     int index = i;
-                    VisualElement option = UiKit.El(_options, "dialogue-option", "row");
-                    option.style.width = twoColumns ? Length.Percent(48f) : Length.Percent(80f);
-                    UiKit.Text(option, (i + 1) + ".", "muted").style.width = 18f;
-                    Label text = UiKit.Text(option, line.Options[i]);
+                    VisualElement option = UiKit.El(_options, "dialogue-option");
+                    UiKit.Text(option, (i + 1).ToString(), "dialogue-option__key");
+                    Label text = UiKit.Text(option, line.Options[i], "dialogue-option__text");
                     text.style.flexGrow = 1;
                     text.style.flexShrink = 1;
-                    text.style.whiteSpace = WhiteSpace.Normal;
                     option.RegisterCallback<ClickEvent>(_ => Session.ChooseDialogue(index));
                 }
             }

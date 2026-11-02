@@ -35,6 +35,52 @@ namespace Rth.Client.Ui.Panels
         private int _builtFor = -1;
         private readonly List<Tile> _tiles = new List<Tile>();
 
+        /// <summary>
+        /// A crack in the card where a slash would be: a jagged split running the card's whole
+        /// height, through its border at the top and the bottom, so the card reads as broken in two
+        /// (the level on one side, the cap on the other). Near-black inside, opening a little where it
+        /// breaks the edges; no highlight (owner). Drawn with the vector
+        /// painter (anti-aliased), so it holds up at any interface scale.
+        /// </summary>
+        private static void Crack(VisualElement parent)
+        {
+            var crack = new VisualElement { pickingMode = PickingMode.Ignore };
+            crack.AddToClassList("skill-crack");
+            parent.Add(crack);
+            crack.generateVisualContent += ctx =>
+            {
+                Rect r = crack.contentRect;
+                float w = r.width, h = r.height;
+                if (w <= 0f || h <= 0f) return;
+                // The spine, top to bottom, leaning like a slash, with a few kinks.
+                Vector2[] spine =
+                {
+                    new Vector2(w * 0.92f, 0f), new Vector2(w * 0.70f, h * 0.20f), new Vector2(w * 0.80f, h * 0.38f),
+                    new Vector2(w * 0.40f, h * 0.60f), new Vector2(w * 0.50f, h * 0.78f), new Vector2(w * 0.08f, h),
+                };
+                // Open where it breaks the card's edges, narrower through the middle.
+                float[] widths = { 2.6f, 1.5f, 1.8f, 1.3f, 1.6f, 2.6f };
+                var left = new List<Vector2>();
+                var right = new List<Vector2>();
+                for (int i = 0; i < spine.Length; i++)
+                {
+                    Vector2 along = (i < spine.Length - 1 ? spine[i + 1] : spine[i]) - (i > 0 ? spine[i - 1] : spine[i]);
+                    Vector2 side = new Vector2(-along.y, along.x).normalized;
+                    left.Add(spine[i] + side * widths[i] * 0.5f);
+                    right.Add(spine[i] - side * widths[i] * 0.5f);
+                }
+                Painter2D p = ctx.painter2D;
+                p.lineJoin = LineJoin.Round;
+                p.fillColor = new Color(0.01f, 0.01f, 0.008f, 0.95f);
+                p.BeginPath();
+                p.MoveTo(left[0]);
+                for (int i = 1; i < left.Count; i++) p.LineTo(left[i]);
+                for (int i = right.Count - 1; i >= 0; i--) p.LineTo(right[i]);
+                p.ClosePath();
+                p.Fill();
+            };
+        }
+
         private sealed class Tile
         {
             public string Skill;
@@ -112,12 +158,8 @@ namespace Rth.Client.Ui.Panels
                 UiKit.El(tile, "spacer").pickingMode = PickingMode.Ignore;
                 Label level = UiKit.Text(tile, "1", "skill-tile__level");
                 level.pickingMode = PickingMode.Ignore;
-                // Level and cap parted by a crack cut into the card rather than a slash: two short
-                // strokes at different angles, a dark groove with a faint lit edge.
-                VisualElement crack = UiKit.El(tile, "skill-crack");
-                crack.pickingMode = PickingMode.Ignore;
-                UiKit.El(crack, "skill-crack__seg", "skill-crack__seg--upper").pickingMode = PickingMode.Ignore;
-                UiKit.El(crack, "skill-crack__seg", "skill-crack__seg--lower").pickingMode = PickingMode.Ignore;
+                // Level and cap parted by a crack in the card rather than a slash (owner).
+                Crack(tile);
                 Label max = UiKit.Text(tile, "", "skill-tile__max");
                 max.pickingMode = PickingMode.Ignore;
 

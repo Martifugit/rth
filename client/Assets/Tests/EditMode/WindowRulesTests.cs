@@ -357,5 +357,36 @@ namespace Rth.Client.Tests
             Assert.AreEqual("2048x1152", WindowRules.NearestBucket(saved, 2100, 1200));
             Assert.IsNull(WindowRules.NearestBucket(new string[0], 1600, 900));
         }
+
+        [Test]
+        public void ADraggedEdgeTakesTheWindowsSharingItAlong()
+        {
+            var a = new Box(0, 0, 200, 300);
+            var b = new Box(200, 0, 150, 300);     // flush to a's right
+            var far = new Box(500, 0, 100, 100);
+            List<(int Index, Edge Facing)> sharing = WindowRules.Sharing(a, Edge.Right, new List<Box> { b, far });
+            Assert.AreEqual(1, sharing.Count);
+            Assert.AreEqual((0, Edge.Left), sharing[0]);
+
+            // a grows by 40: b's left edge follows; b can't go under its minimum (100).
+            var (box, moved) = WindowRules.ResizeShared(new Box(0, 0, 240, 300), new List<(Box, Edge, float, float)> { (b, Edge.Left, 100f, 50f) });
+            Assert.AreEqual(240f, box.W);
+            Assert.AreEqual(new Box(240, 0, 110, 300), moved[0]);
+            var (capped, cappedMoved) = WindowRules.ResizeShared(new Box(0, 0, 300, 300), new List<(Box, Edge, float, float)> { (b, Edge.Left, 100f, 50f) });
+            Assert.AreEqual(250f, capped.W);
+            Assert.AreEqual(100f, cappedMoved[0].W);
+        }
+
+        [Test]
+        public void AWindowDroppedBesideANearlyAlikeOneLinesUpWithIt()
+        {
+            var side = new Box(800, 400, 200, 300);
+            var dropped = new Box(600, 420, 200, 270);     // flush left of it, 20 px short at each end
+            Box matched = WindowRules.MatchBeside(dropped, new List<Box> { side }, 100, 100, 1280, 720, 48f);
+            Assert.AreEqual(new Box(600, 400, 200, 300), matched);
+            // Too different: left alone.
+            var small = new Box(600, 500, 200, 100);
+            Assert.AreEqual(small, WindowRules.MatchBeside(small, new List<Box> { side }, 100, 100, 1280, 720, 48f));
+        }
     }
 }

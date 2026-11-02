@@ -797,6 +797,18 @@ namespace Rth.Client.Ui
             return (box, landing.HasValue);
         }
 
+        /// <summary>How near (screen pixels) a dropped window's ends must be to a neighbour's to line up with it.</summary>
+        private const float MatchScreenPixels = 48f;
+
+        /// <summary>A window dropped beside another of nearly its height (or width) lines up with it (WindowRules.MatchBeside).</summary>
+        public WindowRules.Box MatchBeside(UiWindow window, WindowRules.Box dropped)
+        {
+            Vector2 screen = ScreenSize;
+            Vector2 min = window.MinSize;
+            float tolerance = MatchScreenPixels / Mathf.Max(0.1f, _settings != null ? _settings.scale : 1f);
+            return WindowRules.MatchBeside(dropped, ObstaclesFor(window), min.x, min.y, screen.x, screen.y, tolerance);
+        }
+
         /// <summary>The size a panel's own window starts at: its fixed size, else its default size (never under its minimum).</summary>
         public Vector2 OwnSize(UiPanel panel)
         {
@@ -867,6 +879,10 @@ namespace Rth.Client.Ui
 
         private void ShowGuideLines(List<WindowRules.Guide> guides)
         {
+            // Only the screen's centre lines are drawn (owner: edge guides got in the way); snapping
+            // to edges still happens, silently.
+            Vector2 middle = ScreenSize / 2f;
+            guides = guides?.Where(g => g.Vertical ? Mathf.Abs(g.At - middle.x) < 0.5f : Mathf.Abs(g.At - middle.y) < 0.5f).ToList();
             Vector2 screen = ScreenSize;
             for (int i = 0; i < Mathf.Max(_guides.Count, guides?.Count ?? 0); i++)
             {

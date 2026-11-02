@@ -193,7 +193,7 @@ namespace Rth.Client.Ui
             var tab = new VisualElement();
             tab.AddToClassList("tab");
             _tabs.Insert(index, tab);
-            UiKit.Icon(tab, IconLibrary.Get(panel.Icon), 22f, "tab__icon").pickingMode = PickingMode.Ignore;
+            UiKit.Icon(tab, IconLibrary.Get(panel.Icon), 20f, "tab__icon").pickingMode = PickingMode.Ignore;
             UiKit.Tooltip(tab, () => panel.Title);
             tab.RegisterCallback<PointerDownEvent>(e => PressTab(panel, e));
             tab.RegisterCallback<PointerMoveEvent>(OnPointerMove);
@@ -269,7 +269,8 @@ namespace Rth.Client.Ui
             Root.EnableInClassList("window--bare", bare);
             Root.EnableInClassList("window--fixed", !Resizable);
             Root.EnableInClassList("window--resizable", Resizable);
-            Root.EnableInClassList("window--floating", IsFloating);
+            // A frameless floating window (the conversation) gets no border: it would box empty space.
+            Root.EnableInClassList("window--floating", IsFloating && !bare);
             Root.EnableInClassList("window--placeholder", IsPlaceholder);
             _titleBar.style.display = bare ? DisplayStyle.None : DisplayStyle.Flex;
             _tabs.style.display = single ? DisplayStyle.None : DisplayStyle.Flex;
@@ -285,6 +286,9 @@ namespace Rth.Client.Ui
         /// The smallest the window may be: its panels' content minimum plus the frame around it, and
         /// never narrower than its title bar's icons, tabs and close button need.
         /// </summary>
+        /// <summary>The narrowest a tab squeezes to when the window is narrow (its icon still whole).</summary>
+        private const float TabLeast = 20f;
+
         public Vector2 MinSize
         {
             get
@@ -292,8 +296,10 @@ namespace Rth.Client.Ui
                 Vector2 content = LeastContent;
                 foreach (UiPanel p in Panels) content = Vector2.Max(content, p.MinSize);
                 if (IsBare) return content;
-                // Title bar: 10 px of padding, the icon (26) or the tabs (29 each), 28 px to grab, the close button (26).
-                float strip = 10f + (Panels.Count <= 1 ? 26f : Panels.Count * 29f) + 28f + 26f;
+                // Title bar: 10 px of padding, the icon (26) or the tabs (each may squeeze to 21), a little to
+                // grab (6), the close button (26). Tabs squeeze rather than hold the window wide, so a window
+                // of six tabs can still be as narrow as a 4-wide pack.
+                float strip = 10f + (Panels.Count <= 1 ? 26f : Panels.Count * (TabLeast + 1f)) + 6f + 26f;
                 Vector2 framed = content + FrameChrome;
                 return new Vector2(Mathf.Max(framed.x, strip), framed.y);
             }
@@ -417,7 +423,7 @@ namespace Rth.Client.Ui
 
             if (_gesture == Gesture.Resize)
             {
-                Resize(delta, snap, screen);
+                Resize(delta, snap, screen, e.altKey);
                 return;
             }
 
@@ -461,19 +467,78 @@ namespace Rth.Client.Ui
             }
         }
 
-        private void Resize(Vector2 delta, float snap, Vector2 screen)
+        /// <summary>
+        /// Resizing. Windows sharing a dragged edge (flush against it) move their edge with it, like a
+        /// splitter between panes, so a tidy arrangement stays tidy; hold Alt to resize this one alone.
+        /// </summary>
+        private void Resize(Vector2 delta, float snap, Vector2 screen, bool alone)
         {
-            List<WindowRules.Box> others = IsFloating ? new List<WindowRules.Box>() : _ui.ObstaclesFor(this);
+            List<UiWindow> neighbours = IsFloating ? new List<UiWindow>() : _ui.Windows.Where(w => w != this && !w.IsFloating).ToList();
+            var shared = new List<(UiWindow Window, WindowRules.Edge Facing)>();
             Vector2[] allowed = AllowedSizes;
+            if (!alone && allowed == null)
+                foreach (var (index, facing) in WindowRules.Sharing(_startBox, _edges, neighbours.Select(w => w.ResizeStart).ToList()))
+                {
+                    UiWindow w = neighbours[index];
+                    if (w.Resizable && w.AllowedSizes == null) shared.Add((w, facing));
+                }
+            // The others it may not run into: every docked neighbour (where it stood when this began)
+            // except those moving their shared edge with it.
+            List<WindowRules.Box> others = neighbours.Where(w => !shared.Any(x => x.Window == w)).Select(w => w.ResizeStart).ToList();
             Vector2 min = allowed != null ? new Vector2(allowed.Min(s => s.x), allowed.Min(s => s.y)) : MinSize;
             WindowRules.Box box = WindowRules.Resize(_startBox, _edges, delta.x, delta.y, min.x, min.y, others, screen.x, screen.y, snap);
             if (allowed != null)
                 box = WindowRules.NearestAllowed(_startBox, box, _edges, allowed.Select(s => (s.x, s.y)).ToList(), others, screen.x, screen.y);
+            if (shared.Count > 0)
+            {
+                var (fitted, moved) = WindowRules.ResizeShared(box, shared.Select(s => (s.Window.ResizeStart, s.Facing, s.Window.MinSize.x, s.Window.MinSize.y)).ToList());
+                box = fitted;
+                for (int i = 0; i < shared.Count; i++) shared[i].Window.Preview(moved[i]);
+            }
+            foreach (UiWindow w in _sharing)
+                if (!shared.Any(s => s.Window == w)) w.Preview(w.ResizeStart);
+            _sharing.Clear();
+            _sharing.AddRange(shared.Select(s => s.Window));
             _landing = box;
             _landingFits = true;
             Size = new Vector2(box.W, box.H);
             Place(new Vector2(box.X, box.Y));
             _ui.ShowGuides(WindowRules.Contacts(box, _ui.SnapTargetsFor(this), screen.x, screen.y));
+        }
+
+        /// <summary>The windows moving with this one's resize (they share the dragged edge).</summary>
+        private readonly List<UiWindow> _sharing = new List<UiWindow>();
+
+        /// <summary>The window's box when a neighbour began resizing (what a shared edge works from).</summary>
+        internal WindowRules.Box ResizeStart => _previewing ? _previewStart : Box;
+
+        private bool _previewing;
+        private WindowRules.Box _previewStart;
+
+        /// <summary>Drawn at a box while a neighbour drags an edge they share; nothing is kept until it's let go.</summary>
+        internal void Preview(WindowRules.Box box)
+        {
+            if (!_previewing)
+            {
+                _previewing = true;
+                _previewStart = Box;
+            }
+            Size = new Vector2(box.W, box.H);
+            Place(new Vector2(box.X, box.Y));
+        }
+
+        /// <summary>Keeps (or, cancelled, undoes) the box a neighbour's resize gave it.</summary>
+        internal void EndPreview(bool keep, Vector2 screen)
+        {
+            if (!_previewing) return;
+            _previewing = false;
+            SetBox(keep ? Box : _previewStart, screen);
+        }
+
+        private void EndSharing(bool keep, Vector2 screen)
+        {
+            foreach (UiWindow w in _sharing) w.EndPreview(keep, screen);
+            _sharing.Clear();
         }
 
         private void OnPointerUp(PointerUpEvent e)
@@ -495,9 +560,18 @@ namespace Rth.Client.Ui
                 case Gesture.Move when _dockInto != null && Panels.Count == 1:
                     _ui.DropPanel(Panels[0], e.position, null);
                     return;
-                case Gesture.Move:
                 case Gesture.Resize:
                     SetBox(_landingFits ? _landing : _startBox, _ui.ScreenSize);
+                    EndSharing(_landingFits, _ui.ScreenSize);
+                    _ui.SaveLayout();
+                    return;
+                case Gesture.Move:
+                    // Dropped flush beside a window of nearly the same height (or width), it lines up
+                    // with it exactly, so rows and columns come out even without pixel pushing.
+                    WindowRules.Box dropped = _landingFits ? _landing : _startBox;
+                    if (_landingFits && !IsFloating && Resizable && AllowedSizes == null && !e.altKey)
+                        dropped = _ui.MatchBeside(this, dropped);
+                    SetBox(dropped, _ui.ScreenSize);
                     _ui.SaveLayout();
                     return;
             }
@@ -514,6 +588,7 @@ namespace Rth.Client.Ui
             _ui.HideDragGhost();
             _ui.HideLanding();
             if (moved) SetBox(_startBox, _ui.ScreenSize);
+            EndSharing(false, _ui.ScreenSize);
         }
 
         // ------------------------------------------------------------------ tabs: click, pull out, dock

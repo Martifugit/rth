@@ -36,7 +36,7 @@ every piece and how they are organised.
 |---|---|
 | **Main action bar** ✓ | Blood, phlegm and breath as three equal gauges; the bile axis (two halves filling outward from a black centre that holds the value); 14 slots on keys 1 to 0, - and =. Fixed size: 580 px wide, slots 38 px at a 40 px pitch (`ActionBarRow.Pitch`), so every bar lines up with it slot for slot. Devotion (hymns) replaced breath. **To change:** the style meter shown may follow the weapon you hold. |
 | **Secondary action bars** ✓ | Up to four more bars of 14 slots (bars 2 to 5, from the window menu), no keys. Each is a full row as wide as the main bar (to snap flush under or over it), or resized to exactly half that width in two rows of seven, or two columns of seven standing tall (`AllowedSizes`); the slots are laid out, centred, to whichever size the window has. Abilities and items are dragged onto any bar; layouts are kept on the server (client state `bars`; a layout saved with two secondaries loads with the new bars empty). |
-| **Minimap** ✓ | Round, in a bronze bezel with a gold crest (`Skin/minimap-bezel`); it turns with the camera, click to walk. The compass (click to face north) and the clock sit in medallions on the ring's upper corners, the region's name low on the map. A red flag marks where a click sent you (on the map or in the world) until you get there or stop; the world map's marker shows as a small gold diamond. While either is further off than the map shows, a small arrow at the edge points its way, slowly fading in and out (gold for the marker, red for the flag). Six round buttons sit in a cradle around the bottom of the ring: run (remembered between sessions, client state `run`), world map, "Journal (J)", "Guides (G)", settings and a menu of every window. Shown at 270 px: its geometry is shared by `MinimapPanel.cs` and `make_skin.py` in 240-pixel design units, which the panel multiplies by `MinimapPanel.Scale`, so the bezel and buttons stretch evenly. No blood orb: blood is on the action bar. |
+| **Minimap** ✓ | Round, in a bronze bezel with a gold crest (`Skin/minimap-bezel`); it turns with the camera, click to walk. The compass (click to face north) and the clock (the real local time: a day in R'th is a real day) sit in medallions on the ring's upper corners, the region's name low on the map. A red flag marks where a click sent you (on the map or in the world) until you get there or stop; the world map's marker shows as a small gold diamond. While either is further off than the map shows, an arrow at the edge points its way, slowly fading in and out (gold for the marker, red for the flag). Six round buttons sit in a cradle around the bottom of the ring: run (remembered between sessions, client state `run`), world map, "Journal (J)", "Guides (G)", settings and a menu of every window. Shown at 270 px: its geometry is shared by `MinimapPanel.cs` and `make_skin.py` in 240-pixel design units, which the panel multiplies by `MinimapPanel.Scale`, so the bezel and buttons stretch evenly. No blood orb: blood is on the action bar. |
 | **Chat** ✓ | Filters (all, game, public) and the line you type on (Enter). Resizable (at least 260 x 120) and can share a window as a tab; the lines scroll and fill whatever size it has. Private and group chat to come. |
 | **Target** ✓ | What you are fighting, and its health. Kept while you walk away in combat. |
 | **Buffs / debuffs** ✓ | Two fixed rows of status icons above the action bar, each half its width (bile's four statuses, wards from abilities), each with its % or time left; hover for what it does. |
@@ -191,7 +191,8 @@ object type; (3) the other providers and the legend's categories.
 - **Shop** ✓: stock, prices, buy 1 / 5 / 10 / X.
 - **Conversation** ✓: two parts, as in the modern game. The **message** (portrait, name, the
   words, continue with Space) and then, if there's anything to answer, the **reply** ("What
-  would you like to say?", numbered answers).
+  would you like to say?", the answers in one column, each a row with its number key in a chip).
+  The conversation window has no frame of its own.
 
 ## Laying windows out
 
@@ -207,9 +208,14 @@ screen's edges, so a clean interface is easy to build. The rules are plain maths
   neighbours level with it count, so nothing across the screen pulls. The snap distance is 8 screen
   pixels at every interface scale. **Hold Alt** to place freely. There is no grid. The window is
   drawn where it will land (a docked window that would overlap moves to the nearest free place),
-  so nothing jumps on release; guide lines show what it sits flush on; red means no room here.
+  so nothing jumps on release; red means no room here. The only guide line drawn is the screen's
+  centre, while the window sits on it (the owner found guides on every flush edge in the way).
+  Dropped beside a window of nearly the same height (or width), within 48 screen pixels, it takes
+  that window's size and lines up with it, so a column or row of windows comes out even.
 - **Resizing:** any edge or corner. The moving edges snap flush the same way and stop flush at a
-  neighbour (they never jump back), with guides. A window never goes under its minimum, which is its
+  neighbour (they never jump back). An edge shared with a flush neighbour is a splitter: dragging
+  it moves the neighbour's edge too, so the two stay flush (`WindowRules.ResizeShared`); **hold
+  Alt** to resize the one window alone. A window never goes under its minimum, which is its
   panels' content minimum plus its frame (and never narrower than its title bar's icons). A panel
   with `AllowedSizes` resizes between those sizes only (the nearest that fits), even if it is bare
   or fixed: extra action bars use it.

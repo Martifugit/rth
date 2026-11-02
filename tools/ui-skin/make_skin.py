@@ -293,10 +293,11 @@ def save(img, name):
     img.save(os.path.join(OUT, name + ".png"))
 
 if __name__ == "__main__":
-    # Windows: slice 14. The body gradient runs dark charcoal-brown. The rim is one bronze all round
+    # Windows: slice 14. The body gradient runs dark charcoal-brown. The rim is one bronze all round,
+    # with no gold corner angles: the title bar hides the top two, so the bottom two stood out (owner).
     # and the corners have no studs, so all four corner angles look the same (the title bar covers
     # the top of the frame's inside, and a rim lighter at the top made the bottom angles stand out).
-    frame("window", 48, 4, (137, 111, 69, 255), (137, 111, 69, 255), (24, 22, 20, 250), (13, 12, 11, 250), True, studs=False)
+    frame("window", 48, 4, (137, 111, 69, 255), (137, 111, 69, 255), (24, 22, 20, 250), (13, 12, 11, 250), False, studs=False)
     # HUD pieces (bars, minimap, chat): slice 12, a little translucent.
     frame("hud", 40, 3, (150, 122, 78, 255), (84, 66, 38, 255), (20, 19, 17, 235), (11, 10, 9, 235), False)
     # Inner panels (cards, wells with a rim): slice 6.

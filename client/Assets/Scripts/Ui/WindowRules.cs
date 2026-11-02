@@ -237,6 +237,86 @@ namespace Rth.Client.Ui
             return best;
         }
 
+        // ------------------------------------------------------------------ neighbours
+
+        /// <summary>How close (pixels) two edges must be to count as shared, and to line up when dropped.</summary>
+        public const float Flush = 0.5f;
+
+        /// <summary>
+        /// The windows sharing an edge that is being dragged: flush against it (within
+        /// <see cref="Flush"/>) and overlapping it along its length. Returns, for each, its index in
+        /// <paramref name="others"/> and which of its own edges faces the moving one. Dragging that
+        /// edge moves theirs with it, like a splitter between panes.
+        /// </summary>
+        public static List<(int Index, Edge Facing)> Sharing(Box b, Edge edges, IReadOnlyList<Box> others)
+        {
+            var found = new List<(int, Edge)>();
+            for (int i = 0; i < others.Count; i++)
+            {
+                Box o = others[i];
+                bool alongY = o.Y < b.Bottom - Flush && b.Y < o.Bottom - Flush;
+                bool alongX = o.X < b.Right - Flush && b.X < o.Right - Flush;
+                if ((edges & Edge.Right) != 0 && alongY && Math.Abs(o.X - b.Right) <= Flush) found.Add((i, Edge.Left));
+                else if ((edges & Edge.Left) != 0 && alongY && Math.Abs(o.Right - b.X) <= Flush) found.Add((i, Edge.Right));
+                else if ((edges & Edge.Bottom) != 0 && alongX && Math.Abs(o.Y - b.Bottom) <= Flush) found.Add((i, Edge.Top));
+                else if ((edges & Edge.Top) != 0 && alongX && Math.Abs(o.Bottom - b.Y) <= Flush) found.Add((i, Edge.Bottom));
+            }
+            return found;
+        }
+
+        /// <summary>
+        /// Keeps a resized box from squeezing the windows that share its moving edges below their
+        /// minimums, then gives each of them its new box: its facing edge follows the moved edge.
+        /// </summary>
+        public static (Box Box, List<Box> Linked) ResizeShared(Box resized, IReadOnlyList<(Box Start, Edge Facing, float MinW, float MinH)> linked)
+        {
+            float x0 = resized.X, x1 = resized.Right, y0 = resized.Y, y1 = resized.Bottom;
+            foreach (var (o, facing, minW, minH) in linked)
+            {
+                if (facing == Edge.Left) x1 = Math.Min(x1, o.Right - minW);
+                else if (facing == Edge.Right) x0 = Math.Max(x0, o.X + minW);
+                else if (facing == Edge.Top) y1 = Math.Min(y1, o.Bottom - minH);
+                else if (facing == Edge.Bottom) y0 = Math.Max(y0, o.Y + minH);
+            }
+            var box = new Box(x0, y0, Math.Max(1f, x1 - x0), Math.Max(1f, y1 - y0));
+            var moved = new List<Box>();
+            foreach (var (o, facing, _, _) in linked)
+            {
+                if (facing == Edge.Left) moved.Add(new Box(box.Right, o.Y, o.Right - box.Right, o.H));
+                else if (facing == Edge.Right) moved.Add(new Box(o.X, o.Y, box.X - o.X, o.H));
+                else if (facing == Edge.Top) moved.Add(new Box(o.X, box.Bottom, o.W, o.Bottom - box.Bottom));
+                else moved.Add(new Box(o.X, o.Y, o.W, box.Y - o.Y));
+            }
+            return (box, moved);
+        }
+
+        /// <summary>
+        /// A window dropped flush beside another takes on its extent along the shared edge when they
+        /// are already nearly alike (within <paramref name="tolerance"/> at each end): side by side they
+        /// come out the same height, stacked the same width, so neat rows and columns form without
+        /// pixel pushing. Only if it still fits (screen, others, its minimum).
+        /// </summary>
+        public static Box MatchBeside(Box b, IReadOnlyList<Box> others, float minW, float minH, float screenW, float screenH, float tolerance)
+        {
+            foreach (Box o in others)
+            {
+                bool sideBySide = Math.Abs(o.X - b.Right) <= Flush || Math.Abs(o.Right - b.X) <= Flush;
+                bool stacked = Math.Abs(o.Y - b.Bottom) <= Flush || Math.Abs(o.Bottom - b.Y) <= Flush;
+                Box match = b;
+                if (sideBySide && Math.Abs(o.Y - b.Y) <= tolerance && Math.Abs(o.Bottom - b.Bottom) <= tolerance && o.H >= minH)
+                    match = new Box(b.X, o.Y, b.W, o.H);
+                else if (stacked && Math.Abs(o.X - b.X) <= tolerance && Math.Abs(o.Right - b.Right) <= tolerance && o.W >= minW)
+                    match = new Box(o.X, b.Y, o.W, b.H);
+                else continue;
+                if (match.Equals(b)) continue;
+                var rest = new List<Box>();
+                foreach (Box x in others) if (!x.Equals(o)) rest.Add(x);
+                rest.Add(o);
+                if (Fits(match, rest, screenW, screenH)) return match;
+            }
+            return b;
+        }
+
         public static Box Clamp(Box b, float screenW, float screenH) =>
             b.At(Math.Max(0f, Math.Min(b.X, screenW - b.W)), Math.Max(0f, Math.Min(b.Y, screenH - b.H)));
 

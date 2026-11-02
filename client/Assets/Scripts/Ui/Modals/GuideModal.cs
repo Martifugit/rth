@@ -25,7 +25,7 @@ namespace Rth.Client.Ui.Modals
     /// <summary>
     /// Each skill's guide, master-detail: every skill in a list on the left (icon, name, your
     /// level), and on the right the chosen skill's unlocks as one list in level order, each row an
-    /// icon, the level, the name and a small badge for its kind. What you have reached is drawn
+    /// icon, the name and, at the end, the level it needs. What you have reached is drawn
     /// plainly and what is still ahead dimmed, so no banner is needed to say where you stand.
     /// Unlocks are gathered from the content itself (abilities, equipment, tools, recipes and
     /// gathering that need the skill), so the guide is always as complete as the game.
@@ -91,18 +91,18 @@ namespace Rth.Client.Ui.Modals
             if (unlocks.Count == 0) UiKit.Text(list, "Nothing needs this skill yet.", "muted", "guide-list__empty");
             foreach (Unlock u in unlocks)
             {
-                VisualElement row = UiKit.El(list, "row", "guide-unlock");
+                // The same list rows as every other list; the level it needs sits at the end (no kind badge).
+                VisualElement row = UiKit.El(list, "master-row", "guide-unlock");
                 row.EnableInClassList("guide-unlock--locked", level < u.Level);
                 VisualElement slot = UiKit.El(row, "slot", "guide-unlock__slot");
                 VisualElement icon = UiKit.El(slot, "slot__icon");
                 icon.style.width = icon.style.height = 22f;
                 UiKit.SetIcon(icon, u.Icon, u.Tint);
                 icon.pickingMode = PickingMode.Ignore;
-                UiKit.Text(row, u.Level.ToString(), "guide-unlock__level");
                 Label text = UiKit.Text(row, u.Text, "guide-unlock__name");
                 text.style.flexGrow = 1;
                 text.style.flexShrink = 1;
-                UiKit.Text(row, u.Badge, "guide-badge", "guide-badge--" + u.Kind.ToString().ToLowerInvariant());
+                UiKit.Text(row, u.Level.ToString(), "guide-unlock__level");
                 string tip = u.Tooltip;
                 if (tip != null) UiKit.Tooltip(row, () => tip);
             }

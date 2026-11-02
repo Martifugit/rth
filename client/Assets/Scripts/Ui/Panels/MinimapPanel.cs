@@ -45,7 +45,6 @@ namespace Rth.Client.Ui.Panels
 
         private const int TextureSize = 320;
         private const float ViewTiles = 20f;
-        private const float GameDayRealSeconds = 3600f;
 
         public override string Id => "minimap";
         public override string Title => "Minimap";
@@ -169,7 +168,7 @@ namespace Rth.Client.Ui.Panels
             Rounded(clockMedal, MedalSize / 2f);
             _clock = UiKit.Text(clockMedal, "", "minimap__clock");
             _clock.pickingMode = PickingMode.Ignore;
-            UiKit.Tooltip(clockMedal, () => UiKit.Title("Time in R'th") + "\nA day passes every real hour.");
+            UiKit.Tooltip(clockMedal, () => UiKit.Title("Time in R'th") + "\nA day in R'th is a real day.");
 
             _run = Orb(frame, OrbAngles[0], "run", () => UiKit.Title("Run") + "\nTwo tiles a tick instead of one.\n" + UiKit.Colour("Click or press R.", UiKit.Muted), () => Session.ToggleRun());
             Orb(frame, OrbAngles[1], "map", () => "World map (M)", () => Ui.ToggleModal(Ui.Modal<WorldMapModal>()));
@@ -247,9 +246,9 @@ namespace Rth.Client.Ui.Panels
             _region.text = region;
             _region.style.display = string.IsNullOrEmpty(region) ? DisplayStyle.None : DisplayStyle.Flex;
 
-            double seconds = (DateTime.UtcNow - DateTime.UtcNow.Date).TotalSeconds % GameDayRealSeconds;
-            int minutes = (int)(seconds / GameDayRealSeconds * 24 * 60);
-            _clock.text = (minutes / 60).ToString("00") + ":" + (minutes % 60).ToString("00");
+            // A day in R'th is a real day (owner): the clock keeps the time of day where you are.
+            DateTime now = DateTime.Now;
+            _clock.text = now.Hour.ToString("00") + ":" + now.Minute.ToString("00");
         }
 
         private void UpdateDots(EntityView local)
@@ -335,7 +334,7 @@ namespace Rth.Client.Ui.Panels
                 // Either marker out of sight shows as the same small arrow at the edge, slowly
                 // fading in and out: gold for the world map's marker, red for the walk flag.
                 float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * Mathf.PI * 2f / EdgeArrowSeconds);
-                float alpha = 0.3f + 0.5f * pulse;
+                float alpha = 0.45f + 0.5f * pulse;
 
                 TileCoord? waypoint = _panel.Session.Waypoint;
                 if (waypoint.HasValue)
@@ -357,7 +356,7 @@ namespace Rth.Client.Ui.Panels
             }
 
             /// <summary>Where the edge arrows' tips sit: just inside the ring.</summary>
-            private const float EdgeArrowRadius = MapRadius - 11f;
+            private const float EdgeArrowRadius = MapRadius - 8f;
 
             /// <summary>One slow fade in and out of an edge arrow.</summary>
             private const float EdgeArrowSeconds = 1.8f;
@@ -411,15 +410,16 @@ namespace Rth.Client.Ui.Panels
             private static void ArrowAt(Painter2D p, Vector2 tip, Vector2 dir, Color colour, float alpha)
             {
                 Vector2 side = new Vector2(-dir.y, dir.x);
-                Vector2 back = tip - dir * 8f;
+                // Large enough to find at a glance (owner: the first was too small), still a quiet pulse.
+                Vector2 back = tip - dir * 15f;
                 p.fillColor = new Color(colour.r, colour.g, colour.b, alpha);
-                p.strokeColor = new Color(Outline.r, Outline.g, Outline.b, alpha);
-                p.lineWidth = 1.2f;
+                p.strokeColor = new Color(Outline.r, Outline.g, Outline.b, Mathf.Min(1f, alpha + 0.2f));
+                p.lineWidth = 1.6f;
                 p.BeginPath();
                 p.MoveTo(tip);
-                p.LineTo(back + side * 5f);
-                p.LineTo(back + dir * 2.5f);
-                p.LineTo(back - side * 5f);
+                p.LineTo(back + side * 9f);
+                p.LineTo(back + dir * 4.5f);
+                p.LineTo(back - side * 9f);
                 p.ClosePath();
                 p.Fill();
                 p.Stroke();

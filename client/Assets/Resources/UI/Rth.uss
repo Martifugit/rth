@@ -78,6 +78,8 @@
 
 .tab {
     width: 28px;
+    min-width: 20px;
+    flex-shrink: 1;
     margin-right: 1px;
     align-items: center;
     justify-content: center;
@@ -93,8 +95,8 @@
 }
 
 .tab__icon {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     -unity-background-scale-mode: scale-to-fit;
     -unity-background-image-tint-color: rgb(139, 128, 108);
 }
@@ -549,7 +551,7 @@
 }
 
 .menu {
-    min-width: 170px;
+    min-width: 110px;
     background-color: rgba(12, 10, 9, 0.97);
     border-width: 1px;
     border-color: rgb(110, 90, 58);
@@ -560,17 +562,18 @@
 .menu__title {
     -unity-font-definition: resource("UI/Fonts/Cinzel");
     -unity-font-style: bold;
-    font-size: 13px;
+    font-size: 11px;
     letter-spacing: 1px;
     color: rgb(224, 195, 135);
-    padding: 5px 10px 4px 10px;
+    padding: 3px 8px 2px 8px;
     margin-bottom: 2px;
     border-bottom-width: 1px;
     border-bottom-color: rgba(201, 162, 94, 0.3);
 }
 
 .menu__option {
-    padding: 3px 10px;
+    padding: 1px 8px;
+    font-size: 12px;
 }
 
 .menu__option:hover {
@@ -662,21 +665,45 @@
 }
 
 .dialogue-option {
-    padding: 2px 8px;
-    margin: 1px 4px;
-    min-height: 20px;
+    flex-direction: row;
     align-items: center;
+    width: 88%;
+    min-height: 22px;
+    padding: 2px 10px 2px 4px;
     border-radius: 3px;
-    font-size: 13px;
-    color: rgb(240, 222, 176);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(150, 122, 78, 0.18);
 }
 
+/* Faint on purpose: the project blends in linear colour, so light washes over dark come out strong. */
 .dialogue-option:hover {
-    background-color: rgba(224, 195, 135, 0.14);
+    background-color: rgba(224, 195, 135, 0.06);
 }
 
-.dialogue-option > Label {
-    font-size: 13px;
+.dialogue-option__key {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+    border-radius: 9px;
+    border-width: 1px;
+    border-color: rgb(150, 122, 78);
+    background-color: rgba(20, 17, 13, 0.9);
+    -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
+    font-size: 11px;
+    -unity-text-align: middle-center;
+    color: rgb(224, 195, 135);
+    flex-shrink: 0;
+}
+
+.dialogue-option__text {
+    -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Medium");
+    font-size: 14px;
+    color: rgb(240, 222, 176);
+    white-space: normal;
+}
+
+.dialogue-option:hover > .dialogue-option__text {
+    color: rgb(255, 245, 215);
 }
 
 .button--on {
@@ -1181,28 +1208,25 @@
 }
 
 /* ---------------------------------------------------------------- guide: skill unlocks */
-/* One list in level order: icon, level, name, a badge for the kind. What is still ahead is dimmed. */
+/* One list in level order, in the same rows as every other list (master-row): icon, name, and the
+   level it needs at the end. What is still ahead is dimmed. */
 
 .guide-unlock {
-    align-items: center;
     padding: 3px 8px 3px 6px;
-    border-bottom-width: 1px;
-    border-bottom-color: rgba(201, 162, 94, 0.07);
-}
-
-.guide-unlock:hover {
-    background-color: rgba(255, 240, 210, 0.03);
 }
 
 .guide-unlock__slot {
     width: 32px;
     height: 32px;
+    margin-right: 8px;
 }
 
 .guide-unlock__level {
-    width: 36px;
+    flex-shrink: 0;
+    min-width: 28px;
+    margin-left: 8px;
     -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
-    -unity-text-align: middle-center;
+    -unity-text-align: middle-right;
     color: rgb(124, 207, 98);
 }
 
@@ -2056,31 +2080,10 @@
 
 /* Two short strokes at different angles: a dark groove with a faint lit edge, like a cut. */
 .skill-crack {
-    width: 7px;
-    height: 16px;
-    margin: 0 1px;
+    width: 11px;
+    align-self: stretch;
+    margin: 0 2px;
     flex-shrink: 0;
-}
-
-.skill-crack__seg {
-    position: absolute;
-    width: 1px;
-    height: 9px;
-    background-color: rgba(0, 0, 0, 0.85);
-    border-right-width: 1px;
-    border-right-color: rgba(201, 162, 94, 0.35);
-}
-
-.skill-crack__seg--upper {
-    left: 3px;
-    top: 0;
-    rotate: 24deg;
-}
-
-.skill-crack__seg--lower {
-    left: 1px;
-    top: 7px;
-    rotate: 12deg;
 }
 
 /* The skills guide's detail: the skill's name and words, then its unlocks in one framed list. */
@@ -2168,10 +2171,11 @@
 /* UiWindow and UiRoot: resize handles, the frameless move handle, outlines that never change a
    window's size (layout editing, a tab about to dock, a full window), stand-ins, the edit bar. */
 
-/* The title bar shows icons only, and they keep their size however narrow the window gets. */
+/* The title bar shows icons only, and they keep their size however narrow the window gets (tabs
+   may squeeze a little, down to their min-width, but their icons stay whole). */
 .window__title-icon,
 .window__button,
-.tab {
+.tab__icon {
     flex-shrink: 0;
 }
 
