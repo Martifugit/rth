@@ -129,27 +129,6 @@
     padding: 0;
 }
 
-/* Any corner resizes: an L of bronze, shown while the pointer is over the window. */
-.window__grip {
-    position: absolute;
-    width: 14px;
-    height: 14px;
-    border-color: rgba(201, 162, 94, 0);
-}
-
-.window:hover > .window__grip {
-    border-color: rgba(201, 162, 94, 0.55);
-}
-
-.window__grip:hover {
-    border-color: rgb(240, 213, 140);
-}
-
-.window__grip--tl { left: 0; top: 0; border-left-width: 2px; border-top-width: 2px; }
-.window__grip--tr { right: 0; top: 0; border-right-width: 2px; border-top-width: 2px; }
-.window__grip--bl { left: 0; bottom: 0; border-left-width: 2px; border-bottom-width: 2px; }
-.window__grip--br { right: 0; bottom: 0; border-right-width: 2px; border-bottom-width: 2px; }
-
 /* Room to grab the title bar between the tabs and the close button. */
 .window__drag-space {
     min-width: 28px;
@@ -160,51 +139,10 @@
     flex-grow: 0;
 }
 
-.window__handle {
-    position: absolute;
-    left: -4px;
-    top: -4px;
-    width: 14px;
-    height: 14px;
-    background-color: rgb(201, 162, 94);
-    border-width: 2px;
-    border-color: rgb(14, 12, 10);
-    border-radius: 7px;
-    opacity: 0;
-    display: none;
-}
-
-/* Only frameless windows (bars, the minimap) have a move handle; framed ones move by the title bar. */
-.window--bare > .window__handle {
-    display: flex;
-}
-
-.window--bare:hover > .window__handle {
-    opacity: 1;
-}
-
-.window--fixed > .window__grip,
-.window--bare > .window__grip {
-    display: none;
-}
-
-/* Locked: nothing moves, resizes or closes. */
-.rth-root--locked .window__grip,
-.rth-root--locked .window__handle,
-.rth-root--locked .window__close {
-    display: none;
-}
-
 /* Floating windows (bank, shop, conversation) sit above the HUD: a deeper shadow sets them apart. */
 .window--floating {
     border-width: 1px;
     border-color: rgba(0, 0, 0, 0.6);
-}
-
-/* The window a dragged tab will join. */
-.window--dock-target {
-    border-width: 2px;
-    border-color: rgb(240, 213, 140);
 }
 
 /* Where a window being moved or resized will land, and the lines it lines up with. */
@@ -2058,4 +1996,263 @@
     -unity-text-align: middle-center;
     width: 160px;
     margin-left: -80px;
+}
+
+/* ---------------------------------------------------------------- window system */
+/* UiWindow and UiRoot: resize handles, the frameless move handle, outlines that never change a
+   window's size (layout editing, a tab about to dock, a full window), stand-ins, the edit bar. */
+
+/* The title bar shows icons only, and they keep their size however narrow the window gets. */
+.window__title-icon,
+.window__button,
+.tab {
+    flex-shrink: 0;
+}
+
+/* Resizing: a strip along each edge and an L at each corner, all alike. */
+.window__grip {
+    position: absolute;
+    display: none;
+}
+
+.window--resizable > .window__grip {
+    display: flex;
+}
+
+.window__grip--corner {
+    width: 10px;
+    height: 10px;
+    border-color: rgba(201, 162, 94, 0);
+}
+
+.window--resizable:hover > .window__grip--corner {
+    border-color: rgba(201, 162, 94, 0.55);
+}
+
+.window__grip--corner:hover {
+    border-color: rgb(240, 213, 140);
+}
+
+.window__grip--tl { left: 0; top: 0; border-left-width: 2px; border-top-width: 2px; }
+.window__grip--tr { right: 0; top: 0; border-right-width: 2px; border-top-width: 2px; }
+.window__grip--bl { left: 0; bottom: 0; border-left-width: 2px; border-bottom-width: 2px; }
+.window__grip--br { right: 0; bottom: 0; border-right-width: 2px; border-bottom-width: 2px; }
+
+.window__grip--edge {
+    background-color: rgba(240, 213, 140, 0);
+}
+
+.window__grip--edge:hover {
+    background-color: rgba(240, 213, 140, 0.45);
+}
+
+.window__grip--l { left: 0; top: 10px; bottom: 10px; width: 4px; }
+.window__grip--r { right: 0; top: 10px; bottom: 10px; width: 4px; }
+.window__grip--t { top: 0; left: 10px; right: 10px; height: 4px; }
+.window__grip--b { bottom: 0; left: 10px; right: 10px; height: 4px; }
+
+/* A frameless window's move handle: a small grip of dots at its top left, faint until the pointer is near. */
+.window__handle {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 16px;
+    height: 20px;
+    padding: 1px;
+    display: none;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: center;
+    background-color: rgba(14, 12, 10, 0.8);
+    border-width: 1px;
+    border-color: rgba(201, 162, 94, 0.8);
+    border-radius: 3px;
+    opacity: 0.35;
+}
+
+.window--bare > .window__handle {
+    display: flex;
+}
+
+.window--bare:hover > .window__handle {
+    opacity: 0.8;
+}
+
+.window__handle:hover {
+    opacity: 1;
+    border-color: rgb(240, 213, 140);
+}
+
+.window__handle-dot {
+    width: 3px;
+    height: 3px;
+    margin: 1px;
+    border-radius: 1px;
+    background-color: rgb(224, 195, 135);
+}
+
+/* While editing the layout, the whole window is something to drag (below the title bar, whose tabs still pull out). */
+.window__mover {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 35px;
+    bottom: 0;
+    display: none;
+}
+
+.rth-root--editing .window__mover {
+    display: flex;
+}
+
+.rth-root--editing .window--bare > .window__mover {
+    top: 0;
+}
+
+/* Outlines drawn over the window without touching its layout. */
+.window__outline {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: none;
+    border-radius: 5px;
+    align-items: center;
+    justify-content: center;
+}
+
+.rth-root--editing .window__outline {
+    display: flex;
+    border-width: 1px;
+    border-color: rgba(240, 213, 140, 0.75);
+}
+
+.window--dock-target > .window__outline {
+    display: flex;
+    border-width: 2px;
+    border-color: rgb(240, 213, 140);
+    background-color: rgba(240, 213, 140, 0.06);
+}
+
+.window--full > .window__outline {
+    display: flex;
+    border-width: 2px;
+    border-color: rgba(224, 96, 78, 0.8);
+    background-color: rgba(224, 96, 78, 0.14);
+}
+
+.window__full {
+    display: none;
+    -unity-font-definition: resource("UI/Fonts/Cinzel");
+    -unity-font-style: bold;
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: rgb(240, 150, 128);
+    background-color: rgba(12, 10, 9, 0.85);
+    padding: 3px 10px;
+    border-radius: 3px;
+}
+
+.window--full .window__full {
+    display: flex;
+}
+
+/* While editing, every window is named in its bottom left corner. */
+.window__edit-label {
+    position: absolute;
+    left: 4px;
+    bottom: 4px;
+    display: none;
+    font-size: 13px;
+    color: rgb(240, 213, 140);
+    background-color: rgba(12, 10, 9, 0.85);
+    padding: 1px 6px;
+    border-radius: 3px;
+}
+
+.rth-root--editing .window__edit-label {
+    display: flex;
+}
+
+.rth-root--editing .window--resizable > .window__grip--corner {
+    border-color: rgba(240, 213, 140, 0.85);
+}
+
+.rth-root--editing .window__handle {
+    opacity: 1;
+}
+
+/* Stand-ins for windows that open later and for overlays (layout editing only). */
+.window--placeholder > .window__body {
+    background-color: rgba(240, 213, 140, 0.07);
+}
+
+.placeholder {
+    align-items: center;
+    justify-content: center;
+}
+
+.placeholder__text {
+    color: rgb(168, 156, 134);
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+/* Locked (and not editing): nothing moves, resizes or closes. After the rules above, so it wins. */
+.rth-root--locked .window__grip,
+.rth-root--locked .window__handle,
+.rth-root--locked .window__close {
+    display: none;
+}
+
+/* The bar shown while editing the layout. */
+.edit-bar {
+    position: absolute;
+    top: 30%;
+    left: 0;
+    right: 0;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.edit-bar__box {
+    max-width: 760px;
+    flex-direction: row;
+    align-items: center;
+    padding: 6px 10px;
+    background-color: rgba(16, 15, 13, 0.94);
+    border-width: 1px;
+    border-color: rgba(240, 213, 140, 0.7);
+    border-radius: 4px;
+}
+
+.edit-bar__title {
+    -unity-font-definition: resource("UI/Fonts/Cinzel");
+    -unity-font-style: bold;
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: rgb(240, 213, 140);
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+.edit-bar__hint {
+    font-size: 13px;
+    color: rgb(168, 156, 134);
+    white-space: normal;
+    flex-shrink: 1;
+    margin-right: 10px;
+}
+
+/* The layout presets in the windows menu. */
+.windows-menu__presets {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin: 2px 12px 0 12px;
+}
+
+.windows-menu__preset {
+    margin: 0 4px 4px 0;
 }

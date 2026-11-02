@@ -42,7 +42,14 @@ namespace Rth.Client.Ui
         /// </summary>
         public virtual Vector2? FixedSize => null;
 
+        /// <summary>
+        /// The least room the panel's content needs (inside the window's frame, title bar and padding,
+        /// which the window adds itself). A fixed or bare panel's <see cref="FixedSize"/> is the whole window.
+        /// </summary>
         public virtual Vector2 MinSize => new Vector2(170f, 120f);
+
+        /// <summary>Sizes the window may take when resized (snapped to the nearest); null: free resizing within MinSize. Lets fixed-shape panels such as extra action bars resize between layouts.</summary>
+        public virtual Vector2[] AllowedSizes => null;
 
         /// <summary>Size of a window made just for this panel.</summary>
         public virtual Vector2 DefaultSize => FixedSize ?? new Vector2(260f, 320f);

@@ -55,8 +55,10 @@ namespace Rth.Client
         private static readonly float[] PullSteps = { 0.03f, 0.09f, 0.17f };
         /// <summary>How far out a hooked fish starts at the least (tiles): where it bit, unless that's at your feet.</summary>
         private const float NearestStart = 2.5f;
-        /// <summary>How far down from the top of the screen the gauge sits (a share of its height).</summary>
-        private const float TopPadding = 0.1f;
+        /// <summary>The gauge's id among the interface's placeable overlays (its place is chosen while editing the layout).</summary>
+        private const string GaugeOverlay = "angling-gauge";
+        /// <summary>The gauge's size (panel pixels), as Rth.uss draws it.</summary>
+        private static readonly Vector2 GaugeSize = new Vector2(200f, 68f);
         /// <summary>How far to each side a fish swings (tiles).</summary>
         private const float Swing = 2.2f;
 
@@ -103,6 +105,10 @@ namespace Rth.Client
 
         private VisualElement _bar, _fill, _arrows, _reel, _reelFill, _letGo, _tension, _tensionMark;
         private readonly VisualElement[] _chevrons = new VisualElement[3];
+
+        // By default near the top of the screen, a tenth of the way down, so it never covers the
+        // whirlpool or the angler; the player may move it while editing the layout.
+        private void Awake() => Ui.UiRoot.RegisterOverlay(GaugeOverlay, "Fishing gauge", GaugeSize, Ui.UiDefaultLayout.Placement.Screen(0.5f, 0.1f));
 
         private void Update()
         {
@@ -425,7 +431,7 @@ namespace Rth.Client
 
         /// <summary>
         /// The gauges, in the interface's own pieces (the window skin, the bars of the main bar's
-        /// gauges), one piece pinned near the top of the screen: up its right side a vertical bar of the line's tension
+        /// gauges), one piece placed by the layout (near the top of the screen unless the player moved it): up its right side a vertical bar of the line's tension
         /// with its zones (slack, safe, strained, snapping) and a mark for where it is now; beside it
         /// the fish's energy (fish icon) with chevrons on it pointing the way to pull, and under that
         /// how much line is in (rod icon; full at the net: landed). It stays with you, not with the
@@ -627,7 +633,7 @@ namespace Rth.Client
         }
 
         /// <summary>
-        /// The gauge, one piece pinned near the top of the screen: the tension bar up its side, the energy
+        /// The gauge, one piece placed by the layout (near the top of the screen unless the player moved it): the tension bar up its side, the energy
         /// and line-in bars beside it. The chevrons point the way to pull (amber for a tell, white, green while
         /// you answer it, as many lit as you pull hard); a pause mark when it runs, leaps or latches
         /// (let go); the tension mark sits in its zone. Nothing flashes.
@@ -637,13 +643,13 @@ namespace Rth.Client
             Camera cam = Camera.main;
             Transform me = session.world.Local?.transform;
             if (_bar == null || cam == null || me == null || _bar.panel == null) return;
-            // Pinned at the top of the screen, a little way down from the edge, so it never covers the
-            // whirlpool or the angler.
+            // Where the layout puts it (see Awake).
             _bar.style.display = over ? DisplayStyle.None : DisplayStyle.Flex;
             if (over) return;
-            Rect screen = _bar.panel.visualTree.layout;
-            _bar.style.left = screen.width * 0.5f;
-            _bar.style.top = Mathf.Round(screen.height * TopPadding);
+            Rect at = Ui.UiRoot.Instance != null ? Ui.UiRoot.Instance.OverlayRect(GaugeOverlay) : default;
+            _bar.style.left = at.x;
+            _bar.style.top = at.y;
+            _bar.style.marginLeft = 0f;
 
             float fresh = Mathf.Clamp01(_fight.Energy / (float)Mathf.Max(1, _fight.Energy0));
             _fill.style.width = Length.Percent(fresh * 100f);

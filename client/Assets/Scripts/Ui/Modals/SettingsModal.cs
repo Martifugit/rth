@@ -33,6 +33,7 @@ namespace Rth.Client.Ui.Modals
         private readonly Dictionary<RevolutionMode, UiKit.Check> _revolution = new Dictionary<RevolutionMode, UiKit.Check>();
         private readonly Dictionary<TrainDefence, UiKit.Check> _trainDefence = new Dictionary<TrainDefence, UiKit.Check>();
         private Label _scale;
+        private readonly Dictionary<UiDefaultLayout.Preset, Label> _presets = new Dictionary<UiDefaultLayout.Preset, Label>();
         private Label _music;
         private Label _who;
 
@@ -83,10 +84,26 @@ namespace Rth.Client.Ui.Modals
             _scale.style.unityTextAlign = TextAnchor.MiddleCenter;
             UiKit.Button(scaleRow, "+", () => Ui.Scale += 0.125f);
             UiKit.Button(scaleRow, "Fit to screen", () => Ui.UseAutoScale());
+            VisualElement presetRow = UiKit.El(ui, "row");
+            presetRow.style.marginTop = 4f;
+            UiKit.Text(presetRow, "Layout");
+            UiKit.El(presetRow, "spacer");
+            foreach (UiDefaultLayout.Preset preset in UiDefaultLayout.Presets)
+            {
+                UiDefaultLayout.Preset p = preset;
+                Label b = UiKit.Button(presetRow, p.Title, () => Ui.ApplyPreset(p));
+                UiKit.Tooltip(b, () => p.Description);
+                _presets[p] = b;
+            }
             VisualElement resetRow = UiKit.El(ui, "row");
             resetRow.style.marginTop = 4f;
-            UiKit.Text(resetRow, "Put every window back where it started.", "muted", "small");
+            UiKit.Text(resetRow, "Windows sit flush, with no gaps. Edit the layout to move them all, and to place what opens later.", "muted", "small");
             UiKit.El(resetRow, "spacer");
+            UiKit.Button(resetRow, "Edit layout", () =>
+            {
+                Ui.CloseModal();
+                Ui.SetEditMode(true);
+            });
             UiKit.Button(resetRow, "Reset layout", () => Ui.ResetLayout());
 
             // Combat options live in client state, so they follow the player; the server applies them.
@@ -143,6 +160,7 @@ namespace Rth.Client.Ui.Modals
             foreach (KeyValuePair<RevolutionMode, UiKit.Check> r in _revolution) r.Value.Set(options.Revolution == r.Key);
             foreach (KeyValuePair<TrainDefence, UiKit.Check> t in _trainDefence) t.Value.Set(options.TrainDefence == t.Key);
             _scale.text = Mathf.RoundToInt(Ui.Scale * 100f) + "%" + (Ui.AutoScaled ? " (fit)" : "");
+            foreach (KeyValuePair<UiDefaultLayout.Preset, Label> b in _presets) b.Value.EnableInClassList("button--on", Ui.Preset == b.Key);
             _music.text = Mathf.RoundToInt(MusicPlayer.Volume * 100f) + "%";
             EntityView local = Ui.world.Local;
             _who.text = "Logged in as " + UiKit.Colour(Session.PlayerName, UiKit.Value) + (local != null ? UiKit.Colour("   at " + local.Tile, UiKit.Muted) : "");
