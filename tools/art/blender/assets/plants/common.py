@@ -1,4 +1,4 @@
-"""Plants, common. Plants: undergrowth, reeds, crops, herbs, mushrooms, berry bushes (each with its picked state), and the overgrown cave's roots, ivy and fern.
+"""Plants, common. Plants: undergrowth, reeds, crops and cabbages, nettles, dry ground cover, herbs, mushrooms, berry bushes (each with its picked state), and the overgrown cave's roots, ivy and fern.
 
 Run it to lay the family out beside the player (with SAVE set, it also saves the working file
 common.blend beside this script); with EXPORT set it writes every member of ASSETS to
@@ -441,6 +441,122 @@ def fern(seed=4, at=(0, 0, 0)):
     return caves.make("Fern", bm, ["Leaf4"], at=at, smooth=50)
 
 
+def dead_grass(seed=2, at=(0, 0, 0)):
+    """Dry grass where the fields give out into gravel, about a tile across: five low tufts of
+    straw-pale blades lying over downwind, no green left in them, a little bare dust between."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    for k in range(5):
+        a, d = 2 * math.pi * k / 5 + rnd.uniform(-0.4, 0.4), rnd.uniform(0.12, 0.4)
+        c = Vector((d * math.cos(a), d * math.sin(a), 0.0))
+        for j in range(rnd.randint(6, 9)):
+            b = rnd.uniform(0, 2 * math.pi)
+            out = (Vector((math.cos(b), math.sin(b), 0)) * 0.5 + N.WIND).normalized()
+            side = Vector((-out.y, out.x, 0)) * 0.025
+            base = c + Vector((rnd.uniform(-0.05, 0.05), rnd.uniform(-0.05, 0.05), -0.01))
+            mid = base + out * 0.07 + Vector((0, 0, rnd.uniform(0.1, 0.17)))
+            tip = mid + out * rnd.uniform(0.1, 0.18) + Vector((0, 0, rnd.uniform(-0.04, 0.03)))
+            v = [bm.verts.new(p) for p in (base - side, base + side, mid + side * 0.5, mid - side * 0.5, tip)]
+            bm.faces.new((v[0], v[1], v[2], v[3])).material_index = 0
+            bm.faces.new((v[3], v[2], v[4])).material_index = 1
+    return make("DeadGrass", bm, ["Wheat", "Dust"], smooth_angle=60, at=at)
+
+
+def dead_bush(seed=4, at=(0, 0, 0)):
+    """A bush that died in a dry summer and stayed: a knot of grey stems from one root crown,
+    forking twice into bare twigs, a few brown leaves still caught in it."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    blob(bm, (0, 0, 0.03), (0.14, 0.12, 0.07), 0, rnd, mat=0, squash_below=0.0)
+
+    def grow(base, d, length, r, depth):
+        tip = base + d * length
+        branch(bm, base, tip, r, None, mat=0, sides=4)
+        if depth == 0:
+            if rnd.random() < 0.35:
+                A.hull(bm, [tuple(tip + Vector((rnd.uniform(-0.04, 0.04), rnd.uniform(-0.04, 0.04), rnd.uniform(-0.03, 0.03))))
+                            for _ in range(4)], 1)
+            return
+        for _ in range(2):
+            nd = (d + Vector((rnd.uniform(-0.6, 0.6), rnd.uniform(-0.6, 0.6), rnd.uniform(-0.1, 0.4)))).normalized()
+            grow(base.lerp(tip, rnd.uniform(0.5, 0.75)), nd, length * 0.6, r * 0.55, depth - 1)
+    for k in range(5):
+        a = 2 * math.pi * k / 5 + rnd.uniform(-0.3, 0.3)
+        d = Vector((0.55 * math.cos(a), 0.55 * math.sin(a), 1.0)).normalized()
+        grow(Vector((0, 0, 0.04)), d, rnd.uniform(0.45, 0.65), 0.028, 2)
+    return make("DeadBush", bm, ["DeadWood", "Autumn"], smooth_angle=40, at=at)
+
+
+def crops(seed=5, at=(0, 0, 0), ripe=True):
+    """A strip of a field in crop, 2 x 2: three ridges of turned earth along X, a row of corn on each,
+    every plant a few stiff stalks with an ear at the top. ripe=False: green, before the ears turn."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    EARTH, STALK, EAR = range(3)
+    for y in (-0.65, 0.0, 0.65):
+        A.loft(bm, [((-1.0, y, -0.02), 0.22, 0.08), ((1.0, y, -0.02), 0.22, 0.08)], sides=6, ref=(0, 0, 1), mats=EARTH)
+        x = -0.9
+        while x < 0.92:
+            for _ in range(2):
+                base = Vector((x + rnd.uniform(-0.05, 0.05), y + rnd.uniform(-0.06, 0.06), 0.03))
+                h = rnd.uniform(0.6, 0.85) if ripe else rnd.uniform(0.4, 0.6)
+                lean = Vector((rnd.uniform(-0.08, 0.08), rnd.uniform(-0.08, 0.08), 0)) + N.WIND * 0.05
+                top = base + Vector((0, 0, h)) + lean
+                rod(bm, [base, top], 0.008, mat=STALK, sides=3)
+                A.loft(bm, [(top - Vector((0, 0, 0.01)), 0, 0), (top + Vector((0, 0, 0.04)), 0.022, 0.022),
+                            (top + Vector((0, 0, 0.12)), 0, 0)], sides=3, ref=(1, 0, 0), mats=EAR)
+            x += rnd.uniform(0.13, 0.18)
+    colours = ["Furrow", "Wheat", "Thatch"] if ripe else ["Furrow", "Leaf5", "Leaf4"]
+    return make("Crops" if ripe else "CropsGreen", bm, colours, smooth_angle=50, at=at)
+
+
+def cabbages(seed=6, at=(0, 0, 0)):
+    """A cottage's vegetable rows, 2 x 2: three ridges of dark earth along X, a row of cabbages on
+    each, every one a ball of tight leaves in a rosette of looser outer ones, blue-green."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    EARTH, OUTER, HEART = range(3)
+    for y in (-0.65, 0.0, 0.65):
+        A.loft(bm, [((-1.0, y, -0.02), 0.25, 0.08), ((1.0, y, -0.02), 0.25, 0.08)], sides=6, ref=(0, 0, 1), mats=EARTH)
+        for k in range(5):
+            x = -0.8 + 0.4 * k + rnd.uniform(-0.04, 0.04)
+            c = Vector((x, y + rnd.uniform(-0.04, 0.04), 0.05))
+            for j in range(5):                                                                   # the outer leaves, cupped
+                a = 2 * math.pi * j / 5 + rnd.uniform(-0.2, 0.2)
+                d = Vector((math.cos(a), math.sin(a), 0))
+                sd = Vector((-d.y, d.x, 0))
+                v = [bm.verts.new(p) for p in (c, c + d * 0.12 + sd * 0.08 + Vector((0, 0, 0.06)), c + d * 0.2 + Vector((0, 0, 0.1)),
+                                               c + d * 0.12 - sd * 0.08 + Vector((0, 0, 0.06)))]
+                bm.faces.new(v).material_index = OUTER
+            blob(bm, tuple(c + Vector((0, 0, 0.09))), (0.1, 0.1, 0.085), 1, rnd, jitter=(0.92, 1.06), mat=HEART)
+    return make("Cabbages", bm, ["Furrow", "Leaf4", "Moor"], smooth_angle=50, at=at)
+
+
+def nettles(seed=7, at=(0, 0, 0)):
+    """A bed of nettles where the ground is rich and nobody goes: upright stalks in a clump, pairs of
+    toothed dark leaves up each one, the tops drooping with their seed."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    for _ in range(11):
+        a, d = rnd.uniform(0, 2 * math.pi), rnd.uniform(0, 0.38)
+        base = Vector((d * math.cos(a), d * math.sin(a), -0.02))
+        h = rnd.uniform(0.5, 0.85)
+        top = base + Vector((rnd.uniform(-0.06, 0.06), rnd.uniform(-0.06, 0.06), h))
+        rod(bm, [base, top], 0.01, mat=0, sides=3)
+        turn = rnd.uniform(0, math.pi)
+        for k in range(3):
+            p = base.lerp(top, 0.35 + 0.22 * k)
+            for s in (-1, 1):                                                                    # leaves in opposite pairs, turning
+                dd = Vector((math.cos(turn + k * 1.57) * s, math.sin(turn + k * 1.57) * s, 0))
+                side = Vector((-dd.y, dd.x, 0)) * 0.035
+                tip = p + dd * 0.13 - Vector((0, 0, 0.03))
+                v = [bm.verts.new(q) for q in (p, p + dd * 0.06 + side + Vector((0, 0, 0.01)), tip, p + dd * 0.06 - side + Vector((0, 0, 0.01)))]
+                bm.faces.new(v).material_index = 1
+        A.loft(bm, [(top, 0, 0), (top + Vector((0.03, 0, -0.04)), 0.015, 0.015), (top + Vector((0.06, 0, -0.1)), 0, 0)],
+               sides=3, ref=(0, 0, 1), mats=2)
+    return make("Nettles", bm, ["Leaf5", "Fen", "Sedge"], smooth_angle=50, at=at)
+
+
 ASSETS = {
     "Gorse": gorse,
     "BerryBushLow": berry_bush_low,
@@ -466,6 +582,12 @@ ASSETS = {
     "HangingRoots": hanging_roots,
     "IvyDrape": ivy_drape,
     "Fern": fern,
+    "DeadGrass": dead_grass,
+    "DeadBush": dead_bush,
+    "Crops": crops,
+    "CropsGreen": lambda: crops(ripe=False),
+    "Cabbages": cabbages,
+    "Nettles": nettles,
 }
 
 

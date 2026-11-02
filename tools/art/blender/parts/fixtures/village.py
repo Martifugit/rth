@@ -1,4 +1,5 @@
-"""Fixtures, village. What hangs on the village kit's walls, in a wall tile's frame: banner, lantern, a woodpile and a bench against the wall.
+"""Fixtures, village. What hangs on the village kit's walls, in a wall tile's frame: banner, lantern, a woodpile and a bench against the wall, signs (one hung out
+over the street, one fixed over the door) and a candle sconce.
 
 Run it to lay the family out beside the player (with SAVE set, it also saves the working file
 village.blend beside this script); with EXPORT set it writes every member of ASSETS to
@@ -9,6 +10,7 @@ client/Assets/Resources/Art/Parts/Fixtures/Village/<Name>.fbx.
 """
 
 import bmesh
+import math
 import os
 import sys
 
@@ -22,7 +24,7 @@ if __name__ in ("__main__", "<run_path>"):          # run as a script: pick up e
 import rth_art as A  # noqa: E402
 from artlib import family  # noqa: E402
 from artlib.village import (  # noqa: E402
-    BANNER, BARK, BRONZE, CANDLE, IRON, LOG_END, OAK,
+    BANNER, BARK, BRONZE, CANDLE, DARK, DOOR, IRON, LOG_END, OAK,
     PLANKS, STOREY, T, box, piece)
 
 
@@ -79,11 +81,71 @@ def piece_bench():
     return bm
 
 
+def piece_hanging_sign():
+    """A shop sign hung out over the street: an iron bracket jutting from the wall with a scroll under
+    it, a board swinging from two rings below it, end-on to the wall so it is read from up and down
+    the street, the shop's mark painted on both faces. In a wall tile's frame."""
+    bm = bmesh.new()
+    c, z = 0.5, 2.15
+    box(bm, c - 0.02, c + 0.02, -0.85, -T / 2, z, z + 0.04, IRON)                         # the arm
+    box(bm, c - 0.03, c + 0.03, -T / 2 - 0.02, -T / 2, z - 0.35, z + 0.06, IRON)            # its wall plate
+    for y0, y1, z0, z1 in ((-T / 2 - 0.02, -0.4, z - 0.32, z - 0.02), (-0.4, -0.6, z - 0.04, z - 0.0)):
+        A.hull(bm, [(c + dx, y, zz) for dx in (-0.012, 0.012) for y, zz in ((y0, z0), (y1, z1))] +
+               [(c + dx, y1, z1 - 0.025) for dx in (-0.012, 0.012)], IRON)              # the stay
+    for y in (-0.3, -0.75):
+        box(bm, c - 0.01, c + 0.01, y - 0.01, y + 0.01, z - 0.1, z, IRON)                   # the rings
+    box(bm, c - 0.025, c + 0.025, -0.82, -0.23, z - 0.62, z - 0.1, PLANKS)                  # the board
+    box(bm, c - 0.03, c + 0.03, -0.82, -0.23, z - 0.13, z - 0.1, OAK)
+    box(bm, c - 0.03, c + 0.03, -0.82, -0.23, z - 0.62, z - 0.59, OAK)
+    for s in (-1, 1):                                                                        # its mark, both faces
+        x = c + s * 0.027
+        A.hull(bm, [(x, -0.525 + 0.13 * math.cos(a), z - 0.36 + 0.13 * math.sin(a)) for a in
+                    (2 * math.pi * k / 8 for k in range(8))] + [(x - s * 0.002, -0.525, z - 0.36)], DARK)
+    return bm
+
+
+def piece_shop_sign():
+    """A shop's name board fixed flat over its door: a long board in a moulded frame on two iron
+    brackets, the lettering painted dark in a band across it. In a wall tile's frame, the board
+    spanning most of the tile."""
+    bm = bmesh.new()
+    z0, z1 = DOOR + 0.15, DOOR + 0.5
+    box(bm, 0.06, 0.94, -T / 2 - 0.06, -T / 2, z0, z1, PLANKS)
+    for zz in (z0 - 0.03, z1):
+        box(bm, 0.03, 0.97, -T / 2 - 0.08, -T / 2, zz, zz + 0.03, OAK)
+    for x in (0.03, 0.94):
+        box(bm, x, x + 0.03, -T / 2 - 0.08, -T / 2, z0 - 0.03, z1 + 0.03, OAK)
+    for x in (0.2, 0.8):
+        box(bm, x - 0.015, x + 0.015, -T / 2 - 0.1, -T / 2, z0 - 0.1, z0 - 0.03, IRON)
+    for k in range(6):                                                                       # the letters, as dark strokes
+        x = 0.16 + 0.12 * k
+        box(bm, x, x + 0.08, -T / 2 - 0.063, -T / 2 - 0.06, z0 + 0.1, z1 - 0.1, DARK)
+    return bm
+
+
+def piece_sconce():
+    """An iron sconce on the wall of the undercroft or the chapel: a back plate, a curled arm, a
+    drip pan and a candle on its spike. In a wall tile's frame, at the tile's middle."""
+    bm = bmesh.new()
+    c, z = 0.5, 1.6
+    box(bm, c - 0.05, c + 0.05, -T / 2 - 0.015, -T / 2, z - 0.2, z + 0.12, IRON)
+    A.hull(bm, [(c + dx, y, zz) for dx in (-0.012, 0.012) for y, zz in ((-T / 2, z - 0.15), (-T / 2, z - 0.1),
+                                                                       (-T / 2 - 0.2, z), (-T / 2 - 0.2, z + 0.03))], IRON)
+    A.loft(bm, [((c, -T / 2 - 0.2, z), 0.02, 0.02), ((c, -T / 2 - 0.2, z + 0.03), 0.075, 0.075)], sides=8, ref=(1, 0, 0), mats=IRON)
+    A.loft(bm, [((c, -T / 2 - 0.2, z + 0.03), 0.028, 0.028), ((c, -T / 2 - 0.2, z + 0.22), 0.026, 0.026)], sides=6,
+           ref=(1, 0, 0), mats=CANDLE)
+    A.spike(bm, (c, -T / 2 - 0.2, z + 0.215), 0.013, (c, -T / 2 - 0.2, z + 0.28), sides=4, mat=CANDLE)                            # the flame: the kit's candle glow
+    return bm
+
+
 ASSETS = {
     "Banner": piece(piece_banner),
     "Lantern": piece(piece_lantern),
     "Woodpile": piece(piece_woodpile),
     "Bench": piece(piece_bench),
+    "HangingSign": piece(piece_hanging_sign),
+    "ShopSign": piece(piece_shop_sign),
+    "Sconce": piece(piece_sconce),
 }
 
 

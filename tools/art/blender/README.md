@@ -42,6 +42,14 @@ and the village kit's pieces in `world/kits/venaria.json`'s `paths`.
   `parts/roofs/village`, `parts/fixtures/village` and `assets/openings/village` (the door).
 - `boards/basin.py`: the nature board, a patch of Tolling's basin with one of each nature model.
 - `boards/caves.py`: cave entrances dressed seven ways, and every cave model a row per family.
+- `boards/catalogue.py`: any part of `tools/art/catalogue.json` (by status, or by ids, families or kinds)
+  built and laid out a row per family, each model labelled with its name and status.
+- `boards/monuments.py`: Religion's ten monument tiers (`assets/monuments/cruor.py`) dressed as they
+  would stand: the right grade of fount on each landing, reliquaries, braziers, banners, chains and
+  stelae growing with the tier, and an unraised site, each fount's stand tile marked pale. The tiers
+  are one grammar (the First Monument copied grander) laid on the tile grid, set in the family's
+  `TIERS` table; `layout(tier)` gives the founts, stand tiles and blocked tiles for a region's data,
+  and `check(tier)` fails a tier whose founts can't all be walked up to.
 - `buildings/cruor/`: **Cruor's architecture, the chosen style for the empire's capital.** The kit
   (`kit.py`), the cathedral built from it (`cathedral.py`), a scene with every part
   (`showcase.py`) and its textures (`textures.py`). Its rules are in
@@ -228,6 +236,20 @@ Two kits so far. Start from the one that fits, and read its rules before adding 
 - **Do** give every gathered thing its depleted state: trees a stump at axe height, bushes the same
   mesh with a picked (berry-free) texture. Name it in objects.json (`depletedModel`).
 - **Don't** let the triangle budget decide a shape; it is advisory.
+
+**Props (learned on the stations)**
+- **Do** work out what the thing is for before its shape: a forge is a fire pot, a hood, great bellows on
+  a rocker, a slack tub, a coal bin and tongs; a charcoal kiln is a dark earth-and-ash mound, not a grassy
+  hill. The working parts are what make it read.
+- **Don't** put a masonry texture (`Stone`'s Fieldstone) on anything small or carved: a mortar is plain
+  smooth stone (`Gravestone`). Wall textures are for walls.
+- **Do** let wood's grain run along each part: along a table top, up a leg, along a log. It is automatic
+  for the wood colours (`rth_art.WOOD`, laid by `box_uvs`); a flat colour or the old chunky Beam blotches
+  read as plastic or pixels. Model planks one by one only where they should read as planks (a jetty, a
+  table top); each then takes one board of the texture.
+- **Do** paint small openings onto a surface (a vent, a hole) rather than sticking boxes on it.
+- **Do** build from other families' pieces where they exist (`rth_art.join`): the kiln's wind screen is
+  the village's hurdles.
 
 **Checking**
 - **Do** render two views every round: the game view (pitch about 40°) and a low side view

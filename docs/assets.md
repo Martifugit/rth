@@ -65,6 +65,19 @@ else guessed from its name.
   `Fieldstone` is painted soft at full resolution (long flat stones in thin courses, mottled, ragged
   light joints, a little moss), still point filtered, because stones drawn as crisp blocks on the
   chunky grid read as pixel-drawn. `tools/art/surface_textures.py` (`soft_coursed`).
+  Wood too (owner, 2026-10-28, from a study of three treatments): `Beam` (solid timber: oak, timber,
+  dead wood, driftwood, fence rails) and `Planks` / `Boards` (four boards across, soft seams, a butt
+  joint and nails now and then) are painted soft (`soft_wood`, `soft_boards`) in the palette's
+  colours. The grain runs along each part, not by the way it faces: `rth_art.box_uvs` lays every
+  wooden part's coordinates along its length (`grain_uvs`), and a plank modelled on its own takes one
+  board of the texture, so no painted seam runs down it.
+  Religion's monuments (2026-10-28) wear Cruor's one stone in the game's own system: `CruorPlinth`
+  on the podiums' risers and pedestals (big dressed blocks, one course to a 0.15 step, `CruorCourses`,
+  a 1.2-tile repeat mapped from the ground up so each riser is one course), `CruorCarved` on their
+  treads and on all that is carved from one piece (founts, collars, stelae, braziers), the needles
+  `Bloodstone` (a veined, polished red), and the blood in founts and runnels `FountBlood` on `Pool`
+  (soft depth and a few glints). No black panels: relief is carved in the same stone. Painters:
+  `cruor_courses`, `carved`, `bloodstone`, `pool`.
 - Only for **leaves** (cut-out), roofs and thatch, planks, brick and stone courses, water, and a
   few signature surfaces. Everything else is flat colour.
 - They live in **`client/Assets/Art/Textures/`**, where `ArtTextureImporter` imports them point
@@ -174,7 +187,7 @@ as each is designed. A family is only split by style when the style shows.
 | Layer | Kinds |
 | --- | --- |
 | Parts | `walls`, `roofs`, `floors` (floors, stairs, decks), `fixtures` (what hangs on a wall tile: banners, lanterns, a bench or woodpile against it), `fences` (fences, hurdles, field walls, hedges), `waterfront` (jetty spans, quays, piers), `rockwork` (cave rock masses, lips, throats) |
-| Assets | `trees`, `plants` (undergrowth, crops, flowers, reeds), `rocks` (boulders, scree, standing stones, cairns), `nodes` (gatherable, with their worked-out states), `stations` (where recipes happen), `furniture`, `containers`, `dressing` (carts, tools left about, scarecrows, woodpiles), `ways` (fingerposts, milestones, bridges, stepping stones), `openings` (doors, gates, cave mouths, ladders, trapdoors), `lights` (lanterns, candles, braziers, fires), `landmarks` (one-off buildings and monuments), `vessels`, `creatures`, `held` (weapons and tools in the hand) |
+| Assets | `trees`, `plants` (undergrowth, crops, flowers, reeds), `rocks` (boulders, scree, standing stones, cairns), `nodes` (gatherable, with their worked-out states), `stations` (where recipes happen), `furniture`, `containers`, `dressing` (carts, tools left about, scarecrows, woodpiles), `ways` (fingerposts, milestones, bridges, stepping stones), `openings` (doors, gates, cave mouths, ladders, trapdoors), `lights` (lanterns, candles, braziers, fires), `landmarks` (one-off buildings), `monuments` (Religion's monuments in their tiers, their founts and reliquaries, and the faith's dressing round them), `vessels`, `creatures`, `held` (weapons and tools in the hand) |
 
 **One-offs.** Creatures and landmarks are made one at a time, so each gets its own script in its
 style's folder (`assets/creatures/common/fen_rat.py`, `assets/landmarks/village/bell_tower.py`), and

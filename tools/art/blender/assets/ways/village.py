@@ -1,4 +1,4 @@
-"""Ways, village. The basin's ways: fingerpost, milestone, footbridge.
+"""Ways, village. The basin's ways: fingerpost, milestone, footbridge, the stone road bridge, duckboards over the fen.
 
 Run it to lay the family out beside the player (with SAVE set, it also saves the working file
 village.blend beside this script); with EXPORT set it writes every member of ASSETS to
@@ -124,10 +124,87 @@ def footbridge(seed=1, at=(0, 0, 0)):
     return N.make("Footbridge", bm, ["DeadWood", "Planks", "Driftwood", "Scree"], smooth_angle=40, at=at)
 
 
+def road_bridge(seed=1, at=(0, 0, 0)):
+    """Where Palmerway crosses the river: a stone bridge of one round-headed arch, cart-wide, the
+    road running along Y over it and the river along X under it. 4 x 10 tiles. Rubble masonry with
+    a dressed ring of voussoirs round the arch at each face, a low parapet with a coping either
+    side, the deck humped over the arch and running down to the banks, cutwaters against the
+    stream. Origin at the banks' level; the arch springs a little above the water."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    MASONRY, DRESSED, ROAD = range(3)
+    W, L = 1.6, 5.0                    # half the road's width (a cart and a walker) and half the length
+    span, spring = 1.9, -1.2           # the arch's half-span and where it springs, near the water
+    crown = 1.25                       # the deck's rise over the middle
+    assert spring + span + 0.38 < crown - 0.12, "the arch ring must stay under the road"
+    para_h, para_t = 0.75, 0.28
+
+    def deck(y):
+        t = min(1.0, abs(y) / L)
+        return crown * (1 - t * t)
+
+    def soffit(y):                     # the underside: the arch, or the abutments buried in the banks
+        if abs(y) < span:
+            return spring + math.sqrt(span * span - y * y)
+        return -1.2
+    ys = [-L + k * (2 * L) / 20 for k in range(21)]
+    ys = sorted(set(ys + [-span, span] + [span * math.sin(math.radians(a)) for a in range(-75, 90, 15)]))
+    for y0, y1 in zip(ys, ys[1:]):
+        bot = [soffit(y0 + 1e-4 if y0 == -span else y0), soffit(y1 - 1e-4 if y1 == span else y1)]
+        top = [deck(y0), deck(y1)]
+        A.hull(bm, [(x, y, z) for x in (-W - para_t, W + para_t) for y, z in ((y0, bot[0]), (y1, bot[1]), (y0, top[0] - 0.08),
+                                                                              (y1, top[1] - 0.08))], MASONRY)
+        A.hull(bm, [(x, y, z) for x in (-W, W) for y, z in ((y0, top[0] - 0.081), (y1, top[1] - 0.081), (y0, top[0]),
+                                                            (y1, top[1]))], ROAD)
+        for s in (-1, 1):                                                                       # the parapets and their coping
+            xi, xo = s * W, s * (W + para_t)
+            A.hull(bm, [(x, y, z) for x in (xi, xo) for y, z in ((y0, top[0] - 0.08), (y1, top[1] - 0.08),
+                                                                 (y0, top[0] + para_h), (y1, top[1] + para_h))], MASONRY)
+            A.hull(bm, [(x, y, z) for x in (xi - s * 0.04, xo + s * 0.04) for y, z in ((y0, top[0] + para_h), (y1, top[1] + para_h),
+                                                                                         (y0, top[0] + para_h + 0.1),
+                                                                                         (y1, top[1] + para_h + 0.1))], DRESSED)
+    for s in (-1, 1):                                                                           # the arch rings, standing proud
+        x = s * (W + para_t + 0.015)
+        n = 10
+        for k in range(n):
+            a0, a1 = math.pi * k / n, math.pi * (k + 1) / n
+            pts = []
+            for a in (a0, a1):
+                for r in (span, span + 0.38):
+                    pts.append((x, -r * math.cos(a), spring + r * math.sin(a)))
+            A.hull(bm, [p for p in pts] + [(x - s * 0.04, y, z) for _, y, z in pts], DRESSED)
+    for s in (-1, 1):                                                                           # cutwaters on the piers, upstream (-X)
+        y = s * (span + 0.45)
+        A.hull(bm, [(-W - para_t, y + dy, z) for dy in (-0.45, 0.45) for z in (-1.2, spring + 0.5)] +
+               [(-W - para_t - 0.6, y, z) for z in (-1.2, spring + 0.3)] + [(-W - para_t, y, spring + 0.9)], DRESSED)
+    return N.make("RoadBridge", bm, ["Stone", "Granite", "Trodden"], smooth_angle=20, at=at)
+
+
+def duckboards(seed=1, at=(0, 0, 0)):
+    """Duckboards over the fen, one tile along Y (lay them end to end): two split rails on short stakes
+    sunk in the mud, short boards nailed across them a little apart, uneven with age."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    deck = 0.18
+    for x in (-0.28, 0.28):
+        A.box(bm, (x - 0.05, -0.5, deck - 0.1), (x + 0.05, 0.5, deck - 0.03), 1)
+        for y in (-0.35, 0.35):
+            N.rod(bm, [(x, y, -0.3), (x + rnd.uniform(-0.02, 0.02), y, deck - 0.08)], 0.04, mat=2, sides=5)
+    y = -0.5
+    while y < 0.45:
+        w = rnd.uniform(0.12, 0.16)
+        dz = rnd.uniform(-0.012, 0.012)
+        A.box(bm, (-0.42 + rnd.uniform(-0.03, 0.03), y + 0.01, deck - 0.03 + dz), (0.42 + rnd.uniform(-0.03, 0.03), y + w - 0.02, deck + dz), 0)
+        y += w
+    return N.make("Duckboards", bm, ["Boards", "DeadWood", "Driftwood"], smooth_angle=30, at=at)
+
+
 ASSETS = {
     "Fingerpost": fingerpost,
     "Milestone": milestone,
     "Footbridge": footbridge,
+    "RoadBridge": road_bridge,
+    "Duckboards": duckboards,
 }
 
 

@@ -1,4 +1,4 @@
-"""Fences, village. The basin's fences, a tile per span: buck fences, hurdles, hedges, the dry-stone field wall with its pier and stile, the field gate. Spans run along X from the tile's middle.
+"""Fences, village. The basin's fences, a tile per span: buck fences, hurdles, hedges, the dry-stone field wall with its pier and stile and a broken span, the field gate, the wardens' palisade. Spans run along X from the tile's middle.
 
 Run it to lay the family out beside the player (with SAVE set, it also saves the working file
 village.blend beside this script); with EXPORT set it writes every member of ASSETS to
@@ -219,6 +219,54 @@ def wall_stile(seed=2, at=(0, 0, 0)):
     return ob
 
 
+def wall_broken(seed=4, at=(0, 0, 0)):
+    """A field wall span gone to ruin where the fields run out into the gravel, one tile along X:
+    the battered body standing to different heights and down to its footing in the middle, its cope
+    long gone, fallen stones lying about its foot and the gravel drifted half up its sides."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    wb, wt = 0.27, 0.19
+    xs = [0.0, 0.2, 0.38, 0.5, 0.62, 0.8, 1.0]
+    hs = [0.75, 0.62, 0.3, 0.12, 0.22, 0.48, 0.66]
+    rings = []
+    for x, h in zip(xs, hs):
+        h += rnd.uniform(-0.04, 0.04)
+        rings.append([bm.verts.new(p) for p in ((x, -wb, -0.1), (x, wb, -0.1), (x, wt + (0.04 if h < 0.3 else 0), h),
+                                                (x, -wt, h + rnd.uniform(-0.05, 0.02)))])
+    for a, b in zip(rings, rings[1:]):
+        for k in range(4):
+            n = (k + 1) % 4
+            bm.faces.new((a[k], a[n], b[n], b[k])).material_index = 0
+    bm.faces.new(list(reversed(rings[0]))).material_index = 0
+    bm.faces.new(rings[-1]).material_index = 0
+    for k in range(7):                                                                             # fallen stones
+        x, y = rnd.uniform(0.1, 0.9), rnd.choice((-1, 1)) * rnd.uniform(0.35, 0.65)
+        s = rnd.uniform(0.07, 0.12)
+        A.hull(bm, [(x + rnd.uniform(-s, s), y + rnd.uniform(-s, s) * 0.8, rnd.uniform(-0.03, s * 0.9)) for _ in range(8)], 0)
+    for side in (-1, 1):                                                                           # the gravel drifted against it
+        A.hull(bm, [(x, side * y, z) for x in (-0.02, 1.02) for y, z in ((wb + 0.02, 0.18 if side < 0 else 0.1), (wb + 0.45, -0.02))] +
+               [(0.5, side * (wb + 0.25), 0.1)], 1)
+    return make("WallBroken", bm, ["Stone", "Gravel"], at=at)
+
+
+def palisade(seed=5, at=(0, 0, 0)):
+    """One tile of the wardens' palisade along X: split stakes taller than a man driven in side by
+    side, their tops cut to points at uneven heights, bound by a rail on the inside (+Y) pegged to
+    every stake."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    n = 6
+    for k in range(n):
+        x = (k + 0.5) / n
+        r = rnd.uniform(0.075, 0.09)
+        h = rnd.uniform(2.05, 2.3)
+        rod(bm, [(x, 0, -0.2), (x + rnd.uniform(-0.01, 0.01), rnd.uniform(-0.01, 0.01), h)], r, mat=0, sides=6,
+            tip=(x, 0, h + 0.28))
+    for z in (0.55, 1.65):
+        rod(bm, [(-0.02, 0.11, z), (1.02, 0.11, z + rnd.uniform(-0.03, 0.03))], 0.045, mat=1, sides=5)
+    return make("Palisade", bm, ["Bark", "DeadWood"], smooth_angle=40, at=at)
+
+
 def span(fn, **kw):
     """A one-tile span built along X from 0 to 1, moved so its tile's middle is the origin."""
     def build_span():
@@ -242,6 +290,8 @@ ASSETS = {
     "FieldWallPier": wall_pier,
     "FieldGate": span(field_gate),
     "FieldWallStile": span(wall_stile),
+    "FieldWallBroken": span(wall_broken),
+    "Palisade": span(palisade),
 }
 
 

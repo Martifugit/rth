@@ -11,6 +11,7 @@ client/Assets/Resources/Art/surfaces.json.
 Writes client/Assets/Art/Textures/<Name>.png (and <Name>_preview.png at 4x with --preview).
 Standard library only; the same seed gives the same images. Our own art, generated.
 """
+import math
 import os
 import random
 import struct
@@ -490,17 +491,270 @@ def soft_coursed(rnd, course=(15, 20), length=(36, 64), weathered=False):
     return c
 
 
+def _canvas(px):
+    c = Canvas()
+    c.px = px
+    return c
+
+
+def _clamp(v, lo=0.4, hi=1.0):
+    return max(lo, min(hi, v))
+
+
+def soft_wood(rnd):
+    """Wood grain painted soft, the grain running down the image (v): long wavering streaks of
+    lighter and darker wood, a few darker grain lines, two knots with the grain swelling round them.
+    Mapped so v runs along each timber's length (rth_art.grain_uvs)."""
+    across, mid, fine = value_noise(rnd, 32), value_noise(rnd, 8), value_noise(rnd, 64)
+    knots = [(rnd.uniform(0, SIZE), rnd.uniform(0, SIZE)) for _ in range(2)]
+    px = []
+    for y in range(SIZE):
+        for x in range(SIZE):
+            bend = 4.0 * math.sin(2 * math.pi * y / SIZE + 1.3) + 6.0 * (mid(x, y) - 0.5)
+            for kx, ky in knots:                                  # the grain swells round a knot
+                dx, dy = (x - kx + SIZE / 2) % SIZE - SIZE / 2, (y - ky + SIZE / 2) % SIZE - SIZE / 2
+                d = math.hypot(dx, dy / 2.5)
+                if d < 9:
+                    bend += (9 - d) * (1 if dx > 0 else -1) * 0.6
+            g = across((x + bend) % SIZE, 0.0)
+            v = 0.86 + 0.12 * (g - 0.5) + 0.05 * (fine(x, y) - 0.5)
+            if (g * 7) % 1.0 < 0.1:
+                v -= 0.07                                          # a grain line
+            for kx, ky in knots:
+                dx, dy = (x - kx + SIZE / 2) % SIZE - SIZE / 2, (y - ky + SIZE / 2) % SIZE - SIZE / 2
+                d = math.hypot(dx * 1.6, dy)
+                if d < 4.5:
+                    v -= 0.18 * (1 - d / 4.5)                      # the knot
+            px.append(_clamp(v))
+    return _canvas(px)
+
+
+def soft_boards(rnd, seams=True):
+    """Sawn boards painted soft, the boards and their grain running down the image (v), after the
+    2004 game's jetties and fences: each board its own shade, long soft grain streaks wavering along
+    it, a soft dark seam and a lit edge between boards, now and then a butt joint across a board with
+    two nail heads. seams=False: one broad board's grain only (a table top's boards are separate
+    parts). Mapped so v runs along each board's length (rth_art.grain_uvs)."""
+    across, mid, fine = value_noise(rnd, 32), value_noise(rnd, 8), value_noise(rnd, 64)
+    edges = [0, 32, 64, 96, SIZE]                                   # four boards: rth_art.grain_uvs gives a lone plank one
+    shades = [rnd.uniform(-0.06, 0.05) for _ in edges]
+    joints = [(rnd.randrange(SIZE) if rnd.random() < 0.6 else None) for _ in edges]
+    px = []
+    for y in range(SIZE):
+        for x in range(SIZE):
+            b = max(i for i, e in enumerate(edges) if e <= x) if seams else 0
+            left, right = (edges[b], edges[b + 1]) if seams else (0, SIZE)
+            bend = 3.0 * math.sin(2 * math.pi * y / SIZE + b) + 5.0 * (mid(x, y) - 0.5)
+            g = across((x + bend) % SIZE, (b * 37) % SIZE)
+            v = 0.86 + shades[b] + 0.1 * (g - 0.5) + 0.04 * (fine(x, y) - 0.5)
+            if (g * 6) % 1.0 < 0.08:
+                v -= 0.05                                          # a grain line
+            if seams:
+                d = x - left
+                if d < 2:
+                    v -= 0.2 - 0.07 * d                            # the seam, soft
+                elif d == 2:
+                    v += 0.04                                      # the lit edge beside it
+                elif right - x == 1:
+                    v -= 0.06
+                j = joints[b]
+                if j is not None:
+                    dy = (y - j) % SIZE
+                    if dy == 0:
+                        v -= 0.15                                  # a butt joint across the board
+                    elif dy in (2, 3) and min(x - left, right - x) in (5, 6):
+                        v -= 0.22                                  # its nail heads
+            px.append(_clamp(v))
+    return _canvas(px)
+
+
+def cruor_courses(rnd):
+    """A monument's plinth: big dressed blocks laid one course to a step (eight courses in the repeat
+    of 1.2 tiles, each 0.15 tall like the steps, two blocks a course, every other course offset), a
+    thin dark joint, a lit top edge, each block its own shade and softly mottled. Mapped from the
+    ground up, so every step's riser is exactly one course."""
+    fine, mid = value_noise(rnd, 64), value_noise(rnd, 16)
+    courses, blocks = 8, 2
+    ch, bw = SIZE // courses, SIZE // blocks
+    shade = {(c, b): rnd.uniform(-0.07, 0.05) for c in range(courses) for b in range(blocks)}
+    px = []
+    for y in range(SIZE):
+        c, yy = y // ch, y % ch
+        off = bw // 2 if c % 2 else 0
+        for x in range(SIZE):
+            xx = (x + off) % SIZE
+            b, ix = xx // bw, xx % bw
+            v = 0.87 + shade[(c, b)] + 0.05 * (mid(x, y) - 0.5) + 0.025 * (fine(x, y) - 0.5)
+            if yy == ch - 1 or ix < 1:
+                v = 0.6                                            # the joint
+            elif yy >= ch - 3:
+                v += 0.05                                          # the lit top edge
+            px.append(_clamp(v))
+    return _canvas(px)
+
+
+def carved(rnd):
+    """Smooth dressed stone for carved things (founts, stelae, kerbs): no joints, a broad faint
+    mottle, a few short fine tool marks across it."""
+    fine, mid, broad = value_noise(rnd, 64), value_noise(rnd, 16), value_noise(rnd, 4)
+    marks = [(rnd.randrange(SIZE), rnd.randrange(SIZE), rnd.randint(6, 14)) for _ in range(14)]
+    px = [0.0] * (SIZE * SIZE)
+    for y in range(SIZE):
+        for x in range(SIZE):
+            px[y * SIZE + x] = 0.88 + 0.05 * (broad(x, y) - 0.5) + 0.04 * (mid(x, y) - 0.5) + 0.025 * (fine(x, y) - 0.5)
+    for mx, my, n in marks:                                        # tool marks, short and diagonal
+        for k in range(n):
+            px[((my + k) % SIZE) * SIZE + (mx + k // 2) % SIZE] -= 0.035
+    return _canvas([_clamp(v) for v in px])
+
+
+def bloodstone(rnd):
+    """The needles' red stone, polished: a soft cloudy mottle with a few dark veins wandering through it
+    as thin continuous threads (contour lines of a slow, warped noise), the odd pale fleck. Light, so
+    the palette's red carries it."""
+    fine, mid, warp, vein = value_noise(rnd, 64), value_noise(rnd, 16), value_noise(rnd, 8), value_noise(rnd, 4)
+    flecks = {(rnd.randrange(SIZE), rnd.randrange(SIZE)) for _ in range(40)}
+    px = []
+    for y in range(SIZE):
+        for x in range(SIZE):
+            v = 0.86 + 0.11 * (mid(x, y) - 0.5) + 0.05 * (warp(x, y) - 0.5) + 0.025 * (fine(x, y) - 0.5)
+            g = vein((x + 22 * (warp(x, y) - 0.5)) % SIZE, (y + 22 * (warp(y, x) - 0.5)) % SIZE)
+            d = abs((g * 1.6) % 1.0 - 0.5)
+            fade = max(0.0, mid((x * 2) % SIZE, (y * 2) % SIZE) - 0.35) / 0.65    # veins come and go
+            if d < 0.014:
+                v -= 0.1 * fade                                    # a vein
+            elif d < 0.035:
+                v -= 0.035 * fade                                  # its soft edge
+            if (x, y) in flecks:
+                v += 0.08                                          # a pale fleck
+            px.append(_clamp(v))
+    return _canvas(px)
+
+
+def pool(rnd):
+    """Standing blood (or dark water) in a bowl: depth in broad soft patches, slow ripples, a few
+    short light glints where it catches the light."""
+    fine, broad = value_noise(rnd, 64), value_noise(rnd, 8)
+    glints = [(rnd.randrange(SIZE), rnd.randrange(SIZE), rnd.randint(3, 7)) for _ in range(10)]
+    px = [0.0] * (SIZE * SIZE)
+    for y in range(SIZE):
+        for x in range(SIZE):
+            ripple = math.sin(2 * math.pi * (x + 9 * broad(x, y)) / SIZE * 4) * math.sin(2 * math.pi * y / SIZE * 3)
+            px[y * SIZE + x] = 0.8 + 0.08 * (broad(x, y) - 0.5) + 0.03 * ripple + 0.02 * (fine(x, y) - 0.5)
+    for gx, gy, n in glints:
+        for k in range(n):
+            px[gy * SIZE + (gx + k) % SIZE] += 0.18 * (1 - abs(k - n / 2) / (n / 2 + 1))
+    return _canvas([_clamp(v) for v in px])
+
+
+def soft_bark(rnd):
+    """Bark painted soft: ridges running down the image, furrows dark between them, the odd
+    crack across a ridge, mottled."""
+    ridge, mid, fine = value_noise(rnd, 16), value_noise(rnd, 8), value_noise(rnd, 64)
+    px = []
+    for y in range(SIZE):
+        for x in range(SIZE):
+            r = ridge((x + 14 * (mid(x, y) - 0.5)) % SIZE, (y * 0.35) % SIZE)          # ridges that wander and break
+            v = 0.62 + 0.38 * min(1.0, abs(r - 0.5) * 3.0)          # ridges light, furrows dark
+            v += 0.08 * (fine(x, y) - 0.5)
+            if fine((x * 3) % SIZE, (y * 0.5) % SIZE) > 0.9:
+                v -= 0.12                                          # a crack across a ridge
+            px.append(_clamp(v))
+    return _canvas(px)
+
+
+def soft_daub(rnd):
+    """Clay daub painted soft: smoothed by hand in broad sweeps, a little lighter where the hand
+    passed, fine cracks wandering through it, grit."""
+    big, mid = value_noise(rnd, 4), value_noise(rnd, 16)
+    px = [0.86 + 0.07 * (big(x, y) - 0.5) + 0.04 * (mid(x, y) - 0.5) for y in range(SIZE) for x in range(SIZE)]
+
+    def add(x, y, dv):
+        i = (int(y) % SIZE) * SIZE + int(x) % SIZE
+        px[i] += dv
+    for _ in range(26):                                            # hand sweeps: arcs, lit on one side
+        cx, cy, r = rnd.uniform(0, SIZE), rnd.uniform(0, SIZE), rnd.uniform(10, 30)
+        a0 = rnd.uniform(0, 2 * math.pi)
+        for k in range(int(r * 1.5)):
+            a = a0 + k / r
+            x, y = cx + r * math.cos(a), cy + r * math.sin(a)
+            add(x, y, 0.04)
+            add(x + math.cos(a), y + math.sin(a), -0.03)
+    for _ in range(7):                                             # cracks
+        x, y = rnd.uniform(0, SIZE), rnd.uniform(0, SIZE)
+        a = rnd.uniform(0, 2 * math.pi)
+        for _ in range(rnd.randint(18, 40)):
+            add(x, y, -0.14)
+            a += rnd.uniform(-0.6, 0.6)
+            x, y = x + math.cos(a), y + math.sin(a)
+    for i in range(len(px)):
+        if rnd.random() < 0.03:
+            px[i] += rnd.uniform(-0.06, 0.04)                      # grit
+    return _canvas([_clamp(v) for v in px])
+
+
+def soft_turf(rnd):
+    """Turf painted soft: short blades of grass leaning a little, lighter at their tips, with the
+    earth showing through between tufts (warm, so a green palette colour turns it brown-dark)."""
+    earth, mid = value_noise(rnd, 8), value_noise(rnd, 16)
+    base = [0.72 + 0.06 * (mid(x, y) - 0.5) for y in range(SIZE) for x in range(SIZE)]
+    px = [(v, v, v) for v in base]
+    for i in range(SIZE * SIZE):
+        x, y = i % SIZE, i // SIZE
+        e = earth(x, y)
+        if e > 0.62:                                              # earth between the tufts
+            t = min(1.0, (e - 0.62) * 4)
+            v = base[i]
+            px[i] = (v * (1 + 0.25 * t), v * (1 - 0.05 * t), v * (1 - 0.3 * t))
+    for _ in range(1700):                                          # blades, drawn bottom to tip
+        x, y = rnd.uniform(0, SIZE), rnd.uniform(0, SIZE)
+        lean, n = rnd.uniform(-0.4, 0.4), rnd.randint(3, 6)
+        for k in range(n):
+            v = 0.66 + 0.32 * (k + 1) / n
+            i = (int(y - k) % SIZE) * SIZE + int(x + lean * k) % SIZE
+            px[i] = (v, v, v)
+    return _canvas([tuple(_clamp(c) for c in p) for p in px])
+
+
+def soft_soil(rnd):
+    """Soil painted soft: mottled earth with small clods, each lit along its top and shadowed
+    under it, and a few pebbles."""
+    big, mid = value_noise(rnd, 6), value_noise(rnd, 24)
+    px = [0.8 + 0.07 * (big(x, y) - 0.5) + 0.05 * (mid(x, y) - 0.5) for y in range(SIZE) for x in range(SIZE)]
+
+    def add(x, y, dv):
+        px[(int(y) % SIZE) * SIZE + int(x) % SIZE] += dv
+    for _ in range(140):                                           # clods
+        cx, cy, r = rnd.uniform(0, SIZE), rnd.uniform(0, SIZE), rnd.uniform(1.5, 3.5)
+        for dy in range(-4, 5):
+            for dx in range(-4, 5):
+                d = math.hypot(dx, dy)
+                if d <= r:
+                    add(cx + dx, cy + dy, 0.06 if dy < 0 else 0.02)
+                elif d <= r + 1 and dy > 0:
+                    add(cx + dx, cy + dy, -0.09)                   # its shadow
+    for _ in range(30):                                            # pebbles
+        cx, cy = rnd.uniform(0, SIZE), rnd.uniform(0, SIZE)
+        for dx, dy in ((0, 0), (1, 0), (0, 1), (1, 1)):
+            add(cx + dx, cy + dy, 0.1)
+    return _canvas([_clamp(v) for v in px])
+
+
 TEXTURES = {
     "Thatch": lambda r: chunky(thatch(r)),
     "Slate": lambda r: chunky(slate(r)),
     "Fieldstone": lambda r: soft_coursed(random.Random(11), weathered=True),   # the seed the owner chose it at
     "Ashlar": lambda r: coursed(r, (4, 4), (7, 9)),
-    "Planks": lambda r: chunky(planks(r)),
-    "Plaster": lambda r: chunky(plaster(r)),
-    "Beam": lambda r: chunky(beam(r)),
-    "Boards": lambda r: boards(r),
+    "Planks": lambda r: soft_boards(random.Random(2002)),                     # wood painted soft (owner, 2026-10-28,
+    "Plaster": lambda r: chunky(plaster(r)),                                  # from the wood study's row B)
+    "Beam": lambda r: soft_wood(random.Random(2001)),
+    "Boards": lambda r: soft_boards(random.Random(2003)),
     "Blocks": lambda r: blocks(r),
     "Flags": lambda r: flags(r),
+    "CruorCourses": lambda r: cruor_courses(random.Random(3101)),              # Religion's monuments (2026-10-28)
+    "Carved": lambda r: carved(random.Random(3102)),
+    "Bloodstone": lambda r: bloodstone(random.Random(3103)),
+    "Pool": lambda r: pool(random.Random(3104)),
 }
 
 

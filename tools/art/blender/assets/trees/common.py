@@ -1,4 +1,4 @@
-"""Trees, common. Trees and their felled states: alder, ash, hawthorn, pollard willow, elm, pine, birch, a sapling, a snag, stumps and a fallen log.
+"""Trees, common. Trees and their felled states: alder, ash, hawthorn, pollard willow, elm, pine, birch, a sapling, a snag, the dry rise's wind thorn, the churchyard yew, an orchard apple (picked and not), stumps and a fallen log.
 
 Run it to lay the family out beside the player (with SAVE set, it also saves the working file
 common.blend beside this script); with EXPORT set it writes every member of ASSETS to
@@ -374,6 +374,85 @@ def rotten_stump(seed=5, at=(0, 0, 0)):
     return N.make("RottenStump", bm, ["DeadWood", "Umber", "Moss", "CryptEarth", "Linen", "Ochre"], smooth_angle=40, at=at)
 
 
+def wind_thorn(seed=6, at=(0, 0, 0)):
+    """A thorn on the dry rise, where the wind off the spine has nearly won: a stunted crooked trunk
+    lying over downwind, bare limbs raked the same way, and the little leaf it still keeps in two
+    small dark clumps at the lee end. Lower than the heath's hawthorn; nothing walks under it."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    uvs = {}
+    side = Vector((-WIND.y, WIND.x, 0))
+    pts = [Vector((0, 0, -0.05)), WIND * 0.15 + Vector((0, 0, 0.55)), WIND * 0.6 + Vector((0, 0, 0.95)),
+           WIND * 1.25 + Vector((0, 0, 1.15))]
+    rod(bm, pts, 0.11, sides=6, taper=0.35)
+    roots(bm, 0.11, 0.4, 3, rnd, rot=2.5, rise=1.8)
+    for t, s, lift, length in ((0.35, 0.35, 0.45, 0.8), (0.55, -0.3, 0.3, 0.9), (0.75, 0.15, 0.5, 0.7), (0.5, 0.0, 0.7, 0.6)):
+        base = pts[1].lerp(pts[2], t) if t < 0.6 else pts[2].lerp(pts[3], t)
+        tip = base + WIND * length + side * s + Vector((0, 0, lift))
+        N.branch(bm, base, tip, 0.04, None, mat=0, sides=4)
+        N.branch(bm, base.lerp(tip, 0.5), base.lerp(tip, 0.5) + WIND * 0.3 - side * s * 0.5 + Vector((0, 0, 0.25)), 0.02, None, mat=0, sides=3)
+    for d, sd, z, radii in ((1.45, 0.1, 1.3, (0.5, 0.4, 0.3)), (1.0, -0.35, 1.2, (0.35, 0.3, 0.25))):
+        clump(bm, WIND * d + side * sd + Vector((0, 0, z)), radii, rnd, 1, 2, uvs)
+    return leafy("WindThorn", bm, uvs, ["DeadWood", leaf_mat("Thorn"), "Leaf1"], at)
+
+
+def yew(seed=9, at=(0, 0, 0)):
+    """The churchyard yew, older than the chapel: a short, fat, fluted trunk splitting low into
+    several stems, red-brown and bare and showing under one broad dark mass of needles that hangs
+    low all round, wider than it is tall. Nothing else in the basin is so dark."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    uvs = {}
+    roots(bm, 0.32, 0.8, 5, rnd, rot=0.3, rise=1.6)
+    fork = Vector((0, 0, 0.9))
+    for k in range(4):
+        a = 2 * math.pi * k / 4 + rnd.uniform(-0.3, 0.3)
+        out = Vector((math.cos(a), math.sin(a), 0))
+        top = fork + out * rnd.uniform(0.8, 1.1) + Vector((0, 0, rnd.uniform(1.4, 1.8)))
+        rod(bm, [Vector((0, 0, -0.05)), Vector((0.02, 0, 0.5)), fork + out * 0.1, top], 0.32 if k == 0 else 0.22,
+            sides=7, taper=0.3)
+    for k in range(6):                                            # the skirt of the crown, low all round
+        a = 2 * math.pi * k / 6 + rnd.uniform(-0.2, 0.2)
+        c = Vector((1.35 * math.cos(a), 1.35 * math.sin(a), 1.75 + rnd.uniform(-0.1, 0.15)))
+        clump(bm, c, (1.0, 1.0, 0.75), rnd, 1, 2, uvs)
+    for k in range(3):                                            # and the crown over them
+        a = 2 * math.pi * k / 3 + 0.5
+        clump(bm, Vector((0.6 * math.cos(a), 0.6 * math.sin(a), 2.5)), (1.05, 1.05, 0.8), rnd, 1, 2, uvs)
+    clump(bm, Vector((0, 0, 3.15)), (0.8, 0.8, 0.6), rnd, 1, 2, uvs)
+    return leafy("Yew", bm, uvs, ["Yew", leaf_mat("Needles"), "Leaf1"], at)
+
+
+def yew_stump(seed=9, at=(0, 0, 0)):
+    """The yew after Woodcutting: a wide low fluted stump, the cut red at its heart, the roots
+    gripping."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    cut_stub(bm, (0, 0, -0.05), 0.34, 0.45, 0.05, rnd, sides=8)
+    roots(bm, 0.32, 0.8, 5, rnd, rot=0.3, rise=1.2)
+    return make("YewStump", bm, ["Yew", "Ash"], smooth_angle=50, at=at)
+
+
+def apple_tree(seed=12, at=(0, 0, 0), picked=False):
+    """An orchard apple, as a farm keeps them: a short leaning trunk opening at head height into
+    three low limbs spread wide for picking, a round open crown of pale leaves hung with red fruit.
+    picked: the same tree with the fruit gone (a Foraging node's spent state)."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    uvs = {}
+    roots(bm, 0.15, 0.45, 3, rnd, rot=1.1)
+    fork = Vector((0.12, 0.05, 1.25))
+    for k in range(3):
+        a = 2 * math.pi * k / 3 + rnd.uniform(-0.3, 0.3)
+        out = Vector((math.cos(a), math.sin(a), 0))
+        top = fork + out * rnd.uniform(0.9, 1.1) + Vector((0, 0, rnd.uniform(0.7, 0.95)))
+        rod(bm, [Vector((0, 0, -0.05)), Vector((0.06, 0.02, 0.7)), fork, fork.lerp(top, 0.5) + Vector((0, 0, 0.1)), top],
+            0.15 if k == 0 else 0.13, sides=6, taper=0.35)
+        clump(bm, top + Vector((0, 0, 0.2)), (0.85, 0.8, 0.6), rnd, 1, 2, uvs)
+    clump(bm, fork + Vector((0, 0, 1.35)), (0.75, 0.75, 0.55), rnd, 1, 2, uvs)
+    tex = "BushPalePicked" if picked else "BushPale"
+    return leafy("AppleTree" + ("Picked" if picked else ""), bm, uvs, ["Bark", leaf_mat(tex), "Leaf1"], at)
+
+
 ASSETS = {
     "Alder": alder,
     "AlderStool": stool_cut,
@@ -393,6 +472,11 @@ ASSETS = {
     "BirchStump": birch_stump,
     "Sapling": sapling,
     "RottenStump": rotten_stump,
+    "WindThorn": wind_thorn,
+    "Yew": yew,
+    "YewStump": yew_stump,
+    "AppleTree": apple_tree,
+    "AppleTreePicked": lambda: apple_tree(picked=True),
 }
 
 

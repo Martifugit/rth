@@ -59,6 +59,34 @@
    "texture": "Beam",
    "tiles": 1
   },
+  "DeadWood": {
+   "texture": "Beam",
+   "tiles": 1
+  },
+  "Driftwood": {
+   "texture": "Beam",
+   "tiles": 1
+  },
+  "Fence": {
+   "texture": "Beam",
+   "tiles": 1
+  },
+  "CruorPlinth": {
+   "texture": "CruorCourses",
+   "tiles": 1.2
+  },
+  "CruorCarved": {
+   "texture": "Carved",
+   "tiles": 1
+  },
+  "Bloodstone": {
+   "texture": "Bloodstone",
+   "tiles": 1.5
+  },
+  "FountBlood": {
+   "texture": "Pool",
+   "tiles": 1
+  },
   "Boards": {
    "texture": "Boards",
    "tiles": 1.2

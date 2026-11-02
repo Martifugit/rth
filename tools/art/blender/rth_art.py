@@ -103,6 +103,86 @@ def box_uvs(me):
         for li in p.loop_indices:
             co = me.vertices[me.loops[li].vertex_index].co
             uv.data[li].uv = (co[a] / tiles, co[b] / tiles_v)
+    grain_uvs(me)
+
+
+def join(target, others):
+    """Join other objects into `target` (their transforms applied, their materials kept), so a piece
+    can be built from other families' pieces (a kiln's screen from the village's hurdles). Returns
+    target."""
+    others = [o for o in others if o is not None and o is not target]
+    if not others:
+        return target
+    for o in bpy.context.selected_objects:
+        o.select_set(False)
+    for o in others + [target]:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = target
+    with bpy.context.temp_override(active_object=target, selected_editable_objects=others + [target],
+                                   selected_objects=others + [target]):
+        bpy.ops.object.join()
+    return target
+
+
+# Wood wears a soft grain painted down its texture (Beam: solid timber; Planks, Boards: boards side by
+# side), so its coordinates are laid along each part, not by the axes it faces (box_uvs calls this).
+WOOD = ("Oak", "Timber", "Planks", "Boards", "DeadWood", "Driftwood", "Fence", "Yew")
+BOARDED = ("Planks", "Boards")          # their texture is four boards across, each a quarter of it wide
+BOARD = 0.3                             # a part no wider than this is one board: it gets one of them
+
+
+def grain_uvs(ob, names=WOOD, repeat=1.0):
+    """Lay a grained texture (wood, bark: the grain runs down the image) along each part's length:
+    every connected part whose material is one of `names` gets v along its longest side, so a leg's
+    grain runs up, a table top's and a log's along it; faces across the length (a log's cut end)
+    keep both their own axes. A part of a boarded material no wider than BOARD (a plank modelled on
+    its own) is squeezed across into one of the texture's boards, so no painted seam runs down it.
+    `ob` is an object or a mesh; `repeat`: metres per repeat."""
+    me = getattr(ob, "data", ob)
+    wanted = {i for i, m in enumerate(me.materials) if m and m.name.split("@")[0] in names}
+    if not wanted or not me.uv_layers:
+        return
+    boarded = {i for i in wanted if me.materials[i].name.split("@")[0] in BOARDED}
+    uv = me.uv_layers[0]
+    faces = [p for p in me.polygons if p.material_index in wanted]
+    parent = {}
+
+    def find(a):
+        while parent.setdefault(a, a) != a:
+            parent[a] = parent[parent[a]]
+            a = parent[a]
+        return a
+    for p in faces:
+        vs = list(p.vertices)
+        for v in vs[1:]:
+            ra, rb = find(vs[0]), find(v)
+            if ra != rb:
+                parent[ra] = rb
+    parts = {}
+    for p in faces:
+        parts.setdefault(find(p.vertices[0]), []).append(p)
+    for part in parts.values():
+        cos = [me.vertices[v].co for p in part for v in p.vertices]
+        lo = [min(c[i] for c in cos) for i in range(3)]
+        ext = [max(c[i] for c in cos) - lo[i] for i in range(3)]
+        long_ = max(range(3), key=lambda i: ext[i])
+        one_board = part[0].material_index in boarded and sorted(ext)[1] <= BOARD
+        band = int(abs(lo[0] * 7.0 + lo[1] * 13.0 + lo[2] * 3.0) * 10) % 4 * 0.25 + 0.035   # which board it takes
+        for p in part:
+            n = p.normal
+            ax = max(range(3), key=lambda i: abs(n[i]))
+            a, b = {0: (1, 2), 1: (0, 2), 2: (0, 1)}[ax]
+            if long_ in (a, b):
+                u_axis, v_axis = (b, a) if a == long_ else (a, b)
+            else:
+                u_axis, v_axis = a, b
+            for li in p.loop_indices:
+                co = me.vertices[me.loops[li].vertex_index].co
+                if one_board and u_axis != long_:
+                    u = band + 0.18 * (co[u_axis] - lo[u_axis]) / max(ext[u_axis], 1e-6)
+                else:
+                    u = co[u_axis] / repeat
+                uv.data[li].uv = (u, co[v_axis] / repeat)
 
 
 def reset():
@@ -356,10 +436,11 @@ def finish(bm):
 # ---- preview ----
 
 def preview_rig(focus=(0.5, 0.5, 0.6), distance=9.0, pitch=40.0, yaw=-30.0, ground=6, human=True,
-                ground_colour="Grass", human_at=(-0.5, 0.5)):
+                ground_colour="Grass", human_at=(-0.5, 0.5), coll_name="Preview"):
     """Ground of tiles, the game's sun, a camera at the game's pitch, and the player for scale.
-    Everything goes in the 'Preview' collection, which the export skips."""
-    coll = collection("Preview")
+    Everything goes in the 'Preview' collection (or coll_name, for a board in its own scene), which
+    the export skips."""
+    coll = collection(coll_name)
     scene = bpy.context.scene
 
     # Ground: one quad per tile, two alternating shades of the ground colour so tiles read.
