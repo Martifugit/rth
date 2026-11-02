@@ -30,22 +30,40 @@ public class AnglingPaceTests
 
     private static AnglingSpeciesDef Def(string id) => Content.Angling.Species.First(s => s.Id == id);
 
-    /// <summary>The best ordinary (not collector) part for each slot a player of the species' level can use and that suits the fish.</summary>
+    /// <summary>
+    /// The best ordinary (not collector) rig a player of the species' level could have: for each
+    /// rod they can use, the best part for each of its slots that fits it and suits the fish, keeping
+    /// the rigs with a lure that takes the fish, the strongest of those.
+    /// </summary>
     internal static List<(AnglingTackleDef Part, double Condition)> BestRig(AnglingSpeciesDef species)
     {
-        var parts = new List<(AnglingTackleDef, double)>();
         List<AnglingTackleDef> usable = Content.Items.Values.Select(i => i.Tackle).Where(t => t != null && !t.Collector
             && t.Requirements.All(r => r.Level <= species.Level)).Select(t => t!).ToList();
-        foreach (AnglingSlot slot in Enum.GetValues<AnglingSlot>())
+        List<(AnglingTackleDef Part, double Condition)>? best = null;
+        int bestScore = -1;
+        foreach (AnglingTackleDef rod in usable.Where(t => t.Slot == AnglingSlot.Rod))
         {
-            IEnumerable<AnglingTackleDef> mine = usable.Where(t => t.Slot == slot);
-            if (slot == AnglingSlot.Lure) mine = mine.Where(t => AnglingRules.Bites(t, species));
-            if (slot == AnglingSlot.Line && species.MaxThickness > 0) mine = mine.Where(t => t.Thickness <= species.MaxThickness);
-            if (slot == AnglingSlot.Hook && species.Teeth) mine = mine.OrderByDescending(t => t.NoTeethWear);
-            AnglingTackleDef? best = mine.OrderByDescending(t => t.Tier).ThenByDescending(t => t.SnapBuffer + t.Strength + t.ReelSpeed + t.RunDrag + t.HookHold).FirstOrDefault();
-            if (best != null) parts.Add((best, 100));
+            var rig = new List<(AnglingTackleDef, double)> { (rod, 100) };
+            bool lure = false;
+            foreach (AnglingSlot slot in rod.RodSlots)
+            {
+                IEnumerable<AnglingTackleDef> mine = usable.Where(t => t.Slot == slot && AnglingRules.FitProblem(rod, "rod", t, "part") == null);
+                if (slot == AnglingSlot.Lure) mine = mine.Where(t => AnglingRules.Bites(t, species));
+                if (slot == AnglingSlot.Line && species.MaxThickness > 0) mine = mine.Where(t => t.Thickness <= species.MaxThickness);
+                if (slot == AnglingSlot.Hook && species.Teeth) mine = mine.OrderByDescending(t => t.NoTeethWear);
+                AnglingTackleDef? part = mine.OrderByDescending(t => t.Tier).ThenByDescending(t => t.SnapBuffer + t.Strength + t.ReelSpeed + t.RunDrag + t.HookHold).FirstOrDefault();
+                if (part == null) continue;
+                rig.Add((part, 100));
+                lure |= slot == AnglingSlot.Lure;
+            }
+            int score = rig.Sum(p => p.Item1.SnapBuffer + p.Item1.Strength + p.Item1.ReelSpeed + p.Item1.RunDrag + p.Item1.HookHold) + rod.Tier * 1000;
+            if (lure && score > bestScore)
+            {
+                best = rig;
+                bestScore = score;
+            }
         }
-        return parts;
+        return best ?? new List<(AnglingTackleDef, double)>();
     }
 
     [Theory]

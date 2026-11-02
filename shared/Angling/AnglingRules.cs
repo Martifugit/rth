@@ -68,6 +68,22 @@ namespace Rth.Shared.Angling
             return rig;
         }
 
+        /// <summary>
+        /// Why a part won't go on a rod, or null: the rod has no such slot, the part is of a higher
+        /// tier than the rod, or it doesn't fit the rod's kind.
+        /// </summary>
+        public static string? FitProblem(AnglingTackleDef rod, string rodName, AnglingTackleDef part, string partName)
+        {
+            if (part.Slot == AnglingSlot.Rod) return "That's a rod, not a part for one.";
+            bool hasSlot = false;
+            foreach (AnglingSlot s in rod.RodSlots) hasSlot |= s == part.Slot;
+            if (!hasSlot) return "Your " + rodName + " has nowhere to take a " + part.Slot.ToString().ToLowerInvariant() + ".";
+            if (part.Tier > rod.Tier) return "The " + partName + " is too much for your " + rodName + ": it needs a tier " + part.Tier + " rod.";
+            if (part.Rods.Count > 0 && !part.Rods.Contains(rod.Kind))
+                return "The " + partName + " is made for " + string.Join(" or ", part.Rods) + " rods, not a " + rod.Kind + " rod.";
+            return null;
+        }
+
         /// <summary>Whether a lure takes a species: by id, or "tier:N" for every species of tier N and below.</summary>
         public static bool Bites(AnglingTackleDef lure, AnglingSpeciesDef species)
         {

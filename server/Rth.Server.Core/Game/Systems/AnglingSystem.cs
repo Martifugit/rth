@@ -37,6 +37,7 @@ namespace Rth.Server.Game
             public uint Started;
             public uint LastInput;
             public string? Lure;
+            public string Rod = "";
         }
 
         /// <summary>The player's fight now (null: none) and the last fight state sent.</summary>
@@ -77,9 +78,10 @@ namespace Rth.Server.Game
                 return spot.Active ? "The fish here are wary of you. Try elsewhere for a while." : "The water is quiet here.";
             int level = World.Find<SkillSystem>()?.Level(player, Rules.Skill) ?? 1;
             if (level < species.Level) return species.Name + " requires level " + species.Level + " " + World.Content.SkillName(Rules.Skill) + " to hook.";
+            ItemDef? rod = Tackle.Rod(player);
+            if (rod == null) return "You need a rod, in your hand or your pack, to fish for trophies.";
             ItemDef? lure = Tackle.Part(player, AnglingSlot.Lure);
-            if (Tackle.Part(player, AnglingSlot.Rod) == null) return "You need a rod on your rig to fish for trophies.";
-            if (lure?.Tackle == null) return "You need a lure on your rig.";
+            if (lure?.Tackle == null) return "Your " + rod.Name.ToLowerInvariant() + " needs a lure: right-click it and choose Rig.";
             if (!AnglingRules.Bites(lure.Tackle, species)) return "Nothing here will take your " + lure.Name.ToLowerInvariant() + ".";
             ItemDef? line = Tackle.Part(player, AnglingSlot.Line);
             int thickness = line?.Tackle?.Thickness ?? 0;
@@ -118,6 +120,7 @@ namespace Rth.Server.Game
                 Started = now,
                 LastInput = now,
                 Lure = Tackle.Part(player, AnglingSlot.Lure)?.Id,
+                Rod = Tackle.Rod(player)?.Id ?? "",
             };
             hooked.State = new AnglingFightState
             {
@@ -169,7 +172,7 @@ namespace Rth.Server.Game
             state.Steps = fight.Steps;
             state.Outcome = outcome == AnglingOutcome.None ? AnglingOutcome.Escaped : outcome;
             AnglingLogSystem? log = World.Find<AnglingLogSystem>();
-            Tackle.Wear(player, fight, species);
+            Tackle.Wear(player, hooked.Rod, fight, species);
 
             if (state.Outcome == AnglingOutcome.Landed)
             {
@@ -332,7 +335,13 @@ namespace Rth.Server.Game
                     world.Tell(player, _started ? TextKind.Info : TextKind.Warning, problem);
                     return false;
                 }
-                if (!_started) world.Tell(player, TextKind.Info, "You cast your line and wait.");
+                if (!_started)
+                {
+                    world.Tell(player, TextKind.Info, "You cast your line and wait.");
+                    // The rod in hand while fishing (as a gathering tool is); the weapon comes back after.
+                    string? rod = world.Get<AnglingTackleSystem>().Rod(player)?.Id;
+                    if (rod != null) player.SetHeld(rod);
+                }
                 _started = true;
                 _biteAt = world.CurrentTick + (uint)world.Random.Next(rules.BiteMinTicks, rules.BiteMaxTicks + 1);
                 world.Animate(player, "fish_rod", Object.Tile);

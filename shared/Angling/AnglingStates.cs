@@ -56,10 +56,17 @@ namespace Rth.Shared.Angling
         public double Condition = 100;
     }
 
-    /// <summary>The player's rig ("tackle"): the slots and the stats they make (with no level bonus).</summary>
+    /// <summary>
+    /// The rod being rigged ("tackle"): <see cref="Open"/> is the rod whose rig window is open ("":
+    /// none). Its slots (the rod's own, in order) with their parts and conditions, the rod's own
+    /// condition, and the stats it all makes (with no level bonus).
+    /// </summary>
     public sealed class AnglingTackleState
     {
         public const string StateKey = "tackle";
+        public const string IntentKind = "tackle";
+        public string Open = "";
+        public double RodCondition = 100;
         public List<AnglingSlotState> Slots = new List<AnglingSlotState>();
         public AnglingRigStats Stats;
     }

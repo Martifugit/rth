@@ -170,7 +170,10 @@ namespace Rth.Shared.Angling
         public static AnglingRigStats Bare() => new AnglingRigStats { SnapBuffer = 20, Strength = 100, ReelSpeed = 100, RunDrag = 100, HookHold = 30 };
     }
 
-    /// <summary>The slots of a rig.</summary>
+    /// <summary>
+    /// The slots of a rig. A rod (slot <see cref="Rod"/>) is the rig itself: its
+    /// <see cref="AnglingTackleDef.Slots"/> say which of the others it has.
+    /// </summary>
     public enum AnglingSlot : byte
     {
         Rod = 0,
@@ -178,6 +181,12 @@ namespace Rth.Shared.Angling
         Line = 2,
         Hook = 3,
         Lure = 4,
+        /// <summary>From tier 5: a trace between line and hook.</summary>
+        Leader = 5,
+        /// <summary>From tier 5: a float that holds a bait where fish feed.</summary>
+        Float = 6,
+        /// <summary>From tier 5: a lantern on the rod (lightfin's tells).</summary>
+        Lantern = 7,
     }
 
     /// <summary>
@@ -188,6 +197,12 @@ namespace Rth.Shared.Angling
     {
         public AnglingSlot Slot;
         public int Tier = 1;
+        /// <summary>A rod: its kind ("fly", "spinning", "ledger"), which decides what fits it.</summary>
+        public string Kind = "";
+        /// <summary>A rod: the slots it has (none listed: reel, line, hook and lure).</summary>
+        public List<AnglingSlot> Slots = new List<AnglingSlot>();
+        /// <summary>A part: the rod kinds it fits (none listed: any rod).</summary>
+        public List<string> Rods = new List<string>();
         /// <summary>Using it: Fishing at its tier.</summary>
         public List<SkillRequirement> Requirements = new List<SkillRequirement>();
         /// <summary>The rig stats it sets (its slot's own; a rod's snapBuffer, a reel's reelSpeed and runDrag...). 0: the bare rig's.</summary>
@@ -210,6 +225,11 @@ namespace Rth.Shared.Angling
         /// <summary>Can't be made: only the collector mends it.</summary>
         public bool Collector;
         public AnglingRepairDef? Repair;
+
+        public static readonly AnglingSlot[] DefaultSlots = { AnglingSlot.Reel, AnglingSlot.Line, AnglingSlot.Hook, AnglingSlot.Lure };
+
+        /// <summary>A rod's slots, in order.</summary>
+        public IReadOnlyList<AnglingSlot> RodSlots => Slots.Count > 0 ? (IReadOnlyList<AnglingSlot>)Slots : DefaultSlots;
     }
 
     /// <summary>Mending a part yourself at a tackle bench: what it takes, and the skill to do it.</summary>

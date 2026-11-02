@@ -78,6 +78,16 @@ namespace Rth.Server.Content
                 foreach (string b in t.Bites)
                     if (!b.StartsWith("tier:") && !file.Species.Any(s => s.Id == b)) problems.Add(where + "bites names unknown species '" + b + "'.");
                 if (t.Slot == AnglingSlot.Lure && t.Bites.Count == 0) problems.Add(where + "a lure needs something to bite on it.");
+                if (t.Slot == AnglingSlot.Rod)
+                {
+                    if (string.IsNullOrWhiteSpace(t.Kind)) problems.Add(where + "a rod needs a kind (fly, spinning, ledger...).");
+                    if (t.RodSlots.Contains(AnglingSlot.Rod)) problems.Add(where + "a rod can't have a rod slot.");
+                    if (t.RodSlots.Distinct().Count() != t.RodSlots.Count) problems.Add(where + "a rod's slots must differ.");
+                    if (i.Equipment == null || i.Equipment.Slot != EquipSlot.Weapon) problems.Add(where + "a rod is wielded: it needs equipment in the Weapon slot.");
+                }
+                else if (t.Kind.Length > 0 || t.Slots.Count > 0) problems.Add(where + "only rods have a kind and slots.");
+                foreach (string kind in t.Rods)
+                    if (!items.Values.Any(o => o.Tackle?.Slot == AnglingSlot.Rod && o.Tackle.Kind == kind)) problems.Add(where + "fits '" + kind + "' rods, and no rod is one.");
                 if (t.WearPerFight < 0 || t.WearPerHard < 0) problems.Add(where + "wear can't be negative.");
             }
             foreach (ItemDef i in items.Values)

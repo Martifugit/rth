@@ -42,7 +42,10 @@ public class AnglingTests
         ContentParts parts = TestContent.Parts();
         parts.Items.Add(new ItemDef { Id = "raw_fish", Name = "Raw fish", Stackable = true });
         parts.Items.Add(new ItemDef { Id = "twine", Name = "Twine", Stackable = true });
-        parts.Items.Add(new ItemDef { Id = "rod", Name = "Ash rod", Value = 40, Tackle = new AnglingTackleDef { Slot = AnglingSlot.Rod, SnapBuffer = 24, WearPerFight = 1 } });
+        parts.Items.Add(new ItemDef { Id = "rod", Name = "Ash rod", Value = 40, Equipment = new EquipmentDef { Slot = EquipSlot.Weapon },
+            Tackle = new AnglingTackleDef { Slot = AnglingSlot.Rod, Kind = "spinning", Tier = 3, SnapBuffer = 24, WearPerFight = 1 } });
+        parts.Items.Add(new ItemDef { Id = "fly_rod", Name = "Fly rod", Equipment = new EquipmentDef { Slot = EquipSlot.Weapon },
+            Tackle = new AnglingTackleDef { Slot = AnglingSlot.Rod, Kind = "fly", Tier = 1, SnapBuffer = 30 } });
         parts.Items.Add(new ItemDef { Id = "reel", Name = "Reel", Value = 40, Tackle = new AnglingTackleDef { Slot = AnglingSlot.Reel, ReelSpeed = 105, RunDrag = 115, WearPerFight = 1, WearPerHard = 5 } });
         parts.Items.Add(new ItemDef { Id = "line", Name = "Flax line", Value = 20, Tackle = new AnglingTackleDef { Slot = AnglingSlot.Line, Strength = 110, Thickness = 2, WearPerFight = 2, WearPerHard = 10,
             Repair = new AnglingRepairDef { Materials = { new ItemCost { Item = "twine", Count = 1 } }, Requirements = { new SkillRequirement { Skill = "occultism", Level = 5 } } } } });
@@ -50,7 +53,9 @@ public class AnglingTests
         parts.Items.Add(new ItemDef { Id = "hook", Name = "Hook", Value = 10, Tackle = new AnglingTackleDef { Slot = AnglingSlot.Hook, HookHold = 40, WearPerFight = 2 } });
         parts.Items.Add(new ItemDef { Id = "fly", Name = "Fly", Tackle = new AnglingTackleDef { Slot = AnglingSlot.Lure, Bites = { "perch" } } });
         parts.Items.Add(new ItemDef { Id = "spinner", Name = "Spinner", Tackle = new AnglingTackleDef { Slot = AnglingSlot.Lure, Bites = { "tier:3" } } });
-        parts.Items.Add(new ItemDef { Id = "big_rod", Name = "Big rod", Tackle = new AnglingTackleDef { Slot = AnglingSlot.Rod, SnapBuffer = 30, Requirements = { new SkillRequirement { Skill = Skill, Level = 50 } } } });
+        parts.Items.Add(new ItemDef { Id = "big_line", Name = "Big line", Tackle = new AnglingTackleDef { Slot = AnglingSlot.Line, Strength = 150, Requirements = { new SkillRequirement { Skill = Skill, Level = 50 } } } });
+        parts.Items.Add(new ItemDef { Id = "tier5_reel", Name = "Fine reel", Tackle = new AnglingTackleDef { Slot = AnglingSlot.Reel, Tier = 5, ReelSpeed = 130 } });
+        parts.Items.Add(new ItemDef { Id = "spinning_only", Name = "Spinning reel", Tackle = new AnglingTackleDef { Slot = AnglingSlot.Reel, ReelSpeed = 120, Rods = { "spinning" } } });
         parts.Objects.Add(new ObjectDef { Id = "perch_spot", Name = "Perch ripples", Actions = { new ActionDef { Id = "cast", Label = "Cast" } } });
         parts.Objects.Add(new ObjectDef { Id = "pike_spot", Name = "Pike ripples", Actions = { new ActionDef { Id = "cast", Label = "Cast" } } });
         parts.Objects.Add(new ObjectDef { Id = "bench", Name = "Tackle bench", Actions = { new ActionDef { Id = "mend", Label = "Mend" } } });
@@ -190,43 +195,72 @@ public class AnglingTests
 
     // ------------------------------------------------------------------ the rig
 
+    private static Dictionary<AnglingSlot, string> RigOf(WorldFixture fx, string rod) =>
+        fx.World.Get<AnglingTackleSystem>().Of(fx.Player("Alice")).RigOf(rod);
+
     [Fact]
-    public void Parts_go_into_the_rig_and_back_out_and_requirements_hold()
+    public void A_rod_opens_its_rig_and_parts_go_on_and_back_off()
     {
         var (fx, alice) = World();
         RigAll(fx, alice, "Alice", "rod", "line");
-        PlayerTackle rig = fx.World.Get<AnglingTackleSystem>().Of(fx.Player("Alice"));
-        Assert.Equal("rod", rig.Slots[AnglingSlot.Rod]);
-        Assert.Equal(-1, Slot(fx, "Alice", "rod"));
+        Assert.Equal("rod", fx.World.Get<AnglingTackleSystem>().Of(fx.Player("Alice")).Open);
+        Assert.Equal("rod", State<AnglingTackleState>(alice, AnglingTackleState.StateKey)!.Open);
+        Assert.Equal("line", RigOf(fx, "rod")[AnglingSlot.Line]);
+        Assert.NotEqual(-1, Slot(fx, "Alice", "rod"));                 // the rod stays in the pack
+        Assert.Equal(-1, Slot(fx, "Alice", "line"));
         Assert.Equal(110, fx.World.Get<AnglingTackleSystem>().Stats(fx.Player("Alice")).Strength);
+        Assert.Equal(24, fx.World.Get<AnglingTackleSystem>().Stats(fx.Player("Alice")).SnapBuffer);
 
         RigAll(fx, alice, "Alice", "thick_line");      // swaps: the old line comes back
-        Assert.Equal("thick_line", rig.Slots[AnglingSlot.Line]);
+        Assert.Equal("thick_line", RigOf(fx, "rod")[AnglingSlot.Line]);
         Assert.NotEqual(-1, Slot(fx, "Alice", "line"));
 
-        alice.FromClient(new IntentMessage { Kind = AnglingTackleSystem.IntentKind, Arg = "unrig:Rod" });
+        alice.FromClient(new IntentMessage { Kind = AnglingTackleSystem.IntentKind, Arg = "unrig:Line" });
         fx.Ticks(1);
-        Assert.False(rig.Slots.ContainsKey(AnglingSlot.Rod));
-        Assert.NotEqual(-1, Slot(fx, "Alice", "rod"));
+        Assert.False(RigOf(fx, "rod").ContainsKey(AnglingSlot.Line));
+        Assert.NotEqual(-1, Slot(fx, "Alice", "thick_line"));
 
-        RigAll(fx, alice, "Alice", "big_rod");
-        Assert.False(rig.Slots.ContainsKey(AnglingSlot.Rod));
+        // Dragged from the pack onto the open rig.
+        alice.FromClient(new IntentMessage { Kind = AnglingTackleSystem.IntentKind, Arg = "put:" + Slot(fx, "Alice", "line") });
+        fx.Ticks(1);
+        Assert.Equal("line", RigOf(fx, "rod")[AnglingSlot.Line]);
+
+        RigAll(fx, alice, "Alice", "big_line");
+        Assert.Equal("line", RigOf(fx, "rod")[AnglingSlot.Line]);
         Assert.Contains(alice.Texts, t => t.Contains("level 50"));
+
+        alice.FromClient(new IntentMessage { Kind = AnglingTackleSystem.IntentKind, Arg = "close" });
+        fx.Ticks(1);
+        Assert.Equal("", State<AnglingTackleState>(alice, AnglingTackleState.StateKey)!.Open);
     }
 
     [Fact]
-    public void The_rig_is_saved()
+    public void A_part_must_fit_the_rods_kind_and_tier_and_each_rod_keeps_its_own_rig()
     {
         var (fx, alice) = World();
-        RigAll(fx, alice, "Alice", "rod", "fly");
-        fx.World.Get<AnglingTackleSystem>().Of(fx.Player("Alice")).Condition["rod"] = 42;
-        alice.FromClient(new LogoutMessage());
-        fx.Ticks(2);
-        fx.Login("Alice");
+        RigAll(fx, alice, "Alice", "fly_rod", "tier5_reel");
+        Assert.False(RigOf(fx, "fly_rod").ContainsKey(AnglingSlot.Reel));
+        Assert.Contains(alice.Texts, t => t.Contains("tier 5 rod"));
+        RigAll(fx, alice, "Alice", "spinning_only");
+        Assert.False(RigOf(fx, "fly_rod").ContainsKey(AnglingSlot.Reel));
+        Assert.Contains(alice.Texts, t => t.Contains("made for spinning rods"));
+
+        RigAll(fx, alice, "Alice", "rod", "spinning_only");
+        Assert.Equal("spinning_only", RigOf(fx, "rod")[AnglingSlot.Reel]);
+        Assert.Empty(RigOf(fx, "fly_rod"));
+    }
+
+    [Fact]
+    public void The_rod_in_hand_is_the_one_fished_with_and_it_can_be_worn()
+    {
+        var (fx, alice) = World();
+        Give(fx, "Alice", "rod", "fly_rod");
+        AnglingTackleSystem tackle = fx.World.Get<AnglingTackleSystem>();
+        Assert.Equal("rod", tackle.Rod(fx.Player("Alice"))!.Id);          // the best in the pack: tier 3
+        alice.FromClient(new ItemActionMessage { Container = ContainerKind.Inventory, Slot = Slot(fx, "Alice", "fly_rod"), ActionId = ItemActions.Equip });
         fx.Ticks(1);
-        PlayerTackle rig = fx.World.Get<AnglingTackleSystem>().Of(fx.Player("Alice"));
-        Assert.Equal("fly", rig.Slots[AnglingSlot.Lure]);
-        Assert.Equal(42, rig.ConditionOf("rod"));
+        Assert.Equal("fly_rod", fx.World.Get<ItemSystem>().Worn(fx.Player("Alice"), EquipSlot.Weapon)?.Id);
+        Assert.Equal("fly_rod", tackle.Rod(fx.Player("Alice"))!.Id);
     }
 
     // ------------------------------------------------------------------ spots

@@ -124,7 +124,19 @@
     "sellPercent": 40,
     "stock": [
       {
-        "item": "alder_rod",
+        "item": "fishing_rod",
+        "price": 30,
+        "quantity": 5,
+        "restockTicks": 100
+      },
+      {
+        "item": "alder_fly_rod",
+        "price": 30,
+        "quantity": 5,
+        "restockTicks": 100
+      },
+      {
+        "item": "alder_ledger_rod",
         "price": 30,
         "quantity": 5,
         "restockTicks": 100

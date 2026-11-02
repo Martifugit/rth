@@ -1611,82 +1611,9 @@
     "ticks": 4,
     "xp": 5
   },
-  {
-    "id": "make_alder_rod",
-    "name": "alder rod",
-    "verb": "make",
-    "animation": "work",
-    "skill": "artifice",
-    "level": 1,
-    "station": "net_bench",
-    "group": "Tackle",
-    "inputs": [
-      {
-        "item": "alder_log",
-        "count": 1
-      }
-    ],
-    "outputs": [
-      {
-        "item": "alder_rod",
-        "count": 1
-      }
-    ],
-    "ticks": 4,
-    "xp": 3
-  },
-  {
-    "id": "make_ash_rod",
-    "name": "ash rod",
-    "verb": "make",
-    "animation": "work",
-    "skill": "artifice",
-    "level": 10,
-    "station": "net_bench",
-    "group": "Tackle",
-    "inputs": [
-      {
-        "item": "ash_log",
-        "count": 1
-      }
-    ],
-    "outputs": [
-      {
-        "item": "ash_rod",
-        "count": 1
-      }
-    ],
-    "ticks": 4,
-    "xp": 4
-  },
-  {
-    "id": "make_ironbound_rod",
-    "name": "ironbound rod",
-    "verb": "make",
-    "animation": "work",
-    "skill": "artifice",
-    "level": 20,
-    "station": "net_bench",
-    "group": "Tackle",
-    "inputs": [
-      {
-        "item": "ash_log",
-        "count": 1
-      },
-      {
-        "item": "iron_bar",
-        "count": 1
-      }
-    ],
-    "outputs": [
-      {
-        "item": "ironbound_rod",
-        "count": 1
-      }
-    ],
-    "ticks": 4,
-    "xp": 5
-  },
+  
+  
+  
   {
     "id": "make_copper_reel",
     "name": "copper reel",
@@ -2061,5 +1988,233 @@
     "tools": [
       "tag:hammer"
     ]
+  },
+  {
+    "id": "make_alder_fly_rod",
+    "name": "alder fly rod",
+    "verb": "make",
+    "animation": "work",
+    "skill": "artifice",
+    "level": 1,
+    "station": "net_bench",
+    "group": "Rods",
+    "inputs": [
+      {
+        "item": "alder_log",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "alder_fly_rod",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 3
+  },
+  {
+    "id": "make_fishing_rod",
+    "name": "fishing rod",
+    "verb": "make",
+    "animation": "work",
+    "skill": "artifice",
+    "level": 1,
+    "station": "net_bench",
+    "group": "Rods",
+    "inputs": [
+      {
+        "item": "alder_log",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "fishing_rod",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 3
+  },
+  {
+    "id": "make_alder_ledger_rod",
+    "name": "alder ledger rod",
+    "verb": "make",
+    "animation": "work",
+    "skill": "artifice",
+    "level": 1,
+    "station": "net_bench",
+    "group": "Rods",
+    "inputs": [
+      {
+        "item": "alder_log",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "alder_ledger_rod",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 3
+  },
+  {
+    "id": "make_ash_fly_rod",
+    "name": "ash fly rod",
+    "verb": "make",
+    "animation": "work",
+    "skill": "artifice",
+    "level": 10,
+    "station": "net_bench",
+    "group": "Rods",
+    "inputs": [
+      {
+        "item": "ash_log",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "ash_fly_rod",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 4
+  },
+  {
+    "id": "make_ash_spinning_rod",
+    "name": "ash spinning rod",
+    "verb": "make",
+    "animation": "work",
+    "skill": "artifice",
+    "level": 10,
+    "station": "net_bench",
+    "group": "Rods",
+    "inputs": [
+      {
+        "item": "ash_log",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "ash_spinning_rod",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 4
+  },
+  {
+    "id": "make_ash_ledger_rod",
+    "name": "ash ledger rod",
+    "verb": "make",
+    "animation": "work",
+    "skill": "artifice",
+    "level": 10,
+    "station": "net_bench",
+    "group": "Rods",
+    "inputs": [
+      {
+        "item": "ash_log",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "ash_ledger_rod",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 4
+  },
+  {
+    "id": "make_ironbound_fly_rod",
+    "name": "ironbound fly rod",
+    "verb": "make",
+    "animation": "work",
+    "skill": "artifice",
+    "level": 20,
+    "station": "net_bench",
+    "group": "Rods",
+    "inputs": [
+      {
+        "item": "ash_log",
+        "count": 1
+      },
+      {
+        "item": "iron_bar",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "ironbound_fly_rod",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 5
+  },
+  {
+    "id": "make_ironbound_spinning_rod",
+    "name": "ironbound spinning rod",
+    "verb": "make",
+    "animation": "work",
+    "skill": "artifice",
+    "level": 20,
+    "station": "net_bench",
+    "group": "Rods",
+    "inputs": [
+      {
+        "item": "ash_log",
+        "count": 1
+      },
+      {
+        "item": "iron_bar",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "ironbound_spinning_rod",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 5
+  },
+  {
+    "id": "make_ironbound_ledger_rod",
+    "name": "ironbound ledger rod",
+    "verb": "make",
+    "animation": "work",
+    "skill": "artifice",
+    "level": 20,
+    "station": "net_bench",
+    "group": "Rods",
+    "inputs": [
+      {
+        "item": "ash_log",
+        "count": 1
+      },
+      {
+        "item": "iron_bar",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "ironbound_ledger_rod",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 5
   }
 ]
