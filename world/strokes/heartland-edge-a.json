@@ -1,0 +1,59 @@
+{
+  "regions": ["land_0_m1", "land_1_m1", "land_2_m1", "land_3_m1"],
+  "moveBorders": true,
+  "note": "The Edge, first of two (2026-11-02; docs/areas/tolling.md and lake-road.md 'Levels'): one escarpment facing north from Tolling's dry rise east under Knellmere, the heartland's southern rim. In Tolling it is dry ground about 8 to 10 high over the basin, its lip a line of lookouts; at the lake it is the Downs' white chalk cliff, 11 to 13 over a strip of shingle shore. Behind it the land dips gently south (the generated Downs meet it at the south border). A combe (a dry valley) is cut into the face south of p-lake-south for the camp lane, and the downs brook falls over the cliff into a pool before it reaches the lake. Applied once with `tools/world strokes world/strokes/heartland-edge-a.json`, then the roads in heartland-edge-b.json.",
+  "shapes": [
+    {
+      "id": "the-edge",
+      "raise": 7,
+      "gentle": 14,
+      "ragged": 1.5,
+      "seed": 151,
+      "cliffSide": [0, 1],
+      "points": [
+        [70, -104], [70, -56], [78, -46], [88, -42], [100, -42], [112, -43], [126, -44], [140, -41], [156, -38], [170, -35],
+        [182, -33], [192, -36], [204, -42], [220, -46], [236, -48], [250, -48], [262, -49], [276, -48], [290, -48],
+        [306, -48], [322, -49], [338, -48], [352, -47], [368, -45], [384, -44], [404, -44], [404, -104]
+      ]
+    },
+    {
+      "id": "the-downs-higher",
+      "raise": 2.5,
+      "gentle": 24,
+      "ragged": 0,
+      "seed": 152,
+      "points": [[200, -104], [200, -40], [404, -40], [404, -104]]
+    },
+    {
+      "id": "camp-lane-combe",
+      "raise": -9,
+      "level": 0.6,
+      "gentle": 4,
+      "ragged": 1,
+      "seed": 153,
+      "points": [[255, -38], [272, -38], [276, -50], [279, -64], [276, -74], [268, -74], [262, -62], [257, -50]]
+    }
+  ],
+  "strokes": [
+    {
+      "id": "downs-brook",
+      "ground": "river",
+      "seed": 154,
+      "points": [[299, -97], [297, -88], [294, -80], [293, -72], [292, -64], [292, -56], [293, -48], [294, -42], [294, -36]],
+      "width": [3, 4],
+      "wind": 0.5,
+      "wave": 18,
+      "bends": "meander",
+      "ragged": 0.1,
+      "erase": ["river"],
+      "eraseReach": 3,
+      "fall": 0.5,
+      "pool": 1.5,
+      "banks": [{ "ground": "meadow", "share": 0.4, "scale": 5 }],
+      "bankReach": 1.5
+    }
+  ],
+  "swaps": [
+    { "from": ["downs", "grass", "meadow", "shingle"], "nearWater": 0, "steep": 1.0, "steepReach": 0, "rect": [196, -72, 400, -38], "otherwise": "chalk" }
+  ]
+}

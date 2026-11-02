@@ -432,8 +432,8 @@
       "colors": [{ "Stone": "Granite" }],
       "chimney": "E1",
       "faces": {
-        "S": ["Wall", "WallShuttered", "Wall", "Wall"],
-        "W": ["Wall", "WallDoorway+Lantern", "WallShuttered", "Wall"]
+        "N": ["Wall", "WallDoorway+Lantern", "WallShuttered", "Wall"],
+        "W": ["Wall", "WallShuttered", "Wall", "Wall"]
       }
     } }
   ]

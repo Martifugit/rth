@@ -1,0 +1,197 @@
+{
+  "regions": [
+    "land_0_m1",
+    "land_1_m1",
+    "land_2_m1",
+    "land_3_m1"
+  ],
+  "note": "The Edge, second of two (2026-11-02): the camp lane graded up the combe from p-lake-south and on in a deep hollow way through the chalk onto the Downs, a shore path along the strip under the Downs' cliff, over the brook's mouth on a footbridge, and a path from the fishers' landing on Wennow's south bay switching back up the Edge's face to the lookout on its lip (s-dry-rise). A path leaves the camp lane where it tops the Downs, crosses the brook above its fall and runs along the top to s-hill-figure on the lip. Applied once after heartland-edge-a.json.",
+  "strokes": [
+    {
+      "id": "camp-lane",
+      "ground": "dirttrack",
+      "seed": 161,
+      "points": [
+        [
+          262,
+          -34
+        ],
+        [
+          264,
+          -44
+        ],
+        [
+          266,
+          -52
+        ],
+        [
+          269,
+          -60
+        ],
+        [
+          272,
+          -68
+        ],
+        [
+          275,
+          -76
+        ],
+        [
+          279,
+          -82
+        ],
+        [
+          284,
+          -88
+        ],
+        [
+          289,
+          -94
+        ],
+        [
+          291,
+          -97
+        ]
+      ],
+      "width": [
+        2,
+        2
+      ],
+      "wind": 0.3,
+      "wave": 14,
+      "ragged": 0,
+      "erase": [
+        "dirttrack"
+      ],
+      "eraseReach": 3,
+      "grade": 0.35
+    },
+    {
+      "id": "lookout-path",
+      "ground": "dirttrack",
+      "seed": 162,
+      "points": [
+        [
+          108,
+          -33
+        ],
+        [
+          102,
+          -36
+        ],
+        [
+          96,
+          -38.5
+        ],
+        [
+          104,
+          -41.5
+        ],
+        [
+          112,
+          -43.5
+        ],
+        [
+          119,
+          -45.5
+        ],
+        [
+          122,
+          -48
+        ]
+      ],
+      "width": [
+        2,
+        2
+      ],
+      "wind": 0,
+      "ragged": 0,
+      "eraseReach": 0,
+      "grade": 0.35
+    },
+    {
+      "id": "shore-path",
+      "ground": "dirttrack",
+      "seed": 163,
+      "points": [
+        [
+          266,
+          -40
+        ],
+        [
+          278,
+          -43
+        ],
+        [
+          290,
+          -43.5
+        ],
+        [
+          302,
+          -43
+        ],
+        [
+          316,
+          -43.5
+        ],
+        [
+          326,
+          -42
+        ]
+      ],
+      "width": [
+        2,
+        2
+      ],
+      "wind": 0.5,
+      "wave": 12,
+      "ragged": 0,
+      "eraseReach": 0,
+      "grade": 0.35
+    },
+    {
+      "id": "figure-path",
+      "ground": "dirttrack",
+      "seed": 164,
+      "points": [
+        [
+          285,
+          -93
+        ],
+        [
+          292,
+          -89
+        ],
+        [
+          300,
+          -82
+        ],
+        [
+          308,
+          -74
+        ],
+        [
+          317,
+          -66
+        ],
+        [
+          326,
+          -59
+        ],
+        [
+          332,
+          -55
+        ]
+      ],
+      "width": [
+        2,
+        2
+      ],
+      "wind": 0.6,
+      "wave": 14,
+      "ragged": 0,
+      "eraseReach": 0,
+      "grade": 0.35
+    }
+  ]
+}

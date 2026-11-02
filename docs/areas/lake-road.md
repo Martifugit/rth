@@ -168,3 +168,11 @@ mid game, read from the shore before anyone goes.
    under the Downs, a little sand by p-lakeport. Left: grass, the Downs' grass and chalk, reeds and
    fen, lake and river, the road and tracks, shingle at the shore.
 7. **Heights:** the only tiles steeper than a cliff are the Downs' scarp, as meant.
+8. **The Edge and the Downs built** (2026-11-02, `world/strokes/heartland-edge-a.json`, `-b`): the
+   Downs' face is now a white chalk cliff of about 9 over a shingle strip 8 tiles wide under it, the
+   downs 12 to 13 behind, dipping south (the generated Downs meet them at the border). The camp lane
+   climbs from p-lake-south up a combe and on in a deep hollow way through the chalk onto the top;
+   the downs brook falls over the cliff into a pool and the lake; a shore path runs along the strip
+   over the brook's mouth; a path leaves the camp lane at the top, crosses the brook above its fall
+   and runs along the top to s-hill-figure on the lip. The north shore's rise, the isle's height and
+   the outflow's weir are still to do.

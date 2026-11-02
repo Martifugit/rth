@@ -259,6 +259,21 @@ before it bites: the dry ground is where it starts.
     from the dry rise (about 155 tiles away) or the waygate. Either those views are given up, or
     landmarks get a far view of their own (a silhouette drawn beyond the fog). Waiting on the owner.
 
+19. **The levels built** (2026-11-02; `world/strokes/tolling-levels-a.json`, `-b`, and the Edge in
+    `heartland-edge-a.json`, `-b`, applied once):
+    - **The knoll** raised under the whole town: the crown about 4.6 over the river (it was 2.1), a
+      rock bank straight down to the river on the east, long slopes south (the Sere road), west (into
+      the march's floor) and north (Hollow lane to the mill). Palmerway comes up from the bridge
+      through a cutting into the square; a lane goes down the bank to the skinning yard.
+    - **The heath ridge** east of Wennow, about 6 with a rock face towards the basin and a long slope
+      down to the fens; Palmerway crosses it through a saddle (about 3.5) where the waygate stands,
+      the wardens' hut beside the road in the saddle. The gate is now a real gate in a real gap.
+    - **The Edge** south of Wennow: a face of about 7 up to a dry plateau at 8 to 10, falling gently
+      south; its west end tapers out before the Sere road and the edge farm. A path switches back up
+      the face from the fishers' landing to the lookout on its lip, where s-dry-rise and its cairn
+      now are (123, -49).
+    - Everything walkable from the square (a flood fill over the tiles, not yet walked).
+
 ## Decided (2026-10-27)
 
 1. **The farm and the dry rise stay.** p-edge-farm is the Sere road's first beat and a calm place to
