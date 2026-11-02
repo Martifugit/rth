@@ -541,10 +541,9 @@ namespace Rth.Client
             _lateral = Mathf.MoveTowards(_lateral, lateralTarget, dt * (move == AnglingMove.Run ? 1.2f : 2.6f));
             float depthTarget = move == AnglingMove.Dive || move == AnglingMove.Latch ? 1f : 0f;
             _depth = Mathf.MoveTowards(_depth, depthTarget, dt * 1.8f);
-            float out01 = Mathf.Clamp((float)_fight.Distance / Mathf.Max(1, _fight.Distance0), 0f, 3f);
-            float far = Mathf.Max(reach, NearestStart);
-            float along = Mathf.Max(0.9f, 0.9f + out01 * (far - 0.9f));
-            Vector3 target = player + forward * along + right * (_lateral * Mathf.Clamp01(out01 + 0.25f));
+            // It stays out where it bit (the line-in bar shows it coming): it only swings side to side.
+            float along = Mathf.Max(reach, NearestStart);
+            Vector3 target = player + forward * along + right * _lateral;
             target.y = _water;
             _fishPos = Vector3.Lerp(_fishPos, target, 1f - Mathf.Exp(-dt * 5f));
 
