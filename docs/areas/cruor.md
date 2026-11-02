@@ -153,6 +153,15 @@ monuments along the roads in, the oldest worn smooth.
    rises gently to about 4.6 over 12 tiles round (322, 180), where the cathedral stands, so the hill
    reads as a hill with a crown, not a table. The east side keeps its bluff over the great river (the
    only cliffs in the area, as before).
+7. **The levels built** (2026-11-02, `world/strokes/cruor-levels-a.json`, `-b`, `-c`, applied once;
+   the crown of finding 5 is now the top of three tiers): the lower town about 6.2, with bluffs straight
+   into the great river on the north and east (rock) and long slopes to the meander and the neck; the
+   upper town a terrace about 10.5, edged by a step for stage 2's retaining walls; the crown 14.1. The
+   generator's roads across the hill went; the new ones are graded: the lake road off the meander's
+   north bridge up the south-west slope, the south road from the south bridge, the west road up the
+   neck, a street ramping along the upper terrace's south wall, a street up to the crown, and the north
+   road down the north bluff in switchbacks to the north bridge. Everything reachable from p-lakeport
+   (a flood fill over the tiles, not yet walked). The city's own streets and walls are stage 2.
 6. **Ground (1.5):** worn and broken ground, sand and shingle scraps away from water and stubs of
    old road went to the land round them. Left: grass and meadow, the fields, heath and bracken east,
    Eller's forest north, the rivers, the roads, a little shingle and reeds at the water.

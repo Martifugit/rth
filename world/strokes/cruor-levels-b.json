@@ -1,0 +1,7 @@
+{
+  "area": "cruor",
+  "note": "Cruor's levels, second of three (2026-11-02): the generator's roads across the hill, which now run into the terrace walls and the bluffs, cleared to the ground round them; the new ones come in cruor-levels-c.json. Applied once after cruor-levels-a.json.",
+  "swaps": [
+    { "from": ["path"], "nearWater": 0, "rect": [300, 160, 348, 216], "otherwise": "surround" }
+  ]
+}

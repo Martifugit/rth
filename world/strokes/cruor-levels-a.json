@@ -1,0 +1,33 @@
+{
+  "area": "cruor",
+  "note": "Cruor's levels, first of two (2026-11-02, docs/areas/cruor.md 'Levels'): the hill in tiers. The whole hill raised by 3 with bluffs straight into the great river on its north and east (the lower town about 6), long slopes to the meander on the south and to the neck on the west; the upper town a terrace 4 higher (about 10) edged by a step where the retaining walls go at stage 2; the crown about 14 where the cathedral stands. Applied once with `tools/world strokes world/strokes/cruor-levels-a.json`, then the roads in cruor-levels-b.json.",
+  "shapes": [
+    {
+      "id": "hill-base",
+      "raise": 3,
+      "gentle": 9,
+      "ragged": 1.2,
+      "seed": 171,
+      "cliffSide": [0.7, 0.7],
+      "rock": "scree",
+      "rockRise": 1.4,
+      "points": [[292, 150], [312, 146], [330, 146], [344, 149], [349, 158], [350, 172], [349, 188], [347, 200], [340, 210], [328, 214], [312, 214], [298, 210], [290, 196], [287, 176], [288, 160]]
+    },
+    {
+      "id": "upper-town",
+      "raise": 4,
+      "gentle": 2,
+      "ragged": 0.6,
+      "seed": 172,
+      "points": [[306, 164], [322, 160], [336, 163], [342, 172], [342, 190], [336, 202], [322, 205], [308, 200], [303, 186], [303, 172]]
+    },
+    {
+      "id": "crown",
+      "raise": 2.5,
+      "gentle": 4,
+      "ragged": 0.6,
+      "seed": 173,
+      "points": [[315, 174], [322, 171], [330, 174], [332, 182], [329, 189], [322, 192], [315, 189], [312, 182]]
+    }
+  ]
+}

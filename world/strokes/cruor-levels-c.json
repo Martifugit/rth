@@ -1,0 +1,12 @@
+{
+  "area": "cruor",
+  "note": "Cruor's levels, third of three (2026-11-02): the roads, graded. The lake road comes off the meander's north bridge up the hill's south-west slope to the lower town; the south road comes up from the south bridge; the west road from the great bridge comes up the neck; a street ramps along the upper terrace's south wall from the lower town to the upper; another climbs to the crown; the north road comes down the north bluff in switchbacks to the north bridge. Applied once after cruor-levels-b.json.",
+  "strokes": [
+    { "id": "lake-road-up", "ground": "path", "seed": 181, "points": [[301, 141], [306, 148], [312, 155], [317, 160]], "width": [3, 3], "wind": 0, "ragged": 0, "erase": ["path"], "eraseReach": 2, "grade": 0.35 },
+    { "id": "south-road-up", "ground": "path", "seed": 182, "points": [[335, 137], [331, 142], [327, 148], [323, 154], [320, 159]], "width": [3, 3], "wind": 0, "ragged": 0, "erase": ["path"], "eraseReach": 2, "grade": 0.35 },
+    { "id": "west-road-up", "ground": "path", "seed": 183, "points": [[282, 191], [290, 184], [297, 179], [301, 177]], "width": [3, 3], "wind": 0, "ragged": 0, "erase": ["path"], "eraseReach": 2, "grade": 0.35 },
+    { "id": "upper-street", "ground": "path", "seed": 184, "points": [[310, 160], [318, 160.5], [326, 161.5], [334, 164], [339, 169]], "width": [3, 3], "wind": 0, "ragged": 0, "eraseReach": 0, "grade": 0.3 },
+    { "id": "crown-street", "ground": "path", "seed": 185, "points": [[336, 196], [330, 194], [324, 192], [322, 187]], "width": [3, 3], "wind": 0, "ragged": 0, "eraseReach": 0, "grade": 0.35 },
+    { "id": "north-road-down", "ground": "path", "seed": 186, "points": [[330, 204], [342, 207], [334, 213], [338, 220], [341, 225]], "width": [3, 3], "wind": 0, "ragged": 0, "erase": ["path"], "eraseReach": 2, "grade": 0.35 }
+  ]
+}
