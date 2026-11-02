@@ -8,15 +8,18 @@ using UnityEngine.UIElements;
 namespace Rth.Client.Ui.Panels
 {
     /// <summary>
-    /// Every skill at a glance, as tiles of icon and level, three across, with the combat and
-    /// total levels on a footer row. A thin bar under each shows progress to the next level. Click a skill for
-    /// its guide (what it unlocks); right-click to set a level or XP target, shown in gold and in
-    /// the XP tracker.
+    /// Every skill at a glance, as narrow tiles of icon and level over the skill's cap (37, a
+    /// small crack cut into the card, 100), three across in a modest width, with the combat and
+    /// total levels on a footer row. A thin bar under each shows progress to the next level. Click
+    /// a skill for its guide (what it unlocks); right-click to set a level or XP target, shown in
+    /// gold and in the XP tracker.
     /// </summary>
     public sealed class SkillsPanel : UiPanel
     {
-        private const float TileWidth = 86f;
-        private const float TileHeight = 38f;
+        private const float TileWidth = 76f;
+        private const float TileHeight = 34f;
+        private const float TileGap = 4f;
+        private const float TilePitch = TileWidth + TileGap;
 
         public override string Id => "skills";
         public override string Title => "Skills";
@@ -24,7 +27,7 @@ namespace Rth.Client.Ui.Panels
         public override string DefaultWindow => UiDefaultLayout.Side;
         public override int Order => 5;
         public override Key Hotkey => Key.K;
-        public override Vector2 MinSize => new Vector2(2 * (TileWidth + 4f) + 24f, 160f);
+        public override Vector2 MinSize => UiKit.Chrome.Around(2 * TilePitch + UiKit.Slots.Slack, 120f);
 
         private VisualElement _grid;
         private Label _total;
@@ -36,6 +39,7 @@ namespace Rth.Client.Ui.Panels
         {
             public string Skill;
             public Label Level;
+            public Label Max;
             public VisualElement Progress;
             public VisualElement Target;
         }
@@ -43,11 +47,12 @@ namespace Rth.Client.Ui.Panels
         protected override void Build(VisualElement root)
         {
             _grid = UiKit.El(root, "slot-grid");
-            _grid.style.width = 3 * (TileWidth + 4f);
+            _grid.style.width = 3 * TilePitch + UiKit.Slots.Slack;
             _grid.style.alignSelf = Align.Center;
-            // As many columns of tiles as the window is wide.
+            // As many columns of tiles as the window is wide, with a pixel of slack so pixel snapping
+            // at a fractional interface scale never wraps the last column and pushes the grid off centre.
             root.RegisterCallback<GeometryChangedEvent>(_ =>
-                _grid.style.width = Mathf.Max(1, Mathf.FloorToInt(root.contentRect.width / (TileWidth + 4f))) * (TileWidth + 4f));
+                _grid.style.width = Mathf.Max(1, Mathf.FloorToInt((root.contentRect.width - UiKit.Slots.Slack) / TilePitch)) * TilePitch + UiKit.Slots.Slack);
             UiKit.El(root, "spacer");
             VisualElement total = UiKit.El(root, "footer-row");
             UiKit.Text(total, "Combat", "heading").style.marginTop = total.style.marginBottom = 0f;
@@ -76,6 +81,7 @@ namespace Rth.Client.Ui.Panels
                 long from = content.XpCurve.XpForLevel(level, cap);
                 long to = content.XpCurve.XpForLevel(level + 1, cap);
                 tile.Level.text = level.ToString();
+                tile.Max.text = cap.ToString();
                 tile.Progress.style.width = Length.Percent(to > from ? (xp - from) * 100f / (to - from) : 100f);
 
                 // The target bar runs from the start of this level to the goal.
@@ -95,24 +101,28 @@ namespace Rth.Client.Ui.Panels
             foreach (SkillDef skill in Session.Content.Skills)
             {
                 string id = skill.Id;
-                VisualElement tile = UiKit.El(_grid, "card", "row");
+                VisualElement tile = UiKit.El(_grid, "card", "row", "skill-tile");
                 tile.style.width = TileWidth;
                 tile.style.height = TileHeight;
-                tile.style.marginRight = tile.style.marginBottom = 4f;
-                tile.style.paddingTop = tile.style.paddingBottom = 2f;
-                tile.style.paddingLeft = 6f;
-                UiKit.Icon(tile, IconLibrary.Get(skill.Icon), 24f).style.unityBackgroundImageTintColor = UiKit.IconTint;
-                Label level = UiKit.Text(tile, "1", "value", "bold");
-                level.style.flexGrow = 1;
-                level.style.fontSize = 17;
-                level.style.unityTextAlign = TextAnchor.MiddleRight;
+                tile.style.marginLeft = tile.style.marginRight = tile.style.marginTop = tile.style.marginBottom = TileGap / 2f;
+                UiKit.Icon(tile, IconLibrary.Get(skill.Icon), 18f, "skill-tile__icon").style.unityBackgroundImageTintColor = UiKit.IconTint;
+                UiKit.El(tile, "spacer").pickingMode = PickingMode.Ignore;
+                Label level = UiKit.Text(tile, "1", "skill-tile__level");
                 level.pickingMode = PickingMode.Ignore;
+                // Level and cap parted by a crack cut into the card rather than a slash: two short
+                // strokes at different angles, a dark groove with a faint lit edge.
+                VisualElement crack = UiKit.El(tile, "skill-crack");
+                crack.pickingMode = PickingMode.Ignore;
+                UiKit.El(crack, "skill-crack__seg", "skill-crack__seg--upper").pickingMode = PickingMode.Ignore;
+                UiKit.El(crack, "skill-crack__seg", "skill-crack__seg--lower").pickingMode = PickingMode.Ignore;
+                Label max = UiKit.Text(tile, "", "skill-tile__max");
+                max.pickingMode = PickingMode.Ignore;
 
                 VisualElement track = UiKit.El(tile);
                 track.pickingMode = PickingMode.Ignore;
                 track.style.position = Position.Absolute;
-                track.style.left = 6f;
-                track.style.right = 6f;
+                track.style.left = 5f;
+                track.style.right = 5f;
                 track.style.bottom = 3f;
                 track.style.height = 3f;
                 track.style.backgroundColor = new Color(0f, 0f, 0f, 0.5f);
@@ -122,7 +132,7 @@ namespace Rth.Client.Ui.Panels
                 VisualElement target = UiKit.El(tile);
                 target.pickingMode = PickingMode.Ignore;
                 target.style.position = Position.Absolute;
-                target.style.left = 6f;
+                target.style.left = 5f;
                 target.style.top = 2f;
                 target.style.height = 2f;
                 target.style.backgroundColor = UiKit.Value;
@@ -133,7 +143,7 @@ namespace Rth.Client.Ui.Panels
                     else if (e.button == 1) Ui.Menu(e.position, skill.Name, TargetOptions(skill));
                 });
                 UiKit.Tooltip(tile, () => Describe(skill));
-                _tiles.Add(new Tile { Skill = id, Level = level, Progress = progress, Target = target });
+                _tiles.Add(new Tile { Skill = id, Level = level, Max = max, Progress = progress, Target = target });
             }
         }
 
@@ -174,7 +184,7 @@ namespace Rth.Client.Ui.Panels
             long goal = SkillTargets.GoalXp(Session, skill.Id);
             if (target != null && goal > xp) lines.Add("Target (" + SkillTargets.Describe(target) + "): " + UiKit.Colour((goal - xp).ToString("N0") + " XP to go", UiKit.Value));
             else if (target != null) lines.Add("Target (" + SkillTargets.Describe(target) + "): " + UiKit.Colour("reached", UiKit.Good));
-            lines.Add(UiKit.Colour("Click for the skill guide. Right-click to set a target.", UiKit.Muted));
+            lines.Add(UiKit.Colour("Right-click to set a target.", UiKit.Muted));
             return string.Join("\n", lines);
         }
     }
