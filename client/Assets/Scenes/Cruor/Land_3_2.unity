@@ -225,7 +225,7 @@ Transform:
   - {fileID: 68510684}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1760646760
+--- !u!1 &418834443
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -233,9 +233,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1760646761}
-  - component: {fileID: 1760646763}
-  - component: {fileID: 1760646762}
+  - component: {fileID: 418834444}
+  - component: {fileID: 418834446}
+  - component: {fileID: 418834445}
   m_Layer: 0
   m_Name: ground
   m_TagString: Untagged
@@ -243,13 +243,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1760646761
+--- !u!4 &418834444
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1760646760}
+  m_GameObject: {fileID: 418834443}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -258,13 +258,13 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1972538775}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1760646762
+--- !u!114 &418834445
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1760646760}
+  m_GameObject: {fileID: 418834443}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 13319de907f67d14b8f65df0c6f4ee3f, type: 3}
@@ -274,13 +274,13 @@ MonoBehaviour:
   placedPosition: {x: 0, y: 0, z: 0}
   placedYaw: 0
   canTurn: 0
---- !u!114 &1760646763
+--- !u!114 &418834446
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1760646760}
+  m_GameObject: {fileID: 418834443}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 783d2bd530dba444ca648956f03f6d1c, type: 3}
@@ -9966,24 +9966,108 @@ MonoBehaviour:
   - ggAAAgggggggggggggggggggggggggggggggggggggggAAAggggeeeeeeeeeeeeeeeeeeeeJeHHHHHHHHHerrrrrrreEEEgggggggggg
   overlay: 0101010001010000010000000000000000y
   soft: 0000000000000000000000000000000000y
-  speckles:
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0.78431374, g: 0.77254903, b: 0.6901961, a: 0.16}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
+  stoneRows:
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - '                                                                                               2'
+  - '                                                                                             232'
+  - '                                                                                            2332'
+  - '                                                                                          1232'
+  - '                                                                                          222'
+  - '                                                                                         111'
+  - '                                                                                         11'
+  - '                                                                                      1111'
+  - '                                                                                     1221'
+  - '                                                                                    122'
+  - '                                                                                   122'
+  - '                                                                                   12'
+  - '                                                                                  11'
+  - '                                                                                 11'
+  - '                                                                                111'
+  - '                                                                               121'
+  - '                                                                              121'
+  - '                                                                            1232'
+  - '                                                                           1232'
+  - '                                                                         12222'
+  - '                                                                         121'
+  - '                                                                      1  11'
+  - '                                                                    1211'
+  - '                                                                 222211'
+  - '                                                               233321'
+  - '                                                            2233322'
+  - '                                                         1123322'
+  - '                                                       222222'
+  - '                                                       222'
+  - 
+  - 
+  - 
+  - '                                                22'
+  - '                                               2332'
+  - '                                               332'
+  - '                                              232'
+  - '                                             233'
+  - '                                             232'
+  - '                                             23'
+  - '                                            122'
+  - '                                            121'
+  - '                                             1'
+  - 
+  - '                                             1'
+  - '                                            11'
+  - '                                            1'
+  - '                                           1'
+  - '                                           11'
+  - '                                           1'
+  - '                                           1'
+  - '                                           1'
+  - 
+  - '                                          1'
+  - '                                         11'
+  - '                                         111'
+  - '                                         121'
+  - '                                         121'
+  - '                                         121'
+  - '                                         121'
+  - '                                         121'
+  - '                                         12'
+  stoneKinds: 123
+  stoneColours:
+  - {r: 0.5294118, g: 0.49803922, b: 0.40392157, a: 0.12}
+  - {r: 0.5294118, g: 0.49803922, b: 0.40392157, a: 0.25}
+  - {r: 0.5294118, g: 0.49803922, b: 0.40392157, a: 0.45}
   water: 0000000000000000000000000001000000y
   beyond: 0000000000000000000000000000000000y
   pixelsPerTile: 8
@@ -10017,7 +10101,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1760646761}
+  - {fileID: 418834444}
   m_Father: {fileID: 155086166}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1972538776

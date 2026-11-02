@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &531728276
+--- !u!1 &779996577
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,9 +127,118 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 531728277}
-  - component: {fileID: 531728279}
-  - component: {fileID: 531728278}
+  - component: {fileID: 779996578}
+  - component: {fileID: 779996579}
+  m_Layer: 0
+  m_Name: Data
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &779996578
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 779996577}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1603958365}
+  m_Father: {fileID: 1590586128}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &779996579
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 779996577}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dae11f54f77d594380b380938ae6d6e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Rth.MapTools::Rth.MapTools.DataRoot
+  builtIds:
+  - ground
+--- !u!1 &1590586126
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1590586128}
+  - component: {fileID: 1590586127}
+  m_Layer: 0
+  m_Name: Cruor's empire
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1590586127
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1590586126}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 359294af178506b4987426f1bfa762a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Rth.MapTools::Rth.MapTools.MapArea
+  exportName: land_2_2
+  title: Cruor's empire
+  origin: {x: 192, y: 192}
+  size: {x: 96, y: 96}
+  plane: 0
+  instanced: 0
+  music: 
+  ownAtmosphere: 0
+  sunIntensity: 1.1
+  sunColor: {r: 1, g: 0.96, b: 0.88, a: 1}
+  ambientSky: {r: 0.62, g: 0.68, b: 0.78, a: 1}
+  ambientEquator: {r: 0.5, g: 0.52, b: 0.5, a: 1}
+  ambientGround: {r: 0.3, g: 0.28, b: 0.24, a: 1}
+  fog: {r: 0.66, g: 0.77, b: 0.85, a: 1}
+  fogStart: 45
+  fogEnd: 85
+--- !u!4 &1590586128
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1590586126}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 779996578}
+  - {fileID: 1961605949}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1603958364
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1603958365}
+  - component: {fileID: 1603958367}
+  - component: {fileID: 1603958366}
   m_Layer: 0
   m_Name: ground
   m_TagString: Untagged
@@ -137,13 +246,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &531728277
+--- !u!4 &1603958365
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 531728276}
+  m_GameObject: {fileID: 1603958364}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -152,13 +261,13 @@ Transform:
   m_Children: []
   m_Father: {fileID: 779996578}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &531728278
+--- !u!114 &1603958366
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 531728276}
+  m_GameObject: {fileID: 1603958364}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 13319de907f67d14b8f65df0c6f4ee3f, type: 3}
@@ -168,13 +277,13 @@ MonoBehaviour:
   placedPosition: {x: 0, y: 0, z: 0}
   placedYaw: 0
   canTurn: 0
---- !u!114 &531728279
+--- !u!114 &1603958367
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 531728276}
+  m_GameObject: {fileID: 1603958364}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 783d2bd530dba444ca648956f03f6d1c, type: 3}
@@ -9863,137 +9972,12 @@ MonoBehaviour:
   - gggggggggggggeeeeeeeeeeeeeeeegggggggggeeeeeeeeeegggggggggggggggggggggggggEEEEEEEgEEEEEEEEEEgHHHHggAAAggg
   overlay: 010101010101010100000101000000000000y
   soft: 000000000000000000000000000000000000y
-  speckles:
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0.6431373, g: 0.63529414, b: 0.5764706, a: 0.16}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0.5294118, g: 0.49803922, b: 0.40392157, a: 0.1}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
+  stoneRows: []
+  stoneKinds: 
+  stoneColours: []
   water: 000000000000000000000000000000000100y
   beyond: 000000000000000000000000000000000000y
   pixelsPerTile: 8
---- !u!1 &779996577
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 779996578}
-  - component: {fileID: 779996579}
-  m_Layer: 0
-  m_Name: Data
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &779996578
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 779996577}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 531728277}
-  m_Father: {fileID: 1590586128}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &779996579
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 779996577}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8dae11f54f77d594380b380938ae6d6e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Rth.MapTools::Rth.MapTools.DataRoot
-  builtIds:
-  - ground
---- !u!1 &1590586126
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1590586128}
-  - component: {fileID: 1590586127}
-  m_Layer: 0
-  m_Name: Cruor's empire
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1590586127
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1590586126}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 359294af178506b4987426f1bfa762a9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Rth.MapTools::Rth.MapTools.MapArea
-  exportName: land_2_2
-  title: Cruor's empire
-  origin: {x: 192, y: 192}
-  size: {x: 96, y: 96}
-  plane: 0
-  instanced: 0
-  music: 
-  ownAtmosphere: 0
-  sunIntensity: 1.1
-  sunColor: {r: 1, g: 0.96, b: 0.88, a: 1}
-  ambientSky: {r: 0.62, g: 0.68, b: 0.78, a: 1}
-  ambientEquator: {r: 0.5, g: 0.52, b: 0.5, a: 1}
-  ambientGround: {r: 0.3, g: 0.28, b: 0.24, a: 1}
-  fog: {r: 0.66, g: 0.77, b: 0.85, a: 1}
-  fogStart: 45
-  fogEnd: 85
---- !u!4 &1590586128
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1590586126}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 779996578}
-  - {fileID: 1961605949}
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1961605948
 GameObject:
   m_ObjectHideFlags: 0

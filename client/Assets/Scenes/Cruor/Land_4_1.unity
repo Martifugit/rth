@@ -181,7 +181,7 @@ Transform:
   - {fileID: 1890923243}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1258183219
+--- !u!1 &891220110
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -189,56 +189,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1258183220}
-  - component: {fileID: 1258183221}
-  m_Layer: 0
-  m_Name: Data
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1258183220
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1258183219}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1752359601}
-  m_Father: {fileID: 861205011}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1258183221
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1258183219}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8dae11f54f77d594380b380938ae6d6e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Rth.MapTools::Rth.MapTools.DataRoot
-  builtIds:
-  - ground
---- !u!1 &1752359600
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1752359601}
-  - component: {fileID: 1752359603}
-  - component: {fileID: 1752359602}
+  - component: {fileID: 891220111}
+  - component: {fileID: 891220113}
+  - component: {fileID: 891220112}
   m_Layer: 0
   m_Name: ground
   m_TagString: Untagged
@@ -246,13 +199,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1752359601
+--- !u!4 &891220111
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1752359600}
+  m_GameObject: {fileID: 891220110}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -261,13 +214,13 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1258183220}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1752359602
+--- !u!114 &891220112
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1752359600}
+  m_GameObject: {fileID: 891220110}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 13319de907f67d14b8f65df0c6f4ee3f, type: 3}
@@ -277,13 +230,13 @@ MonoBehaviour:
   placedPosition: {x: 0, y: 0, z: 0}
   placedYaw: 0
   canTurn: 0
---- !u!114 &1752359603
+--- !u!114 &891220113
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1752359600}
+  m_GameObject: {fileID: 891220110}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 783d2bd530dba444ca648956f03f6d1c, type: 3}
@@ -9951,21 +9904,158 @@ MonoBehaviour:
   - ggggggggggggggggggggggggggggeeeeeehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhkkkkk
   overlay: 0101010100000000000000y
   soft: 0000000000000000000000y
-  speckles:
-  - {r: 0.78431374, g: 0.77254903, b: 0.6901961, a: 0.16}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
+  stoneRows:
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - '                                                                                              11'
+  - '                                                                                            1111'
+  - '                                                                                           1111'
+  - '                                                                                          111'
+  - '                                                                                      11'
+  - '                                                                                    1111'
+  - '                                                                                   1211'
+  - '                                                                                 1221'
+  - '                                                                               12221'
+  - '                                                                             12221'
+  - '                                                                           22221'
+  - '                                                                         22222'
+  - '                                                                       22221'
+  - '                                                                    222222'
+  - '                                                                  23332'
+  - '                                                               222222'
+  - '                                                            112332'
+  - '                                                         2222222'
+  - '                                                      1233322'
+  - '                                                    122322'
+  - '                                                 111122'
+  - '                                           2222111111'
+  - '           1222222222222222222222111  111123321111'
+  - '  111    112333333333222222222221111   111111'
+  - '          1111111122'
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  stoneKinds: 123
+  stoneColours:
+  - {r: 0.5294118, g: 0.49803922, b: 0.40392157, a: 0.12}
+  - {r: 0.5294118, g: 0.49803922, b: 0.40392157, a: 0.25}
+  - {r: 0.5294118, g: 0.49803922, b: 0.40392157, a: 0.45}
   water: 0000000000000000000001y
   beyond: 0000000000000000000000y
   pixelsPerTile: 8
+--- !u!1 &1258183219
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1258183220}
+  - component: {fileID: 1258183221}
+  m_Layer: 0
+  m_Name: Data
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1258183220
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1258183219}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 891220111}
+  m_Father: {fileID: 861205011}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1258183221
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1258183219}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dae11f54f77d594380b380938ae6d6e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Rth.MapTools::Rth.MapTools.DataRoot
+  builtIds:
+  - ground
 --- !u!1 &1890923242
 GameObject:
   m_ObjectHideFlags: 0
