@@ -566,6 +566,17 @@ character a tile), not a Unity splat map: `docs/world-guide.md` section 4. Water
 people yet. What its art needs is `docs/areas/tolling-assets.md`; most kits there are early iterations,
 not finished assets.
 
+**AN, Fishing in depth: trophy angling (on `claude/fishing-depth`):** the design is `docs/fishing.md`
+(work packages AN1-AN9 in `docs/plan.md`). The fight is `AnglingFight` in `shared/Angling`, a
+deterministic integer simulation on 50 ms steps: the server rolls the fish and sends it
+("anglingFight"), the client plays it live (`AnglingPanel`) and sends its inputs as the "angling"
+intent, and the server replays them and decides. `AnglingTackleSystem` (the rig as player state:
+rod, reel, line, hook, lure; wear; mending), `AnglingSpotSystem` (each species' trophy spots, a few
+active at a time, per-player spooking), `AnglingSystem` (cast, bite, catch, hand-in, leads, `open`
+items) and `AnglingLogSystem` (the fishing log). angling.json holds species, size classes and
+rules; trophies and fish boxes are generated per species. Perch, eel and pike with tier 1-3 tackle
+are at the `kittest` pond. Compile-checked outside Unity, not yet seen in the Editor.
+
 **Next: not chosen yet.** Candidates: ranged, building out Tolling (landmarks first), more
 quests and achievements, Tailoring and Artifice content.
 
@@ -601,6 +612,10 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | Something an entity visibly holds or wears | `Entity.SetHeld` (players: the weapon slot; NPCs: `held` in npcs.json) reaches clients in `EntityAdded.Held` and appearance events; the client's body draws it (`HeldItemArt` until items have models). |
 | Fight pacing | Tune creatures in npcs.json; `PacingTests` simulates the starter kit against each and prints the numbers. |
 | A gathering node (rock, tree, fount) | `node` on an object type in objects.json (skill, level, chance, XP, items, extras, points, yields, `depleteChance`, respawn, an optional surge, a `tool` kind and `toolTier`) and a `gather` action; place it as a `rock`, `tree` or `prop` piece with `"object"` in the region's data. No code. A node worked by progress (Mining) has `progress` (needed, perStrike, perLevel, strikeXp) instead of the chance; fire-setting on it is `fire` (logs, burn and heat-cycle ticks, crack, douse XP) done by using items on the rock (logs lay a fire, water douses it; `GatheringSystem` is an `IObjectUseHandler`, asked by `UseSystem` when uses.json has no match), and water to douse with is an item with `water` (`leaves` its emptier carrier). Gear and buffs raise gathering through the `gatherSuccess` and `gatherConservation` stats. |
+| A trophy fish species | An entry in angling.json `species` (tier, level, `spotType`, spots active and for how long, spooking, weights, XP, `maxThickness`, `teeth`, its `fight`: move weights, tell and move lengths, energy, distance, `dark`, `noTells`; box contents; notes). Trophy and fish-box items are generated. Place its spots as props with `"object": <spotType>` (a type with a `cast` action). `docs/fishing.md` section 9. |
+| A tackle part (rod, reel, line, hook, lure) | `tackle` on the item (slot, tier, requirements, the rig stats it sets, `thickness`, `bites`, wear, `repair`, `collector`). `AnglingRules.Rig` makes the rig; a new rig stat is a field on `AnglingRigStats` read in `AnglingFight.Step`. |
+| A move a fish makes in the fight | A value in `AnglingMove`, its rule in `AnglingFight.Step`/`AdvanceFish`, its counter in `AnglingBot`, its look and tell in `AnglingPanel`; `AnglingFightTests` checks fight lengths. |
+| An item opened for what's inside (a fish box, a casket) | `open` on the item (`verb`, `rolls`, `entries` by weight); `AnglingSystem.Open` handles the "open" action. |
 | A gathering tool (pickaxe, hatchet, rod) | `tool` on the item in items.json (kind, tier, requirements, `success`, `conservation`, `extras`/`replacesExtras`, `transforms`); add `equipment` (Weapon) to make it wieldable. `GatheringSystem.BestTool` picks it. A new effect is a field on `ToolDef` read in `GatheringSystem.Attempt`. |
 | Something that restores devotion | An object action `pray` in objects.json (an altar), or the `restoreDevotion` / `restoreDevotionPercent` effect ops on a consumable. |
 | A skill that replaced another | `retired` in skills.json (old id: new id); saves move the XP on login. |

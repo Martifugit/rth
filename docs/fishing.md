@@ -164,7 +164,8 @@ holding one part, which is an ordinary item put in from the pack ("Rig") and tak
 
 - **Trade-offs, not a ladder.** Thick line is strong but line-shy fish won't bite it; a heavy reel
   handles pike runs but reels slowly. A mid-level rig made right beats a top rig made wrong.
-- Anyone can trophy-fish without high making levels; the big catches are harder and rarer without
+- A rod and a lure are the least you can cast with; an empty slot fights with a poor bare part.
+  Anyone can trophy-fish without high making levels; the big catches are harder and rarer without
   good parts.
 - Higher-tier parts need the matching making skill to make, never Fishing; using a part needs
   Fishing at its tier (rule 2.5: requirements are hard limits).
