@@ -15,6 +15,14 @@ namespace Rth.Shared.World.Data
         /// <summary>Heights are kept to this step (a hundredth of a tile).</summary>
         public const float Step = 0.01f;
 
+        /// <summary>
+        /// The range any tool keeps heights in, in tiles. Wide on purpose: the world has real
+        /// verticality (docs/world-scale.md section 3); the bottom is the deepest a carved bed goes.
+        /// </summary>
+        public const float Lowest = -4f, Highest = 64f;
+
+        public static float Clamp(float h) => Math.Max(Lowest, Math.Min(Highest, h));
+
         /// <summary>The region's heights, or null for flat ground. Throws <see cref="FormatException"/> on a bad terrain.</summary>
         public static Heightfield? Read(RegionData region)
         {

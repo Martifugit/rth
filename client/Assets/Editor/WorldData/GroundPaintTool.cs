@@ -649,7 +649,7 @@ namespace Rth.Client.Editor
                             break;
                         }
                     }
-                    changes.Add((x, y, Mathf.Clamp(h, -4f, 16f))); // the whole world stays within about 16 tiles (world-scale.md 3)
+                    changes.Add((x, y, Rth.Shared.World.Data.TerrainText.Clamp(h))); // world-scale.md 3: real verticality, within the data's range
                 }
             foreach ((int x, int y, float h) in changes)
                 foreach (TileGround g in TileGround.Active)

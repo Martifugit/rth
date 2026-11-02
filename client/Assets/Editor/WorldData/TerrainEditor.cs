@@ -28,7 +28,7 @@ namespace Rth.Client.Editor
         private const string MenuPath = "R'th/World/Edit Terrain";
         private const string ObjectName = "R'th terrain editor (not saved)";
         /// <summary>The world's heights stay within these (world-scale.md 3); the terrain spans them.</summary>
-        private const float Low = -4f, High = 16f;
+        private const float Low = Rth.Shared.World.Data.TerrainText.Lowest, High = Rth.Shared.World.Data.TerrainText.Highest;
         /// <summary>The largest standard heightmap: 2048 tiles a side, a sample on every corner.</summary>
         private const int Resolution = 2049;
 

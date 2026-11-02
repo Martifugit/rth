@@ -84,7 +84,7 @@ stranger, lit by the glow from beneath and what people brought (the lift's lamps
     darkness, with no ground below what you can see. The faces in the hole are moonlight blue
     (`Moonlight`, given as the lip's and the shaft's `cliff` material), and the glow and the mist
     come later (stage 4).
-- **Heights** (in tiles; the whole world stays within about 16, and a tile steeper than 1 is a
+- **Heights** (in tiles; written when the world was held to 16, see `world-scale.md` section 3; a tile steeper than 1 is a
   cliff):
 
   | Where | Height |

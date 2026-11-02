@@ -86,9 +86,10 @@ These come from how RuneScape's world is built, from Albion's and Blizzard's zon
     **unfinished places** (unnaturally regular ground, never quite completed), a **dry valley**
     whose river was moved, a road that ends at nothing (a town taken out), old **moonfall
     craters**, Selenfall's breach, and the frontiers where the world is still being made.
-11. **Gentle almost everywhere, steep where it matters.** The whole world spans about 16 tiles of
-    height (`world-scale.md` section 3). Spend it where it tells the story: the spine, the Scarp,
-    the volcanoes, the mesas, Cruor's hill, the moor's tors. Elsewhere the land rolls.
+11. **Real verticality, planned** (owner, 2026-11-02; `world-scale.md` section 3). Height is
+    spent boldly where it tells the story and shapes the routes: the spine's walls and passes, the
+    Scarp, the volcanoes, the mesas, Cruor's hill, the moor's tors, gorges, crags and terraces. Every
+    area plans its levels and the ways between them; flat land is flat on purpose.
 12. **Room to grow.** Frontiers on three sides, reserved sites in every area, and a layout that
     adds places without moving old ones.
 

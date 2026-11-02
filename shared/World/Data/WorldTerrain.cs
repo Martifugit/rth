@@ -140,7 +140,7 @@ namespace Rth.Shared.World.Data
             w.Write(field.OriginY);
             w.Write(field.Width);
             w.Write(field.Depth);
-            foreach (float h in field.Corners) w.Write((short)TerrainText.Hundredths(Math.Max(-4f, Math.Min(16f, h))));
+            foreach (float h in field.Corners) w.Write((short)TerrainText.Hundredths(TerrainText.Clamp(h)));
         }
 
         public static Heightfield ReadHeights(string path)
@@ -164,7 +164,7 @@ namespace Rth.Shared.World.Data
             for (int y = Math.Max(now.OriginY, edited.OriginY); y <= Math.Min(now.OriginY + now.Depth, edited.OriginY + edited.Depth); y++)
                 for (int x = Math.Max(now.OriginX, edited.OriginX); x <= Math.Min(now.OriginX + now.Width, edited.OriginX + edited.Width); x++)
                 {
-                    float h = TerrainText.Hundredths(Math.Max(-4f, Math.Min(16f, edited.Corner(x, y)))) * TerrainText.Step;
+                    float h = TerrainText.Hundredths(TerrainText.Clamp(edited.Corner(x, y))) * TerrainText.Step;
                     if (TerrainText.Hundredths(h) == TerrainText.Hundredths(now.Corner(x, y))) continue;
                     if (world.Pinned(x, y)) pinnedTouched++;
                     else final.SetCorner(x, y, h);

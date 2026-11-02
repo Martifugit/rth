@@ -65,36 +65,61 @@ solid and the player can't stand inside a crown. Ordinary trees stay 1 × 1. Bot
 crowns inside a circle of their stated width, so a crown never reaches more than a tile past
 the trunk's blocked tiles.
 
-## 3. Terrain
+## 3. Terrain and verticality
 
-Today every region is flat (one ground box at y = 0). These rules apply once ground has height:
-the scale test region uses **`MapTerrain`** (a heightfield; section 6) and the rest of the world
-stays flat until it is blocked out again (see [world-building.md](world-building.md)).
+**Decided (owner, 2026-11-02): the world has real verticality.** Dramatic cliffs and heights are
+welcome; map verticality is part of what makes a world feel modern. The old limits here (cliffs of 1
+to 3 tiles, 16 tiles for the whole world) were what the 2004 game could manage, not a design goal,
+and they are gone. What makes height work is **planning, not caution**: every height is placed for a
+reason and every climb is designed. What we don't want is the first-person open world's mountain
+range, big walkable slopes that exist for their own sake; height here shapes routes, edges and views.
 
-**Ground is never flat** except where flattened on purpose (towns, roads, building plots). Open
-land gets a soft base noise of **0.6–3.75 tiles**, the reference's default.
+**The rules**
+1. **Every area has a vertical plan** in its brief ([world-areas.md](world-areas.md), the "Levels"
+   heading): its levels (low, middle, high ground, with heights), what stands on each, the ways
+   between them, and what each one sees.
+2. **Every climb is a route.** The ways up are designed and few: a road or path switching back up
+   a slope, a ramp along a cliff's foot, steps cut in the rock, a pass, a bridge over a gorge, a
+   ladder or stair (`climb` objects), later Agility shortcuts (a `climb` with `requirements`). A
+   height nobody can reach is scenery on purpose, an edge or a backdrop, never an accident.
+3. **Cliffs are walls that shape the world.** They make the edges (instead of invisible walls), the
+   funnels and chokepoints, the terraces a town stands on, and the vantage points. A long cliff with
+   one way up is a place; a field of random bumps is not.
+4. **Height pays off.** The top of a climb shows something: the landmarks below, the way ahead, the
+   way back. Some things are only reached from above or below. A descent can reveal a place.
+5. **Mountains are mostly backdrop.** A range is impassable rock and its faces, crossed at passes,
+   with walkable high ground only where it has a purpose (a plateau, a ledge path, a ridge road, a
+   shepherd's high pasture). The spine is a wall with gates in it, not a slope to wander up.
+6. **Flat is a choice too.** A town square, a field, a fen, a lake shore are flat because they
+   should be; open land that is flat by default is a plan that wasn't made.
 
-**Relief per screen** (a 24 × 24 tile window, about what the default camera shows):
+**Numbers** (guides for the plan, not caps):
 
-| | Typical | Upper normal | Rare | Never |
-| --- | --- | --- | --- | --- |
-| Highest minus lowest | ≤ 3 | ≤ 8 | ≤ 12 | > 16 |
+| | Height (tiles) |
+| --- | --- |
+| Lowland: river meadows, fens, shores | 0 to 6 |
+| Hills, downs, a town's knoll | 6 to 16 |
+| Uplands, plateaux, foothills | 12 to 24 |
+| Mountains (backdrop, passes cut through) | up to about 60 |
+| A low step: a bank, a terrace edge | 1 to 3 |
+| A proper cliff | 4 to 12 |
+| A set piece: a gorge wall, a scarp, a sea cliff, a crag over a cave | 12 to 30 |
 
-**Slopes.** At least **97 %** of neighbouring tile corners differ by under a tile. Those are
-walkable. The rest are cliffs.
+The player is 1.94 tiles tall and a storey 2.6, so a cliff under about 4 tiles reads as a wall,
+not a cliff. Heights are kept between -4 and 64 by every tool (`TerrainText.Lowest`/`Highest`).
 
-**Cliffs** are **1–3 tiles** high and block movement (the exporter blocks every `MapTerrain` tile
-that rises more than its `cliffStep`, 1 tile by default, from one corner to another). Use a cliff to
-say "this terrace is higher"; use several stepped ones for a big climb. Higher than 3 tiles in one
-place needs a reason: a lookout, a waterfall, a boss arena.
+**How it works in the game.** The server is flat: a tile rising more than its region's `cliffStep`
+(1 tile by default) across its corners is a cliff and blocked, so a cliff of any height is one line
+of blocked tiles at its face. A walkable slope rises less than a tile per tile; a road up a cliff
+switches back along it. The camera tilts up over high ground near the player
+(`CameraRules.LiftFloor`), so a tall cliff behind the player doesn't hide them; ledge paths are at
+least 2 tiles wide. Nothing below -0.3 shows (the unbuilt land under the world), so depth is carved
+into raised land: a gorge is cut into a plateau, not dug below the sea.
 
-**Mountains and borders.** An impassable range is raised ground (a few tiles) covered with rock
-blocks one storey high, with colour, snow and fog doing the rest. It is not tall geometry. Peaks
-taller than the screen rules go only where the player cannot walk behind them: the edge of the
-world, or across water.
-
-**The whole world** stays within about **16 tiles** of height, sea floor to the highest
-walkable point.
+**Tools.** Strokes plans (`world/strokes/`): `shapes` raise or lower land (`raise`, a `cliffSide` for
+one steep face, `rock` on what is steep), islands and lakes; rivers cut their beds and gather steep
+stretches into falls. In Unity: **Edit Terrain** (Unity's terrain tools over the whole world) and
+**Shape and Paint Ground**. Check a plan from the player's path in Play mode.
 
 **Water** has **one sea level** for the whole world (proposed: height 0, so land is 0 and up).
 Lakes and rivers sit at their own level, which steps down only at falls and weirs, and every

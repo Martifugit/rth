@@ -82,6 +82,7 @@ is a worked one). It takes its facts from [world-plan.md](world-plan.md) and the
 | **For** | What the area is for in the game and when players come (early, mid, late). |
 | **Who** | Who lives here, and which powers' stories pass through. |
 | **Shape** | The one shape you remember; its landforms, water and ground (four or five colours). |
+| **Levels** | Its vertical plan ([world-scale.md](world-scale.md) section 3): the low, middle and high ground with their heights, what stands on each, every way between them (switchbacks, steps, passes, bridges, ladders, shortcuts), and what each level sees. |
 | **Landmarks and views** | One or two landmarks and where each is seen from; the views to keep clear. |
 | **Routes** | Every road, path and river in and out, and where each meets its neighbour area. |
 | **Places** | Its settlements and sites, each with a line on what it will hold. |

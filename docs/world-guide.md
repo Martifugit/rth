@@ -52,8 +52,8 @@ Started 2026-10-23.
   a world where every village has the same four services is not.
 - **The camera never loses the player.** *Decided.* Anything that can come between the camera
   and the player must be able to turn transparent when it does: roofs hide, trees, walls and
-  landmarks fade smoothly (not popping). Build squat and wide rather than tall, so it happens
-  rarely ([world-scale.md](world-scale.md) sections 1, 4, 5).
+  landmarks fade smoothly (not popping). Buildings and props are built squat and wide rather than
+  tall, so it happens rarely; high ground is handled by the camera tilting over it ([world-scale.md](world-scale.md) sections 1, 4, 5).
 
 ## 2. Scale
 
@@ -89,15 +89,15 @@ moderate 31%, dense 4%, inside settlements 14%.
 the camera profile). Until they are made, build to today's sizes and keep tall things rare and
 wide.
 
-**Terrain** ([world-scale.md](world-scale.md) section 3). *Proposed.*
-- Open ground rolls gently (0.6-3.75 tiles of base noise); towns, roads and plots are flattened.
-- In any 24 × 24 window (about one screen): relief normally under 3 tiles, up to 8, rarely 12,
-  never over 16.
-- Cliffs are 1-3 tiles and block. A mountain is raised ground with rock blocks about a storey
-  high, not tall geometry.
-- One sea level; rivers step down only at falls; the whole world within about 16 tiles of height.
-- Nothing below -0.3 shows in play: the Game scene's unbuilt land, a green plane at -0.3 under the
-  whole world, covers it. A hole or a pit stops just above it (Selenfall's shaft stops at -0.2).
+**Terrain** ([world-scale.md](world-scale.md) section 3). *Decided (2026-11-02): real verticality,
+planned.*
+- Dramatic heights and cliffs are welcome; every area plans its levels, and every climb is a
+  designed route (a switchback road, steps in the rock, a pass, a bridge, a ladder, a shortcut).
+- Lowland 0-6, hills 6-16, uplands 12-24, mountains as backdrop up to about 60; proper cliffs 4-12
+  tiles, set pieces to 30. Guides for the plan, not caps.
+- Mountains are walls with passes, not open slopes to wander; flat ground is flat on purpose.
+- One sea level; rivers step down only at falls. Nothing below -0.3 shows, so depth is carved into
+  raised land.
 
 **Services and spacing** (world-wide, [areas/rules.md](areas/rules.md)): a bank about every 80
 tiles along the ways people travel, fast travel about every 150, every settlement with dungeons or
@@ -197,10 +197,10 @@ its layout, look and assets are unsettled: they get thrown away when the layout 
   numbers into heights and ground in minutes, and a script checked the routes before anyone
   walked them. The owner's walk then changed the design, which no amount of planning had. Keep
   such scripts as scaffolding: the region files are the work.
-- **Real depth doesn't fit; fake it.** The world holds about 16 tiles of height, so a pit you can
-  see across never feels deep or roomy. Something deep is a hole you can't see the bottom of, and
-  separate regions below it, each with its own height budget, joined by a transport (a fade to
-  black) and walled with cut-off edges so the camera sees in.
+- **Depth is carved into high ground.** Nothing below -0.3 shows, so a pit dug down from flat land
+  stays shallow; a deep place is cut into a plateau or a hill. Somewhere deeper still is a hole you
+  can't see the bottom of and separate regions below it, joined by a transport (a fade to black) and
+  walled with cut-off edges so the camera sees in.
 - **One walkable path is dull.** Give a place several ways and levels, each with room for content.
 - **Check what the Editor made, not only the data.** A colour missing from a region's materials is
   drawn magenta. The compiler now catches it for `material` and `cliff`, but look at the walk all

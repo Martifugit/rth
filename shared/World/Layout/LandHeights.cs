@@ -91,7 +91,7 @@ namespace Rth.Shared.World.Layout
         private void Round()
         {
             for (int i = 0; i < _corners.Length; i++)
-                _corners[i] = (float)Math.Round(Math.Max(-4f, Math.Min(16f, _corners[i])) * 100f) / 100f;
+                _corners[i] = (float)Math.Round(Rth.Shared.World.Data.TerrainText.Clamp(_corners[i]) * 100f) / 100f;
         }
 
         /// <summary>
