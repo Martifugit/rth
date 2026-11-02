@@ -33,6 +33,35 @@ public class GroundStrokesTests
     }
 
     [Fact]
+    public void ARaisedScarpIsSteepAlongItsWholeFaceAndGentleBehind()
+    {
+        ContinentData data = ContinentData.Parse(File.ReadAllText(Path.Combine(Root, "world", "layout", "continent.json")));
+        var brushes = GroundEdit.Brushes(data).ToDictionary(b => b.Id);
+        var region = new RegionData { Id = "test", Origin = new[] { 0, 0 }, Size = new[] { 64, 64 } };
+        var piece = new Piece { Id = "ground", Kind = PieceKind.Tiles, Rect = new[] { 0, 0, 64, 64 }, Paint = true, Legend = new SortedDictionary<string, TileKind>(StringComparer.Ordinal), Rows = new List<string>() };
+        region.Pieces.Add(piece);
+        char g = GroundEdit.CharFor(region, piece, brushes["grass"].Kind, brushes["grass"].Materials, brushes["grass"].Letter);
+        piece.Rows = Enumerable.Repeat(new string(g, 64), 64).ToList();
+        region.Terrain = TerrainText.Write(new Rth.Shared.World.Heightfield(0, 0, 64, 64));
+
+        // A plateau west of x 40, its face east, its back running off west.
+        var plan = new StrokePlan
+        {
+            Shapes = { new GroundShape { Id = "edge", Raise = 6f, Gentle = 12f, Ragged = 0f, CliffSide = new[] { 1f, 0f },
+                Points = { new[] { -10f, 4f }, new[] { 15f, 4f }, new[] { 40f, 4f }, new[] { 40f, 12f }, new[] { 40f, 24f }, new[] { 40f, 36f }, new[] { 40f, 48f }, new[] { 40f, 60f }, new[] { 15f, 60f }, new[] { -10f, 60f }, new[] { -10f, 32f } } } },
+        };
+        GroundStrokes.Apply(new[] { region }, data, plan);
+        var after = TerrainText.Read(region)!;
+        foreach (int y in new[] { 16, 32, 48 })
+        {
+            Assert.True(after.Corner(38, y) - after.Corner(41, y) > 4f, $"the face at y {y} is not steep");
+            Assert.InRange(after.Corner(20, y), 5.9f, 6.1f);
+        }
+        // The south and north ends ease in (they don't face east).
+        Assert.True(after.Corner(20, 8) - after.Corner(20, 4) < 4f);
+    }
+
+    [Fact]
     public void AGradedRoadClimbsACliffItsWholeLengthWalkable()
     {
         ContinentData data = ContinentData.Parse(File.ReadAllText(Path.Combine(Root, "world", "layout", "continent.json")));

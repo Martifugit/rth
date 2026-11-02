@@ -496,13 +496,29 @@ namespace Rth.Shared.World.Ground
             if (sh.Raise != 0f)
             {
                 // How far in from the edge the rise is reached: gentle, or short on the cliff side (a crag's face).
+                // Which way the nearest stretch of the outline faces: steep where it faces the cliff side.
+                // (By the edge, not the peak, so a long scarp is steep along its whole face.)
+                bool clockwise = SignedArea(closed) < 0f;
                 float Shoulder(float x, float y)
                 {
-                    if (sh.CliffSide == null || sh.Peak == null) return Math.Max(1f, sh.Gentle);
-                    float dx = x - sh.Peak[0], dy = y - sh.Peak[1], dp = (float)Math.Sqrt(dx * dx + dy * dy);
-                    float len = (float)Math.Sqrt(Sq(sh.CliffSide[0]) + Sq(sh.CliffSide[1]));
-                    float facing = dp > 1e-3f ? (dx * sh.CliffSide[0] + dy * sh.CliffSide[1]) / (dp * Math.Max(1e-3f, len)) : 0f;
-                    return 0.6f + (Math.Max(1f, sh.Gentle) - 0.6f) * (1f - LandNoise.Smooth((facing - 0.25f) / 0.5f));
+                    if (sh.CliffSide == null) return Math.Max(1f, sh.Gentle);
+                    float best = float.MaxValue, nx = 0f, ny = 0f;
+                    for (int k = 0; k + 1 < closed.Count; k++)
+                    {
+                        float[] a = closed[k], b = closed[k + 1];
+                        float dx = b[0] - a[0], dy = b[1] - a[1], len2 = dx * dx + dy * dy;
+                        if (len2 < 1e-6f) continue;
+                        float t = Math.Max(0f, Math.Min(1f, ((x - a[0]) * dx + (y - a[1]) * dy) / len2));
+                        float d = Sq(a[0] + t * dx - x) + Sq(a[1] + t * dy - y);
+                        if (d >= best) continue;
+                        best = d;
+                        float len = (float)Math.Sqrt(len2);
+                        // Outward normal: right of the direction for an anticlockwise outline, left for a clockwise one.
+                        nx = (clockwise ? -dy : dy) / len; ny = (clockwise ? dx : -dx) / len;
+                    }
+                    float side = (float)Math.Sqrt(Sq(sh.CliffSide[0]) + Sq(sh.CliffSide[1]));
+                    float facing = (nx * sh.CliffSide[0] + ny * sh.CliffSide[1]) / Math.Max(1e-3f, side);
+                    return 0.6f + (Math.Max(1f, sh.Gentle) - 0.6f) * (1f - LandNoise.Smooth((facing - 0.35f) / 0.4f));
                 }
                 var raised = new Dictionary<(int, int), float>();
                 for (int cy = y0; cy <= y1; cy++)
@@ -686,6 +702,14 @@ namespace Rth.Shared.World.Ground
                     }
                 }
             return $"{sh.Id}: {wet.Count} tiles of water at {level:0.00}, {dried.Count} tiles dried to land, {free.Count} corners eased, {shore} shore tiles.";
+        }
+
+        private static float SignedArea(List<float[]> poly)
+        {
+            // Shoelace: positive for an anticlockwise outline (x east, y north).
+            float a = 0f;
+            for (int i = 0, j = poly.Count - 1; i < poly.Count; j = i++) a += poly[j][0] * poly[i][1] - poly[i][0] * poly[j][1];
+            return a / 2f;
         }
 
         private static bool InsidePolygon(List<float[]> poly, float x, float y)
