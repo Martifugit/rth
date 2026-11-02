@@ -17,7 +17,15 @@ namespace Rth.Client.Ui
     /// </summary>
     public sealed class UiRoot : MonoBehaviour
     {
-        private const string LayoutPref = "rth.ui.layout.v3";
+        /// <summary>The single layout saved before layouts were kept per screen size: read once, to migrate.</summary>
+        private const string LegacyLayoutPref = "rth.ui.layout.v3";
+        /// <summary>A layout per screen-size bucket: this prefix and the bucket ("1920x1088").</summary>
+        private const string LayoutPrefix = "rth.ui.layout.v4.";
+        /// <summary>The buckets that have a saved layout, oldest first, ";" between them.</summary>
+        private const string LayoutIndexPref = "rth.ui.layout.v4.index";
+        private const string PresetPref = "rth.ui.preset";
+        /// <summary>How many screen sizes keep a layout of their own.</summary>
+        private const int MaxBuckets = 8;
         private const string LockedPref = "rth.ui.locked";
         private const string ScalePref = "rth.ui.scale";
 
@@ -64,7 +72,7 @@ namespace Rth.Client.Ui
             set
             {
                 PlayerPrefs.SetInt(LockedPref, value ? 1 : 0);
-                _root?.EnableInClassList("rth-root--locked", value);
+                _root?.EnableInClassList("rth-root--locked", value && !EditMode);
             }
         }
 
@@ -211,15 +219,22 @@ namespace Rth.Client.Ui
             if (!_built)
             {
                 _built = true;
-                if (!LoadLayout()) DefaultLayout();
+                LayOutForScreen(screen);
                 _lastScreen = screen;
             }
             if (screen != _lastScreen)
             {
                 _lastScreen = screen;
                 if (AutoScaled && _settings != null && !Mathf.Approximately(_settings.scale, AutoScale)) _settings.scale = AutoScale;
-                foreach (UiWindow w in _windows) w.Apply(screen);
-                SettleDocked();
+                string bucket = WindowRules.BucketOf(screen.x, screen.y);
+                if (bucket != _bucket && SavedBuckets().Contains(bucket)) ChangeScreen(screen);
+                else
+                {
+                    // No layout of its own yet: this one adapts (anchored, sizes kept as chosen) and becomes it.
+                    _bucket = bucket;
+                    foreach (UiWindow w in _windows) w.Apply(screen);
+                    SettleDocked();
+                }
             }
 
             _hover.text = PopupMenu.IsOpen || _drag != null ? "" : session.HoverText;
@@ -243,6 +258,7 @@ namespace Rth.Client.Ui
             Keyboard keyboard = Keyboard.current;
             if (keyboard == null || IsTyping) return;
             if (keyboard.escapeKey.wasPressedThisFrame && _openModal != null) CloseModal();
+            else if (keyboard.escapeKey.wasPressedThisFrame && EditMode) SetEditMode(false);
             if (FlyCamera.Active) return; // its WASD, Q and E would open windows
             foreach (UiPanel panel in _panels)
                 if (panel.Hotkey != Key.None && keyboard[panel.Hotkey].wasPressedThisFrame) Toggle(panel);
@@ -632,7 +648,7 @@ namespace Rth.Client.Ui
 
         /// <summary>
         /// Opens a panel: into a window already holding panels from its default group, or a new
-        /// window where it last stood or where its group belongs.
+        /// window where it last stood or where its group belongs in the chosen preset.
         /// </summary>
         public void Open(UiPanel panel)
         {
@@ -641,6 +657,13 @@ namespace Rth.Client.Ui
                 panel.Window.Activate(panel);
                 panel.Window.Root.BringToFront();
                 return;
+            }
+            // Its placeholder (while editing the layout) gives way to the real thing, keeping its place.
+            UiWindow stand = _windows.FirstOrDefault(w => w.IsPlaceholder && ((PlaceholderPanel)w.Panels[0]).ForId == panel.Id);
+            if (stand != null)
+            {
+                RememberPlaceholder(stand);
+                RemoveWindow(stand);
             }
             UiWindow home = _windows.FirstOrDefault(w => w.CanDock(panel) && w.Panels.Any(p => p.DefaultWindow == panel.DefaultWindow));
             if (home != null)
@@ -652,13 +675,9 @@ namespace Rth.Client.Ui
             {
                 UiWindow window;
                 if (_placements.TryGetValue(panel.Id, out SavedWindow last))
-                    window = CreateWindow(last.anchor, last.offset, last.size, panel);
+                    window = CreateWindow(last.anchor, last.offset, PreferredOf(last), panel);
                 else
-                {
-                    UiDefaultLayout.Placement place = UiDefaultLayout.Windows.TryGetValue(panel.DefaultWindow, out UiDefaultLayout.Placement p) && !panel.Floating
-                        ? p : UiDefaultLayout.Centred(panel);
-                    window = CreateWindow(place.Anchor, place.Offset, place.Size, panel);
-                }
+                    window = CreateWindowAt(HomeBox(panel), panel);
                 FitIn(window);
             }
             SaveLayout();
@@ -693,15 +712,31 @@ namespace Rth.Client.Ui
             panel.OnClosedByPlayer();
         }
 
-        /// <summary>Where a panel last stood on its own, so it reopens there.</summary>
+        /// <summary>Where a panel (or an overlay, "overlay:id") last stood on its own, so it reopens there.</summary>
         private readonly Dictionary<string, SavedWindow> _placements = new Dictionary<string, SavedWindow>();
 
-        private void Remember(UiWindow window) =>
-            _placements[window.Panels[0].Id] = new SavedWindow { panels = new List<string> { window.Panels[0].Id }, anchor = window.Anchor, offset = window.Offset, size = window.Size };
+        private void Remember(UiWindow window)
+        {
+            if (window.IsPlaceholder)
+            {
+                RememberPlaceholder(window);
+                return;
+            }
+            _placements[window.Panels[0].Id] = Saved(window, window.Panels[0].Id);
+        }
+
+        private void RememberPlaceholder(UiWindow window) =>
+            _placements[((PlaceholderPanel)window.Panels[0]).ForId] = Saved(window, ((PlaceholderPanel)window.Panels[0]).ForId);
+
+        private static SavedWindow Saved(UiWindow window, string id) =>
+            new SavedWindow { panels = new List<string> { id }, anchor = window.Anchor, offset = window.Offset, size = window.Size, preferred = window.Preferred };
+
+        /// <summary>The size a saved window chose (older saves only knew the size it had).</summary>
+        private static Vector2 PreferredOf(SavedWindow saved) => saved.preferred.x > 0f && saved.preferred.y > 0f ? saved.preferred : saved.size;
 
         private UiWindow CreateWindow(Vector2 anchor, Vector2 offset, Vector2 size, params UiPanel[] panels)
         {
-            var window = new UiWindow(this) { Anchor = anchor, Offset = offset, Size = size };
+            var window = new UiWindow(this) { Anchor = anchor, Offset = offset, Size = size, Preferred = size };
             foreach (UiPanel p in panels.Take(UiWindow.MaxTabs)) window.Add(p, activate: false);
             if (window.Panels.Count > 0) window.Activate(window.Panels[0]);
             _windows.Add(window);
@@ -710,21 +745,64 @@ namespace Rth.Client.Ui
             return window;
         }
 
+        /// <summary>A window at a box (panel pixels), anchored to whichever corner or edge it is nearest.</summary>
+        private UiWindow CreateWindowAt(WindowRules.Box box, params UiPanel[] panels)
+        {
+            UiWindow window = CreateWindow(Vector2.zero, Vector2.zero, new Vector2(box.W, box.H), panels);
+            window.SetBox(box, ScreenSize);
+            return window;
+        }
+
         private void RemoveWindow(UiWindow window)
         {
             _windows.Remove(window);
             window.Root.RemoveFromHierarchy();
+            if (_dockTarget == window) _dockTarget = null;
         }
 
         // ------------------------------------------------------------------ placement: no overlap, snapping, previews
+
+        /// <summary>
+        /// Whether windows can be moved, resized, closed and re-tabbed now: unlocked, or editing the
+        /// layout (which works even while locked).
+        /// </summary>
+        public bool CanArrange => !Locked || EditMode;
+
+        /// <summary>The snap distance in panel pixels (the same few screen pixels at every scale); none while Alt is held.</summary>
+        public float SnapDistance(bool altHeld) => altHeld ? 0f : WindowRules.SnapDistanceFor(_settings != null ? _settings.scale : 1f);
 
         /// <summary>What a docked window may not overlap: every other docked window.</summary>
         public List<WindowRules.Box> ObstaclesFor(UiWindow window) =>
             _windows.Where(w => w != window && !w.IsFloating).Select(w => w.Box).ToList();
 
-        /// <summary>What a moving window lines up with.</summary>
+        /// <summary>What a moving window lines up with: the others of its kind (docked with docked, floating with floating).</summary>
         public List<WindowRules.Box> SnapTargetsFor(UiWindow window) =>
-            _windows.Where(w => w != window && w.IsFloating == window.IsFloating).Select(w => w.Box).ToList();
+            _windows.Where(w => w != window && w.IsFloating == (window?.IsFloating ?? false)).Select(w => w.Box).ToList();
+
+        /// <summary>
+        /// Where a window (or a new one, <paramref name="self"/> null) wanted at a box would land:
+        /// snapped flush, then for a docked window moved to the nearest place clear of the others.
+        /// Fits is false when there is no room at all. Guides are the lines it ends up flush on.
+        /// </summary>
+        public (WindowRules.Box Box, bool Fits) Land(UiWindow self, WindowRules.Box wanted, bool floating, float snap, out List<WindowRules.Guide> guides)
+        {
+            Vector2 screen = ScreenSize;
+            List<WindowRules.Box> targets = _windows.Where(w => w != self && w.IsFloating == floating).Select(w => w.Box).ToList();
+            WindowRules.Box snapped = WindowRules.Snap(wanted, targets, screen.x, screen.y, snap);
+            WindowRules.Box? landing = floating
+                ? WindowRules.Clamp(snapped, screen.x, screen.y)
+                : WindowRules.NearestFree(snapped, _windows.Where(w => w != self && !w.IsFloating).Select(w => w.Box).ToList(), screen.x, screen.y);
+            WindowRules.Box box = landing ?? snapped;
+            guides = WindowRules.Contacts(box, targets, screen.x, screen.y);
+            return (box, landing.HasValue);
+        }
+
+        /// <summary>The size a panel's own window starts at: its fixed size, else its default size (never under its minimum).</summary>
+        public Vector2 OwnSize(UiPanel panel)
+        {
+            if (panel.AllowedSizes != null && panel.AllowedSizes.Length > 0) return panel.FixedSize ?? panel.AllowedSizes[0];
+            return panel.FixedSize ?? Vector2.Max(UiWindow.MinSizeFor(panel), panel.DefaultSize);
+        }
 
         /// <summary>Moves a docked window to the nearest place where it overlaps nothing (if it doesn't already fit).</summary>
         private void FitIn(UiWindow window)
@@ -732,17 +810,17 @@ namespace Rth.Client.Ui
             if (window.IsFloating) return;
             Vector2 screen = ScreenSize;
             WindowRules.Box? free = WindowRules.NearestFree(window.Box, ObstaclesFor(window), screen.x, screen.y);
-            if (free.HasValue && !free.Value.Equals(window.Box)) window.SetBox(free.Value, screen);
+            if (free.HasValue && !free.Value.Equals(window.Box)) window.MoveTo(new Vector2(free.Value.X, free.Value.Y), screen);
         }
 
-        /// <summary>Settles every docked window so none overlaps another (earlier windows keep their place).</summary>
+        /// <summary>Settles the docked windows so none overlaps another, moving as few as it can; sizes stay as chosen.</summary>
         private void SettleDocked()
         {
             Vector2 screen = ScreenSize;
             List<UiWindow> docked = _windows.Where(w => !w.IsFloating).ToList();
             List<WindowRules.Box> settled = WindowRules.Settle(docked.Select(w => w.Box).ToList(), screen.x, screen.y);
             for (int i = 0; i < docked.Count; i++)
-                if (!settled[i].Equals(docked[i].Box)) docked[i].SetBox(settled[i], screen);
+                if (!settled[i].Equals(docked[i].Box)) docked[i].MoveTo(new Vector2(settled[i].X, settled[i].Y), screen);
         }
 
         private VisualElement _landing;
@@ -750,10 +828,12 @@ namespace Rth.Client.Ui
         private readonly List<VisualElement> _guides = new List<VisualElement>();
         private UiWindow _dockTarget;
 
+        /// <summary>The window a dragged tab (or lone window) would join right now, if any.</summary>
+        public UiWindow DockTarget => _dockTarget;
+
         /// <summary>
-        /// Shows where a window being moved or resized will land: an outline (red if it won't fit
-        /// anywhere), an optional label ("Add as a tab", "New window"), and the guide lines it
-        /// lined up with.
+        /// Shows where a window will land when it isn't drawn there itself (a tab being pulled out, or
+        /// nowhere to go): an outline (red if it won't fit), an optional label, and the guide lines.
         /// </summary>
         public void ShowLanding(WindowRules.Box box, bool fits, string label, List<WindowRules.Guide> guides)
         {
@@ -764,6 +844,7 @@ namespace Rth.Client.Ui
                 _landingLabel = UiKit.Text(_landing, "", "landing__label");
                 _landingLabel.pickingMode = PickingMode.Ignore;
             }
+            SetDockTarget(null, false);
             _landing.style.display = DisplayStyle.Flex;
             _landing.style.left = box.X;
             _landing.style.top = box.Y;
@@ -773,7 +854,19 @@ namespace Rth.Client.Ui
             _landing.RemoveFromClassList("landing--marker");
             _landingLabel.text = label ?? "";
             _landingLabel.style.display = string.IsNullOrEmpty(label) ? DisplayStyle.None : DisplayStyle.Flex;
+            ShowGuideLines(guides);
+        }
 
+        /// <summary>Shows only the guide lines (the window itself is drawn where it will land).</summary>
+        public void ShowGuides(List<WindowRules.Guide> guides)
+        {
+            if (_landing != null) _landing.style.display = DisplayStyle.None;
+            SetDockTarget(null, false);
+            ShowGuideLines(guides);
+        }
+
+        private void ShowGuideLines(List<WindowRules.Guide> guides)
+        {
             Vector2 screen = ScreenSize;
             for (int i = 0; i < Mathf.Max(_guides.Count, guides?.Count ?? 0); i++)
             {
@@ -791,8 +884,10 @@ namespace Rth.Client.Ui
                 }
                 WindowRules.Guide guide = guides[i];
                 line.style.display = DisplayStyle.Flex;
-                line.style.left = guide.Vertical ? guide.At : 0f;
-                line.style.top = guide.Vertical ? 0f : guide.At;
+                // A line on the screen's right or bottom edge is drawn just inside it.
+                float at = guide.Vertical ? Mathf.Min(guide.At, screen.x - 1f) : Mathf.Min(guide.At, screen.y - 1f);
+                line.style.left = guide.Vertical ? at : 0f;
+                line.style.top = guide.Vertical ? 0f : at;
                 line.style.width = guide.Vertical ? 1f : screen.x;
                 line.style.height = guide.Vertical ? screen.y : 1f;
             }
@@ -802,92 +897,141 @@ namespace Rth.Client.Ui
         {
             if (_landing != null) _landing.style.display = DisplayStyle.None;
             foreach (VisualElement g in _guides) g.style.display = DisplayStyle.None;
-            SetDockTarget(null);
+            SetDockTarget(null, false);
         }
 
-        private void SetDockTarget(UiWindow window)
+        private bool _dockTargetFull;
+
+        private void SetDockTarget(UiWindow window, bool full)
         {
-            if (_dockTarget == window) return;
-            _dockTarget?.Root.RemoveFromClassList("window--dock-target");
+            if (_dockTarget == window && _dockTargetFull == full) return;
+            _dockTarget?.MarkDockTarget(false, false);
             _dockTarget = window;
-            _dockTarget?.Root.AddToClassList("window--dock-target");
+            _dockTargetFull = full;
+            _dockTarget?.MarkDockTarget(true, full);
         }
 
         /// <summary>
-        /// Where a tab being dragged would go: into a window's tab strip under the pointer (its own,
-        /// to put it back or reorder it; another, to dock), or a window of its own.
+        /// The window whose tab strip is under a point that a dragged panel could go into: its own
+        /// (to reorder it), or another that takes it. <paramref name="moving"/> is a lone window being
+        /// dragged, never its own target. Full is true when the window under the point would take it
+        /// but has no room for another tab.
         /// </summary>
-        private (UiWindow dock, WindowRules.Box box, bool fits) PanelDrop(UiPanel panel, Vector2 at)
+        private (UiWindow Window, bool Full) DockAt(UiPanel panel, Vector2 at, UiWindow moving)
         {
             UiWindow from = panel.Window;
-            UiWindow dock = _windows.FirstOrDefault(w => w.AcceptsDropAt(at) && (w == from || w.CanDock(panel)));
-            if (dock != null)
+            foreach (UiWindow w in _windows)
             {
-                (int _, float x) = dock.TabSlotAt(at);
-                Rect bar = dock.TitleBarBound;
-                return (dock, new WindowRules.Box(x - 2f, bar.y + 3f, 4f, bar.height - 6f), true); // the insertion marker
+                if (w == moving || !w.AcceptsDropAt(at)) continue;
+                if (w == from && moving == null) return (w, false);
+                if (w.CanDock(panel)) return (w, false);
+                if (w.IsFull && w.CouldDock(panel)) return (w, true);
             }
-            Vector2 size = from != null && from.Panels.Count == 1 ? from.Size : Vector2.Max(panel.MinSize, from != null ? from.Size : panel.DefaultSize);
-            Vector2 screen = ScreenSize;
-            var wanted = new WindowRules.Box(at.x - 20f, at.y - 10f, size.x, size.y);
-            if (panel.Floating) return (null, WindowRules.Clamp(wanted, screen.x, screen.y), true);
-            // A window of its own may not land on another docked window (its old one included, if it stays).
-            List<WindowRules.Box> others = _windows.Where(w => !w.IsFloating && !(w == from && from.Panels.Count == 1)).Select(w => w.Box).ToList();
-            WindowRules.Box? free = WindowRules.NearestFree(wanted, others, screen.x, screen.y);
-            return (null, free ?? wanted, free.HasValue);
+            return (null, false);
         }
 
-        /// <summary>While a tab is dragged: highlight the window it would join, or outline its new window.</summary>
-        public void PreviewPanelDrop(UiPanel panel, Vector2 at)
+        /// <summary>
+        /// While a tab (or a lone window) is dragged: if the pointer is over a tab strip that would take
+        /// it, marks that window with an outline (or as full) and shows where in the strip it would
+        /// go, and says true; else clears the mark and says false.
+        /// </summary>
+        public bool PreviewDock(UiPanel panel, Vector2 at, UiWindow moving)
         {
-            (UiWindow dock, WindowRules.Box box, bool fits) = PanelDrop(panel, at);
-            UiWindow from = panel.Window;
-            SetDockTarget(dock != null && dock != from ? dock : null);
-            bool alone = from != null && from.Panels.Count == 1;
-            string label = dock == null ? (fits ? (alone ? "Move here" : "Own window") : "No room here")
-                : dock == from ? null // putting it back, or reordering: the marker says where
-                : null;
-            ShowLanding(box, fits, label, null);
-            _landing.EnableInClassList("landing--marker", dock != null);
-        }
-
-        /// <summary>A tab dropped somewhere: onto another window's title bar joins it; anywhere else gets its own window.</summary>
-        public void DropPanel(UiPanel panel, Vector2 at)
-        {
-            UiWindow from = panel.Window;
-            (UiWindow dock, WindowRules.Box box, bool fits) = PanelDrop(panel, at);
-            if (!fits) return;
-            if (dock != null && dock == from)
+            (UiWindow dock, bool full) = DockAt(panel, at, moving);
+            if (dock == null)
             {
-                // Dropped back on its own tab strip: put back, or moved along it.
-                from.MoveTab(panel, from.TabSlotAt(at).Index);
+                SetDockTarget(null, false);
+                return false;
+            }
+            HideLanding();
+            if (full)
+            {
+                SetDockTarget(dock, true);
+                return true;
+            }
+            (int _, float x) = dock.TabSlotAt(at);
+            Rect bar = dock.TitleBarBound;
+            ShowLanding(new WindowRules.Box(x - 2f, bar.y + 3f, 4f, bar.height - 6f), true, null, null);
+            _landing.EnableInClassList("landing--marker", true);
+            // Joining another window outlines it; moving along its own strip needs only the marker.
+            SetDockTarget(dock != panel.Window ? dock : null, false);
+            return true;
+        }
+
+        /// <summary>
+        /// A dragged panel let go: onto a tab strip that takes it, it joins (or moves along) that strip;
+        /// otherwise it gets a window of its own at <paramref name="landing"/> (null: nowhere to go,
+        /// nothing changes).
+        /// </summary>
+        public void DropPanel(UiPanel panel, Vector2 at, WindowRules.Box? landing)
+        {
+            UiWindow from = panel.Window;
+            (UiWindow dock, bool full) = DockAt(panel, at, from != null && from.Panels.Count == 1 ? from : null);
+            if (dock != null && !full)
+            {
+                if (dock == from) from.MoveTab(panel, from.TabSlotAt(at).Index); // back in its strip, or moved along it
+                else
+                {
+                    dock.Add(panel, true, dock.TabSlotAt(at).Index);
+                    dock.Root.BringToFront();
+                    if (from != null && from.Panels.Count == 0) RemoveWindow(from);
+                }
                 SaveLayout();
                 return;
             }
-            if (dock != null)
-            {
-                dock.Add(panel, true, dock.TabSlotAt(at).Index);
-                dock.Root.BringToFront();
-            }
-            else if (from != null && from.Panels.Count == 1)
-            {
-                from.SetBox(box, ScreenSize); // its own window: just move it
-                SaveLayout();
-                return;
-            }
-            else
-            {
-                UiWindow window = CreateWindow(Vector2.zero, Vector2.zero, new Vector2(box.W, box.H), panel);
-                window.SetBox(box, ScreenSize);
-            }
+            if (full || !landing.HasValue) return;
+            UiWindow window = CreateWindowAt(landing.Value, panel);
+            window.Root.BringToFront();
             if (from != null && from.Panels.Count == 0) RemoveWindow(from);
             SaveLayout();
         }
 
-        // ------------------------------------------------------------------ layouts
+        // ------------------------------------------------------------------ presets and default placements
+
+        /// <summary>The preset the player picked (Reset layout goes back to it).</summary>
+        public UiDefaultLayout.Preset Preset => UiDefaultLayout.Find(PlayerPrefs.GetString(PresetPref, UiDefaultLayout.Classic.Id));
+
+        /// <summary>Every window of the chosen preset placed on this screen, at its panels' own sizes where they insist.</summary>
+        private Dictionary<string, WindowRules.Box> PresetBoxes(UiDefaultLayout.Preset preset)
+        {
+            Vector2 screen = ScreenSize;
+            return UiDefaultLayout.Resolve(preset, screen.x, screen.y, group =>
+            {
+                foreach (UiPanel p in _panels)
+                {
+                    if (p.DefaultWindow != group) continue;
+                    if (p.FixedSize.HasValue) return (p.FixedSize.Value.x, p.FixedSize.Value.y);
+                    if (p.AllowedSizes != null && p.AllowedSizes.Length > 0) return (p.AllowedSizes[0].x, p.AllowedSizes[0].y);
+                }
+                return null;
+            });
+        }
+
+        /// <summary>Where a panel's window goes when nothing remembers it: its group's place in the preset, or centred.</summary>
+        private WindowRules.Box HomeBox(UiPanel panel)
+        {
+            Vector2 screen = ScreenSize;
+            Vector2 min = UiWindow.MinSizeFor(panel);
+            if (PresetBoxes(Preset).TryGetValue(panel.DefaultWindow, out WindowRules.Box b))
+            {
+                Vector2 size = panel.FixedSize ?? Vector2.Max(min, new Vector2(b.W, b.H));
+                return WindowRules.Clamp(new WindowRules.Box(b.X, b.Y, size.x, size.y), screen.x, screen.y);
+            }
+            Vector2 own = OwnSize(panel);
+            return WindowRules.Anchored(0.5f, 0.5f, 0f, 0f, own.x, own.y, screen.x, screen.y);
+        }
+
+        /// <summary>Puts every window where a preset says (and remembers the choice). Server windows and overlays go back to their homes too.</summary>
+        public void ApplyPreset(UiDefaultLayout.Preset preset)
+        {
+            PlayerPrefs.SetString(PresetPref, preset.Id);
+            ResetLayout();
+        }
 
         public void ResetLayout()
         {
+            bool editing = EditMode;
+            if (editing) SetEditMode(false, save: false);
             _placements.Clear();
             foreach (UiWindow w in _windows.ToList())
             {
@@ -896,22 +1040,137 @@ namespace Rth.Client.Ui
             }
             DefaultLayout();
             SaveLayout();
+            if (editing) SetEditMode(true);
         }
 
         private void DefaultLayout()
         {
+            UiDefaultLayout.Preset preset = Preset;
+            Dictionary<string, WindowRules.Box> boxes = PresetBoxes(preset);
             foreach (IGrouping<string, UiPanel> group in _panels.Where(p => p.OpenByDefault && p.ServerOpen == null).GroupBy(p => p.DefaultWindow))
             {
-                UiPanel first = group.First();
-                UiDefaultLayout.Placement place = UiDefaultLayout.Windows.TryGetValue(group.Key, out UiDefaultLayout.Placement p)
-                    ? p : UiDefaultLayout.Centred(first);
+                if (preset.Closed.Contains(group.Key)) continue;
                 UiPanel[] panels = group.ToArray();
-                CreateWindow(place.Anchor, place.Offset, place.Size, panels);
+                WindowRules.Box box = boxes.TryGetValue(group.Key, out WindowRules.Box b) ? b : HomeBox(panels[0]);
+                CreateWindowAt(box, panels);
                 // A group larger than a window holds opens the rest in windows of their own.
                 foreach (UiPanel extra in panels.Skip(UiWindow.MaxTabs)) Open(extra);
             }
             SettleDocked();
         }
+
+        // ------------------------------------------------------------------ editing the layout
+
+        /// <summary>Editing the layout: every window shows its frame and handles, and stand-ins show where server windows and overlays go.</summary>
+        public bool EditMode { get; private set; }
+
+        private VisualElement _editBar;
+
+        public void ToggleEditMode() => SetEditMode(!EditMode);
+
+        public void SetEditMode(bool on, bool save = true)
+        {
+            if (on == EditMode) return;
+            EditMode = on;
+            _root?.EnableInClassList("rth-root--editing", on);
+            _root?.EnableInClassList("rth-root--locked", Locked && !on);
+            if (on)
+            {
+                CloseModal();
+                ShowPlaceholders();
+                ShowEditBar();
+            }
+            else
+            {
+                foreach (UiWindow w in _windows.Where(w => w.IsPlaceholder).ToList())
+                {
+                    RememberPlaceholder(w);
+                    RemoveWindow(w);
+                }
+                _editBar?.RemoveFromHierarchy();
+                _editBar = null;
+                HideLanding();
+                if (save) SaveLayout();
+            }
+        }
+
+        /// <summary>Stand-ins for every server window not open now, and every overlay, where each will appear.</summary>
+        private void ShowPlaceholders()
+        {
+            Vector2 screen = ScreenSize;
+            foreach (UiPanel panel in _panels.Where(p => p.ServerOpen != null && p.Window == null))
+            {
+                var stand = new PlaceholderPanel(panel);
+                stand.Create(this);
+                if (_placements.TryGetValue(panel.Id, out SavedWindow last)) CreateWindow(last.anchor, last.offset, PreferredOf(last), stand);
+                else CreateWindowAt(HomeBox(panel), stand);
+            }
+            foreach (Overlay overlay in _overlays.Values)
+            {
+                var stand = new PlaceholderPanel(OverlayKey(overlay.Id), overlay.Title, overlay.Size);
+                stand.Create(this);
+                Rect r = OverlayRect(overlay.Id);
+                CreateWindowAt(new WindowRules.Box(r.x, r.y, r.width, r.height), stand);
+            }
+            foreach (UiWindow w in _windows.Where(w => w.IsPlaceholder)) w.Apply(screen);
+        }
+
+        private void ShowEditBar()
+        {
+            // A row across the screen that catches nothing, holding the bar in its middle.
+            _editBar = UiKit.El(_root, "edit-bar");
+            _editBar.pickingMode = PickingMode.Ignore;
+            VisualElement box = UiKit.El(_editBar, "edit-bar__box");
+            UiKit.Text(box, "EDITING LAYOUT", "edit-bar__title").pickingMode = PickingMode.Ignore;
+            UiKit.Text(box, "Drag any window; edges snap flush (hold Alt to place freely). Stand-ins show where windows that open later will go.", "edit-bar__hint").pickingMode = PickingMode.Ignore;
+            UiKit.Button(box, "Done", () => SetEditMode(false));
+        }
+
+        // ------------------------------------------------------------------ overlays
+
+        /// <summary>Something drawn outside the windows (the trophy fishing gauge) whose place the player can choose while editing the layout.</summary>
+        private sealed class Overlay
+        {
+            public string Id;
+            public string Title;
+            public Vector2 Size;
+            public UiDefaultLayout.Placement Home;
+        }
+
+        private static readonly Dictionary<string, Overlay> _overlays = new Dictionary<string, Overlay>();
+
+        private static string OverlayKey(string id) => "overlay:" + id;
+
+        /// <summary>
+        /// Registers a placeable overlay: its id (for saved layouts), a name shown while editing, its
+        /// size (panel pixels) and where it goes by default. Calling again just updates it. The owner
+        /// then draws it at <see cref="OverlayRect"/>.
+        /// </summary>
+        public static void RegisterOverlay(string id, string title, Vector2 size, UiDefaultLayout.Placement home) =>
+            _overlays[id] = new Overlay { Id = id, Title = title, Size = size, Home = home };
+
+        /// <summary>Where an overlay goes now (panel pixels): where the player put it, else its default place.</summary>
+        public Rect OverlayRect(string id)
+        {
+            if (!_overlays.TryGetValue(id, out Overlay overlay)) return Rect.zero;
+            Vector2 screen = ScreenSize;
+            string key = OverlayKey(id);
+            UiWindow stand = _windows.FirstOrDefault(w => w.IsPlaceholder && ((PlaceholderPanel)w.Panels[0]).ForId == key);
+            if (stand != null) return stand.Rect;
+            Vector2 size = overlay.Size;
+            if (_placements.TryGetValue(key, out SavedWindow saved))
+            {
+                Vector2 pos = new Vector2(saved.anchor.x * (screen.x - size.x), saved.anchor.y * (screen.y - size.y)) + saved.offset;
+                pos.x = Mathf.Round(Mathf.Clamp(pos.x, 0f, Mathf.Max(0f, screen.x - size.x)));
+                pos.y = Mathf.Round(Mathf.Clamp(pos.y, 0f, Mathf.Max(0f, screen.y - size.y)));
+                return new Rect(pos, size);
+            }
+            UiDefaultLayout.Placement h = overlay.Home;
+            WindowRules.Box b = WindowRules.Clamp(WindowRules.Anchored(h.AnchorX, h.AnchorY, h.OffsetX, h.OffsetY, size.x, size.y, screen.x, screen.y), screen.x, screen.y);
+            return new Rect(b.X, b.Y, b.W, b.H);
+        }
+
+        // ------------------------------------------------------------------ saved layouts, one per screen size
 
         [Serializable]
         private sealed class SavedWindow
@@ -920,7 +1179,10 @@ namespace Rth.Client.Ui
             public string active;
             public Vector2 anchor;
             public Vector2 offset;
+            /// <summary>The size it had when saved.</summary>
             public Vector2 size;
+            /// <summary>The size the player chose (zero in layouts saved before this was kept).</summary>
+            public Vector2 preferred;
         }
 
         [Serializable]
@@ -929,38 +1191,93 @@ namespace Rth.Client.Ui
             public List<SavedWindow> windows = new List<SavedWindow>();
             /// <summary>Every panel that existed when saved: a panel added since opens by default.</summary>
             public List<string> known = new List<string>();
-            /// <summary>Where closed panels last stood.</summary>
+            /// <summary>Where closed panels, server windows and overlays last stood.</summary>
             public List<SavedWindow> placements = new List<SavedWindow>();
         }
 
+        /// <summary>The bucket (screen size in panel pixels, rounded) the layout in use belongs to.</summary>
+        private string _bucket;
+
+        private static string BucketKey(string bucket) => LayoutPrefix + bucket;
+
+        private static List<string> SavedBuckets() =>
+            PlayerPrefs.GetString(LayoutIndexPref, "").Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+
         public void SaveLayout()
         {
-            if (!_built) return;
+            if (!_built || _bucket == null) return;
             var layout = new SavedLayout { known = _panels.Select(p => p.Id).ToList() };
             foreach (UiWindow w in _windows)
             {
+                if (w.IsPlaceholder)
+                {
+                    RememberPlaceholder(w);
+                    continue;
+                }
                 // Server windows reopen when the server says, not at login.
                 if (w.Panels.Any(p => p.ServerOpen != null))
                 {
                     if (w.Panels.Count == 1) Remember(w);
                     continue;
                 }
-                layout.windows.Add(new SavedWindow
-                {
-                    panels = w.Panels.Select(p => p.Id).ToList(),
-                    active = w.Active?.Id,
-                    anchor = w.Anchor,
-                    offset = w.Offset,
-                    size = w.Size,
-                });
+                SavedWindow saved = Saved(w, null);
+                saved.panels = w.Panels.Select(p => p.Id).ToList();
+                saved.active = w.Active?.Id;
+                layout.windows.Add(saved);
             }
             layout.placements = _placements.Values.ToList();
-            PlayerPrefs.SetString(LayoutPref, JsonUtility.ToJson(layout));
+            PlayerPrefs.SetString(BucketKey(_bucket), JsonUtility.ToJson(layout));
+            List<string> buckets = SavedBuckets();
+            if (!buckets.Contains(_bucket))
+            {
+                buckets.Add(_bucket);
+                // Keep a handful: the oldest screen sizes go first.
+                while (buckets.Count > MaxBuckets)
+                {
+                    PlayerPrefs.DeleteKey(BucketKey(buckets[0]));
+                    buckets.RemoveAt(0);
+                }
+                PlayerPrefs.SetString(LayoutIndexPref, string.Join(";", buckets));
+            }
         }
 
-        private bool LoadLayout()
+        /// <summary>
+        /// Lays the interface out for this screen: its own saved layout; else the saved layout of the
+        /// nearest screen size (anchored, so it adapts), else the old single layout (v3, migrated), else
+        /// the chosen preset. Only a layout of this screen's own is written back unasked.
+        /// </summary>
+        private void LayOutForScreen(Vector2 screen)
         {
-            string json = PlayerPrefs.GetString(LayoutPref, "");
+            _bucket = WindowRules.BucketOf(screen.x, screen.y);
+            List<string> buckets = SavedBuckets();
+            string json = buckets.Contains(_bucket) ? PlayerPrefs.GetString(BucketKey(_bucket), "") : "";
+            bool own = !string.IsNullOrEmpty(json);
+            if (!own)
+            {
+                string nearest = WindowRules.NearestBucket(buckets, screen.x, screen.y);
+                json = nearest != null ? PlayerPrefs.GetString(BucketKey(nearest), "") : PlayerPrefs.GetString(LegacyLayoutPref, "");
+            }
+            if (!LoadLayout(json)) DefaultLayout();
+            else if (!own && buckets.Count == 0) SaveLayout(); // the old layout, moved over once
+        }
+
+        /// <summary>Tears the windows down and lays them out again for a new screen size (its own layout if it has one).</summary>
+        private void ChangeScreen(Vector2 screen)
+        {
+            bool editing = EditMode;
+            if (editing) SetEditMode(false);
+            _placements.Clear();
+            foreach (UiWindow w in _windows.ToList())
+            {
+                foreach (UiPanel p in w.Panels.ToList()) w.Remove(p);
+                RemoveWindow(w);
+            }
+            LayOutForScreen(screen);
+            if (editing) SetEditMode(true);
+        }
+
+        private bool LoadLayout(string json)
+        {
             if (string.IsNullOrEmpty(json)) return false;
             SavedLayout layout;
             try
@@ -981,7 +1298,7 @@ namespace Rth.Client.Ui
             {
                 UiPanel[] panels = saved.panels.Where(byId.ContainsKey).Select(id => byId[id]).Where(p => p.Window == null).ToArray();
                 if (panels.Length == 0) continue;
-                UiWindow window = CreateWindow(saved.anchor, saved.offset, saved.size, panels);
+                UiWindow window = CreateWindow(saved.anchor, saved.offset, PreferredOf(saved), panels);
                 if (saved.active != null && byId.TryGetValue(saved.active, out UiPanel active) && active.Window == window) window.Activate(active);
                 // A layout saved before windows had a tab limit: the rest open on their own.
                 foreach (UiPanel extra in panels.Skip(UiWindow.MaxTabs)) Open(extra);
@@ -992,6 +1309,10 @@ namespace Rth.Client.Ui
             return true;
         }
 
-        private void OnApplicationQuit() => SaveLayout();
+        private void OnApplicationQuit()
+        {
+            SetEditMode(false, save: false);
+            SaveLayout();
+        }
     }
 }

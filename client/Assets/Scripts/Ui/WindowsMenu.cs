@@ -8,8 +8,8 @@ namespace Rth.Client.Ui
     /// <summary>
     /// The interface menu (the button under the minimap): every window the player can show or hide,
     /// grouped into what is always on screen and the panels, each with its icon, hotkey and whether
-    /// it is showing; a click shows or hides it. Below: the interface lock and reset layout. Closes
-    /// when the pointer leaves it.
+    /// it is showing; a click shows or hides it. Below: the layout presets, layout editing, the
+    /// interface lock and reset layout. Closes when the pointer leaves it.
     /// </summary>
     public static class WindowsMenu
     {
@@ -41,7 +41,25 @@ namespace Rth.Client.Ui
             Section(ui, menu, "On screen", panels.Where(p => p.Bare || p.FixedSize.HasValue));
             Section(ui, menu, "Panels", panels.Where(p => !p.Bare && !p.FixedSize.HasValue));
 
+            // The presets: a click lays every window out that way (and Reset layout returns to it).
+            UiKit.Text(menu, "LAYOUT", "windows-menu__section");
+            VisualElement presets = UiKit.El(menu, "windows-menu__presets");
+            foreach (UiDefaultLayout.Preset preset in UiDefaultLayout.Presets)
+            {
+                UiDefaultLayout.Preset p = preset;
+                Label b = UiKit.Button(presets, p.Title, () => ui.ApplyPreset(p), "windows-menu__preset");
+                UiKit.Tooltip(b, () => p.Description);
+                b.schedule.Execute(() => b.EnableInClassList("button--on", ui.Preset == p)).Every(200);
+            }
+
             VisualElement footer = UiKit.El(menu, "windows-menu__footer");
+            Label edit = UiKit.Button(footer, "", () =>
+            {
+                ui.ToggleEditMode();
+                Close();
+            });
+            edit.schedule.Execute(() => edit.text = ui.EditMode ? "Done editing" : "Edit layout").Every(100);
+            UiKit.Tooltip(edit, () => "Every window shows its frame and handles, and stand-ins show where windows that open later (bank, shop, conversation, the fishing gauge) will go.");
             Label lockButton = UiKit.Button(footer, "", () => ui.Locked = !ui.Locked);
             lockButton.schedule.Execute(() => lockButton.text = ui.Locked ? "Unlock windows" : "Lock windows").Every(100);
             UiKit.El(footer, "spacer");

@@ -24,8 +24,13 @@ def vgradient(w, h, top, bottom):
         px[0, y] = lerp(top, bottom, y / max(1, h - 1))
     return column.resize((w, h), Image.NEAREST)
 
-def frame(name, size, radius, rim_top, rim_bottom, inner_top, inner_bottom, ornaments, outline=(5, 4, 3, 255)):
-    """A rounded frame: dark outline, bronze rim (lighter at the top), dark line, gradient body."""
+def frame(name, size, radius, rim_top, rim_bottom, inner_top, inner_bottom, ornaments, outline=(5, 4, 3, 255), studs=True):
+    """A rounded frame: dark outline, bronze rim (lighter at the top), dark line, gradient body.
+
+    Ornaments are gold angles at the corners; studs add a small diamond inside each. A frame whose
+    corners must all look alike gives the rim one colour (rim_top == rim_bottom: the gold reads the
+    same against it everywhere) and no studs (a title bar drawn over the top would hide those two).
+    """
     S = size * SS
     img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
@@ -50,6 +55,8 @@ def frame(name, size, radius, rim_top, rim_bottom, inner_top, inner_bottom, orna
             y0 = cy + sy * 2 * SS
             d.rectangle(sorted_box(x0, y0, x0 + sx * arm, y0 + sy * w), fill=gold)
             d.rectangle(sorted_box(x0, y0, x0 + sx * w, y0 + sy * arm), fill=gold)
+            if not studs:
+                continue
             # a tiny diamond stud just inside the angle
             dx, dy = x0 + sx * 3 * SS, y0 + sy * 3 * SS
             d.polygon([(dx, dy - 1.5 * SS), (dx + 1.5 * SS, dy), (dx, dy + 1.5 * SS), (dx - 1.5 * SS, dy)], fill=gold)
@@ -286,8 +293,10 @@ def save(img, name):
     img.save(os.path.join(OUT, name + ".png"))
 
 if __name__ == "__main__":
-    # Windows: slice 14. The body gradient runs dark charcoal-brown.
-    frame("window", 48, 4, (176, 144, 92, 255), (98, 78, 46, 255), (24, 22, 20, 250), (13, 12, 11, 250), True)
+    # Windows: slice 14. The body gradient runs dark charcoal-brown. The rim is one bronze all round
+    # and the corners have no studs, so all four corner angles look the same (the title bar covers
+    # the top of the frame's inside, and a rim lighter at the top made the bottom angles stand out).
+    frame("window", 48, 4, (137, 111, 69, 255), (137, 111, 69, 255), (24, 22, 20, 250), (13, 12, 11, 250), True, studs=False)
     # HUD pieces (bars, minimap, chat): slice 12, a little translucent.
     frame("hud", 40, 3, (150, 122, 78, 255), (84, 66, 38, 255), (20, 19, 17, 235), (11, 10, 9, 235), False)
     # Inner panels (cards, wells with a rim): slice 6.

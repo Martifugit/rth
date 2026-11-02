@@ -6,20 +6,23 @@ using UnityEngine.UIElements;
 namespace Rth.Client.Ui
 {
     /// <summary>
-    /// A window holding one or more panels. With one panel the title bar shows its icon and name;
-    /// with several, a strip of icon tabs (at most <see cref="MaxTabs"/>). The title bar moves the
-    /// window, any corner resizes it, and a tab (or a lone panel's icon) dragged elsewhere docks
-    /// the panel into another window or undocks it into its own; while dragging, an outline shows
-    /// where it will land. A window with a single bare panel (bars, the minimap) has no frame, just
-    /// a hover handle.
+    /// A window holding one or more panels. Its title bar shows icons only: a lone panel's icon, or a
+    /// strip of icon tabs (at most <see cref="MaxTabs"/>); the name is the icon's tooltip. The title
+    /// bar (or a lone panel's icon) moves the window, any edge or corner resizes it, and a tab pulled
+    /// out of the strip becomes a window of its own or joins another window's strip. Every drag
+    /// behaves the same: edges snap flush to the screen and to neighbours (Alt held: no snapping),
+    /// guides show the lines it sits on, and the window is drawn where it will land, so nothing
+    /// jumps on release. A window with a single bare panel (bars, the minimap) has no frame, just a
+    /// move handle at its top left corner.
     ///
     /// <b>Docked</b> windows (the HUD) never overlap each other: <see cref="WindowRules"/> resolves
     /// every move and resize against the others. <b>Floating</b> windows (the bank, a shop, the
     /// conversation) sit in a layer above, open centred, and may overlap. While the interface is
-    /// locked, nothing moves, resizes or closes.
+    /// locked (and not in layout editing), nothing moves, resizes or closes.
     ///
-    /// Position is kept relative to an anchor (a corner, an edge's middle, or the centre), so
-    /// layouts survive a change of resolution.
+    /// Position is kept relative to an anchor (a corner, an edge's middle, or the centre), and the
+    /// size the player chose is kept apart from the size the screen allows, so layouts survive a
+    /// change of resolution and a window grows back when there is room again.
     /// </summary>
     public sealed class UiWindow
     {
@@ -27,36 +30,53 @@ namespace Rth.Client.Ui
         public const int MaxTabs = 6;
         private const float TabDragThreshold = 6f;
 
+        /// <summary>
+        /// What a framed window's frame takes around its panel (Rth.uss: 3 px of window padding each
+        /// side, the 32 px title bar, 8 px of body padding each side). Panels state their content's
+        /// minimum; the window adds this.
+        /// </summary>
+        public static readonly Vector2 FrameChrome = new Vector2(3f * 2f + 8f * 2f, 3f * 2f + 32f + 8f * 2f);
+
+        /// <summary>The least content any panel gets, whatever it says.</summary>
+        private static readonly Vector2 LeastContent = new Vector2(100f, 40f);
+
+        /// <summary>Where the pointer holds a window pulled out of a tab: on its title bar, by its icon.</summary>
+        public static readonly Vector2 PullOutGrab = new Vector2(20f, 16f);
+
         private readonly UiRoot _ui;
         private readonly VisualElement _titleBar;
         private readonly VisualElement _titleIcon;
-        private readonly Label _title;
         private readonly VisualElement _tabs;
         private readonly VisualElement _close;
         private readonly VisualElement _body;
+        private readonly VisualElement _outline;
+        private readonly Label _editLabel;
         private readonly Dictionary<UiPanel, VisualElement> _tabElements = new Dictionary<UiPanel, VisualElement>();
 
         public readonly VisualElement Root;
         public readonly List<UiPanel> Panels = new List<UiPanel>();
         public UiPanel Active { get; private set; }
 
-        /// <summary>0, 0.5 or 1 on each axis: left/centre/right and top/middle/bottom.</summary>
+        /// <summary>0 to 1 on each axis: left/centre/right and top/middle/bottom.</summary>
         public Vector2 Anchor;
         /// <summary>Offset from the anchored position, in panel pixels.</summary>
         public Vector2 Offset;
+        /// <summary>The size it has now: <see cref="Preferred"/>, unless the screen is too small for it.</summary>
         public Vector2 Size;
+        /// <summary>The size the player chose (or the layout gave): kept when a small screen squeezes the window, restored when there is room.</summary>
+        public Vector2 Preferred;
 
-        private enum Gesture { None, Move, Resize }
+        private enum Gesture { None, Move, Resize, PullOut }
 
         private Gesture _gesture;
-        private WindowRules.Corner _corner;
+        private WindowRules.Edge _edges;
         private Vector2 _pointerStart;
         private WindowRules.Box _startBox;
         private WindowRules.Box _landing;
         private bool _landingFits;
+        private UiWindow _dockInto;
         private UiPanel _tabPressed;
         private Vector2 _tabPressedAt;
-        private bool _tabDragging;
 
         public bool IsBare => Panels.Count == 1 && Panels[0].Bare;
 
@@ -65,7 +85,10 @@ namespace Rth.Client.Ui
 
         public bool IsFull => Panels.Count >= MaxTabs;
 
-        /// <summary>The size every panel in it insists on, if any: the window then can't be resized.</summary>
+        /// <summary>A stand-in shown only while editing the layout (a server window, an overlay).</summary>
+        public bool IsPlaceholder => Panels.Count == 1 && Panels[0] is PlaceholderPanel;
+
+        /// <summary>The size every panel in it insists on, if any: the window then can't be resized (unless it has <see cref="AllowedSizes"/>).</summary>
         public Vector2? FixedSize
         {
             get
@@ -76,6 +99,20 @@ namespace Rth.Client.Ui
             }
         }
 
+        /// <summary>The sizes a panel in it allows (resizing snaps between them), if any.</summary>
+        public Vector2[] AllowedSizes
+        {
+            get
+            {
+                foreach (UiPanel p in Panels)
+                    if (p.AllowedSizes != null && p.AllowedSizes.Length > 0) return p.AllowedSizes;
+                return null;
+            }
+        }
+
+        /// <summary>Whether the player can resize it: free sizing, or between allowed sizes.</summary>
+        public bool Resizable => AllowedSizes != null || !FixedSize.HasValue;
+
         public UiWindow(UiRoot ui)
         {
             _ui = ui;
@@ -85,45 +122,60 @@ namespace Rth.Client.Ui
 
             _titleBar = UiKit.El(Root, "window__titlebar");
             _titleIcon = UiKit.El(_titleBar, "window__title-icon");
-            _title = UiKit.Text(_titleBar, "", "window__title");
-            _title.pickingMode = PickingMode.Ignore;
+            UiKit.Tooltip(_titleIcon, () => Panels.Count == 1 ? Panels[0].Title : null);
             _tabs = UiKit.El(_titleBar, "window__tabs");
             // Room to grab the title bar between the tabs and the close button.
             UiKit.El(_titleBar, "window__drag-space").pickingMode = PickingMode.Ignore;
             _close = UiKit.El(_titleBar, "window__button", "window__close");
             UiKit.SetIcon(_close, IconLibrary.Get("close"));
-            _close.RegisterCallback<ClickEvent>(_ => { if (!_ui.Locked) _ui.CloseWindow(this); });
+            _close.RegisterCallback<ClickEvent>(_ => { if (_ui.CanArrange && !IsPlaceholder) _ui.CloseWindow(this); });
             UiKit.Tooltip(_close, () => "Close");
             _titleBar.RegisterCallback<PointerDownEvent>(BeginMove);
 
-            // A lone panel's icon is its tab: drag it onto another window to combine them.
-            _titleIcon.RegisterCallback<PointerDownEvent>(e => { if (Panels.Count == 1) PressTab(Panels[0], e); });
-            _titleIcon.RegisterCallback<PointerMoveEvent>(DragTab);
-            _titleIcon.RegisterCallback<PointerUpEvent>(e => { if (Panels.Count == 1) ReleaseTab(_titleIcon, Panels[0], e); });
-
             _body = UiKit.El(Root, "window__body");
 
-            var grips = new List<VisualElement>();
-            foreach ((WindowRules.Corner corner, string cls) in new[]
+            // While editing the layout, the whole window is something to drag (its panel's own
+            // clicks wait until editing is done); outside editing this catcher is hidden.
+            VisualElement mover = UiKit.El(Root, "window__mover");
+            mover.RegisterCallback<PointerDownEvent>(BeginMove);
+
+            var handles = new List<VisualElement> { _titleBar, mover };
+            foreach ((WindowRules.Edge edge, string cls) in new[]
                      {
-                         (WindowRules.Corner.TopLeft, "window__grip--tl"), (WindowRules.Corner.TopRight, "window__grip--tr"),
-                         (WindowRules.Corner.BottomLeft, "window__grip--bl"), (WindowRules.Corner.BottomRight, "window__grip--br"),
+                         (WindowRules.Edge.Left, "window__grip--l"), (WindowRules.Edge.Right, "window__grip--r"),
+                         (WindowRules.Edge.Top, "window__grip--t"), (WindowRules.Edge.Bottom, "window__grip--b"),
+                         (WindowRules.Edge.TopLeft, "window__grip--tl"), (WindowRules.Edge.TopRight, "window__grip--tr"),
+                         (WindowRules.Edge.BottomLeft, "window__grip--bl"), (WindowRules.Edge.BottomRight, "window__grip--br"),
                      })
             {
-                VisualElement grip = UiKit.El(Root, "window__grip", cls);
-                WindowRules.Corner c = corner;
-                grip.RegisterCallback<PointerDownEvent>(e => BeginResize(e, c));
-                grips.Add(grip);
+                bool corner = edge == WindowRules.Edge.TopLeft || edge == WindowRules.Edge.TopRight || edge == WindowRules.Edge.BottomLeft || edge == WindowRules.Edge.BottomRight;
+                VisualElement grip = UiKit.El(Root, "window__grip", corner ? "window__grip--corner" : "window__grip--edge", cls);
+                WindowRules.Edge e = edge;
+                grip.RegisterCallback<PointerDownEvent>(ev => BeginResize(ev, e));
+                handles.Add(grip);
             }
 
+            // A frameless window's handle: a small grip of dots, faint until the pointer is near.
             VisualElement handle = UiKit.El(Root, "window__handle");
+            for (int i = 0; i < 6; i++) UiKit.El(handle, "window__handle-dot").pickingMode = PickingMode.Ignore;
             handle.RegisterCallback<PointerDownEvent>(BeginMove);
-            UiKit.Tooltip(handle, () => _ui.Locked ? null : "Drag to move");
+            UiKit.Tooltip(handle, () => _ui.CanArrange ? "Drag to move" + (Panels.Count == 1 ? ": " + Panels[0].Title : "") : null);
+            handles.Add(handle);
 
-            foreach (VisualElement e in grips.Append(_titleBar).Append(handle))
+            // Drawn over everything, never in the way: the outline while editing or while a dragged
+            // tab would join this window, and the "full" mark when it can't take another tab.
+            _outline = UiKit.El(Root, "window__outline");
+            _outline.pickingMode = PickingMode.Ignore;
+            _editLabel = UiKit.Text(_outline, "", "window__edit-label");
+            _editLabel.pickingMode = PickingMode.Ignore;
+            Label full = UiKit.Text(_outline, "FULL", "window__full");
+            full.pickingMode = PickingMode.Ignore;
+
+            foreach (VisualElement e in handles)
             {
                 e.RegisterCallback<PointerMoveEvent>(OnPointerMove);
                 e.RegisterCallback<PointerUpEvent>(OnPointerUp);
+                e.RegisterCallback<PointerCaptureOutEvent>(_ => CancelGesture());
             }
         }
 
@@ -144,8 +196,9 @@ namespace Rth.Client.Ui
             UiKit.Icon(tab, IconLibrary.Get(panel.Icon), 22f, "tab__icon").pickingMode = PickingMode.Ignore;
             UiKit.Tooltip(tab, () => panel.Title);
             tab.RegisterCallback<PointerDownEvent>(e => PressTab(panel, e));
-            tab.RegisterCallback<PointerMoveEvent>(DragTab);
-            tab.RegisterCallback<PointerUpEvent>(e => ReleaseTab(tab, panel, e));
+            tab.RegisterCallback<PointerMoveEvent>(OnPointerMove);
+            tab.RegisterCallback<PointerUpEvent>(OnPointerUp);
+            tab.RegisterCallback<PointerCaptureOutEvent>(_ => CancelGesture());
             _tabElements[panel] = tab;
 
             if (activate || Active == null) Activate(panel);
@@ -174,9 +227,9 @@ namespace Rth.Client.Ui
         {
             if (Panels.Count == 1 || _tabs.resolvedStyle.display == DisplayStyle.None)
             {
-                Rect bar = _titleBar.worldBound;
-                bool before = point.x < bar.center.x;
-                return (before ? 0 : 1, before ? bar.xMin + 4f : _title.worldBound.xMax);
+                Rect icon = _titleIcon.worldBound;
+                bool before = point.x < icon.center.x;
+                return (before ? 0 : 1, before ? icon.xMin - 2f : icon.xMax + 2f);
             }
             for (int i = 0; i < Panels.Count; i++)
             {
@@ -207,7 +260,6 @@ namespace Rth.Client.Ui
             if (panel != null) _body.Add(panel.Container);
             foreach (KeyValuePair<UiPanel, VisualElement> t in _tabElements)
                 t.Value.EnableInClassList("tab--active", t.Key == panel);
-            if (Panels.Count == 1 && panel != null) _title.text = panel.Title;
         }
 
         private void UpdateFrame()
@@ -215,39 +267,67 @@ namespace Rth.Client.Ui
             bool bare = IsBare;
             bool single = Panels.Count == 1;
             Root.EnableInClassList("window--bare", bare);
-            Root.EnableInClassList("window--fixed", FixedSize.HasValue);
+            Root.EnableInClassList("window--fixed", !Resizable);
+            Root.EnableInClassList("window--resizable", Resizable);
             Root.EnableInClassList("window--floating", IsFloating);
+            Root.EnableInClassList("window--placeholder", IsPlaceholder);
             _titleBar.style.display = bare ? DisplayStyle.None : DisplayStyle.Flex;
             _tabs.style.display = single ? DisplayStyle.None : DisplayStyle.Flex;
-            _titleIcon.style.display = _title.style.display = single ? DisplayStyle.Flex : DisplayStyle.None;
-            if (single)
-            {
-                UiKit.SetIcon(_titleIcon, IconLibrary.Get(Panels[0].Icon));
-                _title.text = Panels[0].Title;
-            }
+            _titleIcon.style.display = single ? DisplayStyle.Flex : DisplayStyle.None;
+            if (single) UiKit.SetIcon(_titleIcon, IconLibrary.Get(Panels[0].Icon));
+            // Only the edit-mode label names the window; the title bar shows icons alone.
+            _editLabel.text = string.Join(" / ", Panels.Select(p => p.Title));
             // A bare window has no frame to click: only what its panel draws catches the pointer.
             Root.pickingMode = _body.pickingMode = bare ? PickingMode.Ignore : PickingMode.Position;
         }
 
+        /// <summary>
+        /// The smallest the window may be: its panels' content minimum plus the frame around it, and
+        /// never narrower than its title bar's icons, tabs and close button need.
+        /// </summary>
         public Vector2 MinSize
         {
             get
             {
-                var min = new Vector2(120f, 80f);
-                foreach (UiPanel p in Panels) min = Vector2.Max(min, p.MinSize);
-                return min;
+                Vector2 content = LeastContent;
+                foreach (UiPanel p in Panels) content = Vector2.Max(content, p.MinSize);
+                if (IsBare) return content;
+                // Title bar: 10 px of padding, the icon (26) or the tabs (29 each), 28 px to grab, the close button (26).
+                float strip = 10f + (Panels.Count <= 1 ? 26f : Panels.Count * 29f) + 28f + 26f;
+                Vector2 framed = content + FrameChrome;
+                return new Vector2(Mathf.Max(framed.x, strip), framed.y);
             }
+        }
+
+        /// <summary>The window MinSize a lone panel would have (for a tab pulled out into a window of its own).</summary>
+        public static Vector2 MinSizeFor(UiPanel panel)
+        {
+            Vector2 content = Vector2.Max(LeastContent, panel.MinSize);
+            return panel.Bare ? content : new Vector2(Mathf.Max(content.x + FrameChrome.x, 90f), content.y + FrameChrome.y);
         }
 
         // ------------------------------------------------------------------ placement
 
-        /// <summary>Puts the window where its anchor and offset say, kept on screen.</summary>
+        /// <summary>The size the window takes on a screen: its chosen size, as the panel's rules and the screen allow.</summary>
+        private Vector2 SizeFor(Vector2 screen)
+        {
+            Vector2[] allowed = AllowedSizes;
+            if (allowed != null)
+            {
+                (float w, float h) = WindowRules.NearestSize(Preferred.x, Preferred.y, allowed.Select(s => (s.x, s.y)).ToList(), screen.x, screen.y);
+                return new Vector2(w, h);
+            }
+            if (FixedSize.HasValue) return FixedSize.Value;
+            return Vector2.Max(MinSize, Vector2.Min(Preferred, screen));
+        }
+
+        /// <summary>Puts the window where its anchor and offset say, at the size the screen allows, kept on screen.</summary>
         public void Apply(Vector2 screen)
         {
-            Size = FixedSize ?? Vector2.Max(MinSize, Vector2.Min(Size, screen));
+            Size = SizeFor(screen);
             Vector2 pos = new Vector2(Anchor.x * (screen.x - Size.x), Anchor.y * (screen.y - Size.y)) + Offset;
-            pos.x = Mathf.Clamp(pos.x, 0f, Mathf.Max(0f, screen.x - Size.x));
-            pos.y = Mathf.Clamp(pos.y, 0f, Mathf.Max(0f, screen.y - Size.y));
+            pos.x = Mathf.Round(Mathf.Clamp(pos.x, 0f, Mathf.Max(0f, screen.x - Size.x)));
+            pos.y = Mathf.Round(Mathf.Clamp(pos.y, 0f, Mathf.Max(0f, screen.y - Size.y)));
             Place(pos);
         }
 
@@ -267,11 +347,18 @@ namespace Rth.Client.Ui
 
         public WindowRules.Box Box => new WindowRules.Box(Position.x, Position.y, Size.x, Size.y);
 
-        /// <summary>Moves the window to a box (position and size) and re-anchors it there.</summary>
+        /// <summary>Moves the window to a box (position and size), takes that size as the one chosen, and re-anchors it there.</summary>
         public void SetBox(WindowRules.Box box, Vector2 screen)
         {
-            Size = new Vector2(box.W, box.H);
+            Size = Preferred = new Vector2(box.W, box.H);
             Reanchor(screen, new Vector2(box.X, box.Y));
+            Apply(screen);
+        }
+
+        /// <summary>Moves the window without touching the size chosen for it (settling a layout).</summary>
+        public void MoveTo(Vector2 position, Vector2 screen)
+        {
+            Reanchor(screen, position);
             Apply(screen);
         }
 
@@ -289,16 +376,16 @@ namespace Rth.Client.Ui
 
         private void BeginMove(PointerDownEvent e)
         {
-            if (_ui.Locked || e.button != 0) return;
+            if (!_ui.CanArrange || e.button != 0) return;
             // Buttons and tabs in the title bar get their own clicks: don't start a move on them.
             if (e.target is VisualElement target && (target.ClassListContains("window__button") || target.ClassListContains("tab"))) return;
             StartGesture(Gesture.Move, e);
         }
 
-        private void BeginResize(PointerDownEvent e, WindowRules.Corner corner)
+        private void BeginResize(PointerDownEvent e, WindowRules.Edge edges)
         {
-            if (_ui.Locked || e.button != 0 || FixedSize.HasValue) return;
-            _corner = corner;
+            if (!_ui.CanArrange || e.button != 0 || !Resizable) return;
+            _edges = edges;
             StartGesture(Gesture.Resize, e);
         }
 
@@ -309,53 +396,124 @@ namespace Rth.Client.Ui
             _startBox = Box;
             _landing = _startBox;
             _landingFits = true;
+            _dockInto = null;
             ((VisualElement)e.currentTarget).CapturePointer(e.pointerId);
             e.StopPropagation();
         }
 
         private void OnPointerMove(PointerMoveEvent e)
         {
-            if (_gesture == Gesture.None) return;
-            Vector2 screen = _ui.ScreenSize;
-            Vector2 delta = (Vector2)e.position - _pointerStart;
-            List<WindowRules.Box> others = _ui.ObstaclesFor(this);
-            var guides = new List<WindowRules.Guide>();
-            if (_gesture == Gesture.Move)
+            if (_tabPressed != null && _gesture == Gesture.None)
             {
-                WindowRules.Box moved = _startBox.At(_startBox.X + delta.x, _startBox.Y + delta.y);
-                WindowRules.Box snapped = WindowRules.Snap(moved, _ui.SnapTargetsFor(this), screen.x, screen.y, guides);
-                WindowRules.Box? free = IsFloating ? WindowRules.Clamp(snapped, screen.x, screen.y) : WindowRules.NearestFree(snapped, others, screen.x, screen.y);
-                // Flush beside a neighbour, a resizable window takes its height (or width): easy alignment.
-                if (free.HasValue && !IsFloating && !FixedSize.HasValue)
-                {
-                    Vector2 min = MinSize;
-                    free = WindowRules.MatchNeighbour(free.Value, others, min.x, min.y, screen.x, screen.y);
-                }
-                _landingFits = free.HasValue;
-                _landing = free ?? _startBox;
-                // The window follows the pointer; the outline shows where it will settle.
-                Place(new Vector2(snapped.X, snapped.Y));
+                // A tab pressed in a strip of several: pulled far enough, it comes out.
+                if (!_ui.CanArrange || ((Vector2)e.position - _tabPressedAt).magnitude <= TabDragThreshold) return;
+                _gesture = Gesture.PullOut;
+            }
+            if (_gesture == Gesture.None) return;
+            Vector2 at = e.position;
+            Vector2 screen = _ui.ScreenSize;
+            float snap = _ui.SnapDistance(e.altKey);
+            Vector2 delta = at - _pointerStart;
+
+            if (_gesture == Gesture.Resize)
+            {
+                Resize(delta, snap, screen);
+                return;
+            }
+
+            if (_gesture == Gesture.PullOut)
+            {
+                // A window of the panel's own size, held by its title bar, wherever the pointer goes.
+                UiPanel panel = _tabPressed;
+                _ui.ShowDragGhost(panel.Title, IconLibrary.Get(panel.Icon), UiKit.IconTint, at);
+                if (_ui.PreviewDock(panel, at, null)) return;
+                Vector2 size = _ui.OwnSize(panel);
+                var wanted = new WindowRules.Box(at.x - PullOutGrab.x, at.y - PullOutGrab.y, size.x, size.y);
+                (_landing, _landingFits) = _ui.Land(null, wanted, panel.Floating, snap, out List<WindowRules.Guide> pullGuides);
+                _ui.ShowLanding(_landing, _landingFits, _landingFits ? null : "No room here", pullGuides);
+                return;
+            }
+
+            // Moving the window: a lone panel's window may also join another window's tab strip.
+            if (Panels.Count == 1 && _ui.PreviewDock(Panels[0], at, this))
+            {
+                _dockInto = _ui.DockTarget;
+                Root.style.opacity = 0.5f;
+                Place(new Vector2(_startBox.X, _startBox.Y));
+                return;
+            }
+            _dockInto = null;
+            Root.style.opacity = StyleKeyword.Null;
+            WindowRules.Box moved = _startBox.At(_startBox.X + delta.x, _startBox.Y + delta.y);
+            (_landing, _landingFits) = _ui.Land(this, moved, IsFloating, snap, out List<WindowRules.Guide> guides);
+            if (_landingFits)
+            {
+                // Drawn where it will land: letting go changes nothing.
+                Place(new Vector2(_landing.X, _landing.Y));
+                _ui.ShowGuides(guides);
             }
             else
             {
-                Vector2 min = MinSize;
-                _landing = WindowRules.Resize(_startBox, _corner, delta.x, delta.y, min.x, min.y,
-                    IsFloating ? new List<WindowRules.Box>() : others, screen.x, screen.y);
-                _landingFits = true;
-                Size = new Vector2(_landing.W, _landing.H);
-                Place(new Vector2(_landing.X, _landing.Y));
+                // Nowhere to go here: it follows the pointer, outlined red, and goes back if let go.
+                WindowRules.Box free = WindowRules.Clamp(moved, screen.x, screen.y);
+                Place(new Vector2(free.X, free.Y));
+                _ui.ShowLanding(free, false, "No room here", null);
             }
-            _ui.ShowLanding(_landing, _landingFits, null, guides);
+        }
+
+        private void Resize(Vector2 delta, float snap, Vector2 screen)
+        {
+            List<WindowRules.Box> others = IsFloating ? new List<WindowRules.Box>() : _ui.ObstaclesFor(this);
+            Vector2[] allowed = AllowedSizes;
+            Vector2 min = allowed != null ? new Vector2(allowed.Min(s => s.x), allowed.Min(s => s.y)) : MinSize;
+            WindowRules.Box box = WindowRules.Resize(_startBox, _edges, delta.x, delta.y, min.x, min.y, others, screen.x, screen.y, snap);
+            if (allowed != null)
+                box = WindowRules.NearestAllowed(_startBox, box, _edges, allowed.Select(s => (s.x, s.y)).ToList(), others, screen.x, screen.y);
+            _landing = box;
+            _landingFits = true;
+            Size = new Vector2(box.W, box.H);
+            Place(new Vector2(box.X, box.Y));
+            _ui.ShowGuides(WindowRules.Contacts(box, _ui.SnapTargetsFor(this), screen.x, screen.y));
         }
 
         private void OnPointerUp(PointerUpEvent e)
         {
-            if (_gesture == Gesture.None) return;
-            ((VisualElement)e.currentTarget).ReleasePointer(e.pointerId);
+            // State first: letting the pointer go may report a lost capture, which must find nothing to undo.
+            Gesture gesture = _gesture;
+            UiPanel tab = _tabPressed;
             _gesture = Gesture.None;
+            _tabPressed = null;
+            ((VisualElement)e.currentTarget).ReleasePointer(e.pointerId);
+            Root.style.opacity = StyleKeyword.Null;
+            _ui.HideDragGhost();
             _ui.HideLanding();
-            SetBox(_landingFits ? _landing : _startBox, _ui.ScreenSize);
-            _ui.SaveLayout();
+            switch (gesture)
+            {
+                case Gesture.PullOut:
+                    _ui.DropPanel(tab, e.position, _landingFits ? _landing : (WindowRules.Box?)null);
+                    return;
+                case Gesture.Move when _dockInto != null && Panels.Count == 1:
+                    _ui.DropPanel(Panels[0], e.position, null);
+                    return;
+                case Gesture.Move:
+                case Gesture.Resize:
+                    SetBox(_landingFits ? _landing : _startBox, _ui.ScreenSize);
+                    _ui.SaveLayout();
+                    return;
+            }
+        }
+
+        /// <summary>A gesture lost the pointer (focus left, the window closed): put everything back.</summary>
+        private void CancelGesture()
+        {
+            if (_gesture == Gesture.None && _tabPressed == null) return;
+            bool moved = _gesture == Gesture.Move || _gesture == Gesture.Resize;
+            _gesture = Gesture.None;
+            _tabPressed = null;
+            Root.style.opacity = StyleKeyword.Null;
+            _ui.HideDragGhost();
+            _ui.HideLanding();
+            if (moved) SetBox(_startBox, _ui.ScreenSize);
         }
 
         // ------------------------------------------------------------------ tabs: click, pull out, dock
@@ -366,36 +524,28 @@ namespace Rth.Client.Ui
             Activate(panel);
             _tabPressed = panel;
             _tabPressedAt = e.position;
-            _tabDragging = false;
+            _gesture = Gesture.None;
+            _landingFits = false;
             ((VisualElement)e.currentTarget).CapturePointer(e.pointerId);
             e.StopPropagation();
-        }
-
-        private void DragTab(PointerMoveEvent e)
-        {
-            if (_tabPressed == null || _ui.Locked) return;
-            if (!_tabDragging && ((Vector2)e.position - _tabPressedAt).magnitude > TabDragThreshold) _tabDragging = true;
-            if (!_tabDragging) return;
-            _ui.ShowDragGhost(_tabPressed.Title, IconLibrary.Get(_tabPressed.Icon), UiKit.IconTint, e.position);
-            _ui.PreviewPanelDrop(_tabPressed, e.position);
-        }
-
-        private void ReleaseTab(VisualElement tab, UiPanel panel, PointerUpEvent e)
-        {
-            tab.ReleasePointer(e.pointerId);
-            bool dragged = _tabDragging;
-            _tabPressed = null;
-            _tabDragging = false;
-            _ui.HideDragGhost();
-            _ui.HideLanding();
-            if (dragged) _ui.DropPanel(panel, e.position);
         }
 
         /// <summary>Whether a point (panel space) is over this window's title bar, where panels can be dropped.</summary>
         public bool AcceptsDropAt(Vector2 point) => !IsBare && _titleBar.worldBound.Contains(point);
 
+        /// <summary>Whether this window could take <paramref name="panel"/> as another tab, if it had room.</summary>
+        public bool CouldDock(UiPanel panel) =>
+            !IsBare && !IsPlaceholder && Resizable && AllowedSizes == null && FixedSize == null
+            && !panel.FixedSize.HasValue && panel.AllowedSizes == null && !panel.Bare && !(panel is PlaceholderPanel) && IsFloating == panel.Floating;
+
         /// <summary>Whether this window can take <paramref name="panel"/> as another tab.</summary>
-        public bool CanDock(UiPanel panel) =>
-            !IsBare && !IsFull && !FixedSize.HasValue && !panel.FixedSize.HasValue && !panel.Bare && IsFloating == panel.Floating;
+        public bool CanDock(UiPanel panel) => !IsFull && CouldDock(panel);
+
+        /// <summary>Marks the window as where a dragged tab would go (an outline that changes nothing's size), or as full.</summary>
+        public void MarkDockTarget(bool on, bool full)
+        {
+            Root.EnableInClassList("window--dock-target", on && !full);
+            Root.EnableInClassList("window--full", on && full);
+        }
     }
 }
