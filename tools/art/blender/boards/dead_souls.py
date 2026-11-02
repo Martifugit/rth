@@ -1,6 +1,8 @@
-r"""The souls board: the four directions for the shades of the long way back side by side, beside the player
-for scale, on the realm's dark ash, each labelled, for the owner to pick from. The old Shade stands at
-the end of the row for comparison. It makes nothing of its own and exports nothing.
+r"""The souls board: the dead of the long way back the owner picked, side by side beside the player for
+scale, on the realm's dark ash, each labelled: the wraith (the shades, the drifting dead who strike
+those who come close) and the burdened (the walker, who hands travellers back their belongings). The
+other two directions (shade_faded, shade_mourner) and the old Shade stay in the folder, off the board.
+It makes nothing of its own and exports nothing.
 
     import runpy; runpy.run_path(r"C:\dev\rth\tools\art\blender\boards\dead_souls.py")
 """
@@ -20,16 +22,13 @@ if __name__ in ("__main__", "<run_path>"):          # run as a script: pick up e
 import rth_art as A  # noqa: E402
 from artlib import family  # noqa: E402
 import artlib.nature as N  # noqa: E402
-from assets.creatures.dead import shade, shade_burdened, shade_faded, shade_mourner, shade_wraith  # noqa: E402
+from assets.creatures.dead import shade_burdened, shade_wraith  # noqa: E402
 
 GROUND = "Lava"                         # the realm's dark ash
-SPACING = 3.0                           # between the variants along X
+SPACING = 3.2                           # between the models along X
 ROW = [                                 # (name, builder, label)
-    ("ShadeFaded", shade_faded.build, "A  Faded soldier"),
-    ("ShadeWraith", shade_wraith.build, "B  Wraith"),
-    ("ShadeBurdened", shade_burdened.build, "C  Burdened"),
-    ("ShadeMourner", shade_mourner.build, "D  Mourner"),
-    ("Shade", shade.build, "old Shade"),
+    ("ShadeWraith", shade_wraith.build, "Shade (wraith)"),
+    ("ShadeBurdened", shade_burdened.build, "Walker (burdened)"),
 ]
 
 
@@ -69,8 +68,8 @@ def build():
 
 def rig():
     n = len(ROW)
-    mid = (SPACING * (n - 1)) / 2 + 0.5 - 1.0
-    A.preview_rig(focus=(mid, 0.0, 0.9), distance=15.0, pitch=40, yaw=-12, ground=0, human=True,
+    mid = (SPACING * (n - 1)) / 2 + 0.5 - 0.6
+    A.preview_rig(focus=(mid, 0.0, 0.9), distance=11.0, pitch=40, yaw=-12, ground=0, human=True,
                   human_at=(-1.8, 0.0))
     world = bpy.context.scene.world
     world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.05, 0.08, 0.09, 1)   # the realm's dark
