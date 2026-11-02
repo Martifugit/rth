@@ -1,0 +1,189 @@
+{
+  "area": "tolling",
+  "note": "Wennow reshaped (1.4, 2026-11-02): the generator's round blob becomes a broad mere lying along the valley from the river's mouth (north-west) to where the Wenn leaves (south-east), with a slim arm reaching north towards Palmerway (the narrow between the mere and the heath), a bay on the south shore by s-wennow-south, a reedy corner at the outlet and reeds at the river's mouth. The old water outside the new outline and the old sand rim become the land round them, easing up from the new shore. Applied once with `tools/world strokes world/strokes/tolling-wennow.json`; the tiles are the truth afterwards.",
+  "shapes": [
+    {
+      "id": "wennow",
+      "water": true,
+      "ground": "lake",
+      "level": 0.1,
+      "seed": 61,
+      "ragged": 1.8,
+      "points": [
+        [
+          75.4,
+          9.0
+        ],
+        [
+          82.7,
+          14.2
+        ],
+        [
+          91.6,
+          20.1
+        ],
+        [
+          99.9,
+          15.8
+        ],
+        [
+          109.3,
+          16.9
+        ],
+        [
+          118.9,
+          15.4
+        ],
+        [
+          126.0,
+          16.3
+        ],
+        [
+          133.3,
+          7.6
+        ],
+        [
+          141.2,
+          1.8
+        ],
+        [
+          148.3,
+          -7.7
+        ],
+        [
+          137.8,
+          -13.8
+        ],
+        [
+          127.7,
+          -17.8
+        ],
+        [
+          118.3,
+          -18.9
+        ],
+        [
+          109.7,
+          -26.6
+        ],
+        [
+          100.9,
+          -21.2
+        ],
+        [
+          94.1,
+          -10.6
+        ],
+        [
+          86.3,
+          -4.3
+        ],
+        [
+          79.7,
+          0.5
+        ]
+      ],
+      "drain": [
+        "lake"
+      ],
+      "drainGrounds": [
+        "sand"
+      ],
+      "drainReach": 26,
+      "shoreReach": 3,
+      "beachWidth": 1.5,
+      "shore": [
+        {
+          "ground": "reeds",
+          "share": 0.62,
+          "scale": 4,
+          "rect": [
+            132,
+            -24,
+            156,
+            -1
+          ]
+        },
+        {
+          "ground": "reeds",
+          "share": 0.4,
+          "scale": 3,
+          "rect": [
+            68,
+            -2,
+            86,
+            18
+          ]
+        },
+        {
+          "ground": "sand",
+          "share": 0.5,
+          "scale": 3,
+          "rect": [
+            100,
+            -34,
+            118,
+            -22
+          ]
+        },
+        {
+          "ground": "meadow",
+          "share": 0.35,
+          "scale": 5
+        }
+      ]
+    },
+    {
+      "id": "wennow-arm",
+      "water": true,
+      "ground": "lake",
+      "level": 0.1,
+      "seed": 62,
+      "ragged": 1.3,
+      "points": [
+        [
+          112,
+          14
+        ],
+        [
+          110,
+          22
+        ],
+        [
+          109,
+          29
+        ],
+        [
+          112,
+          35
+        ],
+        [
+          117,
+          37
+        ],
+        [
+          121,
+          33
+        ],
+        [
+          121,
+          25
+        ],
+        [
+          124,
+          15
+        ]
+      ],
+      "drain": [],
+      "shoreReach": 3,
+      "beachWidth": 1.5,
+      "shore": [
+        {
+          "ground": "meadow",
+          "share": 0.3,
+          "scale": 5
+        }
+      ]
+    }
+  ]
+}

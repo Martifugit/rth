@@ -75,6 +75,10 @@ namespace Rth.Shared.World.Ground
         public string Ground = "";
         public float Share = 0.3f;
         public float Scale = 6f;
+        /// <summary>Only within [x0, y0, x1, y1) (none: anywhere); read by a water shape's shore.</summary>
+        public int[]? Rect;
+
+        public bool Holds(int x, int y) => Rect == null || x >= Rect[0] && y >= Rect[1] && x < Rect[2] && y < Rect[3];
     }
 
     /// <summary>
@@ -116,6 +120,21 @@ namespace Rth.Shared.World.Ground
         public int[]? Clear;
         public List<string> ClearGrounds = new List<string>();
         public string ClearTo = "lake";
+
+        // A body of water instead of land (a mere, a pond, a bay): "water": true.
+
+        /// <summary>The outline is water in <see cref="Ground"/> (a lake), its surface level at <see cref="Level"/> (or the lowest water near it).</summary>
+        public bool Water;
+        public float? Level;
+        /// <summary>Water: the old water of these grounds outside the new outline, within <see cref="DrainReach"/> tiles of it, becomes land.</summary>
+        public List<string> Drain = new List<string>();
+        /// <summary>Water: grounds of the old shore (a sand rim) within <see cref="DrainReach"/>, given the land round them (<see cref="Shore"/> may paint some back).</summary>
+        public List<string> DrainGrounds = new List<string>();
+        public float DrainReach = 12f;
+        /// <summary>Water: how far, in tiles, the land eases down to the new shore.</summary>
+        public float ShoreReach = 3f;
+        /// <summary>Water: patches along the new shore (reeds, a little beach), within <see cref="BeachWidth"/> tiles of the water; each may be held to a rect.</summary>
+        public List<Scatter> Shore = new List<Scatter>();
     }
 
     public sealed class GroundSwap
@@ -360,6 +379,7 @@ namespace Rth.Shared.World.Ground
                 sh.Ragged * (0.7f * LandNoise.Value(sh.Seed, x / 5f, y / 5f) + 0.3f * LandNoise.Value(sh.Seed + 1, x / 2.2f, y / 2.2f));
             int x0 = (int)Math.Floor(outline.Min(p => p[0]) - sh.Ragged - 2), x1 = (int)Math.Ceiling(outline.Max(p => p[0]) + sh.Ragged + 2);
             int y0 = (int)Math.Floor(outline.Min(p => p[1]) - sh.Ragged - 2), y1 = (int)Math.Ceiling(outline.Max(p => p[1]) + sh.Ragged + 2);
+            if (sh.Water) return FillWater(g, sh, Edge, x0, y0, x1, y1);
 
             // The water's level round it: the lowest corner of water near it.
             float level = float.NaN;
@@ -428,6 +448,99 @@ namespace Rth.Shared.World.Ground
                 land++;
             }
             return $"{sh.Id}: {land} tiles ({beach} beach, {rock} rock), {cleared} old tiles cleared, water at {level:0.00}.";
+        }
+
+        /// <summary>
+        /// A body of water from the outline: inside it is water at one level; the old water of the
+        /// <see cref="GroundShape.Drain"/> grounds outside it (and an old shore rim left away from the
+        /// water) becomes the land round it, its ground rising smoothly from the new shore to the land
+        /// that was never touched; then patches along the new shore.
+        /// </summary>
+        private static string FillWater(Grid g, GroundShape sh, Func<float, float, float> edge, int x0, int y0, int x1, int y1)
+        {
+            if (!g.Has(sh.Ground) || !g.IsWater(sh.Ground)) return $"{sh.Id}: '{sh.Ground}' is not a water ground.";
+            int reach = (int)Math.Ceiling(sh.DrainReach);
+            float level = float.NaN;
+            if (sh.Level is float fixedLevel) level = fixedLevel;
+            else
+                for (int y = y0 - 3; y < y1 + 3; y++)
+                    for (int x = x0 - 3; x < x1 + 3; x++)
+                        if (g.IsWater(g.GroundAt(x, y)) && g.Corner(x, y) is float h && (float.IsNaN(level) || h < level)) level = h;
+            if (float.IsNaN(level)) level = 0f;
+
+            var wet = new HashSet<(int, int)>();
+            for (int y = y0; y < y1; y++)
+                for (int x = x0; x < x1; x++)
+                    if (edge(x + 0.5f, y + 0.5f) > 0f && g.GroundAt(x, y) != null) wet.Add((x, y));
+            var drain = new HashSet<string>(sh.Drain);
+            var dried = new HashSet<(int, int)>();
+            for (int y = y0 - reach; y < y1 + reach; y++)
+                for (int x = x0 - reach; x < x1 + reach; x++)
+                    if (!wet.Contains((x, y)) && g.GroundAt(x, y) is string id && drain.Contains(id) && edge(x + 0.5f, y + 0.5f) > -sh.DrainReach)
+                        dried.Add((x, y));
+
+            foreach ((int x, int y) in wet) g.Set(x, y, sh.Ground);
+            var erase = new HashSet<string>(drain) { sh.Ground };
+            erase.UnionWith(sh.DrainGrounds);
+            g.Fill(dried, erase);
+            // The old shore's rim.
+            var rim = new HashSet<string>(sh.DrainGrounds);
+            var stranded = new HashSet<(int, int)>();
+            for (int y = y0 - reach; y < y1 + reach; y++)
+                for (int x = x0 - reach; x < x1 + reach; x++)
+                    if (g.GroundAt(x, y) is string id && rim.Contains(id) && edge(x + 0.5f, y + 0.5f) > -sh.DrainReach) stranded.Add((x, y));
+            g.Fill(stranded, erase);
+            dried.UnionWith(stranded);
+
+            // Heights: the water level; the land round what changed relaxed smoothly between it and the land beyond.
+            const float bank = 0.12f;
+            bool TouchesWater(int cx, int cy) =>
+                g.IsWater(g.GroundAt(cx - 1, cy - 1)) || g.IsWater(g.GroundAt(cx, cy - 1)) || g.IsWater(g.GroundAt(cx - 1, cy)) || g.IsWater(g.GroundAt(cx, cy));
+            foreach ((int x, int y) in wet)
+                foreach (var c in new[] { (x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1) }) g.SetCorner(c.Item1, c.Item2, level);
+            int sr = Math.Max(1, (int)Math.Ceiling(sh.ShoreReach));
+            var free = new HashSet<(int, int)>();
+            foreach ((int x, int y) in wet.Concat(dried))
+                for (int j = -sr; j <= sr + 1; j++)
+                    for (int i = -sr; i <= sr + 1; i++)
+                    {
+                        int cx = x + i, cy = y + j;
+                        if (!free.Contains((cx, cy)) && !TouchesWater(cx, cy) && g.Corner(cx, cy) != null &&
+                            g.GroundAt(cx - 1, cy - 1) != null && g.GroundAt(cx, cy - 1) != null && g.GroundAt(cx - 1, cy) != null && g.GroundAt(cx, cy) != null)
+                            free.Add((cx, cy));
+                    }
+            var h0 = new Dictionary<(int, int), float>();
+            foreach ((int cx, int cy) in free)
+                foreach (var c in new[] { (cx, cy), (cx + 1, cy), (cx - 1, cy), (cx, cy + 1), (cx, cy - 1) })
+                    if (!h0.ContainsKey(c) && g.Corner(c.Item1, c.Item2) is float h) h0[c] = h;
+            foreach (var c in free) h0[c] = Math.Max(h0[c], level + bank);
+            var order = free.OrderBy(c => c.Item2).ThenBy(c => c.Item1).ToList();
+            for (int pass = 0; pass < 400; pass++)
+                foreach (var c in order)
+                {
+                    float sum = 0f;
+                    int n = 0;
+                    foreach (var o in new[] { (c.Item1 + 1, c.Item2), (c.Item1 - 1, c.Item2), (c.Item1, c.Item2 + 1), (c.Item1, c.Item2 - 1) })
+                        if (h0.TryGetValue(o, out float v)) { sum += v; n++; }
+                    if (n > 0) h0[c] = Math.Max(level + bank, sum / n);
+                }
+            foreach (var c in order) g.SetCorner(c.Item1, c.Item2, h0[c]);
+
+            // Patches along the shore.
+            int bw = Math.Max(1, (int)Math.Ceiling(sh.BeachWidth)), shore = 0;
+            for (int y = y0 - reach; y < y1 + reach; y++)
+                for (int x = x0 - reach; x < x1 + reach; x++)
+                {
+                    if (!(g.GroundAt(x, y) is string id) || !g.IsNatural(id) || !g.WaterWithin(x, y, bw)) continue;
+                    for (int k = 0; k < sh.Shore.Count; k++)
+                    {
+                        Scatter s = sh.Shore[k];
+                        if (!s.Holds(x, y) || !g.Has(s.Ground) || !Patch(sh.Seed + 40 + k, x, y, s)) continue;
+                        if (g.Set(x, y, s.Ground)) shore++;
+                        break;
+                    }
+                }
+            return $"{sh.Id}: {wet.Count} tiles of water at {level:0.00}, {dried.Count} tiles dried to land, {free.Count} corners eased, {shore} shore tiles.";
         }
 
         private static bool InsidePolygon(List<float[]> poly, float x, float y)
