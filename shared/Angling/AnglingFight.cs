@@ -77,7 +77,7 @@ namespace Rth.Shared.Angling
         /// <summary>Tuning: tension per step reeling and giving line; energy a correct pull drains; reeling speed (hundredths of a unit a step) and how much of it reaches a fresh fish (per thousand).</summary>
         public const int TensionReel = 5, TensionGive = 6, DrainCounter = 16, ReelUnits = 300, FreshReel = 250, SlackDrift = 25, RunUnits = 500, RunTire = 7;
         /// <summary>A rod's snapBuffer and a hook's hookHold are counted in these many steps each, so people (not just bots) can keep up.</summary>
-        public const int RedStepsPerBuffer = 2, SlackStepsPerHold = 3;
+        public const int RedStepsPerBuffer = 2, SlackStepsPerHold = 5;
 
         private readonly AnglingFightDef _def;
         private readonly AnglingRigStats _rig;
@@ -131,6 +131,12 @@ namespace Rth.Shared.Angling
         public int RunSteps { get; private set; }
         public int JumpCount { get; private set; }
         public int LatchSteps { get; private set; }
+
+        /// <summary>How close the line is to snapping, per thousand (0: not in the red).</summary>
+        public int SnapDanger => _redRun * 1000 / Math.Max(1, Math.Max(1, _rig.SnapBuffer) * RedStepsPerBuffer);
+
+        /// <summary>How close the hook is to pulling free from slack, per thousand (0: the line isn't slack).</summary>
+        public int SlackDanger => _slackRun * 1000 / Math.Max(1, Math.Max(1, _rig.HookHold) * SlackStepsPerHold);
 
         // ------------------------------------------------------------------ randomness (xorshift32: the same everywhere)
 

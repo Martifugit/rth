@@ -312,6 +312,9 @@ namespace Rth.Server.Game
         private bool _started;
         private bool _hooked;
         private uint _biteAt;
+        private uint _nextAnimation;
+        /// <summary>Ticks between plays of the fishing animation (as an ordinary spot's attempts: 3 s).</summary>
+        private const int AnimationTicks = 5;
 
         public AnglingCastInteraction(PlacedObject spot) : base(spot) { }
 
@@ -328,7 +331,11 @@ namespace Rth.Server.Game
             AnglingSpotSystem spots = world.Get<AnglingSpotSystem>();
             AnglingSpotSystem.Spot? spot = spots.SpotAt(Object);
             if (spot == null) return false;
-            if (angling.Of(player).Fight != null) return true;     // fighting: the client's inputs drive it
+            if (angling.Of(player).Fight != null)
+            {
+                Animate(world, player);
+                return true;     // fighting: the client's inputs drive it
+            }
             if (_hooked) return false;                              // the fight is over: one fish a cast
             AnglingFile rules = world.Content.Angling;
             if (!_started || _biteAt == 0)
@@ -348,7 +355,8 @@ namespace Rth.Server.Game
                 }
                 _started = true;
                 _biteAt = world.CurrentTick + (uint)world.Random.Next(rules.BiteMinTicks, rules.BiteMaxTicks + 1);
-                world.Animate(player, "fish_rod", Object.Tile);
+                _nextAnimation = 0;
+                Animate(world, player);
                 return true;
             }
             if (!spots.Workable(player, spot))
@@ -356,10 +364,22 @@ namespace Rth.Server.Game
                 world.Tell(player, TextKind.Info, spot.Active ? "The fish here have grown wary of you." : "The ripples die away. The fish have moved on.");
                 return false;
             }
-            if (world.CurrentTick < _biteAt) return true;
+            if (world.CurrentTick < _biteAt)
+            {
+                Animate(world, player);
+                return true;
+            }
             _hooked = true;
             angling.Hook(player, spot);
             return true;
+        }
+
+        /// <summary>The fishing animation, again every few ticks, so the angler keeps fishing as long as this lasts.</summary>
+        private void Animate(World world, Player player)
+        {
+            if (world.CurrentTick < _nextAnimation) return;
+            _nextAnimation = world.CurrentTick + AnimationTicks;
+            world.Animate(player, "fish_rod", Object.Tile);
         }
     }
 }

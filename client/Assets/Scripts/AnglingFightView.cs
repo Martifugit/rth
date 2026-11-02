@@ -53,8 +53,8 @@ namespace Rth.Client
         /// pull; past each further one, a harder pull (1, 2, then 3, the hardest).
         /// </summary>
         private static readonly float[] PullSteps = { 0.03f, 0.09f, 0.17f };
-        /// <summary>How far out a hooked fish starts, at least (tiles), so it is seen coming in.</summary>
-        private const float FarOut = 5f;
+        /// <summary>How far out a hooked fish starts at the least (tiles): where it bit, unless that's at your feet.</summary>
+        private const float NearestStart = 2.5f;
         /// <summary>How far to each side a fish swings (tiles).</summary>
         private const float Swing = 2.2f;
 
@@ -170,7 +170,7 @@ namespace Rth.Client
             {
                 _hinted = true;
                 session.AddLog(TextKind.Info, SteerWithMouse
-                    ? "Fish on! Hold Space to reel. Move the cursor the way the arrows on the fish's bar point, against where it pulls the line; they turn green when you have it. When the bar's edge flashes red, let go of Space, and let go before the line turns red."
+                    ? "Fish on! Hold Space to reel, and move the cursor the way the arrows on the fish's gauge point (they turn green when you have it). Watch the frame: flashing red, the line is about to snap, so let go; flashing pale blue, the line is slack and the hook will pull free, so reel. The lower bar fills as the fish comes in; full, it's landed."
                     : "Fish on! Hold Space to reel; let go when the line turns red, when it runs, and when it leaps.");
             }
         }
@@ -472,8 +472,7 @@ namespace Rth.Client
             float depthTarget = move == AnglingMove.Dive || move == AnglingMove.Latch ? 1f : 0f;
             _depth = Mathf.MoveTowards(_depth, depthTarget, dt * 1.8f);
             float out01 = Mathf.Clamp((float)_fight.Distance / Mathf.Max(1, _fight.Distance0), 0f, 3f);
-            // It bites well out (at least FarOut tiles), so reeling it in is something you watch happen.
-            float far = Mathf.Max(reach, FarOut);
+            float far = Mathf.Max(reach, NearestStart);
             float along = Mathf.Max(0.9f, 0.9f + out01 * (far - 0.9f));
             Vector3 target = player + forward * along + right * (_lateral * Mathf.Clamp01(out01 + 0.25f));
             target.y = _water;
@@ -522,7 +521,7 @@ namespace Rth.Client
                 _line.SetPosition(i, p);
                 _outline.SetPosition(i, p);
             }
-            Color c = slack ? new Color(0.78f, 0.78f, 0.78f, 0.9f)
+            Color c = slack ? Flash(new Color(0.7f, 0.75f, 0.8f, 0.9f), new Color(0.6f, 0.85f, 1f, 1f), 4f + 16f * _fight.SlackDanger / 1000f)
                 : tension < AnglingFight.ComfortLow / 1000f ? new Color(0.92f, 0.92f, 0.85f, 1f)
                 : tension <= AnglingFight.ComfortHigh / 1000f ? new Color(0.45f, 0.95f, 0.45f, 1f)
                 : red ? Color.Lerp(new Color(1f, 0.2f, 0.12f, 1f), Color.white, 0.25f + 0.25f * Mathf.Sin(t * 18f))
@@ -585,7 +584,12 @@ namespace Rth.Client
                     ? (order < AnglingInput.Strength(_lastInput) ? 1f : 0.25f)
                     : 0.45f + 0.55f * Mathf.Clamp01(Mathf.Sin(Time.time * 8f - order * 1.2f) * 0.5f + 0.5f);
             }
-            Color edge = spent && !letGo ? Color.Lerp(new Color(0.2f, 0.45f, 0.15f), new Color(0.6f, 1f, 0.45f), 0.5f + 0.5f * Mathf.Sin(Time.time * 6f))
+            // Losing it comes first: the frame flashes faster the nearer the line is to snapping (red) or
+            // the hook to pulling free from slack (pale blue: reel in!).
+            float snap = _fight.SnapDanger / 1000f, slackDanger = _fight.SlackDanger / 1000f;
+            Color edge = snap > 0f ? Flash(new Color(0.4f, 0.05f, 0.04f), new Color(1f, 0.2f, 0.15f), 6f + 14f * snap)
+                : slackDanger > 0.15f ? Flash(new Color(0.1f, 0.2f, 0.3f), new Color(0.6f, 0.85f, 1f), 4f + 16f * slackDanger)
+                : spent && !letGo ? Color.Lerp(new Color(0.2f, 0.45f, 0.15f), new Color(0.6f, 1f, 0.45f), 0.5f + 0.5f * Mathf.Sin(Time.time * 6f))
                 : letGo ? Color.Lerp(new Color(0.35f, 0.08f, 0.06f), new Color(1f, 0.25f, 0.2f), 0.5f + 0.5f * Mathf.Sin(Time.time * 14f))
                 : telling ? new Color(1f, 0.8f, 0.35f) : new Color(70 / 255f, 60 / 255f, 48 / 255f);
             _bar.style.borderTopColor = edge;
@@ -593,6 +597,8 @@ namespace Rth.Client
             _bar.style.borderLeftColor = edge;
             _bar.style.borderRightColor = edge;
         }
+
+        private static Color Flash(Color low, Color high, float speed) => Color.Lerp(low, high, 0.5f + 0.5f * Mathf.Sin(Time.time * speed));
 
         /// <summary>The horizontal direction that goes to the right on screen, across the line to the fish.</summary>
         private static Vector3 ScreenRight(Vector3 forward)
