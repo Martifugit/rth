@@ -19,7 +19,11 @@ namespace Rth.Client.Ui
     public sealed class ActionBars
     {
         public const int SlotCount = 14;
-        public const int BarCount = 3;
+        /// <summary>
+        /// The main bar and four secondary bars. A layout saved with fewer (there used to be two
+        /// secondaries) loads with the new bars empty, and the next change saves all five.
+        /// </summary>
+        public const int BarCount = 5;
         private const string StateKey = "bars";
         private const string LockKey = "bars.locked";
 

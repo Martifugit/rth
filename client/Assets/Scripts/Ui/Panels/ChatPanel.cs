@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 namespace Rth.Client.Ui.Panels
 {
     /// <summary>
-    /// The chatbox, a fixed size: filter tabs (all, game, public), game messages and chat, and the
+    /// The chatbox, resizable and dockable like any panel: filter tabs (all, game, public), game messages and chat, and the
     /// line you type on. Enter starts typing (keys stop being hotkeys), Enter sends, Escape stops.
     /// Clicking the line starts typing too; nothing else (the UI's key navigation, a click elsewhere
     /// in the window) gives it the keyboard, so until then every key belongs to the game.
@@ -20,7 +20,11 @@ namespace Rth.Client.Ui.Panels
         public override string Title => "Chat";
         public override string Icon => "chat";
         public override string DefaultWindow => UiDefaultLayout.Chat;
-        public override Vector2? FixedSize => new Vector2(480f, 230f);
+        public override Vector2 DefaultSize => new Vector2(480f, 230f);
+        public override Vector2 MinSize => new Vector2(260f, 120f);
+
+        /// <summary>The chat fills whatever size it has itself: the lines scroll, the tabs and the input line stay put.</summary>
+        public override bool Scrolls => false;
 
         private enum Filter
         {
@@ -52,7 +56,13 @@ namespace Rth.Client.Ui.Panels
             }
 
             _scroll = UiKit.Scroll(root);
+            _scroll.AddToClassList("chat-scroll");
             _scroll.style.flexShrink = 1;
+            // Resized (or docked into another window), it shows the newest lines again.
+            _scroll.RegisterCallback<GeometryChangedEvent>(e =>
+            {
+                if (e.oldRect.size != e.newRect.size) ScrollToEnd();
+            });
 
             VisualElement inputRow = UiKit.El(root, "chat-input-row");
             _name = UiKit.Text(inputRow, "", "bold", "chat-name");

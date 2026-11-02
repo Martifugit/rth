@@ -44,6 +44,9 @@ namespace Rth.Client.Ui
 
         public virtual Vector2 MinSize => new Vector2(170f, 120f);
 
+        /// <summary>Sizes the window may take when resized (snapped to the nearest); null: free resizing within MinSize. Lets fixed-shape panels such as extra action bars resize between layouts.</summary>
+        public virtual Vector2[] AllowedSizes => null;
+
         /// <summary>Size of a window made just for this panel.</summary>
         public virtual Vector2 DefaultSize => FixedSize ?? new Vector2(260f, 320f);
 

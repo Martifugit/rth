@@ -125,6 +125,8 @@ def divider(name):
 # The minimap is a round map in a bronze bezel. Its geometry is in panel pixels and must match
 # MinimapPanel.cs (Size, Centre, MapRadius, OrbRing, OrbAngles, MedalRing, MedalSize...).
 # Angles run clockwise from the top. The bezel texture covers the whole panel at MM_TEX pixels.
+# These are design units: the panel multiplies them all by MinimapPanel.Scale (shown at 270 px), so
+# the bezel and the orbs are stretched evenly and nothing here changes with the minimap's size.
 MM_SIZE = 240
 MM_TEX = 512
 MM_C = 120.0
