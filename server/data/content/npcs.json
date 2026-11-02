@@ -442,7 +442,8 @@
     "dialogue": "ferryman",
     "shape": "Capsule",
     "color": "#2b2a33",
-    "scale": 1.1
+    "scale": 1.0,
+    "model": "Art/Assets/Creatures/Dead/Ferryman"
   },
   {
     "id": "tinker",

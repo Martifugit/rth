@@ -1,6 +1,6 @@
 r"""Ways, dead. The long way back across the realm of the dead's still water: the causeway's worn slabs
 (one a tile), single stepping stones, and the soul gate, an arch of two leaning bone-pale stones under a
-lintel, where the route begins.
+lintel, where the route begins. And the Landing's jetty, where the ferryman waits by his boat.
 
 Run it to lay the family out beside the player (with SAVE set, it also saves the working file
 dead.blend beside this script); with EXPORT set it writes every member of ASSETS to
@@ -23,8 +23,11 @@ if __name__ in ("__main__", "<run_path>"):          # run as a script: pick up e
     for _m in [m for m in sys.modules if m == "rth_art" or m.split(".")[0] in ("artlib", "assets", "parts", "boards")]:
         del sys.modules[_m]
 
+from mathutils import Matrix, Vector  # noqa: E402
+
 import rth_art as A  # noqa: E402
 from artlib import family  # noqa: E402
+import artlib.nature as N  # noqa: E402
 from artlib.caves import make  # noqa: E402
 
 TOP = 0.06                      # a slab's walked top above the tile's ground (the water's level is the game's)
@@ -118,10 +121,108 @@ def soul_gate(seed=3, at=(0, 0, 0)):
     return make("SoulGate", bm, ["BonePale", "DeadSlate", "SoulGlow"], at=at, smooth=20)
 
 
+# ---- the Landing's jetty ------------------------------------------------------------------------
+
+JETTY = (2, 9)                  # tiles across (east) and along (north), from the origin's tile
+DECK = 0.3                      # the deck's top above the water
+PLANK = (0.2, 0.05, 0.225)      # a plank's width, thickness and its spacing along the jetty
+STRINGER = (0.12, 0.15)         # the beams under the planks: width, depth
+HEADER = 0.12                   # the cross beam on each pair of posts, under the stringers
+BENTS = (-0.33, 2.6, 5.5, 8.33)  # where the pairs of posts stand along the jetty (the ends carry the stringers' ends)
+POST_R = 0.085
+JETTY_MATS = ["DrownedWood", "Blackiron", "CandleWax", "CandleFlame"]
+J_WOOD, J_IRON, J_WAX, J_FLAME = range(4)
+
+
+def jetty_candles(bm, top, specs):
+    """Candles stuck on a post's top in a pool of their wax (the lights family's candle, its colours
+    moved onto the jetty's: wax, flame, the wick in iron)."""
+    from assets.lights import dead as lights
+    before = set(bm.faces)
+    lights.pool(bm, 0.075, 0.02, centre=(top.x, top.y), points=6, z=top.z)
+    for dx, dy, h, lit in specs:
+        lights.candle(bm, (top.x + dx, top.y + dy, top.z + 0.012), h, 0.026, (0.0, 0.0), lit)
+    remap = {lights.WAX: J_WAX, lights.CFLAME: J_FLAME, lights.WICK: J_IRON, lights.BONE: J_WAX}
+    for f in set(bm.faces) - before:
+        f.material_index = remap[f.material_index]
+
+
+def iron_band(bm, c, r, h=0.05):
+    A.prism(bm, 8, r, r, c.z - h / 2, c.z + h / 2, center=(c.x, c.y), mat_index=J_IRON, cap_bottom=True)
+
+
+def jetty(seed=4, at=(0, 0, 0)):
+    """The Landing's jetty, where the ferryman waits by his boat: weathered planks laid one by one
+    across three stringers, on cross beams carried by pairs of drowned posts, two tiles wide and nine
+    long, running north from the shore into the water. Iron nails over the stringers, one plank gone
+    and the next broken; an iron-banded mooring post with a ring on the boat's side (east), and
+    candles burning on the posts at the shore and at the far end.
+
+    Built in the game's frame (x east, y north) and turned half round at the end: the export turns
+    Blender -Y into the game's north, so the jetty runs along -Y and its second tile lies at -X. The
+    origin is the middle of its south-west tile, at the water's level."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    w, l = JETTY
+    x0, x1, y0, y1 = -0.5, w - 0.5, -0.5, l - 0.5
+    pw, pt, step = PLANK
+    under = DECK - pt                                      # the planks' underside, on the stringers
+    s_bot = under - STRINGER[1]                            # the stringers' underside, on the headers
+    h_bot = s_bot - HEADER                                 # the headers' underside, on the posts
+    for x in (x0 + 0.1, (x0 + x1) / 2, x1 - 0.1):
+        A.box(bm, (x - STRINGER[0] / 2, y0 + 0.08, s_bot), (x + STRINGER[0] / 2, y1 - 0.08, under), J_WOOD)
+    # the planks, one by one: ends ragged, each lying a hair differently; one gone and one broken
+    n = int(round((y1 - y0) / step))
+    for i in range(n):
+        y = y0 + step * (i + 0.5)
+        if i == n - 9:
+            continue                                       # gone
+        a = x0 - rnd.uniform(-0.01, 0.05)
+        b = x1 + rnd.uniform(-0.01, 0.05)
+        if i == n - 8:
+            b = x1 - 0.62                                  # broken off short over the middle stringer
+        z = rnd.uniform(-0.008, 0.006)
+        A.box(bm, (a, y - pw / 2, under + z), (b, y + pw / 2, DECK + z), J_WOOD)
+        for nx in (x0 + 0.1, x1 - 0.1):                    # two nail heads over each outer stringer, painted on
+            if a < nx < b:
+                for ny in (-0.05, 0.05):
+                    q = [bm.verts.new((nx + dx, y + ny + dy, DECK + z + 0.002))
+                         for dx, dy in ((-0.016, -0.016), (0.016, -0.016), (0.016, 0.016), (-0.016, 0.016))]
+                    bm.faces.new(q).material_index = J_IRON
+    # the bents: a cross beam on two posts at each, the posts sunk deep in the water
+    tops = {}
+    for k, y in enumerate(BENTS):
+        A.box(bm, (x0 - 0.12, y - 0.07, h_bot), (x1 + 0.12, y + 0.07, s_bot), J_WOOD)
+        for side, x in (("w", x0 - 0.02), ("e", x1 + 0.02)):
+            rise = {(0, "w"): 0.42, (0, "e"): 0.3, (2, "e"): 0.85, (3, "w"): 0.62, (3, "e"): 0.5}.get((k, side))
+            top = Vector((x + rnd.uniform(-0.02, 0.02), y + 0.11, DECK + rise if rise else h_bot + 0.04))
+            line = [Vector((x, y + 0.11, -0.9)), Vector((x, y + 0.11, h_bot)), top]
+            N.rod(bm, line, POST_R, mat=J_WOOD, sides=7, taper=0.9)
+            if rise:
+                tops[(k, side)] = top
+    # iron on the posts that stand proud: a band under each top, and the mooring post's ring on the
+    # boat's side
+    for key, top in tops.items():
+        iron_band(bm, top - Vector((0, 0, 0.12)), POST_R * 0.95)
+    moor = tops[(2, "e")]
+    staple = moor + Vector((POST_R * 0.85, 0, -0.3))
+    A.box(bm, staple + Vector((-0.04, -0.03, -0.02)), staple + Vector((0.03, 0.03, 0.02)), J_IRON)
+    ring = [staple + Vector((0.02, 0.07 * math.sin(2 * math.pi * k / 8), -0.07 + 0.07 * math.cos(2 * math.pi * k / 8)))
+            for k in range(9)]
+    N.rod(bm, ring, 0.012, mat=J_IRON, sides=4)
+    # candles on the shore posts and the far end's west post
+    jetty_candles(bm, tops[(0, "w")], [(0.0, 0.0, 0.2, True), (0.03, -0.03, 0.09, True)])
+    jetty_candles(bm, tops[(0, "e")], [(0.0, 0.0, 0.12, True)])
+    jetty_candles(bm, tops[(3, "w")], [(0.0, 0.01, 0.26, True), (-0.03, -0.03, 0.14, True), (0.03, -0.02, 0.06, False)])
+    bmesh.ops.rotate(bm, verts=bm.verts, cent=(0, 0, 0), matrix=Matrix.Rotation(math.pi, 3, "Z"))
+    return make("Jetty", bm, JETTY_MATS, at=at, smooth=35)
+
+
 ASSETS = {
     "CausewaySlab": causeway_slab,
     "SteppingStone": stepping_stone,
     "SoulGate": soul_gate,
+    "Jetty": jetty,
 }
 
 

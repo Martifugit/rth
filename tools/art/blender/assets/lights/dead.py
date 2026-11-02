@@ -87,6 +87,60 @@ def soul_lantern(seed=1, at=(0, 0, 0), spent=False):
     return make("SoulLanternSpent" if spent else "SoulLantern", bm, MATS, at=at, smooth=35)
 
 
+SHORE_POST = 1.85               # the shore lantern's post top
+ARM = 0.42                      # how far its iron arm reaches out
+
+
+def shore_lantern(seed=5, at=(0, 0, 0)):
+    """The lantern at the jetty's foot: a tall crooked post of drowned timber in a ring of dark stones, an
+    iron arm out from its top turned down into a hook, the soul lantern hanging from it on a short chain
+    (a peaked cap, four bars, a floor plate, the pale flame). The arm reaches toward Blender -X, the game's
+    east at no rotation (toward the jetty)."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    top = Vector((0.06, 0.03, SHORE_POST))
+    line = N.wobble(rnd, (0, 0, -0.15), top, 6, 0.04)
+    N.rod(bm, line, 0.1, mat=WOOD, sides=7, taper=0.7)
+    for k in range(5):                                      # stones packed round the foot
+        a = 2 * math.pi * k / 5 + rnd.uniform(-0.2, 0.2)
+        c = Vector((0.21 * math.cos(a), 0.21 * math.sin(a), 0))
+        s = rnd.uniform(0.1, 0.14)
+        pts = [c + Vector((rnd.uniform(-s, s), rnd.uniform(-s, s), -0.04)) for _ in range(4)]
+        pts += [c + Vector((rnd.uniform(-s, s) * 0.7, rnd.uniform(-s, s) * 0.7, s * rnd.uniform(0.6, 0.9))) for _ in range(3)]
+        A.hull(bm, pts, mat=STONE)
+    # the arm: out of the post a little under its top, a strut under it, the end turned down to a hook
+    root = top - Vector((0, 0, 0.12))
+    end = root + Vector((-ARM, 0, 0.05))
+    N.rod(bm, [root + Vector((0.04, 0, 0)), end, end + Vector((-0.04, 0, -0.04))], 0.02, mat=IRON, sides=4)
+    N.rod(bm, [root - Vector((0.0, 0, 0.3)), root + Vector((-ARM * 0.55, 0, 0.02))], 0.014, mat=IRON, sides=4)
+    for z in (0.02, -0.3):                                  # the arm's and the strut's iron collars round the post
+        c = root + Vector((0, 0, z))
+        A.prism(bm, 7, 0.088, 0.088, c.z - 0.025, c.z + 0.025, center=(c.x, c.y), mat_index=IRON, cap_bottom=True)
+    # the lantern, hanging on its chain from the hook
+    hook = end + Vector((-0.04, 0, -0.05))
+    cap_top = hook - Vector((0, 0, 0.12))
+    N.rod(bm, [hook + Vector((0, 0, 0.02)), cap_top], 0.01, mat=IRON, sides=4)
+    cx, cy = cap_top.x, cap_top.y
+    z1 = cap_top.z - 0.08
+    z0 = z1 - CAGE_H
+    A.prism(bm, 4, CAGE_R + 0.04, 0.02, z1, cap_top.z + 0.01, center=(cx, cy), rot=math.pi / 4, mat_index=IRON,
+            cap_bottom=True)
+    for k in range(4):
+        a = math.pi / 4 + k * math.pi / 2
+        x, y = cx + CAGE_R * math.cos(a) * 1.3, cy + CAGE_R * math.sin(a) * 1.3
+        N.rod(bm, [(x, y, z0 + 0.01), (x, y, z1 + 0.01)], 0.012, mat=IRON, sides=4)
+    A.prism(bm, 4, CAGE_R + 0.02, CAGE_R + 0.02, z0 - 0.03, z0, center=(cx, cy), rot=math.pi / 4, mat_index=IRON,
+            cap_bottom=True)
+    fl = []
+    for k in range(6):
+        a = 2 * math.pi * k / 6
+        fl.append((cx + 0.06 * math.cos(a), cy + 0.06 * math.sin(a), z0 + 0.1))
+        fl.append((cx + 0.035 * math.cos(a + 0.5), cy + 0.035 * math.sin(a + 0.5), z0 + 0.005))
+    fl.append((cx + 0.01, cy, z1 - 0.04))
+    A.hull(bm, fl, mat=FLAME)
+    return make("ShoreLantern", bm, MATS, at=at, smooth=35)
+
+
 # ---- candles -------------------------------------------------------------------------------------
 
 CANDLE_MATS = ["CandleWax", "CandleFlame", "DeadSlate", "BonePale"]
@@ -305,6 +359,7 @@ def candle_shelf():
 ASSETS = {
     "SoulLantern": soul_lantern,
     "SoulLanternSpent": lambda: soul_lantern(spent=True),
+    "ShoreLantern": shore_lantern,
     "CandleClusterSmall": candle_cluster_small,
     "CandleClusterLarge": candle_cluster_large,
     "CandleHeap": candle_heap,
