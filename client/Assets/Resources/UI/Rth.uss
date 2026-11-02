@@ -1925,6 +1925,8 @@
     -unity-text-align: middle-center;
     width: 160px;
     margin-left: -80px;
+}
+
 /* ---- panel contents ---- */
 /* Slot sizes, inner tabs and small pieces inside panels (pack, worn, skills, ability book,
    religion, quests, guide). Kept together so the panels share one set of sizes. */
