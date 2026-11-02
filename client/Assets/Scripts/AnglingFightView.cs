@@ -25,9 +25,9 @@ namespace Rth.Client
     /// runs green when it's right, turns amber, then red and trembling before it snaps;</item>
     /// <item>the fish is a dark shape under the water, swinging wide to the side it swims, sinking
     /// as it dives, gone in a splash as it leaps;</item>
-    /// <item>over it, its energy as a bar (a tired fish is a fish to reel in), and what it is doing as
-    /// a mark: amber while it shows what it will do next (its tell), then red until you answer it
-    /// and green while you do;</item>
+    /// <item>over it, its energy as a bar (a tired fish is a fish to reel in), with chevrons on it
+    /// pointing the way to pull (amber for its tell, green while you answer it), and its edge
+    /// flashing red when there is nothing to pull and you must let go. No words;</item>
     /// <item>water effects: a swirl where it will turn, bubbles before a dive, a wake before a run,
     /// boiling before a leap, spray when you pull it the right way.</item>
     /// </list>
@@ -82,7 +82,6 @@ namespace Rth.Client
         private float _nextThrash;
         private float _nextSpray;
 
-        private Vector3 _lean;
         private Transform _rodMesh;
         private Vector3 _rodTipLocal;
         private bool _hasRodTip;
@@ -95,9 +94,8 @@ namespace Rth.Client
         private LineRenderer _outline;
         private readonly ParticleSystem.Particle[] _one = new ParticleSystem.Particle[1];
 
-        private VisualElement _bar, _fill;
-        private Label _arrows;
-        private Label _cue;
+        private VisualElement _bar, _fill, _arrows;
+        private readonly VisualElement[] _chevrons = new VisualElement[3];
 
         private void Update()
         {
@@ -167,7 +165,7 @@ namespace Rth.Client
             {
                 _hinted = true;
                 session.AddLog(TextKind.Info, SteerWithMouse
-                    ? "Fish on! Hold Space to reel. The word over the fish is where it's pulling; move the cursor the other way (the arrows on its bar point where, and turn green when you have it), or below you to lift against a dive. Let go of Space when it runs or leaps, and before the line turns red."
+                    ? "Fish on! Hold Space to reel. Move the cursor the way the arrows on the fish's bar point, against where it pulls the line; they turn green when you have it. When the bar's edge flashes red, let go of Space, and let go before the line turns red."
                     : "Fish on! Hold Space to reel; let go when the line turns red, when it runs, and when it leaps.");
             }
         }
@@ -352,14 +350,18 @@ namespace Rth.Client
                 gloss.AddToClassList("world-bar__gloss");
                 _bar.Add(_fill);
                 _bar.Add(gloss);
-                // Arrows on the bar: the way to pull.
-                _arrows = new Label("") { pickingMode = PickingMode.Ignore };
+                // Chevrons on the bar: the way to pull (drawn, not written).
+                _arrows = new VisualElement { pickingMode = PickingMode.Ignore };
                 _arrows.AddToClassList("angling-arrows");
+                for (int i = 0; i < _chevrons.Length; i++)
+                {
+                    var chevron = new VisualElement { pickingMode = PickingMode.Ignore };
+                    chevron.AddToClassList("angling-chevron");
+                    _arrows.Add(chevron);
+                    _chevrons[i] = chevron;
+                }
                 _bar.Add(_arrows);
                 ui.WorldLayer.Add(_bar);
-                _cue = new Label("") { pickingMode = PickingMode.Ignore };
-                _cue.AddToClassList("angling-cue");
-                ui.WorldLayer.Add(_cue);
             }
         }
 
@@ -466,11 +468,6 @@ namespace Rth.Client
 
             // The line: from the rod tip to the fish, its colour the tension.
             Vector3 tip = RodTip(me, forward, right);
-            // Your pull shows on the line: its rod end swings to the side you pull, back as you lift.
-            byte pulling = over ? AnglingInput.PullNone : AnglingInput.Pull(_lastInput);
-            Vector3 lean = pulling == AnglingInput.PullRight ? right : pulling == AnglingInput.PullLeft ? -right : pulling == AnglingInput.PullUp ? -forward * 0.6f + Vector3.up * 0.4f : Vector3.zero;
-            _lean = Vector3.Lerp(_lean, lean * 0.6f, 1f - Mathf.Exp(-dt * 10f));
-            tip += _lean;
             float tension = _fight.Tension / (float)AnglingFight.TensionMax;
             bool slack = _fight.Tension <= AnglingFight.SlackLine, red = _fight.Tension >= AnglingFight.RedLine;
             float sag = Mathf.Lerp(0.9f, 0.03f, Mathf.Clamp01(tension / 0.5f));
@@ -480,6 +477,8 @@ namespace Rth.Client
                 float u = i / (float)(_line.positionCount - 1);
                 Vector3 p = Vector3.Lerp(tip, end, u);
                 p.y -= sag * 4f * u * (1f - u);
+                // The fish drags the line its way: it bows out to the side the fish pulls.
+                p += right * (_lateral / Swing) * 0.45f * Mathf.Clamp01(tension / 0.4f) * 4f * u * (1f - u);
                 if (red) p += right * (Mathf.Sin(t * 60f + u * 9f) * 0.03f * Mathf.Sin(Mathf.PI * u));
                 _line.SetPosition(i, p);
                 _outline.SetPosition(i, p);
@@ -498,7 +497,12 @@ namespace Rth.Client
             DrawMarks(move, over);
         }
 
-        /// <summary>The energy bar over the fish, and the mark for what it is doing (amber tell, red until answered, green while answered).</summary>
+        /// <summary>
+        /// The energy bar over the fish, with chevrons on it pointing the way to pull against it:
+        /// amber while the fish shows what it will do, white while it does it, green while you answer
+        /// it. When it runs, leaps or latches there is nothing to pull: the bar's edge flashes red
+        /// (let go). No words.
+        /// </summary>
         private void DrawMarks(AnglingMove move, bool over)
         {
             Camera cam = Camera.main;
@@ -506,61 +510,40 @@ namespace Rth.Client
             Vector3 above = _fishPos + Vector3.up * 0.9f;
             bool visible = cam.WorldToScreenPoint(above).z > 0f && !over;
             _bar.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
-            _cue.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
             if (!visible) return;
             Vector2 p = RuntimePanelUtils.CameraTransformWorldToPanel(_bar.panel, above, cam);
             _bar.style.left = p.x;
             _bar.style.top = p.y;
-            _cue.style.left = p.x;
-            _cue.style.top = p.y;
             float fresh = Mathf.Clamp01(_fight.Energy / (float)Mathf.Max(1, _fight.Energy0));
             _fill.style.width = Length.Percent(fresh * 100f);
             _fill.style.backgroundColor = fresh > 0.5f ? new Color(0.85f, 0.65f, 0.25f) : fresh > 0.2f ? new Color(0.9f, 0.5f, 0.2f) : new Color(0.55f, 0.85f, 0.4f);
 
-            string word;
-            Color colour;
-            if (_fight.InTell && _fight.TellVisible)
+            bool telling = _fight.InTell && _fight.TellVisible;
+            AnglingMove asks = telling ? _fight.Tell : move;
+            // A chevron is a box's top and right edges: rotated 45 degrees it points right, 225 left, 135 down (lift: towards you).
+            float angle = asks == AnglingMove.Left ? 45f : asks == AnglingMove.Right ? 225f : 135f;
+            bool pull = asks == AnglingMove.Left || asks == AnglingMove.Right || asks == AnglingMove.Dive;
+            bool letGo = asks == AnglingMove.Run || asks == AnglingMove.Jump || asks == AnglingMove.Latch;
+            Color colour = telling ? new Color(1f, 0.8f, 0.35f) : Answers(move, _lastInput) ? new Color(0.5f, 1f, 0.5f) : Color.white;
+            _arrows.style.display = pull ? DisplayStyle.Flex : DisplayStyle.None;
+            _arrows.style.flexDirection = asks == AnglingMove.Dive ? FlexDirection.Column : FlexDirection.Row;
+            for (int i = 0; i < _chevrons.Length; i++)
             {
-                word = Word(_fight.Tell);
-                colour = new Color(1f, 0.8f, 0.35f);
+                VisualElement c = _chevrons[i];
+                c.style.rotate = new Rotate(new Angle(angle, AngleUnit.Degree));
+                c.style.borderTopColor = colour;
+                c.style.borderRightColor = colour;
+                // A wave runs along them the way to pull.
+                int order = asks == AnglingMove.Right ? _chevrons.Length - 1 - i : i;
+                c.style.opacity = 0.45f + 0.55f * Mathf.Clamp01(Mathf.Sin(Time.time * 8f - order * 1.2f) * 0.5f + 0.5f);
             }
-            else if (move != AnglingMove.Straight)
-            {
-                word = Word(move);
-                colour = Answers(move, _lastInput) ? new Color(0.5f, 1f, 0.5f) : new Color(1f, 0.35f, 0.3f);
-            }
-            else
-            {
-                word = fresh < 0.2f ? "tired: reel it in" : "";
-                colour = new Color(0.6f, 1f, 0.6f);
-            }
-            _cue.text = word;
-            _cue.style.color = colour;
-
-            // The way to pull, on the bar: green while you do, else white.
-            AnglingMove asks = _fight.InTell && _fight.TellVisible ? _fight.Tell : move;
-            string arrows = asks switch
-            {
-                AnglingMove.Left => "pull  >>>",
-                AnglingMove.Right => "<<<  pull",
-                AnglingMove.Dive => "pull back",
-                AnglingMove.Run or AnglingMove.Jump or AnglingMove.Latch => "let go",
-                _ => "",
-            };
-            _arrows.text = arrows;
-            _arrows.style.color = asks == move && move != AnglingMove.Straight && Answers(move, _lastInput) ? new Color(0.5f, 1f, 0.5f) : Color.white;
+            Color edge = letGo ? Color.Lerp(new Color(0.35f, 0.08f, 0.06f), new Color(1f, 0.25f, 0.2f), 0.5f + 0.5f * Mathf.Sin(Time.time * 14f))
+                : telling ? new Color(1f, 0.8f, 0.35f) : new Color(70 / 255f, 60 / 255f, 48 / 255f);
+            _bar.style.borderTopColor = edge;
+            _bar.style.borderBottomColor = edge;
+            _bar.style.borderLeftColor = edge;
+            _bar.style.borderRightColor = edge;
         }
-
-        private static string Word(AnglingMove move) => move switch
-        {
-            AnglingMove.Left => "Left",
-            AnglingMove.Right => "Right",
-            AnglingMove.Dive => "Diving",
-            AnglingMove.Run => "Running",
-            AnglingMove.Jump => "Leaping",
-            AnglingMove.Latch => "Latched",
-            _ => "",
-        };
 
         /// <summary>The horizontal direction that goes to the right on screen, across the line to the fish.</summary>
         private static Vector3 ScreenRight(Vector3 forward)
@@ -648,41 +631,11 @@ namespace Rth.Client
                 Transform me = session.world.Local?.transform;
                 Vector3 at = me != null ? me.position + (_fishPos - me.position) * 0.3f : _fishPos;
                 Splash(at, 30, 1.3f);
-                Pop(state.PersonalBest ? "Landed! New personal best!" : "Landed!", new Color(0.6f, 1f, 0.55f));
             }
             else
             {
                 Ring(_fishPos, 1.4f, 1.4f, 0.8f);
-                Pop(state.Outcome == AnglingOutcome.Snapped ? "The line snapped" : state.Outcome == AnglingOutcome.HookFree ? "It threw the hook" : "It got away",
-                    new Color(1f, 0.45f, 0.4f));
             }
-        }
-
-        /// <summary>A word over the fish as the fight ends.</summary>
-        private void Pop(string text, Color colour)
-        {
-            Ui.UiRoot ui = Ui.UiRoot.Instance;
-            Camera cam = Camera.main;
-            if (ui?.WorldLayer == null || cam == null) return;
-            var label = new Label(text) { pickingMode = PickingMode.Ignore };
-            label.AddToClassList("angling-cue");
-            label.style.color = colour;
-            ui.WorldLayer.Add(label);
-            Vector3 at = _fishPos + Vector3.up * 1.0f;
-            float start = Time.time;
-            label.schedule.Execute(() =>
-            {
-                float k = (Time.time - start) / 2.2f;
-                if (k >= 1f || cam == null || label.panel == null)
-                {
-                    label.RemoveFromHierarchy();
-                    return;
-                }
-                Vector2 p = RuntimePanelUtils.CameraTransformWorldToPanel(label.panel, at + Vector3.up * k * 0.8f, cam);
-                label.style.left = p.x;
-                label.style.top = p.y;
-                label.style.opacity = 1f - k * k;
-            }).Every(16).Until(() => label.panel == null);
         }
 
         // ------------------------------------------------------------------ effects
@@ -739,10 +692,8 @@ namespace Rth.Client
             _root = null;
             _fight = null;
             _bar?.RemoveFromHierarchy();
-            _cue?.RemoveFromHierarchy();
             _bar = null;
             _arrows = null;
-            _cue = null;
         }
 
         private void OnDisable() => Clear();

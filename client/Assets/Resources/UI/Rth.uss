@@ -1931,13 +1931,21 @@
     position: absolute;
     left: 0;
     right: 0;
-    top: -2px;
+    top: 0;
     bottom: 0;
-    -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
-    font-size: 12px;
-    -unity-text-align: middle-center;
-    text-shadow: 0 1px 2px rgb(0, 0, 0);
-    color: rgb(255, 255, 255);
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.angling-chevron {
+    width: 7px;
+    height: 7px;
+    margin: 0 3px;
+    border-top-width: 2px;
+    border-right-width: 2px;
+    border-top-color: rgb(255, 255, 255);
+    border-right-color: rgb(255, 255, 255);
 }
 
 .world-pop {

@@ -112,8 +112,10 @@ much **fight** it has left shows in how often and how hard it thrashes. No panel
 **Legible first (owner, 2026-11-02, after trying it):** everything is drawn over the scene
 (`Shaders/AnglingOverlay`), so trees and roofs never hide the line or the fish; the line starts at the
 held rod's real tip and has a dark edge; the camera swings round behind you when a fish bites; over the
-fish, its **energy** as a bar (like a creature's) and a **mark** for what it is doing: amber while it
-shows its tell, red until you answer it, green while you do ("RUN: let go", "<<< left"...); and
+fish, its **energy** as a bar (like a creature's) with **chevrons** on it pointing the way to pull
+against it: amber while it shows its tell, green while you answer it; when it runs or leaps the
+bar's edge flashes red (let go). **No words** (owner). The line bows out to the side the fish pulls,
+and you pull the other way (the cursor against a fixed line from you to the spot); and
 spray off the fish when you pull it the right way. Tension moves slowly enough for people (reel +5,
 give -6 a step; a rod's red allowance and a hook's slack allowance count double and triple), and
 letting go during a leap drops the line slack fast. **One fish a cast:** after a fight, landed or
