@@ -273,18 +273,35 @@ namespace Rth.Client
             return me.position + Vector3.up * 1.45f + forward * 0.9f + right * 0.15f;
         }
 
-        /// <summary>For a moment after the bite the camera swings round behind you, facing the fish.</summary>
+        /// <summary>
+        /// The camera at the bite: it swings round behind you and a little to one side (so you aren't
+        /// in line with the fish), tilts down onto the water and looks between you and the fish, so the
+        /// whirlpool sits out on the water in clear view. For a moment it is set; after that you can turn
+        /// it as you like, and it keeps looking between you both until the fight ends.
+        /// </summary>
         private void TurnCamera()
         {
             CameraRig rig = CameraRig.Current;
             Transform me = session.world.Local?.transform;
+            if (rig == null || me == null) return;
+            Vector3 toFish = _fishPos - me.position;
+            toFish.y = 0f;
+            rig.FocusOffset = toFish * 0.5f;
             float since = Time.unscaledTime - _startedAt;
-            if (rig == null || me == null || since > 1.4f) return;
-            Vector3 dir = _spot - me.position;
-            dir.y = 0f;
-            if (dir.sqrMagnitude < 0.01f) return;
-            float want = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
-            rig.yaw = Mathf.LerpAngle(rig.yaw, want, 1f - Mathf.Exp(-Time.unscaledDeltaTime * 5f));
+            if (since > 1.4f || toFish.sqrMagnitude < 0.01f) return;
+            float ease = 1f - Mathf.Exp(-Time.unscaledDeltaTime * 5f);
+            float want = Mathf.Atan2(toFish.x, toFish.z) * Mathf.Rad2Deg + CameraSide;
+            rig.yaw = Mathf.LerpAngle(rig.yaw, want, ease);
+            rig.pitch = Mathf.Lerp(rig.pitch, Mathf.Clamp(Mathf.Max(rig.pitch, CameraPitch), rig.minPitch, rig.maxPitch), ease);
+        }
+
+        /// <summary>The camera at a bite: degrees to the side of straight behind you, and the least pitch (looking down onto the water).</summary>
+        private const float CameraSide = 25f, CameraPitch = 52f;
+
+        /// <summary>The camera looks at you again.</summary>
+        private static void ReleaseCamera()
+        {
+            if (CameraRig.Current != null) CameraRig.Current.FocusOffset = Vector3.zero;
         }
 
         // ------------------------------------------------------------------ input
@@ -796,6 +813,7 @@ namespace Rth.Client
         private void Clear()
         {
             Capturing = false;
+            if (_fight != null) ReleaseCamera();
             if (_root != null) Destroy(_root);
             _root = null;
             _fight = null;

@@ -42,6 +42,12 @@ namespace Rth.Client
         /// <summary>The camera drawing the world, for rules that depend on where it is (roofs).</summary>
         public static CameraRig Current { get; private set; }
 
+        /// <summary>
+        /// Added to where the camera looks (eased like the follow), for a moment that wants something
+        /// beside the player in view: a fish fight looks between the angler and the fish. Zero normally.
+        /// </summary>
+        public Vector3 FocusOffset;
+
         /// <summary>The pitch in use this frame: the player's, raised by the terrain lift.</summary>
         public float EffectivePitch { get; private set; }
 
@@ -126,7 +132,7 @@ namespace Rth.Client
             ReadInput();
 
             Vector3 ground = target != null ? target.position : idleFocus;
-            Vector3 goal = ground + Vector3.up;
+            Vector3 goal = ground + Vector3.up + FocusOffset;
             _focus = Vector3.Lerp(_focus, goal, 1f - Mathf.Exp(-followSharpness * Time.deltaTime));
 
             float floorTarget = minPitch;
