@@ -33,6 +33,46 @@ public class GroundStrokesTests
     }
 
     [Fact]
+    public void AGradedRoadClimbsACliffItsWholeLengthWalkable()
+    {
+        ContinentData data = ContinentData.Parse(File.ReadAllText(Path.Combine(Root, "world", "layout", "continent.json")));
+        var brushes = GroundEdit.Brushes(data).ToDictionary(b => b.Id);
+        var region = new RegionData { Id = "test", Origin = new[] { 0, 0 }, Size = new[] { 48, 48 } };
+        var piece = new Piece { Id = "ground", Kind = PieceKind.Tiles, Rect = new[] { 0, 0, 48, 48 }, Paint = true, Legend = new SortedDictionary<string, TileKind>(StringComparer.Ordinal), Rows = new List<string>() };
+        region.Pieces.Add(piece);
+        char g = GroundEdit.CharFor(region, piece, brushes["grass"].Kind, brushes["grass"].Materials, brushes["grass"].Letter);
+        piece.Rows = Enumerable.Repeat(new string(g, 48), 48).ToList();
+        // Low land at 0.5 to the south, a plateau at 6.5 from y 24 north: a cliff along y 24.
+        var field = new Rth.Shared.World.Heightfield(0, 0, 48, 48);
+        for (int y = 0; y <= 48; y++) for (int x = 0; x <= 48; x++) field.SetCorner(x, y, y >= 24 ? 6.5f : 0.5f);
+        region.Terrain = TerrainText.Write(field);
+
+        // Three legs switching back up the cliff's face.
+        var road = new Stroke
+        {
+            Id = "climb", Ground = "path", Width = new[] { 2f, 2f }, Wind = 0f, Ragged = 0f, Grade = 0.3f,
+            Points = { new[] { 4f, 14f }, new[] { 40f, 20f }, new[] { 8f, 26f }, new[] { 40f, 32f } },
+        };
+        List<string> log = GroundStrokes.Apply(new[] { region }, data, new StrokePlan { Strokes = { road } });
+        Assert.DoesNotContain("too steep", log[0]);
+        var after = TerrainText.Read(region)!;
+        char path = GroundEdit.CharFor(region, piece, brushes["path"].Kind, brushes["path"].Materials, brushes["path"].Letter);
+        int tiles = 0;
+        for (int y = 0; y < 48; y++)
+            for (int x = 0; x < 48; x++)
+            {
+                if (GroundEdit.At(piece, x, y) != path || x < 6 || x > 38) continue;   // the road, away from its ends' turns
+                float lo = new[] { after.Corner(x, y), after.Corner(x + 1, y), after.Corner(x, y + 1), after.Corner(x + 1, y + 1) }.Min();
+                float hi = new[] { after.Corner(x, y), after.Corner(x + 1, y), after.Corner(x, y + 1), after.Corner(x + 1, y + 1) }.Max();
+                Assert.True(hi - lo < 1f, $"road tile ({x}, {y}) rises {hi - lo:0.00}: a cliff");
+                tiles++;
+            }
+        Assert.True(tiles > 60);
+        Assert.Equal(0.5f, after.Corner(2, 2), 2);   // the land away from the road untouched
+        Assert.Equal(6.5f, after.Corner(30, 44), 2);
+    }
+
+    [Fact]
     public void AWaterShapeRedrawsAMereAndDriesTheOldOne()
     {
         ContinentData data = ContinentData.Parse(File.ReadAllText(Path.Combine(Root, "world", "layout", "continent.json")));

@@ -67,6 +67,14 @@ namespace Rth.Shared.World.Ground
         public float Pool = 1.5f;
         /// <summary>Rivers: how far the banks reach from the water, in tiles.</summary>
         public float BankReach = 1.6f;
+        /// <summary>
+        /// Paths: graded to climb no more than this (tiles a tile) along the line, cutting into rises
+        /// and built up over dips, with the land easing back over <see cref="GradeBank"/> tiles either
+        /// side; its ends stay at the land's height. A climb steeper than this needs switchbacks (more
+        /// points). 0: the path lies on the land as it is.
+        /// </summary>
+        public float Grade;
+        public float GradeBank = 2.5f;
     }
 
     /// <summary>Patches of a ground: about <see cref="Share"/> of the tiles offered, in blobs about <see cref="Scale"/> tiles across.</summary>
@@ -351,9 +359,105 @@ namespace Rth.Shared.World.Ground
                 }
                 g.Carve(core.Where(t => g.GroundAt(t.Item1, t.Item2) == s.Ground).ToList(), oldWater, line, levels);
             }
-            return $"{s.Id}: {drawn} tiles of {s.Ground} along {total:0} tiles, {cleared.Count} old tiles cleared" +
+            string graded = !river && s.Grade > 0f ? GradeRoad(g, s, line, along, total, HalfAt, core, near) : "";
+            return $"{s.Id}: {drawn} tiles of {s.Ground} along {total:0} tiles, {cleared.Count} old tiles cleared" + graded +
                    string.Concat(falls.Select(f => $", a fall {f:0} tiles along")) +
                    (bridges > 0 ? $", {bridges} tiles of {s.Bridge} over water" : "") + ".";
+        }
+
+        /// <summary>
+        /// A road's own gradient: the land's heights along it, smoothed, held to the stroke's grade
+        /// (ends fixed) with a level landing at each sharp turn (a switchback's hairpin), written over
+        /// the road tile by tile and eased into the land beside it. Corners touching water keep their
+        /// height (a bridge leaves the river under it alone).
+        /// </summary>
+        private static string GradeRoad(Grid g, Stroke s, List<float[]> line, float[] along, float total,
+                                        Func<float, float> halfAt, HashSet<(int, int)> core, Dictionary<(int, int), (float d, float at)> near)
+        {
+            int n = line.Count;
+            var raw = new float[n];
+            for (int k = 0; k < n; k++)
+                raw[k] = g.Corner((int)Math.Round(line[k][0]), (int)Math.Round(line[k][1])) ?? 0f;
+            // Smoothed over about four tiles either way.
+            var p = new float[n];
+            for (int k = 0; k < n; k++)
+            {
+                float sum = 0f, w = 0f;
+                for (int j = 0; j < n; j++)
+                {
+                    float d = Math.Abs(along[j] - along[k]);
+                    if (d > 4f) continue;
+                    float wt = 1f - d / 4.5f;
+                    sum += raw[j] * wt; w += wt;
+                }
+                p[k] = sum / w;
+            }
+            p[0] = raw[0]; p[n - 1] = raw[n - 1];
+            // Landings: within four tiles of a control point where the road turns by more than 100 degrees.
+            var landing = new bool[n];
+            for (int c = 1; c + 1 < s.Points.Count; c++)
+            {
+                float[] a = s.Points[c - 1], b = s.Points[c], d = s.Points[c + 1];
+                float ux = b[0] - a[0], uy = b[1] - a[1], vx = d[0] - b[0], vy = d[1] - b[1];
+                float cos = (ux * vx + uy * vy) / Math.Max(1e-3f, (float)Math.Sqrt((ux * ux + uy * uy) * (vx * vx + vy * vy)));
+                if (cos > -0.17f) continue;
+                int at = 0;
+                float bd = float.MaxValue;
+                for (int k = 0; k < n; k++) { float d2 = Sq(line[k][0] - b[0]) + Sq(line[k][1] - b[1]); if (d2 < bd) { bd = d2; at = k; } }
+                for (int k = 0; k < n; k++) if (Math.Abs(along[k] - along[at]) <= 4f) landing[k] = true;
+            }
+            // Held to the grade (level on landings): forward from the start, back from the end, then the ends restored.
+            float m = s.Grade;
+            for (int pass = 0; pass < 4; pass++)
+            {
+                for (int k = 1; k < n; k++) { float lim = landing[k] && landing[k - 1] ? 0f : m * (along[k] - along[k - 1]); p[k] = Math.Max(p[k - 1] - lim, Math.Min(p[k - 1] + lim, p[k])); }
+                p[n - 1] = raw[n - 1];
+                for (int k = n - 2; k >= 0; k--) { float lim = landing[k] && landing[k + 1] ? 0f : m * (along[k + 1] - along[k]); p[k] = Math.Max(p[k + 1] - lim, Math.Min(p[k + 1] + lim, p[k])); }
+                p[0] = raw[0];
+            }
+            float steepest = 0f;
+            for (int k = 1; k < n; k++) { float ds = Math.Max(1e-3f, along[k] - along[k - 1]); steepest = Math.Max(steepest, Math.Abs(p[k] - p[k - 1]) / ds); }
+            float ProfileAt(float a)
+            {
+                if (a <= along[0]) return p[0];
+                for (int k = 1; k < n; k++)
+                    if (a <= along[k]) { float t = (a - along[k - 1]) / Math.Max(1e-4f, along[k] - along[k - 1]); return p[k - 1] + (p[k] - p[k - 1]) * t; }
+                return p[n - 1];
+            }
+
+            bool TouchesWater(int cx, int cy) =>
+                g.IsWater(g.GroundAt(cx - 1, cy - 1)) || g.IsWater(g.GroundAt(cx, cy - 1)) || g.IsWater(g.GroundAt(cx - 1, cy)) || g.IsWater(g.GroundAt(cx, cy));
+            // The road: each tile's height from its place along the line, its corners the mean of the road tiles round them.
+            var sums = new Dictionary<(int, int), (float sum, int count)>();
+            foreach ((int x, int y) t in core)
+            {
+                if (g.IsWater(g.GroundAt(t.x, t.y)) || !near.TryGetValue(t, out var nr)) continue;
+                float target = ProfileAt(nr.at);
+                foreach (var c in new[] { (t.x, t.y), (t.x + 1, t.y), (t.x, t.y + 1), (t.x + 1, t.y + 1) })
+                    sums[c] = sums.TryGetValue(c, out var v) ? (v.sum + target, v.count + 1) : (target, 1);
+            }
+            var road = new Dictionary<(int, int), float>();
+            foreach (var e in sums)
+                if (!TouchesWater(e.Key.Item1, e.Key.Item2)) road[e.Key] = e.Value.sum / e.Value.count;
+            // The land beside it eases back from the nearest road corner.
+            int bank = (int)Math.Ceiling(s.GradeBank);
+            var eased = new Dictionary<(int, int), float>();
+            foreach (var r in road)
+                for (int j = -bank; j <= bank; j++)
+                    for (int i = -bank; i <= bank; i++)
+                    {
+                        var c = (r.Key.Item1 + i, r.Key.Item2 + j);
+                        if (road.ContainsKey(c) || !(g.Corner(c.Item1, c.Item2) is float here) || TouchesWater(c.Item1, c.Item2)) continue;
+                        float d = (float)Math.Sqrt(i * i + j * j);
+                        if (d > s.GradeBank) continue;
+                        float h = r.Value + (here - r.Value) * LandNoise.Smooth(d / s.GradeBank);
+                        // The nearest road corner wins.
+                        if (!eased.TryGetValue(c, out float had) || d < DistToRoad(c)) eased[c] = h;
+                        float DistToRoad((int, int) q) { float best = float.MaxValue; for (int jj = -bank; jj <= bank; jj++) for (int ii = -bank; ii <= bank; ii++) if (road.ContainsKey((q.Item1 + ii, q.Item2 + jj))) best = Math.Min(best, (float)Math.Sqrt(ii * ii + jj * jj)); return best; }
+                    }
+            foreach (var e in road) g.SetCorner(e.Key.Item1, e.Key.Item2, e.Value);
+            foreach (var e in eased) g.SetCorner(e.Key.Item1, e.Key.Item2, e.Value);
+            return $", graded ({road.Count} road corners, steepest {steepest:0.00} a tile{(steepest > m + 0.01f ? ": too steep for its length, add switchbacks" : "")})";
         }
 
         /// <summary>
