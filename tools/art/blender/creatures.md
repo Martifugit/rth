@@ -7,6 +7,43 @@ starting any creature, and add to it when a round teaches something new.
 
 The tools are in `artlib/grow.py`. The dragon is the worked example of every rule here.
 
+## Start here: what worked
+
+These were built by this method and passed by the owner, sometimes after several rounds. Start a new
+creature by copying the closest one, not from an empty file.
+
+| Creature | Script | What it proves | Owner's verdict |
+|---|---|---|---|
+| Dragon | `assets/creatures/common/dragon.py` (+ `dragon.tuning.json`) | grown body, wings as bone and membrane in one surface, hands, joints, hand edits as data | "a good start", then about 20 rounds; the base for dragon-kin |
+| Drake | `drake.py` | a family member: same anatomy, two or three signatures (wingless, crouched, crown of spikes) | "looks quite good, let's carry on" (third design) |
+| Wyvern | `wyvern.py` | dragon-kin with the arms as wings | built on the drake's method |
+| Wolf and stray dog | `canine.py` (`WOLF`, `STRAY_DOG`) | a mammal from a spec of numbers; menace from posture and mass alone | "well done" |
+| Fen rat (grown), hare | `rat.py`, `hare.py` | small mammals from `beast.quadruped(spec)`; a hairpin hind leg | passed after thinner ears and tucked legs |
+| Fox, boar, stag, bear | `wild.py` | one spec each; `beast.scaled`; hooves; antlers as bones on pedicle plates | agreed critique applied (bear larger, antlers thinner) |
+| Plated drake F | `boards/plating_study.py` | few large faceted plates as an overlay part | the most evolved of six |
+| Armour, chunks | `boards/armour_tests.py`, `boards/chunk_tests.py` | plating every part from its own axis; big plates in the body's coordinates | all cases pass |
+
+**The recipe in short** (each step has its section below):
+1. Proportions as numbers against the player (1.8 m), and a short list of what must read, in order.
+2. One closed body mesh grown in code: a body tube, then neck, head, tail and legs extruded from it.
+   A four-legged animal is just a spec for `beast.quadruped`, not new code.
+3. Neutral pose, exact symmetry, the +X half with a Mirror; a few parts (body, wing, plates).
+4. All quads, closed, no crossings, checked by script every round; bend-test every joint.
+5. One colour per part until the owner passes the shape.
+6. Things that stick out grow out of the surface (`beast.grow_out`, `beast.bone`). Many small
+   features (plates, armour) go on an overlay part (`artlib/plates.py`, `artlib/armour.py`).
+7. Review side, front, three-quarter and game camera, with a wireframe, beside the player body. Then
+   iterate on the same mesh; rebuild a part's construction when it needs a third fix.
+
+**What the owner rejected** (don't repeat these):
+- Primitives put together by numbers (balls, cones, boxes, tubes), alone or as a "design proxy" to fit
+  a mesh over. Every attempt read as sloppy and childish: the maquette board of 25 bosses and the
+  Moon-Bearer studies (2026-11-01, scrapped 2026-11-02; in git history before commit `dc1fbbc`).
+- Designing from the toolkit outward: body plus rock chunks plus crystals (the Moonfall Beast) read as
+  "an odd bear-like thing", formulaic, with parts floating beside the head. Design first (below),
+  then build only what the design needs.
+- Thick ears and antlers, growths that hover, and painted markings before the shape passes.
+
 ## What failed (don't try these again)
 
 - **Reducing high-poly models** (Quaternius, 2026-10-27): decimate, remesh and shrinkwrap gave soup.
@@ -145,8 +182,10 @@ for the current list.
 ## Shared parts
 
 `artlib/beast.py` holds what creatures share: `to_object` (a part with its Mirror), `keep_left`,
-`symmetric`, `tuning`/`tune` (hand edits in `<creature>.tuning.json`), `foot` (three toes, claws) and
-`spines` (blades along the top line). The dragon and the drake use them; reach for them first.
+`symmetric`, `tuning`/`tune` (hand edits in `<creature>.tuning.json`), `foot` (three toes, claws),
+`spines` (blades along the top line), `paw` and `hoof`, `quadruped(spec)` (any four-legged animal),
+`scaled(spec, k)`, `grow_out` (ears, tusks), `bone` and `curve` (horns, antlers, tines, ribs). Reach for
+them first.
 
 ## Designing a family (learned on the drake)
 
@@ -324,18 +363,28 @@ Still open:
   would read cleaner;
 - a big plate is one surface: it can't bend at a joint (neck and tail plates are short for that reason).
 
-## A boss: the Moonfall Beast (2026-11-01, `assets/creatures/common/moonfall_beast.py`)
+- **A chunk that wraps the body needs a sunken underside skin** on the same rings (`armour.chunk` does
+  this): closing it with flat faces across its rim cut through the body and the plate's own walls.
 
-A world boss built from everything above: a grown body, crater-rock chunks, crystal clusters. Body
-and overlay end all quads and closed, the body with no crossings; the overlay's visible collisions are
-crystals bursting through plates, by design.
+## Big creatures (learned on a scrapped boss, 2026-11-01)
+
 - **Scale breaks fixed numbers.** Tools tuned on drake-sized parts failed at three times the size: the
   foot's pad must sit a scaled step ahead of the ankle (0.22 x size), a chunk's ray limit must grow
   with the part's girth, and a leg ring may be no wider along the body than the patch it leaves from.
-- **A chunk that wraps the body needs a sunken underside skin** on the same rings: closing it with flat
-  faces across its rim cut through the body and the plate's own walls (57 crossings, then none).
-- **Crystals** (`crystal`, `cluster` in the beast's script): six-sided prisms sunk in the body, a short
-  faceted point closed with quads, gathered in clusters leaning out and back; on the centre line a
-  crystal has corners on the middle plane so the Mirror splits it. They belong in the kit next.
-- **A boss's head carries the menace:** the first (a long pointed snout) read as a rat; a massive blunt
-  skull lower than the shoulders, under a helm, with crystal tusks from the jaw, read as a boss.
+- **The head carries the menace:** a long pointed snout on a big body read as a rat; a massive blunt
+  skull carried lower than the shoulders read as dangerous.
+
+## Design: what made the passed creatures read
+
+The geometry rules above make a creature clean; these made the owner accept it.
+- **Start from a real animal, and push it once.** The wolf is a wolf in its numbers; the drake is
+  dragon anatomy crouched like a stalking cat. The owner's recipe for anything special: take a real
+  creature, make it slightly more fantastical, and give it one thing that stands out and sets its
+  theme. Not a pile of features.
+- **Identity comes from a few signatures**, checked against what else the silhouette could be
+  (a dinosaur, a boar, a frog). See "Designing a family".
+- **Mood is posture and mass**, not added parts: the wolf and the stray share a builder.
+- **Thin where it should be thin:** ears are flaps, antlers and tines slender, rooted in a collar.
+- **Every growth is rooted**, checked by eye from several angles as well as by the report.
+- **Iterate one model in rounds with the owner** rather than showing many shallow options; the dragon,
+  drake and wolf each took several rounds, and each round fixed what the owner named.
