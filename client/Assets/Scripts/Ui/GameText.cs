@@ -58,6 +58,24 @@ namespace Rth.Client.Ui
         };
 
         /// <summary>A tooltip card for an item (rich text).</summary>
+        /// <summary>A tackle part's slot and what it sets on the rig: "Tier 3 reel: reel speed 95, run drag 140".</summary>
+        public static string TackleLine(Rth.Shared.Angling.AnglingTackleDef t)
+        {
+            var parts = new List<string>();
+            if (t.SnapBuffer > 0) parts.Add("red buffer " + t.SnapBuffer);
+            if (t.Strength > 0) parts.Add("strength " + t.Strength);
+            if (t.Thickness > 0) parts.Add("thickness " + t.Thickness);
+            if (t.ReelSpeed > 0) parts.Add("reel speed " + t.ReelSpeed);
+            if (t.RunDrag > 0) parts.Add("run drag " + t.RunDrag);
+            if (t.HookHold > 0) parts.Add("hook hold " + t.HookHold);
+            if (t.NoTeethWear) parts.Add("teeth don't dull it");
+            if (t.Lantern) parts.Add("a lantern");
+            if (t.Listening) parts.Add("hears every tell");
+            if (t.Bites.Count > 0) parts.Add("takes " + string.Join(", ", t.Bites).Replace("tier:", "tier ") );
+            if (t.Collector) parts.Add("only the collector mends it");
+            return "Tier " + t.Tier + " " + t.Slot.ToString().ToLowerInvariant() + (parts.Count > 0 ? ": " + string.Join(", ", parts) : "");
+        }
+
         public static string Describe(ItemDef def, int count)
         {
             var lines = new List<string> { UiKit.Title(def.Name) + (count > 1 ? UiKit.Colour("  x" + count.ToString("N0"), UiKit.Value) : "") };
@@ -67,6 +85,7 @@ namespace Rth.Client.Ui
                 lines.Add(UiKit.Colour("Tier " + def.Tool.Tier + " " + def.Tool.Kind
                     + (def.Tool.Success > 0 ? ", +" + (def.Tool.Success * 100).ToString("0.#") + "% success" : "")
                     + (def.Tool.Conservation > 0 ? ", " + (def.Tool.Conservation * 100).ToString("0.#") + "% conservation" : ""), UiKit.Value));
+            if (def.Tackle != null) lines.Add(UiKit.Colour(TackleLine(def.Tackle), UiKit.Value));
             if (!string.IsNullOrEmpty(def.Examine)) lines.Add(def.Examine);
             if (def.Equipment != null && def.Equipment.Stats.Count > 0)
             {
