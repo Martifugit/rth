@@ -2,7 +2,7 @@
   "note": "Written by Sync World from Assets/Scenes/RealmOfTheDead.unity. Read-only: change world/regions/realm_of_the_dead.json, or the scene's Handmade root in Unity.",
   "region": "realm_of_the_dead",
   "origin": [8192, 8192], "size": [32, 32],
-  "dataPieces": { "npc": 1, "prop": 85, "rock": 4, "tiles": 1 },
+  "dataPieces": { "npc": 1, "prop": 75, "rock": 4, "tiles": 1 },
   "handmade": [
 
   ]
