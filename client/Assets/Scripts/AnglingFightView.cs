@@ -82,6 +82,7 @@ namespace Rth.Client
         private Vector3 _fishPos;
         private float _lateral;
         private float _depth;
+        private float _whirl;
         private AnglingMove _lastMove = AnglingMove.Straight;
         private bool _lastInTell;
         private float _nextThrash;
@@ -165,6 +166,7 @@ namespace Rth.Client
             FindRodTip();
             _fishPos = _spot;
             Splash(_spot, 14, 0.9f);     // the strike
+            if (state.Revised) RarePopup(state);
             if (!_hinted)
             {
                 _hinted = true;
@@ -182,6 +184,46 @@ namespace Rth.Client
                 if (Mathf.FloorToInt(p.x) == state.X && Mathf.FloorToInt(p.z) == state.Y) return new Vector3(state.X + 0.5f, p.y, state.Y + 0.5f);
             }
             return GroundHeight.Centre(new TileCoord(state.X, state.Y), state.Plane);
+        }
+
+        /// <summary>
+        /// A revised fish has bitten: a title over your head, for a moment, so you know to focus (it
+        /// fights faster, with less warning). Words are kept out of the fight itself; this is the one
+        /// announcement, at the start.
+        /// </summary>
+        private void RarePopup(AnglingFightState state)
+        {
+            Ui.UiRoot ui = Ui.UiRoot.Instance;
+            Camera cam = Camera.main;
+            Transform me = session.world.Local?.transform;
+            if (ui?.WorldLayer == null || cam == null || me == null) return;
+            string name = "fish";
+            if (session.Content?.Angling != null)
+                foreach (AnglingSpeciesDef sp in session.Content.Angling.Species)
+                    if (sp.Id == state.Species) name = sp.Name.ToLowerInvariant();
+            var popup = new VisualElement { pickingMode = PickingMode.Ignore };
+            popup.AddToClassList("angling-rare");
+            var title = new Label("A revised " + name + "!") { pickingMode = PickingMode.Ignore };
+            title.AddToClassList("angling-rare__title");
+            popup.Add(title);
+            var line = new Label("Something isn't finished about it. It will fight harder.") { pickingMode = PickingMode.Ignore };
+            line.AddToClassList("angling-rare__line");
+            popup.Add(line);
+            ui.WorldLayer.Add(popup);
+            float start = Time.unscaledTime;
+            popup.schedule.Execute(() =>
+            {
+                float k = (Time.unscaledTime - start) / 3.2f;
+                if (k >= 1f || me == null || cam == null || popup.panel == null)
+                {
+                    popup.RemoveFromHierarchy();
+                    return;
+                }
+                Vector2 at = RuntimePanelUtils.CameraTransformWorldToPanel(popup.panel, me.position + Vector3.up * 2.3f, cam);
+                popup.style.left = at.x;
+                popup.style.top = at.y - 18f * k;
+                popup.style.opacity = k < 0.1f ? k / 0.1f : k > 0.75f ? (1f - k) / 0.25f : 1f;
+            }).Every(16).Until(() => popup.panel == null);
         }
 
         /// <summary>The rod in your hand: the far end of its mesh, along its length, from the grip is where the line starts.</summary>
@@ -363,7 +405,7 @@ namespace Rth.Client
 
         /// <summary>
         /// The gauges, in the interface's own pieces (the window skin, the bars of the main bar's
-        /// gauges), one piece over your head: up its left side a vertical bar of the line's tension
+        /// gauges), one piece over your head: up its right side a vertical bar of the line's tension
         /// with its zones (slack, safe, strained, snapping) and a mark for where it is now; beside it
         /// the fish's energy (fish icon) with chevrons on it pointing the way to pull, and under that
         /// how much line is in (rod icon; full at the net: landed). It stays with you, not with the
@@ -388,11 +430,11 @@ namespace Rth.Client
                 return row;
             }
 
-            // One piece: the tension bar up its left side, the energy and line-in bars beside it.
+            // One piece: the energy and line-in bars, the tension bar up its right side.
             _bar = El(null, "window", "angling-hud");
             VisualElement body = El(_bar, "angling-hud__body");
-            _tension = El(body, "angling-hud__tension");
             VisualElement bars = El(body, "angling-hud__bars");
+            _tension = El(body, "angling-hud__tension");
             Row(bars, "fish", new Color(0.95f, 0.75f, 0.45f), out VisualElement energy);
             _fill = El(energy, "bar__fill");
             _fill.style.backgroundColor = new Color(0.78f, 0.55f, 0.24f);
@@ -410,6 +452,7 @@ namespace Rth.Client
             _reelFill.style.backgroundColor = new Color(0.35f, 0.62f, 0.8f);
             El(_reel, "bar__gloss");
             El(_reel, "angling-hud__net");
+            if (_state != null && _state.Revised) _bar.AddToClassList("angling-hud--revised");
 
             VisualElement tube = El(_tension, "bar", "angling-tension__bar");
             void Zone(int from, int to, Color colour)
@@ -503,22 +546,21 @@ namespace Rth.Client
             float along = Mathf.Max(0.9f, 0.9f + out01 * (far - 0.9f));
             Vector3 target = player + forward * along + right * (_lateral * Mathf.Clamp01(out01 + 0.25f));
             target.y = _water;
-            Vector3 was = _fishPos;
             _fishPos = Vector3.Lerp(_fishPos, target, 1f - Mathf.Exp(-dt * 5f));
-            Vector3 heading = _fishPos - was;
-            heading.y = 0f;
-            if (heading.sqrMagnitude < 1e-6f) heading = -forward;
 
-            // The fish: a dark shape, longer than wide, fainter and smaller as it dives, hidden in the air.
+            // The fish: a whirlpool where the line goes down, spinning faster the more fight it has
+            // left, smaller and fainter as it dives, gone while it leaps; violet for a revised fish.
             bool airborne = move == AnglingMove.Jump;
-            float size = 0.7f + 0.35f * Mathf.Clamp01(_fight.Energy0 / 15000f);
-            float alpha = airborne || over ? 0f : Mathf.Lerp(0.75f, 0.3f, _depth);
+            float fresh = Mathf.Clamp01(_fight.Energy / (float)Mathf.Max(1, _fight.Energy0));
+            float size = (1.1f + 0.5f * Mathf.Clamp01(_fight.Energy0 / 15000f)) * Mathf.Lerp(1f, 0.7f, _depth);
+            float alpha = airborne || over ? 0f : Mathf.Lerp(0.8f, 0.35f, _depth);
+            _whirl += dt * Mathf.Lerp(90f, 420f, fresh);
             _one[0] = new ParticleSystem.Particle
             {
                 position = _fishPos + Vector3.up * 0.02f,
-                startSize3D = new Vector3(size * 0.42f, size * 1.4f, 1f) * Mathf.Lerp(1f, 0.8f, _depth),
-                rotation = -Mathf.Atan2(heading.x, heading.z) * Mathf.Rad2Deg,
-                startColor = _state.Revised ? new Color(0.22f, 0.06f, 0.32f, alpha) : new Color(0.03f, 0.04f, 0.06f, alpha),
+                startSize3D = new Vector3(size, size, 1f),
+                rotation = -_whirl,
+                startColor = _state.Revised ? new Color(0.78f, 0.62f, 1f, alpha) : new Color(0.8f, 0.92f, 1f, alpha),
                 remainingLifetime = 10f,
                 startLifetime = 10f,
             };
@@ -772,7 +814,7 @@ namespace Rth.Client
     {
         private static Material _shadow, _rings, _drops, _line, _lineShadow;
 
-        public static Material Shadow() => _shadow != null ? _shadow : _shadow = Make(Ellipse(), 1);
+        public static Material Shadow() => _shadow != null ? _shadow : _shadow = Make(Whirlpool(), 1);
         public static Material Rings() => _rings != null ? _rings : _rings = Make(Ring(), 2);
         public static Material Drops() => _drops != null ? _drops : _drops = Make(Soft(), 3);
 
@@ -806,11 +848,18 @@ namespace Rth.Client
         }
 
         /// <summary>A fish's shadow from above: an ellipse, soft edged, narrower at the tail.</summary>
-        private static Texture2D Ellipse() => Tex("FishShadow", 64, (u, v) =>
+        /// <summary>A whirlpool from above: three spiral arms of foam winding in to a darker eye, fading at the rim.</summary>
+        private static Texture2D Whirlpool() => Tex("Whirlpool", 128, (u, v) =>
         {
-            float w = Mathf.Lerp(0.5f, 1f, Mathf.Clamp01((v + 1f) / 1.4f));
-            float r = Mathf.Sqrt(u * u / (w * w) + v * v);
-            return Mathf.Clamp01((1f - r) * 5f);
+            float r = Mathf.Sqrt(u * u + v * v);
+            if (r >= 1f) return 0f;
+            float theta = Mathf.Atan2(v, u);
+            // Arms: a spiral (angle winding with the log of the radius), three of them, soft-edged.
+            float arm = Mathf.Cos(3f * theta + 7f * Mathf.Log(r + 0.08f));
+            float band = Mathf.Clamp01((arm - 0.35f) * 2.2f);
+            float rim = Mathf.Clamp01((1f - r) * 3f);
+            float eye = Mathf.Clamp01(r * 4f);
+            return band * rim * eye * 0.95f;
         });
 
         private static Texture2D Ring() => Tex("Ripple", 64, (u, v) =>
