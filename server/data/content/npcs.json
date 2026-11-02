@@ -527,5 +527,39 @@
     "shape": "Capsule",
     "color": "#4a3a5a",
     "dialogue": "collector"
+  },
+  {
+    "id": "shade",
+    "name": "Shade",
+    "examine": "Someone who didn't make it. It doesn't know you, and doesn't want to.",
+    "blood": 1000,
+    "attackable": false,
+    "aggressive": true,
+    "aggroRadius": 2,
+    "leashRadius": 5,
+    "attackRange": 1,
+    "attackTicks": 4,
+    "accuracy": 1.0,
+    "hitPercent": 15,
+    "style": "None",
+    "wanderRadius": 0,
+    "respawnTicks": 10,
+    "shape": "Capsule",
+    "color": "#9fc4c0",
+    "model": "Art/Assets/Creatures/Dead/Shade"
+  },
+  {
+    "id": "walker",
+    "name": "The walker",
+    "examine": "A traveller in a worn cloak, leaning on a staff. The only warm colour on this shore.",
+    "blood": 1000,
+    "attackable": false,
+    "attacks": false,
+    "wanderRadius": 0,
+    "actions": [ { "id": "talk", "label": "Talk-to" } ],
+    "dialogue": "walker",
+    "shape": "Capsule",
+    "color": "#6b5a44",
+    "model": "Art/Assets/Creatures/Dead/Walker"
   }
 ]

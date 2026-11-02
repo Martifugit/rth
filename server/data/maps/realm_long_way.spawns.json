@@ -1,0 +1,12 @@
+[
+  { "npc": "shade", "plane": 0, "x": 8184, "y": 8143, "wander": -1, "patrol": [[8184, 8140], [8184, 8151]], "patrolMode": "bounce" },
+  { "npc": "shade", "plane": 0, "x": 8195, "y": 8149, "wander": -1, "patrol": [[8195, 8140], [8195, 8151]], "patrolMode": "bounce" },
+  { "npc": "shade", "plane": 0, "x": 8206, "y": 8141, "wander": -1, "patrol": [[8206, 8140], [8206, 8151]], "patrolMode": "bounce" },
+  { "npc": "shade", "plane": 0, "x": 8217, "y": 8147, "wander": -1, "patrol": [[8217, 8140], [8217, 8151]], "patrolMode": "bounce" },
+  { "npc": "shade", "plane": 0, "x": 8228, "y": 8145, "wander": -1, "patrol": [[8228, 8140], [8228, 8151]], "patrolMode": "bounce" },
+  { "npc": "shade", "plane": 0, "x": 8239, "y": 8151, "wander": -1, "patrol": [[8239, 8140], [8239, 8151]], "patrolMode": "bounce" },
+  { "npc": "shade", "plane": 0, "x": 8200, "y": 8108, "wander": -1, "patrol": [[8200, 8106], [8200, 8119]], "patrolMode": "bounce" },
+  { "npc": "shade", "plane": 0, "x": 8188, "y": 8117, "wander": -1, "patrol": [[8188, 8106], [8188, 8119]], "patrolMode": "bounce" },
+  { "npc": "shade", "plane": 0, "x": 8251, "y": 8126, "wander": -1, "patrol": [[8251, 8134], [8251, 8114], [8220, 8114]], "patrolMode": "bounce" },
+  { "npc": "walker", "plane": 0, "x": 8171, "y": 8100, "wander": -1 }
+]

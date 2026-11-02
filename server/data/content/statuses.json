@@ -148,5 +148,13 @@
     "icon": "status_ward",
     "color": "#e0c060",
     "description": "A blow that would kill you leaves you on 1 blood instead."
+  },
+  {
+    "id": "the_cold",
+    "name": "The cold",
+    "icon": "status_melancholic",
+    "color": "#9fc4c0",
+    "debuff": true,
+    "description": "The long way takes your blood as you go, and it won't come back by itself. Soul lanterns warm you, once each."
   }
 ]

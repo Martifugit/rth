@@ -431,7 +431,7 @@
         "next": "explain4"
       },
       "explain4": {
-        "text": "The chest on the landing holds what you banked among the living, if you need it. Now.",
+        "text": "The chest on the landing holds what you banked among the living, if you need it. And if you'd rather not pay, there's the long way, past the stones on the south shore. Few make it. Now.",
         "next": "terms"
       },
       "terms": {
@@ -469,6 +469,7 @@
           { "text": "Pay {ferryFee}.", "conditions": [ { "type": "ferryCanPay" } ], "actions": [ { "type": "ferryPay" } ] },
           { "text": "I can't pay that.", "conditions": [ { "type": "ferryCanPay", "not": true } ], "next": "without" },
           { "text": "Take me back without them.", "conditions": [ { "type": "ferryCanPay" } ], "next": "without" },
+          { "text": "I'll walk back.", "next": "walk" },
           { "text": "Not yet." }
         ]
       },
@@ -476,6 +477,18 @@
         "text": "Then you go back light. I keep your things about {ferryHours} hours. Pay me before then and they're yours. After that, they're the river's.",
         "options": [
           { "text": "Take me back.", "actions": [ { "type": "ferryLeave" } ] },
+          { "text": "I'll walk back.", "next": "walk" },
+          { "text": "Wait.", "next": "fee" }
+        ]
+      },
+      "walk": {
+        "text": "The long way. Past the stones on the south shore, on your own feet, with nothing in your hands. It's cold the whole way, and the cold takes you as you go. There are others out there who never stopped walking. Keep clear of them.",
+        "next": "walk2"
+      },
+      "walk2": {
+        "text": "Make it to the far shore and the walker will give you back what I hold, and ask nothing. Fall, and you wake here, and we talk again. I'll keep your things the same {ferryHours} hours either way.",
+        "options": [
+          { "text": "I'll walk." },
           { "text": "Wait.", "next": "fee" }
         ]
       }
@@ -577,6 +590,31 @@
             "next": "start"
           }
         ]
+      }
+    }
+  },
+  {
+    "id": "walker",
+    "start": "start",
+    "nodes": {
+      "start": {
+        "branches": [
+          { "conditions": [ { "type": "trialRunning", "id": "long_way" } ], "next": "made" }
+        ],
+        "next": "idle"
+      },
+      "made": {
+        "text": "You walked it. Sit a moment; the cold doesn't come onto this shore.",
+        "next": "made2"
+      },
+      "made2": {
+        "text": "I tried it once, when I still had a body to try with. I didn't make it. I've waited here since, for the ones who do. He sends me what he holds of yours. Here.",
+        "options": [
+          { "text": "Thank you.", "actions": [ { "type": "trialWin", "id": "long_way" }, { "type": "ferryReturnFree" } ] }
+        ]
+      },
+      "idle": {
+        "text": "Not like this. Walk it, and I'll be here."
       }
     }
   }
