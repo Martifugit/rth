@@ -124,8 +124,9 @@ namespace Rth.Shared.World.Ground
         public bool KeepHeights;
         /// <summary>
         /// Only heights: the land inside is raised by this much (lowered if negative) on top of what is
-        /// there, easing in over <see cref="Gentle"/> tiles from the edge; the ground is left as it is (a
-        /// crown on a hill, a knoll, a hollow).
+        /// there, easing in over <see cref="Gentle"/> tiles from the edge, or abruptly on the
+        /// <see cref="CliffSide"/> of the <see cref="Peak"/> (a crag's face); the ground is left as it
+        /// is, but for <see cref="Rock"/> where it now rises steeply (a crown on a hill, a knoll, a crag).
         /// </summary>
         public float Raise;
 
@@ -390,16 +391,31 @@ namespace Rth.Shared.World.Ground
             if (sh.Water) return FillWater(g, sh, Edge, x0, y0, x1, y1);
             if (sh.Raise != 0f)
             {
+                // How far in from the edge the rise is reached: gentle, or short on the cliff side (a crag's face).
+                float Shoulder(float x, float y)
+                {
+                    if (sh.CliffSide == null || sh.Peak == null) return Math.Max(1f, sh.Gentle);
+                    float dx = x - sh.Peak[0], dy = y - sh.Peak[1], dp = (float)Math.Sqrt(dx * dx + dy * dy);
+                    float len = (float)Math.Sqrt(Sq(sh.CliffSide[0]) + Sq(sh.CliffSide[1]));
+                    float facing = dp > 1e-3f ? (dx * sh.CliffSide[0] + dy * sh.CliffSide[1]) / (dp * Math.Max(1e-3f, len)) : 0f;
+                    return 0.6f + (Math.Max(1f, sh.Gentle) - 0.6f) * (1f - LandNoise.Smooth((facing - 0.25f) / 0.5f));
+                }
                 var raised = new Dictionary<(int, int), float>();
                 for (int cy = y0; cy <= y1; cy++)
                     for (int cx = x0; cx <= x1; cx++)
                     {
                         float d = Edge(cx, cy);
                         if (d <= 0f || !(g.Corner(cx, cy) is float h)) continue;
-                        raised[(cx, cy)] = h + sh.Raise * LandNoise.Smooth(Math.Min(1f, d / Math.Max(1f, sh.Gentle)));
+                        raised[(cx, cy)] = h + sh.Raise * LandNoise.Smooth(Math.Min(1f, d / Shoulder(cx, cy)));
                     }
                 foreach (var r in raised) g.SetCorner(r.Key.Item1, r.Key.Item2, r.Value);
-                return $"{sh.Id}: {raised.Count} corners raised by up to {sh.Raise:0.00}.";
+                // Rock where it now rises steeply.
+                int rocky = 0;
+                if (sh.Rock != null && g.Has(sh.Rock))
+                    for (int ty = y0; ty < y1; ty++)
+                        for (int tx = x0; tx < x1; tx++)
+                            if (g.GroundAt(tx, ty) is string id && g.IsNatural(id) && g.RiseOf(tx, ty) > sh.RockRise && g.Set(tx, ty, sh.Rock)) rocky++;
+                return $"{sh.Id}: {raised.Count} corners raised by up to {sh.Raise:0.00}, {rocky} tiles of rock.";
             }
 
             // The water's level round it: the lowest corner of water near it.

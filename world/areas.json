@@ -44,7 +44,7 @@
       "done": { "1.1": "2026-10-27", "1.2": "2026-10-26 regions taken over; first ground pass (world/strokes/cruor.json)", "1.3": "2026-11-02 the crown raised on the hill (world/strokes/cruor-loop-b.json)", "1.4": "2026-11-02 the outflow meanders round the monument and the hill's south; three bridges", "1.5": "2026-11-02 strays gone (not yet seen in the Editor)" }, "notes": "" },
     { "id": "western-march", "name": "The western march", "wave": 1, "about": "Dry downs and scrub west of Tolling, the observatory spur, the road to the salt pass.",
       "regions": ["land_m1_m1", "land_m1_0", "land_m1_1"],
-      "done": { "1.1": "2026-10-27", "1.2": "2026-10-26 regions taken over; first ground pass (world/strokes/western-march.json)" }, "notes": "" },
+      "done": { "1.1": "2026-10-27", "1.2": "2026-10-26 regions taken over; first ground pass (world/strokes/western-march.json)", "1.3": "2026-11-02 the cave's crag (world/strokes/western-march-cave.json); the rest as the first pass", "1.4": "2026-10-26 rivers meandered, bridges (first pass)", "1.5": "2026-10-26 five grounds plus fields (first pass; not yet seen in the Editor)" }, "notes": "" },
     { "id": "great-bridge", "name": "The great bridge and the dry valley", "wave": 2, "about": "The north road over the great river, the dry valley and its bridge over nothing.",
       "regions": ["land_0_1", "land_1_1", "land_0_2", "land_1_2", "land_2_2"],
       "done": {}, "notes": "" },

@@ -1,6 +1,6 @@
 # The western march: the brief
 
-**Status:** agreed (2026-10-27); the regions are taken over and have had a
+**Status:** agreed (2026-10-27); the cave's crag 2026-11-02 (findings 4-6); the regions are taken over and have had a
 first ground pass (below). Wave 1. Ground only this pass: no assets, buildings, people or objects. Template: [world-example.md](../world-example.md); the area next
 door, [tolling.md](tolling.md).
 
@@ -119,6 +119,21 @@ the edge of Tolling's first ring).
    at x -73, and its road arrives at x -76 where the march's west road has it at x -61. Decided
    (2026-10-27): keep the approach (part of L4's approved stage 1) and move its river and road at the
    southern border to meet the march's, rather than scrapping and regenerating it.
+
+4. **The cave's crag** (2026-11-02, `world/strokes/western-march-cave.json`, applied once): s-tolling-cave
+   stood on flat meadow by Tolling's river, with nothing for a cave to be in. A crag of the first
+   foothills now rises north-east of the river, about 2.6 at its top: gentle on its north, east and
+   south where it meets the land climbing towards the dry valley, a rock face (scree, cliffs) on its
+   west over the river and towards the town, and the site at the face's southern foot, where the
+   mouth goes at stage 2. Made with the strokes shapes' `raise` and a `cliffSide`.
+5. **Landforms, water and ground otherwise as the first pass left them** (1.3-1.5): the land climbs
+   west from about 0.7 to the foothills' 2 to 4, the observatory's spur stands at about 4 in the
+   north-west, the two rivers meander, the west road crosses Tolling's river on its short bridge and
+   the well road Sere's river on one. The only other cliffs are on the area's west edge, where the
+   foothills rise into the salt pass. Grounds: foothills, heath, bracken, grass and meadow, the rivers,
+   the tracks and the two farms' fields.
+6. **The well road** (2.1, open): only its south-west end is in the data (a short stretch of caravan
+   road by Sere's river); the line up to the salt road near (-94, 50) is still to draw.
 
 ## Decided (2026-10-27)
 

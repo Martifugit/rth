@@ -1,0 +1,61 @@
+{
+  "area": "western-march",
+  "note": "The cave's crag (1.3, 2026-11-02): s-tolling-cave stood on flat meadow by Tolling's river, with nothing for a cave to be in. A crag of the first foothills rises north-east of the river, about 2.4 high, gentle on its north and east where it meets the rising land, a rock face towards the river and the town on its south-west, where the cave's mouth is. Applied once with `tools/world strokes world/strokes/western-march-cave.json`; the tiles are the truth afterwards.",
+  "shapes": [
+    {
+      "id": "cave-crag",
+      "raise": 2.2,
+      "seed": 101,
+      "ragged": 1,
+      "points": [
+        [
+          -19,
+          153
+        ],
+        [
+          -15,
+          150
+        ],
+        [
+          -9,
+          150
+        ],
+        [
+          -4,
+          153
+        ],
+        [
+          -3,
+          160
+        ],
+        [
+          -6,
+          166
+        ],
+        [
+          -12,
+          168
+        ],
+        [
+          -18,
+          164
+        ],
+        [
+          -21,
+          158
+        ]
+      ],
+      "peak": [
+        -14,
+        158
+      ],
+      "cliffSide": [
+        -1,
+        -0.45
+      ],
+      "gentle": 8,
+      "rock": "scree",
+      "rockRise": 0.8
+    }
+  ]
+}
