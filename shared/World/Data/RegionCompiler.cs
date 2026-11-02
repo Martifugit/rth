@@ -86,9 +86,15 @@ namespace Rth.Shared.World.Data
             }
             if (result.Terrain != null)
             {
+                // A building stands level on its foundation, so the floor inside it is walkable however
+                // steep the ground under it (as the Editor builds it).
+                var floors = new HashSet<(int, int)>();
+                foreach (Piece piece in region.Pieces)
+                    if (piece.Kind == PieceKind.Building && piece.Rect != null && (piece.Plane ?? region.Plane) == region.Plane)
+                        foreach (var t in RectTiles(piece.Rect)) floors.Add(t);
                 for (int y = region.OriginY; y < region.OriginY + h; y++)
                     for (int x = region.OriginX; x < region.OriginX + w; x++)
-                        if (result.Terrain.IsSteep(x, y, region.Terrain!.CliffStep)) layers.Block(region.Plane, x, y);
+                        if (!floors.Contains((x, y)) && result.Terrain.IsSteep(x, y, region.Terrain!.CliffStep)) layers.Block(region.Plane, x, y);
                 foreach (Piece piece in region.Pieces)
                     if ((piece.Plane ?? region.Plane) == region.Plane && FlatKinds.Contains(piece.Kind) && !(piece.Kind == PieceKind.Fence && piece.Model != null))
                         result.Warnings.Add($"Piece '{piece.Id}' ({piece.Kind}) is drawn flat at height 0 over the region's terrain: on terrain, draw ground with a tiles piece.");

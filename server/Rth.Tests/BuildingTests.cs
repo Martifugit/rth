@@ -76,6 +76,20 @@ public class BuildingTests
     }
 
     [Fact]
+    public void ABuildingOnSteepGroundHasAWalkableFloor()
+    {
+        RegionData region = Region(Cottage(Spec(("S", new[] { "Wall", "WallDoorway", "Wall", "Wall" }))));
+        // Ground climbing a tile and a half a tile from west to east: every tile a cliff.
+        var field = new Heightfield(0, 0, 16, 16);
+        for (int y = 0; y <= 16; y++) for (int x = 0; x <= 16; x++) field.SetCorner(x, y, x * 1.5f);
+        region.Terrain = TerrainText.Write(field);
+        RegionCompiler.Result r = RegionCompiler.Compile(region, null);
+        Assert.True(r.Errors.Count == 0, string.Join("\n", r.Errors));
+        for (int y = 4; y < 8; y++) for (int x = 4; x < 8; x++) Assert.False(r.Map.IsBlocked(0, x, y), $"floor ({x}, {y}) blocked");
+        Assert.True(r.Map.IsBlocked(0, 2, 2));   // the slope outside is still a cliff
+    }
+
+    [Fact]
     public void AWoodpileAndAChimneyBlockTheTilesOutsideTheirWalls()
     {
         BuildingSpec spec = Spec(("S", new[] { "WallDoorway" }), ("N", new[] { "", "Wall+Woodpile" }));

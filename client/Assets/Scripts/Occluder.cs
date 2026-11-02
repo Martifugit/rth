@@ -83,8 +83,9 @@ namespace Rth.Client
                 int[] t;
                 try
                 {
-                    // The Editor can read any mesh; a build only one imported with Read/Write.
-                    if (mesh == null || (!mesh.isReadable && !Application.isEditor)) throw new System.InvalidOperationException();
+                    // Only a mesh imported with Read/Write can be read, in Play mode in the Editor too (it
+                    // logs an error rather than throwing): the building kit's pieces aren't, so their boxes stand in.
+                    if (mesh == null || !mesh.isReadable) throw new System.InvalidOperationException();
                     v = mesh.vertices;
                     t = mesh.triangles;
                 }
