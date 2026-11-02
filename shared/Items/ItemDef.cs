@@ -45,6 +45,29 @@ namespace Rth.Shared.Items
         public ProcessDef? Process;
         /// <summary>Set down as an object for a while (logs lit as a campfire): see <see cref="PlaceDef"/>.</summary>
         public PlaceDef? Place;
+        /// <summary>A part for an angler's rig (rod, reel, line, hook, lure): docs/fishing.md 4.</summary>
+        public Rth.Shared.Angling.AnglingTackleDef? Tackle;
+        /// <summary>Opened from the pack for what's inside (a fish box): see <see cref="OpenDef"/>.</summary>
+        public OpenDef? Open;
+    }
+
+    /// <summary>
+    /// An item opened for what's inside (a fish box): it is used up and rolls <see cref="Rolls"/>
+    /// times on its entries, each picked by weight.
+    /// </summary>
+    public sealed class OpenDef
+    {
+        public string Verb = "Open";
+        public int Rolls = 1;
+        public List<OpenEntry> Entries = new List<OpenEntry>();
+    }
+
+    public sealed class OpenEntry
+    {
+        public string Item = "";
+        public int Min = 1;
+        public int Max = 1;
+        public int Weight = 1;
     }
 
     /// <summary>A number of one item: a cost, an ingredient, a reward.</summary>

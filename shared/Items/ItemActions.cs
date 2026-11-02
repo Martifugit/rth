@@ -43,6 +43,10 @@ namespace Rth.Shared.Items
         public const string Process = "process";
         /// <summary>Sets the item down as an object (a <see cref="PlaceDef"/>): lighting logs.</summary>
         public const string Place = "place";
+        /// <summary>Opens the item for what's inside (an <see cref="OpenDef"/>): a fish box.</summary>
+        public const string Open = "open";
+        /// <summary>Puts a tackle part in the angler's rig (an <see cref="Rth.Shared.Angling.AnglingTackleDef"/>).</summary>
+        public const string Rig = "rig";
         public const string Drop = "drop";
         public const string Examine = "examine";
 
@@ -55,6 +59,8 @@ namespace Rth.Shared.Items
             (def, where) => where == ContainerKind.Equipment ? new ItemAction(Unequip, "Remove") : (ItemAction?)null,
             (def, where) => where == ContainerKind.Inventory && def.Process != null ? new ItemAction(Process, def.Process.Verb) : (ItemAction?)null,
             (def, where) => where == ContainerKind.Inventory && def.Place != null ? new ItemAction(Place, def.Place.Verb) : (ItemAction?)null,
+            (def, where) => where == ContainerKind.Inventory && def.Open != null ? new ItemAction(Open, def.Open.Verb) : (ItemAction?)null,
+            (def, where) => where == ContainerKind.Inventory && def.Tackle != null ? new ItemAction(Rig, "Rig") : (ItemAction?)null,
             (def, where) => where == ContainerKind.Inventory ? new ItemAction(Use, "Use") : (ItemAction?)null,
             (def, where) => where == ContainerKind.Inventory ? new ItemAction(Drop, "Drop") : (ItemAction?)null,
             (def, where) => new ItemAction(Examine, "Examine"),

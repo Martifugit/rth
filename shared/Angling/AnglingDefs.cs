@@ -34,6 +34,11 @@ namespace Rth.Shared.Angling
         public AnglingRigStats BareRig = AnglingRigStats.Bare();
         /// <summary>At condition 0 a part gives this percent of its stats (it never breaks).</summary>
         public int WornPercent = 60;
+        /// <summary>What tackle-makers charge in, and the share of a part's value a full mend costs (percent).</summary>
+        public string Currency = "coins";
+        public int MendPercent = 50;
+        /// <summary>The collector charges this many times as much to mend a collector part.</summary>
+        public int CollectorMendTimes = 3;
     }
 
     /// <summary>A size class: the trophy item made for it, its XP and box multipliers.</summary>
@@ -76,23 +81,17 @@ namespace Rth.Shared.Angling
         public double Xp = 100;
         /// <summary>The thickest line it will bite on (a line's <see cref="AnglingTackleDef.Thickness"/>); 0: any.</summary>
         public int MaxThickness;
+        /// <summary>Toothy (pike): hooks dull twice as fast on it, unless they don't dull on teeth.</summary>
+        public bool Teeth;
         public AnglingFightDef Fight = new AnglingFightDef();
         /// <summary>What its fish boxes hold: each roll picks one by weight.</summary>
-        public List<AnglingBoxEntry> Box = new List<AnglingBoxEntry>();
+        public List<OpenEntry> Box = new List<OpenEntry>();
         /// <summary>Lines for the angler's notes, unlocked by catches or by people.</summary>
         public List<AnglingNoteDef> Notes = new List<AnglingNoteDef>();
         /// <summary>Client: the ripple its spots show (a name the client draws).</summary>
         public string Ripple = "";
         public string Color = "#7a8c5a";
         public string Icon = "fish";
-    }
-
-    public sealed class AnglingBoxEntry
-    {
-        public string Item = "";
-        public int Min = 1;
-        public int Max = 1;
-        public int Weight = 1;
     }
 
     /// <summary>A line in a species' notes: shown after <see cref="Catches"/> catches, or when a dialogue gives it (Catches 0).</summary>
