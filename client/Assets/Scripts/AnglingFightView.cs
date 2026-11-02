@@ -96,10 +96,9 @@ namespace Rth.Client
         private ParticleSystem _rings;
         private ParticleSystem _spray;
         private LineRenderer _line;
-        private LineRenderer _outline;
         private readonly ParticleSystem.Particle[] _one = new ParticleSystem.Particle[1];
 
-        private VisualElement _bar, _fill, _arrows, _reel, _reelFill;
+        private VisualElement _bar, _fill, _arrows, _reel, _reelFill, _letGo, _tension, _tensionMark;
         private readonly VisualElement[] _chevrons = new VisualElement[3];
 
         private void Update()
@@ -356,50 +355,75 @@ namespace Rth.Client
             scol.enabled = true;
             scol.color = Fade(0.05f, 0.6f);
 
-            _outline = Line("Line shadow", AnglingFx.LineMaterial(-1), 0.075f);
-            _line = Line("Line", AnglingFx.LineMaterial(0), 0.04f);
+            _line = Line("Line", AnglingFx.LineMaterial(0), 0.016f);
 
             Ui.UiRoot ui = Ui.UiRoot.Instance;
-            if (ui?.WorldLayer != null)
+            if (ui?.WorldLayer != null) BuildGauges(ui.WorldLayer);
+        }
+
+        /// <summary>
+        /// The gauges, in the interface's own pieces (the window skin, the bars of the main bar's
+        /// gauges): over your head, the fish's energy (fish icon) with chevrons on it pointing the way
+        /// to pull, and under it how much line is in (rod icon; full at the net: landed); beside you, a
+        /// vertical bar of the line's tension with its zones (slack, safe, strained, snapping) and a
+        /// mark for where it is now. They stay with you, not with the fish. Nothing flashes.
+        /// </summary>
+        private void BuildGauges(VisualElement layer)
+        {
+            VisualElement El(VisualElement parent, params string[] classes)
             {
-                // The gauge: a frame holding the fish's energy (with the chevrons) and, under it, how
-                // much of the line is in (full: landed; its end is the net).
-                _bar = new VisualElement { pickingMode = PickingMode.Ignore };
-                _bar.AddToClassList("angling-gauge");
-                VisualElement energy = new VisualElement { pickingMode = PickingMode.Ignore };
-                energy.AddToClassList("angling-gauge__energy");
-                _bar.Add(energy);
-                _fill = new VisualElement { pickingMode = PickingMode.Ignore };
-                _fill.AddToClassList("angling-gauge__fill");
-                energy.Add(_fill);
-                var gloss = new VisualElement { pickingMode = PickingMode.Ignore };
-                gloss.AddToClassList("world-bar__gloss");
-                energy.Add(gloss);
-                _reel = new VisualElement { pickingMode = PickingMode.Ignore };
-                _reel.AddToClassList("angling-gauge__reel");
-                _bar.Add(_reel);
-                _reelFill = new VisualElement { pickingMode = PickingMode.Ignore };
-                _reelFill.AddToClassList("angling-gauge__reel-fill");
-                _reel.Add(_reelFill);
-                var net = new VisualElement { pickingMode = PickingMode.Ignore };
-                net.AddToClassList("angling-gauge__net");
-                _reel.Add(net);
-                var reelGloss = new VisualElement { pickingMode = PickingMode.Ignore };
-                reelGloss.AddToClassList("world-bar__gloss");
-                _reel.Add(reelGloss);
-                // Chevrons on the bar: the way to pull (drawn, not written).
-                _arrows = new VisualElement { pickingMode = PickingMode.Ignore };
-                _arrows.AddToClassList("angling-arrows");
-                for (int i = 0; i < _chevrons.Length; i++)
-                {
-                    var chevron = new VisualElement { pickingMode = PickingMode.Ignore };
-                    chevron.AddToClassList("angling-chevron");
-                    _arrows.Add(chevron);
-                    _chevrons[i] = chevron;
-                }
-                energy.Add(_arrows);
-                ui.WorldLayer.Add(_bar);
+                var e = new VisualElement { pickingMode = PickingMode.Ignore };
+                foreach (string c in classes) e.AddToClassList(c);
+                parent?.Add(e);
+                return e;
             }
+            VisualElement Row(VisualElement parent, string icon, Color tint, out VisualElement track)
+            {
+                VisualElement row = El(parent, "angling-hud__row");
+                VisualElement i = El(row, "angling-hud__icon");
+                i.style.backgroundImage = new StyleBackground(Ui.IconLibrary.Get(icon));
+                i.style.unityBackgroundImageTintColor = tint;
+                track = El(row, "bar", "angling-hud__bar");
+                return row;
+            }
+
+            _bar = El(null, "window", "angling-hud");
+            Row(_bar, "fish", new Color(0.95f, 0.75f, 0.45f), out VisualElement energy);
+            _fill = El(energy, "bar__fill");
+            _fill.style.backgroundColor = new Color(0.78f, 0.55f, 0.24f);
+            El(energy, "bar__gloss");
+            _arrows = El(energy, "angling-arrows");
+            for (int i = 0; i < _chevrons.Length; i++) _chevrons[i] = El(_arrows, "angling-chevron");
+            // Let go: two upright strokes, a pause, where the chevrons would be.
+            _letGo = El(energy, "angling-letgo");
+            El(_letGo, "angling-letgo__stroke");
+            El(_letGo, "angling-letgo__stroke");
+
+            Row(_bar, "fishing", new Color(0.7f, 0.85f, 0.95f), out _reel);
+            _reel.AddToClassList("angling-hud__reel");
+            _reelFill = El(_reel, "bar__fill");
+            _reelFill.style.backgroundColor = new Color(0.35f, 0.62f, 0.8f);
+            El(_reel, "bar__gloss");
+            El(_reel, "angling-hud__net");
+            layer.Add(_bar);
+
+            _tension = El(null, "window", "angling-tension");
+            VisualElement tube = El(_tension, "bar", "angling-tension__bar");
+            void Zone(int from, int to, Color colour)
+            {
+                VisualElement z = El(tube, "angling-tension__zone");
+                z.style.bottom = Length.Percent(100f * from / AnglingFight.TensionMax);
+                z.style.height = Length.Percent(100f * (to - from) / AnglingFight.TensionMax);
+                z.style.backgroundColor = colour;
+            }
+            Zone(0, AnglingFight.SlackLine, new Color(0.25f, 0.33f, 0.42f));
+            Zone(AnglingFight.SlackLine, AnglingFight.ComfortLow, new Color(0.16f, 0.16f, 0.14f));
+            Zone(AnglingFight.ComfortLow, AnglingFight.ComfortHigh, new Color(0.22f, 0.4f, 0.2f));
+            Zone(AnglingFight.ComfortHigh, AnglingFight.RedLine, new Color(0.5f, 0.36f, 0.14f));
+            Zone(AnglingFight.RedLine, AnglingFight.TensionMax, new Color(0.5f, 0.13f, 0.1f));
+            El(tube, "bar__gloss");
+            _tensionMark = El(tube, "angling-tension__mark");
+            layer.Add(_tension);
         }
 
         private LineRenderer Line(string name, Material material, float width)
@@ -517,49 +541,45 @@ namespace Rth.Client
                 p.y -= sag * 4f * u * (1f - u);
                 // The fish drags the line its way: it bows out to the side the fish pulls.
                 p += right * (_lateral / Swing) * 0.45f * Mathf.Clamp01(tension / 0.4f) * 4f * u * (1f - u);
-                if (red) p += right * (Mathf.Sin(t * 60f + u * 9f) * 0.03f * Mathf.Sin(Mathf.PI * u));
+                if (red) p += right * (Mathf.Sin(t * 60f + u * 9f) * 0.015f * Mathf.Sin(Mathf.PI * u));
                 _line.SetPosition(i, p);
-                _outline.SetPosition(i, p);
             }
-            Color c = slack ? Flash(new Color(0.7f, 0.75f, 0.8f, 0.9f), new Color(0.6f, 0.85f, 1f, 1f), 4f + 16f * _fight.SlackDanger / 1000f)
-                : tension < AnglingFight.ComfortLow / 1000f ? new Color(0.92f, 0.92f, 0.85f, 1f)
-                : tension <= AnglingFight.ComfortHigh / 1000f ? new Color(0.45f, 0.95f, 0.45f, 1f)
-                : red ? Color.Lerp(new Color(1f, 0.2f, 0.12f, 1f), Color.white, 0.25f + 0.25f * Mathf.Sin(t * 18f))
-                : new Color(1f, 0.72f, 0.2f, 1f);
+            Color c = red ? new Color(1f, 0.8f, 0.72f, 0.95f) : new Color(0.88f, 0.88f, 0.84f, 0.9f);
             if (over) c.a = Mathf.Clamp01(1f - (Time.unscaledTime - _endedAt) / 0.6f);
             _line.startColor = _line.endColor = c;
-            Color shade = new Color(0f, 0f, 0f, 0.55f * c.a);
-            _outline.startColor = _outline.endColor = shade;
-            _line.widthMultiplier = red ? 0.055f : 0.04f;
+            _line.widthMultiplier = 0.016f;
 
             DrawMarks(move, over);
         }
 
         /// <summary>
-        /// The energy bar over the fish, with chevrons on it pointing the way to pull against it:
-        /// amber while the fish shows what it will do, white while it does it, green while you answer
-        /// it. When it runs, leaps or latches there is nothing to pull: the bar's edge flashes red
-        /// (let go). No words.
+        /// The gauges, kept in place by you: the energy and line-in bars over your head, the tension
+        /// bar at your side. The chevrons point the way to pull (amber for a tell, white, green while
+        /// you answer it, as many lit as you pull hard); a pause mark when it runs, leaps or latches
+        /// (let go); the tension mark sits in its zone. Nothing flashes.
         /// </summary>
         private void DrawMarks(AnglingMove move, bool over)
         {
             Camera cam = Camera.main;
-            if (_bar == null || cam == null || _bar.panel == null) return;
-            Vector3 above = _fishPos + Vector3.up * 0.9f;
-            bool visible = cam.WorldToScreenPoint(above).z > 0f && !over;
+            Transform me = session.world.Local?.transform;
+            if (_bar == null || _tension == null || cam == null || me == null || _bar.panel == null) return;
+            Vector3 head = me.position + Vector3.up * 2.3f, side = me.position + Vector3.up * 1.1f;
+            bool visible = cam.WorldToScreenPoint(head).z > 0f && !over;
             _bar.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+            _tension.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
             if (!visible) return;
-            Vector2 p = RuntimePanelUtils.CameraTransformWorldToPanel(_bar.panel, above, cam);
+            Vector2 p = RuntimePanelUtils.CameraTransformWorldToPanel(_bar.panel, head, cam);
             _bar.style.left = p.x;
             _bar.style.top = p.y;
+            Vector2 q = RuntimePanelUtils.CameraTransformWorldToPanel(_tension.panel, side, cam);
+            _tension.style.left = q.x;
+            _tension.style.top = q.y;
+
             float fresh = Mathf.Clamp01(_fight.Energy / (float)Mathf.Max(1, _fight.Energy0));
             _fill.style.width = Length.Percent(fresh * 100f);
-            bool spent = _fight.Energy == 0;
-            // How much of the line is in: from where it bit (empty) to the net (full: landed). Further
-            // out than where it bit (a run) shows empty and reddens.
+            // How much of the line is in: from where it bit (empty) to the net (full: landed).
             float inShare = Mathf.Clamp01(1f - _fight.Distance / (float)Mathf.Max(1, _fight.Distance0));
             _reelFill.style.width = Length.Percent(inShare * 100f);
-            _reelFill.style.backgroundColor = _fight.Distance > _fight.Distance0 ? new Color(0.75f, 0.3f, 0.25f) : new Color(0.4f, 0.72f, 0.9f);
 
             bool telling = _fight.InTell && _fight.TellVisible;
             AnglingMove asks = telling ? _fight.Tell : move;
@@ -567,7 +587,8 @@ namespace Rth.Client
             float angle = asks == AnglingMove.Left ? 45f : asks == AnglingMove.Right ? 225f : 135f;
             bool pull = asks == AnglingMove.Left || asks == AnglingMove.Right || asks == AnglingMove.Dive;
             bool letGo = asks == AnglingMove.Run || asks == AnglingMove.Jump || asks == AnglingMove.Latch;
-            Color colour = telling ? new Color(1f, 0.8f, 0.35f) : Answers(move, _lastInput) ? new Color(0.5f, 1f, 0.5f) : Color.white;
+            bool answering = !telling && Answers(move, _lastInput);
+            Color colour = telling ? new Color(1f, 0.8f, 0.35f) : answering ? new Color(0.55f, 1f, 0.5f) : Color.white;
             _arrows.style.display = pull ? DisplayStyle.Flex : DisplayStyle.None;
             _arrows.style.flexDirection = asks == AnglingMove.Dive ? FlexDirection.Column : FlexDirection.Row;
             for (int i = 0; i < _chevrons.Length; i++)
@@ -576,29 +597,19 @@ namespace Rth.Client
                 c.style.rotate = new Rotate(new Angle(angle, AngleUnit.Degree));
                 c.style.borderTopColor = colour;
                 c.style.borderRightColor = colour;
-                // A wave runs along them the way to pull.
                 int order = asks == AnglingMove.Right ? _chevrons.Length - 1 - i : i;
-                // While you answer it, as many light up as you pull hard (the far cursor, all three); else a wave runs along them the way to pull.
-                bool answering = !telling && Answers(move, _lastInput);
-                c.style.opacity = answering
-                    ? (order < AnglingInput.Strength(_lastInput) ? 1f : 0.25f)
-                    : 0.45f + 0.55f * Mathf.Clamp01(Mathf.Sin(Time.time * 8f - order * 1.2f) * 0.5f + 0.5f);
+                c.style.opacity = answering ? (order < AnglingInput.Strength(_lastInput) ? 1f : 0.3f) : 0.9f;
             }
-            // Losing it comes first: the frame flashes faster the nearer the line is to snapping (red) or
-            // the hook to pulling free from slack (pale blue: reel in!).
-            float snap = _fight.SnapDanger / 1000f, slackDanger = _fight.SlackDanger / 1000f;
-            Color edge = snap > 0f ? Flash(new Color(0.4f, 0.05f, 0.04f), new Color(1f, 0.2f, 0.15f), 6f + 14f * snap)
-                : slackDanger > 0.15f ? Flash(new Color(0.1f, 0.2f, 0.3f), new Color(0.6f, 0.85f, 1f), 4f + 16f * slackDanger)
-                : spent && !letGo ? Color.Lerp(new Color(0.2f, 0.45f, 0.15f), new Color(0.6f, 1f, 0.45f), 0.5f + 0.5f * Mathf.Sin(Time.time * 6f))
-                : letGo ? Color.Lerp(new Color(0.35f, 0.08f, 0.06f), new Color(1f, 0.25f, 0.2f), 0.5f + 0.5f * Mathf.Sin(Time.time * 14f))
-                : telling ? new Color(1f, 0.8f, 0.35f) : new Color(70 / 255f, 60 / 255f, 48 / 255f);
-            _bar.style.borderTopColor = edge;
-            _bar.style.borderBottomColor = edge;
-            _bar.style.borderLeftColor = edge;
-            _bar.style.borderRightColor = edge;
-        }
+            _letGo.style.display = letGo ? DisplayStyle.Flex : DisplayStyle.None;
+            foreach (VisualElement stroke in _letGo.Children())
+                stroke.style.backgroundColor = telling ? new Color(1f, 0.8f, 0.35f) : !AnglingInput.Reeling(_lastInput) ? new Color(0.55f, 1f, 0.5f) : Color.white;
 
-        private static Color Flash(Color low, Color high, float speed) => Color.Lerp(low, high, 0.5f + 0.5f * Mathf.Sin(Time.time * speed));
+            float tension = Mathf.Clamp01(_fight.Tension / (float)AnglingFight.TensionMax);
+            _tensionMark.style.bottom = Length.Percent(tension * 100f);
+            _tensionMark.style.backgroundColor = _fight.Tension >= AnglingFight.RedLine ? new Color(1f, 0.45f, 0.35f)
+                : _fight.Tension <= AnglingFight.SlackLine ? new Color(0.65f, 0.8f, 1f)
+                : _fight.Tension > AnglingFight.ComfortHigh ? new Color(1f, 0.8f, 0.4f) : new Color(0.85f, 1f, 0.8f);
+        }
 
         /// <summary>The horizontal direction that goes to the right on screen, across the line to the fish.</summary>
         private static Vector3 ScreenRight(Vector3 forward)
@@ -747,6 +758,8 @@ namespace Rth.Client
             _root = null;
             _fight = null;
             _bar?.RemoveFromHierarchy();
+            _tension?.RemoveFromHierarchy();
+            _tension = null;
             _bar = null;
             _arrows = null;
             _reel = null;

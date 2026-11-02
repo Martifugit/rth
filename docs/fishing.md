@@ -112,12 +112,15 @@ much **fight** it has left shows in how often and how hard it thrashes. No panel
 **Legible first (owner, 2026-11-02, after trying it):** everything is drawn over the scene
 (`Shaders/AnglingOverlay`), so trees and roofs never hide the line or the fish; the line starts at the
 held rod's real tip and has a dark edge; the camera swings round behind you when a fish bites; over the
-fish, a two-part gauge: its **energy** above (like a creature's) and, below, **how much line is in**
-(full at the net: landed; owner: without it the fight felt endless), the energy with **chevrons** on it pointing the way to pull
-against it: amber while it shows its tell, green while you answer it; when it runs or leaps the
-bar's edge flashes red (let go). **No words** (owner). The line bows out to the side the fish pulls,
-and you pull the other way (the cursor against a fixed line from you to the spot), **harder the further out** the cursor is (three steps; a harder pull tires the fish faster and strains the line a little; as many chevrons light as you pull hard). A wrong pull no longer gives the fish energy back; **progress shows all through** (owner: a long fight is fine if you can see it getting somewhere): a fresh fish comes in at a quarter of full speed, faster as it tires, and letting go only lets it drift back a little; and
-spray off the fish when you pull it the right way. Tension moves slowly enough for people (reel +5,
+you, in the interface's own window and bars (owner: the first gauges and line looked out of place, and
+followed the fish about), a gauge over your head: the fish's **energy** with **chevrons** pointing the way
+to pull against it (amber for its tell, green while you answer it, as many lit as you pull hard; a pause
+mark when it runs or leaps: let go) and below it **how much line is in** (full at the net: landed); and
+beside you a vertical **tension bar** with its zones (slack, safe, strained, snapping) and a mark for where
+the line is. Nothing flashes. The line is a plain thin line that bows out to the side the fish pulls; you
+pull the other way, harder the further out the cursor is. **The challenge is tiring the fish** (owner): a
+spent fish gives up whatever it was doing, never gets its breath back, and is reeled in within seconds,
+while a fresh one comes in only slowly; and spray off the fish when you pull it the right way. Tension moves slowly enough for people (reel +5,
 give -6 a step; a rod's red allowance and a hook's slack allowance count double and triple), and
 letting go during a leap drops the line slack fast. **One fish a cast:** after a fight, landed or
 lost, you cast again yourself.

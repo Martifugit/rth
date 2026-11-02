@@ -38,7 +38,7 @@
       "xp": 290,
       "ripple": "quick",
       "color": "#7a8c5a",
-      "fight": { "turn": 10, "tellSteps": 22, "moveMinSteps": 40, "moveMaxSteps": 70, "energy": 6600, "distance": 650 },
+      "fight": { "turn": 10, "tellSteps": 22, "moveMinSteps": 40, "moveMaxSteps": 70, "energy": 11200, "distance": 650 },
       "box": [
         { "item": "raw_perch", "min": 1, "max": 2, "weight": 8 },
         { "item": "raw_eel", "min": 1, "max": 1, "weight": 2 },
@@ -67,7 +67,7 @@
       "xp": 290,
       "ripple": "bubbles",
       "color": "#4a4a3a",
-      "fight": { "turn": 8, "dive": 5, "tellSteps": 20, "moveMinSteps": 36, "moveMaxSteps": 60, "energy": 6500, "distance": 700 },
+      "fight": { "turn": 8, "dive": 5, "tellSteps": 20, "moveMinSteps": 36, "moveMaxSteps": 60, "energy": 11000, "distance": 700 },
       "box": [
         { "item": "raw_eel", "min": 1, "max": 2, "weight": 8 },
         { "item": "raw_perch", "min": 1, "max": 1, "weight": 2 },
@@ -97,7 +97,7 @@
       "teeth": true,
       "ripple": "line",
       "color": "#6a7a50",
-      "fight": { "turn": 10, "dive": 2, "run": 4, "tellSteps": 15, "moveMinSteps": 28, "moveMaxSteps": 50, "breatherSteps": 50, "energy": 6100, "distance": 800, "runPull": 120 },
+      "fight": { "turn": 10, "dive": 2, "run": 4, "tellSteps": 15, "moveMinSteps": 28, "moveMaxSteps": 50, "breatherSteps": 50, "energy": 10400, "distance": 800, "runPull": 120 },
       "box": [
         { "item": "raw_pike", "min": 1, "max": 2, "weight": 8 },
         { "item": "raw_eel", "min": 1, "max": 1, "weight": 3 },

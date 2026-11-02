@@ -75,7 +75,7 @@ namespace Rth.Shared.Angling
         /// <summary>Six minutes: nothing fights longer.</summary>
         public const int MaxSteps = 7200;
         /// <summary>Tuning: tension per step reeling and giving line; energy a correct pull drains; reeling speed (hundredths of a unit a step) and how much of it reaches a fresh fish (per thousand).</summary>
-        public const int TensionReel = 5, TensionGive = 6, DrainCounter = 16, ReelUnits = 300, FreshReel = 250, SlackDrift = 25, RunUnits = 500, RunTire = 7;
+        public const int TensionReel = 5, TensionGive = 6, DrainCounter = 16, ReelUnits = 300, FreshReel = 150, SpentReelTimes = 3, SlackDrift = 25, RunUnits = 500, RunTire = 7;
         /// <summary>A rod's snapBuffer and a hook's hookHold are counted in these many steps each, so people (not just bots) can keep up.</summary>
         public const int RedStepsPerBuffer = 2, SlackStepsPerHold = 5;
 
@@ -88,6 +88,7 @@ namespace Rth.Shared.Angling
         private AnglingMove _next;
         private bool _lastTurnLeft;
         private int _redRun, _slackRun;
+        private bool _spent;
 
         public AnglingFight(AnglingFish fish, AnglingRigStats rig)
         {
@@ -251,7 +252,16 @@ namespace Rth.Shared.Angling
             if (move != AnglingMove.Latch && move != AnglingMove.Jump && Tension >= ComfortLow && Tension <= ComfortHigh) energy -= 3;
             if (move == AnglingMove.Dive && pull != AnglingInput.PullUp) energy += 8;
             if (move == AnglingMove.Straight && !reel && pull == AnglingInput.PullNone) energy += 2;
-            Energy = Clamp(energy, 0, Energy0);
+            // Spent stays spent: no getting its breath back once it has none.
+            Energy = _spent ? 0 : Clamp(energy, 0, Energy0);
+            if (Energy == 0 && !_spent)
+            {
+                _spent = true;
+                // Whatever it was doing, it gives up: no more running, leaping or holding on.
+                Current = AnglingMove.Straight;
+                _tellLeft = 0;
+                _moveLeft = SpentSteps;
+            }
 
             // Distance.
             // In hundredths of a unit, so small speeds still add up.
@@ -261,7 +271,7 @@ namespace Rth.Shared.Angling
             {
                 int spent = 1000 - Fresh;
                 int speed = ReelUnits * Math.Max(1, _rig.ReelSpeed) / 100 * (1000 + _rig.ReelBonus) / 1000;
-                int factor = FreshReel + (1000 - FreshReel) * spent / 1000;      // a fresh fish comes in slowly, faster as it tires: progress all through
+                int factor = Energy == 0 ? 1000 * SpentReelTimes : FreshReel + (1000 - FreshReel) * spent / 1000;      // a fresh fish comes in slowly; a spent one is reeled straight in
                 int gain = speed * factor / 1000;
                 if (move == AnglingMove.Dive) gain /= 2;
                 distance -= Math.Max(1, gain);

@@ -14,12 +14,12 @@ public class AnglingFightTests
 
     public AnglingFightTests(ITestOutputHelper output) => _out = output;
 
-    internal static AnglingFightDef Perch() => new() { Turn = 10, TellSteps = 16, MoveMinSteps = 30, MoveMaxSteps = 55, Energy = 6600, Distance = 650 };
-    internal static AnglingFightDef Eel() => new() { Turn = 8, Dive = 5, TellSteps = 14, MoveMinSteps = 28, MoveMaxSteps = 50, Energy = 6500, Distance = 700 };
-    internal static AnglingFightDef Pike() => new() { Turn = 10, Dive = 2, Run = 4, TellSteps = 11, MoveMinSteps = 20, MoveMaxSteps = 40, BreatherSteps = 45, Energy = 6100, Distance = 800, RunPull = 120 };
-    internal static AnglingFightDef Lamprey() => new() { Turn = 8, Dive = 2, Run = 2, Latch = 3, TellSteps = 12, MoveMinSteps = 24, MoveMaxSteps = 45, Energy = 6200, Distance = 800 };
-    internal static AnglingFightDef Char() => new() { Turn = 6, Run = 4, Jump = 4, TellSteps = 11, MoveMinSteps = 24, MoveMaxSteps = 44, Energy = 4000, Distance = 700 };
-    internal static AnglingFightDef Sturgeon() => new() { Turn = 6, Dive = 5, Run = 3, Jump = 2, TellSteps = 12, MoveMinSteps = 40, MoveMaxSteps = 80, BreatherSteps = 60, Energy = 7500, Distance = 750 };
+    internal static AnglingFightDef Perch() => new() { Turn = 10, TellSteps = 16, MoveMinSteps = 30, MoveMaxSteps = 55, Energy = 11200, Distance = 650 };
+    internal static AnglingFightDef Eel() => new() { Turn = 8, Dive = 5, TellSteps = 14, MoveMinSteps = 28, MoveMaxSteps = 50, Energy = 11000, Distance = 700 };
+    internal static AnglingFightDef Pike() => new() { Turn = 10, Dive = 2, Run = 4, TellSteps = 11, MoveMinSteps = 20, MoveMaxSteps = 40, BreatherSteps = 45, Energy = 10400, Distance = 800, RunPull = 120 };
+    internal static AnglingFightDef Lamprey() => new() { Turn = 8, Dive = 2, Run = 2, Latch = 3, TellSteps = 12, MoveMinSteps = 24, MoveMaxSteps = 45, Energy = 10500, Distance = 800 };
+    internal static AnglingFightDef Char() => new() { Turn = 6, Run = 4, Jump = 4, TellSteps = 11, MoveMinSteps = 24, MoveMaxSteps = 44, Energy = 6800, Distance = 700 };
+    internal static AnglingFightDef Sturgeon() => new() { Turn = 6, Dive = 5, Run = 3, Jump = 2, TellSteps = 12, MoveMinSteps = 40, MoveMaxSteps = 80, BreatherSteps = 60, Energy = 12800, Distance = 750 };
 
     internal static AnglingRigStats GoodRig() => new() { SnapBuffer = 24, Strength = 110, ReelSpeed = 105, RunDrag = 115, HookHold = 40 };
 
@@ -70,8 +70,32 @@ public class AnglingFightTests
         Assert.True(small.Landed > 0.9 && average.Landed > 0.85 && big.Landed > 0.7, "a good angler lands most fish");
         Assert.InRange(small.Seconds, 12, 36);
         Assert.InRange(average.Seconds, 25, 65);
-        Assert.InRange(big.Seconds, 55, 130);
-        Assert.InRange(revised.Seconds, 70, 190);
+        Assert.InRange(big.Seconds, 55, 140);
+        Assert.InRange(revised.Seconds, 70, 250);
+    }
+
+    [Theory]
+    [MemberData(nameof(Species))]
+    public void Once_spent_a_fish_is_reeled_in_within_seconds(string name)
+    {
+        // The challenge is tiring it; after that you more or less reel it in (owner, 2026-11-02).
+        for (uint seed = 1; seed <= 40; seed++)
+        {
+            AnglingFight fight = Fight(Def(name), 600, seed);
+            var bot = new AnglingBot(seed);
+            int spentAt = -1;
+            while (!fight.Over)
+            {
+                fight.Step(bot.Decide(fight));
+                if (spentAt < 0 && fight.Energy == 0) spentAt = fight.Steps;
+            }
+            Assert.Equal(AnglingOutcome.Landed, fight.Outcome);
+            if (spentAt < 0) continue;     // landed before it was quite spent: fine
+            double reelSeconds = (fight.Steps - spentAt) * AnglingFight.StepMs / 1000.0;
+            double fightSeconds = spentAt * AnglingFight.StepMs / 1000.0;
+            Assert.True(reelSeconds < 12, name + ": reeling in took " + reelSeconds + "s");
+            Assert.True(fightSeconds > reelSeconds * 2, name + ": the fight (" + fightSeconds + "s) should be most of it, not the reeling (" + reelSeconds + "s)");
+        }
     }
 
     [Fact]
