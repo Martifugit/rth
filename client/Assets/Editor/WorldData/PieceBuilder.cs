@@ -200,6 +200,20 @@ namespace Rth.Client.Editor
             else if (piece.Kind == PieceKind.Prop)
                 WorldKit.Box("Placeholder", look, go.transform.position + new Vector3(0f, 0.4f, 0f), new Vector3(0.8f, 0.8f, 0.8f), kit.Mat("Placeholder", new Color(0.8f, 0.2f, 0.8f)));
 
+            if (piece.Light != null)
+            {
+                var glow = new GameObject("Light");
+                glow.transform.SetParent(look, false);
+                glow.transform.localPosition = new Vector3(0f, piece.Light.Height, 0f);
+                Light light = glow.AddComponent<Light>();
+                light.type = LightType.Point;
+                light.range = piece.Light.Range;
+                light.intensity = piece.Light.Intensity;
+                light.color = ColorUtility.TryParseHtmlString(piece.Light.Color, out Color lc) ? lc : Color.white;
+                light.shadows = LightShadows.None;
+                if (piece.Light.Flicker > 0f) glow.AddComponent<Flicker>().amount = piece.Light.Flicker;
+            }
+
             // The look never collides or carries markers: the piece's data decides those.
             foreach (Collider c in look.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(c);
             foreach (MonoBehaviour m in look.GetComponentsInChildren<MonoBehaviour>(true))

@@ -279,6 +279,26 @@ namespace Rth.Client.Editor
             area.instanced = region.Instanced;
             area.music = region.Music ?? "";
             area.ownAtmosphere = region.Atmosphere != null;
+            RegionPostFx fx = area.GetComponent<RegionPostFx>();
+            if (region.PostFx == null)
+            {
+                if (fx != null) Object.DestroyImmediate(fx);
+            }
+            else
+            {
+                if (fx == null) fx = area.gameObject.AddComponent<RegionPostFx>();
+                RegionPostFxDef d = region.PostFx;
+                fx.area = new RectInt(region.OriginX, region.OriginY, region.Width, region.Height);
+                fx.bloom = d.Bloom;
+                fx.bloomThreshold = d.BloomThreshold;
+                fx.bloomTint = d.BloomTint != null ? Hex(d.BloomTint, Color.white) : Color.white;
+                fx.vignette = d.Vignette;
+                fx.vignetteColor = d.VignetteColor != null ? Hex(d.VignetteColor, Color.black) : Color.black;
+                fx.tint = d.Tint != null ? Hex(d.Tint, Color.white) : Color.white;
+                fx.saturation = d.Saturation;
+                fx.contrast = d.Contrast;
+                fx.exposure = d.Exposure;
+            }
             if (region.Atmosphere != null)
             {
                 RegionAtmosphere a = region.Atmosphere;

@@ -30,6 +30,11 @@ namespace Rth.Shared.World.Data
         public string Music = "";
         /// <summary>The region's own light and fog (a crypt, a cave); null for the open world's.</summary>
         public RegionAtmosphere? Atmosphere;
+        /// <summary>
+        /// Client only: the region's own post-processing (bloom so glowing things glow, a vignette, a
+        /// colour grade), drawn as a local volume over the region (the client's RegionPostFx).
+        /// </summary>
+        public RegionPostFxDef? PostFx;
         /// <summary>Flat ground over the whole rectangle in this material; null when the ground is hand-made or a terrain.</summary>
         public string? Ground;
         /// <summary>Materials by name: a colour ("#5C8C38") or a palette name. Pieces name these.</summary>
@@ -154,6 +159,8 @@ namespace Rth.Shared.World.Data
         /// objects block their own tile unless this says otherwise; [0, 0, 0, 0] blocks nothing.
         /// </summary>
         public int[]? Footprint;
+        /// <summary>A light it gives off (client only): a candle heap, a brazier.</summary>
+        public PieceLight? Light;
         /// <summary>Drawn by nothing: only its markers (a hidden trigger's object, a creature with no stand-in).</summary>
         public bool? Hidden;
         /// <summary>A model to draw (a prefab under Assets/), instead of or as well as its parts; for a fence, one span centred on its tile.</summary>
@@ -286,6 +293,40 @@ namespace Rth.Shared.World.Data
     /// A primitive in a piece's look: a box or cylinder, its centre relative to the piece's tile
     /// centre (x east, y up, z north, in metres), its size, its turn (Euler degrees) and material.
     /// </summary>
+    /// <summary>A region's post-processing (<see cref="RegionData.PostFx"/>). Zero (or white) leaves an effect off.</summary>
+    public sealed class RegionPostFxDef
+    {
+        /// <summary>Bloom intensity (URP's), e.g. 1.5; 0: none.</summary>
+        public float Bloom;
+        /// <summary>How bright a pixel must be to bloom (linear; soul and candle flames are bright).</summary>
+        public float BloomThreshold = 0.9f;
+        public string? BloomTint;
+        /// <summary>Vignette intensity, 0..1.</summary>
+        public float Vignette;
+        public string? VignetteColor;
+        /// <summary>A colour filter over everything (#RRGGBB): the region's tone.</summary>
+        public string? Tint;
+        /// <summary>-100..100.</summary>
+        public float Saturation;
+        /// <summary>-100..100.</summary>
+        public float Contrast;
+        /// <summary>Post exposure in stops.</summary>
+        public float Exposure;
+    }
+
+    /// <summary>A point light carried by a placed piece (a candle heap, a brazier): drawn by the client only.</summary>
+    public sealed class PieceLight
+    {
+        public string Color = "#ffffff";
+        public float Intensity = 1f;
+        /// <summary>Reach in tiles.</summary>
+        public float Range = 5f;
+        /// <summary>Height above the piece's foot, in tiles.</summary>
+        public float Height = 1f;
+        /// <summary>A slow flicker (0: steady; 0.15: a candle's).</summary>
+        public float Flicker;
+    }
+
     public sealed class Part
     {
         /// <summary>"box" or "cylinder".</summary>

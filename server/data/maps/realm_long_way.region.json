@@ -4,5 +4,5 @@
   "hasSpawn": false,
   "instanced": true,
   "music": "",
-  "atmosphere": { "sunIntensity": 0.14, "sun": "#9CC8C0", "ambientSky": "#34494B", "ambientEquator": "#1E2A2C", "ambientGround": "#0B1011", "fog": "#0C1618", "fogStart": 16, "fogEnd": 48 }
+  "atmosphere": { "sunIntensity": 0.22, "sun": "#8FD3C6", "ambientSky": "#3A5652", "ambientEquator": "#1F3230", "ambientGround": "#0B1312", "fog": "#0D1D1D", "fogStart": 14, "fogEnd": 46 }
 }

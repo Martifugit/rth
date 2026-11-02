@@ -11,7 +11,7 @@
     "emptyHanded": true,
     "walkOnly": true,
     "emptyHandedMessage": "The way back takes nothing with you. Leave it in the grave chest first.",
-    "drain": { "percent": 2.1, "everyTicks": 3 },
+    "drain": { "percent": 1.8, "everyTicks": 3 },
     "status": "the_cold",
     "startMessage": "You step between the stones. The cold comes up through your feet.",
     "failMessage": "The way back lets go of you.",

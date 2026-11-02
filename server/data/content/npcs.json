@@ -540,7 +540,7 @@
     "attackRange": 1,
     "attackTicks": 4,
     "accuracy": 1.0,
-    "hitPercent": 15,
+    "hitPercent": 12,
     "style": "None",
     "wanderRadius": 0,
     "respawnTicks": 10,

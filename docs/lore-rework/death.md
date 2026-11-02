@@ -41,11 +41,11 @@ The owner's choices, and the first numbers (all data: `trials.json`, `objects.js
 - **Who may go.** Only someone the ferryman holds something for, and only empty-handed (the
   grave chest is right there). Running is not possible on the way: the cold is in your legs.
   At walking pace a clean walk takes about two and a half minutes.
-- **The cold.** 2.1% of max blood every 3 ticks (0.7% a tick), and blood doesn't return by itself while walking.
+- **The cold.** 1.8% of max blood every 3 ticks (0.6% a tick), and blood doesn't return by itself while walking.
 - **Shades** (`shade`): the dead who didn't make it. They can't be fought. They drift back and
   forth on set paths: across the ash flats (stretch 2), across the last causeway on two spurs
   (stretch 4) and round the long way through the stone field. Come within two tiles and one
-  follows you a little way and strikes for 15% of max blood.
+  follows you a little way and strikes for 12% of max blood.
 - **Grasping hands** (`grasping_hands`): unseen until they take you. They hold you for 4 ticks
   (the cold keeps biting) and take 8%. They lie thickest on the short line through the stone field
   (stretch 3), with a few on the last causeway. The long way round the field has none, but has a
@@ -58,7 +58,7 @@ The owner's choices, and the first numbers (all data: `trials.json`, `objects.js
 - **The walker** waits on the far shore. Reach them and they give back everything the ferryman
   holds, for nothing, and you return as if the fee were paid (death.json `returnTo`).
 - **Pace.** `LongWayPaceTests` walks the route with a bot that knows where the hands are and waits
-  for shades. It arrives with 20% of its blood. Without the lanterns, or after two minutes'
+  for shades. It arrives with about 20% of its blood after six shade hits (eased 2026-11-02 after the owner died past the second lantern). Without the lanterns, or after two minutes'
   dawdling at the start, it dies. A first walk, not knowing where the hands are, should usually fail.
 - Hymns and Defence's abilities still help a little against shades; the cold and the hands ignore
   wards.
