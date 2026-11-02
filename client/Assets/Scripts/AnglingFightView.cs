@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using Rth.MapTools;
 using Rth.Shared.Angling;
+using Rth.Shared.Items;
 using Rth.Shared.Net;
 using Rth.Shared.World;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
+using UnityEngine.UIElements;
 
 namespace Rth.Client
 {
@@ -15,24 +17,31 @@ namespace Rth.Client
     /// 50 ms steps, and sends what the player does as the "angling" intent in small batches; the
     /// server replays them and decides.
     ///
-    /// What you see: the fish as a dark shape under the water, nearer as you reel it in, swinging
-    /// to the side it swims, sinking as it dives, gone in a splash as it leaps; the line from your
-    /// rod to it, sagging when slack, straight when taut, reddening and trembling near snapping;
-    /// its tells as water effects (a swirl on the side it will turn to, bubbles before a dive, a
-    /// wake before a run, the surface boiling before a leap); and how much fight it has left in
-    /// how hard it thrashes. It is drawn from effects alone, like a fishing spot.
+    /// Made to be read at a glance, over everything (Shaders/AnglingOverlay, so a tree or a roof
+    /// never hides it):
+    /// <list type="bullet">
+    /// <item>the camera swings round behind you when a fish bites, so the fight is in front of you;</item>
+    /// <item>the line, from your rod's tip to the fish, is the tension: it sags pale when slack,
+    /// runs green when it's right, turns amber, then red and trembling before it snaps;</item>
+    /// <item>the fish is a dark shape under the water, swinging wide to the side it swims, sinking
+    /// as it dives, gone in a splash as it leaps;</item>
+    /// <item>over it, its energy as a bar (a tired fish is a fish to reel in), and what it is doing as
+    /// a mark: amber while it shows what it will do next (its tell), then red until you answer it
+    /// and green while you do;</item>
+    /// <item>water effects: a swirl where it will turn, bubbles before a dive, a wake before a run,
+    /// boiling before a leap, spray when you pull it the right way.</item>
+    /// </list>
     ///
-    /// The mouse is the rod while the fight lasts (world clicks are ignored: <see cref="Capturing"/>).
-    /// Two ways to fight, a setting (<see cref="SteerWithMouse"/>), to find which feels right:
-    /// steer (hold Space to reel; move the cursor across the line to the opposite side
-    /// from where the fish swims; pull it back towards you to lift against a dive) or reel only
-    /// (hold to reel; your angler leans against the fish by itself).
+    /// Hold Space to reel. The cursor is the rod and needs no clicking (world clicks are ignored
+    /// while it lasts, <see cref="Capturing"/>): to the side of the line the fish isn't swimming to,
+    /// or below you to lift against a dive. Or, with steering off (Settings), you only reel and
+    /// your angler leans against the fish by itself.
     /// </summary>
     public sealed class AnglingFightView : MonoBehaviour
     {
         public GameSession session;
 
-        /// <summary>A fight is on: the mouse is the rod, and world clicks are ignored.</summary>
+        /// <summary>A fight is on: the cursor is the rod, and world clicks are ignored.</summary>
         public static bool Capturing { get; private set; }
 
         private const string SteerPref = "rth.angling.steer";
@@ -40,9 +49,11 @@ namespace Rth.Client
         private const int BatchSteps = 6;
         private const int AutoReaction = 6;
         /// <summary>Pixels the cursor must be off the line to count as a pull.</summary>
-        private const float PullDeadZone = 50f;
+        private const float PullDeadZone = 40f;
+        /// <summary>How far to each side a fish swings (tiles).</summary>
+        private const float Swing = 2.2f;
 
-        /// <summary>Steer the fish with the mouse (otherwise the angler steers and you only reel).</summary>
+        /// <summary>Steer the fish with the cursor (otherwise the angler steers and you only reel).</summary>
         public static bool SteerWithMouse
         {
             get => PlayerPrefs.GetInt(SteerPref, 1) == 1;
@@ -56,8 +67,10 @@ namespace Rth.Client
         private readonly Queue<AnglingMove> _seen = new Queue<AnglingMove>();
         private int _sent;
         private float _ms;
+        private float _startedAt;
         private float _endedAt = -1f;
         private bool _hinted;
+        private byte _lastInput;
 
         private Vector3 _spot;
         private float _water;
@@ -67,13 +80,22 @@ namespace Rth.Client
         private AnglingMove _lastMove = AnglingMove.Straight;
         private bool _lastInTell;
         private float _nextThrash;
+        private float _nextSpray;
+
+        private Transform _rodMesh;
+        private Vector3 _rodTipLocal;
+        private bool _hasRodTip;
 
         private GameObject _root;
         private ParticleSystem _shadow;
         private ParticleSystem _rings;
         private ParticleSystem _spray;
         private LineRenderer _line;
+        private LineRenderer _outline;
         private readonly ParticleSystem.Particle[] _one = new ParticleSystem.Particle[1];
+
+        private VisualElement _bar, _fill;
+        private Label _cue;
 
         private void Update()
         {
@@ -101,10 +123,12 @@ namespace Rth.Client
                 {
                     _ms -= AnglingFight.StepMs;
                     byte input = ReadInput();
+                    _lastInput = input;
                     _inputs.Add(input);
                     _fight.Step(input);
                 }
                 if (_inputs.Count - _sent >= BatchSteps || (_fight.Over && _sent < _inputs.Count)) Send();
+                TurnCamera();
             }
             else if (_endedAt < 0f)
             {
@@ -112,7 +136,7 @@ namespace Rth.Client
                 Ended(state);
             }
             Draw();
-            if (_endedAt >= 0f && Time.unscaledTime - _endedAt > 1.2f) Clear();
+            if (_endedAt >= 0f && Time.unscaledTime - _endedAt > 2.5f) Clear();
         }
 
         private void Begin(AnglingFightState state)
@@ -132,15 +156,17 @@ namespace Rth.Client
             _lateral = 0f;
             _depth = 0f;
             _lastMove = AnglingMove.Straight;
+            _startedAt = Time.unscaledTime;
             Build();
+            FindRodTip();
             _fishPos = _spot;
             Splash(_spot, 14, 0.9f);     // the strike
             if (!_hinted)
             {
                 _hinted = true;
                 session.AddLog(TextKind.Info, SteerWithMouse
-                    ? "Fish on! Hold Space to reel. Move the cursor to the side of the line the fish isn't swimming to, behind you to lift against a dive, and let go of Space when it runs or leaps. Watch the line: let go before it turns red."
-                    : "Fish on! Hold Space to reel; let go when the line strains, when it runs, and when it leaps.");
+                    ? "Fish on! Hold Space to reel. Move the cursor to the other side of the line from where the fish swims (the mark over it turns green when you have it), below you to lift against a dive. Let go of Space when it runs or leaps, and before the line turns red."
+                    : "Fish on! Hold Space to reel; let go when the line turns red, when it runs, and when it leaps.");
             }
         }
 
@@ -154,17 +180,78 @@ namespace Rth.Client
             return GroundHeight.Centre(new TileCoord(state.X, state.Y), state.Plane);
         }
 
+        /// <summary>The rod in your hand: the far end of its mesh, along its length, from the grip is where the line starts.</summary>
+        private void FindRodTip()
+        {
+            _hasRodTip = false;
+            _rodMesh = null;
+            Transform me = session.world.Local?.transform;
+            if (me == null || session.Content == null) return;
+            var rods = new HashSet<string>();
+            foreach (ItemDef i in session.Content.Items)
+                if (i.Tackle?.Slot == AnglingSlot.Rod) rods.Add(i.Id);
+            foreach (Transform t in me.GetComponentsInChildren<Transform>())
+            {
+                if (!rods.Contains(t.name)) continue;
+                float best = -1f;
+                foreach (MeshFilter mf in t.GetComponentsInChildren<MeshFilter>())
+                {
+                    if (mf.sharedMesh == null) continue;
+                    Bounds b = mf.sharedMesh.bounds;
+                    Vector3 axis = Dominant(b.extents);
+                    foreach (float sign in new[] { -1f, 1f })
+                    {
+                        Vector3 end = b.center + Vector3.Scale(b.extents, axis) * sign;
+                        float d = (mf.transform.TransformPoint(end) - t.position).sqrMagnitude;
+                        if (d <= best) continue;
+                        best = d;
+                        _rodMesh = mf.transform;
+                        _rodTipLocal = end;
+                    }
+                }
+                _hasRodTip = _rodMesh != null;
+                return;
+            }
+        }
+
+        /// <summary>The unit axis of a box's longest side.</summary>
+        private static Vector3 Dominant(Vector3 extents) =>
+            extents.x >= extents.y && extents.x >= extents.z ? Vector3.right : extents.y >= extents.z ? Vector3.up : Vector3.forward;
+
+        private Vector3 RodTip(Transform me, Vector3 forward, Vector3 right)
+        {
+            if (_hasRodTip && _rodMesh != null) return _rodMesh.TransformPoint(_rodTipLocal);
+            if (Time.frameCount % 30 == 0) FindRodTip();     // the rod may only now be in hand
+            return me.position + Vector3.up * 1.45f + forward * 0.9f + right * 0.15f;
+        }
+
+        /// <summary>For a moment after the bite the camera swings round behind you, facing the fish.</summary>
+        private void TurnCamera()
+        {
+            CameraRig rig = CameraRig.Current;
+            Transform me = session.world.Local?.transform;
+            float since = Time.unscaledTime - _startedAt;
+            if (rig == null || me == null || since > 1.4f) return;
+            Vector3 dir = _spot - me.position;
+            dir.y = 0f;
+            if (dir.sqrMagnitude < 0.01f) return;
+            float want = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
+            rig.yaw = Mathf.LerpAngle(rig.yaw, want, 1f - Mathf.Exp(-Time.unscaledDeltaTime * 5f));
+        }
+
         // ------------------------------------------------------------------ input
 
         private byte ReadInput()
         {
-            Mouse mouse = Mouse.current;
-            Vector2 pointer = mouse != null ? mouse.position.ReadValue() : Vector2.zero;
             // Space reels (no clicking: a click is the world's). The cursor only steers.
             Keyboard keyboard = Keyboard.current;
             bool reel = keyboard != null && keyboard.spaceKey.isPressed && !Ui.UiRoot.IsTyping;
-            byte pull = AnglingInput.PullNone;
-            if (SteerWithMouse) pull = Steer(pointer);
+            byte pull;
+            if (SteerWithMouse)
+            {
+                Mouse mouse = Mouse.current;
+                pull = mouse != null ? Steer(mouse.position.ReadValue()) : AnglingInput.PullNone;
+            }
             else
             {
                 // The angler leans against what it saw the fish do a moment ago.
@@ -176,13 +263,13 @@ namespace Rth.Client
             return AnglingInput.Make(reel, pull);
         }
 
-        /// <summary>Where the cursor is against the line on screen: off to one side pulls that way; back towards you lifts.</summary>
+        /// <summary>Where the cursor is against the line on screen: off to one side pulls that way; below you lifts.</summary>
         private byte Steer(Vector2 pointer)
         {
             Camera cam = Camera.main;
             Transform me = session.world.Local?.transform;
             if (cam == null || me == null) return AnglingInput.PullNone;
-            Vector3 a = cam.WorldToScreenPoint(me.position + Vector3.up * 1.2f), b = cam.WorldToScreenPoint(_fishPos);
+            Vector3 a = cam.WorldToScreenPoint(me.position + Vector3.up * 1.0f), b = cam.WorldToScreenPoint(_fishPos);
             if (a.z < 0f || b.z < 0f) return AnglingInput.PullNone;
             Vector2 axis = new Vector2(b.x - a.x, b.y - a.y);
             if (axis.sqrMagnitude < 1f) return AnglingInput.PullNone;
@@ -196,6 +283,23 @@ namespace Rth.Client
             return AnglingInput.PullNone;
         }
 
+        /// <summary>Whether this input answers what the fish is doing now (the mark goes green).</summary>
+        private static bool Answers(AnglingMove move, byte input)
+        {
+            byte pull = AnglingInput.Pull(input);
+            bool reel = AnglingInput.Reeling(input);
+            switch (move)
+            {
+                case AnglingMove.Left: return pull == AnglingInput.PullRight;
+                case AnglingMove.Right: return pull == AnglingInput.PullLeft;
+                case AnglingMove.Dive: return pull == AnglingInput.PullUp;
+                case AnglingMove.Run:
+                case AnglingMove.Jump:
+                case AnglingMove.Latch: return !reel;
+                default: return true;
+            }
+        }
+
         private void Send()
         {
             while (_sent < _inputs.Count)
@@ -207,17 +311,16 @@ namespace Rth.Client
             }
         }
 
-        // ------------------------------------------------------------------ drawing
+        // ------------------------------------------------------------------ building
 
         private void Build()
         {
             _root = new GameObject("Angling fight") { hideFlags = HideFlags.DontSave };
             _shadow = Particles("Fish", _root, AnglingFx.Shadow(), 1, ParticleSystemRenderMode.HorizontalBillboard);
-            _rings = Particles("Rings", _root, AnglingFx.Rings(), 40, ParticleSystemRenderMode.HorizontalBillboard);
-            _spray = Particles("Spray", _root, AnglingFx.Glow(), 200, ParticleSystemRenderMode.Billboard);
+            _rings = Particles("Rings", _root, AnglingFx.Rings(), 60, ParticleSystemRenderMode.HorizontalBillboard);
+            _spray = Particles("Spray", _root, AnglingFx.Drops(), 240, ParticleSystemRenderMode.Billboard);
             ParticleSystem.MainModule sm = _spray.main;
             sm.gravityModifier = 0.6f;
-            // Rings spread as they fade; drops fade as they fall.
             ParticleSystem.SizeOverLifetimeModule rsize = _rings.sizeOverLifetime;
             rsize.enabled = true;
             rsize.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.25f, 0f, 2f), new Keyframe(1f, 1f, 0.3f, 0f)));
@@ -227,15 +330,42 @@ namespace Rth.Client
             ParticleSystem.ColorOverLifetimeModule scol = _spray.colorOverLifetime;
             scol.enabled = true;
             scol.color = Fade(0.05f, 0.6f);
-            var lineGo = new GameObject("Line") { hideFlags = HideFlags.DontSave };
-            lineGo.transform.SetParent(_root.transform, false);
-            _line = lineGo.AddComponent<LineRenderer>();
-            _line.sharedMaterial = AnglingFx.LineMaterial();
-            _line.positionCount = 12;
-            _line.widthMultiplier = 0.018f;
-            _line.numCapVertices = 2;
-            _line.shadowCastingMode = ShadowCastingMode.Off;
-            _line.receiveShadows = false;
+
+            _outline = Line("Line shadow", AnglingFx.LineMaterial(-1), 0.075f);
+            _line = Line("Line", AnglingFx.LineMaterial(0), 0.04f);
+
+            Ui.UiRoot ui = Ui.UiRoot.Instance;
+            if (ui?.WorldLayer != null)
+            {
+                _bar = new VisualElement { pickingMode = PickingMode.Ignore };
+                _bar.AddToClassList("world-bar");
+                _bar.AddToClassList("angling-energy");
+                _fill = new VisualElement { pickingMode = PickingMode.Ignore };
+                _fill.AddToClassList("world-bar__fill");
+                var gloss = new VisualElement { pickingMode = PickingMode.Ignore };
+                gloss.AddToClassList("world-bar__gloss");
+                _bar.Add(_fill);
+                _bar.Add(gloss);
+                ui.WorldLayer.Add(_bar);
+                _cue = new Label("") { pickingMode = PickingMode.Ignore };
+                _cue.AddToClassList("angling-cue");
+                ui.WorldLayer.Add(_cue);
+            }
+        }
+
+        private LineRenderer Line(string name, Material material, float width)
+        {
+            var go = new GameObject(name) { hideFlags = HideFlags.DontSave };
+            go.transform.SetParent(_root.transform, false);
+            LineRenderer line = go.AddComponent<LineRenderer>();
+            line.sharedMaterial = material;
+            line.positionCount = 16;
+            line.widthMultiplier = width;
+            line.numCapVertices = 3;
+            line.shadowCastingMode = ShadowCastingMode.Off;
+            line.receiveShadows = false;
+            line.alignment = LineAlignment.View;
+            return line;
         }
 
         private static Gradient Fade(float inBy, float holdTo)
@@ -270,6 +400,8 @@ namespace Rth.Client
             return ps;
         }
 
+        // ------------------------------------------------------------------ drawing
+
         private void Draw()
         {
             if (_fight == null || _root == null) return;
@@ -282,58 +414,125 @@ namespace Rth.Client
             float reach = Mathf.Max(1.5f, toSpot.magnitude);
             Vector3 forward = toSpot.sqrMagnitude > 0.01f ? toSpot.normalized : me.forward;
             Vector3 right = ScreenRight(forward);
+            bool over = _endedAt >= 0f;
 
-            // Where the fish is: as far out as the fight says, off to the side it swims, down as it dives.
-            AnglingMove move = _fight.Current;
-            float lateralTarget = move == AnglingMove.Left ? -1.1f : move == AnglingMove.Right ? 1.1f : 0f;
-            _lateral = Mathf.MoveTowards(_lateral, lateralTarget, dt * (move == AnglingMove.Run ? 0.6f : 1.4f));
+            // Where the fish is: as far out as the fight says, swung wide to the side it swims, down as it dives.
+            AnglingMove move = over ? AnglingMove.Straight : _fight.Current;
+            float lateralTarget = move == AnglingMove.Left ? -Swing : move == AnglingMove.Right ? Swing : 0f;
+            _lateral = Mathf.MoveTowards(_lateral, lateralTarget, dt * (move == AnglingMove.Run ? 1.2f : 2.6f));
             float depthTarget = move == AnglingMove.Dive || move == AnglingMove.Latch ? 1f : 0f;
-            _depth = Mathf.MoveTowards(_depth, depthTarget, dt * 1.5f);
+            _depth = Mathf.MoveTowards(_depth, depthTarget, dt * 1.8f);
             float out01 = Mathf.Clamp((float)_fight.Distance / Mathf.Max(1, _fight.Distance0), 0f, 3f);
-            float along = Mathf.Max(0.8f, out01 * reach);
-            Vector3 target = player + forward * along + right * (_lateral * Mathf.Min(1f, out01 + 0.3f));
+            float along = Mathf.Max(0.9f, out01 * reach);
+            Vector3 target = player + forward * along + right * (_lateral * Mathf.Clamp01(out01 + 0.25f));
             target.y = _water;
-            _fishPos = Vector3.Lerp(_fishPos, target, 1f - Mathf.Exp(-dt * 6f));
-            Vector3 heading = (forward * (move == AnglingMove.Run ? 1f : -0.3f) + right * Mathf.Sign(lateralTarget == 0f ? 0.001f : lateralTarget) * (lateralTarget == 0f ? 0f : 1f)).normalized;
+            Vector3 was = _fishPos;
+            _fishPos = Vector3.Lerp(_fishPos, target, 1f - Mathf.Exp(-dt * 5f));
+            Vector3 heading = _fishPos - was;
+            heading.y = 0f;
+            if (heading.sqrMagnitude < 1e-6f) heading = -forward;
 
             // The fish: a dark shape, longer than wide, fainter and smaller as it dives, hidden in the air.
             bool airborne = move == AnglingMove.Jump;
-            float size = 0.45f + 0.25f * Mathf.Clamp01(_fight.Energy0 / 12000f);
-            float alpha = airborne ? 0f : Mathf.Lerp(0.55f, 0.18f, _depth);
+            float size = 0.7f + 0.35f * Mathf.Clamp01(_fight.Energy0 / 15000f);
+            float alpha = airborne || over ? 0f : Mathf.Lerp(0.75f, 0.3f, _depth);
             _one[0] = new ParticleSystem.Particle
             {
-                position = _fishPos + Vector3.up * 0.015f,
-                startSize3D = new Vector3(size * 0.45f, size * 1.4f, 1f) * Mathf.Lerp(1f, 0.8f, _depth),
+                position = _fishPos + Vector3.up * 0.02f,
+                startSize3D = new Vector3(size * 0.42f, size * 1.4f, 1f) * Mathf.Lerp(1f, 0.8f, _depth),
                 rotation = -Mathf.Atan2(heading.x, heading.z) * Mathf.Rad2Deg,
-                startColor = _state.Revised ? new Color(0.15f, 0.05f, 0.25f, alpha) : new Color(0.02f, 0.03f, 0.04f, alpha),
+                startColor = _state.Revised ? new Color(0.22f, 0.06f, 0.32f, alpha) : new Color(0.03f, 0.04f, 0.06f, alpha),
                 remainingLifetime = 10f,
                 startLifetime = 10f,
             };
             _shadow.SetParticles(_one, 1);
 
-            Tells(move, right, forward, t);
-            Thrash(t);
+            if (!over)
+            {
+                Tells(move, right, forward);
+                Thrash(t);
+                PullSpray(move, right, t);
+            }
 
-            // The line: from the rod tip to the fish, sagging when slack, straight when taut, red and trembling near snapping.
-            Vector3 tip = player + Vector3.up * 1.45f + forward * 0.7f + right * 0.12f;
+            // The line: from the rod tip to the fish, its colour the tension.
+            Vector3 tip = RodTip(me, forward, right);
             float tension = _fight.Tension / (float)AnglingFight.TensionMax;
-            float sag = Mathf.Lerp(0.7f, 0.02f, Mathf.Clamp01(tension / 0.55f));
-            bool red = _fight.Tension >= AnglingFight.RedLine;
-            Vector3 end = airborne ? _fishPos + Vector3.up * (0.6f * Mathf.Sin(Mathf.PI * Mathf.Repeat(t * 1.2f, 1f))) : _fishPos;
+            bool slack = _fight.Tension <= AnglingFight.SlackLine, red = _fight.Tension >= AnglingFight.RedLine;
+            float sag = Mathf.Lerp(0.9f, 0.03f, Mathf.Clamp01(tension / 0.5f));
+            Vector3 end = airborne ? _fishPos + Vector3.up * (0.7f * Mathf.Sin(Mathf.PI * Mathf.Repeat(t * 1.2f, 1f))) : _fishPos;
             for (int i = 0; i < _line.positionCount; i++)
             {
                 float u = i / (float)(_line.positionCount - 1);
                 Vector3 p = Vector3.Lerp(tip, end, u);
                 p.y -= sag * 4f * u * (1f - u);
-                if (red) p += right * (Mathf.Sin(t * 70f + u * 9f) * 0.012f * Mathf.Sin(Mathf.PI * u));
+                if (red) p += right * (Mathf.Sin(t * 60f + u * 9f) * 0.03f * Mathf.Sin(Mathf.PI * u));
                 _line.SetPosition(i, p);
+                _outline.SetPosition(i, p);
             }
-            Color calm = new Color(0.9f, 0.88f, 0.8f, 0.85f), strain = new Color(1f, 0.75f, 0.3f, 0.95f), danger = new Color(1f, 0.25f, 0.15f, 1f);
-            Color c = tension < 0.6f ? calm : tension < 0.85f ? Color.Lerp(calm, strain, (tension - 0.6f) / 0.25f) : Color.Lerp(strain, danger, (tension - 0.85f) / 0.15f);
-            if (_fight.Tension <= AnglingFight.SlackLine) c = new Color(0.75f, 0.75f, 0.75f, 0.6f);
+            Color c = slack ? new Color(0.78f, 0.78f, 0.78f, 0.9f)
+                : tension < AnglingFight.ComfortLow / 1000f ? new Color(0.92f, 0.92f, 0.85f, 1f)
+                : tension <= AnglingFight.ComfortHigh / 1000f ? new Color(0.45f, 0.95f, 0.45f, 1f)
+                : red ? Color.Lerp(new Color(1f, 0.2f, 0.12f, 1f), Color.white, 0.25f + 0.25f * Mathf.Sin(t * 18f))
+                : new Color(1f, 0.72f, 0.2f, 1f);
+            if (over) c.a = Mathf.Clamp01(1f - (Time.unscaledTime - _endedAt) / 0.6f);
             _line.startColor = _line.endColor = c;
-            _line.widthMultiplier = red ? 0.026f : 0.018f;
+            Color shade = new Color(0f, 0f, 0f, 0.55f * c.a);
+            _outline.startColor = _outline.endColor = shade;
+            _line.widthMultiplier = red ? 0.055f : 0.04f;
+
+            DrawMarks(move, over);
         }
+
+        /// <summary>The energy bar over the fish, and the mark for what it is doing (amber tell, red until answered, green while answered).</summary>
+        private void DrawMarks(AnglingMove move, bool over)
+        {
+            Camera cam = Camera.main;
+            if (_bar == null || cam == null || _bar.panel == null) return;
+            Vector3 above = _fishPos + Vector3.up * 0.9f;
+            bool visible = cam.WorldToScreenPoint(above).z > 0f && !over;
+            _bar.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+            _cue.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!visible) return;
+            Vector2 p = RuntimePanelUtils.CameraTransformWorldToPanel(_bar.panel, above, cam);
+            _bar.style.left = p.x;
+            _bar.style.top = p.y;
+            _cue.style.left = p.x;
+            _cue.style.top = p.y;
+            float fresh = Mathf.Clamp01(_fight.Energy / (float)Mathf.Max(1, _fight.Energy0));
+            _fill.style.width = Length.Percent(fresh * 100f);
+            _fill.style.backgroundColor = fresh > 0.5f ? new Color(0.85f, 0.65f, 0.25f) : fresh > 0.2f ? new Color(0.9f, 0.5f, 0.2f) : new Color(0.55f, 0.85f, 0.4f);
+
+            string word;
+            Color colour;
+            if (_fight.InTell && _fight.TellVisible)
+            {
+                word = Word(_fight.Tell);
+                colour = new Color(1f, 0.8f, 0.35f);
+            }
+            else if (move != AnglingMove.Straight)
+            {
+                word = Word(move);
+                colour = Answers(move, _lastInput) ? new Color(0.5f, 1f, 0.5f) : new Color(1f, 0.35f, 0.3f);
+            }
+            else
+            {
+                word = fresh < 0.2f ? "tired: reel it in" : "";
+                colour = new Color(0.6f, 1f, 0.6f);
+            }
+            _cue.text = word;
+            _cue.style.color = colour;
+        }
+
+        private static string Word(AnglingMove move) => move switch
+        {
+            AnglingMove.Left => "<<<  left",
+            AnglingMove.Right => "right  >>>",
+            AnglingMove.Dive => "diving",
+            AnglingMove.Run => "RUN: let go",
+            AnglingMove.Jump => "LEAP: let go",
+            AnglingMove.Latch => "latched: let go",
+            _ => "",
+        };
 
         /// <summary>The horizontal direction that goes to the right on screen, across the line to the fish.</summary>
         private static Vector3 ScreenRight(Vector3 forward)
@@ -345,7 +544,7 @@ namespace Rth.Client
         }
 
         /// <summary>A move's tell, once, as it begins (if the fish shows its tells); and the moment a move starts.</summary>
-        private void Tells(AnglingMove move, Vector3 right, Vector3 forward, float t)
+        private void Tells(AnglingMove move, Vector3 right, Vector3 forward)
         {
             bool inTell = _fight.InTell && _fight.TellVisible;
             if (inTell && !_lastInTell)
@@ -355,32 +554,31 @@ namespace Rth.Client
                 {
                     case AnglingMove.Left:
                     case AnglingMove.Right:
-                        // A swirl on the side it is about to turn to.
-                        Ring(_fishPos + right * (next == AnglingMove.Left ? -0.6f : 0.6f), 0.9f, 1.2f, 0.7f);
-                        Ring(_fishPos + right * (next == AnglingMove.Left ? -0.75f : 0.75f), 0.5f, 1.0f, 0.5f);
+                        Vector3 side = right * (next == AnglingMove.Left ? -1f : 1f);
+                        Ring(_fishPos + side * 0.8f, 1.1f, 1.2f, 0.8f);
+                        Ring(_fishPos + side * 1.2f, 0.7f, 1.0f, 0.6f);
                         break;
                     case AnglingMove.Dive:
-                        Bubbles(_fishPos, 18);
+                        Bubbles(_fishPos, 22);
                         break;
                     case AnglingMove.Run:
-                        // A wake opening away from you.
-                        for (int i = 0; i < 4; i++) Ring(_fishPos + forward * (0.3f + i * 0.35f), 0.4f + i * 0.15f, 0.9f + i * 0.15f, 0.6f);
+                        for (int i = 0; i < 5; i++) Ring(_fishPos + forward * (0.3f + i * 0.4f), 0.5f + i * 0.15f, 0.9f + i * 0.15f, 0.7f);
                         break;
                     case AnglingMove.Jump:
-                        Bubbles(_fishPos, 30);
-                        Ring(_fishPos, 1.4f, 0.7f, 0.9f);
+                        Bubbles(_fishPos, 36);
+                        Ring(_fishPos, 1.6f, 0.7f, 0.9f);
                         break;
                     case AnglingMove.Latch:
-                        Ring(_fishPos, 0.5f, 1.6f, 0.4f);
+                        Ring(_fishPos, 0.6f, 1.6f, 0.5f);
                         break;
                 }
             }
             _lastInTell = inTell;
             if (move != _lastMove)
             {
-                if (move == AnglingMove.Jump) Splash(_fishPos, 22, 1.4f);
-                if (_lastMove == AnglingMove.Jump) Splash(_fishPos, 26, 1.1f);
-                if (move == AnglingMove.Run) Splash(_fishPos, 8, 0.6f);
+                if (move == AnglingMove.Jump) Splash(_fishPos, 24, 1.4f);
+                if (_lastMove == AnglingMove.Jump) Splash(_fishPos, 28, 1.1f);
+                if (move == AnglingMove.Run) Splash(_fishPos, 10, 0.7f);
                 _lastMove = move;
             }
         }
@@ -390,10 +588,29 @@ namespace Rth.Client
         {
             if (_fight.Current == AnglingMove.Jump || t < _nextThrash) return;
             float fresh = Mathf.Clamp01(_fight.Energy / (float)Mathf.Max(1, _fight.Energy0));
-            _nextThrash = t + Mathf.Lerp(2.2f, 0.35f, fresh) * Random.Range(0.7f, 1.3f);
+            _nextThrash = t + Mathf.Lerp(2.2f, 0.45f, fresh) * Random.Range(0.7f, 1.3f);
             if (_depth > 0.6f) return;
             Splash(_fishPos, Mathf.RoundToInt(Mathf.Lerp(2f, 8f, fresh)), Mathf.Lerp(0.35f, 0.8f, fresh));
-            Ring(_fishPos, Mathf.Lerp(0.4f, 0.9f, fresh), 1.1f, 0.5f);
+        }
+
+        /// <summary>Pulling it the right way shows: spray off the fish, away from where it wants to go.</summary>
+        private void PullSpray(AnglingMove move, Vector3 right, float t)
+        {
+            if (t < _nextSpray) return;
+            byte pull = AnglingInput.Pull(_lastInput);
+            bool turning = move == AnglingMove.Left || move == AnglingMove.Right || move == AnglingMove.Dive;
+            if (!turning || !Answers(move, _lastInput) || pull == AnglingInput.PullNone) return;
+            _nextSpray = t + 0.18f;
+            Vector3 away = pull == AnglingInput.PullRight ? right : pull == AnglingInput.PullLeft ? -right : Vector3.up * 0.3f;
+            for (int i = 0; i < 3; i++)
+                _spray.Emit(new ParticleSystem.EmitParams
+                {
+                    position = new Vector3(_fishPos.x, _water + 0.05f, _fishPos.z),
+                    velocity = away * Random.Range(0.8f, 1.4f) + Vector3.up * Random.Range(0.8f, 1.5f),
+                    startSize3D = Vector3.one * Random.Range(0.07f, 0.13f),
+                    startLifetime = Random.Range(0.35f, 0.6f),
+                    startColor = new Color(0.85f, 1f, 0.9f, 0.9f),
+                }, 1);
         }
 
         private void Ended(AnglingFightState state)
@@ -402,39 +619,70 @@ namespace Rth.Client
             {
                 Transform me = session.world.Local?.transform;
                 Vector3 at = me != null ? me.position + (_fishPos - me.position) * 0.3f : _fishPos;
-                Splash(at, 24, 1.2f);
+                Splash(at, 30, 1.3f);
+                Pop(state.PersonalBest ? "Landed! New personal best!" : "Landed!", new Color(0.6f, 1f, 0.55f));
             }
-            else Ring(_fishPos, 1.2f, 1.4f, 0.7f);
+            else
+            {
+                Ring(_fishPos, 1.4f, 1.4f, 0.8f);
+                Pop(state.Outcome == AnglingOutcome.Snapped ? "The line snapped" : state.Outcome == AnglingOutcome.HookFree ? "It threw the hook" : "It got away",
+                    new Color(1f, 0.45f, 0.4f));
+            }
+        }
+
+        /// <summary>A word over the fish as the fight ends.</summary>
+        private void Pop(string text, Color colour)
+        {
+            Ui.UiRoot ui = Ui.UiRoot.Instance;
+            Camera cam = Camera.main;
+            if (ui?.WorldLayer == null || cam == null) return;
+            var label = new Label(text) { pickingMode = PickingMode.Ignore };
+            label.AddToClassList("angling-cue");
+            label.style.color = colour;
+            ui.WorldLayer.Add(label);
+            Vector3 at = _fishPos + Vector3.up * 1.0f;
+            float start = Time.time;
+            label.schedule.Execute(() =>
+            {
+                float k = (Time.time - start) / 2.2f;
+                if (k >= 1f || cam == null || label.panel == null)
+                {
+                    label.RemoveFromHierarchy();
+                    return;
+                }
+                Vector2 p = RuntimePanelUtils.CameraTransformWorldToPanel(label.panel, at + Vector3.up * k * 0.8f, cam);
+                label.style.left = p.x;
+                label.style.top = p.y;
+                label.style.opacity = 1f - k * k;
+            }).Every(16).Until(() => label.panel == null);
         }
 
         // ------------------------------------------------------------------ effects
 
         private void Ring(Vector3 at, float size, float life, float alpha)
         {
-            var p = new ParticleSystem.EmitParams
+            _rings.Emit(new ParticleSystem.EmitParams
             {
                 position = new Vector3(at.x, _water + 0.03f, at.z),
                 startSize3D = new Vector3(size, size, 1f),
                 startLifetime = life,
                 startColor = new Color(0.85f, 0.95f, 1f, alpha),
                 velocity = Vector3.zero,
-            };
-            _rings.Emit(p, 1);
-            // Rings grow as they fade (size and colour over lifetime are set up once).
+            }, 1);
         }
 
         private void Bubbles(Vector3 at, int count)
         {
             for (int i = 0; i < count; i++)
             {
-                Vector2 r = Random.insideUnitCircle * 0.35f;
+                Vector2 r = Random.insideUnitCircle * 0.4f;
                 _spray.Emit(new ParticleSystem.EmitParams
                 {
                     position = new Vector3(at.x + r.x, _water + 0.02f, at.z + r.y),
                     velocity = new Vector3(0f, Random.Range(0.4f, 0.9f), 0f),
-                    startSize3D = Vector3.one * Random.Range(0.05f, 0.11f),
+                    startSize3D = Vector3.one * Random.Range(0.06f, 0.12f),
                     startLifetime = Random.Range(0.3f, 0.7f),
-                    startColor = new Color(0.8f, 0.95f, 1f, 0.7f),
+                    startColor = new Color(0.8f, 0.95f, 1f, 0.8f),
                 }, 1);
             }
         }
@@ -448,12 +696,12 @@ namespace Rth.Client
                 {
                     position = new Vector3(at.x, _water + 0.05f, at.z),
                     velocity = new Vector3(dir.x * strength, Random.Range(1.2f, 2.6f) * strength, dir.y * strength),
-                    startSize3D = Vector3.one * Random.Range(0.06f, 0.14f),
+                    startSize3D = Vector3.one * Random.Range(0.07f, 0.15f),
                     startLifetime = Random.Range(0.45f, 0.9f),
-                    startColor = new Color(0.9f, 0.97f, 1f, 0.85f),
+                    startColor = new Color(0.9f, 0.97f, 1f, 0.9f),
                 }, 1);
             }
-            Ring(at, 0.6f + strength * 0.5f, 1.0f, 0.6f);
+            Ring(at, 0.7f + strength * 0.5f, 1.0f, 0.7f);
         }
 
         private void Clear()
@@ -462,34 +710,38 @@ namespace Rth.Client
             if (_root != null) Destroy(_root);
             _root = null;
             _fight = null;
+            _bar?.RemoveFromHierarchy();
+            _cue?.RemoveFromHierarchy();
+            _bar = null;
+            _cue = null;
         }
 
-        private void OnDisable()
-        {
-            Capturing = false;
-            if (_root != null) Destroy(_root);
-            _root = null;
-        }
+        private void OnDisable() => Clear();
     }
 
-    /// <summary>The materials and textures the fight is drawn with: the particle shader the spots use.</summary>
+    /// <summary>The materials and textures the fight is drawn with (Shaders/AnglingOverlay: over everything).</summary>
     internal static class AnglingFx
     {
-        private static Material _shadow, _rings, _glow, _line;
+        private static Material _shadow, _rings, _drops, _line, _lineShadow;
 
-        public static Material Shadow() => _shadow != null ? _shadow : _shadow = Make(Ellipse(), BlendMode.SrcAlpha, BlendMode.OneMinusSrcAlpha);
-        public static Material Rings() => _rings != null ? _rings : _rings = Make(Ring(), BlendMode.One, BlendMode.One);
-        public static Material Glow() => _glow != null ? _glow : _glow = Make(Soft(), BlendMode.SrcAlpha, BlendMode.OneMinusSrcAlpha);
-        public static Material LineMaterial() => _line != null ? _line : _line = Make(Strip(), BlendMode.SrcAlpha, BlendMode.OneMinusSrcAlpha);
+        public static Material Shadow() => _shadow != null ? _shadow : _shadow = Make(Ellipse(), 1);
+        public static Material Rings() => _rings != null ? _rings : _rings = Make(Ring(), 2);
+        public static Material Drops() => _drops != null ? _drops : _drops = Make(Soft(), 3);
 
-        private static Material Make(Texture2D texture, BlendMode src, BlendMode dst)
+        /// <summary>The line (order 0) and its dark edge drawn just under it (order -1), so it reads on any background.</summary>
+        public static Material LineMaterial(int order)
         {
-            Shader shader = Resources.Load<Shader>("Shaders/Particle");
+            if (order < 0) return _lineShadow != null ? _lineShadow : _lineShadow = Make(Strip(), -1);
+            return _line != null ? _line : _line = Make(Strip(), 4);
+        }
+
+        private static Material Make(Texture2D texture, int order)
+        {
+            Shader shader = Resources.Load<Shader>("Shaders/AnglingOverlay");
             if (shader == null) shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
             var m = new Material(shader) { hideFlags = HideFlags.DontSave };
             m.SetTexture("_BaseMap", texture);
-            m.SetFloat("_SrcBlend", (float)src);
-            m.SetFloat("_DstBlend", (float)dst);
+            m.renderQueue = 3050 + order;
             return m;
         }
 
@@ -505,26 +757,27 @@ namespace Rth.Client
             return tex;
         }
 
-        /// <summary>A fish's shadow from above: an ellipse, soft edged, a little narrower at the tail.</summary>
+        /// <summary>A fish's shadow from above: an ellipse, soft edged, narrower at the tail.</summary>
         private static Texture2D Ellipse() => Tex("FishShadow", 64, (u, v) =>
         {
-            float w = Mathf.Lerp(0.55f, 1f, Mathf.Clamp01((v + 1f) / 1.4f));
+            float w = Mathf.Lerp(0.5f, 1f, Mathf.Clamp01((v + 1f) / 1.4f));
             float r = Mathf.Sqrt(u * u / (w * w) + v * v);
-            return Mathf.Clamp01((1f - r) * 4f);
+            return Mathf.Clamp01((1f - r) * 5f);
         });
 
         private static Texture2D Ring() => Tex("Ripple", 64, (u, v) =>
         {
             float r = Mathf.Sqrt(u * u + v * v);
-            return Mathf.Exp(-Mathf.Pow((r - 0.85f) / 0.07f, 2f));
+            return Mathf.Exp(-Mathf.Pow((r - 0.85f) / 0.08f, 2f));
         });
 
         private static Texture2D Soft() => Tex("Drop", 32, (u, v) =>
         {
             float r = Mathf.Sqrt(u * u + v * v);
-            return Mathf.Clamp01(1f - r) * Mathf.Clamp01(1f - r) * 1.6f;
+            return Mathf.Clamp01((1f - r) * 2.5f);
         });
 
-        private static Texture2D Strip() => Tex("Line", 8, (u, v) => 1f - Mathf.Abs(u) * 0.5f);
+        /// <summary>The line: solid across, softened at its very edges.</summary>
+        private static Texture2D Strip() => Tex("Line", 8, (u, v) => Mathf.Clamp01((1f - Mathf.Abs(v)) * 3f));
     }
 }

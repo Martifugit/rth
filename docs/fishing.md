@@ -107,7 +107,17 @@ sinking as it dives, gone in a splash as it leaps (revised fish are tinted wrong
 from the rod tip to it and *is* the tension gauge (sagging when slack, straight when taut, amber,
 then red and trembling near snapping); **tells** are water effects (a swirl on the side it will turn
 to, bubbles before a dive, a wake opening before a run, the surface boiling before a leap); and how
-much **fight** it has left shows in how often and how hard it thrashes. No bars, no panel.
+much **fight** it has left shows in how often and how hard it thrashes. No panel.
+
+**Legible first (owner, 2026-11-02, after trying it):** everything is drawn over the scene
+(`Shaders/AnglingOverlay`), so trees and roofs never hide the line or the fish; the line starts at the
+held rod's real tip and has a dark edge; the camera swings round behind you when a fish bites; over the
+fish, its **energy** as a bar (like a creature's) and a **mark** for what it is doing: amber while it
+shows its tell, red until you answer it, green while you do ("RUN: let go", "<<< left"...); and
+spray off the fish when you pull it the right way. Tension moves slowly enough for people (reel +5,
+give -6 a step; a rod's red allowance and a hook's slack allowance count double and triple), and
+letting go during a leap drops the line slack fast. **One fish a cast:** after a fight, landed or
+lost, you cast again yourself.
 
 **Controls are an experiment** (`AnglingFightView`, Settings > Fishing), to be judged by playing
 and against other games (Sea of Thieves and Red Dead Redemption 2 keep the fish and line in the

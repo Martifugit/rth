@@ -345,9 +345,15 @@ public class AnglingTests
         Assert.NotEqual(AnglingOutcome.Landed, lost.Outcome);
         Assert.Equal(1, fx.World.Get<AnglingLogSystem>().Species(fx.Player("Alice"), "perch").Lost);
 
-        // It casts again by itself; two catches spook the spot (spookAfter 2).
+        // One fish a cast: it doesn't cast again by itself.
+        fx.Ticks(20);
+        Assert.Null(fx.World.Get<AnglingSystem>().Of(fx.Player("Alice")).Fight);
+        Assert.Null(fx.Player("Alice").Interaction);
+
+        // Cast again; two catches spook the spot (spookAfter 2).
         for (int caught = 0; caught < 2; caught++)
         {
+            Cast(alice, spot);
             for (int i = 0; i < 10 && fx.World.Get<AnglingSystem>().Of(fx.Player("Alice")).Fight == null; i++) fx.Ticks(1);
             Assert.Equal(AnglingOutcome.Landed, PlayFight(fx, alice).Outcome);
         }

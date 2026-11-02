@@ -65,7 +65,9 @@ namespace Rth.Shared.Angling
         /// <summary>Six minutes: nothing fights longer.</summary>
         public const int MaxSteps = 7200;
         /// <summary>Tuning: tension per step reeling and giving line; energy a correct pull drains; reeling speed (hundredths of a unit a step) and how much of it reaches a fresh fish (per thousand).</summary>
-        public const int TensionReel = 12, TensionGive = 20, DrainCounter = 12, ReelUnits = 800, FreshReel = 100, RunUnits = 500, RunTire = 7;
+        public const int TensionReel = 5, TensionGive = 6, DrainCounter = 12, ReelUnits = 800, FreshReel = 100, RunUnits = 500, RunTire = 7;
+        /// <summary>A rod's snapBuffer and a hook's hookHold are counted in these many steps each, so people (not just bots) can keep up.</summary>
+        public const int RedStepsPerBuffer = 2, SlackStepsPerHold = 3;
 
         private readonly AnglingFightDef _def;
         private readonly AnglingRigStats _rig;
@@ -197,32 +199,32 @@ namespace Rth.Shared.Angling
             bool wrongPull = pull != AnglingInput.PullNone && !counter;
             int up = 0, down = 0;
             if (reel) up += TensionReel; else down += TensionGive;
-            if (wrongPull) up += 4;
+            if (wrongPull) up += 2;
             int runScale = _def.RunPull * (Revised ? 125 : 100) / Math.Max(1, _rig.RunDrag);
             switch (move)
             {
                 case AnglingMove.Left:
                 case AnglingMove.Right:
-                    up += 3;
+                    up += 1;
                     break;
                 case AnglingMove.Dive:
-                    if (pull == AnglingInput.PullUp) up += 5;
-                    else down += 10;
+                    if (pull == AnglingInput.PullUp) up += 2;
+                    else down += 4;
                     break;
                 case AnglingMove.Run:
-                    if (reel) up += 55 * runScale / 100;
+                    if (reel) up += 22 * runScale / 100;
                     break;
                 case AnglingMove.Jump:
-                    down += 15;
+                    if (!reel) down += 18;     // in the air: let go and the line falls slack fast
                     break;
                 case AnglingMove.Latch:
-                    if (reel) up += 11;
+                    if (reel) up += 5;
                     break;
             }
             int strength = Math.Max(1, _rig.Strength);
             int tension = Tension + up * 100 / strength - down;
             // Giving line to a running fish: the drag holds it near the middle.
-            if (move == AnglingMove.Run && !reel) tension = Tension + (550 * runScale / 100 - Tension) / 4;
+            if (move == AnglingMove.Run && !reel) tension = Tension + (550 * runScale / 100 - Tension) / 10;
             Tension = Clamp(tension, 0, TensionMax);
 
             // Energy.
@@ -260,8 +262,8 @@ namespace Rth.Shared.Angling
             if (move == AnglingMove.Latch) LatchSteps++;
 
             if (move == AnglingMove.Jump && _moveLeft == 0 && Tension > 200 + _rig.HookHold * 5) Outcome = AnglingOutcome.HookFree;
-            else if (_redRun > Math.Max(1, _rig.SnapBuffer)) Outcome = AnglingOutcome.Snapped;
-            else if (_slackRun > Math.Max(1, _rig.HookHold)) Outcome = AnglingOutcome.HookFree;
+            else if (_redRun > Math.Max(1, _rig.SnapBuffer) * RedStepsPerBuffer) Outcome = AnglingOutcome.Snapped;
+            else if (_slackRun > Math.Max(1, _rig.HookHold) * SlackStepsPerHold) Outcome = AnglingOutcome.HookFree;
             else if (Distance == 0) Outcome = AnglingOutcome.Landed;
             else if (Distance > Distance0 * 3 || Steps >= MaxSteps) Outcome = AnglingOutcome.Escaped;
         }

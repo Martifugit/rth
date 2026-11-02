@@ -303,12 +303,14 @@ namespace Rth.Server.Game
     }
 
     /// <summary>
-    /// Walks to a trophy spot and fishes it: a cast, a wait for the bite, the fight; then casts
-    /// again while the spot is workable and there's room. Walking away ends it (and lets a hooked fish go).
+    /// Walks to a trophy spot and fishes it: a cast, a wait for the bite, the fight. One fish a cast:
+    /// when the fight ends, landed or lost, so does this (cast again to fish on). Walking away ends
+    /// it (and lets a hooked fish go).
     /// </summary>
     public sealed class AnglingCastInteraction : ObjectInteraction
     {
         private bool _started;
+        private bool _hooked;
         private uint _biteAt;
 
         public AnglingCastInteraction(PlacedObject spot) : base(spot) { }
@@ -327,6 +329,7 @@ namespace Rth.Server.Game
             AnglingSpotSystem.Spot? spot = spots.SpotAt(Object);
             if (spot == null) return false;
             if (angling.Of(player).Fight != null) return true;     // fighting: the client's inputs drive it
+            if (_hooked) return false;                              // the fight is over: one fish a cast
             AnglingFile rules = world.Content.Angling;
             if (!_started || _biteAt == 0)
             {
@@ -354,7 +357,7 @@ namespace Rth.Server.Game
                 return false;
             }
             if (world.CurrentTick < _biteAt) return true;
-            _biteAt = 0;     // after this fight, cast again
+            _hooked = true;
             angling.Hook(player, spot);
             return true;
         }

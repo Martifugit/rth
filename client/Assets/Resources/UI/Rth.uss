@@ -1909,6 +1909,24 @@
     opacity: 0.8;
 }
 
+.angling-cue {
+    position: absolute;
+    -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
+    font-size: 20px;
+    color: rgb(255, 232, 180);
+    text-shadow: 0 2px 3px rgb(0, 0, 0);
+    -unity-text-align: middle-center;
+    width: 200px;
+    margin-left: -100px;
+    margin-top: -40px;
+}
+
+.angling-energy {
+    width: 96px;
+    margin-left: -48px;
+    height: 12px;
+}
+
 .world-pop {
     position: absolute;
     -unity-font-definition: resource("UI/Fonts/AlegreyaSans-Bold");
