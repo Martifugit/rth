@@ -122,6 +122,12 @@ namespace Rth.Shared.World.Ground
         public string ClearTo = "lake";
         /// <summary>Land: only the ground is painted (a town's square, a yard); the heights stay as they are.</summary>
         public bool KeepHeights;
+        /// <summary>
+        /// Only heights: the land inside is raised by this much (lowered if negative) on top of what is
+        /// there, easing in over <see cref="Gentle"/> tiles from the edge; the ground is left as it is (a
+        /// crown on a hill, a knoll, a hollow).
+        /// </summary>
+        public float Raise;
 
         // A body of water instead of land (a mere, a pond, a bay): "water": true.
 
@@ -382,6 +388,19 @@ namespace Rth.Shared.World.Ground
             int x0 = (int)Math.Floor(outline.Min(p => p[0]) - sh.Ragged - 2), x1 = (int)Math.Ceiling(outline.Max(p => p[0]) + sh.Ragged + 2);
             int y0 = (int)Math.Floor(outline.Min(p => p[1]) - sh.Ragged - 2), y1 = (int)Math.Ceiling(outline.Max(p => p[1]) + sh.Ragged + 2);
             if (sh.Water) return FillWater(g, sh, Edge, x0, y0, x1, y1);
+            if (sh.Raise != 0f)
+            {
+                var raised = new Dictionary<(int, int), float>();
+                for (int cy = y0; cy <= y1; cy++)
+                    for (int cx = x0; cx <= x1; cx++)
+                    {
+                        float d = Edge(cx, cy);
+                        if (d <= 0f || !(g.Corner(cx, cy) is float h)) continue;
+                        raised[(cx, cy)] = h + sh.Raise * LandNoise.Smooth(Math.Min(1f, d / Math.Max(1f, sh.Gentle)));
+                    }
+                foreach (var r in raised) g.SetCorner(r.Key.Item1, r.Key.Item2, r.Value);
+                return $"{sh.Id}: {raised.Count} corners raised by up to {sh.Raise:0.00}.";
+            }
 
             // The water's level round it: the lowest corner of water near it.
             float level = float.NaN;

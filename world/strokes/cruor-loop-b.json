@@ -1,0 +1,279 @@
+{
+  "area": "cruor",
+  "note": "Cruor's loop, second of two (1.3-1.5, 2026-11-02): the outflow comes in from the lake road area and swings in a wide meander round s-lake-monument, then runs east along the hill's foot to the confluence, so the hill has water on three sides (the great river north and east, the outflow south) and every road crosses water to reach the city: the lake road crosses the meander's south leg, passes the monument in the meadow inside it (the gate before the gate) and crosses the north leg to the hill; the south road gets its bridge too. A gentle crown raised on the hill's flat top (3.2 to about 4.6) where the cathedral will stand; the strays (worn and broken ground, sand and shingle scraps, reeds away from water, stubs of old road) go to the land round them. Applied once after cruor-loop-a.json.",
+  "shapes": [
+    {
+      "id": "cruor-crown",
+      "raise": 1.4,
+      "gentle": 12,
+      "ragged": 1.5,
+      "seed": 91,
+      "points": [
+        [
+          322,
+          201
+        ],
+        [
+          336,
+          196
+        ],
+        [
+          342,
+          182
+        ],
+        [
+          338,
+          166
+        ],
+        [
+          324,
+          160
+        ],
+        [
+          308,
+          164
+        ],
+        [
+          302,
+          180
+        ],
+        [
+          308,
+          195
+        ]
+      ]
+    }
+  ],
+  "strokes": [
+    {
+      "id": "outflow",
+      "ground": "river",
+      "seed": 92,
+      "points": [
+        [
+          343,
+          96
+        ],
+        [
+          336,
+          104
+        ],
+        [
+          324,
+          110
+        ],
+        [
+          310,
+          113
+        ],
+        [
+          296,
+          115
+        ],
+        [
+          283,
+          116
+        ],
+        [
+          272,
+          119
+        ],
+        [
+          266,
+          125
+        ],
+        [
+          267,
+          131
+        ],
+        [
+          274,
+          135
+        ],
+        [
+          288,
+          136
+        ],
+        [
+          304,
+          135
+        ],
+        [
+          318,
+          134
+        ],
+        [
+          332,
+          134
+        ],
+        [
+          347,
+          137
+        ]
+      ],
+      "width": [
+        6,
+        7
+      ],
+      "wind": 0.8,
+      "wave": 30,
+      "bends": "meander",
+      "ragged": 0.12,
+      "banks": [
+        {
+          "ground": "meadow",
+          "share": 0.5,
+          "scale": 6
+        },
+        {
+          "ground": "reeds",
+          "share": 0.12,
+          "scale": 3
+        }
+      ],
+      "bankReach": 2
+    },
+    {
+      "id": "lake-road-bridge-south",
+      "ground": "path",
+      "seed": 93,
+      "points": [
+        [
+          268,
+          106
+        ],
+        [
+          274,
+          112
+        ],
+        [
+          280,
+          118
+        ],
+        [
+          285,
+          124
+        ]
+      ],
+      "width": [
+        3,
+        3
+      ],
+      "wind": 0,
+      "ragged": 0,
+      "erase": [
+        "path"
+      ],
+      "eraseReach": 4
+    },
+    {
+      "id": "lake-road-bridge-north",
+      "ground": "path",
+      "seed": 95,
+      "points": [
+        [
+          290,
+          127.5
+        ],
+        [
+          295,
+          132.5
+        ],
+        [
+          300.5,
+          138
+        ],
+        [
+          305.5,
+          143
+        ],
+        [
+          310,
+          147.5
+        ]
+      ],
+      "width": [
+        3,
+        3
+      ],
+      "wind": 0,
+      "ragged": 0,
+      "erase": [
+        "path"
+      ],
+      "eraseReach": 4
+    },
+    {
+      "id": "south-road-bridge",
+      "ground": "path",
+      "seed": 94,
+      "points": [
+        [
+          327,
+          147
+        ],
+        [
+          331,
+          142
+        ],
+        [
+          335,
+          137
+        ],
+        [
+          339,
+          132
+        ],
+        [
+          342,
+          128
+        ]
+      ],
+      "width": [
+        3,
+        3
+      ],
+      "wind": 0,
+      "ragged": 0,
+      "erase": [
+        "path"
+      ],
+      "eraseReach": 2
+    }
+  ],
+  "swaps": [
+    {
+      "from": [
+        "worn",
+        "broken"
+      ],
+      "nearWater": 0,
+      "otherwise": "surround"
+    },
+    {
+      "from": [
+        "sand",
+        "shingle"
+      ],
+      "awayFromWater": 2,
+      "nearWater": 0,
+      "otherwise": "surround"
+    },
+    {
+      "from": [
+        "reeds"
+      ],
+      "awayFromWater": 2,
+      "nearWater": 0,
+      "otherwise": "surround"
+    },
+    {
+      "from": [
+        "path"
+      ],
+      "nearWater": 0,
+      "smaller": 12,
+      "otherwise": "surround"
+    }
+  ]
+}

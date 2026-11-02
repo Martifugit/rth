@@ -1,6 +1,6 @@
 # Cruor and the meander: the brief
 
-**Status:** agreed (2026-10-27). Wave 1. Ground only this pass: no assets, buildings, people or
+**Status:** agreed (2026-10-27); the loop and the crown 2026-11-02 (findings 4-6). Wave 1. Ground only this pass: no assets, buildings, people or
 objects. The four regions are taken over and have had a first ground pass (path and river strokes,
 `world/strokes/cruor.json`, applied once; the tiles are the truth now). The city itself is designed
 in [../regions/cruor.md](../regions/cruor.md) (on the old map; its layout direction and building
@@ -123,3 +123,19 @@ monuments along the roads in, the oldest worn smooth.
    the five above at 1.5.
 3. **The first ground pass** (`world/strokes/cruor.json`) is kept as the base; the owner's walk
    (1.6) judges it.
+4. **The loop made whole** (2026-11-02, `world/strokes/cruor-loop-a.json` then `-b.json`, applied
+   once). The generator's outflow ran straight north to the confluence, so the hill had water on two
+   sides and the lake road reached the city without crossing any. Now the outflow comes in from the
+   lake road area at (343, 96), swings west in a wide meander round s-lake-monument and runs east
+   along the hill's foot to the confluence: water on three sides (the great river north and east,
+   the outflow south), the open neck to the west (where the filled moat goes). The lake road crosses
+   the meander's south leg, passes the monument in the meadow inside it (the gate before the gate)
+   and crosses the north leg to the hill; the south road to the Gall and east roads crosses it too.
+   Three bridges, all first drawn as `bridge` ground; the art is the road bridge's (Tolling's) for now.
+5. **The hill's crown** (`cruor-crown`, a new strokes shape option `"raise"`): the flat top at 3.2
+   rises gently to about 4.6 over 12 tiles round (322, 180), where the cathedral stands, so the hill
+   reads as a hill with a crown, not a table. The east side keeps its bluff over the great river (the
+   only cliffs in the area, as before).
+6. **Ground (1.5):** worn and broken ground, sand and shingle scraps away from water and stubs of
+   old road went to the land round them. Left: grass and meadow, the fields, heath and bracken east,
+   Eller's forest north, the rivers, the roads, a little shingle and reeds at the water.

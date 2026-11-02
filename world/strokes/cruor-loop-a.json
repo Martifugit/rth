@@ -1,0 +1,7 @@
+{
+  "area": "cruor",
+  "note": "Cruor's loop, first of two (2026-11-02): the outflow's old straight course north from the lake road area to the confluence, and its bridge, cleared to the land round them, so cruor-loop-b.json can lead it round the hill's south side. Applied once with `tools/world strokes world/strokes/cruor-loop-a.json`, then b.",
+  "swaps": [
+    { "from": ["river", "bridge"], "nearWater": 0, "rect": [336, 96, 350, 131], "otherwise": "surround" }
+  ]
+}

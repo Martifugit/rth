@@ -19,8 +19,7 @@
     "LandHeath": "Heath",
     "LandMeadow": "Meadow",
     "LandPath": "Trodden",
-    "LandStonesGravel": "Gravel",
-    "LandWorn": "Worn"
+    "LandStonesGravel": "Gravel"
   },
   "seed": 570346567,
   "generated": "blockout",
@@ -124,7 +123,7 @@
     "64 61 59 57 56*5 55*3 54 53 51 49 47 44 40 36 32 28 24 20 16 12 9 7*5 9 10 12 14 16 18 20 21 23 26 28 30 33 36 39 44 49 53 58 61 65 67 70 72 74 76 78 80 81 83 84 85 86 89 92 97 104 111 120 128 137 145 153 158 162 164 165 163 160 157 152 148 144 141 139 137 135 132 128 124 118 111 104 97 92"
   ] },
   "pieces": [
-    { "id": "ground", "kind": "tiles", "rect": [384, 192, 480, 288], "legend": { "&": { "material": "LandDirttrack", "layer": "over" }, "A": { "material": "LandPath", "layer": "over" }, "G": { "material": "LandGlade" }, "J": { "material": "LandFurrow", "layer": "over" }, "U": { "material": "LandWorn" }, "e": { "material": "LandMeadow" }, "g": { "material": "LandGrass", "cliff": "LandCliffCliffRock" }, "h": { "material": "LandHeath", "cliff": "LandCliffCliffRock" }, "k": { "material": "LandBracken" }, "v": { "material": "LandDeepwood" }, "w": { "material": "LandForest", "cliff": "LandCliffCliffRock" } }, "paint": true, "margin": 4, "stoneLegend": { "1": { "material": "LandStonesGravel", "share": 0.12 }, "2": { "material": "LandStonesGravel", "share": 0.25 }, "3": { "material": "LandStonesGravel", "share": 0.45 }, "4": { "material": "LandStonesGravel", "share": 0.7 } }, "rows": [
+    { "id": "ground", "kind": "tiles", "rect": [384, 192, 480, 288], "legend": { "&": { "material": "LandDirttrack", "layer": "over" }, "A": { "material": "LandPath", "layer": "over" }, "G": { "material": "LandGlade" }, "J": { "material": "LandFurrow", "layer": "over" }, "e": { "material": "LandMeadow" }, "g": { "material": "LandGrass", "cliff": "LandCliffCliffRock" }, "h": { "material": "LandHeath", "cliff": "LandCliffCliffRock" }, "k": { "material": "LandBracken" }, "v": { "material": "LandDeepwood" }, "w": { "material": "LandForest", "cliff": "LandCliffCliffRock" } }, "paint": true, "margin": 4, "stoneLegend": { "1": { "material": "LandStonesGravel", "share": 0.12 }, "2": { "material": "LandStonesGravel", "share": 0.25 }, "3": { "material": "LandStonesGravel", "share": 0.45 }, "4": { "material": "LandStonesGravel", "share": 0.7 } }, "rows": [
       "wwwwGGGGGGGGGGGGGGGGGGGGvvvvGGGwwwwwwwwAAAAAwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww",
       "wwwwGGGGGGGGGGGGGGGGGGGGwvvGGGGwwwwwwwAAAAAwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww",
       "wwwwGGGGGGGGGGGGGGGGGGGwwwGGGGwwwwwwAAAAAAwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww",
@@ -268,8 +267,8 @@
       "Agggeeee",
       "ggggeeee",
       "ggggeeee",
-      "gUggegge",
-      "Ugggggge",
+      "ggggegge",
+      "ggggggge",
       "ggggggge",
       "ggggggge",
       "ggggegee",

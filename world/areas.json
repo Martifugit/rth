@@ -41,7 +41,7 @@
       "done": { "1.1": "2026-10-27", "1.2": "2026-10-26 regions taken over; first ground pass (world/strokes/lake-road.json)", "1.3": "2026-11-02 the lake reaches under the Downs' edge; the isle off the south shore", "1.4": "2026-11-02 Knellmere reshaped (world/strokes/lake-road-knellmere.json)", "1.5": "2026-11-02 strays gone; five grounds, shingle and reeds at the shore (not yet seen in the Editor)" }, "notes": "" },
     { "id": "cruor", "name": "Cruor and the meander", "wave": 1, "about": "The capital on its hill in the great river's loop, and the roads into it.",
       "regions": ["land_3_1", "land_2_1", "land_4_1", "land_3_2"],
-      "done": { "1.1": "2026-10-27", "1.2": "2026-10-26 regions taken over; first ground pass (world/strokes/cruor.json)" }, "notes": "" },
+      "done": { "1.1": "2026-10-27", "1.2": "2026-10-26 regions taken over; first ground pass (world/strokes/cruor.json)", "1.3": "2026-11-02 the crown raised on the hill (world/strokes/cruor-loop-b.json)", "1.4": "2026-11-02 the outflow meanders round the monument and the hill's south; three bridges", "1.5": "2026-11-02 strays gone (not yet seen in the Editor)" }, "notes": "" },
     { "id": "western-march", "name": "The western march", "wave": 1, "about": "Dry downs and scrub west of Tolling, the observatory spur, the road to the salt pass.",
       "regions": ["land_m1_m1", "land_m1_0", "land_m1_1"],
       "done": { "1.1": "2026-10-27", "1.2": "2026-10-26 regions taken over; first ground pass (world/strokes/western-march.json)" }, "notes": "" },
