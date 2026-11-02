@@ -399,7 +399,7 @@ namespace Rth.Client
             El(_letGo, "angling-letgo__stroke");
             El(_letGo, "angling-letgo__stroke");
 
-            Row(_bar, "fishing", new Color(0.7f, 0.85f, 0.95f), out _reel);
+            Row(_bar, "fishing", new Color(0.7f, 0.85f, 0.95f), out _reel).AddToClassList("angling-hud__row--second");
             _reel.AddToClassList("angling-hud__reel");
             _reelFill = El(_reel, "bar__fill");
             _reelFill.style.backgroundColor = new Color(0.35f, 0.62f, 0.8f);
