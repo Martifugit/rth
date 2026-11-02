@@ -36,6 +36,8 @@ namespace Rth.Client.Ui
         public const string ActionBar = "actionbar";
         public const string ActionBar2 = "actionbar2";
         public const string ActionBar3 = "actionbar3";
+        public const string ActionBar4 = "actionbar4";
+        public const string ActionBar5 = "actionbar5";
         public const string Target = "target";
         public const string Buffs = "buffs";
         public const string Debuffs = "debuffs";
@@ -46,15 +48,19 @@ namespace Rth.Client.Ui
 
         public static readonly Dictionary<string, Placement> Windows = new Dictionary<string, Placement>
         {
-            [Minimap] = new Placement(1f, 0f, 0f, 0f, 240f, 240f),
+            [Minimap] = new Placement(1f, 0f, 0f, 0f, 270f, 270f),
             [Side] = new Placement(1f, 1f, 0f, 0f, 312f, 400f),
             [Side2] = new Placement(1f, 1f, 0f, -404f, 312f, 220f),
             [Chat] = new Placement(0f, 1f, 0f, 0f, 480f, 230f),
-            [ActionBar] = new Placement(0.5f, 1f, 0f, 0f, 636f, 110f),
-            [Buffs] = new Placement(0.5f, 1f, -160f, -114f, 316f, 40f),
-            [Debuffs] = new Placement(0.5f, 1f, 160f, -114f, 316f, 40f),
-            [ActionBar2] = new Placement(0.5f, 1f, 0f, -158f, 636f, 62f),
-            [ActionBar3] = new Placement(0.5f, 1f, 0f, -222f, 636f, 62f),
+            [ActionBar] = new Placement(0.5f, 1f, 0f, 0f, 580f, 108f),
+            // The buff and debuff rows: each half the main bar's width, together exactly over it.
+            [Buffs] = new Placement(0.5f, 1f, -145f, -112f, 290f, 40f),
+            [Debuffs] = new Placement(0.5f, 1f, 145f, -112f, 290f, 40f),
+            // The secondary bars stack flush above the buffs, each the main bar's width.
+            [ActionBar2] = new Placement(0.5f, 1f, 0f, -156f, 580f, 56f),
+            [ActionBar3] = new Placement(0.5f, 1f, 0f, -212f, 580f, 56f),
+            [ActionBar4] = new Placement(0.5f, 1f, 0f, -268f, 580f, 56f),
+            [ActionBar5] = new Placement(0.5f, 1f, 0f, -324f, 580f, 56f),
             [Target] = new Placement(0.5f, 0f, 0f, 8f, 260f, 64f),
             [Dialogue] = new Placement(0.5f, 1f, 0f, -130f, 600f, 230f),
             [Town] = new Placement(0.5f, 0.5f, -60f, -30f, 780f, 480f),

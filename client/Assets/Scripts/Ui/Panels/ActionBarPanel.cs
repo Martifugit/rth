@@ -17,7 +17,19 @@ namespace Rth.Client.Ui.Panels
         public override string Icon => "book";
         public override string DefaultWindow => UiDefaultLayout.ActionBar;
         public override bool Bare => true;
-        public override Vector2? FixedSize => new Vector2(636f, 110f);
+        public override Vector2? FixedSize => new Vector2(Width, Height);
+
+        /// <summary>The bar's frame either side of the slots (the hud surface's own padding).</summary>
+        public const float SidePadding = 10f;
+
+        /// <summary>
+        /// The main bar's width: one row of slots and the frame's padding. Secondary bars take the
+        /// same width (or exactly half), so a bar snapped under this one lines up slot for slot.
+        /// </summary>
+        public static readonly float Width = ActionBarRow.SizeFor(ActionBars.SlotCount).x + 2f * SidePadding;
+
+        /// <summary>The gauges, the bile axis and a row of slots, in the frame's padding.</summary>
+        public const float Height = 108f;
 
         private UiKit.Gauge _blood;
         private UiKit.Gauge _phlegm;
@@ -51,9 +63,9 @@ namespace Rth.Client.Ui.Panels
             _bile = new BileAxis(frame);
             _bile.Root.style.marginTop = 5f;
 
-            VisualElement slots = UiKit.El(frame);
-            slots.style.marginTop = 5f;
-            _slots = new ActionBarRow(Ui, slots, 0);
+            _slots = new ActionBarRow(Ui, frame, 0);
+            _slots.Root.style.marginTop = 5f;
+            _slots.Root.style.alignSelf = Align.Center;
             _lock.BringToFront(); // above the gauges, so its own tooltip and click win
         }
 
@@ -136,26 +148,75 @@ namespace Rth.Client.Ui.Panels
         }
     }
 
-    /// <summary>A secondary action bar: 14 more slots, no keys, a fixed size. Open them from the window menu.</summary>
+    /// <summary>
+    /// A secondary action bar (bars 2 to 5, opened from the window menu): 14 more slots, no keys.
+    /// It is a full row as wide as the main bar, or, resized, half that width in two rows of seven,
+    /// or two columns of seven standing tall; the window snaps between those sizes
+    /// (<see cref="AllowedSizes"/>) and the slots are laid out, centred, to whichever it has.
+    /// </summary>
     public abstract class SecondaryBarPanel : UiPanel
     {
+        /// <summary>The frame above and below the slots (and either side of the tall layout).</summary>
+        private const float EndPadding = 8f;
+
+        /// <summary>The layouts as columns of slots, one for one with <see cref="Sizes"/>.</summary>
+        private static readonly int[] Columns = { ActionBars.SlotCount, 7, 2 };
+
+        /// <summary>A full row as wide as the main bar; exactly half its width in two rows; two columns standing as tall as that is wide.</summary>
+        private static readonly Vector2[] Sizes =
+        {
+            new Vector2(ActionBarPanel.Width, ActionBarRow.Pitch + 2f * EndPadding),
+            new Vector2(ActionBarPanel.Width / 2f, 2f * ActionBarRow.Pitch + 2f * EndPadding),
+            new Vector2(2f * ActionBarRow.Pitch + 2f * EndPadding, ActionBarPanel.Width / 2f),
+        };
+
         protected abstract int Bar { get; }
         public override string Icon => "book";
         public override bool Bare => true;
         public override bool OpenByDefault => false;
-        public override Vector2? FixedSize => new Vector2(636f, 62f);
+        public override Vector2[] AllowedSizes => Sizes;
+        public override Vector2 DefaultSize => Sizes[0];
+        public override Vector2 MinSize => new Vector2(Sizes[2].x, Sizes[0].y);
 
         private ActionBarRow _slots;
+        private VisualElement _frame;
+        private int _columns = -1;
 
         protected override void Build(VisualElement root)
         {
             root.pickingMode = PickingMode.Ignore;
-            VisualElement frame = UiKit.El(root, "hud");
-            frame.style.flexGrow = 1;
-            _slots = new ActionBarRow(Ui, frame, Bar);
+            // No padding of its own: the block of slots sits centred in whatever size the window has.
+            _frame = UiKit.El(root, "hud", "hud--bar");
+            _frame.style.flexGrow = 1;
+            _slots = new ActionBarRow(Ui, _frame, Bar);
         }
 
-        public override void Refresh() => _slots.Refresh();
+        public override void Refresh()
+        {
+            int columns = Columns[Nearest(Window != null ? Window.Size : _frame.layout.size)];
+            if (columns != _columns)
+            {
+                _columns = columns;
+                _slots.SetColumns(columns);
+            }
+            _slots.Refresh();
+        }
+
+        /// <summary>The layout whose size is nearest the window's, by proportion on each axis.</summary>
+        private static int Nearest(Vector2 size)
+        {
+            if (float.IsNaN(size.x) || float.IsNaN(size.y) || size.x <= 0f || size.y <= 0f) return 0;
+            int best = 0;
+            float bestScore = float.MaxValue;
+            for (int i = 0; i < Sizes.Length; i++)
+            {
+                float score = Mathf.Abs(Mathf.Log(size.x / Sizes[i].x)) + Mathf.Abs(Mathf.Log(size.y / Sizes[i].y));
+                if (score >= bestScore) continue;
+                best = i;
+                bestScore = score;
+            }
+            return best;
+        }
     }
 
     public sealed class ActionBar2Panel : SecondaryBarPanel
@@ -172,5 +233,21 @@ namespace Rth.Client.Ui.Panels
         public override string Id => "actionbar3";
         public override string Title => "Action bar 3";
         public override string DefaultWindow => UiDefaultLayout.ActionBar3;
+    }
+
+    public sealed class ActionBar4Panel : SecondaryBarPanel
+    {
+        protected override int Bar => 3;
+        public override string Id => "actionbar4";
+        public override string Title => "Action bar 4";
+        public override string DefaultWindow => UiDefaultLayout.ActionBar4;
+    }
+
+    public sealed class ActionBar5Panel : SecondaryBarPanel
+    {
+        protected override int Bar => 4;
+        public override string Id => "actionbar5";
+        public override string Title => "Action bar 5";
+        public override string DefaultWindow => UiDefaultLayout.ActionBar5;
     }
 }

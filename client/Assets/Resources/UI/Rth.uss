@@ -2059,3 +2059,58 @@
     width: 160px;
     margin-left: -80px;
 }
+
+/* ---- HUD pieces ---- */
+/* Action bars, the minimap and the chat (ActionBarPanel, ActionBarRow, MinimapPanel, ChatPanel). */
+
+/* The block of an action bar's slots: ActionBarRow sizes it to whole columns of one pitch (38 px
+   slots, 1 px around each), so the slots wrap into rows and every bar lines up slot for slot. */
+.action-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+    align-content: flex-start;
+}
+
+.action-row > .ability {
+    width: 38px;
+    height: 38px;
+    margin: 1px;
+}
+
+.action-row > .ability > .ability__timer {
+    font-size: 17px;
+}
+
+/* A secondary bar's surface has no padding of its own: its slots sit centred in whatever size it has. */
+.hud--bar {
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+}
+
+/* The region's name, kept clear of the ring now that the minimap is larger. */
+.minimap-frame .minimap__region {
+    left: 22px;
+    right: 22px;
+    bottom: 27px;
+}
+
+/* A little more room between chat messages. */
+.chat-scroll .chat-line {
+    margin-bottom: 3px;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+}
+
+/* The chat has no hard dark edges: the input line has no box in any state (the default theme's
+   field frame included), and the scrollbar is only its bronze thumb, with no dark track. */
+.chat-input > .unity-base-text-field__input,
+.chat-input:hover > .unity-base-text-field__input,
+.chat-input:focus > .unity-base-text-field__input {
+    border-width: 0;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.rth-root .chat-scroll .unity-base-slider__tracker {
+    background-color: rgba(0, 0, 0, 0);
+}

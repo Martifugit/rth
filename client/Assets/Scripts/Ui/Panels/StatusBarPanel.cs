@@ -18,7 +18,8 @@ namespace Rth.Client.Ui.Panels
         protected abstract bool Debuffs { get; }
         public override string Icon => "focus";
         public override bool Bare => true;
-        public override Vector2? FixedSize => new Vector2(316f, 40f);
+        /// <summary>Half the main bar's width, so the buff and debuff rows side by side span it exactly.</summary>
+        public override Vector2? FixedSize => new Vector2(ActionBarPanel.Width / 2f, 40f);
 
         private VisualElement _row;
         private readonly List<StatusSlot> _slots = new List<StatusSlot>();

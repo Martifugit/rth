@@ -8,7 +8,8 @@ using UnityEngine.UIElements;
 namespace Rth.Client.Ui.Panels
 {
     /// <summary>
-    /// One row of 14 action bar slots, shared by the main and secondary bars. Shows each slot's
+    /// The 14 slots of one action bar, shared by the main and secondary bars, in one row or wrapped
+    /// into a block (<see cref="SetColumns"/>). Shows each slot's
     /// ability, hymn or item, its key, cooldown and whether it can be used. Click to use; drag an
     /// ability from the book, a hymn from the religion tab or an item from the pack onto a slot to
     /// place it; drag between slots to swap; drag a slot off the bars to clear it, or right-click
@@ -16,7 +17,14 @@ namespace Rth.Client.Ui.Panels
     /// </summary>
     public sealed class ActionBarRow
     {
-        public const float SlotSize = 42f;
+        /// <summary>A slot's size and the gap around it: one pitch for every bar, so stacked bars line up slot for slot.</summary>
+        public const float SlotSize = 38f;
+        public const float SlotMargin = 1f;
+        public const float Pitch = SlotSize + 2f * SlotMargin;
+        private const float IconSize = 28f;
+
+        /// <summary>The slots' own box, sized to whole columns so they wrap into rows and stay centred in the bar.</summary>
+        public readonly VisualElement Root;
 
         private readonly UiRoot _ui;
         private readonly int _bar;
@@ -43,14 +51,14 @@ namespace Rth.Client.Ui.Panels
         {
             _ui = ui;
             _bar = bar;
-            VisualElement row = UiKit.El(parent, "row");
-            row.style.justifyContent = Justify.Center;
+            VisualElement row = Root = UiKit.El(parent, "action-row");
+            SetColumns(ActionBars.SlotCount);
             for (int i = 0; i < ActionBars.SlotCount; i++)
             {
                 int index = i;
                 var slot = new Slot { Root = UiKit.El(row, "slot", "ability") };
                 slot.Icon = UiKit.El(slot.Root, "slot__icon");
-                slot.Icon.style.width = slot.Icon.style.height = 30f;
+                slot.Icon.style.width = slot.Icon.style.height = IconSize;
                 slot.Icon.pickingMode = PickingMode.Ignore;
                 slot.Cooldown = new RadialCooldown();
                 slot.Root.Add(slot.Cooldown);
@@ -85,6 +93,22 @@ namespace Rth.Client.Ui.Panels
                 UiKit.Tooltip(slot.Root, () => BarsLocked ? null : Describe(Session.Bars?.Get(_bar, index)));
                 _slots[i] = slot;
             }
+        }
+
+        /// <summary>Lays the 14 slots out in this many columns (14: one row; 7: two rows; 2: two columns of seven).</summary>
+        public void SetColumns(int columns)
+        {
+            columns = Mathf.Clamp(columns, 1, ActionBars.SlotCount);
+            int rows = (ActionBars.SlotCount + columns - 1) / columns;
+            Root.style.width = columns * Pitch;
+            Root.style.height = rows * Pitch;
+        }
+
+        /// <summary>The size of the slots laid out in this many columns.</summary>
+        public static Vector2 SizeFor(int columns)
+        {
+            int rows = (ActionBars.SlotCount + columns - 1) / columns;
+            return new Vector2(columns * Pitch, rows * Pitch);
         }
 
         private static bool Accepts(object data) =>
