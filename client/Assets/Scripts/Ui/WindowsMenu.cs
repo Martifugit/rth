@@ -43,7 +43,7 @@ namespace Rth.Client.Ui
 
             VisualElement footer = UiKit.El(menu, "windows-menu__footer");
             Label lockButton = UiKit.Button(footer, "", () => ui.Locked = !ui.Locked);
-            lockButton.schedule.Execute(() => lockButton.text = ui.Locked ? "Unlock interface" : "Lock interface").Every(100);
+            lockButton.schedule.Execute(() => lockButton.text = ui.Locked ? "Unlock windows" : "Lock windows").Every(100);
             UiKit.El(footer, "spacer");
             UiKit.Button(footer, "Reset layout", () =>
             {

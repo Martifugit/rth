@@ -32,5 +32,6 @@
   { "type": "eel_rise", "plane": 0, "x": 1192, "y": 1013 },
   { "type": "pike_rise", "plane": 0, "x": 1193, "y": 1014 },
   { "type": "pike_rise", "plane": 0, "x": 1193, "y": 1016 },
-  { "type": "net_bench", "plane": 0, "x": 1182, "y": 1016 }
+  { "type": "net_bench", "plane": 0, "x": 1182, "y": 1016 },
+  { "type": "bank_chest", "plane": 0, "x": 1180, "y": 1014 }
 ]

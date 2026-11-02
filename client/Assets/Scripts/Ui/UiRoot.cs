@@ -57,6 +57,7 @@ namespace Rth.Client.Ui
         public T Panel<T>() where T : UiPanel => _panels.OfType<T>().FirstOrDefault();
         public T Modal<T>() where T : UiModal => _modals.OfType<T>().FirstOrDefault();
 
+        /// <summary>Windows locked: they can't be moved, resized, closed or re-tabbed. Action bars have their own lock (<see cref="BarsLocked"/>).</summary>
         public bool Locked
         {
             get => PlayerPrefs.GetInt(LockedPref, 0) == 1;
@@ -64,6 +65,19 @@ namespace Rth.Client.Ui
             {
                 PlayerPrefs.SetInt(LockedPref, value ? 1 : 0);
                 _root?.EnableInClassList("rth-root--locked", value);
+            }
+        }
+
+        /// <summary>
+        /// Action bars locked: nothing is dragged onto, off or between bar slots, or out of the
+        /// ability book and the hymns. Kept with the player (client state), apart from the window lock.
+        /// </summary>
+        public bool BarsLocked
+        {
+            get => session?.Bars?.Locked ?? false;
+            set
+            {
+                if (session?.Bars != null) session.Bars.Locked = value;
             }
         }
 

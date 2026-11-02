@@ -31,12 +31,12 @@ namespace Rth.Client.Ui.Panels
             VisualElement frame = UiKit.El(root, "hud");
             frame.style.flexGrow = 1;
 
-            // The interface lock, at the bar's top right: locks windows, action bars and ability books.
+            // The action bar lock, at the bar's top right: nothing is dragged onto, off or between bars (windows have their own lock).
             _lock = UiKit.El(frame, "hud__lock");
             UiKit.SetIcon(_lock, IconLibrary.Get("padlock"));
-            _lock.RegisterCallback<ClickEvent>(_ => Ui.Locked = !Ui.Locked);
-            UiKit.Tooltip(_lock, () => UiKit.Title(Ui.Locked ? "Interface locked" : "Interface unlocked") + "\n" +
-                (Ui.Locked ? "Windows, action bars and ability books stay put. Click to unlock." : "Click to lock windows, action bars and ability books in place."));
+            _lock.RegisterCallback<ClickEvent>(_ => Ui.BarsLocked = !Ui.BarsLocked);
+            UiKit.Tooltip(_lock, () => UiKit.Title(Ui.BarsLocked ? "Action bars locked" : "Action bars unlocked") + "\n" +
+                (Ui.BarsLocked ? "Abilities stay where they are on your bars. Click to unlock." : "Click to stop abilities being dragged on or off your bars by accident."));
 
             VisualElement gauges = UiKit.El(frame, "row");
             gauges.style.marginRight = 20f; // clear of the lock
@@ -72,7 +72,7 @@ namespace Rth.Client.Ui.Panels
             _devotion.Fill = singing ? new Color(1f, 0.93f, 0.7f) : UiKit.DevotionColour;
             _bile.Set(state.Bile, content);
             _slots.Refresh();
-            _lock.EnableInClassList("hud__lock--on", Ui.Locked);
+            _lock.EnableInClassList("hud__lock--on", Ui.BarsLocked);
         }
 
         /// <summary>

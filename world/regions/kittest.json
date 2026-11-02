@@ -245,6 +245,7 @@
     {"id": "yard-gear-bench", "kind": "prop", "at": [1182, 1016], "object": "net_bench", "parts": [{"shape": "box", "at": [0, 0.4, 0], "size": [0.9, 0.08, 0.5], "material": "KitStake", "name": "Top"}, {"shape": "box", "at": [0, 0.2, 0], "size": [0.8, 0.4, 0.4], "material": "KitStake", "name": "Legs"}]},
     {"id": "pond-fishmonger", "kind": "npc", "at": [1184, 1014], "npc": "fishmonger", "wander": 0},
     {"id": "pond-tackle-maker", "kind": "npc", "at": [1184, 1012], "npc": "tackle_maker", "wander": 0},
-    {"id": "pond-collector", "kind": "npc", "at": [1196, 1015], "npc": "collector", "wander": 0}
+    {"id": "pond-collector", "kind": "npc", "at": [1196, 1015], "npc": "collector", "wander": 0},
+    {"id": "yard-bank-chest", "kind": "prop", "at": [1180, 1014], "object": "bank_chest", "parts": [{"shape": "box", "at": [0, 0.25, 0], "size": [0.8, 0.5, 0.55], "material": "KitStake", "name": "Chest"}, {"shape": "box", "at": [0, 0.52, 0], "size": [0.84, 0.06, 0.6], "material": "KitIron", "name": "Lid"}]}
   ]
 }

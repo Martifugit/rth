@@ -27,6 +27,7 @@ namespace Rth.Client.Ui.Modals
         private UiKit.Check _lift;
         private readonly Dictionary<CameraProfile, UiKit.Check> _camera = new Dictionary<CameraProfile, UiKit.Check>();
         private UiKit.Check _lock;
+        private UiKit.Check _barsLock;
         private UiKit.Check _queueing;
         private readonly Dictionary<RevolutionMode, UiKit.Check> _revolution = new Dictionary<RevolutionMode, UiKit.Check>();
         private readonly Dictionary<TrainDefence, UiKit.Check> _trainDefence = new Dictionary<TrainDefence, UiKit.Check>();
@@ -69,7 +70,8 @@ namespace Rth.Client.Ui.Modals
 
             UiKit.Heading(scroll, "Interface").style.marginTop = 12f;
             VisualElement ui = UiKit.El(scroll, "card");
-            _lock = new UiKit.Check(ui, "Lock the interface: windows, action bars and ability books stay put (also the lock on the main bar)", () => Ui.Locked = !Ui.Locked);
+            _lock = new UiKit.Check(ui, "Lock windows: they can't be moved, resized or closed", () => Ui.Locked = !Ui.Locked);
+            _barsLock = new UiKit.Check(ui, "Lock action bars: abilities aren't dragged on or off them (also the lock on the main bar)", () => Ui.BarsLocked = !Ui.BarsLocked);
             VisualElement scaleRow = UiKit.El(ui, "row");
             scaleRow.style.marginTop = 4f;
             UiKit.Text(scaleRow, "Interface scale");
@@ -128,6 +130,7 @@ namespace Rth.Client.Ui.Modals
             _lift.Set(CameraRig.TerrainLift);
             foreach (KeyValuePair<CameraProfile, UiKit.Check> c in _camera) c.Value.Set(CameraRig.Profile == c.Key);
             _lock.Set(Ui.Locked);
+            _barsLock.Set(Ui.BarsLocked);
             CombatOptions options = Options();
             _queueing.Set(options.Queueing);
             foreach (KeyValuePair<RevolutionMode, UiKit.Check> r in _revolution) r.Value.Set(options.Revolution == r.Key);

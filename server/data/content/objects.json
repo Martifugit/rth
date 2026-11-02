@@ -1883,5 +1883,11 @@
         "label": "Cast"
       }
     ]
+  },
+  {
+    "id": "bank_chest",
+    "name": "Bank chest",
+    "examine": "An iron-bound chest with the Synod's seal on the lock. Whatever you bank anywhere is in here too.",
+    "actions": [ { "id": "bank", "label": "Bank" } ]
   }
 ]

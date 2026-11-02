@@ -466,9 +466,10 @@ The framework, decided with the owner:
    the X); **any corner** resizes it. Snapping to a grid, screen edges and other windows' edges
    and centres, with guides drawn while dragging, and a preview of **where it will land and
    whether it will dock** (join another window as a tab) or undock. A cap on tabs per window.
-3. **Lock** (a small toggle at the top right of the main action bar) locks everything: no dragging
-   abilities on bars or out of ability books, no tooltips on bars, no moving, resizing or closing
-   windows (no X while locked).
+3. **Two locks** (owner, 2026-11-02: they must be separate). The **window lock** (windows menu,
+   Settings) stops windows being moved, resized or closed. The **action bar lock** (the toggle at
+   the top right of the main bar, a bar slot's right-click, Settings) stops abilities, hymns and
+   items being dragged onto, off or between bars and out of the ability book.
 4. **A default layout that scales with the screen** (fits 720p to 1440p).
 5. **A contract every panel follows:** content scrolls rather than overflows, text wraps, the
    minimum size is what the content needs, and one responsive slot grid (columns and slot size

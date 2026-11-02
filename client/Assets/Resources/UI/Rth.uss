@@ -723,6 +723,24 @@
     background-image: resource("UI/Skin/button-hover");
 }
 
+.dialogue-option {
+    padding: 2px 8px;
+    margin: 1px 4px;
+    min-height: 20px;
+    align-items: center;
+    border-radius: 3px;
+    font-size: 13px;
+    color: rgb(240, 222, 176);
+}
+
+.dialogue-option:hover {
+    background-color: rgba(224, 195, 135, 0.14);
+}
+
+.dialogue-option > Label {
+    font-size: 13px;
+}
+
 .button--on {
     background-image: resource("UI/Skin/button-on");
     color: rgb(255, 245, 215);
