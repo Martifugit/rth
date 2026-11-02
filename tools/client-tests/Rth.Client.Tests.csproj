@@ -16,6 +16,7 @@
     <Compile Include="..\..\client\Assets\Scripts\View\CameraRules.cs" Link="Client\CameraRules.cs" />
     <Compile Include="..\..\client\Assets\Scripts\Ui\WindowRules.cs" Link="Client\WindowRules.cs" />
     <Compile Include="..\..\client\Assets\Scripts\Ui\Modals\WorldMapView.cs" Link="Client\WorldMapView.cs" />
+    <Compile Include="..\..\client\Assets\Scripts\Characters\SkirtRules.cs" Link="Client\SkirtRules.cs" />
     <Compile Include="..\..\client\Assets\Tests\EditMode\*.cs" Link="Tests\%(Filename)%(Extension)" />
   </ItemGroup>
 
