@@ -1558,7 +1558,7 @@
     },
     {"id": "s-lake-monument", "kind": "monument", "at": [282, 132], "stage": "early", "note": "a blood monument on the road into Cruor"},
     {"id": "s-reed-fens", "kind": "skilling", "at": [210, 36], "stage": "early", "note": "Knellmere's reed fens: fishing, fen rats"},
-    {"id": "s-belfry", "kind": "ruin", "at": [284, 24], "stage": "mid", "note": "the drowned belfry on Knellmere's isle"},
+    {"id": "s-belfry", "kind": "ruin", "at": [300, -15], "stage": "mid", "note": "the drowned belfry on Knellmere's isle"},
     {"id": "s-undercroft", "kind": "dungeon", "at": [330, 150], "stage": "mid", "note": "the undercroft below Cruor's hill"},
     {"id": "s-bridge-monument", "kind": "monument", "at": [222, 226], "stage": "early", "note": "a monument at the great bridge"},
     {"id": "s-eller-edge", "kind": "skilling", "at": [380, 312], "stage": "early", "note": "Eller's edge: the first good wood"},

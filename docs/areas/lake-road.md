@@ -1,6 +1,6 @@
 # Knellmere and the lake road: the brief
 
-**Status:** agreed (2026-10-27). Wave 1. Ground only this pass: no assets, buildings, people or
+**Status:** agreed (2026-10-27); Knellmere reshaped 2026-11-02 (findings 4-7). Wave 1. Ground only this pass: no assets, buildings, people or
 objects. The four regions are taken over and have had a first ground pass (path and river strokes,
 `world/strokes/lake-road.json`, applied once; the tiles are the truth now). Template:
 [world-example.md](../world-example.md); the area before it on the road, [tolling.md](tolling.md).
@@ -132,3 +132,19 @@ mid game, read from the shore before anyone goes.
    tiles each: trimmed to the five above at 1.5.
 3. **The first ground pass** (`world/strokes/lake-road.json`) is kept as the base; the owner's walk
    (1.6) judges it.
+4. **Knellmere reshaped** (2026-11-02, `world/strokes/lake-road-knellmere.json`, applied once). The
+   generator's round lake had its isle in the middle and stopped about 40 tiles short of the Downs, so
+   the white edge stood over nothing. Now the lake keeps its north shore by p-lakeport and the reed fens
+   on the west (where the Wenn comes in), and reaches a broad lobe south-east under the Downs: the
+   scarp stands over a strip of shingle shore 8 to 12 tiles wide, and the downs brook runs straight off
+   the edge into it. About 7,900 tiles of water (was 5,700), level at 0.1.
+5. **The isle moved off the south shore** (`belfry-isle`, about 290 tiles, rising to 1.4, steeper on
+   its south side, a shingle edge): about 10 tiles of water from the south shore, 30 from
+   p-lake-south's landing. s-belfry moved there, (300, -15) in `continent.json`; the belfry stands on
+   or off it at stage 2. Seen from the lake road and p-lakeport across the whole lake (about 70 tiles:
+   within the fog, at the edge of what loads).
+6. **Ground (1.5):** worn and broken ground and heath scraps went to the land round them, mud away
+   from the water likewise, the old sand rim with the old water; reeds along the west shore, shingle
+   under the Downs, a little sand by p-lakeport. Left: grass, the Downs' grass and chalk, reeds and
+   fen, lake and river, the road and tracks, shingle at the shore.
+7. **Heights:** the only tiles steeper than a cliff are the Downs' scarp, as meant.

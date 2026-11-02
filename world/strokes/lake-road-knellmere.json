@@ -1,0 +1,307 @@
+{
+  "area": "lake-road",
+  "note": "Knellmere reshaped (1.3-1.5, 2026-11-02): the generator's round lake with an isle in its middle becomes a great lake that keeps its north shore by p-lakeport and its reed fens on the west, and reaches south-east under the Downs' white edge, so the scarp stands over a strip of shore; the isle moves off the south shore, small and steep on its south side, where the drowned belfry will stand. The old water outside, the sand rim and the strays (worn and broken ground, heath scraps, mud away from water) become the land round them. Applied once with `tools/world strokes world/strokes/lake-road-knellmere.json`; the tiles are the truth afterwards.",
+  "shapes": [
+    {
+      "id": "knellmere",
+      "water": true,
+      "ground": "lake",
+      "level": 0.1,
+      "seed": 81,
+      "ragged": 2.4,
+      "points": [
+        [
+          205,
+          2
+        ],
+        [
+          209,
+          8
+        ],
+        [
+          214,
+          20
+        ],
+        [
+          215,
+          34
+        ],
+        [
+          218,
+          44
+        ],
+        [
+          224,
+          48
+        ],
+        [
+          232,
+          51
+        ],
+        [
+          242,
+          55
+        ],
+        [
+          252,
+          57
+        ],
+        [
+          262,
+          57
+        ],
+        [
+          272,
+          56
+        ],
+        [
+          282,
+          53
+        ],
+        [
+          292,
+          50
+        ],
+        [
+          302,
+          47
+        ],
+        [
+          312,
+          42
+        ],
+        [
+          320,
+          36
+        ],
+        [
+          326,
+          30
+        ],
+        [
+          324,
+          20
+        ],
+        [
+          320,
+          10
+        ],
+        [
+          323,
+          -1
+        ],
+        [
+          322,
+          -10
+        ],
+        [
+          321,
+          -20
+        ],
+        [
+          318,
+          -29
+        ],
+        [
+          311,
+          -35
+        ],
+        [
+          300,
+          -38
+        ],
+        [
+          288,
+          -38
+        ],
+        [
+          279,
+          -33
+        ],
+        [
+          271,
+          -25
+        ],
+        [
+          264,
+          -19
+        ],
+        [
+          254,
+          -13
+        ],
+        [
+          244,
+          -10
+        ],
+        [
+          234,
+          -8
+        ],
+        [
+          224,
+          -5
+        ],
+        [
+          214,
+          -1
+        ]
+      ],
+      "drain": [
+        "lake"
+      ],
+      "drainGrounds": [
+        "sand",
+        "shingle",
+        "broken"
+      ],
+      "drainReach": 24,
+      "shoreReach": 3,
+      "beachWidth": 1.5,
+      "shore": [
+        {
+          "ground": "reeds",
+          "share": 0.55,
+          "scale": 4,
+          "rect": [
+            196,
+            -8,
+            224,
+            52
+          ]
+        },
+        {
+          "ground": "shingle",
+          "share": 0.45,
+          "scale": 3,
+          "rect": [
+            268,
+            -44,
+            334,
+            -14
+          ]
+        },
+        {
+          "ground": "sand",
+          "share": 0.35,
+          "scale": 3,
+          "rect": [
+            248,
+            50,
+            278,
+            64
+          ]
+        },
+        {
+          "ground": "meadow",
+          "share": 0.25,
+          "scale": 5
+        }
+      ]
+    },
+    {
+      "id": "belfry-isle",
+      "seed": 82,
+      "ground": "grass",
+      "ragged": 1.2,
+      "points": [
+        [
+          284,
+          -17
+        ],
+        [
+          288,
+          -12
+        ],
+        [
+          296,
+          -10
+        ],
+        [
+          303,
+          -8
+        ],
+        [
+          309,
+          -11
+        ],
+        [
+          310,
+          -16
+        ],
+        [
+          305,
+          -21
+        ],
+        [
+          297,
+          -23
+        ],
+        [
+          290,
+          -22
+        ]
+      ],
+      "patches": [
+        {
+          "ground": "heath",
+          "share": 0.3,
+          "scale": 4
+        }
+      ],
+      "peak": [
+        300,
+        -15
+      ],
+      "height": 1.3,
+      "spread": 7,
+      "gentle": 2.5,
+      "cliffSide": [
+        0,
+        -1
+      ],
+      "beach": "shingle",
+      "beachWidth": 0.8,
+      "beachPatches": [
+        {
+          "ground": "grass",
+          "share": 0.4,
+          "scale": 2
+        }
+      ]
+    }
+  ],
+  "swaps": [
+    {
+      "from": [
+        "worn",
+        "broken",
+        "heath"
+      ],
+      "nearWater": 0,
+      "otherwise": "surround"
+    },
+    {
+      "from": [
+        "mud"
+      ],
+      "awayFromWater": 3,
+      "nearWater": 0,
+      "otherwise": "surround"
+    },
+    {
+      "from": [
+        "bridge"
+      ],
+      "nearWater": 0,
+      "awayFromWater": 1,
+      "rect": [
+        250,
+        50,
+        276,
+        64
+      ],
+      "otherwise": "surround"
+    }
+  ]
+}
