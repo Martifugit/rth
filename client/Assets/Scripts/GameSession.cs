@@ -214,6 +214,9 @@ namespace Rth.Client
             AnglingViews angling = GetComponent<AnglingViews>();
             if (angling == null) angling = gameObject.AddComponent<AnglingViews>();
             angling.session = this;
+            AnglingFightView anglingFight = GetComponent<AnglingFightView>();
+            if (anglingFight == null) anglingFight = gameObject.AddComponent<AnglingFightView>();
+            anglingFight.session = this;
             MiningView mining = GetComponent<MiningView>();
             if (mining == null) mining = gameObject.AddComponent<MiningView>();
             mining.session = this;
@@ -441,7 +444,8 @@ namespace Rth.Client
         /// <summary>A game message from the interface itself (not the server), shown in chat.</summary>
         public void Notify(string text) => AddLog(TextKind.Info, text);
 
-        private void AddLog(TextKind kind, string text)
+        /// <summary>A line in the chat log from the client itself (a hint), as if the server had said it.</summary>
+        public void AddLog(TextKind kind, string text)
         {
             Log.Add(new LogLine { Kind = kind, Text = text });
             LogTotal++;
@@ -495,7 +499,8 @@ namespace Rth.Client
             _hoveredEntity = 0;
             HoveredObject = null;
             _useTargets = 0;
-            List<(string Label, Action Action)> options = overHud ? null : WorldOptionsAt(pointer, out title);
+            // In a fish fight the mouse is the rod: the world isn't clicked.
+            List<(string Label, Action Action)> options = overHud || AnglingFightView.Capturing ? null : WorldOptionsAt(pointer, out title);
             world.HoveredId = _hoveredEntity;
             HoverText = options != null && options.Count > 0 ? options[0].Label : "";
             if (IsUsingItem && _useTargets == 0) HoverText = UseLabel + " ->";

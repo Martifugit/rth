@@ -14,6 +14,10 @@ namespace Rth.Shared.Angling
         /// <summary>A number that changes with each new fight, so the client knows a new one began.</summary>
         public int Id;
         public string Species = "";
+        /// <summary>The spot it bit at (where the fish is drawn from).</summary>
+        public int Plane;
+        public int X;
+        public int Y;
         public AnglingFightDef Fight = new AnglingFightDef();
         public int Energy;
         public uint Seed;

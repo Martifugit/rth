@@ -6,31 +6,32 @@ using UnityEngine;
 namespace Rth.Client
 {
     /// <summary>
-    /// Trophy spots on the water (docs/fishing.md 3.1), from the "anglingSpots" state: a spot is
-    /// only there while it is active and not spooked for you (hidden, and not clickable,
-    /// otherwise). A visible spot's rings move in its species' way ("quick", "bubbles", "line",
-    /// anything else slow and wide) and weaken as its time runs out (plenty, thinning, nearly gone).
-    /// Region objects are MapObjects in the streamed scenes, found by type and tile.
+    /// Trophy spots on the water (docs/fishing.md 3.1), from the "anglingSpots" state. Like a
+    /// fishing spot, a trophy spot is only its effects: its scene parts are an Editor marker and
+    /// hidden in play, and while it is active (and not spooked for you) it shows the fishing spots'
+    /// bubbles and rings (<see cref="SkillingEffects.Bubbles"/>), in its species' way ("quick":
+    /// small, quick rings; "bubbles": strings of bubbles; "line": rings drifting long; anything
+    /// else: slow, wide rings), thinning as its time runs out. An inactive spot can't be clicked.
     /// </summary>
     public sealed class AnglingViews : MonoBehaviour
     {
         public GameSession session;
 
         private float _nextScan;
+        private int _version = -1;
         private readonly Dictionary<(string, int, int), MapObject> _objects = new Dictionary<(string, int, int), MapObject>();
-        private readonly Dictionary<MapObject, (Renderer[] Renderers, Collider[] Colliders)> _hidden = new Dictionary<MapObject, (Renderer[], Collider[])>();
-        private readonly Dictionary<Transform, Vector3> _baseScale = new Dictionary<Transform, Vector3>();
-        private readonly Dictionary<Transform, Vector3> _basePosition = new Dictionary<Transform, Vector3>();
-        private readonly Dictionary<MapObject, (string Ripple, int Phase)> _shown = new Dictionary<MapObject, (string, int)>();
+        private readonly HashSet<MapObject> _lookless = new HashSet<MapObject>();
+        private readonly Dictionary<MapObject, (GameObject Fx, int Phase)> _effects = new Dictionary<MapObject, (GameObject, int)>();
 
         private void Update()
         {
             if (session == null || !session.IsInGame || session.Content?.Angling == null) return;
-            Dictionary<string, AnglingSpeciesDef> bySpot = new Dictionary<string, AnglingSpeciesDef>();
+            var bySpot = new Dictionary<string, AnglingSpeciesDef>();
             foreach (AnglingSpeciesDef s in session.Content.Angling.Species) bySpot[s.SpotType] = s;
             if (bySpot.Count == 0) return;
 
-            if (Time.unscaledTime >= _nextScan)
+            bool rescan = Time.unscaledTime >= _nextScan;
+            if (rescan)
             {
                 _nextScan = Time.unscaledTime + 2f;
                 _objects.Clear();
@@ -39,86 +40,78 @@ namespace Rth.Client
                     if (!bySpot.ContainsKey(o.objectType)) continue;
                     Vector3 p = o.transform.position;
                     _objects[(o.objectType, Mathf.FloorToInt(p.x), Mathf.FloorToInt(p.z))] = o;
+                    if (_lookless.Add(o))
+                        foreach (Renderer r in o.GetComponentsInChildren<Renderer>()) r.enabled = false;
                 }
+                _lookless.RemoveWhere(o => o == null);
             }
+            if (!rescan && session.StateVersion == _version) return;
+            _version = session.StateVersion;
 
             var active = new Dictionary<MapObject, AnglingSpotView>();
             foreach (AnglingSpotView v in session.ServerState<AnglingSpotsState>(AnglingSpotsState.StateKey).Spots)
                 if (_objects.TryGetValue((v.Type, v.X, v.Y), out MapObject o) && o != null) active[o] = v;
 
-            _shown.Clear();
+            foreach (MapObject o in new List<MapObject>(_effects.Keys))
+                if (o == null || !active.TryGetValue(o, out AnglingSpotView v) || v.Phase != _effects[o].Phase)
+                {
+                    if (_effects[o].Fx != null) Destroy(_effects[o].Fx);
+                    _effects.Remove(o);
+                }
             foreach (MapObject o in _objects.Values)
             {
                 if (o == null) continue;
-                if (active.TryGetValue(o, out AnglingSpotView view))
-                {
-                    Show(o);
-                    _shown[o] = (bySpot[o.objectType].Ripple, view.Phase);
-                }
-                else if (!_hidden.ContainsKey(o)) Hide(o);
+                bool on = active.TryGetValue(o, out AnglingSpotView view);
+                foreach (Collider c in o.GetComponentsInChildren<Collider>()) c.enabled = on;
+                if (!on || _effects.ContainsKey(o)) continue;
+                _effects[o] = (Make(o, bySpot[o.objectType].Ripple, view.Phase), view.Phase);
             }
-            foreach (MapObject o in new List<MapObject>(_hidden.Keys))
-                if (o == null) _hidden.Remove(o);
-
-            float t = Time.time;
-            foreach (KeyValuePair<MapObject, (string Ripple, int Phase)> pair in _shown) Animate(pair.Key.transform, pair.Value.Ripple, pair.Value.Phase, t);
         }
 
-        /// <summary>Each child (a ring) pulses in the species' way; weaker as the spot's time runs out.</summary>
-        private void Animate(Transform spot, string ripple, int phase, float t)
+        /// <summary>A fishing spot's effects, in the species' way and as strong as the time it has left.</summary>
+        private static GameObject Make(MapObject spot, string ripple, int phase)
         {
+            GameObject fx = SkillingEffects.Bubbles(spot);
             float strength = 0.45f + 0.275f * Mathf.Clamp(phase, 0, 2);
-            int i = 0;
-            foreach (Transform ring in spot.GetComponentsInChildren<Transform>())
+            ParticleSystem bubbles = fx.GetComponent<ParticleSystem>();
+            Transform ringsGo = fx.transform.Find("Rings");
+            ParticleSystem rings = ringsGo != null ? ringsGo.GetComponent<ParticleSystem>() : null;
+            float bubbleRate, ringRate, ringLife = 3.1f, ringSize = 0.85f;
+            switch (ripple)
             {
-                if (ring == spot || ring.GetComponent<Renderer>() == null) continue;
-                if (!_baseScale.ContainsKey(ring))
+                case "quick": bubbleRate = 4f; ringRate = 2.6f; ringLife = 1.8f; ringSize = 0.55f; break;
+                case "bubbles": bubbleRate = 16f; ringRate = 1.0f; break;
+                case "line": bubbleRate = 3f; ringRate = 1.4f; ringLife = 3.6f; ringSize = 1.1f; break;
+                default: bubbleRate = 4f; ringRate = 0.9f; ringLife = 4f; ringSize = 1.3f; break;
+            }
+            if (bubbles != null)
+            {
+                ParticleSystem.EmissionModule e = bubbles.emission;
+                e.rateOverTime = bubbleRate * strength;
+            }
+            if (rings != null)
+            {
+                ParticleSystem.EmissionModule e = rings.emission;
+                e.rateOverTime = ringRate * strength;
+                ParticleSystem.MainModule m = rings.main;
+                m.startLifetime = new ParticleSystem.MinMaxCurve(ringLife * 0.85f, ringLife * 1.15f);
+                m.startSize = new ParticleSystem.MinMaxCurve(ringSize * 0.8f, ringSize * 1.2f);
+                if (ripple == "line")
                 {
-                    _baseScale[ring] = ring.localScale;
-                    _basePosition[ring] = ring.localPosition;
-                }
-                Vector3 scale = _baseScale[ring], position = _basePosition[ring];
-                float offset = i++ * 0.37f;
-                float pulse;
-                switch (ripple)
-                {
-                    case "quick":
-                        pulse = Mathf.Repeat(t * 1.6f + offset, 1f);
-                        ring.localScale = new Vector3(scale.x * (0.5f + pulse) * strength, scale.y, scale.z * (0.5f + pulse) * strength);
-                        break;
-                    case "bubbles":
-                        pulse = Mathf.Repeat(t * 0.8f + offset, 1f);
-                        ring.localScale = new Vector3(scale.x * (0.6f + 0.6f * pulse) * strength, scale.y, scale.z * (0.6f + 0.6f * pulse) * strength);
-                        ring.localPosition = position + new Vector3(Mathf.Sin(t * 3f + offset) * 0.08f, 0f, Mathf.Cos(t * 2.3f + offset) * 0.08f);
-                        break;
-                    case "line":
-                        pulse = Mathf.Repeat(t * 0.5f + offset, 1f);
-                        ring.localScale = new Vector3(scale.x * (0.7f + 0.5f * pulse) * strength, scale.y, scale.z * 0.6f * strength);
-                        ring.localPosition = position + new Vector3((pulse - 0.5f) * 0.5f, 0f, 0f);
-                        break;
-                    default:
-                        pulse = Mathf.Repeat(t * 0.35f + offset, 1f);
-                        ring.localScale = new Vector3(scale.x * (0.6f + 0.9f * pulse) * strength, scale.y, scale.z * (0.6f + 0.9f * pulse) * strength);
-                        break;
+                    // Rings strung out in a line, as if something long lay under them.
+                    ParticleSystem.ShapeModule shape = rings.shape;
+                    shape.shapeType = ParticleSystemShapeType.SingleSidedEdge;
+                    shape.radius = 0.7f;
                 }
             }
+            return fx;
         }
 
-        private void Hide(MapObject o)
+        private void OnDisable()
         {
-            Renderer[] renderers = System.Array.FindAll(o.GetComponentsInChildren<Renderer>(), r => r.enabled);
-            Collider[] colliders = System.Array.FindAll(o.GetComponentsInChildren<Collider>(), c => c.enabled);
-            foreach (Renderer r in renderers) r.enabled = false;
-            foreach (Collider c in colliders) c.enabled = false;
-            _hidden[o] = (renderers, colliders);
-        }
-
-        private void Show(MapObject o)
-        {
-            if (!_hidden.TryGetValue(o, out (Renderer[] Renderers, Collider[] Colliders) was)) return;
-            foreach (Renderer r in was.Renderers) if (r != null) r.enabled = true;
-            foreach (Collider c in was.Colliders) if (c != null) c.enabled = true;
-            _hidden.Remove(o);
+            foreach (var pair in _effects)
+                if (pair.Value.Fx != null) Destroy(pair.Value.Fx);
+            _effects.Clear();
         }
     }
 }

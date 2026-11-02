@@ -125,6 +125,7 @@ namespace Rth.Server.Game
             hooked.State = new AnglingFightState
             {
                 Id = hooked.Id, Species = species.Id, Fight = species.Fight, Energy = fish.Energy, Seed = fish.Seed, Revised = revised, Rig = rig,
+                Plane = spot.Placed.Plane, X = spot.Placed.X, Y = spot.Placed.Y,
             };
             angling.Fight = hooked;
             World.Tell(player, TextKind.Info, revised ? "Something takes the lure... something not quite right." : "Something takes the lure!");

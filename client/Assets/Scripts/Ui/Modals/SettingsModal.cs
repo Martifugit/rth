@@ -28,6 +28,7 @@ namespace Rth.Client.Ui.Modals
         private readonly Dictionary<CameraProfile, UiKit.Check> _camera = new Dictionary<CameraProfile, UiKit.Check>();
         private UiKit.Check _lock;
         private UiKit.Check _barsLock;
+        private UiKit.Check _steerFish;
         private UiKit.Check _queueing;
         private readonly Dictionary<RevolutionMode, UiKit.Check> _revolution = new Dictionary<RevolutionMode, UiKit.Check>();
         private readonly Dictionary<TrainDefence, UiKit.Check> _trainDefence = new Dictionary<TrainDefence, UiKit.Check>();
@@ -89,6 +90,11 @@ namespace Rth.Client.Ui.Modals
             UiKit.Button(resetRow, "Reset layout", () => Ui.ResetLayout());
 
             // Combat options live in client state, so they follow the player; the server applies them.
+            UiKit.Heading(scroll, "Fishing").style.marginTop = 12f;
+            VisualElement fishing = UiKit.El(scroll, "card");
+            _steerFish = new UiKit.Check(fishing, "Steer hooked fish with the mouse (sweep against the fish; off: your angler leans against it and you only reel)",
+                () => AnglingFightView.SteerWithMouse = !AnglingFightView.SteerWithMouse);
+
             UiKit.Heading(scroll, "Combat").style.marginTop = 12f;
             VisualElement combat = UiKit.El(scroll, "card");
             _queueing = new UiKit.Check(combat, "Ability queueing", () =>
@@ -131,6 +137,7 @@ namespace Rth.Client.Ui.Modals
             foreach (KeyValuePair<CameraProfile, UiKit.Check> c in _camera) c.Value.Set(CameraRig.Profile == c.Key);
             _lock.Set(Ui.Locked);
             _barsLock.Set(Ui.BarsLocked);
+            _steerFish.Set(AnglingFightView.SteerWithMouse);
             CombatOptions options = Options();
             _queueing.Set(options.Queueing);
             foreach (KeyValuePair<RevolutionMode, UiKit.Check> r in _revolution) r.Value.Set(options.Revolution == r.Key);

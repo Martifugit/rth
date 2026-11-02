@@ -99,10 +99,29 @@ About 15-25 trophy attempts an hour, counting searching, travel and waiting.
 
 ### 3.3 The fight
 
-The reeling panel shows the **fish** (facing the way it swims; visibly wrong if revised), the
-**tension bar** (slack on the left, snapping on the right, a comfortable zone in the middle),
-**distance** (from where it bit to your net) and **energy** (how much fight it has left).
+**In the world, not in a box (owner, 2026-11-02).** The first version put the fight in a little
+panel with keyboard controls; the owner rejected it outright (disconnected from the game, awkward
+controls, ugly animation). The fight is now drawn in the world from effects, like a fishing spot:
+the **fish** is a dark shape under the water, nearer as it comes in, swinging to the side it swims,
+sinking as it dives, gone in a splash as it leaps (revised fish are tinted wrong); the **line** runs
+from the rod tip to it and *is* the tension gauge (sagging when slack, straight when taut, amber,
+then red and trembling near snapping); **tells** are water effects (a swirl on the side it will turn
+to, bubbles before a dive, a wake opening before a run, the surface boiling before a leap); and how
+much **fight** it has left shows in how often and how hard it thrashes. No bars, no panel.
 
+**Controls are an experiment** (`AnglingFightView`, Settings > Fishing), to be judged by playing
+and against other games (Sea of Thieves and Red Dead Redemption 2 keep the fish and line in the
+world and have you push against the fish; WoW and Animal Crossing are pure timing; Stardew,
+Albion and Dredge use a small minigame box, the approach rejected here):
+- **Steer (default):** the mouse is the rod while the fight lasts. Hold the left button to reel;
+  sweep the cursor across the line to the side the fish isn't swimming; pull it back towards
+  yourself to lift against a dive; let go when it runs or leaps.
+- **Reel only:** hold to reel and let go on strain, runs and leaps; your angler leans against the
+  fish by itself.
+
+Both send the same inputs to the same simulation, so a new scheme is client code only.
+
+The rules underneath, whatever the controls:
 Controls: **hold to reel** (it comes in, tension rises); **let go** to give line (tension falls,
 it drifts out a little); **pull left, right or up** to work against it.
 
@@ -151,12 +170,26 @@ No anti-cheat: the replay keeps client and server agreeing, nothing more.
 
 ## 4. Rigging
 
-The rig is **your own tackle** (per-player state, saved with you, not an item): five slots, each
-holding one part, which is an ordinary item put in from the pack ("Rig") and taken back out.
+**The rod is the rig (owner, 2026-11-02).** A rod is a tiered item you **wield in the main hand**
+(people want to show off a good rod, or stand at the bank with one) or carry. Right-click it,
+**Rig**, and a rig window opens: the rod drawn across it with its slots along it. Parts go in from
+the pack (dragged onto a slot, or "Rig" on the part) and come out with a click. Each kind of rod
+keeps its own rig. The rod fished with is the one in hand, else the best in the pack.
+
+**How a rod can be rigged:**
+- Its **tier** caps its parts' tier: a tier-3 rod takes parts of tier 3 and below, so rods carry the
+  progression.
+- Its **kind** decides what fits (each part lists the rod kinds it fits; none listed fits all):
+  a **fly rod** (long and whippy: the most time in the red; flies and fine lines), a **spinning
+  rod** (the all-rounder: spinners and lures, the starter rod) and a **ledger rod** (short and heavy:
+  bait on the bottom, heavy reels with drag). Choosing the rod is the first rigging decision.
+- Every rod has a reel, line, hook and lure slot. From tier 5, rods gain a **leader**, **float** or
+  **lantern** slot (the slots exist; the parts come with those tiers). Collector rods may have slots
+  no crafted rod has.
 
 | Slot | Made by | From | What it does in the fight |
 |---|---|---|---|
-| **Rod** | Artifice | a Woodcutting blank (ash, then sere cedar, pale pine, moonbark…) | how long tension may stay in the red before the line snaps |
+| **Rod** (the rig itself) | Artifice | a Woodcutting blank (alder, ash, then sere cedar, pale pine, moonbark…) | how long tension may stay in the red before the line snaps; its kind and tier decide what fits |
 | **Reel** | Artifice, with Smithing fittings | wood, bars | how fast you reel; how much line a run pulls out |
 | **Line** | Tailoring | Foraging fibre (reed, flax, silkweed, threadmoss, gossamer); Butchering gut for leaders | how much tension before it snaps; its **thickness** (wary fish won't bite thick line) |
 | **Hook** | Smithing | bars | how forgiving it is of slack and jumps; a wire leader for pike |
@@ -181,7 +214,7 @@ Parts wear mostly from **how** you fish, so clean fights save upkeep.
 - **Mending (decided):** anyone can pay a market's **tackle-maker** (coins, by the part's value and
   wear). With the part's making skill at its tier you can mend it yourself at a **tackle bench**
   from materials, much cheaper. Never a chance of failure.
-- A worn part taken out of the rig keeps its condition (remembered by item kind).
+- A worn part taken off a rod keeps its condition (remembered by item kind); rods wear too.
 - **Collector parts** can't be made; the collector mends them, for a fee or materials from rare fish.
 
 ---
@@ -288,12 +321,13 @@ Foraging raises the catch chance a little through the existing `gatherSuccess` s
 |---|---|
 | A species | An entry in `angling.json` `species`: tier, level, trophy spot object type, spots active, active ticks, spook rules, weight range, energy, its fight (`moves`: weights, tell and move lengths; `latch`, `jump`, `dark`, `noTells`), XP, box contents, notes. Trophy items and fish boxes are generated from it. |
 | A trophy spot | A placed object whose type has a `cast` action and is a species' `spotType`. Place it in a region's data like any prop. |
-| A tackle part | `tackle` on an item in items.json: slot, stats (`snapBuffer`, `maxTension`, `reelSpeed`, `runDrag`, `hookHold`, `thickness`), `bites` (lures), wear, `repair` (materials and the skill to mend it yourself). |
+| A rod | `tackle` with `"slot": "Rod"`, a `kind`, a `tier`, its `slots` (default reel, line, hook, lure), its `snapBuffer`; plus `equipment` in the Weapon slot (it is wielded) and `tool` (it fishes ordinary spots too). |
+| A tackle part | `tackle` on an item in items.json: slot, `rods` (the kinds it fits), stats (`snapBuffer`, `maxTension`, `reelSpeed`, `runDrag`, `hookHold`, `thickness`), `bites` (lures), wear, `repair` (materials and the skill to mend it yourself). |
 | A market | An NPC with the `hand-in` action (and `{anglingLead:species}` in its dialogue). |
 | A collector trade | An entry in uses.json: the revised trophy on the collector. |
 | A new fight move | A value in `AnglingMove` and its rule in `AnglingFight.Step` (shared), its counter in `AnglingBot`, and its look in the reeling panel. |
 
-Systems: `AnglingTackleSystem` (the rig, wear, mending), `AnglingSpotSystem` (spots active,
+Systems: `AnglingTackleSystem` (rods and their rigs, wear, mending), `AnglingSpotSystem` (spots active,
 spooking, spots seen), `AnglingSystem` (casting, bites, the fight, catches, hand-ins) and
 `AnglingLogSystem` (the log and notes). Server state keys: "tackle", "anglingSpots", "anglingFight",
 "anglingLog". The intent kinds: "tackle" and "angling".

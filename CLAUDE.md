@@ -569,9 +569,11 @@ not finished assets.
 **AN, Fishing in depth: trophy angling (on `claude/fishing-depth`):** the design is `docs/fishing.md`
 (work packages AN1-AN9 in `docs/plan.md`). The fight is `AnglingFight` in `shared/Angling`, a
 deterministic integer simulation on 50 ms steps: the server rolls the fish and sends it
-("anglingFight"), the client plays it live (`AnglingPanel`) and sends its inputs as the "angling"
-intent, and the server replays them and decides. `AnglingTackleSystem` (the rig as player state:
-rod, reel, line, hook, lure; wear; mending), `AnglingSpotSystem` (each species' trophy spots, a few
+("anglingFight"), the client plays it live in the world (`AnglingFightView`: no panel, the fish
+under the water, the line as the tension gauge, tells as water effects; the controls are an
+experiment, Settings > Fishing) and sends its inputs as the "angling" intent, and the server
+replays them and decides. Rods are tiered, wielded items of a kind (fly, spinning, ledger); right-click
+one, Rig, for its rig window (`RigPanel`). `AnglingTackleSystem` (each rod's rig; wear; mending), `AnglingSpotSystem` (each species' trophy spots, a few
 active at a time, per-player spooking), `AnglingSystem` (cast, bite, catch, hand-in, leads, `open`
 items) and `AnglingLogSystem` (the fishing log). angling.json holds species, size classes and
 rules; trophies and fish boxes are generated per species. Perch, eel and pike with tier 1-3 tackle
