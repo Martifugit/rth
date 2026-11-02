@@ -1610,5 +1610,456 @@
     ],
     "ticks": 4,
     "xp": 5
+  },
+  {
+    "id": "make_alder_rod",
+    "name": "alder rod",
+    "verb": "make",
+    "animation": "work",
+    "skill": "artifice",
+    "level": 1,
+    "station": "net_bench",
+    "group": "Tackle",
+    "inputs": [
+      {
+        "item": "alder_log",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "alder_rod",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 3
+  },
+  {
+    "id": "make_ash_rod",
+    "name": "ash rod",
+    "verb": "make",
+    "animation": "work",
+    "skill": "artifice",
+    "level": 10,
+    "station": "net_bench",
+    "group": "Tackle",
+    "inputs": [
+      {
+        "item": "ash_log",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "ash_rod",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 4
+  },
+  {
+    "id": "make_ironbound_rod",
+    "name": "ironbound rod",
+    "verb": "make",
+    "animation": "work",
+    "skill": "artifice",
+    "level": 20,
+    "station": "net_bench",
+    "group": "Tackle",
+    "inputs": [
+      {
+        "item": "ash_log",
+        "count": 1
+      },
+      {
+        "item": "iron_bar",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "ironbound_rod",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 5
+  },
+  {
+    "id": "make_copper_reel",
+    "name": "copper reel",
+    "verb": "make",
+    "animation": "work",
+    "skill": "artifice",
+    "level": 1,
+    "station": "net_bench",
+    "group": "Tackle",
+    "inputs": [
+      {
+        "item": "alder_log",
+        "count": 1
+      },
+      {
+        "item": "copper_bar",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "copper_reel",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 3
+  },
+  {
+    "id": "make_iron_reel",
+    "name": "iron reel",
+    "verb": "make",
+    "animation": "work",
+    "skill": "artifice",
+    "level": 10,
+    "station": "net_bench",
+    "group": "Tackle",
+    "inputs": [
+      {
+        "item": "ash_log",
+        "count": 1
+      },
+      {
+        "item": "iron_bar",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "iron_reel",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 4
+  },
+  {
+    "id": "make_steel_drag_reel",
+    "name": "steel drag reel",
+    "verb": "make",
+    "animation": "work",
+    "skill": "artifice",
+    "level": 20,
+    "station": "net_bench",
+    "group": "Tackle",
+    "inputs": [
+      {
+        "item": "ash_log",
+        "count": 1
+      },
+      {
+        "item": "steel_bar",
+        "count": 2
+      }
+    ],
+    "outputs": [
+      {
+        "item": "steel_drag_reel",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 5
+  },
+  {
+    "id": "make_steel_spinning_reel",
+    "name": "steel spinning reel",
+    "verb": "make",
+    "animation": "work",
+    "skill": "artifice",
+    "level": 20,
+    "station": "net_bench",
+    "group": "Tackle",
+    "inputs": [
+      {
+        "item": "ash_log",
+        "count": 1
+      },
+      {
+        "item": "steel_bar",
+        "count": 2
+      }
+    ],
+    "outputs": [
+      {
+        "item": "steel_spinning_reel",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 5
+  },
+  {
+    "id": "make_reed_line",
+    "name": "reed line",
+    "verb": "twist",
+    "animation": "work",
+    "skill": "tailoring",
+    "level": 1,
+    "station": "net_bench",
+    "group": "Tackle",
+    "inputs": [
+      {
+        "item": "reed",
+        "count": 3
+      }
+    ],
+    "outputs": [
+      {
+        "item": "reed_line",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 3
+  },
+  {
+    "id": "make_flax_line",
+    "name": "flax line",
+    "verb": "lay",
+    "animation": "work",
+    "skill": "tailoring",
+    "level": 20,
+    "station": "net_bench",
+    "group": "Tackle",
+    "inputs": [
+      {
+        "item": "flax",
+        "count": 3
+      }
+    ],
+    "outputs": [
+      {
+        "item": "flax_line",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 5
+  },
+  {
+    "id": "make_fine_flax_line",
+    "name": "fine flax line",
+    "verb": "spin",
+    "animation": "work",
+    "skill": "tailoring",
+    "level": 20,
+    "station": "net_bench",
+    "group": "Tackle",
+    "inputs": [
+      {
+        "item": "flax",
+        "count": 4
+      }
+    ],
+    "outputs": [
+      {
+        "item": "fine_flax_line",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 5
+  },
+  {
+    "id": "make_pelt_fly",
+    "name": "pelt fly",
+    "verb": "tie",
+    "animation": "work",
+    "skill": "tailoring",
+    "level": 1,
+    "station": "net_bench",
+    "group": "Tackle",
+    "inputs": [
+      {
+        "item": "rat_pelt",
+        "count": 1
+      },
+      {
+        "item": "copper_bar",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "pelt_fly",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 3
+  },
+  {
+    "id": "make_haunch_ledger",
+    "name": "haunch ledger",
+    "verb": "bait",
+    "animation": "work",
+    "skill": "butchering",
+    "level": 5,
+    "station": "net_bench",
+    "group": "Tackle",
+    "inputs": [
+      {
+        "item": "raw_rat_haunch",
+        "count": 1
+      },
+      {
+        "item": "copper_bar",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "haunch_ledger",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 3
+  },
+  {
+    "id": "smith_copper_hook",
+    "name": "copper hook",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 1,
+    "station": "forge",
+    "group": "Tackle",
+    "inputs": [
+      {
+        "item": "copper_bar",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "copper_hook",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 1.6,
+    "tools": [
+      "tag:hammer"
+    ]
+  },
+  {
+    "id": "smith_iron_hook",
+    "name": "iron hook",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 10,
+    "station": "forge",
+    "group": "Tackle",
+    "inputs": [
+      {
+        "item": "iron_bar",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "iron_hook",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 2.2,
+    "tools": [
+      "tag:hammer"
+    ]
+  },
+  {
+    "id": "smith_steel_hook",
+    "name": "steel hook",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 20,
+    "station": "forge",
+    "group": "Tackle",
+    "inputs": [
+      {
+        "item": "steel_bar",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "steel_hook",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 2.8,
+    "tools": [
+      "tag:hammer"
+    ]
+  },
+  {
+    "id": "smith_steel_wire_trace",
+    "name": "steel wire trace",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 20,
+    "station": "forge",
+    "group": "Tackle",
+    "inputs": [
+      {
+        "item": "steel_bar",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "steel_wire_trace",
+        "count": 1
+      }
+    ],
+    "ticks": 4,
+    "xp": 2.8,
+    "tools": [
+      "tag:hammer"
+    ]
+  },
+  {
+    "id": "smith_copper_spinner",
+    "name": "copper spinner",
+    "verb": "smith",
+    "animation": "work",
+    "skill": "smithing",
+    "level": 15,
+    "station": "forge",
+    "group": "Tackle",
+    "inputs": [
+      {
+        "item": "copper_bar",
+        "count": 2
+      }
+    ],
+    "outputs": [
+      {
+        "item": "copper_spinner",
+        "count": 1
+      }
+    ],
+    "ticks": 7,
+    "xp": 4.2,
+    "tools": [
+      "tag:hammer"
+    ]
   }
 ]

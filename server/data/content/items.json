@@ -2042,5 +2042,690 @@
       ],
       "leaves": "empty_vial"
     }
+  },
+  {
+    "id": "alder_rod",
+    "name": "Alder rod",
+    "icon": "fishing",
+    "examine": "A whippy alder rod. Forgiving, if not for long.",
+    "value": 20,
+    "color": "#8a6a40",
+    "tags": [
+      "tackle"
+    ],
+    "tackle": {
+      "slot": "Rod",
+      "tier": 1,
+      "snapBuffer": 18,
+      "wearPerFight": 0.5,
+      "wearPerHard": 0,
+      "repair": {
+        "materials": [
+          {
+            "item": "alder_log",
+            "count": 1
+          }
+        ],
+        "requirements": []
+      }
+    }
+  },
+  {
+    "id": "ash_rod",
+    "name": "Ash rod",
+    "icon": "fishing",
+    "examine": "Springy ash, oiled. It bends a long way before it gives.",
+    "value": 45,
+    "color": "#9a7a48",
+    "tags": [
+      "tackle"
+    ],
+    "tackle": {
+      "slot": "Rod",
+      "tier": 2,
+      "requirements": [
+        {
+          "skill": "fishing",
+          "level": 10
+        }
+      ],
+      "snapBuffer": 22,
+      "wearPerFight": 0.5,
+      "wearPerHard": 0,
+      "repair": {
+        "materials": [
+          {
+            "item": "ash_log",
+            "count": 1
+          }
+        ],
+        "requirements": [
+          {
+            "skill": "artifice",
+            "level": 10
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "ironbound_rod",
+    "name": "Ironbound rod",
+    "icon": "fishing",
+    "examine": "Ash with iron ferrules: stiff, strong and patient in the red.",
+    "value": 90,
+    "color": "#7a6a5a",
+    "tags": [
+      "tackle"
+    ],
+    "tackle": {
+      "slot": "Rod",
+      "tier": 3,
+      "requirements": [
+        {
+          "skill": "fishing",
+          "level": 20
+        }
+      ],
+      "snapBuffer": 27,
+      "wearPerFight": 0.6,
+      "wearPerHard": 0,
+      "repair": {
+        "materials": [
+          {
+            "item": "iron_bar",
+            "count": 1
+          }
+        ],
+        "requirements": [
+          {
+            "skill": "artifice",
+            "level": 20
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "copper_reel",
+    "name": "Copper reel",
+    "icon": "pouch",
+    "examine": "A plain wooden drum with copper cheeks.",
+    "value": 25,
+    "color": "#b87333",
+    "tags": [
+      "tackle"
+    ],
+    "tackle": {
+      "slot": "Reel",
+      "tier": 1,
+      "reelSpeed": 100,
+      "runDrag": 100,
+      "wearPerFight": 0.5,
+      "wearPerHard": 3,
+      "repair": {
+        "materials": [
+          {
+            "item": "tree_resin",
+            "count": 1
+          }
+        ],
+        "requirements": []
+      }
+    }
+  },
+  {
+    "id": "iron_reel",
+    "name": "Iron reel",
+    "icon": "pouch",
+    "examine": "An iron-cheeked reel with a click to it.",
+    "value": 55,
+    "color": "#8a8a8a",
+    "tags": [
+      "tackle"
+    ],
+    "tackle": {
+      "slot": "Reel",
+      "tier": 2,
+      "requirements": [
+        {
+          "skill": "fishing",
+          "level": 10
+        }
+      ],
+      "reelSpeed": 105,
+      "runDrag": 110,
+      "wearPerFight": 0.5,
+      "wearPerHard": 3,
+      "repair": {
+        "materials": [
+          {
+            "item": "tree_resin",
+            "count": 1
+          }
+        ],
+        "requirements": [
+          {
+            "skill": "artifice",
+            "level": 10
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "steel_drag_reel",
+    "name": "Steel drag reel",
+    "icon": "pouch",
+    "examine": "Heavy, with a brake that leans on a running fish. Slow to wind.",
+    "value": 110,
+    "color": "#9aa0a8",
+    "tags": [
+      "tackle"
+    ],
+    "tackle": {
+      "slot": "Reel",
+      "tier": 3,
+      "requirements": [
+        {
+          "skill": "fishing",
+          "level": 20
+        }
+      ],
+      "reelSpeed": 95,
+      "runDrag": 140,
+      "wearPerFight": 0.6,
+      "wearPerHard": 3,
+      "repair": {
+        "materials": [
+          {
+            "item": "tree_resin",
+            "count": 2
+          }
+        ],
+        "requirements": [
+          {
+            "skill": "artifice",
+            "level": 20
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "steel_spinning_reel",
+    "name": "Steel spinning reel",
+    "icon": "pouch",
+    "examine": "Light and quick to wind, with little to hold a run.",
+    "value": 110,
+    "color": "#b0b4b8",
+    "tags": [
+      "tackle"
+    ],
+    "tackle": {
+      "slot": "Reel",
+      "tier": 3,
+      "requirements": [
+        {
+          "skill": "fishing",
+          "level": 20
+        }
+      ],
+      "reelSpeed": 125,
+      "runDrag": 95,
+      "wearPerFight": 0.6,
+      "wearPerHard": 3,
+      "repair": {
+        "materials": [
+          {
+            "item": "tree_resin",
+            "count": 2
+          }
+        ],
+        "requirements": [
+          {
+            "skill": "artifice",
+            "level": 20
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "reed_line",
+    "name": "Reed line",
+    "icon": "bead",
+    "examine": "Twisted reed fibre. Fine, and it frays if you look at it hard.",
+    "value": 8,
+    "color": "#a8a070",
+    "tags": [
+      "tackle"
+    ],
+    "tackle": {
+      "slot": "Line",
+      "tier": 1,
+      "strength": 95,
+      "thickness": 1,
+      "wearPerFight": 1.5,
+      "wearPerHard": 12,
+      "repair": {
+        "materials": [
+          {
+            "item": "reed",
+            "count": 2
+          }
+        ],
+        "requirements": []
+      }
+    }
+  },
+  {
+    "id": "flax_line",
+    "name": "Flax line",
+    "icon": "bead",
+    "examine": "Laid flax: strong, and thick enough for wary fish to see.",
+    "value": 30,
+    "color": "#c8c0a0",
+    "tags": [
+      "tackle"
+    ],
+    "tackle": {
+      "slot": "Line",
+      "tier": 3,
+      "requirements": [
+        {
+          "skill": "fishing",
+          "level": 20
+        }
+      ],
+      "strength": 125,
+      "thickness": 3,
+      "wearPerFight": 1.5,
+      "wearPerHard": 10,
+      "repair": {
+        "materials": [
+          {
+            "item": "flax",
+            "count": 2
+          }
+        ],
+        "requirements": [
+          {
+            "skill": "tailoring",
+            "level": 20
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "fine_flax_line",
+    "name": "Fine flax line",
+    "icon": "bead",
+    "examine": "Flax spun thin. Hard to see, easy to break.",
+    "value": 30,
+    "color": "#d8d2b8",
+    "tags": [
+      "tackle"
+    ],
+    "tackle": {
+      "slot": "Line",
+      "tier": 3,
+      "requirements": [
+        {
+          "skill": "fishing",
+          "level": 20
+        }
+      ],
+      "strength": 105,
+      "thickness": 1,
+      "wearPerFight": 1.5,
+      "wearPerHard": 12,
+      "repair": {
+        "materials": [
+          {
+            "item": "flax",
+            "count": 2
+          }
+        ],
+        "requirements": [
+          {
+            "skill": "tailoring",
+            "level": 20
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "copper_hook",
+    "name": "Copper hook",
+    "icon": "bead",
+    "examine": "Bent copper. It holds, mostly.",
+    "value": 6,
+    "color": "#b87333",
+    "tags": [
+      "tackle"
+    ],
+    "tackle": {
+      "slot": "Hook",
+      "tier": 1,
+      "hookHold": 30,
+      "wearPerFight": 2,
+      "wearPerHard": 4,
+      "repair": {
+        "materials": [
+          {
+            "item": "copper_bar",
+            "count": 1
+          }
+        ],
+        "requirements": []
+      }
+    }
+  },
+  {
+    "id": "iron_hook",
+    "name": "Iron hook",
+    "icon": "bead",
+    "examine": "A barbed iron hook.",
+    "value": 15,
+    "color": "#8a8a8a",
+    "tags": [
+      "tackle"
+    ],
+    "tackle": {
+      "slot": "Hook",
+      "tier": 2,
+      "requirements": [
+        {
+          "skill": "fishing",
+          "level": 10
+        }
+      ],
+      "hookHold": 38,
+      "wearPerFight": 2,
+      "wearPerHard": 4,
+      "repair": {
+        "materials": [
+          {
+            "item": "iron_bar",
+            "count": 1
+          }
+        ],
+        "requirements": [
+          {
+            "skill": "smithing",
+            "level": 10
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "steel_hook",
+    "name": "Steel hook",
+    "icon": "bead",
+    "examine": "Fine steel, needle sharp, with a long barb.",
+    "value": 35,
+    "color": "#b0b4b8",
+    "tags": [
+      "tackle"
+    ],
+    "tackle": {
+      "slot": "Hook",
+      "tier": 3,
+      "requirements": [
+        {
+          "skill": "fishing",
+          "level": 20
+        }
+      ],
+      "hookHold": 46,
+      "wearPerFight": 2.5,
+      "wearPerHard": 4,
+      "repair": {
+        "materials": [
+          {
+            "item": "steel_bar",
+            "count": 1
+          }
+        ],
+        "requirements": [
+          {
+            "skill": "smithing",
+            "level": 20
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "steel_wire_trace",
+    "name": "Steel wire trace",
+    "icon": "bead",
+    "examine": "A hook on a short steel trace: teeth slide off it.",
+    "value": 35,
+    "color": "#a0a4a8",
+    "tags": [
+      "tackle"
+    ],
+    "tackle": {
+      "slot": "Hook",
+      "tier": 3,
+      "requirements": [
+        {
+          "skill": "fishing",
+          "level": 20
+        }
+      ],
+      "hookHold": 40,
+      "noTeethWear": true,
+      "wearPerFight": 2,
+      "wearPerHard": 4,
+      "repair": {
+        "materials": [
+          {
+            "item": "steel_bar",
+            "count": 1
+          }
+        ],
+        "requirements": [
+          {
+            "skill": "smithing",
+            "level": 20
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "pelt_fly",
+    "name": "Pelt fly",
+    "icon": "bead",
+    "examine": "A tuft of rat fur on a hook shank. Perch can't leave it alone.",
+    "value": 6,
+    "color": "#6b5a43",
+    "tags": [
+      "tackle"
+    ],
+    "tackle": {
+      "slot": "Lure",
+      "tier": 1,
+      "bites": [
+        "perch"
+      ],
+      "wearPerFight": 2,
+      "wearPerHard": 0,
+      "repair": {
+        "materials": [
+          {
+            "item": "rat_pelt",
+            "count": 1
+          }
+        ],
+        "requirements": []
+      }
+    }
+  },
+  {
+    "id": "haunch_ledger",
+    "name": "Haunch ledger",
+    "icon": "bead",
+    "examine": "A weighted rig baited with rat haunch, for the bottom where eels feed.",
+    "value": 8,
+    "color": "#8a4a44",
+    "tags": [
+      "tackle"
+    ],
+    "tackle": {
+      "slot": "Lure",
+      "tier": 2,
+      "requirements": [
+        {
+          "skill": "fishing",
+          "level": 10
+        }
+      ],
+      "bites": [
+        "eel"
+      ],
+      "wearPerFight": 3,
+      "wearPerHard": 0,
+      "repair": {
+        "materials": [
+          {
+            "item": "raw_rat_haunch",
+            "count": 1
+          }
+        ],
+        "requirements": [
+          {
+            "skill": "butchering",
+            "level": 5
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "copper_spinner",
+    "name": "Copper spinner",
+    "icon": "bead",
+    "examine": "A spoon of beaten copper that flashes as it turns. Pike strike at it; so do perch.",
+    "value": 20,
+    "color": "#c88a43",
+    "tags": [
+      "tackle"
+    ],
+    "tackle": {
+      "slot": "Lure",
+      "tier": 3,
+      "requirements": [
+        {
+          "skill": "fishing",
+          "level": 20
+        }
+      ],
+      "bites": [
+        "perch",
+        "pike"
+      ],
+      "wearPerFight": 1.5,
+      "wearPerHard": 0,
+      "repair": {
+        "materials": [
+          {
+            "item": "copper_bar",
+            "count": 1
+          }
+        ],
+        "requirements": [
+          {
+            "skill": "smithing",
+            "level": 15
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "lucky_float",
+    "name": "Lucky float",
+    "icon": "bead",
+    "examine": "A float that bobs in a way no float should. Perch, eels and pike all come to it.",
+    "value": 400,
+    "color": "#c8a040",
+    "tags": [
+      "tackle"
+    ],
+    "tackle": {
+      "slot": "Lure",
+      "tier": 3,
+      "requirements": [
+        {
+          "skill": "fishing",
+          "level": 10
+        }
+      ],
+      "bites": [
+        "tier:3"
+      ],
+      "wearPerFight": 1,
+      "wearPerHard": 0,
+      "collector": true
+    }
+  },
+  {
+    "id": "slipping_reel",
+    "name": "Slipping reel",
+    "icon": "pouch",
+    "examine": "It gives line to a running fish as if it knew what the fish would do. It winds well, too.",
+    "value": 500,
+    "color": "#7a8a9a",
+    "tags": [
+      "tackle"
+    ],
+    "tackle": {
+      "slot": "Reel",
+      "tier": 3,
+      "requirements": [
+        {
+          "skill": "fishing",
+          "level": 15
+        }
+      ],
+      "reelSpeed": 118,
+      "runDrag": 135,
+      "wearPerFight": 0.5,
+      "wearPerHard": 2,
+      "collector": true
+    }
+  },
+  {
+    "id": "steel_trace_hook",
+    "name": "Steel-trace hook",
+    "icon": "bead",
+    "examine": "A hook that has been in a revised pike's jaw, and kept its edge.",
+    "value": 500,
+    "color": "#a8b0b8",
+    "tags": [
+      "tackle"
+    ],
+    "tackle": {
+      "slot": "Hook",
+      "tier": 3,
+      "requirements": [
+        {
+          "skill": "fishing",
+          "level": 20
+        }
+      ],
+      "hookHold": 48,
+      "noTeethWear": true,
+      "wearPerFight": 1.5,
+      "wearPerHard": 2,
+      "collector": true
+    }
   }
 ]
