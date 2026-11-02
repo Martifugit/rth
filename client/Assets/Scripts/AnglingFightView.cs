@@ -276,19 +276,20 @@ namespace Rth.Client
         /// <summary>
         /// The camera at the bite: it swings round behind you and a little to one side (so you aren't
         /// in line with the fish), tilts down onto the water and looks between you and the fish, so the
-        /// whirlpool sits out on the water in clear view. For a moment it is set; after that you can turn
-        /// it as you like, and it keeps looking between you both until the fight ends.
+        /// whirlpool sits out on the water in clear view. It is set once, from the spot the fish bit at,
+        /// and stays (it doesn't follow the fish); you can still turn it yourself.
         /// </summary>
         private void TurnCamera()
         {
             CameraRig rig = CameraRig.Current;
             Transform me = session.world.Local?.transform;
             if (rig == null || me == null) return;
-            Vector3 toFish = _fishPos - me.position;
+            // Framed once, from where the fish bit: the view doesn't follow the fish about.
+            Vector3 toFish = _spot - me.position;
             toFish.y = 0f;
-            rig.FocusOffset = toFish * 0.5f;
             float since = Time.unscaledTime - _startedAt;
             if (since > 1.4f || toFish.sqrMagnitude < 0.01f) return;
+            rig.FocusOffset = toFish * 0.5f;
             float ease = 1f - Mathf.Exp(-Time.unscaledDeltaTime * 5f);
             float want = Mathf.Atan2(toFish.x, toFish.z) * Mathf.Rad2Deg + CameraSide;
             rig.yaw = Mathf.LerpAngle(rig.yaw, want, ease);
@@ -753,9 +754,7 @@ namespace Rth.Client
         {
             if (state.Outcome == AnglingOutcome.Landed)
             {
-                Transform me = session.world.Local?.transform;
-                Vector3 at = me != null ? me.position + (_fishPos - me.position) * 0.3f : _fishPos;
-                Splash(at, 30, 1.3f);
+                Splash(_fishPos, 30, 1.3f);     // where the whirlpool was, not on the angler
             }
             else
             {
