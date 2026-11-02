@@ -39,6 +39,53 @@ namespace Rth.Shared.World
         public string? Model;
         /// <summary>Client only: a light the object gives off while set down (#RRGGBB, a campfire's orange), or null.</summary>
         public string? Glow;
+        /// <summary>
+        /// Makes it a tile trigger (a snare, grasping hands): something happens to a player who steps
+        /// onto its tile. Handled by the server's <c>TriggerSystem</c>.
+        /// </summary>
+        public TriggerDef? Trigger;
+    }
+
+    /// <summary>Tile triggers sprung near a player (the "triggers" server state), so clients draw them.</summary>
+    public sealed class TriggersState
+    {
+        public List<SprungTrigger> Sprung = new List<SprungTrigger>();
+    }
+
+    public sealed class SprungTrigger
+    {
+        /// <summary>The object type (its <see cref="TriggerDef.Model"/> is what's drawn).</summary>
+        public string Type = "";
+        public int Plane;
+        public int X;
+        public int Y;
+        /// <summary>The server tick it sprang on.</summary>
+        public uint Tick;
+    }
+
+    /// <summary>
+    /// What a tile trigger does to a player who steps onto its tile: holds them in place, hurts them
+    /// by a share of their max blood, says something. Re-arms per player. A hidden one is drawn only
+    /// while sprung (the "triggers" server state).
+    /// </summary>
+    public sealed class TriggerDef
+    {
+        /// <summary>Not drawn until it springs; clients learn of it only from the "triggers" state.</summary>
+        public bool Hidden;
+        /// <summary>Ticks the player is held in place (0: not held).</summary>
+        public int HoldTicks;
+        /// <summary>Damage as a percentage of the player's max blood (wards don't apply).</summary>
+        public double DamagePercent;
+        /// <summary>Ticks before it can spring on the same player again.</summary>
+        public int RearmTicks = 10;
+        /// <summary>Ticks it shows as sprung to clients.</summary>
+        public int ShowTicks = 4;
+        /// <summary>Said to the player when it springs.</summary>
+        public string? Message;
+        /// <summary>The player's animation when it springs (a clip or role in animations.json).</summary>
+        public string? Animation;
+        /// <summary>Client only: the model drawn while sprung, a path under Resources.</summary>
+        public string? Model;
     }
 
     /// <summary>
@@ -294,6 +341,18 @@ namespace Rth.Shared.World
         /// Needs no handler; with one, the handler runs too.
         /// </summary>
         public string? Animation;
+        /// <summary>
+        /// Effect ops (healBloodPercent, addPhlegm...) applied to the player when used: a lantern
+        /// that warms, a spring that refreshes. Needs no handler.
+        /// </summary>
+        public List<Rth.Shared.Items.EffectOp> Effects = new List<Rth.Shared.Items.EffectOp>();
+        /// <summary>
+        /// Limits <see cref="Effects"/> to once per scope for each player and object: "trial" (once
+        /// per attempt at a trial, see the server's <c>TrialSystem</c>). Null: every use.
+        /// </summary>
+        public string? OncePer;
+        /// <summary>Said instead of the effects when <see cref="OncePer"/> has been used up.</summary>
+        public string? UsedMessage;
     }
 
     /// <summary>One placed object, as exported from the scene (<c>&lt;map&gt;.objects.json</c>).</summary>

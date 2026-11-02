@@ -40,7 +40,7 @@ namespace Rth.Server.Game
     /// without it, and he keeps it for <see cref="DeathRules.HoldHours"/> real hours.
     ///
     /// Extension points: dialogue conditions <c>ferryHolds</c>, <c>ferryFree</c>, <c>ferryCanPay</c>,
-    /// <c>ferryObol</c>, <c>inRealm</c>; actions <c>ferryPay</c>, <c>ferryLeave</c>; tokens
+    /// <c>ferryObol</c>, <c>inRealm</c>; actions <c>ferryPay</c>, <c>ferryLeave</c>, <c>ferryReturnFree</c>; tokens
     /// <c>{ferryFee}</c>, <c>{ferryValue}</c>, <c>{ferryHours}</c>, <c>{deaths}</c>; and the public
     /// <see cref="Pay"/> / <see cref="Leave"/> for anything else that wants to use them.
     /// </summary>
@@ -73,6 +73,7 @@ namespace Rth.Server.Game
             dialogue.RegisterCondition("inRealm", (p, _, _) => Of(p).InRealm);
             dialogue.RegisterAction("ferryPay", (p, _, _) => Pay(p));
             dialogue.RegisterAction("ferryLeave", (p, _, _) => Leave(p));
+            dialogue.RegisterAction("ferryReturnFree", (p, _, _) => ReturnFree(p));
             dialogue.RegisterToken("ferryFee", (p, _, _) => Price(Fee(p)));
             dialogue.RegisterToken("ferryValue", (p, _, _) => Price(Value(p)));
             dialogue.RegisterToken("ferryHours", (p, _, _) => HoursLeft(p).ToString(CultureInfo.InvariantCulture));
@@ -196,6 +197,22 @@ namespace Rth.Server.Game
             FerryHold hold = Of(player);
             if (hold.Holding)
                 World.Tell(player, TextKind.Info, "The ferryman will keep your belongings for about " + HoursLeft(player) + " hours.");
+            SendBack(player);
+        }
+
+        /// <summary>
+        /// Gives back everything held at no cost and takes the player back: the walker's gift at the
+        /// end of the long way back. Anything that doesn't fit stays held, paid for.
+        /// </summary>
+        public void ReturnFree(Player player)
+        {
+            if (player.IsDead) return;
+            FerryHold hold = Of(player);
+            if (hold.Holding)
+            {
+                hold.Paid = true;
+                ReturnGear(player);
+            }
             SendBack(player);
         }
 

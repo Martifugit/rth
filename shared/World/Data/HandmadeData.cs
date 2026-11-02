@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections.Generic;
 
 namespace Rth.Shared.World.Data
@@ -40,5 +41,13 @@ namespace Rth.Shared.World.Data
         public int X;
         public int Y;
         public int Wander = -1;
+        /// <summary>Tiles it walks between, [x, y] each, in order; null or empty for none (it wanders instead).</summary>
+        public List<int[]>? Patrol;
+        /// <summary>"loop" (back to the first tile) or "bounce" (back the way it came).</summary>
+        public string? PatrolMode;
+
+        /// <summary>The patrol as text, for comparing two exports: "x,y;x,y~loop".</summary>
+        public string PatrolKey() => Patrol == null || Patrol.Count == 0 ? "" :
+            string.Join(";", Patrol.Select(p => p[0] + "," + p[1])) + "~" + (PatrolMode ?? "loop");
     }
 }

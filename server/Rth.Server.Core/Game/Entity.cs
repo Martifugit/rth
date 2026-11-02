@@ -70,6 +70,12 @@ namespace Rth.Server.Game
         public uint NextAttackTick { get; set; }
         /// <summary>Last tick this entity dealt or took damage; 0 if never.</summary>
         public uint LastCombatTick { get; set; }
+
+        /// <summary>Held in place (grasping hands, a snare) until this tick: it can't take a step before then.</summary>
+        public uint RootedUntilTick { get; set; }
+
+        /// <summary>Its blood doesn't come back by itself until this tick (the cold of a trial).</summary>
+        public uint BloodRegenHeldUntilTick { get; set; }
         public List<ActiveEffect> Effects { get; } = new List<ActiveEffect>();
         public List<Bleed> Bleeds { get; } = new List<Bleed>();
         public bool HealthChanged { get; set; }

@@ -125,6 +125,7 @@ namespace Rth.Server.Game
                 if (npc.Waypoints.Count == 0)
                 {
                     npc.Returning = false;
+                    npc.EngagedAt = null;
                     ResetHealth(npc);
                 }
                 return;
@@ -137,16 +138,25 @@ namespace Rth.Server.Game
                 target = null;
             }
 
-            // Dragged too far from home: give up, walk back and reset.
-            if (npc.Position.ChebyshevDistance(npc.Home) > def.LeashRadius)
+            // Dragged too far from home (or, on a patrol, from where it left its route): give up,
+            // walk back and reset. A patrolling creature that isn't chasing anyone is never leashed.
+            TileCoord? leashFrom = npc.Spawn.Patrols ? npc.EngagedAt : npc.Home;
+            if (leashFrom is TileCoord from && npc.Position.ChebyshevDistance(from) > def.LeashRadius)
             {
                 npc.ClearCombat();
                 npc.Returning = true;
-                World.SetPath(npc, npc.Home);
+                World.SetPath(npc, from);
                 return;
             }
 
             if (target == null && def.Aggressive && def.Attacks) target = FindAggroTarget(npc);
+            if (target == null && npc.Spawn.Patrols && npc.EngagedAt != null)
+            {
+                // Lost whoever it chased: back onto the route from here.
+                npc.EngagedAt = null;
+                npc.Waypoints.Clear();
+            }
+            if (target != null && npc.Spawn.Patrols && npc.EngagedAt == null) npc.EngagedAt = npc.Position;
 
             if (target != null && def.Attacks)
             {
@@ -163,7 +173,8 @@ namespace Rth.Server.Game
                 ResetHealth(npc);
 
             if (World.CurrentTick < npc.BusyUntilTick) return; // someone is talking to it
-            Wander(npc);
+            if (npc.Spawn.Patrols) Patrol(npc);
+            else Wander(npc);
         }
 
         private Entity? FindAggroTarget(Npc npc)
@@ -186,9 +197,44 @@ namespace Rth.Server.Game
         {
             World.AddAction(new ActionEvent { SourceId = npc.Id, TargetId = target.Id, AbilityId = "npc:" + npc.Def.Id, Pole = 0 });
             if (World.Random.NextDouble() < npc.Def.Accuracy)
-                Combat.Damage(target, World.Random.Next(npc.Def.LeastHit, npc.Def.MaxHit + 1), npc, HitKind.Normal, npc.Def.Style);
+                Combat.Damage(target, HitAmount(npc.Def, target), npc, HitKind.Normal, npc.Def.Style);
             else
                 Combat.Damage(target, 0, npc, HitKind.Miss, npc.Def.Style);
+        }
+
+        /// <summary>What a landed hit does: a share of the target's max blood, or a roll in the creature's range.</summary>
+        private int HitAmount(NpcDef def, Entity target) =>
+            def.HitPercent > 0
+                ? Math.Max(1, (int)Math.Round(target.MaxBlood * def.HitPercent / 100.0))
+                : World.Random.Next(def.LeastHit, def.MaxHit + 1);
+
+        /// <summary>
+        /// Walks the spawn's patrol: on to the next tile when it reaches one, round in a loop or back
+        /// the way it came ("bounce"). Two tiles a tick only if the def says it runs (it doesn't).
+        /// </summary>
+        private void Patrol(Npc npc)
+        {
+            List<int[]> route = npc.Spawn.Patrol!;
+            if (npc.Waypoints.Count > 0)
+            {
+                World.ProcessMovement(npc);
+                return;
+            }
+            npc.PatrolIndex = Math.Max(0, Math.Min(route.Count - 1, npc.PatrolIndex));
+            var goal = new TileCoord(route[npc.PatrolIndex][0], route[npc.PatrolIndex][1]);
+            if (npc.Position == goal)
+            {
+                if (route.Count == 1) return;
+                if (npc.Spawn.PatrolMode == "bounce")
+                {
+                    if (npc.PatrolIndex + npc.PatrolStep < 0 || npc.PatrolIndex + npc.PatrolStep >= route.Count) npc.PatrolStep = -npc.PatrolStep;
+                    npc.PatrolIndex += npc.PatrolStep;
+                }
+                else npc.PatrolIndex = (npc.PatrolIndex + 1) % route.Count;
+                goal = new TileCoord(route[npc.PatrolIndex][0], route[npc.PatrolIndex][1]);
+            }
+            World.SetPath(npc, goal);
+            World.ProcessMovement(npc);
         }
 
         private void Wander(Npc npc)
@@ -226,6 +272,9 @@ namespace Rth.Server.Game
             npc.Blood = npc.MaxBlood;
             npc.Waypoints.Clear();
             npc.Effects.Clear();
+            npc.PatrolIndex = 0;
+            npc.PatrolStep = 1;
+            npc.EngagedAt = null;
             npc.LastCombatTick = 0;
             npc.Teleported = true;
         }

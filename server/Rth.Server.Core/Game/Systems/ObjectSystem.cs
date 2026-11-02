@@ -33,6 +33,14 @@ namespace Rth.Server.Game
 
         public void RegisterAction(string actionId, Action<Player, PlacedObject, ObjectDef> handler) => _actions[actionId] = handler;
 
+        private readonly Dictionary<string, Func<Player, PlacedObject, bool>> _onceScopes = new Dictionary<string, Func<Player, PlacedObject, bool>>();
+
+        /// <summary>
+        /// A scope an action's <see cref="ActionDef.OncePer"/> can name ("trial"): asked whether this
+        /// player may have the action's effects from this object now, and claiming it if so.
+        /// </summary>
+        public void RegisterOnceScope(string scope, Func<Player, PlacedObject, bool> tryClaim) => _onceScopes[scope] = tryClaim;
+
         /// <summary>Whether a flag- or level-gated action is available to this player; tells them why not if it isn't.</summary>
         public static bool Unlocked(World world, Player player, ActionDef action)
         {
@@ -110,8 +118,23 @@ namespace Rth.Server.Game
             World.Events.Publish(new ObjectUsed(player, placed, action.Id));
             if (action.Animation != null) World.Animate(player, action.Animation, placed.Tile);
             if (action.Message != null) World.Tell(player, TextKind.Info, action.Message);
+            if (action.Effects.Count > 0) ApplyEffects(player, placed, action);
             if (_actions.TryGetValue(action.Id, out Action<Player, PlacedObject, ObjectDef>? handler)) handler(player, placed, def);
-            else if (action.Message == null && action.Animation == null) World.Log("No handler for object action '" + action.Id + "'.");
+            else if (action.Message == null && action.Animation == null && action.Effects.Count == 0) World.Log("No handler for object action '" + action.Id + "'.");
+        }
+
+        /// <summary>An action's effect ops, if its <see cref="ActionDef.OncePer"/> scope (if any) allows them.</summary>
+        private void ApplyEffects(Player player, PlacedObject placed, ActionDef action)
+        {
+            if (action.OncePer != null)
+            {
+                if (!_onceScopes.TryGetValue(action.OncePer, out Func<Player, PlacedObject, bool>? claim) || !claim(player, placed))
+                {
+                    if (action.UsedMessage != null) World.Tell(player, TextKind.Info, action.UsedMessage);
+                    return;
+                }
+            }
+            World.Get<ItemSystem>().ApplyEffects(player, action.Effects);
         }
     }
 }
