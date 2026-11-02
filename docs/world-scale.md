@@ -67,43 +67,54 @@ the trunk's blocked tiles.
 
 ## 3. Terrain and verticality
 
-**Decided (owner, 2026-11-02): the world has real verticality.** Dramatic cliffs and heights are
-welcome; map verticality is part of what makes a world feel modern. The old limits here (cliffs of 1
-to 3 tiles, 16 tiles for the whole world) were what the 2004 game could manage, not a design goal,
-and they are gone. What makes height work is **planning, not caution**: every height is placed for a
-reason and every climb is designed. What we don't want is the first-person open world's mountain
-range, big walkable slopes that exist for their own sake; height here shapes routes, edges and views.
+**Decided (owner, 2026-11-02, corrected 2026-11-03): the world has real verticality, planned.**
+Dramatic cliffs and heights are welcome; map verticality is part of what makes a world feel modern.
+The old limits here (cliffs of 1 to 3 tiles, 16 tiles for the whole world) were what the 2004 game
+could manage, not a design goal, and they are gone. What makes height work is **planning**: every
+height is there for a reason in play or in the scene, and every climb is designed. "You can't just
+slap on a few metres here and there and call it better." What we don't want is the first-person
+open world's mountain range, big walkable slopes that exist for their own sake.
+
+**The first pass was rejected** (2026-11-03): Tolling raised on a knoll with a cliff bank, Cruor in
+three tiers of cliffs. Height was put where the content is, suddenly and over small areas. **Towns
+and cities are relatively flat** (not machine-flat, but little change in elevation across them);
+their verticality comes from **storeys, towers, walls, basements, crypts and sewers**, not from
+uneven ground. A city may stand on a hill, but the hill rises outside it. The worked example is
+[areas/heartland-vision.md](areas/heartland-vision.md).
 
 **The rules**
-1. **Every area has a vertical plan** in its brief ([world-areas.md](world-areas.md), the "Levels"
-   heading): its levels (low, middle, high ground, with heights), what stands on each, the ways
-   between them, and what each one sees.
-2. **Every climb is a route.** The ways up are designed and few: a road or path switching back up
-   a slope, a ramp along a cliff's foot, steps cut in the rock, a pass, a bridge over a gorge, a
-   ladder or stair (`climb` objects), later Agility shortcuts (a `climb` with `requirements`). A
-   height nobody can reach is scenery on purpose, an edge or a backdrop, never an accident.
-3. **Cliffs are walls that shape the world.** They make the edges (instead of invisible walls), the
-   funnels and chokepoints, the terraces a town stands on, and the vantage points. A long cliff with
-   one way up is a place; a field of random bumps is not.
-4. **Height pays off.** The top of a climb shows something: the landmarks below, the way ahead, the
-   way back. Some things are only reached from above or below. A descent can reveal a place.
-5. **Mountains are mostly backdrop.** A range is impassable rock and its faces, crossed at passes,
-   with walkable high ground only where it has a purpose (a plateau, a ledge path, a ridge road, a
-   shepherd's high pasture). The spine is a wall with gates in it, not a slope to wander up.
-6. **Flat is a choice too.** A town square, a field, a fen, a lake shore are flat because they
-   should be; open land that is flat by default is a plan that wasn't made.
+1. **Every area has a vision before it has heights** (its brief, [world-areas.md](world-areas.md)):
+   what is done there, its points of interest, what is below ground, its futures (a year, five, ten)
+   and why low, mid and late players come. Its vertical plan follows from that: each height names
+   its **job** (a reveal, a threshold, a wall with a way through, a narrow, a vantage, depth below,
+   or room for a later change) and its routes.
+2. **Busy ground stays level.** A town, a yard, a camp, a quest spot changes by about a tile or so
+   across it, gently. Height there is built: towers to climb, upper floors (`MapLevel`), wall-walks,
+   quays and stairs; and below: cellars, crypts, drains, undercrofts (small instanced regions).
+3. **Relief is landscape-scale.** Land rises over long distances (slopes of about 1 in 7 or gentler
+   on walkable ground) for a reason in how the land formed: rivers cut, lakes undercut, uplands rise
+   towards mountains. Big shapes are few and read from far off.
+4. **A sheer face is a set piece:** one or two an area at most, where there is room and little
+   content, each with its routes (a combe, a ledge path, steps cut in the rock, a stair, a
+   shortcut). A long cliff with one way up is a place; bumps are not.
+5. **Every climb is a route,** and the top pays off: the landmarks below, the way ahead, the way
+   back. Within the fog's reach (85 tiles), or through a lookout that earns a longer view.
+6. **Mountains are mostly backdrop:** impassable rock crossed at passes, walkable high ground only
+   where it has a purpose.
+7. **Depth goes below.** The biggest vertical content is under the ground, where it costs the
+   overworld nothing: dungeons as instanced regions, entered by a `climb`.
 
 **Numbers** (guides for the plan, not caps):
 
 | | Height (tiles) |
 | --- | --- |
+| Busy ground (a town, a yard, a camp): change across it | about 1 to 1.5 |
 | Lowland: river meadows, fens, shores | 0 to 6 |
-| Hills, downs, a town's knoll | 6 to 16 |
-| Uplands, plateaux, foothills | 12 to 24 |
+| Hills, downs, swells | 4 to 16, over long slopes |
+| Uplands, plateaux, foothills | 10 to 24 |
 | Mountains (backdrop, passes cut through) | up to about 60 |
 | A low step: a bank, a terrace edge | 1 to 3 |
-| A proper cliff | 4 to 12 |
-| A set piece: a gorge wall, a scarp, a sea cliff, a crag over a cave | 12 to 30 |
+| A set piece: a river bluff, a gorge wall, a sea or lake cliff, a scarp | 6 to 30 |
 
 The player is 1.94 tiles tall and a storey 2.6, so a cliff under about 4 tiles reads as a wall,
 not a cliff. Heights are kept between -4 and 64 by every tool (`TerrainText.Lowest`/`Highest`).

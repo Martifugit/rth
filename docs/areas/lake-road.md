@@ -40,6 +40,9 @@ belfry in the water, and Cruor's hill beyond.
 
 **Levels** ([world-scale.md](../world-scale.md) section 3, planned 2026-11-02):
 
+**Superseded (2026-11-03):** the owner rejected these levels as arbitrary height (towns raised and tiered, sudden faces over small busy areas). The replacement is proposed in [heartland-vision.md](heartland-vision.md) and waits on the owner; the ground still carries the first pass until it is agreed.
+
+
 **The heartland's rim** (shared by the four wave-1 areas, 2026-11-02): Tolling's basin and
 Knellmere lie inside a rim of high ground. West, **the march edge**: an east-facing escarpment about
 6 high, the march's plateau behind it climbing to the spine. South, **the Edge**: one escarpment from

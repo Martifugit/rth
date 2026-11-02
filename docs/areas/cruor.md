@@ -39,6 +39,9 @@ water, the cathedral at the crown.
 
 **Levels** ([world-scale.md](../world-scale.md) section 3, planned 2026-11-02):
 
+**Superseded (2026-11-03):** the owner rejected these levels as arbitrary height (towns raised and tiered, sudden faces over small busy areas). The replacement is proposed in [heartland-vision.md](heartland-vision.md) and waits on the owner; the ground still carries the first pass until it is agreed.
+
+
 | Level | Height | What is there | What it sees |
 | --- | --- | --- | --- |
 | The meadows | 0 to 2 | the loop's water meadows, the meander round the monument, the confluence, the fields | the city stacked on its hill |

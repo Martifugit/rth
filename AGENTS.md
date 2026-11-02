@@ -30,8 +30,9 @@ Design docs:
 - `docs/systems.md`: combat resources and the rules of a fight.
 - `docs/skills.md`: the v1 skill roster, the rules every skill follows, and each skill in full.
 - `docs/world-scale.md`: sizes, town and camera rules from the measured 2004 game, and **terrain and
-  verticality** (section 3, decided 2026-11-02): real, dramatic height, planned per area, every climb a
-  designed route; decisions D1-D4 wait on the owner and the scale test region.
+  verticality** (section 3, decided 2026-11-02, corrected 2026-11-03): real height at landscape scale,
+  each with a job, every climb a designed route; towns stay level (their height is built and below
+  ground); an area's vision comes before its heights; decisions D1-D4 wait on the owner and the scale test region.
 - `docs/assets.md`: triangle budgets, the palette, textures, leafy trees, recolouring.
 - `docs/world-building.md`: the world layout, region bakes and stamps (a prototype; W1, W2 open).
 - `docs/world-guide.md`: **read before any work on the game world.** The reference: what the world

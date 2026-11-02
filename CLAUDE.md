@@ -31,8 +31,9 @@ Design docs:
 - `docs/systems.md`: combat resources and the rules of a fight.
 - `docs/skills.md`: the v1 skill roster, the rules every skill follows, and each skill in full.
 - `docs/world-scale.md`: sizes, town and camera rules from the measured 2004 game, and **terrain and
-  verticality** (section 3, decided 2026-11-02): real, dramatic height, planned per area, every climb a
-  designed route; decisions D1-D4 wait on the owner and the scale test region.
+  verticality** (section 3, decided 2026-11-02, corrected 2026-11-03): real height at landscape scale,
+  each with a job, every climb a designed route; towns stay level (their height is built and below
+  ground); an area's vision comes before its heights; decisions D1-D4 wait on the owner and the scale test region.
 - `docs/assets.md`: triangle budgets, the palette, textures, leafy trees, recolouring.
 - `docs/world-building.md`: the world layout, region bakes and stamps (a prototype; W1, W2 open).
 - `docs/world-guide.md`: **read before any work on the game world.** The reference: what the world
@@ -585,9 +586,9 @@ character a tile), not a Unity splat map: `docs/world-guide.md` section 4. Water
 crossroads, the church close with the bell tower, 13 buildings from the village kit), Widdermill, the
 toll-house, the monument's plot, the open waygate, the fishers' landing and the edge farm, with
 first-pass landmark art. No people or objects yet (stage 3); waiting on Sync World and the owner's walk.
-Since then wave 1 has its levels (`docs/world-scale.md` section 3, real verticality): the march edge,
-Tolling's knoll and heath ridge, the Edge and the Downs' chalk cliff, Cruor's tiers, all with graded
-roads (`world/strokes/*-levels-*.json`, `heartland-edge-*.json`). What its art needs is `docs/areas/tolling-assets.md`; most kits there are early iterations,
+Wave 1's first levels pass (2026-11-02) was rejected as arbitrary height; its replacement, a vision
+for each area and the land to support it, is proposed in `docs/areas/heartland-vision.md` (the ground
+still carries the first pass until it is agreed). What its art needs is `docs/areas/tolling-assets.md`; most kits there are early iterations,
 not finished assets.
 
 **AN, Fishing in depth: trophy angling (on `claude/fishing-depth`):** the design is `docs/fishing.md`
