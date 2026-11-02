@@ -50,11 +50,12 @@ waygate in its notch. North the land stays low and open towards the dry valley.
 | Level | Height | What is there | What it sees |
 | --- | --- | --- | --- |
 | The lake | 0 to 2 | Knellmere, the reed fens, the shores, p-lakeport's quay, p-lake-south's landing | the Downs' white cliff over the south shore, the isle |
-| The north shore's rise | up to about 8 | Palmerway over the rise at s-lake-view, p-lakeport on a terrace above its quay | the whole lake at once from the crest, Cruor's hill beyond |
+| The heath ridge's saddle | about 3.5 (the ridge 6 either side) | Palmerway cresting past the waygate (Tolling's area), s-lake-view on its east lip | the whole lake at once, the belfry, Cruor's hill beyond |
+| p-lakeport's terrace | about 2.5 over its quay | the town above the quay on the north shore | the lake, the isle, the Downs' cliff |
 | The isle | about 5 | rock, a cliff on its south | |
 | The Downs | the Edge's chalk cliff of 10 to 12, the downs 12 to 15 behind | the hill figure cut in the cliff's face, s-hill-figure on its lip | the lake and everything north of it |
 
-**The ways between them:** Palmerway climbs the rise and comes over its crest to the lake; the
+**The ways between them:** Palmerway crests the heath ridge's saddle and comes down past the fens to p-lakeport's terrace; the
 south-shore road and the camp lane climb the Downs' cliff in combes (dry valleys cut into it) by
 switchbacks; the downs brook falls over the cliff; boats to the isle.
 
@@ -176,3 +177,9 @@ mid game, read from the shore before anyone goes.
    over the brook's mouth; a path leaves the camp lane at the top, crosses the brook above its fall
    and runs along the top to s-hill-figure on the lip. The north shore's rise, the isle's height and
    the outflow's weir are still to do.
+9. **The north shore** (2026-11-02, `world/strokes/lake-road-levels.json`): the view arrives at the heath
+   ridge's saddle, where Palmerway crests past the waygate, so s-lake-view moved there, (205, 51), and no
+   second rise was built on the north shore; the pass road now ends where it meets Palmerway's old line.
+   p-lakeport stands on a terrace about 2 above its quay (Palmerway graded up onto it); the belfry's isle
+   rises to about 5, a rock face on its south. The outflow leaves the lake at the lake's own level, so
+   p-weir's weir is a structure at stage 2, not a fall.

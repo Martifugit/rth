@@ -584,7 +584,10 @@ character a tile), not a Unity splat map: `docs/world-guide.md` section 4. Water
 `docs/areas/tolling.md` findings 11-18): Wennow reshaped; the town on its knoll (the square at the
 crossroads, the church close with the bell tower, 13 buildings from the village kit), Widdermill, the
 toll-house, the monument's plot, the open waygate, the fishers' landing and the edge farm, with
-first-pass landmark art. No people or objects yet (stage 3); waiting on Sync World and the owner's walk. What its art needs is `docs/areas/tolling-assets.md`; most kits there are early iterations,
+first-pass landmark art. No people or objects yet (stage 3); waiting on Sync World and the owner's walk.
+Since then wave 1 has its levels (`docs/world-scale.md` section 3, real verticality): the march edge,
+Tolling's knoll and heath ridge, the Edge and the Downs' chalk cliff, Cruor's tiers, all with graded
+roads (`world/strokes/*-levels-*.json`, `heartland-edge-*.json`). What its art needs is `docs/areas/tolling-assets.md`; most kits there are early iterations,
 not finished assets.
 
 **AN, Fishing in depth: trophy angling (on `claude/fishing-depth`):** the design is `docs/fishing.md`

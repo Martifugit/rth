@@ -1,0 +1,206 @@
+{
+  "regions": [
+    "land_1_0",
+    "land_2_0",
+    "land_2_m1",
+    "land_3_0",
+    "land_3_m1"
+  ],
+  "note": "The lake road's levels (2026-11-02, docs/areas/lake-road.md 'Levels'): the view of Knellmere arrives at the heath ridge's saddle, where Palmerway crests past the waygate (s-lake-view moved there), so the pass road ends where it meets Palmerway's old line, and its stub into the fens goes; p-lakeport stands on a terrace about 2 above its quay; the belfry's isle rises to about 5 with a rock face on its south. Applied once with `tools/world strokes world/strokes/lake-road-levels.json`.",
+  "shapes": [
+    {
+      "id": "lakeport-terrace",
+      "raise": 2,
+      "gentle": 6,
+      "ragged": 0.8,
+      "seed": 191,
+      "cliffSide": [
+        0,
+        -1
+      ],
+      "points": [
+        [
+          244,
+          61
+        ],
+        [
+          262,
+          60
+        ],
+        [
+          280,
+          61
+        ],
+        [
+          284,
+          72
+        ],
+        [
+          282,
+          84
+        ],
+        [
+          262,
+          86
+        ],
+        [
+          244,
+          84
+        ],
+        [
+          240,
+          72
+        ]
+      ]
+    },
+    {
+      "id": "belfry-isle-height",
+      "raise": 3.6,
+      "gentle": 2.5,
+      "ragged": 0.4,
+      "seed": 192,
+      "cliffSide": [
+        0,
+        -1
+      ],
+      "rock": "scree",
+      "rockRise": 1.2,
+      "points": [
+        [
+          288,
+          -16
+        ],
+        [
+          292,
+          -12
+        ],
+        [
+          298,
+          -11
+        ],
+        [
+          304,
+          -10
+        ],
+        [
+          307,
+          -13
+        ],
+        [
+          307,
+          -18
+        ],
+        [
+          303,
+          -21
+        ],
+        [
+          296,
+          -22
+        ],
+        [
+          290,
+          -20
+        ]
+      ]
+    }
+  ],
+  "strokes": [
+    {
+      "id": "pass-junction",
+      "ground": "path",
+      "seed": 194,
+      "points": [
+        [
+          184,
+          48
+        ],
+        [
+          191,
+          48.5
+        ],
+        [
+          197,
+          51
+        ],
+        [
+          203,
+          54.5
+        ]
+      ],
+      "width": [
+        3,
+        3
+      ],
+      "wind": 0,
+      "ragged": 0,
+      "eraseReach": 0
+    },
+    {
+      "id": "lakeport-way-in",
+      "ground": "path",
+      "seed": 193,
+      "points": [
+        [
+          236,
+          60
+        ],
+        [
+          244,
+          62.5
+        ],
+        [
+          252,
+          65
+        ],
+        [
+          260,
+          67.5
+        ],
+        [
+          264,
+          70
+        ]
+      ],
+      "width": [
+        3,
+        3
+      ],
+      "wind": 0,
+      "ragged": 0,
+      "erase": [
+        "path"
+      ],
+      "eraseReach": 2,
+      "grade": 0.35
+    }
+  ],
+  "swaps": [
+    {
+      "from": [
+        "path"
+      ],
+      "nearWater": 0,
+      "rect": [
+        198,
+        43,
+        220,
+        50
+      ],
+      "otherwise": "surround"
+    },
+    {
+      "from": [
+        "path"
+      ],
+      "nearWater": 0,
+      "rect": [
+        195,
+        43,
+        200,
+        46
+      ],
+      "otherwise": "surround"
+    }
+  ]
+}

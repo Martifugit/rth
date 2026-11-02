@@ -1552,9 +1552,9 @@
     {
       "id": "s-lake-view",
       "kind": "lookout",
-      "at": [232, 92],
+      "at": [205, 51],
       "stage": "early",
-      "note": "the rise on the lake road where Knellmere and Cruor's hill open out"
+      "note": "the heath ridge's saddle where Palmerway crests past the waygate and Knellmere, the belfry and Cruor's hill open out below"
     },
     {"id": "s-lake-monument", "kind": "monument", "at": [282, 132], "stage": "early", "note": "a blood monument on the road into Cruor"},
     {"id": "s-reed-fens", "kind": "skilling", "at": [210, 36], "stage": "early", "note": "Knellmere's reed fens: fishing, fen rats"},
