@@ -237,6 +237,12 @@ Two kits so far. Start from the one that fits, and read its rules before adding 
   mesh with a picked (berry-free) texture. Name it in objects.json (`depletedModel`).
 - **Don't** let the triangle budget decide a shape; it is advisory.
 
+**Candles (learned in the realm of the dead, 2026-11-02)**
+- **Do** let candles stand on the ground in clusters, melted heaps and on the water. Masses of them
+  are the realm of the dead's light.
+- **Don't** set them on made or odd carriers: candle shelves read as tables and candle-topped stones
+  as strange rocks. Both were rejected and removed.
+
 **Props (learned on the stations)**
 - **Do** work out what the thing is for before its shape: a forge is a fire pot, a hood, great bellows on
   a rocker, a slack tub, a coal bin and tongs; a charcoal kiln is a dark earth-and-ash mound, not a grassy

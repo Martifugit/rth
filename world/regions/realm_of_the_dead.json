@@ -171,16 +171,6 @@
     {"id": "candle-floatingcandles-8216-8218", "kind": "prop", "at": [8216, 8218], "footprint": [0, 0, 0, 0], "model": "Assets/Resources/Art/Assets/Lights/Dead/FloatingCandles.fbx", "rot": 193},
     {"id": "candle-floatingcandles-8212-8218", "kind": "prop", "at": [8212, 8218], "footprint": [0, 0, 0, 0], "model": "Assets/Resources/Art/Assets/Lights/Dead/FloatingCandles.fbx", "rot": 347},
     {"id": "candle-floatingcandles-8196-8195", "kind": "prop", "at": [8196, 8195], "footprint": [0, 0, 0, 0], "model": "Assets/Resources/Art/Assets/Lights/Dead/FloatingCandles.fbx", "rot": 201},
-    {"id": "candle-candleshelf-8215-8207", "kind": "prop", "at": [8215, 8207], "footprint": [0, 0, 0, 0], "model": "Assets/Resources/Art/Assets/Lights/Dead/CandleShelf.fbx", "rot": 356, "light": {"color": "#9FF0DA", "intensity": 0.9, "range": 4, "height": 0.8, "flicker": 0.14}},
-    {"id": "candle-candleshelf-8211-8198", "kind": "prop", "at": [8211, 8198], "footprint": [0, 0, 0, 0], "model": "Assets/Resources/Art/Assets/Lights/Dead/CandleShelf.fbx", "rot": 207},
-    {"id": "candle-candleshelf-8203-8211", "kind": "prop", "at": [8203, 8211], "footprint": [0, 0, 0, 0], "model": "Assets/Resources/Art/Assets/Lights/Dead/CandleShelf.fbx", "rot": 106, "light": {"color": "#9FF0DA", "intensity": 0.9, "range": 4, "height": 0.8, "flicker": 0.14}},
-    {"id": "candle-candleshelf-8210-8196", "kind": "prop", "at": [8210, 8196], "footprint": [0, 0, 0, 0], "model": "Assets/Resources/Art/Assets/Lights/Dead/CandleShelf.fbx", "rot": 253},
-    {"id": "candle-candleshelf-8204-8196", "kind": "prop", "at": [8204, 8196], "footprint": [0, 0, 0, 0], "model": "Assets/Resources/Art/Assets/Lights/Dead/CandleShelf.fbx", "rot": 353, "light": {"color": "#9FF0DA", "intensity": 0.9, "range": 4, "height": 0.8, "flicker": 0.14}},
-    {"id": "candle-candleshelf-8200-8202", "kind": "prop", "at": [8200, 8202], "footprint": [0, 0, 0, 0], "model": "Assets/Resources/Art/Assets/Lights/Dead/CandleShelf.fbx", "rot": 55},
-    {"id": "candle-candleshelf-8204-8212", "kind": "prop", "at": [8204, 8212], "footprint": [0, 0, 0, 0], "model": "Assets/Resources/Art/Assets/Lights/Dead/CandleShelf.fbx", "rot": 117, "light": {"color": "#9FF0DA", "intensity": 0.9, "range": 4, "height": 0.8, "flicker": 0.14}},
-    {"id": "candle-candleshelf-8220-8202", "kind": "prop", "at": [8220, 8202], "footprint": [0, 0, 0, 0], "model": "Assets/Resources/Art/Assets/Lights/Dead/CandleShelf.fbx", "rot": 314},
-    {"id": "candle-candleshelf-8212-8211", "kind": "prop", "at": [8212, 8211], "footprint": [0, 0, 0, 0], "model": "Assets/Resources/Art/Assets/Lights/Dead/CandleShelf.fbx", "rot": 28, "light": {"color": "#9FF0DA", "intensity": 0.9, "range": 4, "height": 0.8, "flicker": 0.14}},
-    {"id": "candle-candleshelf-8215-8210", "kind": "prop", "at": [8215, 8210], "footprint": [0, 0, 0, 0], "model": "Assets/Resources/Art/Assets/Lights/Dead/CandleShelf.fbx", "rot": 202},
-    {"id": "candle-candleheap-8202-8206", "kind": "prop", "at": [8202, 8206], "footprint": [0, 0, 0, 0], "model": "Assets/Resources/Art/Assets/Lights/Dead/CandleHeap.fbx", "rot": 156, "light": {"color": "#9FF0DA", "intensity": 2.0, "range": 7, "height": 1.0, "flicker": 0.14}}
+    {"id": "candle-candleheap-8202-8206", "kind": "prop", "at": [8202, 8206], "footprint": [0, 0, 0, 0], "model": "Assets/Resources/Art/Assets/Lights/Dead/CandleHeap.fbx", "rot": 356, "light": {"color": "#9FF0DA", "intensity": 2.0, "range": 7, "height": 1.0, "flicker": 0.14}}
   ]
 }

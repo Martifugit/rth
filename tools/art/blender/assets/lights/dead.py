@@ -307,10 +307,8 @@ ASSETS = {
     "SoulLanternSpent": lambda: soul_lantern(spent=True),
     "CandleClusterSmall": candle_cluster_small,
     "CandleClusterLarge": candle_cluster_large,
-    "CandleStone": candle_stone,
     "CandleHeap": candle_heap,
     "FloatingCandles": floating_candles,
-    "CandleShelf": candle_shelf,
 }
 
 
