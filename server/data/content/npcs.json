@@ -546,7 +546,7 @@
     "respawnTicks": 10,
     "shape": "Capsule",
     "color": "#9fc4c0",
-    "model": "Art/Assets/Creatures/Dead/Shade"
+    "model": "Art/Assets/Creatures/Dead/ShadeWraith"
   },
   {
     "id": "walker",
@@ -560,6 +560,6 @@
     "dialogue": "walker",
     "shape": "Capsule",
     "color": "#6b5a44",
-    "model": "Art/Assets/Creatures/Dead/Walker"
+    "model": "Art/Assets/Creatures/Dead/ShadeBurdened"
   }
 ]

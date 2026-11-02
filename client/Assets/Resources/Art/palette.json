@@ -173,6 +173,7 @@
   { "name": "SoulGlow", "hex": "#cfeee6", "group": "dead", "soul": true },
   { "name": "BonePale", "hex": "#b8b2a2", "group": "dead" },
   { "name": "DeadSlate", "hex": "#34383d", "group": "dead" },
-  { "name": "DrownedWood", "hex": "#2a2622", "group": "dead" }
+  { "name": "DrownedWood", "hex": "#2a2622", "group": "dead" },
+  { "name": "CandleFlame", "hex": "#bff5e4", "group": "dead", "soul": true }
  ]
 }
