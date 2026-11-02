@@ -40,7 +40,9 @@ namespace Rth.Client.Characters
             _model.SetColor("secondary", look.Legs);
             _model.SetColor("leather", look.Boots);
             _model.SetColor("eyes", Palette.TryParse("Sable", out Color eyes) ? eyes : Color.black);
+            _model.SetColor("under", Palette.TryParse("Linen", out Color under) ? under : Color.white);
             _model.SetHair("short");
+            _model.WearDefaultOutfit();
             _animator = new ClipAnimator(_model.Animator, name);
             _chest = _model.Animator.GetBoneTransform(HumanBodyBones.Chest) ?? _model.Animator.GetBoneTransform(HumanBodyBones.Spine);
             _head = _model.Animator.GetBoneTransform(HumanBodyBones.Head);

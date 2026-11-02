@@ -12,6 +12,11 @@ namespace Rth.Client.Characters
     /// Colours are by channel: every material slot in the art is named after one (skin, hair,
     /// primary, secondary, leather, ...), and <see cref="SetColor"/> colours that channel on every
     /// part, so one mesh serves many colourways.
+    ///
+    /// The kit parts are the bare body (in plain underclothes). Garments built with it ("wear_*"
+    /// meshes in the same art, such as the default shirt, trousers and boots) are listed in
+    /// Resources/Characters/outfit.json with the body parts each covers; they stay off until
+    /// <see cref="Wear"/> puts them on.
     /// </summary>
     public sealed class CharacterModel : MonoBehaviour
     {
@@ -27,6 +32,20 @@ namespace Rth.Client.Characters
         private readonly Dictionary<string, int> _hidden = new Dictionary<string, int>();   // by equipment
         private readonly HashSet<string> _baseOff = new HashSet<string>();                 // by appearance
         private readonly Dictionary<GameObject, string[]> _attached = new Dictionary<GameObject, string[]>();
+        private readonly Dictionary<string, string[]> _garments = new Dictionary<string, string[]>();   // what each covers
+        private readonly HashSet<string> _worn = new HashSet<string>();
+        private Outfit _outfit;   // per model: statics outlive Play sessions here (no domain reload)
+
+        private sealed class Outfit
+        {
+            public Dictionary<string, Garment> Garments { get; set; } = new Dictionary<string, Garment>();
+            public List<string> Default { get; set; } = new List<string>();
+        }
+
+        private sealed class Garment
+        {
+            public string[] Hides { get; set; } = new string[0];
+        }
 
         public Animator Animator { get; private set; }
         /// <summary>Top of the model at scale 1, from the art.</summary>
@@ -66,6 +85,47 @@ namespace Rth.Client.Characters
                 if (smr.sharedMesh != null) top = Mathf.Max(top, MeshTop(smr));
             }
             if (top > 0f) Height = top;
+
+            foreach (KeyValuePair<string, Garment> g in LoadOutfit().Garments)
+            {
+                if (!_kit.ContainsKey(g.Key)) continue;
+                _garments[g.Key] = g.Value.Hides ?? new string[0];
+                SetBase(g.Key, false);
+            }
+        }
+
+        private Outfit LoadOutfit()
+        {
+            if (_outfit != null) return _outfit;
+            var file = Resources.Load<TextAsset>(ResourceFolder + "outfit");
+            _outfit = file != null ? Newtonsoft.Json.JsonConvert.DeserializeObject<Outfit>(file.text) ?? new Outfit() : new Outfit();
+            return _outfit;
+        }
+
+        /// <summary>The garments built with this body (e.g. "wear_shirt").</summary>
+        public IEnumerable<string> Garments => _garments.Keys;
+
+        /// <summary>
+        /// Puts on (or takes off) a garment built with the body: it shows, and the body parts it
+        /// covers hide until it comes off.
+        /// </summary>
+        public void Wear(string garment, bool on = true)
+        {
+            if (!_garments.TryGetValue(garment, out string[] hides) || _worn.Contains(garment) == on) return;
+            if (on) _worn.Add(garment); else _worn.Remove(garment);
+            SetBase(garment, on);
+            foreach (string part in hides)
+            {
+                int n = _hidden.TryGetValue(part, out int c) ? c : 0;
+                _hidden[part] = Mathf.Max(0, n + (on ? 1 : -1));
+                Refresh(part);
+            }
+        }
+
+        /// <summary>Puts on the default outfit (outfit.json's "default").</summary>
+        public void WearDefaultOutfit()
+        {
+            foreach (string garment in LoadOutfit().Default) Wear(garment);
         }
 
         // Highest point of a skinned part in model space (its rest pose).

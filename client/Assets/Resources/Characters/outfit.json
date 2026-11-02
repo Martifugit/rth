@@ -1,0 +1,24 @@
+{
+ "garments": {
+  "wear_shirt": {
+   "hides": [
+    "torso"
+   ]
+  },
+  "wear_trousers": {
+   "hides": [
+    "legs"
+   ]
+  },
+  "wear_boots": {
+   "hides": [
+    "feet"
+   ]
+  }
+ },
+ "default": [
+  "wear_shirt",
+  "wear_trousers",
+  "wear_boots"
+ ]
+}
