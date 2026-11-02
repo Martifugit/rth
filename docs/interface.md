@@ -23,10 +23,11 @@ every piece and how they are organised.
 
 | Kind | What it is | Examples |
 |---|---|---|
-| **Panel** (`UiPanel`) | Lives in a movable window; can share it as a tab. Resizable unless it has a fixed size. | Pack, worn, abilities, hymns, skills, quests, task, XP tracker |
-| **Fixed panel** (`FixedSize`) | Movable, never resized: the size it has to be. | Action bars, minimap, chat, target, bank, shop, conversation |
+| **Panel** (`UiPanel`) | Lives in a movable window; can share it as a tab. Resizable unless it has a fixed size. `MinSize` is its content's minimum: the window adds its frame. | Pack, worn, abilities, hymns, skills, quests, task, XP tracker |
+| **Fixed panel** (`FixedSize`) | Movable, never resized: the size it has to be (the whole window). With `AllowedSizes` it resizes, snapping between those sizes. | Action bars, minimap, chat, target, bank, shop, conversation |
 | **Server window** (`ServerOpen`) | Opens and closes when the server says; closing it tells the server. | Bank, shop, conversation (the ferryman's too: death has no window of its own) |
 | **Modal** (`UiModal`) | Centred, fixed size, tabs of related pages, one at a time; Escape or a click outside closes it. | Journal, guide, world map, settings, character |
+| **Overlay** (`UiRoot.RegisterOverlay`) | Drawn by its own code outside the windows; the player places it while editing the layout, and the code reads `OverlayRect`. | The trophy fishing gauge |
 
 ## Always on screen
 
@@ -38,7 +39,7 @@ every piece and how they are organised.
 | **Chat** ✓ | Filters (all, game, public) and the line you type on (Enter). Fixed size. Private and group chat to come. |
 | **Target** ✓ | What you are fighting, and its health. Kept while you walk away in combat. |
 | **Buffs / debuffs** ✓ | Two fixed rows of status icons above the action bar (bile's four statuses, wards from abilities), each with its % or time left; hover for what it does. |
-| **XP drops** ✓ | No surface, only the numbers: each XP gain rises as the skill's icon and "+123" and fades (about 2 s); gains landing together stack, a level-up lingers with "Level N" and a warm glow. Frameless and fixed size (move it by its hover handle, which also outlines its reach); right of centre above the bars by default; close it from the window menu. Catches no clicks. |
+| **XP drops** ✓ | No surface, only the numbers: each XP gain rises as the skill's icon and "+123" and fades (about 2 s); gains landing together stack, a level-up lingers with "Level N" and a warm glow. Frameless and fixed size (move it by its handle, which also outlines its reach); left of the minimap by default; close it from the window menu. Catches no clicks. |
 | **Side window** | Tabs for the panels below. |
 
 ## Side window tabs
@@ -186,6 +187,51 @@ object type; (3) the other providers and the legend's categories.
   words, continue with Space) and then, if there's anything to answer, the **reply** ("What
   would you like to say?", numbered answers).
 
+## Laying windows out
+
+The owner's rule: **no gaps or margins anywhere.** Windows sit flush against each other and the
+screen's edges, so a clean interface is easy to build. The rules are plain maths in
+`WindowRules` (tested by `dotnet test tools/client-tests`).
+
+- **Moving.** The title bar moves a window (a lone panel's icon too; a bare window by the grip of
+  dots at its top left, faint until the pointer is near, hidden while locked). Every drag, by the
+  title bar, the icon or a tab pulled out of a strip, behaves the same way: edges snap flush onto the
+  screen's edges and onto a neighbour's facing edge, or in line with a neighbour's same edge (a bar
+  stacked under another lines up with it), and the window's centre onto the screen's centre. Only
+  neighbours level with it count, so nothing across the screen pulls. The snap distance is 8 screen
+  pixels at every interface scale. **Hold Alt** to place freely. There is no grid. The window is
+  drawn where it will land (a docked window that would overlap moves to the nearest free place),
+  so nothing jumps on release; guide lines show what it sits flush on; red means no room here.
+- **Resizing:** any edge or corner. The moving edges snap flush the same way and stop flush at a
+  neighbour (they never jump back), with guides. A window never goes under its minimum, which is its
+  panels' content minimum plus its frame (and never narrower than its title bar's icons). A panel
+  with `AllowedSizes` resizes between those sizes only (the nearest that fits), even if it is bare
+  or fixed: extra action bars use it.
+- **Tabs.** A tab pulled out becomes a window of its own at its panel's own default size. Dropped
+  on another window's title bar it joins it: the window is outlined (its size never changes) and a
+  marker shows where in the strip; a window that already holds six shows a red "FULL". A lone
+  window dragged by its title bar onto another's title bar joins it too. Title bars show icons only
+  (the name is the tooltip); the icons keep their size however narrow the window.
+- **Presets** (Settings, and the windows menu): **Classic** (minimap top right, XP drops beside it,
+  the side windows bottom right, chat bottom left, the bars bottom centre with the buff rows and any
+  extra bars stacked on the main bar, target top centre), **Compact** (a smaller side window and
+  chat; task and XP tracker closed), **Wide** (the second side window top left, a taller side
+  window, a wider chat) and **Mirrored** (Classic with left and right swapped). Each placement is
+  anchored to the screen or attached to a side of another window (`UiDefaultLayout.Placement.By`),
+  so they stay flush whatever the panels' sizes; the tests check every preset is flush and clear at
+  720p, 1080p and 1440p. Reset layout returns to the chosen preset.
+- **Editing the layout** (windows menu or Settings; Escape or Done ends it, and it works while
+  locked): every window shows an outline, its name and its handles, and the whole window drags.
+  Stand-ins (`PlaceholderPanel`) show where the windows that open later will go (bank, shop, make,
+  rig, conversation, boss timer) and the placeable overlays (the fishing gauge); where you leave
+  them is where they open.
+- **Sizes and screens.** A window keeps the size you chose (`Preferred`) apart from the size the
+  screen allows, and grows back when there is room. Layouts are saved per screen size (in panel
+  pixels, so the scale counts, rounded to 64 px buckets: `rth.ui.layout.v4.<bucket>`); a screen
+  with no layout of its own starts from the nearest one (positions are anchored, so it adapts),
+  and the old single layout (`rth.ui.layout.v3`) is moved over once. Settling (after a screen change
+  or loading) moves only the windows that overlap, never resizes them.
+
 ## Architecture
 
 - **Registries.** Panels and modals register themselves (any concrete subclass); modals list
@@ -200,7 +246,8 @@ object type; (3) the other providers and the legend's categories.
 - **Server state for the interface** arrives as `JsonStateMessage`s ("achievements",
   "bestiary", "bestiaryGuide", "client") read with `GameSession.ServerState<T>`. The client keeps its own
   state (action bar layouts) on the server with `SetClientState`; it follows the player.
-- **Window layout** is saved per machine in PlayerPrefs (the world map's legend and toggles too).
+- **Window layout** is saved per machine and per screen size in PlayerPrefs, with the chosen
+  preset (the world map's legend and toggles are kept there too). See "Laying windows out".
 - **Questions to the server** (things the client doesn't keep, such as another player's inspect
   card) go through `GameSession.Query(kind, arg)`; the answer lands in `GameSession.QueryResults`
   (`QueryResult(kind, arg)`, `QueryVersion` to know when to redraw). Server side, a kind is a
