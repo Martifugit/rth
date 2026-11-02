@@ -1,3 +1,11 @@
 [
-
+  { "type": "door", "plane": 0, "x": 30, "y": 54, "edge": "S" },
+  { "type": "door", "plane": 0, "x": 25, "y": 39, "edge": "N" },
+  { "type": "door", "plane": 0, "x": 36, "y": 39, "edge": "N" },
+  { "type": "door", "plane": 0, "x": 17, "y": 55, "edge": "E" },
+  { "type": "door", "plane": 0, "x": 13, "y": 61, "edge": "W" },
+  { "type": "door", "plane": 0, "x": 10, "y": 46, "edge": "N" },
+  { "type": "door", "plane": 0, "x": 29, "y": 30, "edge": "E" },
+  { "type": "door", "plane": 0, "x": 37, "y": 29, "edge": "W" },
+  { "type": "door", "plane": 0, "x": 61, "y": 49, "edge": "S" }
 ]

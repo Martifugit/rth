@@ -1,8 +1,11 @@
 # Tolling and Wennow: the brief
 
-**Status:** agreed (2026-10-27; the owner left the open calls to the brief, decided at the end). **This pass is ground only**: no
-assets, buildings, people or objects; stage 3 puts the town's content back. Wave 1: the first area taken to
-stage 2 ([world-areas.md](../world-areas.md)). Template: [world-example.md](../world-example.md).
+**Status:** agreed (2026-10-27; the owner left the open calls to the brief, decided at the end).
+Wennow reshaped and stage 2's structure blocked out as data (2026-11-02, findings 11-17): the town on
+its knoll, the mill, the toll-house, the monument's plot, the waygate, the fishers' landing, the dry
+rise's cairn and the edge farm. No people or objects yet; stage 3 puts the town's content back.
+Wave 1: the first area taken to stage 2 ([world-areas.md](../world-areas.md)). Template:
+[world-example.md](../world-example.md).
 
 ## The regions
 
@@ -182,12 +185,57 @@ before it bites: the dry ground is where it starts.
    to heath, dust to gravel, fen, reeds and mud away from the water and scraps of field to the
    land round them: each region now has grass and meadow, heath, gravel (south), the lake and the
    river, the roads and paths, and Tolling's fields.
-9. **Wennow is still the generator's round blob** (1.4, open): a mere this size wants an
-   irregular outline, a bay or two and a reedy corner where the Wenn leaves. Best shaped by hand
-   with **Shape and Paint Ground**.
+9. **Wennow was the generator's round blob** (1.4): reshaped in finding 11.
 10. **The dry rise** reaches about 2.9, not 4; enough for the view. p-edge-farm (38, -50),
     s-wennow-south (108, -38, a new site kind `story`) and s-dry-rise (112, -72) are in
     `continent.json`.
+11. **Wennow reshaped** (2026-11-02, `world/strokes/tolling-wennow.json`, applied once): a broad mere
+    lying along the valley from the river's mouth (north-west) to where the Wenn leaves (south-east),
+    about 2,200 tiles of water (was 2,800); a slim arm reaching north towards Palmerway, so the road
+    runs between the mere and the heath; a bay on the south shore with a little sand, where
+    s-wennow-south now is (109, -31); reeds at the river's mouth and in the outlet's corner. The old
+    water and the generator's sand rim became meadow and grass, easing up from the new shore (no
+    cliffs: nothing steeper than the dry rise's 0.8 a tile). Made with a new kind of strokes shape,
+    `"water": true` (`GroundStrokes.FillWater`), so any lake can be redrawn the same way.
+12. **The town** (2.2, `world/strokes/tolling-town.json` for its ground, the pieces in `land_0_0`).
+    The square is the crossroads on the knoll's crown (gravel, about 13 by 9), where Palmerway, the
+    Sere road, the west road and Hollow lane meet; the fingerpost, a notice board, two stalls and
+    two lamps stand in it. **The church close** is north-west of it on the highest ground: the bell
+    tower (the first-pass model, 3 by 3) standing free three tiles off the chapel's west end, the
+    chapel (6 by 4, slate roof, lancets, its door facing the lychgate's gap in the south wall), the
+    churchyard's dry-stone wall, graves and a ledger stone. **Round the square:** Corvin's apothecary
+    (two storeys, jettied) and the church house (stone, the clerk's bank at stage 3) on its south
+    side either side of the Sere road, the smithy on the west road. **Houses:** the bell-ringer's by
+    the churchyard's west gate, Edda Marsh's by a dew pond west of it (the pond she sleepwalks to),
+    one on the west road and two on the Sere road. **The skinning yard** is downstream by the river,
+    a shed in a hurdle yard, away from the square. Thirteen buildings in all; the generated field
+    strips were cleared from the town and the churchyard, and stay round it as farmland. Hollow
+    lane was moved off the crown to run up the churchyard's east side, and the west road comes into
+    the square's west side instead of cutting through the churchyard.
+13. **Routes** (2.1): Palmerway crosses the river on the first-pass road bridge; the Sere road,
+    the west road and Hollow lane leave by the points in the routes table. Lanes go to the skinning
+    yard and the mill. Two milestones on Palmerway.
+14. **Widdermill** (35, 80): a two-storey stone mill on the river's west bank, the first-pass wheel-
+    house and wheel in the river against its east wall, millstones by its door, a lane from Hollow
+    lane. The layout's mark moved from (30, 80) to the mill.
+15. **Palmerway's places:** the old toll-house (60, 49) with its bar lying in the verge across the
+    road; the monument's plot (78, 50) with the first-pass "monument not yet raised" model, where
+    Brother Hollis and the founts go at stage 3.
+16. **The waygate** (2.4, finding 2 settled): the first-pass gatehouse stands **open** across
+    Palmerway at (180, 48) with the wardens' hut beside it: a watch on the road, not a barrier, so
+    there is no palisade to walk round and no invisible wall. If the owner wants it barred until a
+    quest, the gate needs a line to water or rough ground (the land there is open heath for 40 tiles
+    either way), or it moves to a narrower place.
+17. **Sites** (2.5): s-wennow-south is the fishers' landing (a hut, a jetty of three spans, a boat
+    afloat and one upturned, a mooring post); s-dry-rise has a cairn on its top; p-edge-farm is a
+    stone longhouse with its byre (7 by 4) in a walled yard, hay stooks, and two field walls running
+    south into the gravel, broken where the dry has taken the fields. s-tolling-cave is the western
+    march's.
+18. **What can be seen from where.** The game's fog closes at 85 tiles from the camera and regions
+    load within 48 of the player, so the brief's long views can't happen as written: the bell tower
+    reads from the town's edges, Palmerway's first stretch and the mere's north-west shore, but not
+    from the dry rise (about 155 tiles away) or the waygate. Either those views are given up, or
+    landmarks get a far view of their own (a silhouette drawn beyond the fog). Waiting on the owner.
 
 ## Decided (2026-10-27)
 

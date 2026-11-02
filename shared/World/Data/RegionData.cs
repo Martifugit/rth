@@ -133,6 +133,12 @@ namespace Rth.Shared.World.Data
         public int[]? At;
         /// <summary>Turned around the tile's centre, in degrees (clockwise from above).</summary>
         public float? Rot;
+        /// <summary>
+        /// Its look moved from the tile's centre, [dx, dy] in tiles before it is turned (client only):
+        /// a model whose footprint is even along an axis is centred on a grid line, [0.5, 0] or [0.5, 0.5].
+        /// A third value raises it (a mill wheel on its axle).
+        /// </summary>
+        public float[]? Offset;
         public int[]? Rect;
         /// <summary>A polyline in tiles (x, y pairs; fractions allowed), for roads and rivers.</summary>
         public List<float[]>? Line;

@@ -423,6 +423,17 @@
       "",
       "",
       ""
-    ] }
+    ] },
+    { "id": "milestone-2", "kind": "prop", "at": [130, 51], "footprint": [0, 0, 1, 1], "model": "Assets/Resources/Art/Assets/Ways/Village/Milestone.fbx" },
+    { "id": "waygate", "kind": "prop", "at": [180, 48], "rot": 90, "offset": [0, 0.5], "footprint": [0, 0, 0, 0], "model": "Assets/Resources/Art/Assets/Landmarks/Village/Waygate.fbx" },
+    { "id": "wardens-hut", "kind": "building", "rect": [183, 52, 187, 56], "building": {
+      "kit": "venaria",
+      "colors": [{ "Stone": "Granite" }],
+      "chimney": "E1",
+      "faces": {
+        "S": ["Wall", "WallShuttered", "Wall", "Wall"],
+        "W": ["Wall", "WallDoorway+Lantern", "WallShuttered", "Wall"]
+      }
+    } }
   ]
 }

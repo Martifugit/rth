@@ -423,6 +423,28 @@
       "                                                        122",
       "                                                        1222",
       "                                                        1232"
-    ] }
+    ] },
+    { "id": "edge-farm", "kind": "building", "rect": [48, -51, 55, -47], "building": {
+      "kit": "venaria",
+      "ridge": "x",
+      "colors": [{ "Stone": "Granite" }],
+      "chimney": "W1",
+      "faces": {
+        "N": ["Wall", "WallShuttered", "Wall", "Wall", "WallShuttered", "Wall", "Wall"],
+        "S": ["WallShuttered", "Wall", "WallDoorway+Lantern", "WallBraced", "WallShuttered", "WallBarnDoor", "WallBraced"],
+        "W": ["Wall+Woodpile", "Wall", "Wall", "Wall"]
+      }
+    } },
+    { "id": "farm-yard-west", "kind": "fence", "from": [47, -55], "to": [47, -52], "model": "Assets/Resources/Art/Parts/Fences/Village/FieldWall.fbx", "post": "Assets/Resources/Art/Parts/Fences/Village/FieldWallPier.fbx", "posts": "ends" },
+    { "id": "farm-yard-south", "kind": "fence", "from": [47, -55], "to": [57, -55], "gaps": [50], "model": "Assets/Resources/Art/Parts/Fences/Village/FieldWall.fbx", "post": "Assets/Resources/Art/Parts/Fences/Village/FieldWallPier.fbx", "posts": "ends" },
+    { "id": "farm-yard-east", "kind": "fence", "from": [57, -55], "to": [57, -46], "model": "Assets/Resources/Art/Parts/Fences/Village/FieldWall.fbx", "post": "Assets/Resources/Art/Parts/Fences/Village/FieldWallPier.fbx", "posts": "ends" },
+    { "id": "field-wall-1", "kind": "fence", "from": [57, -55], "to": [57, -66], "model": "Assets/Resources/Art/Parts/Fences/Village/FieldWall.fbx", "post": "Assets/Resources/Art/Parts/Fences/Village/FieldWallPier.fbx", "posts": "ends" },
+    { "id": "field-wall-1b", "kind": "fence", "from": [57, -66], "to": [57, -74], "model": "Assets/Resources/Art/Parts/Fences/Village/FieldWallBroken.fbx", "post": "Assets/Resources/Art/Parts/Fences/Village/FieldWallPier.fbx", "posts": "ends" },
+    { "id": "field-wall-2", "kind": "fence", "from": [66, -52], "to": [66, -62], "model": "Assets/Resources/Art/Parts/Fences/Village/FieldWall.fbx", "post": "Assets/Resources/Art/Parts/Fences/Village/FieldWallPier.fbx", "posts": "ends" },
+    { "id": "field-wall-2b", "kind": "fence", "from": [66, -62], "to": [66, -71], "model": "Assets/Resources/Art/Parts/Fences/Village/FieldWallBroken.fbx", "post": "Assets/Resources/Art/Parts/Fences/Village/FieldWallPier.fbx", "posts": "ends" },
+    { "id": "hay-1", "kind": "prop", "at": [51, -57], "footprint": [0, 0, 1, 1], "model": "Assets/Resources/Art/Assets/Dressing/Village/HayStook.fbx" },
+    { "id": "hay-2", "kind": "prop", "at": [53, -58], "rot": 37, "footprint": [0, 0, 1, 1], "model": "Assets/Resources/Art/Assets/Dressing/Village/HayStook.fbx" },
+    { "id": "hay-3", "kind": "prop", "at": [55, -57], "rot": 74, "footprint": [0, 0, 1, 1], "model": "Assets/Resources/Art/Assets/Dressing/Village/HayStook.fbx" },
+    { "id": "hay-4", "kind": "prop", "at": [52, -60], "rot": 111, "footprint": [0, 0, 1, 1], "model": "Assets/Resources/Art/Assets/Dressing/Village/HayStook.fbx" }
   ]
 }

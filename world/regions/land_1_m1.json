@@ -323,6 +323,21 @@
       "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
       "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
       "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
-    ] }
+    ] },
+    { "id": "fishers-hut", "kind": "building", "rect": [103, -33, 107, -31], "building": {
+      "kit": "venaria",
+      "chimney": "W1",
+      "faces": {
+        "E": ["WallDoorway", "WallShuttered"],
+        "N": ["WallShuttered", "Wall", "Wall", "Wall"]
+      }
+    } },
+    { "id": "landing-jetty-1", "kind": "prop", "at": [108, -28], "footprint": [0, 0, 0, 0], "model": "Assets/Resources/Art/Parts/Waterfront/Village/JettySpan.fbx" },
+    { "id": "landing-jetty-2", "kind": "prop", "at": [108, -27], "footprint": [0, 0, 0, 0], "model": "Assets/Resources/Art/Parts/Waterfront/Village/JettySpan.fbx" },
+    { "id": "landing-jetty-3", "kind": "prop", "at": [108, -26], "footprint": [0, 0, 0, 0], "model": "Assets/Resources/Art/Parts/Waterfront/Village/JettySpan.fbx" },
+    { "id": "landing-boat", "kind": "prop", "at": [110, -26], "rot": 15, "footprint": [0, 0, 0, 0], "model": "Assets/Resources/Art/Assets/Vessels/Village/Rowboat.fbx" },
+    { "id": "landing-boat-up", "kind": "prop", "at": [106, -28], "rot": 70, "footprint": [0, 0, 1, 1], "model": "Assets/Resources/Art/Assets/Vessels/Village/RowboatUpturned.fbx" },
+    { "id": "landing-post", "kind": "prop", "at": [107, -27], "footprint": [0, 0, 0, 0], "model": "Assets/Resources/Art/Assets/Dressing/Village/MooringPost.fbx" },
+    { "id": "dry-rise-cairn", "kind": "prop", "at": [112, -72], "footprint": [0, 0, 1, 1], "model": "Assets/Resources/Art/Assets/Rocks/Common/Cairn.fbx" }
   ]
 }

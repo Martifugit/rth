@@ -1,0 +1,316 @@
+{
+  "area": "tolling",
+  "note": "Tolling's structure (2.1-2.2, 2026-11-02): the square at the crossroads on the knoll's crown, Hollow lane moved off the crown to run up the churchyard's east side, a path through the lychgate, lanes to the skinning yard and the mill, the west road brought into the square's west side clear of the churchyard, and Edda's dew pond west of the churchyard. Applied once with `tools/world strokes world/strokes/tolling-town.json`; the tiles are the truth afterwards.",
+  "shapes": [
+    {
+      "id": "square",
+      "keepHeights": true,
+      "ground": "path",
+      "seed": 71,
+      "ragged": 0.6,
+      "points": [
+        [
+          24,
+          42
+        ],
+        [
+          30,
+          41.2
+        ],
+        [
+          36.5,
+          42
+        ],
+        [
+          37.6,
+          46
+        ],
+        [
+          36.6,
+          50.2
+        ],
+        [
+          30,
+          50.8
+        ],
+        [
+          24.6,
+          50.2
+        ],
+        [
+          23.4,
+          46
+        ]
+      ]
+    },
+    {
+      "id": "edda-pond",
+      "water": true,
+      "ground": "lake",
+      "seed": 72,
+      "ragged": 0.5,
+      "points": [
+        [
+          7,
+          62
+        ],
+        [
+          10,
+          61
+        ],
+        [
+          12.5,
+          63
+        ],
+        [
+          11.5,
+          66
+        ],
+        [
+          8,
+          66.5
+        ],
+        [
+          6,
+          64.5
+        ]
+      ],
+      "shoreReach": 2,
+      "beachWidth": 1,
+      "shore": [
+        {
+          "ground": "reeds",
+          "share": 0.45,
+          "scale": 2
+        }
+      ]
+    }
+  ],
+  "strokes": [
+    {
+      "id": "hollow-lane",
+      "ground": "dirttrack",
+      "seed": 73,
+      "points": [
+        [
+          36,
+          49
+        ],
+        [
+          37,
+          55
+        ],
+        [
+          36.8,
+          60
+        ],
+        [
+          34.5,
+          65.5
+        ],
+        [
+          31.5,
+          70
+        ],
+        [
+          31,
+          73
+        ]
+      ],
+      "width": [
+        2,
+        2
+      ],
+      "wind": 0.6,
+      "wave": 18,
+      "ragged": 0.1,
+      "keep": [
+        "path"
+      ],
+      "eraseReach": 0
+    },
+    {
+      "id": "lychgate-path",
+      "ground": "path",
+      "seed": 74,
+      "points": [
+        [
+          29.5,
+          50
+        ],
+        [
+          29.5,
+          53.5
+        ]
+      ],
+      "width": [
+        2,
+        2
+      ],
+      "wind": 0,
+      "ragged": 0,
+      "eraseReach": 0
+    },
+    {
+      "id": "yard-lane",
+      "ground": "dirttrack",
+      "seed": 75,
+      "points": [
+        [
+          35,
+          41
+        ],
+        [
+          39,
+          37
+        ],
+        [
+          43.5,
+          33.5
+        ]
+      ],
+      "width": [
+        2,
+        2
+      ],
+      "wind": 0.4,
+      "wave": 10,
+      "ragged": 0.1,
+      "keep": [
+        "path"
+      ],
+      "eraseReach": 0
+    },
+    {
+      "id": "mill-lane",
+      "ground": "dirttrack",
+      "seed": 76,
+      "points": [
+        [
+          31.5,
+          80.5
+        ],
+        [
+          33,
+          80.5
+        ]
+      ],
+      "width": [
+        2,
+        2
+      ],
+      "wind": 0,
+      "ragged": 0,
+      "eraseReach": 0
+    },
+    {
+      "id": "west-road",
+      "ground": "dirttrack",
+      "seed": 77,
+      "points": [
+        [
+          0,
+          52
+        ],
+        [
+          5,
+          51.5
+        ],
+        [
+          11,
+          50.5
+        ],
+        [
+          17,
+          49.6
+        ],
+        [
+          23.8,
+          47.8
+        ]
+      ],
+      "width": [
+        2,
+        2
+      ],
+      "wind": 0.5,
+      "wave": 14,
+      "ragged": 0.1,
+      "keep": [
+        "path"
+      ],
+      "eraseReach": 0
+    }
+  ],
+  "swaps": [
+    {
+      "from": [
+        "dirttrack"
+      ],
+      "nearWater": 0,
+      "rect": [
+        27,
+        51,
+        33,
+        64
+      ],
+      "otherwise": "surround"
+    },
+    {
+      "from": [
+        "dirttrack"
+      ],
+      "nearWater": 0,
+      "rect": [
+        3,
+        53,
+        27,
+        58
+      ],
+      "otherwise": "surround"
+    },
+    {
+      "from": [
+        "dirttrack"
+      ],
+      "nearWater": 0,
+      "rect": [
+        9,
+        52,
+        27,
+        53
+      ],
+      "otherwise": "surround"
+    },
+    {
+      "from": [
+        "ley",
+        "wheat",
+        "furrow"
+      ],
+      "nearWater": 0,
+      "rect": [
+        19,
+        52,
+        34,
+        64
+      ],
+      "otherwise": "grass"
+    },
+    {
+      "from": [
+        "ley",
+        "wheat",
+        "furrow"
+      ],
+      "nearWater": 0,
+      "rect": [
+        7,
+        24,
+        52,
+        52
+      ],
+      "otherwise": "surround"
+    }
+  ]
+}

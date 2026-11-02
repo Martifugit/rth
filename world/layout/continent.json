@@ -1310,7 +1310,7 @@
     {"id": "p-forest-deep", "name": "p-forest-deep", "tier": "hamlet", "at": [457, 440], "note": "foresters in Eller's old wood"},
     {"id": "p-poolside", "name": "p-poolside", "tier": "hamlet", "at": [584, 6], "note": "below p-head's falls, by the pool"},
     {"id": "p-ford", "name": "p-ford", "tier": "hamlet", "at": [569, 162], "note": "where the falls' river meets the great river"},
-    {"id": "widdermill", "name": "Widdermill", "tier": "landmark", "at": [30, 80], "note": "the mill on Tolling's river, north of the town"},
+    {"id": "widdermill", "name": "Widdermill", "tier": "landmark", "at": [35, 80], "note": "the mill on Tolling's river, north of the town"},
     {"id": "waygate", "name": "the waygate", "tier": "landmark", "at": [180, 48], "note": "the wardens' gate on Palmerway"},
     {
       "id": "p-head",

@@ -120,6 +120,8 @@ namespace Rth.Shared.World.Ground
         public int[]? Clear;
         public List<string> ClearGrounds = new List<string>();
         public string ClearTo = "lake";
+        /// <summary>Land: only the ground is painted (a town's square, a yard); the heights stay as they are.</summary>
+        public bool KeepHeights;
 
         // A body of water instead of land (a mere, a pond, a bay): "water": true.
 
@@ -428,13 +430,14 @@ namespace Rth.Shared.World.Ground
             var corners = new HashSet<(int, int)>();
             foreach ((int x, int y) in inside)
                 foreach (var c in new[] { (x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1) }) corners.Add(c);
-            foreach ((int cx, int cy) in corners) g.SetCorner(cx, cy, Rise(cx, cy));
+            if (!sh.KeepHeights)
+                foreach ((int cx, int cy) in corners) g.SetCorner(cx, cy, Rise(cx, cy));
 
             // Ground: rock where it rises steeply, beach along the low edge, patches over the rest.
             int land = 0, rock = 0, beach = 0;
             foreach ((int x, int y) in inside)
             {
-                float a = Rise(x, y), b = Rise(x + 1, y), c = Rise(x, y + 1), d = Rise(x + 1, y + 1);
+                float a = sh.KeepHeights ? 0f : Rise(x, y), b = sh.KeepHeights ? 0f : Rise(x + 1, y), c = sh.KeepHeights ? 0f : Rise(x, y + 1), d = sh.KeepHeights ? 0f : Rise(x + 1, y + 1);
                 float high = Math.Max(Math.Max(a, b), Math.Max(c, d)), rise = high - Math.Min(Math.Min(a, b), Math.Min(c, d));
                 string ground;
                 if (sh.Rock != null && rise > sh.RockRise) { ground = sh.Rock; rock++; }
@@ -466,12 +469,15 @@ namespace Rth.Shared.World.Ground
                 for (int y = y0 - 3; y < y1 + 3; y++)
                     for (int x = x0 - 3; x < x1 + 3; x++)
                         if (g.IsWater(g.GroundAt(x, y)) && g.Corner(x, y) is float h && (float.IsNaN(level) || h < level)) level = h;
-            if (float.IsNaN(level)) level = 0f;
-
             var wet = new HashSet<(int, int)>();
             for (int y = y0; y < y1; y++)
                 for (int x = x0; x < x1; x++)
                     if (edge(x + 0.5f, y + 0.5f) > 0f && g.GroundAt(x, y) != null) wet.Add((x, y));
+            // No water near (a pond on dry land): a little under the lowest ground it covers.
+            if (float.IsNaN(level))
+                foreach ((int x, int y) in wet)
+                    if (g.Corner(x, y) is float h && (float.IsNaN(level) || h - 0.1f < level)) level = h - 0.1f;
+            if (float.IsNaN(level)) level = 0f;
             var drain = new HashSet<string>(sh.Drain);
             var dried = new HashSet<(int, int)>();
             for (int y = y0 - reach; y < y1 + reach; y++)

@@ -161,6 +161,8 @@ namespace Rth.Client.Editor
             go.transform.SetParent(parent, false);
             go.transform.position = new Vector3(piece.X + 0.5f, 0f, piece.Y + 0.5f);
             Transform look = WorldKit.Group(go.transform, "Look");
+            if (piece.Offset != null && piece.Offset.Length >= 2)
+                look.localPosition = new Vector3(piece.Offset[0], piece.Offset.Length >= 3 ? piece.Offset[2] : 0f, piece.Offset[1]);
 
             if (piece.Parts != null && piece.Parts.Count > 0)
             {
