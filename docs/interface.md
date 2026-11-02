@@ -43,18 +43,24 @@ every piece and how they are organised.
 
 ## Side window tabs
 
-- **Pack** (28 slots; drag to move, onto a bar, onto the bank). ✓
-- **Worn equipment** ✓: the figure (it scales with the window) and, under it, a row of icon
+- **Pack** (28 slots; drag to move, onto a bar, onto the bank). Standard slots, as many columns
+  as the window is wide and centred; the smallest window is the classic 4 x 7, so it never scrolls. ✓
+- **Worn equipment** ✓: the figure (standard slots, centred; it no longer grows with the window) and, under it, a row of icon
   buttons (`WornPanel.Buttons`, a list: add one for a new view of your gear, such as items kept on
   death or a price check): **combat stats** and **inspect**, both opening the character modal.
   The draggable Character panel is gone (a saved layout that names it just skips it).
-- **Ability books:** one per combat style (Occultism first); drag onto a bar. ✓
-- **Religion** (F): devotion at the top, then the **hymns** (prayers, sung by p-sworn's church) as a book of icons
+- **Ability books:** one per combat style (Occultism first) as quiet inner tabs, the guide's link
+  on the same row; drag onto a bar (the one line of help, pinned to the bottom). No level counter:
+  levels are in the skills panel. ✓
+- **Religion** (F): the **hymns** (prayers, sung by p-sworn's church) as a book of icons
   in level order: click to sing or stop, drag onto an action bar; a sung one glows, a locked one
-  shows its level. Below them, **verses** (the church's, for melee) when melee exists. ✓
-- **Skills:** tiles, the combat and total levels on a footer row; click for the guide, right-click to
+  shows its level. Below them, **verses** (the church's, for melee) when melee exists. Devotion
+  is on the main action bar, not here. ✓
+- **Skills:** narrow tiles (three across in a modest width): icon, then level and the skill's cap
+  parted by a small crack cut into the card (37 and 100, no slash); the combat and total levels on a footer row; click for the guide, right-click to
   "Set level target" or "Set exp target" (each asks for a number). Targets follow the player. ✓
-- **Quests:** the list; click for the journal. ✓
+- **Quests:** how many are done and the journal's link on one quiet row, then the list; click a
+  quest for the journal. ✓
 - **Task** and **XP tracker**. ✓
 - To come: **verses** (melee; drag onto a bar like abilities, with the scriptures you hold),
   **spellbooks** (the occult houses' spells; choose the active one), **friends**, **group**.
@@ -76,11 +82,10 @@ every piece and how they are organised.
   **unique** (no other creature or boss gives it, and it isn't guaranteed); the server works
   this, and where creatures live, out from content and spawns (`BestiaryGuideBuilder`, the
   "bestiaryGuide" state). Bosses show completions, attempts, times and the same drop log.
-- **Guide** (G) ✓: **skills** (pick a skill; its unlocks as one list in level order, each with
-  a small badge for its kind (builder, equipment, tool, recipe, gathering...), a "Your level" line
-  between what you have and what comes next, and chips to narrow the list to one kind, shown
-  only when the skill has more than one; gathered from the content itself) and **abilities**
-  (every ability as a full card).
+- **Guide** (G) ✓: **skills** (master-detail: every skill in a list with your level; the chosen
+  skill's unlocks as one list in level order, each with a small badge for its kind (builder,
+  equipment, tool, recipe, gathering...), what you have reached drawn plainly and what is ahead
+  dimmed; gathered from the content itself) and **abilities** (every ability as a full card).
 - **World map** (M) ✓: the continent, drawn from the layout the world is built from
   (`world/layout/`, sent as `ClientContent.Chart`), so it always matches the world. The ground is
   painted once (each ground in its colour, wandering edges, hill shading, shallows, an inked coast,
@@ -205,6 +210,15 @@ object type; (3) the other providers and the legend's categories.
   card) go through `GameSession.Query(kind, arg)`; the answer lands in `GameSession.QueryResults`
   (`QueryResult(kind, arg)`, `QueryVersion` to know when to redraw). Server side, a kind is a
   handler registered with `QuerySystem.Register`.
+- **Slots** (`UiKit.Slots`): one size for every slot inside a panel (pack, worn, bank, ability
+  book, hymns, shop): 36 px with a 28 px icon, 4 px apart (the `slot--std` class). Grids are whole
+  pixels wide plus a pixel of slack, because at a fractional interface scale (1.25 at 1440p)
+  layout snaps widths to screen pixels and an exact fit can wrap its last column off centre. Panels
+  ask for a minimum window that fits their content (`UiKit.Chrome.Around`). The action bars and
+  buff icons keep their own, larger slots.
+- **Inner tabs** (`UiKit.SubTabs`): tabs inside a panel (the ability book's styles) are small
+  words over a faint line, never buttons; a panel's link to its guide or journal is a small icon at
+  the right end of the same row. Help text is kept to one line at most, pinned to the bottom.
 - **Bars** (`UiKit.Bar`): the label fills the bar with no margins and never wraps, and a bar
   that shows text is at least `Bar.LabelledHeight` (17 px) tall, so the text is centred inside
   it at any requested height.

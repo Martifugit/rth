@@ -85,7 +85,7 @@ namespace Rth.Client.Ui.Modals
             }
 
             VisualElement verses = Card(right, "Verses and buffs");
-            _noneActive = UiKit.Text(verses, "Nothing active. Verses and some abilities add these for a while.", "muted", "small", "prose");
+            _noneActive = UiKit.Text(verses, "Nothing active.", "muted", "small", "prose");
             foreach (string stat in Conditional) _conditionalRows[stat] = StatRow(verses, stat);
 
             // Anything new that no group names yet still shows.
@@ -169,8 +169,9 @@ namespace Rth.Client.Ui.Modals
 
             _body = UiKit.El(root, "inspect-body");
             VisualElement figureCard = UiKit.El(_body, "well", "inspect-figure");
+            // A little more room between slots than the side panel's, the slots themselves standard.
             _figure = new WornPanel.Figure(Ui, Session, figureCard, null, readOnly: true);
-            _figure.Fit(64f);
+            _figure.Fit(WornPanel.Figure.StandardCell + 8f);
             VisualElement side = UiKit.El(_body, "inspect-side");
             UiKit.Heading(side, "Highlights");
             _highlights = UiKit.El(side, "well");
@@ -206,8 +207,7 @@ namespace Rth.Client.Ui.Modals
 
             _name.text = inspect.Name;
             _levels.text = "Combat level " + inspect.CombatLevel + "     Total level " + inspect.TotalLevel;
-            _note.text = self ? "This is what other players see when they inspect you." : "";
-            _note.style.display = self ? DisplayStyle.Flex : DisplayStyle.None;
+            _note.style.display = DisplayStyle.None;
             _body.style.display = DisplayStyle.Flex;
 
             List<string> worn = inspect.Equipment;

@@ -7,8 +7,8 @@ using UnityEngine.UIElements;
 namespace Rth.Client.Ui.Panels
 {
     /// <summary>
-    /// The quest list: not started, in progress, done, with how many are done. Click a quest to
-    /// open it in the journal, where the whole story so far is.
+    /// The quest list: not started, in progress, done, with how many are done and the journal's
+    /// link on the row above. Click a quest to open it in the journal, where the whole story so far is.
     /// </summary>
     public sealed class QuestsPanel : UiPanel
     {
@@ -18,6 +18,8 @@ namespace Rth.Client.Ui.Panels
         public override string DefaultWindow => UiDefaultLayout.Side;
         public override int Order => 6;
         public override Key Hotkey => Key.Q;
+        // The list scrolls inside its frame; the head row stays put.
+        public override bool Scrolls => false;
 
         public static readonly Color NotStarted = new Color(0.88f, 0.4f, 0.32f);
         public static readonly Color Started = new Color(0.94f, 0.84f, 0.4f);
@@ -29,13 +31,13 @@ namespace Rth.Client.Ui.Panels
 
         protected override void Build(VisualElement root)
         {
-            VisualElement top = UiKit.El(root, "row");
-            _summary = UiKit.Text(top, "", "small");
-            UiKit.El(top, "spacer");
-            UiKit.Button(top, "Journal", () => Ui.OpenModal<JournalModal>("quests"));
+            // How many are done, and the journal's link, on one quiet row like the ability book's tabs.
+            var head = new UiKit.SubTabs(root);
+            _summary = head.Caption("");
+            head.Link("journal", "Quest journal", () => Ui.OpenModal<JournalModal>("quests"));
             VisualElement well = UiKit.El(root, "well");
             well.style.flexGrow = 1;
-            well.style.marginTop = 6f;
+            well.style.flexShrink = 1;
             _list = UiKit.Scroll(well);
         }
 
@@ -52,16 +54,15 @@ namespace Rth.Client.Ui.Panels
             int done = 0;
             foreach (QuestEntry q in Session.Quests)
                 if (q.State == QuestState.Complete) done++;
-            _summary.text = "Completed " + UiKit.Colour(done + " of " + Session.Quests.Count, UiKit.Value);
+            _summary.text = UiKit.Colour(done + " / " + Session.Quests.Count, UiKit.Value) + " done";
 
             _list.Clear();
-            if (Session.Quests.Count == 0) UiKit.Text(_list, "No quests yet. Talk to people.", "muted", "small");
+            if (Session.Quests.Count == 0) UiKit.Text(_list, "No quests yet.", "muted", "small");
             foreach (QuestEntry quest in Session.Quests)
             {
                 string id = quest.Id;
-                VisualElement row = UiKit.MasterRow(_list, quest.Name + (string.IsNullOrEmpty(quest.Progress) ? "" : "   " + quest.Progress),
+                UiKit.MasterRow(_list, quest.Name + (string.IsNullOrEmpty(quest.Progress) ? "" : "   " + quest.Progress),
                     () => Ui.OpenModal<JournalModal>("quests", id), ColourOf(quest.State));
-                UiKit.Tooltip(row, () => UiKit.Colour("Click to open in the journal.", UiKit.Muted));
             }
         }
     }

@@ -4,7 +4,10 @@ using UnityEngine.UIElements;
 
 namespace Rth.Client.Ui
 {
-    /// <summary>One item slot: the item's icon (a note shows as paper) and, for stacks, the count in the classic colours.</summary>
+    /// <summary>
+    /// One item slot at the standard size (<see cref="UiKit.Slots"/>): the item's icon (a note shows
+    /// as paper) and, for stacks, the count in the classic colours.
+    /// </summary>
     public sealed class ItemSlotView
     {
         public readonly VisualElement Root;
@@ -14,7 +17,7 @@ namespace Rth.Client.Ui
 
         public ItemSlotView(VisualElement parent, params string[] extraClasses)
         {
-            Root = UiKit.El(parent, "slot");
+            Root = UiKit.El(parent, "slot", UiKit.Slots.Class);
             foreach (string c in extraClasses) Root.AddToClassList(c);
             _icon = UiKit.El(Root, "slot__icon");
             _count = UiKit.Text(Root, "", "slot__count");

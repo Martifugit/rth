@@ -51,7 +51,7 @@ namespace Rth.Client.Ui.Panels
             well.style.marginTop = 6f;
             ScrollView scroll = UiKit.Scroll(well);
             _list = scroll.contentContainer;
-            _empty = UiKit.Text(scroll, "Gain some XP and it shows here.", "muted", "small");
+            _empty = UiKit.Text(scroll, "No XP gained yet.", "muted", "small");
         }
 
         public override void Observe()

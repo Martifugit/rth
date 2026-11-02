@@ -11,9 +11,10 @@ namespace Rth.Client.Ui.Panels
 {
     /// <summary>
     /// A combat style's abilities as a book of icons: builders, spenders and ultimates, with a
-    /// tab per style (it opens on the style of the weapon in hand). Locked ones are dimmed with
-    /// the level they need. Click to use, drag onto an action bar to place it, hover for the full
-    /// card. Cruor's verses are in the Religion panel, not here.
+    /// quiet tab per style (it opens on the style of the weapon in hand) and the guide's link on
+    /// the same row. Locked ones are dimmed with the level they need (the style's level itself is
+    /// in the skills panel). Click to use, drag onto an action bar to place it, hover for the full
+    /// card; one line at the bottom says so. Cruor's verses are in the Religion panel, not here.
     /// </summary>
     public sealed class AbilityBookPanel : UiPanel
     {
@@ -23,29 +24,24 @@ namespace Rth.Client.Ui.Panels
         public override string DefaultWindow => UiDefaultLayout.Side;
         public override int Order => 3;
         public override Key Hotkey => Key.A;
+        // The list scrolls by itself, so the hint stays pinned to the bottom of the window.
+        public override bool Scrolls => false;
 
-        private VisualElement _tabs;
+        private UiKit.SubTabs _tabs;
         private ScrollView _list;
-        private Label _level;
         private int _builtFor = -1;
         private CombatStyle _style = CombatStyle.None;
         private CombatStyle _builtStyle = CombatStyle.None;
         private CombatStyle _weaponStyle = CombatStyle.None;
-        private readonly List<(CombatStyle Style, Label Tab)> _styleTabs = new List<(CombatStyle, Label)>();
         private readonly List<(string Id, VisualElement Slot, Label Level)> _slots = new List<(string, VisualElement, Label)>();
 
         protected override void Build(VisualElement root)
         {
-            _tabs = UiKit.El(root, "row");
-            _tabs.style.flexShrink = 0;
-            _tabs.style.marginBottom = 4f;
-            VisualElement top = UiKit.El(root, "row");
-            _level = UiKit.Text(top, "", "muted", "small");
-            UiKit.El(top, "spacer");
-            UiKit.Button(top, "Guide", () => Ui.OpenModal<GuideModal>("abilities"));
+            _tabs = new UiKit.SubTabs(root);
+            _tabs.Link("guide", "Ability guide", () => Ui.OpenModal<GuideModal>("abilities"));
             _list = UiKit.Scroll(root);
-            Label hint = UiKit.Text(root, "Drag an ability onto an action bar.", "muted", "small");
-            hint.style.unityTextAlign = TextAnchor.MiddleCenter;
+            _list.style.flexShrink = 1;
+            UiKit.Text(root, "Drag an ability onto an action bar.", "panel-hint");
         }
 
         public override void Refresh()
@@ -60,9 +56,7 @@ namespace Rth.Client.Ui.Panels
             }
             if (Session.Content.Abilities.Count != _builtFor || _style != _builtStyle) Rebuild();
 
-            string skill = SkillOfStyle(_style);
-            _level.text = GameText.StyleName(_style) + " level " + Session.Level(skill);
-            foreach ((CombatStyle style, Label tab) in _styleTabs) tab.EnableInClassList("button--on", style == _style);
+            _tabs.Set(_style.ToString());
             foreach ((string id, VisualElement slot, Label level) in _slots)
             {
                 AbilityDef a = Session.Ability(id);
@@ -106,13 +100,10 @@ namespace Rth.Client.Ui.Panels
             _builtStyle = _style;
 
             _tabs.Clear();
-            _styleTabs.Clear();
             foreach (CombatStyle style in styles)
             {
                 CombatStyle s = style;
-                Label tab = UiKit.Button(_tabs, GameText.StyleName(s), () => _style = s);
-                tab.style.marginRight = 4f;
-                _styleTabs.Add((s, tab));
+                _tabs.Add(s.ToString(), GameText.StyleName(s), () => _style = s);
             }
 
             _list.Clear();
@@ -133,9 +124,7 @@ namespace Rth.Client.Ui.Panels
         public static (string, VisualElement, Label) AbilitySlot(UiRoot ui, GameSession session, VisualElement grid, AbilityDef ability)
         {
             string id = ability.Id;
-            VisualElement slot = UiKit.El(grid, "slot");
-            VisualElement icon = UiKit.El(slot, "slot__icon");
-            icon.pickingMode = PickingMode.Ignore;
+            VisualElement slot = UiKit.Slots.Make(grid, out VisualElement icon);
             UiKit.SetIcon(icon, IconLibrary.ForAbility(ability), IconLibrary.AbilityTint(ability));
             Label level = UiKit.Text(slot, "", "slot__level");
             level.pickingMode = PickingMode.Ignore;
