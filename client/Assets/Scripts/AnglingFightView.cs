@@ -55,6 +55,8 @@ namespace Rth.Client
         private static readonly float[] PullSteps = { 0.03f, 0.09f, 0.17f };
         /// <summary>How far out a hooked fish starts at the least (tiles): where it bit, unless that's at your feet.</summary>
         private const float NearestStart = 2.5f;
+        /// <summary>How far down from the top of the screen the gauge sits (a share of its height).</summary>
+        private const float TopPadding = 0.1f;
         /// <summary>How far to each side a fish swings (tiles).</summary>
         private const float Swing = 2.2f;
 
@@ -405,7 +407,7 @@ namespace Rth.Client
 
         /// <summary>
         /// The gauges, in the interface's own pieces (the window skin, the bars of the main bar's
-        /// gauges), one piece over your head: up its right side a vertical bar of the line's tension
+        /// gauges), one piece pinned near the top of the screen: up its right side a vertical bar of the line's tension
         /// with its zones (slack, safe, strained, snapping) and a mark for where it is now; beside it
         /// the fish's energy (fish icon) with chevrons on it pointing the way to pull, and under that
         /// how much line is in (rod icon; full at the net: landed). It stays with you, not with the
@@ -597,7 +599,7 @@ namespace Rth.Client
         }
 
         /// <summary>
-        /// The gauge, one piece kept in place over your head: the tension bar up its side, the energy
+        /// The gauge, one piece pinned near the top of the screen: the tension bar up its side, the energy
         /// and line-in bars beside it. The chevrons point the way to pull (amber for a tell, white, green while
         /// you answer it, as many lit as you pull hard); a pause mark when it runs, leaps or latches
         /// (let go); the tension mark sits in its zone. Nothing flashes.
@@ -607,13 +609,13 @@ namespace Rth.Client
             Camera cam = Camera.main;
             Transform me = session.world.Local?.transform;
             if (_bar == null || cam == null || me == null || _bar.panel == null) return;
-            Vector3 head = me.position + Vector3.up * 2.3f;
-            bool visible = cam.WorldToScreenPoint(head).z > 0f && !over;
-            _bar.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
-            if (!visible) return;
-            Vector2 p = RuntimePanelUtils.CameraTransformWorldToPanel(_bar.panel, head, cam);
-            _bar.style.left = p.x;
-            _bar.style.top = p.y;
+            // Pinned at the top of the screen, a little way down from the edge, so it never covers the
+            // whirlpool or the angler.
+            _bar.style.display = over ? DisplayStyle.None : DisplayStyle.Flex;
+            if (over) return;
+            Rect screen = _bar.panel.visualTree.layout;
+            _bar.style.left = screen.width * 0.5f;
+            _bar.style.top = Mathf.Round(screen.height * TopPadding);
 
             float fresh = Mathf.Clamp01(_fight.Energy / (float)Mathf.Max(1, _fight.Energy0));
             _fill.style.width = Length.Percent(fresh * 100f);
