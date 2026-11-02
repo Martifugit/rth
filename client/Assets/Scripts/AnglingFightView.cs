@@ -82,6 +82,7 @@ namespace Rth.Client
         private float _nextThrash;
         private float _nextSpray;
 
+        private Vector3 _lean;
         private Transform _rodMesh;
         private Vector3 _rodTipLocal;
         private bool _hasRodTip;
@@ -95,6 +96,7 @@ namespace Rth.Client
         private readonly ParticleSystem.Particle[] _one = new ParticleSystem.Particle[1];
 
         private VisualElement _bar, _fill;
+        private Label _arrows;
         private Label _cue;
 
         private void Update()
@@ -165,7 +167,7 @@ namespace Rth.Client
             {
                 _hinted = true;
                 session.AddLog(TextKind.Info, SteerWithMouse
-                    ? "Fish on! Hold Space to reel. Move the cursor to the other side of the line from where the fish swims (the mark over it turns green when you have it), below you to lift against a dive. Let go of Space when it runs or leaps, and before the line turns red."
+                    ? "Fish on! Hold Space to reel. The word over the fish is where it's pulling; move the cursor the other way (the arrows on its bar point where, and turn green when you have it), or below you to lift against a dive. Let go of Space when it runs or leaps, and before the line turns red."
                     : "Fish on! Hold Space to reel; let go when the line turns red, when it runs, and when it leaps.");
             }
         }
@@ -263,13 +265,17 @@ namespace Rth.Client
             return AnglingInput.Make(reel, pull);
         }
 
-        /// <summary>Where the cursor is against the line on screen: off to one side pulls that way; below you lifts.</summary>
+        /// <summary>
+        /// Where the cursor is on screen against a fixed line, from you to the spot the fish bit at
+        /// (not to the fish, which swings: the line to it would lean with it and turn the controls
+        /// round). Right of it pulls right, left of it pulls left, below you lifts.
+        /// </summary>
         private byte Steer(Vector2 pointer)
         {
             Camera cam = Camera.main;
             Transform me = session.world.Local?.transform;
             if (cam == null || me == null) return AnglingInput.PullNone;
-            Vector3 a = cam.WorldToScreenPoint(me.position + Vector3.up * 1.0f), b = cam.WorldToScreenPoint(_fishPos);
+            Vector3 a = cam.WorldToScreenPoint(me.position + Vector3.up * 1.0f), b = cam.WorldToScreenPoint(new Vector3(_spot.x, _water, _spot.z));
             if (a.z < 0f || b.z < 0f) return AnglingInput.PullNone;
             Vector2 axis = new Vector2(b.x - a.x, b.y - a.y);
             if (axis.sqrMagnitude < 1f) return AnglingInput.PullNone;
@@ -346,6 +352,10 @@ namespace Rth.Client
                 gloss.AddToClassList("world-bar__gloss");
                 _bar.Add(_fill);
                 _bar.Add(gloss);
+                // Arrows on the bar: the way to pull.
+                _arrows = new Label("") { pickingMode = PickingMode.Ignore };
+                _arrows.AddToClassList("angling-arrows");
+                _bar.Add(_arrows);
                 ui.WorldLayer.Add(_bar);
                 _cue = new Label("") { pickingMode = PickingMode.Ignore };
                 _cue.AddToClassList("angling-cue");
@@ -456,6 +466,11 @@ namespace Rth.Client
 
             // The line: from the rod tip to the fish, its colour the tension.
             Vector3 tip = RodTip(me, forward, right);
+            // Your pull shows on the line: its rod end swings to the side you pull, back as you lift.
+            byte pulling = over ? AnglingInput.PullNone : AnglingInput.Pull(_lastInput);
+            Vector3 lean = pulling == AnglingInput.PullRight ? right : pulling == AnglingInput.PullLeft ? -right : pulling == AnglingInput.PullUp ? -forward * 0.6f + Vector3.up * 0.4f : Vector3.zero;
+            _lean = Vector3.Lerp(_lean, lean * 0.6f, 1f - Mathf.Exp(-dt * 10f));
+            tip += _lean;
             float tension = _fight.Tension / (float)AnglingFight.TensionMax;
             bool slack = _fight.Tension <= AnglingFight.SlackLine, red = _fight.Tension >= AnglingFight.RedLine;
             float sag = Mathf.Lerp(0.9f, 0.03f, Mathf.Clamp01(tension / 0.5f));
@@ -521,16 +536,29 @@ namespace Rth.Client
             }
             _cue.text = word;
             _cue.style.color = colour;
+
+            // The way to pull, on the bar: green while you do, else white.
+            AnglingMove asks = _fight.InTell && _fight.TellVisible ? _fight.Tell : move;
+            string arrows = asks switch
+            {
+                AnglingMove.Left => "pull  >>>",
+                AnglingMove.Right => "<<<  pull",
+                AnglingMove.Dive => "pull back",
+                AnglingMove.Run or AnglingMove.Jump or AnglingMove.Latch => "let go",
+                _ => "",
+            };
+            _arrows.text = arrows;
+            _arrows.style.color = asks == move && move != AnglingMove.Straight && Answers(move, _lastInput) ? new Color(0.5f, 1f, 0.5f) : Color.white;
         }
 
         private static string Word(AnglingMove move) => move switch
         {
-            AnglingMove.Left => "<<<  left",
-            AnglingMove.Right => "right  >>>",
-            AnglingMove.Dive => "diving",
-            AnglingMove.Run => "RUN: let go",
-            AnglingMove.Jump => "LEAP: let go",
-            AnglingMove.Latch => "latched: let go",
+            AnglingMove.Left => "Left",
+            AnglingMove.Right => "Right",
+            AnglingMove.Dive => "Diving",
+            AnglingMove.Run => "Running",
+            AnglingMove.Jump => "Leaping",
+            AnglingMove.Latch => "Latched",
             _ => "",
         };
 
@@ -713,6 +741,7 @@ namespace Rth.Client
             _bar?.RemoveFromHierarchy();
             _cue?.RemoveFromHierarchy();
             _bar = null;
+            _arrows = null;
             _cue = null;
         }
 
