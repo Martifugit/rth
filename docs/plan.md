@@ -406,6 +406,12 @@ Design: `docs/lore-rework/death.md`.
   grasping hands; lanterns; retry while held; return as the ferry does. Spec in
   `docs/lore-rework/death.md`; trials, tile triggers, patrols and percent hits as general
   mechanisms; `world/regions/realm_long_way.json`; first-pass art (style `dead`). Seen in Play.
+- **Next, a cleanup pass over both dead regions (owner, 2026-11-02):** (1) the mist along the
+  ground clips through it: find what draws it (most likely the flat water surface showing through
+  shore corners the paint pass set below or near the waterline, since that pass dropped water's
+  -0.15 height) and fix it everywhere; (2) the player must never see the end of the world: find a
+  creative way to hide the region edges (an endless dark lake beyond them, fog that swallows the
+  distance, far-off candle glows and silhouettes for depth, camera limits), then walk every edge.
 
 ---
 
