@@ -217,7 +217,7 @@ before it bites: the dry ground is where it starts.
     yard and the mill. Two milestones on Palmerway.
 14. **Widdermill** (35, 80): a two-storey stone mill on the river's west bank, the first-pass wheel-
     house and wheel in the river against its east wall, millstones by its door, a lane from Hollow
-    lane. The layout's mark moved from (30, 80) to the mill.
+    lane. The layout's mark stays at (30, 80), beside it (the layout's coarse river covers the mill).
 15. **Palmerway's places:** the old toll-house (60, 49) with its bar lying in the verge across the
     road; the monument's plot (78, 50) with the first-pass "monument not yet raised" model, where
     Brother Hollis and the founts go at stage 3.
