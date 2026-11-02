@@ -38,7 +38,10 @@ namespace Rth.Client.Ui.Panels
             TaskMessage task = Session.CurrentTask;
             bool has = task != null && !string.IsNullOrEmpty(task.Description);
             _giver.text = (has ? "From " + task.GiverName : "No task").ToUpperInvariant();
-            _task.text = has ? task.Description : UiKit.Colour("Task-givers hand out work: Wenna at the skinning yard, Corvin at the apothecary.", UiKit.Muted);
+            // No filler when there is no task: the heading says so. (The old hint named townsfolk
+            // who went with Tolling's first blockout.)
+            _task.text = has ? task.Description : "";
+            _task.style.display = has ? DisplayStyle.Flex : DisplayStyle.None;
 
             var points = new List<KeyValuePair<string, int>>();
             if (task != null) points.AddRange(task.Points);

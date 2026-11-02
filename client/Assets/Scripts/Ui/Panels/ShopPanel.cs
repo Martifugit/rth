@@ -52,14 +52,12 @@ namespace Rth.Client.Ui.Panels
                 ShopEntry entry = shop.Entries[i];
                 ItemDef def = Session.Item(entry.ItemId);
 
+                // A standard slot with its price beneath, the cell just wide enough for a price.
                 VisualElement cell = UiKit.El(_grid);
-                cell.style.width = 70f;
+                cell.style.width = 60f;
                 cell.style.alignItems = Align.Center;
                 cell.style.marginBottom = 6f;
-                VisualElement slot = UiKit.El(cell, "slot");
-                slot.style.width = slot.style.height = 48f;
-                VisualElement icon = UiKit.El(slot, "slot__icon");
-                icon.pickingMode = PickingMode.Ignore;
+                VisualElement slot = UiKit.Slots.Make(cell, out VisualElement icon);
                 UiKit.SetItem(icon, def);
                 if (entry.Stock >= 0)
                 {
@@ -90,8 +88,9 @@ namespace Rth.Client.Ui.Panels
                     "\n\nPrice: " + UiKit.Colour(entry.Price.ToString("N0") + " " + shop.CurrencyName.ToLowerInvariant(), UiKit.Value) +
                     (entry.Stock < 0 ? "" : "\nIn stock: " + UiKit.Colour(entry.Stock.ToString(), entry.Stock > 0 ? UiKit.Value : UiKit.Bad)));
             }
+            // One short line: the currency (also in every price's tooltip) and whether it buys.
             _footer.text = "Prices in " + UiKit.Colour(shop.CurrencyName.ToLowerInvariant(), UiKit.Value) + "." +
-                (shop.SellPercent > 0 ? UiKit.Colour("  Click items in your pack to sell them for " + shop.SellPercent + "% of their worth.", UiKit.Muted) : UiKit.Colour("  This shop doesn't buy.", UiKit.Muted));
+                UiKit.Colour(shop.SellPercent > 0 ? "  Buys from your pack at " + shop.SellPercent + "%." : "  Doesn't buy.", UiKit.Muted);
         }
     }
 }
