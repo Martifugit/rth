@@ -33,6 +33,27 @@ Sere's river runs out of them in the south-west, so the march is the dry high gr
 green valleys. The one picture: from the salt road's crest at about x -60, the spine filling the
 west and the observatory on its spur to the north-west.
 
+**Levels** ([world-scale.md](../world-scale.md) section 3, planned 2026-11-02):
+
+**The heartland's rim** (shared by the four wave-1 areas, 2026-11-02): Tolling's basin and
+Knellmere lie inside a rim of high ground. West, **the march edge**: an east-facing escarpment about
+6 high, the march's plateau behind it climbing to the spine. South, **the Edge**: one escarpment from
+Tolling's dry rise east under Knellmere, gravel and dry in Tolling, the Downs' white chalk cliff at
+the lake, 6 to 12 high, its lip a line of lookouts. East of Tolling, **the heath ridge** with the
+waygate in its notch. North the land stays low and open towards the dry valley.
+
+| Level | Height | What is there | What it sees |
+| --- | --- | --- | --- |
+| Under the edge | 1 to 2 | the strip east of the march edge: p-west-march, the cave in the edge's face where Tolling's river falls over it | the edge standing over it, Tolling east |
+| The march edge | a face of about 6 | the escarpment along the march's east side, rock where it is steepest | |
+| The plateau | 7 rising west to 12-14 | heath and bracken, the salt road's crest (about x -60), the old salt track, cairns; Sere's river in its valley in the south-west | the spine filling the west; back east over the basin to the town |
+| The observatory's spur | about 18 | p-observatory on a promontory with its own cliffs | the whole march, the spine, the moon |
+
+**The ways between them:** the salt road climbs the edge by switchbacks near (-40, 50); the west road
+climbs it north of the farm on its way to the river's bridge; the observatory lane switches back up
+the spur; Tolling's river falls over the edge beside the cave; Sere's river leaves the plateau in a
+gorge with a fall.
+
 **Ground (five):** heath, bracken, foothills (the rising ground), meadow by the rivers, river
 water; overlays: the gravel path and dirt tracks, a few fields at the farm. The generator's dust,
 shingle, scree, sand and small grass patches in `land_m1_m1` go to heath or the bank.
@@ -132,6 +153,20 @@ the edge of Tolling's first ring).
    the well road Sere's river on one. The only other cliffs are on the area's west edge, where the
    foothills rise into the salt pass. Grounds: foothills, heath, bracken, grass and meadow, the rivers,
    the tracks and the two farms' fields.
+7. **The levels built** (2026-11-02, `world/strokes/march-levels-a.json`, `-b`, `-c`, applied once; the
+   crag of finding 4 is gone, replaced by the edge):
+   - **The march edge**, an escarpment of about 6 facing east from the north border to the salt
+     road's south, rock on its face; the plateau behind at 7 to 9.6 (its crest near x -60), falling at
+     the west border into the high valley before the salt pass (about 3.7, generated land) and in a
+     long slope south-west into Sere's valley, which stays low and green.
+   - **Tolling's river** comes in low from the north and runs under the edge's face, a strip of
+     ground between them; **s-tolling-cave** moved into the face there, (-40, 156).
+   - **The observatory's spur** stands about 15 at its west end, over the high valley.
+   - **Roads, all graded:** the salt road climbs the edge in two legs with a level hairpin near (-41,
+     60); the west road stays under the edge, crosses Tolling's river once (about (-24, 150)) and runs
+     up the open east bank to Selenfall's approach; the observatory lane climbs the edge in switchbacks
+     from p-west-march, runs along the spur's south flank and up onto it. Everything is walkable from
+     Tolling's square (checked by a flood fill over the tiles, not yet walked).
 6. **The well road** (2.1, open): only its south-west end is in the data (a short stretch of caravan
    road by Sere's river); the line up to the salt road near (-94, 50) is still to draw.
 

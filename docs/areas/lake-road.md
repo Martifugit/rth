@@ -38,6 +38,26 @@ lake is flat at 0, the north shore rolls gently (0 to 2), the Downs climb to 3 t
 shore. The one picture: coming over the rise at s-lake-view, the whole lake laid out below, the
 belfry in the water, and Cruor's hill beyond.
 
+**Levels** ([world-scale.md](../world-scale.md) section 3, planned 2026-11-02):
+
+**The heartland's rim** (shared by the four wave-1 areas, 2026-11-02): Tolling's basin and
+Knellmere lie inside a rim of high ground. West, **the march edge**: an east-facing escarpment about
+6 high, the march's plateau behind it climbing to the spine. South, **the Edge**: one escarpment from
+Tolling's dry rise east under Knellmere, gravel and dry in Tolling, the Downs' white chalk cliff at
+the lake, 6 to 12 high, its lip a line of lookouts. East of Tolling, **the heath ridge** with the
+waygate in its notch. North the land stays low and open towards the dry valley.
+
+| Level | Height | What is there | What it sees |
+| --- | --- | --- | --- |
+| The lake | 0 to 2 | Knellmere, the reed fens, the shores, p-lakeport's quay, p-lake-south's landing | the Downs' white cliff over the south shore, the isle |
+| The north shore's rise | up to about 8 | Palmerway over the rise at s-lake-view, p-lakeport on a terrace above its quay | the whole lake at once from the crest, Cruor's hill beyond |
+| The isle | about 5 | rock, a cliff on its south | |
+| The Downs | the Edge's chalk cliff of 10 to 12, the downs 12 to 15 behind | the hill figure cut in the cliff's face, s-hill-figure on its lip | the lake and everything north of it |
+
+**The ways between them:** Palmerway climbs the rise and comes over its crest to the lake; the
+south-shore road and the camp lane climb the Downs' cliff in combes (dry valleys cut into it) by
+switchbacks; the downs brook falls over the cliff; boats to the isle.
+
 **Ground (five):** grass and meadow (the north shore), the Downs' chalk grass, reeds and fen (the
 west shore), lake and river water; overlays: the gravel road and dirt tracks, sand and shingle at
 the shore. The strays (worn, broken ground, mud, heath scraps) go to the ground round them at 1.5.

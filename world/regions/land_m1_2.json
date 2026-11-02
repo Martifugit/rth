@@ -113,7 +113,7 @@
     "179 157 135 115 97 80 65 52 41 31 23 16 11 7 4 3 2 1 0*79",
     "189 167 145 124 105 87 72 58 45 35 26 19 13 9 6 3 2 1 0*79",
     "201 178 156 134 114 96 79 64 51 39 30 22 15 10 7 4 2 1*2 0*78",
-    "213 190 167 145 124 105 87 71 56 44 33 25 18 12 8 5 3 2 1 0*78"
+    "213 190 167 145 124 105 87 71 56 44 33 25 18 12 8 5 3 2 8 0*78"
   ] },
   "pieces": [
     { "id": "ground", "kind": "tiles", "rect": [-96, 192, 0, 288], "legend": { "+": { "material": "LandSettlement", "height": 0.02, "layer": "over" }, "-": { "material": "LandRoad", "height": 0.01, "layer": "over" }, "b": { "material": "LandBridge", "height": 0.05, "layer": "over" }, "g": { "material": "LandFarmland" }, "r": { "material": "LandRiver", "water": true, "height": -0.15 }, "s": { "material": "LandScrub" } }, "paint": true, "rows": [

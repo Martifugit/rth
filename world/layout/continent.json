@@ -1516,9 +1516,9 @@
     {
       "id": "s-tolling-cave",
       "kind": "cave",
-      "at": [-18, 150],
+      "at": [-40, 156],
       "stage": "early",
-      "note": "a cave in the first foothills west of Tolling: the first dungeon"
+      "note": "a cave in the march edge's face over Tolling's river, reached along the strip under the cliff: the first dungeon"
     },
     {
       "id": "s-wennow-south",

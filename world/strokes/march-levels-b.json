@@ -1,0 +1,21 @@
+{
+  "area": "western-march",
+  "note": "The western march's levels, second of three (2026-11-02): the old west road and observatory lane across the plateau and their bridge cleared (the new ones come in march-levels-c.json), and the first-pass crag east of Tolling's river levelled again (the edge replaces it; the cave moves into the edge's face). Applied once after march-levels-a.json.",
+  "shapes": [
+    {
+      "id": "cave-crag-gone",
+      "raise": -2.2,
+      "seed": 101,
+      "ragged": 1,
+      "points": [[-19, 153], [-15, 150], [-9, 150], [-4, 153], [-3, 160], [-6, 166], [-12, 168], [-18, 164], [-21, 158]],
+      "peak": [-14, 158],
+      "cliffSide": [-1, -0.45],
+      "gentle": 8
+    }
+  ],
+  "swaps": [
+    { "from": ["dirttrack"], "nearWater": 0, "rect": [-96, 121, -36, 182], "otherwise": "surround" },
+    { "from": ["bridge"], "nearWater": 0, "rect": [-62, 174, -54, 183], "otherwise": "river" },
+    { "from": ["scree"], "nearWater": 0, "rect": [-24, 146, 0, 172], "otherwise": "surround" }
+  ]
+}

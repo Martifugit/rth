@@ -1,0 +1,271 @@
+{
+  "area": "western-march",
+  "moveBorders": true,
+  "note": "The western march's levels, first of two (2026-11-02, docs/areas/western-march.md 'Levels'): the march edge, an east-facing escarpment about 6 high from the north border to the salt road's south, the plateau behind it rising a little west to its crest (about 9), then falling at the west border into the high valley before the salt pass (the generated land there meets it) and falling in a long slope south-west into Sere's green valley, which stays low; the observatory's spur raised as a promontory. Tolling's river, coming in low from the north, cuts a gorge through the plateau's north end and runs on under the edge's face. Applied once with `tools/world strokes world/strokes/march-levels-a.json`, then the roads in march-levels-b.json.",
+  "shapes": [
+    {
+      "id": "march-edge",
+      "raise": 6,
+      "gentle": 13,
+      "ragged": 1.2,
+      "seed": 111,
+      "cliffSide": [
+        1,
+        0
+      ],
+      "rock": "scree",
+      "rockRise": 1.2,
+      "points": [
+        [
+          -64,
+          180
+        ],
+        [
+          -54,
+          176
+        ],
+        [
+          -46,
+          168
+        ],
+        [
+          -42,
+          160
+        ],
+        [
+          -40,
+          150
+        ],
+        [
+          -38,
+          140
+        ],
+        [
+          -38,
+          128
+        ],
+        [
+          -40,
+          116
+        ],
+        [
+          -42,
+          100
+        ],
+        [
+          -43,
+          80
+        ],
+        [
+          -44,
+          60
+        ],
+        [
+          -45,
+          40
+        ],
+        [
+          -46,
+          22
+        ],
+        [
+          -48,
+          8
+        ],
+        [
+          -52,
+          -4
+        ],
+        [
+          -58,
+          -14
+        ],
+        [
+          -66,
+          -22
+        ],
+        [
+          -76,
+          -24
+        ],
+        [
+          -86,
+          -18
+        ],
+        [
+          -96,
+          -10
+        ],
+        [
+          -125,
+          -10
+        ],
+        [
+          -125,
+          100
+        ],
+        [
+          -125,
+          181
+        ],
+        [
+          -90,
+          181
+        ]
+      ]
+    },
+    {
+      "id": "march-rise-west",
+      "raise": 1.5,
+      "gentle": 22,
+      "ragged": 0,
+      "seed": 112,
+      "points": [
+        [
+          -62,
+          180
+        ],
+        [
+          -62,
+          100
+        ],
+        [
+          -62,
+          10
+        ],
+        [
+          -75,
+          -10
+        ],
+        [
+          -96,
+          -3
+        ],
+        [
+          -125,
+          -3
+        ],
+        [
+          -125,
+          100
+        ],
+        [
+          -125,
+          181
+        ]
+      ]
+    },
+    {
+      "id": "observatory-spur",
+      "raise": 4,
+      "gentle": 4,
+      "ragged": 1,
+      "seed": 113,
+      "points": [
+        [
+          -125,
+          126
+        ],
+        [
+          -84,
+          127
+        ],
+        [
+          -70,
+          129
+        ],
+        [
+          -60,
+          133
+        ],
+        [
+          -64,
+          141
+        ],
+        [
+          -78,
+          147
+        ],
+        [
+          -125,
+          152
+        ]
+      ]
+    }
+  ],
+  "strokes": [
+    {
+      "id": "tollings-river",
+      "ground": "river",
+      "seed": 114,
+      "points": [
+        [
+          -73,
+          193
+        ],
+        [
+          -65,
+          182
+        ],
+        [
+          -56,
+          177
+        ],
+        [
+          -50,
+          174
+        ],
+        [
+          -42,
+          166
+        ],
+        [
+          -35,
+          158
+        ],
+        [
+          -28,
+          150
+        ],
+        [
+          -20,
+          146
+        ],
+        [
+          -11,
+          142
+        ],
+        [
+          -3,
+          134
+        ],
+        [
+          0,
+          131
+        ]
+      ],
+      "width": [
+        5,
+        5.5
+      ],
+      "wind": 0.6,
+      "wave": 30,
+      "bends": "meander",
+      "ragged": 0.1,
+      "erase": [
+        "river"
+      ],
+      "eraseReach": 3,
+      "fall": 0.45,
+      "pool": 1.5,
+      "banks": [
+        {
+          "ground": "meadow",
+          "share": 0.5,
+          "scale": 6
+        }
+      ],
+      "bankReach": 2
+    }
+  ]
+}

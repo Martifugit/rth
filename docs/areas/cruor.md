@@ -37,6 +37,23 @@ low and open: fields, the monument road, gardens, heath to the east, Eller's fir
 one picture: from the monument on the lake road, the city on its hill inside the bright loop of
 water, the cathedral at the crown.
 
+**Levels** ([world-scale.md](../world-scale.md) section 3, planned 2026-11-02):
+
+| Level | Height | What is there | What it sees |
+| --- | --- | --- | --- |
+| The meadows | 0 to 2 | the loop's water meadows, the meander round the monument, the confluence, the fields | the city stacked on its hill |
+| The lower town | about 6 | the walls and gates, the lower streets | the rivers, the roads in |
+| The upper town | about 10 | the squares, the great houses | over the walls to the heartland |
+| The crown | about 14 | the cathedral | everything: the lake, the Downs' cliff, Eller's trees, the great bridge |
+
+The hill falls in bluffs (cliffs of 8 to 10) straight into the great river on its north and east; it
+steps down in terraces on the south to the meander; the west, the neck, is a long slope.
+
+**The ways between them:** the lake road crosses the meander twice and climbs the neck by a long
+ramp to the west gate; the north road comes down the north bluff by switchbacks to the north bridge;
+the south road comes down the terraces to the south bridge; inside, the streets climb terrace to
+terrace (stage 2).
+
 **Ground (five):** grass and meadow, fields (wheat, ley, furrow) round the city, heath and bracken
 east, forest at Eller's edge north, river water; overlays: the gravel roads in, the bridges, the
 city's own paving at stage 2. Strays (worn, broken ground, sand and shingle scraps, reeds away from

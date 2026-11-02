@@ -23,6 +23,12 @@ namespace Rth.Shared.World.Ground
         public string Note = "";
         /// <summary>Takes generated regions of the plan over first (their "generated" line goes, their scenes to the area's folder), as hand work in the Editor does.</summary>
         public bool TakeOver;
+        /// <summary>
+        /// Lets heights on the plan's outer border change too (a plateau that runs up to the spine):
+        /// the neighbours then follow (`TerrainSeams.Follow`; generated ones at the next blockout).
+        /// Without it the border stays where it is and shapes ease in from it.
+        /// </summary>
+        public bool MoveBorders;
         public List<Stroke> Strokes = new List<Stroke>();
         public List<GroundSwap> Swaps = new List<GroundSwap>();
         /// <summary>Areas of ground drawn from an outline (an island, a hill, a clearing), before the strokes.</summary>
@@ -137,6 +143,8 @@ namespace Rth.Shared.World.Ground
         /// is, but for <see cref="Rock"/> where it now rises steeply (a crown on a hill, a knoll, a crag).
         /// </summary>
         public float Raise;
+        /// <summary>Only heights: the land inside smoothed this many passes (each corner to the mean of its four neighbours), ground and water left alone: mends a pit or a ragged step.</summary>
+        public int Smooth;
 
         // A body of water instead of land (a mere, a pond, a bay): "water": true.
 
@@ -179,7 +187,7 @@ namespace Rth.Shared.World.Ground
         /// <summary>Applies a plan to the regions (edited in place) and returns what it did, a line each.</summary>
         public static List<string> Apply(IReadOnlyList<RegionData> regions, ContinentData data, StrokePlan plan)
         {
-            var g = new Grid(regions, data);
+            var g = new Grid(regions, data) { MoveBorders = plan.MoveBorders };
             var log = new List<string>();
             foreach (GroundShape sh in plan.Shapes) log.Add(Fill(g, sh));
             foreach (Stroke s in plan.Strokes) log.Add(Draw(g, s));
@@ -493,6 +501,27 @@ namespace Rth.Shared.World.Ground
             int x0 = (int)Math.Floor(outline.Min(p => p[0]) - sh.Ragged - 2), x1 = (int)Math.Ceiling(outline.Max(p => p[0]) + sh.Ragged + 2);
             int y0 = (int)Math.Floor(outline.Min(p => p[1]) - sh.Ragged - 2), y1 = (int)Math.Ceiling(outline.Max(p => p[1]) + sh.Ragged + 2);
             if (sh.Water) return FillWater(g, sh, Edge, x0, y0, x1, y1);
+            if (sh.Smooth > 0)
+            {
+                var smoothed = new List<(int, int)>();
+                for (int cy = y0; cy <= y1; cy++)
+                    for (int cx = x0; cx <= x1; cx++)
+                        if (Edge(cx, cy) > 0f && g.Corner(cx, cy) != null && !g.IsWater(g.GroundAt(cx, cy)) && !g.IsWater(g.GroundAt(cx - 1, cy - 1))) smoothed.Add((cx, cy));
+                var h = new Dictionary<(int, int), float>();
+                foreach (var c in smoothed)
+                    foreach (var o in new[] { c, (c.Item1 + 1, c.Item2), (c.Item1 - 1, c.Item2), (c.Item1, c.Item2 + 1), (c.Item1, c.Item2 - 1) })
+                        if (!h.ContainsKey(o) && g.Corner(o.Item1, o.Item2) is float v) h[o] = v;
+                for (int pass = 0; pass < sh.Smooth; pass++)
+                    foreach (var c in smoothed)
+                    {
+                        float sum = 0f; int count = 0;
+                        foreach (var o in new[] { (c.Item1 + 1, c.Item2), (c.Item1 - 1, c.Item2), (c.Item1, c.Item2 + 1), (c.Item1, c.Item2 - 1) })
+                            if (h.TryGetValue(o, out float v)) { sum += v; count++; }
+                        if (count > 0) h[c] = sum / count;
+                    }
+                foreach (var c in smoothed) g.SetCorner(c.Item1, c.Item2, h[c]);
+                return $"{sh.Id}: {smoothed.Count} corners smoothed {sh.Smooth} times.";
+            }
             if (sh.Raise != 0f)
             {
                 // How far in from the edge the rise is reached: gentle, or short on the cliff side (a crag's face).
@@ -812,6 +841,8 @@ namespace Rth.Shared.World.Ground
             private readonly Dictionary<RegionData, Heightfield> _heights = new Dictionary<RegionData, Heightfield>();
             private readonly HashSet<RegionData> _carved = new HashSet<RegionData>();
 
+            public bool MoveBorders;
+
             public Grid(IReadOnlyList<RegionData> regions, ContinentData data)
             {
                 _brushes = GroundEdit.Brushes(data).ToDictionary(b => b.Id);
@@ -954,7 +985,9 @@ namespace Rth.Shared.World.Ground
             /// <summary>Only corners every tile round which is in these regions change, so borders with others stay matched.</summary>
             public void SetCorner(int cx, int cy, float h)
             {
-                if (PartAt(cx - 1, cy - 1) == null || PartAt(cx, cy - 1) == null || PartAt(cx - 1, cy) == null || PartAt(cx, cy) == null) return;
+                bool all = PartAt(cx - 1, cy - 1) != null && PartAt(cx, cy - 1) != null && PartAt(cx - 1, cy) != null && PartAt(cx, cy) != null;
+                bool any = PartAt(cx - 1, cy - 1) != null || PartAt(cx, cy - 1) != null || PartAt(cx - 1, cy) != null || PartAt(cx, cy) != null;
+                if (!all && !(MoveBorders && any)) return;
                 foreach (var p in _parts)
                     if (FieldOf(p.region) is Heightfield f && cx >= f.OriginX && cy >= f.OriginY && cx <= f.OriginX + f.Width && cy <= f.OriginY + f.Depth)
                     {

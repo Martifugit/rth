@@ -1,0 +1,204 @@
+{
+  "area": "western-march",
+  "note": "The western march's levels, third of three (2026-11-02): the roads, graded. The salt road climbs the march edge in two legs with a level hairpin and comes onto the plateau at its crest. The west road stays low under the edge: north from p-west-march along the strip under the cliff, over Tolling's river on one bridge, and up the river's open east bank to Selenfall's approach. The observatory lane is the edge's other climb: switchbacks up from the farm, along the spur's south flank and up onto the spur to the observatory. The first-pass crag's old face, left as a trench when it was levelled, is smoothed out (a `smooth` shape). Applied once after march-levels-b.json.",
+  "strokes": [
+    {
+      "id": "salt-road-climb",
+      "ground": "dirttrack",
+      "seed": 121,
+      "points": [
+        [
+          -33,
+          50.5
+        ],
+        [
+          -38,
+          51
+        ],
+        [
+          -41,
+          60
+        ],
+        [
+          -48,
+          51
+        ],
+        [
+          -55,
+          49
+        ],
+        [
+          -60,
+          49.5
+        ]
+      ],
+      "width": [
+        2,
+        2
+      ],
+      "wind": 0,
+      "ragged": 0,
+      "erase": [
+        "dirttrack"
+      ],
+      "eraseReach": 4,
+      "grade": 0.35
+    },
+    {
+      "id": "west-road",
+      "ground": "dirttrack",
+      "seed": 122,
+      "points": [
+        [
+          -30,
+          110
+        ],
+        [
+          -31,
+          120
+        ],
+        [
+          -32,
+          132
+        ],
+        [
+          -31,
+          141
+        ],
+        [
+          -26,
+          148
+        ],
+        [
+          -22,
+          155
+        ],
+        [
+          -30,
+          163
+        ],
+        [
+          -38,
+          170
+        ],
+        [
+          -46,
+          176
+        ],
+        [
+          -53,
+          182
+        ],
+        [
+          -58,
+          187
+        ],
+        [
+          -60,
+          191
+        ]
+      ],
+      "width": [
+        2,
+        2
+      ],
+      "wind": 0.6,
+      "wave": 16,
+      "ragged": 0.05,
+      "erase": [
+        "dirttrack"
+      ],
+      "eraseReach": 3,
+      "grade": 0.3
+    },
+    {
+      "id": "observatory-lane",
+      "ground": "dirttrack",
+      "seed": 123,
+      "points": [
+        [
+          -31,
+          112
+        ],
+        [
+          -35,
+          113
+        ],
+        [
+          -39,
+          121
+        ],
+        [
+          -44,
+          114
+        ],
+        [
+          -50,
+          120
+        ],
+        [
+          -60,
+          124
+        ],
+        [
+          -72,
+          125
+        ],
+        [
+          -84,
+          127
+        ],
+        [
+          -88,
+          131
+        ],
+        [
+          -84,
+          136
+        ],
+        [
+          -90,
+          139
+        ],
+        [
+          -94,
+          140
+        ]
+      ],
+      "width": [
+        2,
+        2
+      ],
+      "wind": 0,
+      "ragged": 0,
+      "eraseReach": 0,
+      "grade": 0.35
+    }
+  ],
+  "shapes": [
+    {
+      "id": "crag-pit-mended",
+      "smooth": 40,
+      "ragged": 0,
+      "seed": 124,
+      "points": [
+        [
+          -22,
+          148
+        ],
+        [
+          -10,
+          148
+        ],
+        [
+          -8,
+          158
+        ],
+        [
+          -22,
+          158
+        ]
+      ]
+    }
+  ]
+}

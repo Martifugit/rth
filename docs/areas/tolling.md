@@ -46,6 +46,28 @@ turns to dry gravel in the south-east corner, rising to about 4: the rain shadow
 The one picture to remember: standing on the dry rise south of Wennow, the whole basin below
 you, green, with the bell tower on its knoll and the mill on the far side of the water.
 
+**Levels** ([world-scale.md](../world-scale.md) section 3, planned 2026-11-02):
+
+**The heartland's rim** (shared by the four wave-1 areas, 2026-11-02): Tolling's basin and
+Knellmere lie inside a rim of high ground. West, **the march edge**: an east-facing escarpment about
+6 high, the march's plateau behind it climbing to the spine. South, **the Edge**: one escarpment from
+Tolling's dry rise east under Knellmere, gravel and dry in Tolling, the Downs' white chalk cliff at
+the lake, 6 to 12 high, its lip a line of lookouts. East of Tolling, **the heath ridge** with the
+waygate in its notch. North the land stays low and open towards the dry valley.
+
+| Level | Height | What is there | What it sees |
+| --- | --- | --- | --- |
+| The floor | 0 to 1.5 | Wennow and its meadows, the river meadows, Palmerway along the north shore, the mill, the skinning yard, the fishers' landing | the town on its knoll, the march edge west, the Edge south |
+| The knoll | about 4.5 (from the river's 0.1) | Tolling: the square and church close on a flat crown, the houses round it; a steep bank (cliff) down to the river on the east | the whole basin; the bell tower adds ten more |
+| The rim | 6 to 9 | the Edge's dry plateau south (its lip s-dry-rise), the heath ridge east, the march edge west | the basin laid out, the tower on its knoll |
+
+**The ways between them:** Palmerway climbs from the bridge into the square through a cutting in the
+knoll's east bank; the Sere road runs down the knoll's long south slope and round the Edge's low
+west end past the edge farm; the west road falls gently west to the march edge's switchbacks; Hollow
+lane goes down the north slope to the mill; a switchback path climbs the Edge from the fishers'
+landing to the lookout on its lip; Palmerway climbs into the heath ridge's notch, where the waygate
+stands, and down the far side to the fens; the Wenn leaves through a gorge in the ridge.
+
 **Ground (five, from eleven):** grass and meadow (the basin), heath (north and east of the
 mere), gravel (the dry edge), lake water; overlays: the Sere road and Palmerway, Tolling's
 streets and fields. The generator's dust, redrock, sand, bracken and worn patches in the two
