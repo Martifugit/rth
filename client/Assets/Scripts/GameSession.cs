@@ -221,6 +221,9 @@ namespace Rth.Client
             AnglingFightView anglingFight = GetComponent<AnglingFightView>();
             if (anglingFight == null) anglingFight = gameObject.AddComponent<AnglingFightView>();
             anglingFight.session = this;
+            TrialViews trialViews = GetComponent<TrialViews>();
+            if (trialViews == null) trialViews = gameObject.AddComponent<TrialViews>();
+            trialViews.session = this;
             MiningView mining = GetComponent<MiningView>();
             if (mining == null) mining = gameObject.AddComponent<MiningView>();
             mining.session = this;

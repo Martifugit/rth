@@ -29,7 +29,7 @@ namespace Rth.Client.Characters
             {
                 Material[] imported = r.sharedMaterials;
                 var materials = new Material[imported.Length];
-                for (int i = 0; i < imported.Length; i++) materials[i] = Matte;
+                for (int i = 0; i < imported.Length; i++) materials[i] = IsSoul(imported[i]) ? Soul : Matte;
                 r.sharedMaterials = materials;
                 for (int i = 0; i < imported.Length; i++)
                 {
@@ -44,6 +44,23 @@ namespace Rth.Client.Characters
             SetShape(shape, size.y, Mathf.Max(size.x, size.z) * 0.5f);
             return true;
         }
+
+        private static Material _soul;
+
+        /// <summary>The shared soul material (Resources/Shaders/Soul) for palette colours marked "soul"; colour by property block.</summary>
+        private static Material Soul
+        {
+            get
+            {
+                if (_soul != null) return _soul;
+                Shader shader = Shader.Find("Rth/Soul");
+                _soul = shader != null ? new Material(shader) { name = "Soul" } : Matte;
+                return _soul;
+            }
+        }
+
+        private static bool IsSoul(Material material) =>
+            material != null && Palette.IsSoul(material.name.Replace(" (Instance)", "").Trim());
 
         /// <summary>The palette colour a material is named after, else its own colour.</summary>
         private static Color ColourOf(Material material)

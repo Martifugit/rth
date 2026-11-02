@@ -217,7 +217,7 @@ namespace Rth.Shared.World.Data
                     {
                         Npc = Need(piece.Npc, "npc"), Plane = plane, X = piece.X, Y = piece.Y, Wander = piece.Wander ?? -1,
                         Patrol = piece.Patrol != null && piece.Patrol.Count > 0 ? piece.Patrol.Select(p => new[] { p[0], p[1] }).ToList() : null,
-                        PatrolMode = piece.Patrol != null && piece.Patrol.Count > 0 ? piece.PatrolMode : null,
+                        PatrolMode = piece.Patrol != null && piece.Patrol.Count > 0 && piece.PatrolMode != "loop" ? piece.PatrolMode : null,
                     });
                     break;
                 case PieceKind.Spawn:

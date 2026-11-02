@@ -80,6 +80,11 @@ namespace Rth.Client.Editor
                 Piece p = Placed(PieceKind.Npc, n.npcId, n.transform, area, used);
                 p.Npc = n.npcId;
                 if (n.wanderRadius != -1) p.Wander = n.wanderRadius;
+                if (n.patrol != null && n.patrol.Length > 0)
+                {
+                    p.Patrol = System.Linq.Enumerable.ToList(System.Linq.Enumerable.Select(n.patrol, t => new[] { t.x, t.y }));
+                    if (n.patrolMode != "loop") p.PatrolMode = n.patrolMode;
+                }
                 region.Pieces.Add(p);
                 lifted.Add(n.gameObject);
             }

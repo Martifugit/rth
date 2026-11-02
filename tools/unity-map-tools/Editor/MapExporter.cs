@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Rth.Shared.World;
 using Rth.Shared.World.Data;
 using UnityEditor;
@@ -185,6 +186,8 @@ namespace Rth.MapTools.Editor
                 {
                     Npc = spawn.npcId.Trim(), Plane = MapLevel.Of(spawn, area.plane),
                     X = Mathf.FloorToInt(p.x), Y = Mathf.FloorToInt(p.z), Wander = spawn.wanderRadius,
+                    Patrol = spawn.patrol != null && spawn.patrol.Length > 0 ? spawn.patrol.Select(t => new[] { t.x, t.y }).ToList() : null,
+                    PatrolMode = spawn.patrol != null && spawn.patrol.Length > 0 && spawn.patrolMode != "loop" ? spawn.patrolMode : null,
                 });
             }
             return list;

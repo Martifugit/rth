@@ -1900,6 +1900,7 @@
     "id": "soul_lantern",
     "name": "Soul lantern",
     "examine": "Something pale burns in an iron cage on a drowned post. It gives a little warmth, once.",
+    "depletedModel": "Art/Assets/Lights/Dead/SoulLanternSpent",
     "actions": [
       {
         "id": "kindle", "label": "Warm your hands", "animation": "work",

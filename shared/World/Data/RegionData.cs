@@ -154,6 +154,8 @@ namespace Rth.Shared.World.Data
         /// objects block their own tile unless this says otherwise; [0, 0, 0, 0] blocks nothing.
         /// </summary>
         public int[]? Footprint;
+        /// <summary>Drawn by nothing: only its markers (a hidden trigger's object, a creature with no stand-in).</summary>
+        public bool? Hidden;
         /// <summary>A model to draw (a prefab under Assets/), instead of or as well as its parts; for a fence, one span centred on its tile.</summary>
         public string? Model;
         /// <summary>

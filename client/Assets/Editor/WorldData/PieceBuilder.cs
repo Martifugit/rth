@@ -180,8 +180,14 @@ namespace Rth.Client.Editor
             {
                 var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(piece.Model);
                 if (prefab == null) Debug.LogError($"[R'th] {region.Id}: piece '{piece.Id}' names model '{piece.Model}', which isn't in the project.");
-                else ((GameObject)PrefabUtility.InstantiatePrefab(prefab, look)).transform.localPosition = Vector3.zero;
+                else
+                {
+                    Transform model = ((GameObject)PrefabUtility.InstantiatePrefab(prefab, look)).transform;
+                    model.localPosition = Vector3.zero;
+                    if (piece.Scale is float scale && piece.Kind == PieceKind.Prop) model.localScale *= scale;
+                }
             }
+            else if (piece.Hidden == true) { }
             else if (piece.Kind == PieceKind.Tree)
             {
                 var treeKit = new WorldKit(region.Seed ^ StableHash(piece.Id));
@@ -226,6 +232,8 @@ namespace Rth.Client.Editor
                 var spawn = go.AddComponent<MapNpcSpawn>();
                 spawn.npcId = piece.Npc;
                 spawn.wanderRadius = piece.Wander ?? -1;
+                spawn.patrol = piece.Patrol != null ? piece.Patrol.Select(t => new Vector2Int(t[0], t[1])).ToArray() : new Vector2Int[0];
+                spawn.patrolMode = piece.PatrolMode ?? "loop";
             }
             if (piece.Kind == PieceKind.Spawn) go.AddComponent<MapSpawn>();
             return go;
