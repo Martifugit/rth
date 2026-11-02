@@ -113,10 +113,11 @@ much **fight** it has left shows in how often and how hard it thrashes. No bars,
 and against other games (Sea of Thieves and Red Dead Redemption 2 keep the fish and line in the
 world and have you push against the fish; WoW and Animal Crossing are pure timing; Stardew,
 Albion and Dredge use a small minigame box, the approach rejected here):
-- **Steer (default):** the mouse is the rod while the fight lasts. Hold the left button to reel;
+- **Steer (default):** the cursor is the rod while the fight lasts, without clicking (a click is the
+  world's). Hold **Space** to reel (owner, 2026-11-02: not a mouse button);
   sweep the cursor across the line to the side the fish isn't swimming; pull it back towards
   yourself to lift against a dive; let go when it runs or leaps.
-- **Reel only:** hold to reel and let go on strain, runs and leaps; your angler leans against the
+- **Reel only:** hold Space to reel and let go on strain, runs and leaps; your angler leans against the
   fish by itself.
 
 Both send the same inputs to the same simulation, so a new scheme is client code only.

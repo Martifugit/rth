@@ -24,7 +24,7 @@ namespace Rth.Client
     ///
     /// The mouse is the rod while the fight lasts (world clicks are ignored: <see cref="Capturing"/>).
     /// Two ways to fight, a setting (<see cref="SteerWithMouse"/>), to find which feels right:
-    /// steer (hold the left button to reel; sweep the cursor across the line to the opposite side
+    /// steer (hold Space to reel; move the cursor across the line to the opposite side
     /// from where the fish swims; pull it back towards you to lift against a dive) or reel only
     /// (hold to reel; your angler leans against the fish by itself).
     /// </summary>
@@ -139,8 +139,8 @@ namespace Rth.Client
             {
                 _hinted = true;
                 session.AddLog(TextKind.Info, SteerWithMouse
-                    ? "Fish on! Hold the left mouse button to reel. Sweep the mouse to the side the fish isn't swimming, pull it back to lift against a dive, and let go when it runs or leaps."
-                    : "Fish on! Hold the left mouse button to reel; let go when the line strains, when it runs, and when it leaps.");
+                    ? "Fish on! Hold Space to reel. Move the cursor to the side of the line the fish isn't swimming to, behind you to lift against a dive, and let go of Space when it runs or leaps. Watch the line: let go before it turns red."
+                    : "Fish on! Hold Space to reel; let go when the line strains, when it runs, and when it leaps.");
             }
         }
 
@@ -160,8 +160,9 @@ namespace Rth.Client
         {
             Mouse mouse = Mouse.current;
             Vector2 pointer = mouse != null ? mouse.position.ReadValue() : Vector2.zero;
-            bool overUi = Ui.UiRoot.IsPointerOverUi(pointer);
-            bool reel = mouse != null && mouse.leftButton.isPressed && !overUi;
+            // Space reels (no clicking: a click is the world's). The cursor only steers.
+            Keyboard keyboard = Keyboard.current;
+            bool reel = keyboard != null && keyboard.spaceKey.isPressed && !Ui.UiRoot.IsTyping;
             byte pull = AnglingInput.PullNone;
             if (SteerWithMouse) pull = Steer(pointer);
             else
