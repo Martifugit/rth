@@ -13,7 +13,7 @@ namespace Rth.Server.Game
     /// <c>::tele x y</c>, <c>::tele region</c> (a region's middle, instanced ones too),
     /// <c>::pass name</c> (a pass over the spine, from the layout), <c>::fly</c> (a free camera,
     /// <c>::land x y</c> ends it there),
-    /// <c>::level skill n</c>, <c>::give item [count]</c>, <c>::devotion</c>,
+    /// <c>::level skill n</c>, <c>::give item [count]</c>, <c>::devotion</c>, <c>::die</c>,
     /// <c>::boss id|win|fail</c>, <c>::fx type effect [key=value...]</c> (any object effect on
     /// the objects of a type near you), and each boss's previews under its own word
     /// (<c>::saint light</c>), registered with <see cref="RegisterPreview"/>.
@@ -83,6 +83,10 @@ namespace Rth.Server.Game
                     break;
                 case "devotion":
                     World.Get<ReligionSystem>().Restore(player, player.MaxDevotion);
+                    break;
+                case "die":
+                    // Dies where you stand, with whatever you carry: for trying the ferryman and the long way back.
+                    World.Get<CombatSystem>().Damage(player, int.MaxValue / 2, null, Rth.Shared.Net.HitKind.Bleed);
                     break;
                 case string word when _previews.TryGetValue(word, out var preview):
                     Say(player, preview.Run(player, args.Skip(1).ToArray()));
@@ -205,6 +209,7 @@ namespace Rth.Server.Game
             "::level <skill> <level>  -  set a skill's level",
             "::give <item> <count>  -  items in your pack",
             "::devotion  -  refill devotion",
+            "::die  -  die where you stand (the ferryman, the long way back)",
             "::boss <id>  -  start a boss run; ::boss win, ::boss fail end it",
             "::fx <object type> <effect>  -  play one object effect on every one near you (tuning)",
         };

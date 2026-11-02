@@ -77,6 +77,9 @@ namespace Rth.Client
         private Renderer[] _renderers;
         private Light _glow;
         private bool _depleted;
+
+        /// <summary>Showing its depleted look now (used up, picked, felled).</summary>
+        public bool Depleted => _depleted;
         private bool _surging;
         private Vector3 _baseScale;
         private GameObject _stand;      // the depleted model, while it stands in

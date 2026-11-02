@@ -1,0 +1,9 @@
+{
+  "note": "Written by Sync World from Assets/Scenes/LongWay.unity. Read-only: change world/regions/realm_long_way.json, or the scene's Handmade root in Unity.",
+  "region": "realm_long_way",
+  "origin": [8160, 8096], "size": [96, 96],
+  "dataPieces": { "npc": 10, "prop": 203, "tiles": 1 },
+  "handmade": [
+
+  ]
+}

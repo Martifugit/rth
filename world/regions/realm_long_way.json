@@ -14,14 +14,14 @@
   "instanced": true,
   "music": "",
   "atmosphere": {
-    "sunIntensity": 0.03,
-    "sun": "#86B8B0",
-    "ambientSky": "#1C2A2C",
-    "ambientEquator": "#0F1819",
-    "ambientGround": "#040606",
-    "fog": "#050B0C",
-    "fogStart": 14,
-    "fogEnd": 40
+    "sunIntensity": 0.14,
+    "sun": "#9CC8C0",
+    "ambientSky": "#34494B",
+    "ambientEquator": "#1E2A2C",
+    "ambientGround": "#0B1011",
+    "fog": "#0C1618",
+    "fogStart": 16,
+    "fogEnd": 48
   },
   "materials": {
     "DeadAsh": "#2E2C2B",

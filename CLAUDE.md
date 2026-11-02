@@ -11,8 +11,8 @@ classic layout). It is set in its own world, **R'th**, built around the four hum
 multi-region world streamed by the client), 8 (the window-based interface, chat), 9 (the
 skills rework: Religion's hymns replace breath, the v1 skill roster) and 10 (melee: weapon
 styles, melee abilities, Cruor's verses, gathering nodes and the first monument) are done, and
-death v1 (D1 and D2 in `docs/plan.md`: the ferryman holds what you die with, on a dark landing
-built as region data) and workstreams E1 (gathering tools, the first Mining and Woodcutting) and
+death v1 (D1-D3 in `docs/plan.md`: the ferryman holds what you die with, on a dark landing
+built as region data, and the long way back walks it home for free) and workstreams E1 (gathering tools, the first Mining and Woodcutting) and
 E3 (using an item on an object, an NPC or another item) and E4 (the skilling loops: Smithing,
 Cooking, Fishing, Foraging, Medicine, Woodcutting's tending, tiers 1-3) have landed. The v1 skills are
 designed in `docs/skills.md`; most of them exist only as a skill and a level so far.
@@ -492,6 +492,19 @@ The shipped conversation explains death the first time (flag `ferry_explained`).
 no death window any more: the remark (text kind `Ferryman`) is a line in chat, and the
 conversation is the dialogue box.
 
+**Death v1, the long way back (D3, done; first pass):** refuse the ferry and walk home through the
+realm of the dead (`docs/lore-rework/death.md`, "The long way back"). The leaning stones on the
+Landing's south shore (`soul_gate`) begin the trial `long_way` (trials.json) for anyone the ferryman
+holds something for, empty-handed: a 96x96 region south of the Landing (`world/regions/realm_long_way.json`,
+"The Long Way", scene `LongWay.unity`), walked (no running) in about two and a half minutes. The cold
+drains max blood with no regeneration; shades (unattackable, patrolling, hitting for 15% of max
+blood), hidden grasping hands (hold and hurt) and four soul lanterns (35% once an attempt) are data.
+Dying wakes you on the Landing to try again; the walker on the far shore (`walker`) gives the hold
+back free (`ferryReturnFree`). `LongWayPaceTests` walks it with a bot. Its art is a first pass in
+Blender (style `dead`: shade, walker, lanterns, hands, stones, posts, belongings, reeds, causeway,
+gate); palette colours marked `"soul": true` draw with `Soul.shader` (glowing, see-through).
+`::die` kills you where you stand, to try it.
+
 **The world as data (C1-C4, done):** regions are text (`world/regions`), compiled to the server maps by
 `tools/world` without Unity, drawn and checked in Unity by **R'th > World > Sync World**; Tolling,
 Palmerway, the Saint's crypt and LevelTest were converted with byte-identical maps, and E1's rocks
@@ -635,6 +648,11 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | A new object behaviour (mine, open, pray) | An action on the object def, a handler via `ObjectSystem.RegisterAction`, usually starting an `ObjectInteraction`. |
 | An NPC menu option (pickpocket, follow) | An action on the NPC def; a handler via `NpcSystem.RegisterAction` (runs once the player is beside the NPC). |
 | Something said or done in dialogue | `DialogueSystem.RegisterCondition` / `RegisterAction` / `RegisterToken`. Conversations themselves are data. |
+| A timed run through regions (a gauntlet, the long way back) | An entry in trials.json (`TrialDef`): `regions`, a `gate` object with a `trial` action, `start`, dialogue `conditions`, `emptyHanded`, `walkOnly`, a `drain` on max blood (holds regeneration), a `status`, messages. `TrialSystem`: dialogue condition `trialRunning`, actions `trialWin`/`trialLose`, tokens `{trialTime}`/`{trialBest:id}`, events `TrialStarted`/`TrialEnded`, the "trial" state (`TrialTimerPanel`, `TrialViews`). Leaving the regions, dying or logging out loses it. |
+| Something an object gives once a run (a lantern that warms) | `effects` (effect ops) on the object's action, with `oncePer: "trial"` and a `usedMessage`; a new scope is `ObjectSystem.RegisterOnceScope`. The object's `depletedModel` shows it used up, and `glow` lights it (`ObjectLights`). |
+| A trap on a tile (grasping hands, a snare) | `trigger` on the object type (`TriggerDef`: `hidden`, `holdTicks`, `damagePercent`, `rearmTicks`, `showTicks`, `message`, `model`); place it as a prop with `"footprint": [0, 0, 0, 0]` (and `"hidden": true` to draw nothing). `TriggerSystem` springs it, `Entity.RootedUntilTick` holds the player, `TriggerSprung` is published, the "triggers" state draws it (`TrialViews`). |
+| A creature that walks a beat | `patrol` (tiles) and `patrolMode` (`loop` or `bounce`) on its `npc` piece; it leashes from where it left its route and goes back to it. `hitPercent` on the NPC hits for a share of the target's max blood (as hard on everyone). Unattackable NPCs aren't struck back at. |
+| Something drawn glowing and see-through (souls, ghosts) | Its material named after a palette colour with `"soul": true` (palette.json): `NatureImporter` and `CreatureBody` draw it with `Resources/Shaders/Soul`. |
 | A conversation with no NPC in the world (a voice, the ferryman before his landing) | `DialogueSystem.Start(player, dialogueId, speaker)`; it ends when finished, closed or on death, not by walking away. |
 | What happens at death, the fee, the obol | death.json (`DeathRules`); the ferryman's conversation uses `ferryHolds` / `ferryFree` / `ferryCanPay` / `ferryObol` / `inRealm`, actions `ferryPay` / `ferryLeave`, tokens `{ferryFee}` `{ferryValue}` `{ferryHours}` `{deaths}`. Something else reacting to waking: subscribe to `PlayerRespawned`. |
 | Using an item on something ("Use X -> Y") | An entry in uses.json: the item (or `tag:`), one of `onObject` / `onNpc` / `onItem`, checks (`requirements`, dialogue `conditions`, `failMessage`) and outcomes (`consume`, `message`, `effects`, dialogue `actions`, a `recipe`, a `dialogue`). No code; a new kind of outcome is usually a dialogue action. Counted by quests and achievements as kind `use`. |

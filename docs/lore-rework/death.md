@@ -41,7 +41,7 @@ The owner's choices, and the first numbers (all data: `trials.json`, `objects.js
 - **Who may go.** Only someone the ferryman holds something for, and only empty-handed (the
   grave chest is right there). Running is not possible on the way: the cold is in your legs.
   At walking pace a clean walk takes about two and a half minutes.
-- **The cold.** 0.7% of max blood every tick, and blood doesn't return by itself while walking.
+- **The cold.** 2.1% of max blood every 3 ticks (0.7% a tick), and blood doesn't return by itself while walking.
 - **Shades** (`shade`): the dead who didn't make it. They can't be fought. They drift back and
   forth on set paths: across the ash flats (stretch 2), across the last causeway on two spurs
   (stretch 4) and round the long way through the stone field. Come within two tiles and one

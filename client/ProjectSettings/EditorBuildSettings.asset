@@ -1055,5 +1055,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/KitTest.unity
     guid: f3eb107338e2bb748ae8ba6920fd5c81
+  - enabled: 1
+    path: Assets/Scenes/LongWay.unity
+    guid: 6e0f0a36b97588e49a5132ef1a82962d
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
