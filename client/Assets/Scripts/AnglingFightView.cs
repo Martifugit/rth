@@ -53,6 +53,8 @@ namespace Rth.Client
         /// pull; past each further one, a harder pull (1, 2, then 3, the hardest).
         /// </summary>
         private static readonly float[] PullSteps = { 0.03f, 0.09f, 0.17f };
+        /// <summary>How far out a hooked fish starts, at least (tiles), so it is seen coming in.</summary>
+        private const float FarOut = 5f;
         /// <summary>How far to each side a fish swings (tiles).</summary>
         private const float Swing = 2.2f;
 
@@ -97,7 +99,7 @@ namespace Rth.Client
         private LineRenderer _outline;
         private readonly ParticleSystem.Particle[] _one = new ParticleSystem.Particle[1];
 
-        private VisualElement _bar, _fill, _arrows;
+        private VisualElement _bar, _fill, _arrows, _reel, _reelFill;
         private readonly VisualElement[] _chevrons = new VisualElement[3];
 
         private void Update()
@@ -360,15 +362,31 @@ namespace Rth.Client
             Ui.UiRoot ui = Ui.UiRoot.Instance;
             if (ui?.WorldLayer != null)
             {
+                // The gauge: a frame holding the fish's energy (with the chevrons) and, under it, how
+                // much of the line is in (full: landed; its end is the net).
                 _bar = new VisualElement { pickingMode = PickingMode.Ignore };
-                _bar.AddToClassList("world-bar");
-                _bar.AddToClassList("angling-energy");
+                _bar.AddToClassList("angling-gauge");
+                VisualElement energy = new VisualElement { pickingMode = PickingMode.Ignore };
+                energy.AddToClassList("angling-gauge__energy");
+                _bar.Add(energy);
                 _fill = new VisualElement { pickingMode = PickingMode.Ignore };
-                _fill.AddToClassList("world-bar__fill");
+                _fill.AddToClassList("angling-gauge__fill");
+                energy.Add(_fill);
                 var gloss = new VisualElement { pickingMode = PickingMode.Ignore };
                 gloss.AddToClassList("world-bar__gloss");
-                _bar.Add(_fill);
-                _bar.Add(gloss);
+                energy.Add(gloss);
+                _reel = new VisualElement { pickingMode = PickingMode.Ignore };
+                _reel.AddToClassList("angling-gauge__reel");
+                _bar.Add(_reel);
+                _reelFill = new VisualElement { pickingMode = PickingMode.Ignore };
+                _reelFill.AddToClassList("angling-gauge__reel-fill");
+                _reel.Add(_reelFill);
+                var net = new VisualElement { pickingMode = PickingMode.Ignore };
+                net.AddToClassList("angling-gauge__net");
+                _reel.Add(net);
+                var reelGloss = new VisualElement { pickingMode = PickingMode.Ignore };
+                reelGloss.AddToClassList("world-bar__gloss");
+                _reel.Add(reelGloss);
                 // Chevrons on the bar: the way to pull (drawn, not written).
                 _arrows = new VisualElement { pickingMode = PickingMode.Ignore };
                 _arrows.AddToClassList("angling-arrows");
@@ -379,7 +397,7 @@ namespace Rth.Client
                     _arrows.Add(chevron);
                     _chevrons[i] = chevron;
                 }
-                _bar.Add(_arrows);
+                energy.Add(_arrows);
                 ui.WorldLayer.Add(_bar);
             }
         }
@@ -454,7 +472,9 @@ namespace Rth.Client
             float depthTarget = move == AnglingMove.Dive || move == AnglingMove.Latch ? 1f : 0f;
             _depth = Mathf.MoveTowards(_depth, depthTarget, dt * 1.8f);
             float out01 = Mathf.Clamp((float)_fight.Distance / Mathf.Max(1, _fight.Distance0), 0f, 3f);
-            float along = Mathf.Max(0.9f, out01 * reach);
+            // It bites well out (at least FarOut tiles), so reeling it in is something you watch happen.
+            float far = Mathf.Max(reach, FarOut);
+            float along = Mathf.Max(0.9f, 0.9f + out01 * (far - 0.9f));
             Vector3 target = player + forward * along + right * (_lateral * Mathf.Clamp01(out01 + 0.25f));
             target.y = _water;
             Vector3 was = _fishPos;
@@ -535,7 +555,12 @@ namespace Rth.Client
             _bar.style.top = p.y;
             float fresh = Mathf.Clamp01(_fight.Energy / (float)Mathf.Max(1, _fight.Energy0));
             _fill.style.width = Length.Percent(fresh * 100f);
-            _fill.style.backgroundColor = fresh > 0.5f ? new Color(0.85f, 0.65f, 0.25f) : fresh > 0.2f ? new Color(0.9f, 0.5f, 0.2f) : new Color(0.55f, 0.85f, 0.4f);
+            bool spent = _fight.Energy == 0;
+            // How much of the line is in: from where it bit (empty) to the net (full: landed). Further
+            // out than where it bit (a run) shows empty and reddens.
+            float inShare = Mathf.Clamp01(1f - _fight.Distance / (float)Mathf.Max(1, _fight.Distance0));
+            _reelFill.style.width = Length.Percent(inShare * 100f);
+            _reelFill.style.backgroundColor = _fight.Distance > _fight.Distance0 ? new Color(0.75f, 0.3f, 0.25f) : new Color(0.4f, 0.72f, 0.9f);
 
             bool telling = _fight.InTell && _fight.TellVisible;
             AnglingMove asks = telling ? _fight.Tell : move;
@@ -560,7 +585,8 @@ namespace Rth.Client
                     ? (order < AnglingInput.Strength(_lastInput) ? 1f : 0.25f)
                     : 0.45f + 0.55f * Mathf.Clamp01(Mathf.Sin(Time.time * 8f - order * 1.2f) * 0.5f + 0.5f);
             }
-            Color edge = letGo ? Color.Lerp(new Color(0.35f, 0.08f, 0.06f), new Color(1f, 0.25f, 0.2f), 0.5f + 0.5f * Mathf.Sin(Time.time * 14f))
+            Color edge = spent && !letGo ? Color.Lerp(new Color(0.2f, 0.45f, 0.15f), new Color(0.6f, 1f, 0.45f), 0.5f + 0.5f * Mathf.Sin(Time.time * 6f))
+                : letGo ? Color.Lerp(new Color(0.35f, 0.08f, 0.06f), new Color(1f, 0.25f, 0.2f), 0.5f + 0.5f * Mathf.Sin(Time.time * 14f))
                 : telling ? new Color(1f, 0.8f, 0.35f) : new Color(70 / 255f, 60 / 255f, 48 / 255f);
             _bar.style.borderTopColor = edge;
             _bar.style.borderBottomColor = edge;
@@ -717,6 +743,8 @@ namespace Rth.Client
             _bar?.RemoveFromHierarchy();
             _bar = null;
             _arrows = null;
+            _reel = null;
+            _reelFill = null;
         }
 
         private void OnDisable() => Clear();
