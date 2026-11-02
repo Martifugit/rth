@@ -111,7 +111,7 @@ namespace Rth.Client.Ui.Panels
             VisualElement packPage = UiKit.El(pages);
             packPage.style.flexGrow = 1;
             _packGrid = UiKit.El(packPage, "slot-grid");
-            _packGrid.style.width = 4 * 44f;
+            _packGrid.style.width = UiKit.Slots.Across(4); // the classic 4 x 7, standard slots
             _packGrid.style.alignSelf = Align.Center;
             UiKit.Button(packPage, "Deposit pack", () => Session.BankDeposit(-1, 0)).style.marginTop = 6f;
             AddSideTab(tabs, pages, "Pack", "pack", packPage);

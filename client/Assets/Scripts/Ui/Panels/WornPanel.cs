@@ -23,10 +23,11 @@ namespace Rth.Client.Ui.Panels
         public override int Order => 1;
         public override Key Hotkey => Key.E;
 
-        public override Vector2 MinSize => new Vector2(3 * 40f + 24f, 5 * 40f + 60f + ButtonRowHeight);
+        public override Vector2 MinSize => UiKit.Chrome.Around(3 * Figure.StandardCell, 5 * Figure.StandardCell + ButtonRowHeight);
         public override bool Scrolls => false;
 
-        private const float ButtonRowHeight = 40f;
+        /// <summary>The footer row: its line, margin and padding, and a 30 px icon button with its margins.</summary>
+        private const float ButtonRowHeight = 48f;
 
         /// <summary>A button in the row under the figure.</summary>
         public sealed class WornButton
@@ -50,7 +51,8 @@ namespace Rth.Client.Ui.Panels
 
         protected override void Build(VisualElement root)
         {
-            // The figure takes the space above the buttons, and grows and shrinks with the window.
+            // The figure, at the standard slot size, centred in the space above the buttons. It no
+            // longer grows with the window: big slots read as clumsy beside the pack's.
             VisualElement area = UiKit.El(root, "worn__figure-area");
             area.style.flexGrow = 1;
             area.style.flexShrink = 1;
@@ -58,8 +60,6 @@ namespace Rth.Client.Ui.Panels
             area.style.minHeight = 0;
             area.style.justifyContent = Justify.Center;
             _figure = new Figure(Ui, Session, area, null);
-            area.RegisterCallback<GeometryChangedEvent>(_ =>
-                _figure.Fit(Mathf.Clamp(Mathf.Min(area.contentRect.width / 3f, (area.contentRect.height - 8f) / 5f), 40f, 76f)));
 
             VisualElement row = UiKit.El(root, "footer-row", "worn__buttons");
             foreach (WornButton b in Buttons)
@@ -79,7 +79,13 @@ namespace Rth.Client.Ui.Panels
         /// </summary>
         public sealed class Figure
         {
-            private float _cell = 50f;
+            /// <summary>
+            /// A cell of the figure's 3 x 5 layout: a standard slot and room between slots for the
+            /// faint body lines to show.
+            /// </summary>
+            public const float StandardCell = UiKit.Slots.Size + 10f;
+
+            private float _cell = StandardCell;
 
             private static readonly Dictionary<EquipSlot, Vector2Int> Layout = new Dictionary<EquipSlot, Vector2Int>
             {
@@ -117,10 +123,9 @@ namespace Rth.Client.Ui.Panels
                 foreach (KeyValuePair<EquipSlot, Vector2Int> place in Layout)
                 {
                     EquipSlot slot = place.Key;
-                    VisualElement box = UiKit.El(Root, "slot");
+                    VisualElement box = UiKit.Slots.Make(Root, out VisualElement icon);
                     box.style.position = Position.Absolute;
-                    VisualElement icon = UiKit.El(box, "slot__icon");
-                    icon.pickingMode = PickingMode.Ignore;
+                    box.style.marginLeft = box.style.marginRight = box.style.marginTop = box.style.marginBottom = 0f;
                     box.RegisterCallback<PointerDownEvent>(e =>
                     {
                         ItemDef def = _source(slot);
@@ -141,20 +146,26 @@ namespace Rth.Client.Ui.Panels
                 Fit(_cell);
             }
 
-            /// <summary>Lays the figure out with cells <paramref name="cell"/> pixels square.</summary>
+            /// <summary>
+            /// Lays the figure out with cells <paramref name="cell"/> pixels square (whole pixels);
+            /// <see cref="StandardCell"/> gives standard slots.
+            /// </summary>
             public void Fit(float cell)
             {
+                cell = Mathf.Round(cell);
                 _cell = cell;
                 Root.style.width = 3 * cell;
                 Root.style.height = 5 * cell;
                 Place(_spine, 1.5f * cell - 1f, 0.5f * cell, 2f, 4f * cell);
                 Place(_shoulders, 0.5f * cell, 2.5f * cell - 1f, 2f * cell, 2f);
-                float slot = cell - 8f;
+                float inset = Mathf.Round((cell - UiKit.Slots.Size) / 2f);
+                float slot = cell - 2f * inset;
+                float iconSize = Mathf.Approximately(slot, UiKit.Slots.Size) ? UiKit.Slots.Icon : Mathf.Round(slot * 0.78f);
                 foreach (KeyValuePair<EquipSlot, Vector2Int> place in Layout)
                 {
                     (VisualElement box, VisualElement icon) = _slots[place.Key];
-                    Place(box, place.Value.x * cell + 4f, place.Value.y * cell + 4f, slot, slot);
-                    icon.style.width = icon.style.height = slot * 0.8f;
+                    Place(box, place.Value.x * cell + inset, place.Value.y * cell + inset, slot, slot);
+                    icon.style.width = icon.style.height = iconSize;
                 }
             }
 

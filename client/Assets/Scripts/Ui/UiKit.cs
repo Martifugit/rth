@@ -274,6 +274,123 @@ namespace Rth.Client.Ui
         public static string FormatXp(long xp) =>
             xp >= 10_000_000 ? (xp / 1_000_000f).ToString("0.#") + "M" : xp >= 10_000 ? (xp / 1000f).ToString("0.#") + "K" : xp.ToString("N0");
 
+        // ------------------------------------------------------------------ slots and panel sizes
+
+        /// <summary>
+        /// The one size every item and icon slot inside a panel shares (pack, worn, bank, ability
+        /// book, hymns, shop), so the interface reads as one piece and panels pack tightly. 36 px
+        /// with a 4 px gap: OSRS's own slot is about 36 x 32 at 1x; small enough that the 4 x 7
+        /// pack takes under a third of a 1080-pixel screen, big enough for an icon and a stack
+        /// count to read. Sizes are whole pixels and grids carry a pixel of slack, because at a
+        /// fractional interface scale (1.25 at 1440p) layout snaps widths to the screen's pixels,
+        /// and a grid exactly as wide as its slots can lose a hair and wrap its last column.
+        /// The action bars and buff icons keep their own, larger slots.
+        /// </summary>
+        public static class Slots
+        {
+            /// <summary>A slot's width and height, its border included.</summary>
+            public const float Size = 36f;
+
+            /// <summary>The space between two slots (each carries half of it as its margin).</summary>
+            public const float Gap = 4f;
+
+            /// <summary>The pitch of a slot grid: one slot and one gap.</summary>
+            public const float Cell = Size + Gap;
+
+            /// <summary>The icon inside a slot.</summary>
+            public const float Icon = 28f;
+
+            /// <summary>The class that gives a slot this size (Rth.uss, "panel contents").</summary>
+            public const string Class = "slot--std";
+
+            /// <summary>Slack added to a grid's width so pixel snapping never wraps its last column.</summary>
+            public const float Slack = 1f;
+
+            /// <summary>The width (or height) of <paramref name="count"/> slots in a grid.</summary>
+            public static float Across(int count) => count * Cell + Slack;
+
+            /// <summary>An empty standard slot with its icon element, ready to fill.</summary>
+            public static VisualElement Make(VisualElement parent, out VisualElement icon, params string[] classes)
+            {
+                VisualElement slot = El(parent, "slot", Class);
+                foreach (string c in classes) slot.AddToClassList(c);
+                icon = El(slot, "slot__icon");
+                icon.pickingMode = PickingMode.Ignore;
+                return slot;
+            }
+        }
+
+        /// <summary>
+        /// What a window adds around a panel (Rth.uss: the window's 3 px padding, the body's 8 px and
+        /// the 32 px title bar, and 2 px to spare), so a panel can ask for a minimum size that fits
+        /// its contents exactly.
+        /// </summary>
+        public static class Chrome
+        {
+            public const float Width = 2 * 3f + 2 * 8f + 2f;
+            public const float Height = 32f + 2 * 3f + 2 * 8f + 2f;
+
+            /// <summary>The window size that fits a panel's content of this size.</summary>
+            public static Vector2 Around(float contentWidth, float contentHeight) => new Vector2(contentWidth + Width, contentHeight + Height);
+        }
+
+        // ------------------------------------------------------------------ inner tabs
+
+        /// <summary>
+        /// A quiet row of tabs inside a panel (the ability book's styles): small words, the chosen
+        /// one in gold over a thin line, so they never compete with the window's own tabs. What the
+        /// page links to (its guide, the journal) sits at the right end of the same row as a small
+        /// icon (<see cref="Link"/>).
+        /// </summary>
+        public sealed class SubTabs
+        {
+            public readonly VisualElement Root;
+            private readonly VisualElement _tabs;
+            private readonly VisualElement _links;
+            private readonly System.Collections.Generic.List<(string Id, Label Tab)> _all = new System.Collections.Generic.List<(string, Label)>();
+
+            public SubTabs(VisualElement parent)
+            {
+                Root = El(parent, "subtabs");
+                _tabs = El(Root, "subtabs__tabs");
+                _links = El(Root, "subtabs__links");
+            }
+
+            /// <summary>Removes every tab (links stay).</summary>
+            public void Clear()
+            {
+                _tabs.Clear();
+                _all.Clear();
+            }
+
+            public Label Add(string id, string text, Action onClick)
+            {
+                Label tab = Text(_tabs, text, "subtab");
+                tab.RegisterCallback<ClickEvent>(_ => onClick());
+                _all.Add((id, tab));
+                return tab;
+            }
+
+            /// <summary>A quiet line of text in place of tabs (the quests' "2 of 5 done").</summary>
+            public Label Caption(string text) => Text(_tabs, text, "subtabs__caption");
+
+            /// <summary>Marks the chosen tab.</summary>
+            public void Set(string id)
+            {
+                foreach ((string tabId, Label tab) in _all) tab.EnableInClassList("subtab--on", tabId == id);
+            }
+
+            /// <summary>A small icon at the row's right end that opens something (the guide, the journal).</summary>
+            public VisualElement Link(string icon, string tooltip, Action onClick)
+            {
+                VisualElement link = El(_links, "subtabs__link");
+                Icon(link, IconLibrary.Get(icon), 16f, "subtabs__link-icon").pickingMode = PickingMode.Ignore;
+                link.RegisterCallback<ClickEvent>(_ => onClick());
+                Tooltip(link, () => tooltip);
+                return link;
+            }
+        }
+
         // ------------------------------------------------------------------ responsive grids
 
         /// <summary>
@@ -291,7 +408,7 @@ namespace Rth.Client.Ui
             private readonly float _min;
             private readonly float _max;
             private readonly float _aspect;
-            private const float Gap = 4f;
+            private const float Gap = Slots.Gap;
 
             /// <param name="columns">Columns (or, with rows 0, the most columns it will use).</param>
             /// <param name="rows">Rows to fit in the height, or 0 to let the slots flow.</param>
@@ -325,24 +442,29 @@ namespace Rth.Client.Ui
                 {
                     // Fixed columns and rows: the slots grow and shrink to fit both ways.
                     cols = _columns;
-                    h = Mathf.Clamp(Mathf.Min(space.width / _columns, space.height / _rows * _aspect) / _aspect - Gap, _min, _max);
+                    h = Mathf.Clamp(Mathf.Min((space.width - Slots.Slack) / _columns, space.height / _rows * _aspect) / _aspect - Gap, _min, _max);
                 }
                 else
                 {
                     // Flowing: as many columns as fit at the smallest size, then the slots widen to fill the row.
-                    cols = Mathf.Clamp(Mathf.FloorToInt(space.width / (_min * _aspect + Gap)), 1, Mathf.Max(1, _columns));
-                    h = Mathf.Clamp((space.width / cols - Gap) / _aspect, _min, _max);
+                    cols = Mathf.Clamp(Mathf.FloorToInt((space.width - Slots.Slack) / (_min * _aspect + Gap)), 1, Mathf.Max(1, _columns));
+                    h = Mathf.Clamp(((space.width - Slots.Slack) / cols - Gap) / _aspect, _min, _max);
                 }
-                float w = h * _aspect;
+                // Whole pixels, and a pixel of slack on the grid: at a fractional interface scale the
+                // layout snaps the grid's width to screen pixels, and a grid exactly as wide as its
+                // slots lost a hair, wrapped its last column and sat off centre (seen at 1440p).
+                h = Mathf.Floor(h);
+                float w = Mathf.Floor(h * _aspect);
                 Size = h;
-                Root.style.width = cols * (w + Gap);
+                Root.style.width = cols * (w + Gap) + Slots.Slack;
+                float iconSize = Mathf.Approximately(h, Slots.Size) ? Slots.Icon : Mathf.Round(h * 0.78f);
                 foreach (VisualElement child in Root.Children())
                 {
                     child.style.width = w;
                     child.style.height = h;
                     child.style.marginLeft = child.style.marginRight = child.style.marginTop = child.style.marginBottom = Gap / 2f;
                     VisualElement icon = child.Q(className: "slot__icon");
-                    if (icon != null) icon.style.width = icon.style.height = h * 0.8f;
+                    if (icon != null) icon.style.width = icon.style.height = iconSize;
                 }
             }
         }
