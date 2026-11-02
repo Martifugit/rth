@@ -14,12 +14,12 @@ public class AnglingFightTests
 
     public AnglingFightTests(ITestOutputHelper output) => _out = output;
 
-    internal static AnglingFightDef Perch() => new() { Turn = 10, TellSteps = 16, MoveMinSteps = 30, MoveMaxSteps = 55, Energy = 11200, Distance = 650 };
-    internal static AnglingFightDef Eel() => new() { Turn = 8, Dive = 5, TellSteps = 14, MoveMinSteps = 28, MoveMaxSteps = 50, Energy = 11000, Distance = 700 };
-    internal static AnglingFightDef Pike() => new() { Turn = 10, Dive = 2, Run = 4, TellSteps = 11, MoveMinSteps = 20, MoveMaxSteps = 40, BreatherSteps = 45, Energy = 10400, Distance = 800, RunPull = 120 };
-    internal static AnglingFightDef Lamprey() => new() { Turn = 8, Dive = 2, Run = 2, Latch = 3, TellSteps = 12, MoveMinSteps = 24, MoveMaxSteps = 45, Energy = 10500, Distance = 800 };
-    internal static AnglingFightDef Char() => new() { Turn = 6, Run = 4, Jump = 4, TellSteps = 11, MoveMinSteps = 24, MoveMaxSteps = 44, Energy = 6800, Distance = 700 };
-    internal static AnglingFightDef Sturgeon() => new() { Turn = 6, Dive = 5, Run = 3, Jump = 2, TellSteps = 12, MoveMinSteps = 40, MoveMaxSteps = 80, BreatherSteps = 60, Energy = 12800, Distance = 750 };
+    internal static AnglingFightDef Perch() => new() { Turn = 10, TellSteps = 16, MoveMinSteps = 30, MoveMaxSteps = 55, Energy = 6900, Distance = 650 };
+    internal static AnglingFightDef Eel() => new() { Turn = 8, Dive = 5, TellSteps = 14, MoveMinSteps = 28, MoveMaxSteps = 50, Energy = 6800, Distance = 700 };
+    internal static AnglingFightDef Pike() => new() { Turn = 10, Dive = 2, Run = 4, TellSteps = 11, MoveMinSteps = 20, MoveMaxSteps = 40, BreatherSteps = 45, Energy = 6400, Distance = 800, RunPull = 120 };
+    internal static AnglingFightDef Lamprey() => new() { Turn = 8, Dive = 2, Run = 2, Latch = 3, TellSteps = 12, MoveMinSteps = 24, MoveMaxSteps = 45, Energy = 6500, Distance = 800 };
+    internal static AnglingFightDef Char() => new() { Turn = 6, Run = 4, Jump = 4, TellSteps = 11, MoveMinSteps = 24, MoveMaxSteps = 44, Energy = 4200, Distance = 700 };
+    internal static AnglingFightDef Sturgeon() => new() { Turn = 6, Dive = 5, Run = 3, Jump = 2, TellSteps = 12, MoveMinSteps = 40, MoveMaxSteps = 80, BreatherSteps = 60, Energy = 7900, Distance = 750 };
 
     internal static AnglingRigStats GoodRig() => new() { SnapBuffer = 24, Strength = 110, ReelSpeed = 105, RunDrag = 115, HookHold = 40 };
 
@@ -96,6 +96,25 @@ public class AnglingFightTests
             Assert.True(reelSeconds < 12, name + ": reeling in took " + reelSeconds + "s");
             Assert.True(fightSeconds > reelSeconds * 2, name + ": the fight (" + fightSeconds + "s) should be most of it, not the reeling (" + reelSeconds + "s)");
         }
+    }
+
+    [Fact]
+    public void Reeling_well_but_ignoring_where_it_pulls_never_lands_it()
+    {
+        // Keeping the line in the green is not enough: the fish must be fought (owner, 2026-11-02).
+        int landed = 0;
+        for (uint seed = 1; seed <= 60; seed++)
+        {
+            AnglingFight fight = Fight(Perch(), 400, seed);
+            var bot = new AnglingBot(seed);
+            while (!fight.Over)
+            {
+                byte input = bot.Decide(fight);
+                fight.Step(AnglingInput.Make(AnglingInput.Reeling(input), AnglingInput.PullNone));
+            }
+            if (fight.Outcome == AnglingOutcome.Landed) landed++;
+        }
+        Assert.True(landed < 6, "landed " + landed + " of 60 without ever pulling against the fish");
     }
 
     [Fact]

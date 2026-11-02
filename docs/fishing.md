@@ -113,12 +113,12 @@ much **fight** it has left shows in how often and how hard it thrashes. No panel
 (`Shaders/AnglingOverlay`), so trees and roofs never hide the line or the fish; the line starts at the
 held rod's real tip and has a dark edge; the camera swings round behind you when a fish bites; over the
 you, in the interface's own window and bars (owner: the first gauges and line looked out of place, and
-followed the fish about), a gauge over your head: the fish's **energy** with **chevrons** pointing the way
+followed the fish about), one gauge over your head (tension bar up its left side, owner: one piece, not two): the fish's **energy** with **chevrons** pointing the way
 to pull against it (amber for its tell, green while you answer it, as many lit as you pull hard; a pause
 mark when it runs or leaps: let go) and below it **how much line is in** (full at the net: landed); and
 beside you a vertical **tension bar** with its zones (slack, safe, strained, snapping) and a mark for where
 the line is. Nothing flashes. The line is a plain thin line that bows out to the side the fish pulls; you
-pull the other way, harder the further out the cursor is. **The challenge is tiring the fish** (owner): a
+pull the other way, harder the further out the cursor is. **The fish tires only from being fought** (owner: it was impossible to fail by keeping the line green and ignoring it): pulling against it drains it, harder the harder you pull, faster while you reel and the nearer the line is to the red; a turn you don't answer yanks the line towards the red. **The challenge is tiring the fish** (owner): a
 spent fish gives up whatever it was doing, never gets its breath back, and is reeled in within seconds,
 while a fresh one comes in only slowly; and spray off the fish when you pull it the right way. Tension moves slowly enough for people (reel +5,
 give -6 a step; a rod's red allowance and a hook's slack allowance count double and triple), and

@@ -363,10 +363,11 @@ namespace Rth.Client
 
         /// <summary>
         /// The gauges, in the interface's own pieces (the window skin, the bars of the main bar's
-        /// gauges): over your head, the fish's energy (fish icon) with chevrons on it pointing the way
-        /// to pull, and under it how much line is in (rod icon; full at the net: landed); beside you, a
-        /// vertical bar of the line's tension with its zones (slack, safe, strained, snapping) and a
-        /// mark for where it is now. They stay with you, not with the fish. Nothing flashes.
+        /// gauges), one piece over your head: up its left side a vertical bar of the line's tension
+        /// with its zones (slack, safe, strained, snapping) and a mark for where it is now; beside it
+        /// the fish's energy (fish icon) with chevrons on it pointing the way to pull, and under that
+        /// how much line is in (rod icon; full at the net: landed). It stays with you, not with the
+        /// fish. Nothing flashes.
         /// </summary>
         private void BuildGauges(VisualElement layer)
         {
@@ -387,8 +388,12 @@ namespace Rth.Client
                 return row;
             }
 
+            // One piece: the tension bar up its left side, the energy and line-in bars beside it.
             _bar = El(null, "window", "angling-hud");
-            Row(_bar, "fish", new Color(0.95f, 0.75f, 0.45f), out VisualElement energy);
+            VisualElement body = El(_bar, "angling-hud__body");
+            _tension = El(body, "angling-hud__tension");
+            VisualElement bars = El(body, "angling-hud__bars");
+            Row(bars, "fish", new Color(0.95f, 0.75f, 0.45f), out VisualElement energy);
             _fill = El(energy, "bar__fill");
             _fill.style.backgroundColor = new Color(0.78f, 0.55f, 0.24f);
             El(energy, "bar__gloss");
@@ -399,15 +404,13 @@ namespace Rth.Client
             El(_letGo, "angling-letgo__stroke");
             El(_letGo, "angling-letgo__stroke");
 
-            Row(_bar, "fishing", new Color(0.7f, 0.85f, 0.95f), out _reel).AddToClassList("angling-hud__row--second");
+            Row(bars, "fishing", new Color(0.7f, 0.85f, 0.95f), out _reel).AddToClassList("angling-hud__row--second");
             _reel.AddToClassList("angling-hud__reel");
             _reelFill = El(_reel, "bar__fill");
             _reelFill.style.backgroundColor = new Color(0.35f, 0.62f, 0.8f);
             El(_reel, "bar__gloss");
             El(_reel, "angling-hud__net");
-            layer.Add(_bar);
 
-            _tension = El(null, "window", "angling-tension");
             VisualElement tube = El(_tension, "bar", "angling-tension__bar");
             void Zone(int from, int to, Color colour)
             {
@@ -423,7 +426,7 @@ namespace Rth.Client
             Zone(AnglingFight.RedLine, AnglingFight.TensionMax, new Color(0.5f, 0.13f, 0.1f));
             El(tube, "bar__gloss");
             _tensionMark = El(tube, "angling-tension__mark");
-            layer.Add(_tension);
+            layer.Add(_bar);
         }
 
         private LineRenderer Line(string name, Material material, float width)
@@ -553,8 +556,8 @@ namespace Rth.Client
         }
 
         /// <summary>
-        /// The gauges, kept in place by you: the energy and line-in bars over your head, the tension
-        /// bar at your side. The chevrons point the way to pull (amber for a tell, white, green while
+        /// The gauge, one piece kept in place over your head: the tension bar up its side, the energy
+        /// and line-in bars beside it. The chevrons point the way to pull (amber for a tell, white, green while
         /// you answer it, as many lit as you pull hard); a pause mark when it runs, leaps or latches
         /// (let go); the tension mark sits in its zone. Nothing flashes.
         /// </summary>
@@ -562,18 +565,14 @@ namespace Rth.Client
         {
             Camera cam = Camera.main;
             Transform me = session.world.Local?.transform;
-            if (_bar == null || _tension == null || cam == null || me == null || _bar.panel == null) return;
-            Vector3 head = me.position + Vector3.up * 2.3f, side = me.position + Vector3.up * 1.1f;
+            if (_bar == null || cam == null || me == null || _bar.panel == null) return;
+            Vector3 head = me.position + Vector3.up * 2.3f;
             bool visible = cam.WorldToScreenPoint(head).z > 0f && !over;
             _bar.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
-            _tension.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
             if (!visible) return;
             Vector2 p = RuntimePanelUtils.CameraTransformWorldToPanel(_bar.panel, head, cam);
             _bar.style.left = p.x;
             _bar.style.top = p.y;
-            Vector2 q = RuntimePanelUtils.CameraTransformWorldToPanel(_tension.panel, side, cam);
-            _tension.style.left = q.x;
-            _tension.style.top = q.y;
 
             float fresh = Mathf.Clamp01(_fight.Energy / (float)Mathf.Max(1, _fight.Energy0));
             _fill.style.width = Length.Percent(fresh * 100f);
@@ -758,7 +757,6 @@ namespace Rth.Client
             _root = null;
             _fight = null;
             _bar?.RemoveFromHierarchy();
-            _tension?.RemoveFromHierarchy();
             _tension = null;
             _bar = null;
             _arrows = null;

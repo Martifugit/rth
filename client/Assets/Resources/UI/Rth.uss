@@ -1910,10 +1910,24 @@
 }
 
 .angling-hud {
-    width: 168px;
-    margin-left: -84px;
-    margin-top: -46px;
-    padding: 6px 8px;
+    width: 200px;
+    margin-left: -100px;
+    margin-top: -64px;
+    padding: 8px 10px;
+}
+
+.angling-hud__body {
+    flex-direction: row;
+    align-items: stretch;
+}
+
+.angling-hud__tension {
+    margin-right: 8px;
+}
+
+.angling-hud__bars {
+    flex-grow: 1;
+    justify-content: space-between;
 }
 
 .angling-hud__row {
@@ -1929,15 +1943,15 @@
 }
 
 .angling-hud__bar {
-    height: 16px;
+    height: 20px;
 }
 
 .angling-hud__reel {
-    height: 8px;
+    height: 13px;
 }
 
 .angling-hud__row--second {
-    margin-top: 4px;
+    margin-top: 8px;
 }
 
 .angling-hud__net {
@@ -1949,15 +1963,9 @@
     background-color: rgb(224, 210, 170);
 }
 
-.angling-tension {
-    margin-left: 34px;
-    margin-top: -62px;
-    padding: 5px;
-}
-
 .angling-tension__bar {
-    width: 12px;
-    height: 110px;
+    width: 14px;
+    height: 52px;
     flex-grow: 0;
 }
 
