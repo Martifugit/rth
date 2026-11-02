@@ -13,26 +13,33 @@ namespace Rth.Client.Ui.Panels
     /// The minimap: a round top-down view that turns with the camera (dots: gold creatures, white
     /// players; click to walk), set in a bronze bezel (the skin's minimap-bezel, drawn by
     /// tools/ui-skin/make_skin.py), with a flag where a click sent you and, for the marker set on the
-    /// world map, a pin (or a softly blinking arrow at the edge while it's further off). The compass sits in a medallion at the top left (click to face
+    /// world map, a pin; while either is further off than the map shows, a small, softly blinking
+    /// arrow at the edge points its way. The compass sits in a medallion at the top left (click to face
     /// north), the clock in one at the top right, the region's name low on the map. Round buttons
     /// sit in a cradle around the bottom of the ring: run (running is free: there is no run
     /// energy), the world map, journal, guide, settings and a menu of every window.
     /// </summary>
     public sealed class MinimapPanel : UiPanel
     {
-        // Geometry in panel pixels. The bezel texture is drawn to these numbers: change make_skin.py
-        // (MM_SIZE, MM_C, MM_MAP_R, MM_RING_OUT, MM_ORB_RING, MM_ORB_ANGLES, MM_CRADLE,
-        // MM_MEDAL_RING, the two medallion angles) together with them.
-        private const float Size = 240f;
-        private const float Centre = 120f;
-        private const float MapRadius = 88f;
-        private const float RingOuter = 100.5f;
-        private const float OrbRing = 105f;
-        private const float OrbSize = 30f;
+        // Geometry in panel pixels. The bezel texture is drawn to the design numbers (a 240-pixel
+        // panel): change make_skin.py (MM_SIZE, MM_C, MM_MAP_R, MM_RING_OUT, MM_ORB_RING,
+        // MM_ORB_ANGLES, MM_CRADLE, MM_MEDAL_RING, the two medallion angles) together with them.
+        // Everything is then multiplied by Scale, so the whole piece (map, ring, medallions, buttons)
+        // grows together; the bezel is drawn at 512 pixels, so it stays crisp stretched to the
+        // larger size.
+        private const float Scale = 270f / 240f;
+        private const float Size = 240f * Scale;
+        private const float Centre = 120f * Scale;
+        private const float MapRadius = 88f * Scale;
+        private const float RingOuter = 100.5f * Scale;
+        private const float OrbRing = 105f * Scale;
+        private const float OrbSize = 30f * Scale;
+        private const float OrbIconSize = 17f * Scale;
         private static readonly float[] OrbAngles = { 240f, 216f, 192f, 168f, 144f, 120f };
-        private const float CradleInner = 92f, CradleOuter = 118f, CradleFrom = 108f, CradleTo = 252f;
-        private const float MedalRing = 97f;
-        private const float MedalSize = 40f;
+        private const float CradleInner = 92f * Scale, CradleOuter = 118f * Scale, CradleFrom = 108f, CradleTo = 252f;
+        private const float MedalRing = 97f * Scale;
+        private const float MedalSize = 40f * Scale;
+        private const float CompassSize = 30f * Scale;
         private const float CompassAngle = 315f;
         private const float ClockAngle = 45f;
 
@@ -91,6 +98,10 @@ namespace Rth.Client.Ui.Panels
             return new Vector2(Centre + radius * Mathf.Sin(a), Centre - radius * Mathf.Cos(a));
         }
 
+        /// <summary>Rounds every corner by a radius (the map's circle mask, the medallions' hover ring), which scales with the piece.</summary>
+        private static void Rounded(VisualElement e, float radius) =>
+            e.style.borderTopLeftRadius = e.style.borderTopRightRadius = e.style.borderBottomLeftRadius = e.style.borderBottomRightRadius = radius;
+
         private static void Place(VisualElement e, Vector2 centre, float size)
         {
             e.style.position = Position.Absolute;
@@ -115,10 +126,12 @@ namespace Rth.Client.Ui.Panels
             CreateCamera();
             VisualElement frame = UiKit.El(root, "minimap-frame");
             frame.pickingMode = PickingMode.Ignore;
+            frame.style.width = frame.style.height = Size;
 
             // The map, clipped to a circle: a round border radius with overflow hidden masks its children.
             _map = Round(frame, MapRadius * 2f, "minimap");
             Place(_map, new Vector2(Centre, Centre), MapRadius * 2f);
+            Rounded(_map, MapRadius);
             _map.RegisterCallback<PointerDownEvent>(OnMapClick);
             VisualElement view = UiKit.El(_map, "minimap__view");
             view.pickingMode = PickingMode.Ignore;
@@ -140,7 +153,8 @@ namespace Rth.Client.Ui.Panels
 
             VisualElement compassButton = Round(frame, MedalSize, "minimap__medal");
             Place(compassButton, Polar(CompassAngle, MedalRing), MedalSize);
-            _compass = UiKit.Icon(compassButton, IconLibrary.Get("compass"), 30f);
+            Rounded(compassButton, MedalSize / 2f);
+            _compass = UiKit.Icon(compassButton, IconLibrary.Get("compass"), CompassSize);
             _compass.style.unityBackgroundImageTintColor = UiKit.IconTint;
             _compass.pickingMode = PickingMode.Ignore;
             compassButton.RegisterCallback<PointerDownEvent>(e =>
@@ -152,14 +166,15 @@ namespace Rth.Client.Ui.Panels
 
             VisualElement clockMedal = Round(frame, MedalSize, "minimap__medal", "minimap__medal--clock");
             Place(clockMedal, Polar(ClockAngle, MedalRing), MedalSize);
+            Rounded(clockMedal, MedalSize / 2f);
             _clock = UiKit.Text(clockMedal, "", "minimap__clock");
             _clock.pickingMode = PickingMode.Ignore;
             UiKit.Tooltip(clockMedal, () => UiKit.Title("Time in R'th") + "\nA day passes every real hour.");
 
             _run = Orb(frame, OrbAngles[0], "run", () => UiKit.Title("Run") + "\nTwo tiles a tick instead of one.\n" + UiKit.Colour("Click or press R.", UiKit.Muted), () => Session.ToggleRun());
             Orb(frame, OrbAngles[1], "map", () => "World map (M)", () => Ui.ToggleModal(Ui.Modal<WorldMapModal>()));
-            Orb(frame, OrbAngles[2], "journal", () => "Journal: quests, achievements, bestiary (J)", () => Ui.ToggleModal(Ui.Modal<JournalModal>()));
-            Orb(frame, OrbAngles[3], "guide", () => "Guide: skills and abilities (G)", () => Ui.ToggleModal(Ui.Modal<GuideModal>()));
+            Orb(frame, OrbAngles[2], "journal", () => "Journal (" + Ui.Modal<JournalModal>().Hotkey + ")", () => Ui.ToggleModal(Ui.Modal<JournalModal>()));
+            Orb(frame, OrbAngles[3], "guide", () => "Guides (" + Ui.Modal<GuideModal>().Hotkey + ")", () => Ui.ToggleModal(Ui.Modal<GuideModal>()));
             Orb(frame, OrbAngles[4], "settings", () => "Settings", () => Ui.ToggleModal(Ui.Modal<SettingsModal>()));
             VisualElement menu = Orb(frame, OrbAngles[5], "menu", () => WindowsMenu.IsOpen ? null : "Interface: show or hide windows, lock, reset", null);
             menu.RegisterCallback<PointerDownEvent>(e =>
@@ -177,7 +192,7 @@ namespace Rth.Client.Ui.Panels
         {
             VisualElement orb = Round(parent, OrbSize, "orb");
             Place(orb, Polar(angle, OrbRing), OrbSize);
-            VisualElement i = UiKit.Icon(orb, IconLibrary.Get(icon), 17f);
+            VisualElement i = UiKit.Icon(orb, IconLibrary.Get(icon), OrbIconSize);
             i.AddToClassList("orb__icon");
             i.pickingMode = PickingMode.Ignore;
             if (onClick != null) orb.RegisterCallback<ClickEvent>(_ => onClick());
@@ -289,8 +304,8 @@ namespace Rth.Client.Ui.Panels
 
         /// <summary>
         /// The walk flag and the world map's marker, drawn over the dots. The flag is bold, so you
-        /// can see where you're going at a glance; the marker's arrow at the edge stays small and
-        /// fades in and out, so it guides without nagging.
+        /// can see where you're going at a glance; the arrow at the edge for either one out of sight
+        /// stays small and fades in and out, so it guides without nagging.
         /// </summary>
         private sealed class Marks : VisualElement
         {
@@ -317,27 +332,35 @@ namespace Rth.Client.Ui.Panels
                 p.lineJoin = LineJoin.Round;
                 Vector2 centre = new Vector2(MapRadius, MapRadius);
 
+                // Either marker out of sight shows as the same small arrow at the edge, slowly
+                // fading in and out: gold for the world map's marker, red for the walk flag.
+                float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * Mathf.PI * 2f / EdgeArrowSeconds);
+                float alpha = 0.3f + 0.5f * pulse;
+
                 TileCoord? waypoint = _panel.Session.Waypoint;
                 if (waypoint.HasValue)
                 {
                     Vector2 at = _panel.MapPoint(local, waypoint.Value);
                     Vector2 d = at - centre;
-                    float edge = MapRadius - 11f;
-                    if (d.sqrMagnitude <= edge * edge) PinAt(p, at);
-                    else
-                    {
-                        float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * Mathf.PI * 2f / 1.8f);
-                        ArrowAt(p, centre + d.normalized * edge, d.normalized, 0.35f + 0.5f * pulse);
-                    }
+                    if (d.sqrMagnitude <= EdgeArrowRadius * EdgeArrowRadius) PinAt(p, at);
+                    else ArrowAt(p, centre + d.normalized * EdgeArrowRadius, d.normalized, Pin, alpha);
                 }
 
                 TileCoord? flag = _panel.Session.WalkFlag;
                 if (flag.HasValue)
                 {
                     Vector2 at = _panel.MapPoint(local, flag.Value);
-                    if ((at - centre).sqrMagnitude <= (MapRadius - 4f) * (MapRadius - 4f)) FlagAt(p, at);
+                    Vector2 d = at - centre;
+                    if (d.sqrMagnitude <= (MapRadius - 4f) * (MapRadius - 4f)) FlagAt(p, at);
+                    else ArrowAt(p, centre + d.normalized * EdgeArrowRadius, d.normalized, FlagRed, alpha);
                 }
             }
+
+            /// <summary>Where the edge arrows' tips sit: just inside the ring.</summary>
+            private const float EdgeArrowRadius = MapRadius - 11f;
+
+            /// <summary>One slow fade in and out of an edge arrow.</summary>
+            private const float EdgeArrowSeconds = 1.8f;
 
             /// <summary>A flag on a pole, its foot on the tile.</summary>
             private static void FlagAt(Painter2D p, Vector2 foot)
@@ -384,12 +407,12 @@ namespace Rth.Client.Ui.Panels
                 p.Stroke();
             }
 
-            /// <summary>The marker out of sight: a small arrow at the edge pointing its way (y down).</summary>
-            private static void ArrowAt(Painter2D p, Vector2 tip, Vector2 dir, float alpha)
+            /// <summary>A marker out of sight: a small arrow at the edge pointing its way (y down).</summary>
+            private static void ArrowAt(Painter2D p, Vector2 tip, Vector2 dir, Color colour, float alpha)
             {
                 Vector2 side = new Vector2(-dir.y, dir.x);
                 Vector2 back = tip - dir * 8f;
-                p.fillColor = new Color(Pin.r, Pin.g, Pin.b, alpha);
+                p.fillColor = new Color(colour.r, colour.g, colour.b, alpha);
                 p.strokeColor = new Color(Outline.r, Outline.g, Outline.b, alpha);
                 p.lineWidth = 1.2f;
                 p.BeginPath();
