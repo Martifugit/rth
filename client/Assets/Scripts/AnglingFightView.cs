@@ -482,11 +482,21 @@ namespace Rth.Client
                 z.style.height = Length.Percent(100f * (to - from) / AnglingFight.TensionMax);
                 z.style.backgroundColor = colour;
             }
-            Zone(0, AnglingFight.SlackLine, new Color(0.25f, 0.33f, 0.42f));
-            Zone(AnglingFight.SlackLine, AnglingFight.ComfortLow, new Color(0.16f, 0.16f, 0.14f));
-            Zone(AnglingFight.ComfortLow, AnglingFight.ComfortHigh, new Color(0.22f, 0.4f, 0.2f));
-            Zone(AnglingFight.ComfortHigh, AnglingFight.RedLine, new Color(0.5f, 0.36f, 0.14f));
-            Zone(AnglingFight.RedLine, AnglingFight.TensionMax, new Color(0.5f, 0.13f, 0.1f));
+            // The whole bar: red fading to green from the bottom (slack: the hook will pull free), green
+            // where it's good, green fading to red at the top (the line will snap). Gradients as slices.
+            Color danger = new Color(0.62f, 0.12f, 0.09f), good = new Color(0.24f, 0.5f, 0.2f);
+            void Gradient(int from, int to, Color a, Color b)
+            {
+                const int slices = 12;
+                for (int i = 0; i < slices; i++)
+                {
+                    int lo = from + (to - from) * i / slices, hi = from + (to - from) * (i + 1) / slices;
+                    Zone(lo, hi, Color.Lerp(a, b, (i + 0.5f) / slices));
+                }
+            }
+            Gradient(0, AnglingFight.ComfortLow, danger, good);
+            Zone(AnglingFight.ComfortLow, AnglingFight.ComfortHigh, good);
+            Gradient(AnglingFight.ComfortHigh, AnglingFight.TensionMax, good, danger);
             El(tube, "bar__gloss");
             _tensionMark = El(tube, "angling-tension__mark");
             layer.Add(_bar);
