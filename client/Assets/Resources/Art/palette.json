@@ -168,6 +168,11 @@
   { "name": "Blood", "hex": "#800f14", "group": "humour" },
   { "name": "YellowBile", "hex": "#c79e29", "group": "humour" },
   { "name": "BlackBile", "hex": "#291f29", "group": "humour" },
-  { "name": "Phlegm", "hex": "#9eb299", "group": "humour" }
+  { "name": "Phlegm", "hex": "#9eb299", "group": "humour" },
+  { "name": "SoulPale", "hex": "#9fc4c0", "group": "dead", "soul": true },
+  { "name": "SoulGlow", "hex": "#cfeee6", "group": "dead", "soul": true },
+  { "name": "BonePale", "hex": "#b8b2a2", "group": "dead" },
+  { "name": "DeadSlate", "hex": "#34383d", "group": "dead" },
+  { "name": "DrownedWood", "hex": "#2a2622", "group": "dead" }
  ]
 }

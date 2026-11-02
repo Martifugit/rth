@@ -47,6 +47,18 @@ def palette():
     return _palette
 
 
+_souls = None
+
+
+def souls():
+    """Palette names marked "soul": the client draws them glowing and translucent; here they emit."""
+    global _souls
+    if _souls is None:
+        with open(PALETTE_PATH, encoding="utf-8") as f:
+            _souls = {c["name"] for c in json.load(f)["colours"] if c.get("soul")}
+    return _souls
+
+
 def _srgb_to_linear(c):
     return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
 
@@ -69,6 +81,9 @@ def mat(name):
     bsdf.inputs["Roughness"].default_value = 1.0
     bsdf.inputs["Specular IOR Level"].default_value = 0.0
     m.diffuse_color = rgba(name)
+    if name in souls():
+        bsdf.inputs["Emission Color"].default_value = rgba(name)
+        bsdf.inputs["Emission Strength"].default_value = 0.35
     surface = surfaces().get(name)
     if surface and not nodes.get("Surface"):
         path = os.path.join(TEXTURES_DIR, surface["texture"] + ".png")
@@ -126,7 +141,7 @@ def join(target, others):
 
 # Wood wears a soft grain painted down its texture (Beam: solid timber; Planks, Boards: boards side by
 # side), so its coordinates are laid along each part, not by the axes it faces (box_uvs calls this).
-WOOD = ("Oak", "Timber", "Planks", "Boards", "DeadWood", "Driftwood", "Fence", "Yew")
+WOOD = ("Oak", "Timber", "Planks", "Boards", "DeadWood", "Driftwood", "DrownedWood", "Fence", "Yew")
 BOARDED = ("Planks", "Boards")          # their texture is four boards across, each a quarter of it wide
 BOARD = 0.3                             # a part no wider than this is one board: it gets one of them
 
