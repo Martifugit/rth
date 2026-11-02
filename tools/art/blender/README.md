@@ -240,8 +240,10 @@ Two kits so far. Start from the one that fits, and read its rules before adding 
 **Candles (learned in the realm of the dead, 2026-11-02)**
 - **Do** let candles stand on the ground in clusters, melted heaps and on the water. Masses of them
   are the realm of the dead's light.
-- **Don't** set them on made or odd carriers: candle shelves read as tables and candle-topped stones
-  as strange rocks. Both were rejected and removed.
+- **Do** take care with what carries them. Candles on rocks are fine in principle, but the first
+  pass's candle-topped stone (a boxy stone with a neat row of candles and icicle-like wax runs)
+  looked bad, and the candle shelf read as a table. Both were removed. A carrier must look like a
+  natural rock or ledge first, with candles melted onto it unevenly.
 
 **Props (learned on the stations)**
 - **Do** work out what the thing is for before its shape: a forge is a fire pot, a hood, great bellows on
