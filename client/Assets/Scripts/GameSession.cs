@@ -64,7 +64,11 @@ namespace Rth.Client
         private float _stateReceivedTime;
 
         public bool IsInGame => _state == State.InGame;
-        public bool Running { get; private set; }
+        /// <summary>Whether walking runs. The client owns it (it goes with each walk) and keeps it as client state, so it lasts between sessions.</summary>
+        public bool Running => ClientState.TryGetValue(RunKey, out string run) && run == "true";
+
+        /// <summary>The client state key that remembers run on or off.</summary>
+        public const string RunKey = "run";
         public string PlayerName => _name;
 
         /// <summary>The player's resources as of the last tick, or null before the first one.</summary>
@@ -985,7 +989,7 @@ namespace Rth.Client
         /// <summary>The player's combat level, by the content's formula.</summary>
         public int CombatLevel => Content == null ? 1 : Content.CombatLevel.Of(Level);
 
-        public void ToggleRun() => Running = !Running;
+        public void ToggleRun() => SetClientState(RunKey, Running ? "false" : "true");
 
         /// <summary>Says something in public chat.</summary>
         public void Say(string text) => Send(new ChatMessage { Channel = ChatChannel.Public, Text = text });
