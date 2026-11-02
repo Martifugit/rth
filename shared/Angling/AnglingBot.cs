@@ -130,7 +130,7 @@ namespace Rth.Shared.Angling
             foreach (string part in body.Split(','))
             {
                 int x = part.IndexOf('x');
-                if (x <= 0 || !byte.TryParse(part.Substring(0, x), out byte input) || input > 7) return false;
+                if (x <= 0 || !byte.TryParse(part.Substring(0, x), out byte input) || input > AnglingInput.Max) return false;
                 if (!int.TryParse(part.Substring(x + 1), out int run) || run < 1 || inputs.Count + run > maxSteps) return false;
                 for (int r = 0; r < run; r++) inputs.Add(input);
             }

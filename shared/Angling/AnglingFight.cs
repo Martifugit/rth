@@ -16,17 +16,27 @@ namespace Rth.Shared.Angling
     }
 
     /// <summary>
-    /// What the angler does in one step: hold to reel (bit 0) and a pull (bits 1-2: none, left,
-    /// right, up). Packed into a byte, 0-7.
+    /// What the angler does in one step: hold to reel (bit 0), a pull (bits 1-2: none, left, right,
+    /// up) and how hard (bits 3-4, stored as weakness so 0 is a full pull: strength 3, 2 or 1).
+    /// Packed into a byte, 0-31.
     /// </summary>
     public static class AnglingInput
     {
         public const byte Reel = 1;
         public const byte PullNone = 0, PullLeft = 1, PullRight = 2, PullUp = 3;
+        public const int MaxStrength = 3;
+        public const byte Max = 31;
 
-        public static byte Make(bool reel, byte pull) => (byte)((reel ? Reel : 0) | ((pull & 3) << 1));
+        public static byte Make(bool reel, byte pull, int strength = MaxStrength)
+        {
+            int weakness = MaxStrength - (strength < 1 ? 1 : strength > MaxStrength ? MaxStrength : strength);
+            return (byte)((reel ? Reel : 0) | ((pull & 3) << 1) | ((weakness & 3) << 3));
+        }
+
         public static bool Reeling(byte input) => (input & Reel) != 0;
         public static byte Pull(byte input) => (byte)((input >> 1) & 3);
+        /// <summary>How hard the pull is, 1 to 3 (3 when there is no pull).</summary>
+        public static int Strength(byte input) => MaxStrength - ((input >> 3) & 3) < 1 ? 1 : MaxStrength - ((input >> 3) & 3);
     }
 
     /// <summary>
@@ -65,7 +75,7 @@ namespace Rth.Shared.Angling
         /// <summary>Six minutes: nothing fights longer.</summary>
         public const int MaxSteps = 7200;
         /// <summary>Tuning: tension per step reeling and giving line; energy a correct pull drains; reeling speed (hundredths of a unit a step) and how much of it reaches a fresh fish (per thousand).</summary>
-        public const int TensionReel = 5, TensionGive = 6, DrainCounter = 12, ReelUnits = 800, FreshReel = 100, RunUnits = 500, RunTire = 7;
+        public const int TensionReel = 5, TensionGive = 6, DrainCounter = 16, ReelUnits = 800, FreshReel = 100, RunUnits = 500, RunTire = 7;
         /// <summary>A rod's snapBuffer and a hook's hookHold are counted in these many steps each, so people (not just bots) can keep up.</summary>
         public const int RedStepsPerBuffer = 2, SlackStepsPerHold = 3;
 
@@ -199,7 +209,9 @@ namespace Rth.Shared.Angling
             bool wrongPull = pull != AnglingInput.PullNone && !counter;
             int up = 0, down = 0;
             if (reel) up += TensionReel; else down += TensionGive;
+            int pullStrength = AnglingInput.Strength(input);
             if (wrongPull) up += 2;
+            if (counter) up += pullStrength - 1;     // pulling harder strains the line a little
             int runScale = _def.RunPull * (Revised ? 125 : 100) / Math.Max(1, _rig.RunDrag);
             switch (move)
             {
@@ -229,10 +241,9 @@ namespace Rth.Shared.Angling
 
             // Energy.
             int energy = Energy;
-            if (counter) energy -= DrainCounter;
-            else if (wrongPull && move != AnglingMove.Latch) energy += 3;     // pulling its own way helps it
+            if (counter) energy -= DrainCounter * pullStrength / AnglingInput.MaxStrength;     // the harder, the more it tires
             if (move == AnglingMove.Run && !reel) energy -= RunTire;     // running against the drag tires it
-            if (move != AnglingMove.Latch && move != AnglingMove.Jump && Tension >= ComfortLow && Tension <= ComfortHigh) energy -= 2;
+            if (move != AnglingMove.Latch && move != AnglingMove.Jump && Tension >= ComfortLow && Tension <= ComfortHigh) energy -= 3;
             if (move == AnglingMove.Dive && pull != AnglingInput.PullUp) energy += 8;
             if (move == AnglingMove.Straight && !reel && pull == AnglingInput.PullNone) energy += 4;
             Energy = Clamp(energy, 0, Energy0);

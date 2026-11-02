@@ -68,7 +68,7 @@ public class AnglingFightTests
         _out.WriteLine($"{name}: small {small.Seconds:0}s ({small.Landed:P0}), average {average.Seconds:0}s ({average.Landed:P0}), big {big.Seconds:0}s ({big.Landed:P0}), revised {revised.Seconds:0}s ({revised.Landed:P0})");
 
         Assert.True(small.Landed > 0.9 && average.Landed > 0.85 && big.Landed > 0.7, "a good angler lands most fish");
-        Assert.InRange(small.Seconds, 12, 30);
+        Assert.InRange(small.Seconds, 12, 33);
         Assert.InRange(average.Seconds, 28, 65);
         Assert.InRange(big.Seconds, 55, 130);
         Assert.InRange(revised.Seconds, 85, 190);
@@ -167,7 +167,7 @@ public class AnglingFightTests
             at += taken;
         }
         Assert.Equal(inputs, decoded);
-        Assert.False(AnglingInputs.TryDecode("5:9x3", out _, batch));
+        Assert.False(AnglingInputs.TryDecode("5:40x3", out _, batch));
         Assert.False(AnglingInputs.TryDecode("x", out _, batch));
     }
 

@@ -115,7 +115,7 @@ held rod's real tip and has a dark edge; the camera swings round behind you when
 fish, its **energy** as a bar (like a creature's) with **chevrons** on it pointing the way to pull
 against it: amber while it shows its tell, green while you answer it; when it runs or leaps the
 bar's edge flashes red (let go). **No words** (owner). The line bows out to the side the fish pulls,
-and you pull the other way (the cursor against a fixed line from you to the spot); and
+and you pull the other way (the cursor against a fixed line from you to the spot), **harder the further out** the cursor is (three steps; a harder pull tires the fish faster and strains the line a little; as many chevrons light as you pull hard). A wrong pull no longer gives the fish energy back; and
 spray off the fish when you pull it the right way. Tension moves slowly enough for people (reel +5,
 give -6 a step; a rod's red allowance and a hook's slack allowance count double and triple), and
 letting go during a leap drops the line slack fast. **One fish a cast:** after a fight, landed or

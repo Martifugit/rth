@@ -48,8 +48,11 @@ namespace Rth.Client
         private const string AnglingIntent = "angling";
         private const int BatchSteps = 6;
         private const int AutoReaction = 6;
-        /// <summary>Pixels the cursor must be off the line to count as a pull.</summary>
-        private const float PullDeadZone = 40f;
+        /// <summary>
+        /// How far the cursor is off the line, as a share of the screen's height: under the first, no
+        /// pull; past each further one, a harder pull (1, 2, then 3, the hardest).
+        /// </summary>
+        private static readonly float[] PullSteps = { 0.03f, 0.09f, 0.17f };
         /// <summary>How far to each side a fish swings (tiles).</summary>
         private const float Swing = 2.2f;
 
@@ -247,10 +250,11 @@ namespace Rth.Client
             Keyboard keyboard = Keyboard.current;
             bool reel = keyboard != null && keyboard.spaceKey.isPressed && !Ui.UiRoot.IsTyping;
             byte pull;
+            int strength = AnglingInput.MaxStrength;
             if (SteerWithMouse)
             {
                 Mouse mouse = Mouse.current;
-                pull = mouse != null ? Steer(mouse.position.ReadValue()) : AnglingInput.PullNone;
+                (pull, strength) = mouse != null ? Steer(mouse.position.ReadValue()) : (AnglingInput.PullNone, 0);
             }
             else
             {
@@ -260,7 +264,7 @@ namespace Rth.Client
                 pull = seen == AnglingMove.Left ? AnglingInput.PullRight : seen == AnglingMove.Right ? AnglingInput.PullLeft
                     : seen == AnglingMove.Dive ? AnglingInput.PullUp : AnglingInput.PullNone;
             }
-            return AnglingInput.Make(reel, pull);
+            return AnglingInput.Make(reel, pull, strength);
         }
 
         /// <summary>
@@ -268,23 +272,38 @@ namespace Rth.Client
         /// (not to the fish, which swings: the line to it would lean with it and turn the controls
         /// round). Right of it pulls right, left of it pulls left, below you lifts.
         /// </summary>
-        private byte Steer(Vector2 pointer)
+        private (byte Pull, int Strength) Steer(Vector2 pointer)
         {
             Camera cam = Camera.main;
             Transform me = session.world.Local?.transform;
-            if (cam == null || me == null) return AnglingInput.PullNone;
+            if (cam == null || me == null) return (AnglingInput.PullNone, 0);
             Vector3 a = cam.WorldToScreenPoint(me.position + Vector3.up * 1.0f), b = cam.WorldToScreenPoint(new Vector3(_spot.x, _water, _spot.z));
-            if (a.z < 0f || b.z < 0f) return AnglingInput.PullNone;
+            if (a.z < 0f || b.z < 0f) return (AnglingInput.PullNone, 0);
             Vector2 axis = new Vector2(b.x - a.x, b.y - a.y);
-            if (axis.sqrMagnitude < 1f) return AnglingInput.PullNone;
+            if (axis.sqrMagnitude < 1f) return (AnglingInput.PullNone, 0);
             axis.Normalize();
-            Vector2 right = new Vector2(axis.y, -axis.x);   // the screen's right of the line from you to the fish
+            Vector2 right = new Vector2(axis.y, -axis.x);   // the screen's right of the line from you to the spot
             Vector2 rel = pointer - new Vector2(a.x, a.y);
             float along = Vector2.Dot(rel, axis), side = Vector2.Dot(rel, right);
-            if (along < -PullDeadZone && Mathf.Abs(side) < -along) return AnglingInput.PullUp;
-            if (side > PullDeadZone) return AnglingInput.PullRight;
-            if (side < -PullDeadZone) return AnglingInput.PullLeft;
-            return AnglingInput.PullNone;
+            float h = Mathf.Max(1f, Screen.height);
+            // Below you (back from the spot), more than to the side: lift, as hard as it is far back.
+            if (along < 0f && Mathf.Abs(side) < -along)
+            {
+                int lift = StepOf(-along / h);
+                return lift == 0 ? (AnglingInput.PullNone, 0) : (AnglingInput.PullUp, lift);
+            }
+            int hard = StepOf(Mathf.Abs(side) / h);
+            if (hard == 0) return (AnglingInput.PullNone, 0);
+            return (side > 0f ? AnglingInput.PullRight : AnglingInput.PullLeft, hard);
+        }
+
+        /// <summary>How hard a pull this far out is: 0 (none) to 3.</summary>
+        private static int StepOf(float share)
+        {
+            int step = 0;
+            for (int i = 0; i < PullSteps.Length; i++)
+                if (share >= PullSteps[i]) step = i + 1;
+            return step;
         }
 
         /// <summary>Whether this input answers what the fish is doing now (the mark goes green).</summary>
@@ -535,7 +554,11 @@ namespace Rth.Client
                 c.style.borderRightColor = colour;
                 // A wave runs along them the way to pull.
                 int order = asks == AnglingMove.Right ? _chevrons.Length - 1 - i : i;
-                c.style.opacity = 0.45f + 0.55f * Mathf.Clamp01(Mathf.Sin(Time.time * 8f - order * 1.2f) * 0.5f + 0.5f);
+                // While you answer it, as many light up as you pull hard (the far cursor, all three); else a wave runs along them the way to pull.
+                bool answering = !telling && Answers(move, _lastInput);
+                c.style.opacity = answering
+                    ? (order < AnglingInput.Strength(_lastInput) ? 1f : 0.25f)
+                    : 0.45f + 0.55f * Mathf.Clamp01(Mathf.Sin(Time.time * 8f - order * 1.2f) * 0.5f + 0.5f);
             }
             Color edge = letGo ? Color.Lerp(new Color(0.35f, 0.08f, 0.06f), new Color(1f, 0.25f, 0.2f), 0.5f + 0.5f * Mathf.Sin(Time.time * 14f))
                 : telling ? new Color(1f, 0.8f, 0.35f) : new Color(70 / 255f, 60 / 255f, 48 / 255f);
