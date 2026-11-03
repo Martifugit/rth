@@ -1,0 +1,21 @@
+# The Codex's helper (PLAN.md, "The helper"): a Cloudflare Worker. Deploy: npx wrangler deploy
+name = "rth-codex"
+main = "src/index.js"
+compatibility_date = "2026-11-01"
+
+# Where comments are anchored in the pages, and who wrote what (Discord holds the words): schema.sql.
+[[d1_databases]]
+binding = "DB"
+database_name = "rth-codex"
+database_id = "0cd0064a-b56f-4d9e-8ea9-8add7d81bc0b"
+
+# Not secret: where things are. Secrets are in .dev.vars (sent with `wrangler secret bulk .dev.vars`).
+[vars]
+DISCORD_APP_ID = "1567232969637109922"
+DISCORD_GUILD_ID = "1567227695216201878"
+DISCORD_ROLE_ID = "1567237791060853047"
+DISCORD_NOTICES_CHANNEL = "1567238417161650216"
+DISCORD_COMMENTS_CHANNEL = "1567238197845692498"
+DISCORD_RESOLVED_TAG = "1567238306272641174"
+REPO = "Martifugit/rth"
+GITHUB_APP_ID = "5599564"

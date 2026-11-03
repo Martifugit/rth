@@ -1,0 +1,41 @@
+{
+  "name": "rth-docs-editor",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Local reader and editor for R'th's design docs. A dev tool: never shipped with the game.",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/app.js --bundle --format=esm --minify --sourcemap --outfile=public/app.js",
+    "app": "npm run build && node electron/launch.js",
+    "start": "npm run build && node server.js",
+    "test": "node test/merge.test.js && node test/notes.test.js && node test/spell.test.js && node test/sync.test.js && node test/discord.test.js && node test/ai-diff.test.js && node test/openrouter.test.js",
+    "notes": "node notes.js"
+  },
+  "dependencies": {
+    "@tiptap/core": "^2.27.3",
+    "@tiptap/extension-code": "^2.27.3",
+    "@tiptap/extension-image": "^2.27.3",
+    "@tiptap/extension-link": "^2.27.3",
+    "@tiptap/extension-paragraph": "^2.27.3",
+    "@tiptap/extension-placeholder": "^2.27.3",
+    "@tiptap/extension-table": "^2.27.3",
+    "@tiptap/extension-table-cell": "^2.27.3",
+    "@tiptap/extension-table-header": "^2.27.3",
+    "@tiptap/extension-table-row": "^2.27.3",
+    "@tiptap/extension-task-item": "^2.27.3",
+    "@tiptap/extension-task-list": "^2.27.3",
+    "@tiptap/extension-text": "^2.27.3",
+    "@tiptap/pm": "^2.27.3",
+    "@tiptap/starter-kit": "^2.27.3",
+    "dictionary-en": "^4.0.0",
+    "markdown-it": "^14.1.0",
+    "nspell": "^2.1.5",
+    "tiptap-markdown": "^0.8.10"
+  },
+  "devDependencies": {
+    "electron": "^45.2.1",
+    "esbuild": "^0.25.0",
+    "rcedit": "^5.0.2"
+  },
+  "main": "electron/main.js"
+}

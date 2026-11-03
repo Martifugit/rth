@@ -1,0 +1,4 @@
+# Secrets stay on this computer; they're sent to Cloudflare with wrangler, never committed.
+.dev.vars
+*.pem
+.wrangler/

@@ -1,0 +1,173 @@
+# R'th Codex
+
+A local reader and editor for the design docs, in the game's own look (the bronze frames, Cinzel
+and Alegreya Sans, the icons from `client/Assets/Resources/UI`). A dev tool: nothing here is part
+of the game, the client or the server, and it serves on `127.0.0.1` only.
+
+**Start it:** double-click `codex.cmd`. The first time on a computer without the game's repository, it
+asks where the docs should be and fetches just `docs/` (`electron/firstrun.js`); that copy is read-only
+until you sign in with Discord with the Codex role. It opens the Codex as a desktop app (Electron; `npm run app`). On Windows it runs its own copy of Electron, `node_modules/.codex-app/Codex.exe`, stamped "R'th Codex" with the logo so Task Manager names it (`electron/launch.js`, made once and again when Electron or the logo changes).
+Closing it saves anything still being typed. The same Codex also runs in a browser: `npm start`, then
+<http://127.0.0.1:5178/> (another port: `set PORT=5179` first).
+
+Where it's going (an app anyone can download, synced through git, with AI built in): [PLAN.md](PLAN.md).
+
+## Syncing
+
+The app syncs the docs through git by itself, and the **Sync** icon in the title bar syncs now (hover
+it for where things stand). It only ever commits files under `docs/`: code, scenes and any other
+uncommitted work in the folder are never staged, committed, set aside or overwritten.
+
+- **By itself**, every few minutes once you've stopped typing, and when the app closes: it commits the
+  pages you saved *in the Codex*, takes in others' changes, and sends yours. Doc changes made outside
+  the Codex (an agent, another editor) wait for the button, so half-done work is never sent.
+- **The button** does the same, plus those outside changes.
+- **Others' changes** come in with a merge. If they touch a file you have uncommitted changes in, the
+  Codex waits and says so. If someone changed the same lines of a page as you, nothing is merged and
+  it asks: **Keep mine** or **Use theirs**.
+- The browser version (`npm start`) only syncs on the button. `src/sync.js`; tests in
+  `test/sync.test.js` (on throwaway repositories).
+
+## Using it
+
+- **Layout:** click the logo (top left) to choose what sits beside the page: the Pages pane, the
+  Outline and links pane, and the comments. The choice is kept and holds at any window size. When the
+  window is too narrow for a pane, or you have hidden it, its button in the title bar (beside the logo
+  for Pages, beside help for the Outline) opens it over the page as a sheet; picking a page or a heading
+  closes it. Ctrl+\ toggles Pages, Ctrl+Shift+\ the Outline.
+- **Pages** (left): *Design docs* is the GDD (`docs/gdd/`) in its own order, with *Open questions*
+  at the top; *General* is everything else under `docs/`, and the repository's own Markdown. A gold
+  dot is a page changed since the last commit, a green one a page not in git yet. Type to filter.
+- **Spelling** is checked by the Codex, not the browser (whose dictionary follows its language): US
+  English, plus any word the docs use three times or more (R'th's names). Right-click an underlined
+  word for suggestions, or to add it to `words.txt` beside this tool.
+- **Search** (the box at the top, Ctrl+P or `/`): pages whose title or name match, then every line
+  in every page with those words. Click one to go there, highlighted.
+- **Editing:** the page is always editable, like a Google Doc, and saves itself a moment after
+  you stop typing (Ctrl+S saves at once). The bottom right says when it's saved. Links open on a
+  click (Ctrl+K edits one); a link to a page that doesn't exist is red. The **<>** button (top right)
+  shows the raw text; Esc goes back.
+- **Outline and Links** (right): the page's headings, following where you are; what links here,
+  what it links to, and where it's mentioned without a link.
+- **Open questions** (top of the page list): every GDD page's "Open questions" gathered on one
+  page, by section and page. Click a question to go to it.
+- **New page**: a title and a folder under `docs/`, blank or from a template in `docs/gdd/templates/`.
+
+Markdown shortcuts work as you type: `## ` for a heading, `- ` or `1. ` for a list, `> ` for a
+quote, `**bold**`, `` `code` ``, three backticks for a code block. The toolbar has the rest
+(links with a page picker, tables and their rows and columns, checklists, images).
+
+## Signing in, and Discord
+
+**Sign in** (top right) signs in with Discord, through the Codex's helper (`helper/`, a Cloudflare
+Worker at `rth-codex.rthapp.workers.dev`): anyone in the R'th Discord with the **Codex** role. Signed in,
+the Codex sends your changes to GitHub with an hour-long key from the helper (no GitHub account needed)
+and commits them under your Discord name. Not signed in, it uses this computer's own git login, as before.
+The session stays on this computer (encrypted in the desktop app). `src/discord-account.js`,
+`src/account-button.js`.
+
+Every push to `main` that changes a page posts a line in Discord's `#codex` (who edited which pages),
+each page a link that opens it in the Codex: the helper's `/open` page hands over to `rth-codex://`
+links, which the desktop app registers for itself each time it starts.
+
+**With Discord** (`src/discord-extras.js`, `src/discord-presence.js`): **Ctrl+Shift+C** copies the
+selection, or the section you're in, as Discord's Markdown with a link back (tables as code blocks,
+under 2,000 characters). A conversation pasted from Discord goes in as a quote with who said what
+(Ctrl+Z takes it out); a pasted image, or a Discord image link, is saved under `docs/images/pasted/`,
+because Discord's links expire. Your Discord profile shows "Editing <page> in the R'th Codex" while
+the Codex is open (the Discord app on this computer; off in the logo's menu).
+
+**The helper** (`helper/`): `npx wrangler deploy` from that folder. Its settings are in `wrangler.toml`;
+its secrets live in `helper/.dev.vars` and `helper/github-app.pem` on the owner's computer (git ignores
+both) and are sent to Cloudflare with `wrangler secret`. See [PLAN.md](PLAN.md), "The helper".
+
+## The AI tab
+
+**AI**, beside Outline and Links (Ctrl+J from anywhere, or **Ask** under the comment button beside a
+selection): a conversation about the docs. Chips over its box say what it reads (the page, the
+selected passage, the open comment thread); click one away to leave it out. Enter sends, Shift+Enter
+is a new line. It talks by default; asked for a change ("tighten this"), it edits pages under `docs/` itself,
+and its reply says which pages it changed, with **Show** and **Undo**. A page it changed says so in a
+bar at its top: **Show changes** marks what it added and removed (arrows go from one change to the
+next; pointing at one offers Undo for just that one), **Done** clears the marks. The engine finds the
+changes itself by comparing each page before and after the turn (`src/ai-diff.js`, `src/ai-changes.js`);
+the commit that sends them says "with AI". Ask it to *suggest* (a grammar pass, a careful review) and
+the page stays as it is: the bar goes through its suggestions top to bottom, **Accept** or **Skip**
+each (or **Accept all**). An empty AI tab offers a few things to ask where you are; a question typed in
+search (Ctrl+P) has **Ask AI** at the top; a conversation pasted from Discord is read as who said what. Conversations stay on this computer (`.local/`, or the
+app's own folder), listed under the conversation's title. It uses Claude Code when it's on the computer (`claude` on the PATH, or `CODEX_CLAUDE`); otherwise
+**Sign in with OpenRouter** in the AI tab gives free models on the person's own daily allowance (about
+50 messages; `src/openrouter-*.js`). OpenRouter's answers change pages through edit blocks the engine
+applies, so Show changes and Undo work the same. The engine is `src/assistant.js`; the tab is `src/ai.js`.
+
+## Comments
+
+Comments work as in Google Docs, and never go into the page.
+
+- **On some text:** select it and click the comment button beside it (or Ctrl+Alt+M). The text is
+  highlighted and the comment sits beside it in the margin.
+- **The margin:** closed comments are short cards (two lines, the reply count, "New answer" when
+  Claude has answered). Click one to open its thread: the passage it's on, the comment, and the replies
+  hung from it on one line; long messages and long threads are cut short with *Show more* / *Show
+  earlier replies*. **Hide** (above the margin, or the comment count in the status bar) folds the
+  margin to small markers; it stays folded until you show it again.
+- **On the whole page:** the comment button at the top of the page (or Ctrl+Alt+M with nothing selected).
+  Page comments sit at the top of the margin, marked "On this page".
+- **Reply, resolve, more:** click a comment to reply. The tick resolves it; ⋮ has edit, attach to the
+  selected text, add to the page's Open questions (left unsaved for you to check), move, copy its
+  id, delete. Ctrl+Enter posts.
+- **@Claude** in a comment or reply: Claude answers in the thread. It can read the repository but
+  not change it, and its reply streams in. Once Claude is in a thread, replies go to it without
+  naming it again. Tick **Assign to Claude** for something that needs the docs changed: it may edit
+  pages under `docs/`, and its reply has *See what Claude changed*. (Claude waits for your unsaved edits to save first.)
+- **@agent:** assigns the comment to an agent in the next session (see the CLI below).
+- **Comment history** (the speech-bubble button, top right): every comment across the docs; Open,
+  New from Claude (answers you haven't opened yet, and questions Claude left you), Resolved, All.
+  The badge counts what's new from Claude.
+- **When a page changes**, comments find their text again: the same words, else the most similar
+  words in the same section (taking up the new wording), else the section. If the text is gone, the
+  card says so.
+- **Where they're kept:** signed in, in Discord: each comment is a post in `#codex-comments` (the
+  passage quoted, a link back to the Codex), under your Discord name and avatar; replies are messages
+  in the post, and a reply typed in Discord shows in the margin within about ten seconds. Resolving
+  tags the post *Resolved* and closes it; tagging it *Resolved* in Discord resolves it here too. A post
+  started in Discord shows here with no page: ⋮ > attach it to the selected text. The helper keeps
+  where each comment sits (`helper/src/comments.js`); `src/comment-store.js` keeps a copy and asks for
+  changes. On the owner's computer that copy is also written to `docs/.notes/<page path>.json`, so git
+  keeps their history. Not signed in, comments are only those files, as before. Claude needs `claude`
+  on the PATH, or `CODEX_CLAUDE` set to it; its answers post in Discord as "Claude".
+
+**For agents**, `node tools/docs-editor/notes.js` (kinds: `note` a plain comment, `ask` an @Claude question, `task` assigned): `list [--open] [--kind task|ask|note] [--page p]`,
+`show <id>` (the note, its section, passage and line), `reply <id> "text" [--done]`, `done <id>`,
+and `add --page p [--section "A > B"] [--quote "..."] [--kind ask] "text"` to ask the owner something.
+On the owner's computer it works on the Discord comments through the helper (with the agent key in
+`helper/.dev.vars`; replies post as Claude); elsewhere, or with `CODEX_LOCAL_NOTES=1`, on `docs/.notes/`.
+Replies show in the Codex within seconds.
+
+## How saving works
+
+Saving never rewrites the whole file. The editor's Markdown is compared with what it made of the
+page when it opened, block by block (and row by row in tables, item by item in lists); everything
+you didn't touch is written back exactly as it was, and what you changed is wrapped at 100
+columns like the rest of the docs. So a one-word edit is a one-paragraph diff.
+
+If the file changes on disk while it's open (an agent, git, another window), a page with nothing
+waiting to save just reloads; one you're editing asks which version to keep before anything is
+overwritten.
+
+## Files
+
+- `server.js`: a small Node server (no framework): the page, the docs, search, saving, and change
+  events from watching the folders.
+- `src/app.js`: the page (TipTap with `tiptap-markdown`, plus fixes noted in the code for where its
+  Markdown didn't match the docs); `src/merge.js`: the block-preserving save.
+- Comments: `src/anchor.js` (where a comment belongs, and finding it again), `src/notes-store.js` (the
+  files in `docs/.notes`), `src/notes.js` (the highlights, margin, cards and history), `src/agent-run.js`
+  (running `claude -p` for asks and tasks), `notes.js` (the CLI). `src/links.js` and `src/panels.js`:
+  the link index, the Links tab and the Open questions page. `src/layout.js`: the logo's layout menu,
+  docked panes and sheets.
+- `public/`: the page shell and its stylesheet; `npm run build` bundles `src/` into `public/app.js`
+  (git-ignored, built by `npm start`).
+- Tests: `npm test` (the merge, and the comments: anchoring, the store, links and open questions, in Node). `test/roundtrip.browser.js` edits every kind of block on
+  every page in the browser and checks the saved Markdown renders the same; run it from the
+  console with the Codex open (the file says how). Nothing is saved.

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self'">
+<title>R'th Codex</title>
+<style>
+  body { margin: 0; height: 100vh; display: grid; place-items: center; background: #0c0b09; color: #ddd3bf; font: 15px/1.5 "Segoe UI", system-ui, sans-serif; }
+  main { width: 520px; }
+  h1 { font: 700 18px/1 Georgia, serif; letter-spacing: 3px; text-transform: uppercase; color: #e0c387; text-align: center; margin: 0 0 6px; }
+  .sub { text-align: center; color: #a89c86; margin: 0 0 26px; }
+  .card { border: 1px solid #3b3226; border-radius: 6px; padding: 16px 18px; margin-bottom: 14px; background: #100f0d; }
+  .card h2 { margin: 0 0 4px; font-size: 15px; color: #f0d58c; }
+  .card p { margin: 0 0 12px; color: #a89c86; font-size: 14px; }
+  .row { display: flex; gap: 8px; }
+  input { flex: 1; min-width: 0; height: 30px; padding: 0 9px; border: 1px solid #3b3226; border-radius: 3px; background: #0b0a08; color: #ddd3bf; font: inherit; font-size: 13px; }
+  button { height: 30px; padding: 0 14px; border: 1px solid #5a4a30; border-radius: 4px; background: #1d1912; color: #ddd3bf; font: 600 13px/1 inherit; cursor: pointer; }
+  button:hover { border-color: #c9a25e; color: #fff1d2; }
+  button.gold { background: #c9a25e; border-color: #c9a25e; color: #231707; }
+  button.gold:hover { background: #dcb46c; }
+  button:disabled { opacity: .5; cursor: default; }
+  #status { min-height: 1.5em; color: #a89c86; font-size: 13px; margin-top: 10px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  #status.bad { color: #e0604e; white-space: normal; }
+</style>
+</head>
+<body>
+<main>
+  <h1>R'th Codex</h1>
+  <p class="sub">The design docs for R'th. First, where should they be on this computer?</p>
+
+  <div class="card">
+    <h2>Fetch the docs</h2>
+    <p>The Codex keeps its own copy of the docs and syncs it for you. Most people want this.</p>
+    <div class="row"><input id="folder" spellcheck="false"><button id="browse">Change…</button><button id="fetch" class="gold">Fetch</button></div>
+  </div>
+
+  <div class="card">
+    <h2>I have the game's repository</h2>
+    <p>Use a full copy of the repository you already have (the owner, or anyone working on the game).</p>
+    <button id="choose">Choose its folder…</button>
+  </div>
+
+  <div id="status"></div>
+</main>
+<script>
+  const $ = (s) => document.querySelector(s);
+  const status = (t, bad) => { $("#status").textContent = t || ""; $("#status").className = bad ? "bad" : ""; };
+  const busy = (on) => document.querySelectorAll("button").forEach((b) => (b.disabled = on));
+  window.codex.defaults().then((d) => { $("#folder").value = d.folder; });
+  window.codex.onProgress((t) => status(t));
+  $("#browse").onclick = async () => { const p = await window.codex.pickParent(); if (p) $("#folder").value = p + (/[\\/]$/.test(p) ? "" : "\\") + "R'th Codex"; };
+  $("#fetch").onclick = async () => {
+    busy(true); status("Fetching the docs…");
+    const r = await window.codex.fetch($("#folder").value.trim());
+    if (r?.error) { status(r.error, true); busy(false); } else status("Done. Opening the Codex…");
+  };
+  $("#choose").onclick = async () => {
+    const r = await window.codex.choose();
+    if (r?.error) status(r.error, true);
+  };
+</script>
+</body>
+</html>

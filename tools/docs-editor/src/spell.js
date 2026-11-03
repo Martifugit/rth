@@ -1,0 +1,84 @@
+// Spelling, checked by the Codex itself rather than the browser (whose dictionary follows the
+// browser's language, so a Norwegian Chrome underlines all of the English docs). US English, plus:
+//   - words the docs use again and again (R'th's names: Pennick, Lowe, phlegm, Cruor...), and
+//   - the project's own word list, words.txt beside this tool ("Add to dictionary"), tracked in git.
+// Node only: server.js answers the page's questions with it.
+
+import fsp from "node:fs/promises";
+import path from "node:path";
+import nspell from "nspell";
+import dictionary from "dictionary-en";
+
+const WORD = /[\p{L}][\p{L}'’]*/gu;
+const REPEATED = 3; // a word the docs use this often is taken to be meant
+
+export function makeSpell({ wordsFile, texts }) {
+  const spell = nspell(dictionary);
+  let project = new Set();     // words.txt, lowercase
+  let corpus = null;           // lowercase words the docs use often
+  const cache = new Map();     // word -> correct?
+
+  async function loadProject() {
+    try {
+      project = new Set((await fsp.readFile(wordsFile, "utf8")).split(/\r?\n/).map((w) => w.trim().toLowerCase()).filter((w) => w && !w.startsWith("#")));
+    } catch { project = new Set(); }
+  }
+  const ready = loadProject();
+
+  async function loadCorpus() {
+    const counts = new Map();
+    for (const text of (await texts()).values()) {
+      const stripped = text.replace(/```[\s\S]*?```/g, " ").replace(/`[^`\n]*`/g, " ").replace(/\]\([^)]*\)/g, "] ");
+      for (const m of stripped.matchAll(WORD)) {
+        const w = m[0].replace(/’/g, "'").replace(/'s?$/i, "").toLowerCase();
+        if (w.length > 2) counts.set(w, (counts.get(w) || 0) + 1);
+      }
+    }
+    corpus = new Set([...counts].filter(([, n]) => n >= REPEATED).map(([w]) => w));
+  }
+
+  /** Whether a word (as written in the page) is spelt right. */
+  function correct(raw) {
+    const word = raw.replace(/’/g, "'").replace(/^'+|'+$/g, "");
+    if (word.length < 2 || /\d/.test(word)) return true;
+    if (/^[A-Z]{2,}s?$/.test(word)) return true;                 // acronyms: GDD, NPC, XP
+    if (/[a-z][A-Z]/.test(word)) return true;                    // code-ish: camelCase
+    if (cache.has(word)) return cache.get(word);
+    const lower = word.toLowerCase(), bare = lower.replace(/'s$/, "");
+    const ok = spell.correct(word) || spell.correct(lower) || spell.correct(bare)
+      || project.has(lower) || project.has(bare) || (corpus && (corpus.has(lower) || corpus.has(bare)));
+    cache.set(word, ok);
+    return ok;
+  }
+
+  return {
+    async check(words) {
+      await ready;
+      if (!corpus) await loadCorpus();
+      return words.filter((w) => typeof w === "string" && !correct(w));
+    },
+    suggest(word) {
+      // Two letters swapped is the commonest typo ("teh"), and the dictionary's own suggestions
+      // rank it poorly: try those first.
+      const swaps = [];
+      for (let i = 0; i < word.length - 1; i++) {
+        const w = word.slice(0, i) + word[i + 1] + word[i] + word.slice(i + 2);
+        if (w !== word && spell.correct(w) && !swaps.includes(w)) swaps.push(w);
+      }
+      return [...new Set([...swaps, ...spell.suggest(word)])].slice(0, 6);
+    },
+    async add(word) {
+      await ready;
+      const w = String(word).trim();
+      if (!w || /\s/.test(w)) return false;
+      project.add(w.toLowerCase());
+      cache.clear();
+      const list = [...project].sort((a, b) => a.localeCompare(b));
+      await fsp.mkdir(path.dirname(wordsFile), { recursive: true });
+      await fsp.writeFile(wordsFile, "# Words the Codex's spelling check accepts (one a line). \"Add to dictionary\" adds here.\n" + list.join("\n") + "\n", "utf8");
+      return true;
+    },
+    /** The docs changed: count their words again (lazily). */
+    invalidate() { corpus = null; cache.clear(); },
+  };
+}
