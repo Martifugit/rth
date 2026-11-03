@@ -217,7 +217,8 @@ Later, only if wanted (the helper can answer Discord's commands the same way): `
    2. *(Done.)* Edits: copies before a turn, *Show changes* (word marks; a mostly rewritten block shown whole), Undo per change and per turn.
    3. *(Done.)* Suggesting instead (a request that says "suggest"), the starting prompts, *Ask AI* from search, pasted conversations.
    4. *(Done; waiting on a first real sign-in.)* OpenRouter, with Sign in with OpenRouter: one request a message (the engine gathers the reading), edits as blocks in the answer that the engine applies, and OpenRouter's free router (`openrouter/free`) as the model, so no list of free models to keep.
-   `@Claude`, "Assign to Claude" and @agent leave the comments once the AI tab does their work.
+   *(Done.)* `@Claude` and "Assign to Claude" left the comments for the AI tab; `@agent` stays (owner,
+   2026-11-03), since agent sessions take their tasks from it.
 5. **First run** *(done)*: choose a folder (or fetch the docs: a blobless, sparse clone of `docs/`, about
    12 MB and seconds), a welcome offering Sign in with Discord and, without Claude, Sign in with
    OpenRouter (or Not now); a fetched copy is read-only until signed in with the Codex role.

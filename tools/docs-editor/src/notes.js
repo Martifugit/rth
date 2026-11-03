@@ -1,7 +1,7 @@
 // Comments on the docs, the way Google Docs does them: select text, add a comment, and it sits in
 // the margin beside the passage, which is highlighted. Reply, resolve with the tick, more in the ⋮
-// menu. Mention @Claude and Claude answers in the thread; tick "Assign to Claude" and it may edit the
-// docs to do what the comment asks; mention @agent and it waits for the next agent session. The
+// menu. Comments are between people; Claude is asked in the AI tab (Ctrl+J), not here (older threads
+// with Claude's answers still show them). Mention @agent and it waits for the next agent session. The
 // comment history (top right) lists every comment across the docs. Closed comments sit in the margin as
 // short cards (two lines and a reply count), or as small markers when the margin is folded ("Hide").
 //
@@ -9,8 +9,8 @@
 // is a ProseMirror decoration, which is drawn but never written back. anchor.js finds each comment's
 // passage again when the page changes.
 //
-// Stored kinds: "note" (a plain comment), "ask" (@Claude), "task" (assigned: to Claude, run now, or to
-// an agent, left for the next session). The CLI (notes.js) shows them to agents by those names.
+// Stored kinds: "note" (a plain comment), "task" (@agent: left for the next agent session), and "ask"
+// (an @Claude question, from before the AI tab). The CLI (notes.js) shows them to agents by those names.
 
 import { Extension } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
@@ -435,13 +435,15 @@ export function makeNotes(ctx) {
     const pop = h("div", { class: "cm-mentions hidden" });
     const submit = h("button", { class: "btn btn-gold", disabled: true, onclick: (ev) => { ev.stopPropagation(); go(); } }, submitLabel);
     const cancel = h("button", { class: "btn", onclick: (ev) => { ev.stopPropagation(); onCancel(); } }, "Cancel");
-    const mentions = () => ({ claude: /(^|\s)@claude\b/i.test(ta.value), agent: /(^|\s)@agent\b/i.test(ta.value) });
+    // @agent only: Claude is asked in the AI tab (PLAN.md, "AI, built in"), so @Claude points there.
+    const mentions = () => ({ claude: false, agent: /(^|\s)@agent\b/i.test(ta.value) });
+    const askedClaude = () => /(^|\s)@claude\b/i.test(ta.value);
     const refresh = () => {
       ta.style.height = "auto"; ta.style.height = Math.min(220, ta.scrollHeight + 2) + "px";
       const m = mentions();
       assignRow.classList.toggle("hidden", !(allowAssign && m.claude));
-      warn.classList.toggle("hidden", !(m.claude && N.agent && !N.agent.ok));
-      warn.textContent = N.agent && !N.agent.ok ? "Claude isn't available: " + N.agent.error : "";
+      warn.classList.toggle("hidden", !askedClaude());
+      warn.textContent = "Comments are for people now: ask Claude in the AI tab (Ctrl+J), with this passage selected.";
       submit.disabled = !ta.value.trim();
       submit.textContent = m.claude && N.agent?.ok ? (assign.checked ? "Assign" : "Ask Claude") : m.agent ? "Assign" : submitLabel;
       layout();
@@ -450,7 +452,7 @@ export function makeNotes(ctx) {
     const word = () => { const m = ta.value.slice(0, ta.selectionStart).match(/(^|\s)@(\w*)$/); return m ? m[2] : null; };
     const showPop = () => {
       const w = word();
-      const all = [["Claude", "answers here; can edit pages if assigned"], ["agent", "picks it up in the next agent session"]];
+      const all = [["agent", "picks it up in the next agent session"]];
       picks = w === null ? [] : all.filter(([n]) => n.toLowerCase().startsWith(w.toLowerCase()));
       pop.classList.toggle("hidden", !picks.length);
       sel = Math.min(sel, Math.max(0, picks.length - 1));
@@ -485,7 +487,7 @@ export function makeNotes(ctx) {
 
   function draftCard() {
     const ed = editor({
-      key: "draft", placeholder: N.draft?.wholePage ? "Comment on this page, or ask @Claude about it" : "Comment or add @Claude", submitLabel: "Comment",
+      key: "draft", placeholder: N.draft?.wholePage ? "Comment on this page" : "Comment", submitLabel: "Comment",
       onCancel: () => { N.draft = null; draw(); render(); },
       onSubmit: async ({ text, claude, agent, assign }) => {
         const kind = assign || (agent && !claude) ? "task" : claude ? "ask" : "note";
@@ -508,12 +510,12 @@ export function makeNotes(ctx) {
   function replyBox(n) {
     const running = N.runs.has(n.id);
     const ed = editor({
-      key: "reply-" + n.id, placeholder: running ? "Claude is answering…" : "Reply or add @Claude", submitLabel: "Reply",
+      key: "reply-" + n.id, placeholder: running ? "Claude is answering…" : "Reply", submitLabel: "Reply",
       initial: N.drafts.get(n.id) || "",
       onCancel: () => { N.drafts.delete(n.id); N.active = null; draw(); render(); },
       onSubmit: async ({ text, claude, assign }) => {
         // A reply to Claude carries on the conversation without naming it again.
-        const talkingToClaude = claude || (n.kind !== "note" && n.thread.some((e) => e.by === "agent" && e.run));
+        const talkingToClaude = false; // Claude is asked in the AI tab now
         const run = talkingToClaude && N.agent?.ok && !running;
         if (run && (assign || n.kind === "task") && N.page === S.path && !(await ctx.saveNow())) return; // Claude edits the saved page
         if (assign && n.kind !== "task") await api("/api/notes/" + n.id, { method: "PATCH", body: JSON.stringify({ kind: "task" }) });

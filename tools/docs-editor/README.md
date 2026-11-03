@@ -116,10 +116,8 @@ Comments work as in Google Docs, and never go into the page.
 - **Reply, resolve, more:** click a comment to reply. The tick resolves it; ⋮ has edit, attach to the
   selected text, add to the page's Open questions (left unsaved for you to check), move, copy its
   id, delete. Ctrl+Enter posts.
-- **@Claude** in a comment or reply: Claude answers in the thread. It can read the repository but
-  not change it, and its reply streams in. Once Claude is in a thread, replies go to it without
-  naming it again. Tick **Assign to Claude** for something that needs the docs changed: it may edit
-  pages under `docs/`, and its reply has *See what Claude changed*. (Claude waits for your unsaved edits to save first.)
+- **Claude isn't in comments any more:** comments are between people; ask Claude in the AI tab
+  (Ctrl+J, or Ask beside a selection). Older threads keep the answers Claude left in them.
 - **@agent:** assigns the comment to an agent in the next session (see the CLI below).
 - **Comment history** (the speech-bubble button, top right): every comment across the docs; Open,
   New from Claude (answers you haven't opened yet, and questions Claude left you), Resolved, All.

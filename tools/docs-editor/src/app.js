@@ -960,7 +960,7 @@ function helpDialog() {
   const k = (keys, what) => [h("span", {}, keys.split(" ").map((x) => h("kbd", { style: "margin-right:3px" }, x))), h("span", {}, what)];
   modal("Keys", h("div", { class: "keys" },
     k("Ctrl P", "Search: pages by name, then the text of every page"),
-    k("Ctrl Alt M", "Comment on the selected text"), k("Ctrl Enter", "Post a comment. Write @Claude in it to have Claude answer"),
+    k("Ctrl Alt M", "Comment on the selected text"), k("Ctrl Enter", "Post a comment. Write @agent in it to leave it for the next agent session"),
     k("Ctrl J", "Ask the AI (with the selected text, if any)"), k("Ctrl Shift C", "Copy for Discord: the selection, or the section you're in, with a link back"),
     k("Ctrl K", "Add or edit a link"), k("Ctrl B", "Bold"), k("Ctrl I", "Italic"), k("Ctrl Z", "Undo"),
     k("Ctrl S", "Save now (pages also save by themselves)"), k("Alt ←", "Back"),
