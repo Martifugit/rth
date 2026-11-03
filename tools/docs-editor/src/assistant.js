@@ -268,7 +268,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
       if (hit) {
         const n = hit.note;
         chips.thread = { id: n.id, quote: n.anchor?.quote?.slice(0, 200) || "" };
-        const lines = n.thread.map((e) => `${e.by === "agent" ? "Claude" : e.who?.name || "The owner"}: ${e.text}`).join("\n\n");
+        const lines = n.thread.map((e) => `${e.by === "agent" ? "R'th AI (you)" : e.who?.name || "The owner"}: ${e.text}`).join("\n\n");
         parts.push(`The comment thread open beside the page (thread ID ${n.id})${n.anchor?.quote ? `, on "${n.anchor.quote.slice(0, 300)}"` : ""}:\n${lines}`);
       }
     }

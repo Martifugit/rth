@@ -1,6 +1,6 @@
 // Comments in Discord (PLAN.md, "Comments in Discord"). Each comment is a post in the forum channel;
 // its replies are messages in the post. The Codex posts through one webhook, which carries each
-// person's Discord name and avatar (and "Claude" for agents), so it reads as them in Discord. Discord
+// person's Discord name and avatar (and "R'th AI" for the AI), so it reads as them in Discord. Discord
 // holds the words; the database (schema.sql) holds what it can't: the page and passage, kind, status.
 //
 // Reading: Discord only tells programs that stay connected about new messages, and the helper doesn't,
@@ -63,7 +63,9 @@ async function postAs(env, who, content, { thread, name } = {}) {
   return discord(env, `/webhooks/${w.id}/${w.token}?${q}`, { method: "POST", body, auth: false });
 }
 
-const CLAUDE = { name: "Claude", avatar: null };
+// The AI's comments, whichever AI wrote them (Claude, an OpenRouter model, an agent session): one name
+// and the R'th logo (from the public repository) as its avatar.
+const AI = { name: "R'th AI", avatar: "https://raw.githubusercontent.com/Martifugit/rth/main/tools/docs-editor/assets/logo-96.png" };
 
 // ----------------------------------------------------------------------------- reading from Discord
 
@@ -164,9 +166,9 @@ export async function comments(req, env, url, as) {
   }
   if (req.method !== "POST") return null;
   const b = await req.json().catch(() => ({}));
-  // Agents post as Claude: with the owner's agent key, or from someone's Codex running Claude for them.
+  // The AI posts as R'th AI: with the owner's agent key, or from someone's Codex running Claude for them.
   const by = as.kind === "agent" || b.by === "agent" ? "agent" : "person";
-  const who = by === "agent" ? CLAUDE : as.user;
+  const who = by === "agent" ? AI : as.user;
 
   if (path === "/comments") {
     const text = String(b.text || "").trim();

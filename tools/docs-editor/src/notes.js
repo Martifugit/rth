@@ -277,10 +277,10 @@ export function makeNotes(ctx) {
 
   // ----------------------------------------------------------------------------- cards
 
-  // Who wrote an entry: Claude, someone signed in with Discord (their name and avatar, `who`), or, for
+  // Who wrote an entry: the AI (R'th AI, with the logo, whichever AI it was), someone signed in with Discord (their name and avatar, `who`), or, for
   // comments kept in docs/.notes/, the owner (git's name). A draft is by whoever is signed in here.
   const person = (by, who) => {
-    if (by === "agent") return { name: "Claude", cls: "claude", initial: "C" };
+    if (by === "agent") return { name: "R'th AI", cls: "claude", initial: "R", avatar: "/logo.png" };
     const w = who || (N.me && by === "owner" ? N.me : null);
     if (w) return { name: w.name, cls: "person", initial: (w.name?.[0] || "?").toUpperCase(), avatar: w.avatar };
     return { name: N.owner, cls: "owner", initial: (N.owner[0] || "Y").toUpperCase() };
@@ -722,7 +722,7 @@ export function makeNotes(ctx) {
   function updateHistoryBadge() {
     const n = N.history.all.filter(forYou).length;
     const b = $("#historyCount");
-    if (b) { b.textContent = n ? String(n) : ""; b.title = n ? `${n} new from Claude: answers you haven't opened yet, or questions Claude left you` : ""; }
+    if (b) { b.textContent = n ? String(n) : ""; b.title = n ? `${n} new from the AI: answers you haven't opened yet, or questions it left you` : ""; }
   }
 
   function toggleHistory() {
