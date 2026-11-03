@@ -22,7 +22,29 @@ this here?" and find the answer written down. A thing is there because:
 - **it fits the place**: the resource belongs to this ground, the building to this town's trade;
 - **it ties the area to another**: a road, an errand, a resource another area needs.
 
-"It would be nice" isn't a reason.
+"It would be nice" isn't a reason, and neither is "towns usually have one". A list of what a
+place holds, with no reasoning behind each entry, is an assumption, not a plan.
+
+**How an area is designed (the owner, 2026-11-03):**
+- **Places aren't tiered.** An area is never "the tier 1 to 2 place". Activities and tiers are spread
+  all over the world, so a low-level area isn't done once and left: a start area can hold an
+  end-game resource, a late area a low-level one. Each thing goes where it fits the land and the
+  people, at whatever level that makes it.
+- **The plan decides only its own area.** Say what this area offers and what it needs from its
+  neighbours, as questions for their plans. Never "the next area takes over X" or "this area must
+  not hold Y".
+- **Proposals, not decrees.** Little is known about the whole map yet. Write what is proposed, the
+  reasons, and the assumptions it rests on; avoid "must", "only", "everything", "never".
+- **Not every skill everywhere.** A town is not a skilling hub, least of all the spawn. Packing every
+  skill round a square keeps players standing still and makes the early game far too fast. An
+  area holds the skills its land and people give it, spread over its ground, so doing them means
+  going out into it.
+- **Reasons to come are incentives,** for early, mid and late players: what they want here (a
+  quest, a person, a resource worth the trip, a way somewhere, an achievement, something to find).
+  How a player happens to end up here (a respawn point, passing through) isn't a reason.
+- **Derive, then place.** Start from what the area is for at each band (section 1), work out what
+  that needs, then place each thing where the land, its history or its people give it a reason to
+  be. Say what else was considered when the choice isn't obvious.
 
 ---
 
@@ -31,7 +53,12 @@ this here?" and find the answer written down. A thing is there because:
 - **Its part in the wider region.** Which region of the continent it belongs to (the heartland, the
   spine's foothills, Gall's coast...), and what this area gives the region that its other areas
   don't.
-- **When players come:** the level bands it serves (early, mid, late), and the main reason at each.
+- **Why players come, early, mid and late:** the incentives and features that draw them at each
+  stage of the game. Early: what it introduces and what makes them curious to go further. Mid: the
+  quest lines, people and ways onward that bring them back. Late: what the wider area offers (its
+  achievement set's higher tiers, resources worth collecting, endgame ways in).
+- **What makes players leave and explore:** the roads, errands, quests and things seen from here
+  that pull them out, and in which directions.
 - **The one picture:** the view a player remembers.
 
 ## 2. How players find it, and what catches the eye
@@ -81,8 +108,11 @@ A table with **every skill in skills.json as a row**, including the ones with no
   [../skills.md](../skills.md) 2.2: where each tier "tends to be", and abundant at home, sparse
   elsewhere. A fishing village has fish and nets, not a gem mine. A quarry needs rock showing at the
   surface. A resource out of its biome needs a reason.
-- **Pace:** check the counts against the pace table (skills.md 2.1). Is there enough of it, at
-  these levels, for the time players are meant to spend here?
+- **Spread, not stacked:** say how the area's content spreads across levels (something for early,
+  mid and late players where the land gives a reason), and how far apart it is: a skill done here
+  should mean going somewhere in the area, not standing in town.
+- **Pace:** check the counts against the pace table (skills.md 2.1): enough of it, for the players
+  expected here at once?
 - **Supports:** for each piece of content, what it supports: a quest step (`quest:<id>`), a task
   giver, a station nearby that uses it, another area's need.
 
@@ -157,6 +187,11 @@ Then **the wider region:** how this area fits its region's whole, and what it mu
 One per level band the area serves, as a player would play it:
 - where they arrive from, what they see and do, in order, with rough minutes;
 - where they go next, and why they come back.
+
+## 12a. Achievements
+
+The area's set of achievements, by tier (easy to master): what each tier asks of the player across
+the area's places, so the higher tiers bring late players back to an early area.
 
 ## 13. Kept for later
 
