@@ -29,8 +29,14 @@ updated: 2026-11-03
 | Quests | the quests that touch it, linked |
 | The one picture | the view a player remembers, from where |
 
+## The map
+
+The plan drawn over the ground (`tools/world plan render <area>`, written to
+`world/renders/plan-<area>.png`), regenerated from the plan data whenever it changes.
+
 ## 1. What the area is for
 
+- **Goals:** two to four, each naming the pillar it serves ([../../rules.md](../../rules.md) section 5).
 - **Its part in the realm:** what this area gives its realm that its other areas don't.
 - **Why players come, early, mid and late:** the incentives at each stage (a quest, a person, a
   resource worth the trip, a way onward, an achievement, something to find). What it introduces,
@@ -157,10 +163,14 @@ Then **walking times** from the centre to the main places (tiles, then seconds: 
 | Neighbour | What crosses (roads, rivers, views, errands, resources) | Level step at the border | Questions for its page |
 | --- | --- | --- | --- |
 
-## 17. Walkthroughs
+## 17. Flow and walkthroughs
 
-One per stage the area serves, as a player would play it: where they arrive from, what they see and
-do in order, where they go next, and why they come back.
+**The flow:** the path most players take through the area the first time (the critical path: the
+beats in order, from arrival to leaving), and the branches off it, as a short diagram or list. Each
+beat names its place, what happens, and what pulls the player to the next.
+
+**Walkthroughs:** one per stage the area serves, as a player would play it: where they arrive from,
+what they see and do in order, where they go next, and why they come back.
 
 ## 18. Achievements
 

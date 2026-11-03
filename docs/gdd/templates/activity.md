@@ -23,6 +23,11 @@ updated: 2026-11-03
 | Committed | can you leave mid-way? |
 | Rewards | what players come back for |
 
+## Goals
+
+What the activity is for in play, as two to four goals, each naming the pillar it serves and one thing it
+rules out. ([../rules.md](../rules.md) section 5.)
+
 ## The idea
 
 What makes it worth doing, and what it tests.

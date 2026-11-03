@@ -24,6 +24,11 @@ updated: 2026-11-03
 | Rewards | XP, items, unlocks, what opens next |
 | Line | the quest line, linked, and where in it |
 
+## Goals
+
+What the quest is for in play, as two to four goals, each naming the pillar it serves and one thing it
+rules out. ([../rules.md](../rules.md) section 5.)
+
 ## The premise
 
 What is going on, and why the player is drawn in.

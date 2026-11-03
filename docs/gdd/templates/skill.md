@@ -20,9 +20,18 @@ updated: 2026-11-03
 | Takes in, gives out | its inputs and outputs, and which skills they connect to |
 | Max level | |
 
-## What it is for
+## Goals
 
-Its place in the game and in the world's story; what the player feels doing it.
+What the skill is for in play, as two to four goals, each naming the pillar it serves and one thing it
+rules out. ([../rules.md](../rules.md) section 5.)
+
+## Ties to the setting
+
+How it looks and works like the world it is in (the humours, the powers, death).
+
+## What it feels like
+
+What the player feels doing it, at level 1 and at level 90.
 
 ## How it is trained
 

@@ -7,8 +7,8 @@ data: []                    # npc id(s), dialogue id(s)
 updated: 2026-11-03
 ---
 
-<!-- A named person with a part to play. Minor folk stay in their area's cast list until they gain a
-     second area or a quest line. Copy to docs/gdd/people/<person-id>.md. Rules: ../rules.md -->
+<!-- Anyone with a name or a part in a quest (a group that acts as one shares a page). Everyone else
+     is a line in their area's cast list. Copy to docs/gdd/people/<person-id>.md. Rules: ../rules.md -->
 
 # <Name>
 

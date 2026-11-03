@@ -17,7 +17,8 @@ Each old doc is one of:
 - **Stays:** production or research; not part of the GDD. May gain links into it.
 - **Mine, then delete:** superseded, but still holding a few ideas worth keeping as `idea` or
   `proposed` lines on the new pages.
-- **Delete:** superseded with nothing left to keep. Listed for the owner's yes before it goes.
+- **Delete:** superseded with nothing left to keep. Deleted as soon as the GDD covers its subject
+  (the owner, 2026-11-03: the GDD is the truth, and git keeps the rest).
 
 ## The map
 
@@ -85,19 +86,20 @@ The data (`server/data/content`) is the game as built. Each built thing gets its
 
 The audit will turn up content with no place in the design: old-map people (the Synod's clerks,
 Tithe's auditors, Meridian's almanac clerks, Cistern's water-sellers), test-yard stand-ins, retired
-names. Each goes on a list for the owner: keep (and give it a page), or cut from the data.
+names. Each is either given a page or cut from the data, and the report says which.
 
 ## The order
 
 | Phase | Work | Needs the owner |
 | --- | --- | --- |
-| 0 | Agree the structure, the rules and the templates (this). | yes: approve or change |
-| 1 | **Skeleton and checker.** The folders and their indexes; `tools/gdd check` and `index`; `world/plans`, `tools/world plan` and `CLAUDE.md` pointed at the area pages; a line in each production doc pointing here. | no |
-| 2 | **The rules of play** (mostly built or agreed, so low risk): skills, systems, and a page for every built item family, creature family, person, quest and achievement, generated from the data, then written up. | the keep-or-cut list |
+| 0 | Agree the structure, the rules and the templates. **Done** (2026-11-03). | done |
+| 1a | **The vision**: overview, pillars and non-goals, audience and scope, loops, progression, economy, look and sound ([vision/](vision/index.md)), drafted from what the docs already say. Everything after is checked against it. | yes: the pillars are the owner's |
+| 1b | **Skeleton and checker.** The folders and their indexes; `tools/gdd check` and `index`; `world/plans`, `tools/world plan` and `CLAUDE.md` pointed at the area pages; a line in each production doc pointing here. | no |
+| 2 | **The rules of play** (mostly built or agreed, so low risk): skills, systems, and a page for every built item family, creature family, person, quest and achievement, generated from the data, then written up. | no; the report lists what was cut |
 | 3 | **The setting and the decisions:** lore.md and the rework into `setting/`; every decision gathered into [decisions.md](decisions.md). | conflicts found between docs |
 | 4 | **The world:** `world/index.md`, the targets, the realms; then the areas, wave 1 first (Tolling, then the lake road, Cruor, the western march), then the old cities mined, then every other area in `world/areas.json` as an `idea` page with what the layout already knows. | each area page, as now |
 | 5 | **Enrich:** the gaps the move shows (areas with no people, creatures with no home, skills with an empty bracket, quest lines with no quests), as proposals. | yes |
-| 6 | **Delete** the old docs on the list above. | yes: one list |
+| 6 | **Delete** whatever old docs are left, once nothing in them is uncovered. | no |
 
 Phases 2 and 3 can run side by side (different folders); 4 needs 2 and 3, because area pages link to
 the skills, creatures and setting.

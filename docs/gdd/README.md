@@ -7,9 +7,12 @@ updated: 2026-11-03
 
 # R'th: the game design document
 
-**Status:** structure proposed (2026-11-03), for the owner's review. Nothing has been moved in yet:
-[migration.md](migration.md) maps every existing doc onto this structure, and the move starts once
-the structure and [rules.md](rules.md) are agreed.
+**Status:** structure agreed in outline (2026-11-03). The move is under way: [migration.md](migration.md)
+maps every existing doc onto this structure. Tolling and Wennow is the first area written to it
+([world/areas/tolling/](world/areas/tolling/index.md)), as the worked example.
+
+**The GDD is the truth.** Where any other doc disagrees with it, the GDD wins and the other doc is
+out of date ([rules.md](rules.md)).
 
 The GDD describes **the game as a player meets it**: the world and what is in it, the people, the
 creatures, the quests, the items, the skills and the rules they play by, and why each thing is the
@@ -48,7 +51,7 @@ isn't argued again.
 
 | Folder | Holds | One page per |
 | --- | --- | --- |
-| [vision/](vision/) | What R'th is: the pillars, who it is for, what it plays and looks like, the shape of a player's progress (stages, tiers, pace). | topic |
+| [vision/](vision/) | What R'th is, and the tests everything else is held to: the overview, the pillars and non-goals, the audience and scope, the core loops, progression, the economy's resource flow, the art and audio direction. **Read first.** | topic |
 | [setting/](setting/) | The canon: the universe, the gods and powers, the peoples and factions, history, death as the world understands it, the threads that run through the game. What is true, including what is sealed. | power, people or thread |
 | [world/](world/) | The continent: its realms, its areas and the places in them. **Where everything is, how much of it, and why it is there.** | realm; area (a folder); large place or dungeon |
 | [people/](people/) | Named people with a part to play: who they are, what they want, what they know, what they offer, where they appear. | person (minor folk stay in their area's cast list) |
@@ -88,3 +91,19 @@ Each kind of fact has **one home**, and every other page links to it. The full t
 An area page says *eight fen rats in the reeds at the river's mouth, because...* and links to
 [creatures/rats](creatures/). The rats' page says what a fen rat is, its level, what it drops and
 yields, and lists the areas it lives in. Neither repeats the other.
+
+## How this structure was chosen
+
+From what practising designers recommend, fitted to a game built by its owner and agents together:
+- **Vision first, kept short; pillars and non-goals as the filter** every feature is judged by
+  (Tim Ryan's concept-document guidelines; Jagex's design pillars for new OSRS content; the GDC
+  "four one-page designs": vision, pillars, loops, resource flow).
+- **Setting, then story, then systems, and systems that serve the setting,** each mechanic with
+  stated goals agreed before its details are argued (Tim Cain).
+- **Many short pages that stand alone, under one index,** each section with a clear home, rather
+  than one long document nobody reads; visible history and dates on every change; pictures where
+  they say more than words (Librande's one-page designs; wiki-style documentation practice).
+- **A living document that records decisions, not a substitute for discussing them** (Ryan).
+- **Zones planned from a map and a flow**: key locations, then the path through them, then the
+  people and creatures that bring them to life (Blizzard's world-creation talks).
+- **Content inventories as data, design intent as prose:** numbers live where the game reads them.

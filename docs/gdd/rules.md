@@ -7,9 +7,15 @@ updated: 2026-11-03
 
 # Writing and editing the GDD
 
-**Status:** proposed (2026-11-03), for the owner's review. These rules are for everyone who touches
-the GDD: the owner, a local agent, a cloud agent. Where they and an older doc disagree, these win
-once agreed.
+**Status:** agreed in outline (2026-11-03). These rules are for everyone who touches the GDD: the
+owner, a local agent, a cloud agent.
+
+**The GDD is the truth** (the owner, 2026-11-03). What a GDD page says is the game's design. Where
+any other doc, an idea note, a brief or an old plan disagrees with it, the GDD wins and the other
+doc is out of date. Ideas still sprinkled through the old docs are raw material: they are taken in,
+rewritten or dropped as each part of the GDD is written, and the old doc is cut down or deleted once
+nothing in it is left to take. A page's status says how settled its design is, not whether it is
+true: an `idea` in the GDD is the current idea, and nothing outside the GDD outranks it.
 
 ## 1. What belongs here
 
@@ -40,7 +46,7 @@ Restated facts drift apart; that is how the old docs came to disagree with each 
 | --- | --- |
 | Where something is, how many, at what level, and why there | the **area** page (or its place page) |
 | What a person is like, wants, knows and offers; which quests they are in | the **person** page |
-| A minor person (a fisher, a warden) | the area page's cast list, until they gain a second area or a quest line |
+| A person with no name and no part in a quest (a warden, a farmer with an errand) | the area page's cast list; they get a page when they gain a name or a quest part |
 | What a creature is, its kinds, levels, behaviour, drops and yields | the **creature** family page |
 | What an item is, its tier, where it comes from, what uses it | the **item** family page |
 | What a skill unlocks at each level, and which places hold each tier | the **skill** page |
@@ -80,7 +86,12 @@ When you catch yourself writing something that belongs to another page: put it t
   for). Then the detail. Then **Set aside** (if any), then **Not decided**.
 - **Size.** A page that passes about 400 lines, or a section that grows its own sections, is split.
   A place gets its own page when it has buildings with insides, several people, or a dungeon. A
-  dungeon always has its own page.
+  dungeon gets its own page when it has more than one room of content; a single room (a cellar, a
+  vault) is a row in its area's "Below ground" table, or part of the place page above it.
+- **Who gets a person page.** Anyone with **a name or a part in a quest**: they have a voice, wants
+  and a story that writers need in one place. A group that acts as one (the fishers) shares a page.
+  Everyone else is a line in their area's cast list. The rule is mechanical on purpose, so no one
+  has to judge who is important enough.
 - **Files and ids.** File name = id, kebab-case, in its section's folder. An area is a folder,
   `world/areas/<area-id>/index.md`, with its places beside it. Area ids are the ones in
   `world/areas.json`. Data ids (`fen_rat`, `hematite_seam`) are written in `code` and never renamed
@@ -111,18 +122,35 @@ When you catch yourself writing something that belongs to another page: put it t
   levels are first guesses, tuned when built"). Once built, the data holds them.
 - **Dates are absolute** (2026-11-03), never "yesterday" or "last week".
 - **Names.** The owner names things. A new place, person or thing is `p-suggestedName` until named
-  ([decisions.md](decisions.md) 2026-10-22); a working name is marked *(working name)*. Names
-  waiting on [../lore-rework/names.md](../lore-rework/names.md) keep the game's current wording.
+  ([decisions.md](decisions.md) 2026-10-22); a working name is marked *(working name)*. Pages use
+  the canon's names and placeholders (p-sworn's church, not the Sanguine Synod); where the built
+  game still says an old name, the page says so once, in its **Built** line.
 - **Original only.** The OSRS and RS3 references set the style and the feel of play, never the
   content: no RuneScape names, items, quests, creatures or text (`CLAUDE.md`, "References and
   boundaries"). A little overlap of ordinary words is fine.
 - **Sealed truths** (what the game knows but never tells the player yet) go in a **Sealed**
   section of a setting or quest page, so writers keep to them and quests don't give them away.
 
-## 5. The design principles every page follows
+## 5. Goals, pillars and principles
 
-Settled by the owner; repeated here so pages can link one place. The full reasoning stays on the
-linked pages.
+**Every thing states its goal.** A system, skill, activity, quest or place says, near the top, what
+it is for in play and which of the game's pillars ([vision/pillars.md](vision/)) it serves. Agree
+the goals before arguing about the parts: if two people disagree about a detail, check first
+whether they agree on what it is for. Something that serves no pillar, or works against one, says
+why it is still worth having, or goes. Pillars and goals are only useful if they rule things out,
+so each names an example of what it rules out.
+
+**Systems serve the setting.** A mechanic should look and work like the world it is in: the humours
+are combat's resources, the church's faith is paid in blood, death is a ferry. A system page says
+how it ties to the setting; one that could sit in any fantasy game says so as a question.
+
+**Pictures where they say more.** Loops, flows, maps and resource diagrams communicate faster than
+prose. Keep them as source the repository can regenerate (a Mermaid or text diagram in the page,
+or a picture drawn by a tool from the data, such as `tools/world plan render`), never a hand-made
+image that silently goes out of date.
+
+The principles below are settled by the owner; repeated here so pages can link one place. The full
+reasoning stays on the linked pages.
 - **Places aren't tiered.** Content and tiers are spread over the world where the land and people
   give them a reason. A start area can hold an end-game resource ([decisions.md](decisions.md)
   2026-10-22, 2026-11-03).
@@ -140,10 +168,10 @@ linked pages.
 ## 6. Editing
 
 - **`idea` and `proposed`:** anyone may write, change or delete them. Say what changed in the commit.
-- **`agreed`:** don't edit silently. Write the change as a proposal: under the page's
-  **Proposed changes** heading, or on a branch, saying what changes and why, and ask the owner.
-  Once the owner agrees, fold it into the page, delete the proposal, and add a line to
-  [decisions.md](decisions.md).
+- **`agreed`:** don't overturn it on your own. If a change is needed, make it as a proposal (a
+  **Proposed changes** heading on the page, or the change on a branch) and say so in the report;
+  the owner says yes, and a line goes into [decisions.md](decisions.md). Fixing wording, links or
+  ids on an agreed page needs no proposal.
 - **In a design discussion, edit only after the owner decides.** Talk it through first; write down
   what was decided, not what was floated.
 - **`built`:** when the game changes, the page changes **in the same commit**: status, ids, anything
@@ -153,8 +181,13 @@ linked pages.
   for an alternative worth not arguing again.
 - **One subject at a time.** When a change ripples into another page, either make that change too
   or leave a question in that page's **Not decided**. Don't leave two pages disagreeing.
-- **Moving content in** (from the old docs): copy what still holds, rewrite it to these rules, drop
-  the rest, and record the source in the page's **Sources** line until the old doc is gone.
+- **Moving content in** (from the old docs): never paste. Rewrite what still holds to these rules,
+  putting each fact on its home page; drop the rest; and record the source in the page's
+  **Sources** line until the old doc is gone. When old docs disagree, the newest decision wins; a
+  disagreement nobody has decided becomes a question in **Not decided**.
+- **Cleaning up after.** Once a GDD page covers an old doc's design, cut the old doc down to what
+  is still production (or delete it) in the same change, and point its references at the GDD. No
+  list for the owner first: git keeps everything.
 
 ## 7. Areas and their plan data
 
@@ -169,12 +202,17 @@ is production and stays in `docs/areas/<area>.md`.
 
 ## 8. How the GDD meets the data
 
-- The GDD is the **intent**; the content data is the **truth for what is built**.
+- The GDD is the **design**; the content data is **what is built so far**. Where they differ, the
+  data is behind (or ahead, if someone built without writing it down: then the page is updated).
 - A `built` entry names its ids, so a reader can go straight to the data.
+- **The Built line.** A page whose subject partly exists (Corvin is in npcs.json but stands in no
+  region since Tolling was rebuilt) keeps the status of its design and adds a **Built** row to its
+  at-a-glance box: what is in the data, what isn't placed, and where the built text differs (old
+  names, old lore).
 - Numbers on a built thing are described, not copied ("hits for a tenth of your blood"), except
   where the number *is* the design (a level requirement, a count placed in an area).
-- Something in the data with no page is either undocumented (write the page) or trash (cut it from
-  the data, with the owner's yes).
+- Something in the data with no page is either undocumented (write the page) or trash: cut it from
+  the data and say so in the report.
 
 ## 9. The checker (proposed)
 

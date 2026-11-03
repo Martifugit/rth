@@ -15,9 +15,18 @@ updated: 2026-11-03
 
 What it is in two or three lines, and what the player sees of it (bars, windows, messages).
 
-## Why it is in the game
+## Goals
 
-What it adds to play, and what it replaces or avoids.
+What the system is for in play, as two to four goals, each naming the pillar it serves and one thing it
+rules out. ([../rules.md](../rules.md) section 5.)
+
+## Ties to the setting
+
+How it looks and works like the world it is in (the humours, the powers, death).
+
+## What it replaces or avoids
+
+Alternatives weighed, and why this one.
 
 ## How it works
 
