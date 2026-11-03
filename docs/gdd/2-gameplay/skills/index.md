@@ -7,7 +7,7 @@ Sixteen skills, each trained from 1 to 100 up the same ten tiers. RuneScape 3 ha
 list short because each skill is a pipeline one player runs for themselves, and every one feeds
 something that matters in a fight ([pillar 1](../../1-overview/pillars.md)).
 
-## The roster
+## list of skill
 
 | Group | Skill | In one line |
 | --- | --- | --- |
