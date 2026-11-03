@@ -875,3 +875,11 @@ body.right-ai.sheet-outline #outlineWin { width: min(400px, calc(100vw - 48px));
 .ai-setup-row .field { flex: 1; min-width: 0; }
 .ai-setup-label { margin-top: 6px; color: var(--silver); }
 .ai-setup a { color: var(--title); }
+
+/* ------------------------------------------------------------------ the Update button (a new release) */
+.update-btn { color: #8fb8e8; }
+.update-btn.ready { color: #fff; background: #2f6fb8; border-color: #4a8ad6; }
+.update-btn.ready:hover { background: #3a7fcf; color: #fff; }
+.update-btn:disabled { cursor: default; opacity: .8; }
+.update-btn.busy svg { animation: updatePulse 1.2s ease-in-out infinite; }
+@keyframes updatePulse { 50% { transform: translateY(2px); opacity: .6; } }

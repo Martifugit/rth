@@ -1026,6 +1026,8 @@ function wire() {
   buildToolbar();
   $("#sourceBtn").addEventListener("click", () => setMode(S.mode === "source" ? "edit" : "source"));
   $("#quickOpen").addEventListener("click", quickOpen);
+  $("#updateBtn").addEventListener("click", installUpdate);
+  api("/api/update").then(showUpdate, () => {});
   $("#syncBtn").addEventListener("click", syncNow);
   $("#newPage").addEventListener("click", newPageDialog);
   $("#helpBtn").addEventListener("click", helpDialog);
@@ -1305,8 +1307,37 @@ async function start() {
 start();
 
 // For checking in the browser's console: the state, and the merge.
+// ----------------------------------------------------------------------------- updates
+
+// The installed Codex downloads a new release quietly (electron/main.js); the title bar then shows a
+// blue Update button: a click saves, sends, installs and opens the new Codex. While it downloads, the
+// button shows how far along it is.
+let updateView = { state: "none" };
+function showUpdate(v) {
+  updateView = v || { state: "none" };
+  const btn = $("#updateBtn");
+  if (!btn) return;
+  const st = updateView.state;
+  btn.classList.toggle("hidden", st === "none");
+  btn.classList.toggle("ready", st === "ready");
+  btn.classList.toggle("busy", st === "downloading" || st === "installing");
+  btn.disabled = st !== "ready";
+  $("#updateLabel").textContent = st === "downloading" ? updateView.percent + "%" : st === "installing" ? "Updating…" : "Update";
+  btn.title = st === "ready" ? `R'th Codex ${updateView.version} is ready. Click to update: your changes are saved and sent, and the Codex opens again`
+    : st === "downloading" ? `Downloading R'th Codex ${updateView.version}…`
+    : st === "installing" ? "Updating: the Codex opens again in a moment" : "";
+}
+async function installUpdate() {
+  if (updateView.state !== "ready") return;
+  showUpdate({ ...updateView, state: "installing" });
+  const r = await api("/api/update/install", { method: "POST" });
+  if (!r.ok) { toast(r.error || "Couldn't update", "bad"); showUpdate({ ...updateView, state: "ready" }); }
+}
+
 window.__codex = {
   S, mergeEdit, renderHtml, editorMarkdown: () => editorMarkdown(), openDoc, notes, panels, toast,
   // The desktop app calls this before closing: save whatever is still being typed.
+  // The desktop app tells the page about updates (electron/main.js).
+  updateState: (v) => showUpdate(v),
   flush: async () => { clearTimeout(autoTimer); refreshDirty(); return !S.dirty || S.noSave || (await save(false, { quiet: true })); },
 };

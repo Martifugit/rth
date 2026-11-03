@@ -420,6 +420,9 @@ const api = {
   async "GET /api/openrouter"() { return openrouter.view(); },
   async "POST /api/openrouter/signin"(url, req) { return { url: openrouter.signInUrl("http://" + req.headers.host) }; },
   async "POST /api/openrouter/signout"() { return openrouter.signOut(); },
+  // Updates of the desktop app (electron/main.js): the title bar's Update button.
+  async "GET /api/update"() { return globalThis.codexUpdate ? globalThis.codexUpdate.view() : { state: "none" }; },
+  async "POST /api/update/install"() { return globalThis.codexUpdate ? globalThis.codexUpdate.install() : [400, { error: "Updates come with the installed Codex." }]; },
   async "POST /api/openrouter/key"(url, req) { const r = await openrouter.useKey((await body(req)).key); return r.ok ? r : [400, r]; },
   // AI setup (the AI tab's cog): which AI answers, and the ways in.
   async "GET /api/ai/setup"(url) { return assistant.setup({ recheck: url.searchParams.get("recheck") === "1" }); },

@@ -46,6 +46,20 @@ function openLink(link) {
 }
 
 let win = null, origin = null;
+let flushed = false; // what was being typed is saved and sent: the window may close
+
+/**
+ * Before the Codex goes (closing, or updating): the page saves what's still being typed (4 s at most),
+ * then what was saved here is sent (8 s at most; it goes next time otherwise).
+ */
+function saveAndSync() {
+  return Promise.race([
+    win.webContents.executeJavaScript("window.__codex && window.__codex.flush ? window.__codex.flush() : true"),
+    new Promise((r) => setTimeout(r, 4000)),
+  ]).then((v) => process.env.CODEX_DEBUG && console.log("flush ->", v), (err) => process.env.CODEX_DEBUG && console.log("flush failed", err.message))
+    .then(() => Promise.race([fetch(origin + "/api/sync?why=close", { method: "POST" }), new Promise((r) => setTimeout(r, 8000))]))
+    .catch(() => {});
+}
 const boundsFile = () => path.join(app.getPath("userData"), "window.json");
 
 function savedBounds() {
@@ -113,18 +127,11 @@ async function open() {
   win.webContents.on("will-navigate", (e, url) => { if (!url.startsWith(origin)) { e.preventDefault(); if (/^https?:/.test(url)) shell.openExternal(url); } });
   // Closing: the page saves what's still being typed first, then the window closes. However the close
   // starts (the X, Alt+F4, the page itself), it's held until that save is done (or 4 s have passed).
-  let flushed = false, flushing = false;
+  let flushing = false;
   const flushThenClose = () => {
     if (flushing) return;
     flushing = true;
-    Promise.race([
-      win.webContents.executeJavaScript("window.__codex && window.__codex.flush ? window.__codex.flush() : true"),
-      new Promise((r) => setTimeout(r, 4000)),
-    ]).then((v) => process.env.CODEX_DEBUG && console.log("flush ->", v), (err) => process.env.CODEX_DEBUG && console.log("flush failed", err.message))
-      // Then send what was saved here before going (a moment at most; it goes next time otherwise).
-      .then(() => Promise.race([fetch(origin + "/api/sync?why=close", { method: "POST" }), new Promise((r) => setTimeout(r, 8000))]))
-      .catch(() => {})
-      .finally(() => { flushed = true; if (!win.isDestroyed()) win.close(); });
+    saveAndSync().finally(() => { flushed = true; if (!win.isDestroyed()) win.close(); });
   };
   win.on("close", (e) => {
     if (process.env.CODEX_DEBUG) console.log("close", { flushed, flushing });
@@ -151,19 +158,42 @@ async function open() {
 
 /**
  * Updates (PLAN.md, step 6): the installed Codex looks for a newer release on GitHub (the repository's
- * latest release; see package.json's "build.publish"), downloads it quietly and installs it when you
- * close the Codex. The page says when one is ready.
+ * latest release; see package.json's "build.publish") and downloads it quietly. Once it's here, the
+ * title bar shows a blue Update button: a click saves, sends, installs and opens the Codex again
+ * (installUpdate). Closing the Codex installs it too.
  */
+const update = { state: "none", version: null, percent: 0 }; // none, downloading, ready, installing
+let updater = null;
+const tellUpdate = () => {
+  if (win && !win.isDestroyed()) win.webContents.executeJavaScript(`window.__codex && window.__codex.updateState && window.__codex.updateState(${JSON.stringify(update)})`).catch(() => {});
+};
+// The engine (server.js, in this process) asks for it: the page's GET /api/update and its button.
+globalThis.codexUpdate = { view: () => ({ ...update }), install: () => installUpdate() };
+
+async function installUpdate() {
+  if (!updater || update.state !== "ready") return { ok: false, error: "No update is ready." };
+  update.state = "installing"; tellUpdate();
+  await saveAndSync();
+  flushed = true; // saved and sent: the window may close now
+  // Silently (one-click installer), then start the new Codex.
+  setTimeout(() => updater.quitAndInstall(true, true), 100);
+  return { ok: true };
+}
+
 async function watchForUpdates() {
   try {
-    const { default: updater } = await import("electron-updater");
-    const { autoUpdater } = updater;
+    const { default: mod } = await import("electron-updater");
+    const { autoUpdater } = mod;
+    updater = autoUpdater;
     autoUpdater.autoDownload = true;
     autoUpdater.autoInstallOnAppQuit = true;
-    autoUpdater.on("update-downloaded", (info) => {
-      if (win && !win.isDestroyed()) win.webContents.executeJavaScript(`window.__codex && window.__codex.toast && window.__codex.toast(${JSON.stringify(`R'th Codex ${info.version} is ready: it installs when you close the Codex`)}, "good")`).catch(() => {});
+    autoUpdater.on("update-available", (info) => { update.state = "downloading"; update.version = info.version; update.percent = 0; tellUpdate(); });
+    autoUpdater.on("download-progress", (p) => { const pc = Math.round(p.percent || 0); if (pc !== update.percent) { update.percent = pc; tellUpdate(); } });
+    autoUpdater.on("update-downloaded", (info) => { update.state = "ready"; update.version = info.version; update.percent = 100; tellUpdate(); });
+    autoUpdater.on("error", (e) => {
+      if (process.env.CODEX_DEBUG) console.log("update:", e.message);
+      if (update.state === "downloading") { update.state = "none"; tellUpdate(); } // tried again at the next check
     });
-    autoUpdater.on("error", (e) => { if (process.env.CODEX_DEBUG) console.log("update:", e.message); });
     const check = () => autoUpdater.checkForUpdates().catch(() => {});
     check();
     setInterval(check, 6 * 60 * 60 * 1000);
