@@ -108,6 +108,9 @@ A table with **every skill in skills.json as a row**, including the ones with no
   [../skills.md](../skills.md) 2.2: where each tier "tends to be", and abundant at home, sparse
   elsewhere. A fishing village has fish and nets, not a gem mine. A quarry needs rock showing at the
   surface. A resource out of its biome needs a reason.
+- **Every bracket has something worth reaching:** progress shouldn't be too fast or too slow, and each
+  new tier should feel like an accomplishment with time to explore it (skills.md 2.1). Say what in
+  this area is exciting to reach at each level bracket it serves.
 - **Spread, not stacked:** say how the area's content spreads across levels (something for early,
   mid and late players where the land gives a reason), and how far apart it is: a skill done here
   should mean going somewhere in the area, not standing in town.

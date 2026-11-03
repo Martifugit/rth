@@ -66,6 +66,12 @@ and the carcass is where combat and skilling meet.
 ### 2.1 Levels and pace
 - Every skill uses the existing curve (RuneScape's formula) to **level 100** (14,391,160 XP);
   XP keeps counting to 200M. A skill may cap lower with `maxLevel`, but none in v1 does.
+- **How progress should feel (the owner, 2026-11-03):** it varies from skill to skill, and is neither
+  too fast nor mind-numbingly slow. Reaching the next tier of what you can do should feel like an
+  accomplishment, and there should be time to explore a tier before you outlevel it, so every level
+  bracket needs some content that is exciting to reach. The end game is denser, because most time is
+  spent there, but there must be fun things on the way. The numbers below are the first tuning target,
+  to be revisited skill by skill against that.
 - **Target pace: about 50 hours of focused play from 1 to 100**, front-loaded so the early game
   moves fast. Content should be tuned so that the *best ordinary method* in a band gives roughly:
 

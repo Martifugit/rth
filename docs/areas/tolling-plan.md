@@ -44,10 +44,10 @@ Regions:
   - Edda: the Dreaming;
   - the bell-ringer and the clerk: why the bell rang, and the ledger;
   - Wenna: tasks for the carcasses players bring back from further out.
-- **The way to the realm of the dead (proposed).** The player woke in the dead-house. Once they have
-  learned more about the ferryman (in quests elsewhere), the dead-house is where a way through to his
-  landing opens: an inner door behind the biers. That makes Tolling the door to the realm of the
-  dead's mid and late content, which belongs here because this is where the player came back.
+- **Not a door to the realm of the dead** (decided). Why the player woke in the dead-house can be
+  answered in a later quest (the owner's idea: the ferryman found it funny to have them wake there,
+  because it made them come back to him with interesting stories). The dead-house needs nothing more
+  for that.
 - **Resources that fit the area at mid levels:**
   - hematite in the old church quarry (tier 3, skills.md: "old church quarries");
   - bog myrtle on Wennow's shores (tier 4; skills.md names Wennow's shores as one of its homes);
@@ -64,7 +64,6 @@ Regions:
     angler.
   - Wennow is where the player was pulled from the water, which gives its fish a reason to be
     strange.
-- **The realm of the dead's later content,** through the dead-house.
 
 ### What makes players leave, and which way
 
@@ -76,8 +75,8 @@ Regions:
 | **North**, Hollow lane | the miller; the mill wheel | the wheel, from the church close (about 25 tiles) |
 | **West**, the west road | the old quarry off it; the road on towards the march | the quarry's crane over the heath (about 20 tiles) |
 
-**Assumption:** the long views the brief wanted (the bell tower from the dry rise) can't happen with
-the fog at 85 tiles. This plan uses only what is within reach and asks about view points (section 15).
+**Long views** (decided): the fog stays at 85 tiles and view points don't pull it back. Landmarks come
+into view as players explore out of Tolling, and draw them on from there.
 
 ### The one picture
 
@@ -109,7 +108,7 @@ Each with its purpose, why it is here, what the player does, and what it leads t
   road, and a church was built at the crossing. That's what the town is: a church, a toll-keeper's
   road, the trades that serve travellers, and a few homes.
 - **What it holds:** the church close; the square; Corvin's apothecary; the church house (the bank);
-  the smith on the west road; the skinning yard downstream; homes.
+  the skinning yard downstream; homes. **No forge** (decided).
 - **Leads to:** every way out (section 1).
 
 **The church close** ([19, 53, 34, 64])
@@ -182,7 +181,7 @@ Only what the town's purpose needs (section 3). The rects are the stage 2 blocko
 | `church-house` | the bank | `synod_strongbox`, Clerk Ambrose | the church keeps the town's money and its ledger |
 | `apothecary` | Corvin's shop | Corvin; `apothecary_bench`; a trapdoor to his cellar (later) | Corvin introduces potions; his cellar is his secret |
 | `skinning-shed` | the skinning yard | `skinning_rack`, `lye_vat`, Wenna Thole | Butchering is Tolling's own trade: a road town on the edge of rough country takes in carcasses; downstream for the smell |
-| `smithy` | the smith | the smith (*new*), who mends and sells tools (`tinker`'s stock) | carts and horses on a toll road need a smith; no Smithing stations proposed (section 15) |
+| `smithy` (the blockout's name) | unassigned | | Tolling has no forge (decided); the building stays, kept for stage 3's quests, and gets its name then |
 | `bellringer`, `edda` | homes | the bell-ringer; Edda Marsh | both in The Bell and Dreamless |
 | `house-west-road`, `house-sere-west`, `house-sere-east` | homes | unassigned | kept for people stage 3's quests need; no use invented now |
 | `widdermill` | mill | the miller (*new*); the millstones upstairs | the miller's errand |
@@ -205,7 +204,7 @@ Only what the town's purpose needs (section 3). The rects are the stage 2 blocko
 | Fishing | yes, early to late | perch off the landing (`river_spot`, 1 to 10); an `eel_weir` where the Wenn leaves (10 to 20); pike in Wennow (*new* spot, 20 to 30); `perch_rise` and `eel_rise` trophy spots (any level, records late) | taught by the fishers; Wennow holds fish at every level, and its records and revised fish draw late players |
 | Foraging | yes | yarrow on the verges (1 to 10); bog myrtle on Wennow's south shore (*new* patch, 30 to 40) | yarrow for Corvin's potions; bog myrtle's home includes Wennow's shores (skills.md) |
 | Dreaming | later | Edda's pond kept for an orb (section 13) | Edda's thread |
-| Smithing | no (proposed) | | the smith mends and sells; whether Tolling has a forge is a question (section 15) |
+| Smithing | no (decided) | | Tolling has no forge. Smithing may be introduced by a quest that sends the player to a smith in another town: a question for that town's plan |
 | Artifice, Tailoring | no | | nothing here makes or needs them |
 | Cooking | yes | the fishers' fire at the landing | the fishers cook their catch; cooking is taught where the fish are, not in town |
 | Medicine | yes | `apothecary_bench` (Corvin), the `well` in the square (water for vials) | Corvin introduces it |
@@ -233,7 +232,6 @@ Only what the town's purpose needs (section 3). The rects are the stage 2 blocko
 - **Brother Hollis:** Religion.
 - **The fishers:** The Bell step 4; fishing and cooking.
 - **The miller, the farmer:** errands.
-- **The smith:** tools.
 - **The wardens:** the road east.
 
 ## 7. Quests and activities
@@ -244,8 +242,7 @@ Only what the town's purpose needs (section 3). The rects are the stage 2 blocko
 - **Mid quest lines (proposed, to be written):**
   - Corvin's: the cellar and the house of Sallow;
   - Edda's: the Dreaming;
-  - the bell's: why it rang, the ledger;
-  - the way to the dead: the dead-house's inner door.
+  - the bell's: why it rang, the ledger, and in time why the player woke in the dead-house.
 - **Errands:** the miller (the sluice), the farmer (a wall).
 - **Tasks:** Wenna (rats, mites, adders), Corvin (mites).
 
@@ -253,10 +250,10 @@ Only what the town's purpose needs (section 3). The rects are the stage 2 blocko
 
 | Place | Entrance | Size | For | Plan | Why |
 | --- | --- | --- | --- | --- | --- |
-| The dead-house | stairs in the bell tower | about 10 x 8 | every new player; mid (the inner door) | a vaulted room with three biers (the player's, two empty); a shelf of winding sheets; the stairs up; **an inner door** behind the biers, shut until the player has learned enough of the ferryman, leading to his landing (the existing `realm_of_the_dead` region) | where the player came back, so the way to the dead belongs here |
+| The dead-house | stairs in the bell tower | about 10 x 8 | every new player; the bell's quest line later | a vaulted room with three biers (the player's, two empty); a shelf of winding sheets; the stairs up | where the player wakes |
 | The church crypt | a trapdoor in the chapel, opened in The Bell | about 16 x 12 | early (The Bell step 6); later quests | stairs into a passage; the ossuary (the drowned buried here, named); the ledger chest; a blocked arch at the far end, kept for later | The Bell's end |
 | Corvin's cellar | a trapdoor behind his counter, after Dreamless | about 10 x 10 | mid | the still, shelves of jars, a locked chest | his secret, and his quest line's start |
-| The bell tower | ladders inside | 3 x 3 a floor | everyone | the ringing chamber (plane 1); the bell chamber (plane 2) with a view point over the town, the mill, the quarry, the monument and Sour Hollow | the town's height is the tower, not the ground |
+| The bell tower | ladders inside | 3 x 3 a floor | everyone | the ringing chamber (plane 1); the bell chamber (plane 2), looking over the town, the mill, the quarry, the monument and Sour Hollow (within the fog) | the town's height is the tower, not the ground |
 
 ## 9. Heights
 
@@ -301,7 +298,7 @@ Palmerway (east), the Sere road (south), the west road, Hollow lane (north), as 
 | Sere's river: the salient and the sluice | the Sere road south; Corvin's saltfigs come up it | |
 
 **The wider region:**
-- Tolling is the heartland's start and its door to the realm of the dead.
+- Tolling is the heartland's start.
 - Its resources are the ones its land gives at every level: hematite, bog myrtle, Wennow's fish, an
   old elm.
 - It doesn't try to hold one of everything.
@@ -322,10 +319,8 @@ No times: how long each part takes is for play to show.
   - Corvin's and Wenna's tasks take them to Sour Hollow and the dry rise.
   - Then they leave, east to the lake (the main road, the monument on the way), west, or south.
 - **Mid, coming back:** Corvin's, Edda's and the bell's quest lines; the quarry's hematite; the
-  elm; pike and bog myrtle; Wenna for carcasses from further out; the dead-house's inner door once
-  the ferryman is understood.
-- **Late:** the achievement set's higher tiers across the area; Wennow's records and revised fish;
-  the realm of the dead through the dead-house.
+  elm; pike and bog myrtle; Wenna for carcasses from further out.
+- **Late:** the achievement set's higher tiers across the area; Wennow's records and revised fish.
 
 ## 12a. Achievements
 
@@ -336,7 +331,7 @@ The Tolling and Wennow set (proposed; kinds that exist in achievements.json):
 | Easy | finish The Bell; climb the bell tower; catch a perch at the landing; butcher a rat for Wenna; empower the monument once |
 | Medium | finish Dreamless; clear Sour Hollow's mites; set an eel trap at the Wenn; mine hematite in the old quarry; reach the dry rise's cairn |
 | Hard | catch a pike in Wennow; pick bog myrtle on the south shore; fell the old elm with others; Corvin's quest line |
-| Elite | the dead-house's inner door; Edda's quest line; the bell's quest line |
+| Elite | Edda's quest line; the bell's quest line |
 | Master | a record perch from Wennow; a revised fish from Wennow for the collector |
 
 ## 13. Kept for later
@@ -361,15 +356,28 @@ New:
 - the adder;
 - the new people.
 
-## 15. Not decided
+## 15. Decided and not decided
 
-1. **The early pace.** skills.md 2.1 aims at about 18 minutes for levels 1 to 10 by the best method.
-   The owner finds 1 to 15 in an hour far too fast for this game. Revisit the pace table?
-2. **A forge in Tolling:** the smith mends and sells; should Smithing be introduced here or
-   elsewhere?
-3. **The dead-house's inner door:** is Tolling the right door to the realm of the dead?
-4. **End-game resources:** are Wennow's records and revised fish enough, or should something else
-   late belong here?
-5. **The waygate:** open, as built, or barred until a quest?
-6. **View points:** should one pull the fog back (the bell tower, the cairn)?
-7. **The adder** as the dry rise's creature.
+**Decided (the owner, 2026-11-03):**
+- **Pace** varies from skill to skill (skills.md 2.1): neither too fast nor mind-numbingly slow; each
+  new tier should feel like an accomplishment, with time to explore it before outlevelling it.
+  Something exciting in each level bracket; the end game denser, since most time is spent there.
+- **The dead-house** is not a door to the realm of the dead.
+- **Tolling has no forge.**
+- **Late resources:** Wennow's records and revised fish are enough for now, to be rebalanced later.
+- **View points don't pull the fog back:** landmarks come into view as players explore.
+
+**Not decided:**
+1. **The waygate: why is it there?** Whether it is open or barred follows from that. Options:
+   - **A watch and toll for the road's traffic,** open to walkers. The toll moved from the old
+     toll-house when the gate was built on the ridge, which is why the toll-house stands empty. The
+     wardens stop carts, talk to travellers, and are where a player first hears about the road east.
+     Nothing is barred, so it doesn't hold players back.
+   - **A cordon** between the empire's frontier (Tolling, near Sere and the spine) and its
+     heartland: the wardens watch who comes in from the west. It would only bar anyone if a quest
+     needed it.
+   - **Nothing:** no content uses the wardens, so the gate goes. The ridge's crest alone is the
+     threshold, with something small on it (a waystone).
+   - Barring it would keep new players in the start area, which works against making them want to
+     leave. So if it stays, it's proposed open.
+2. **The adder** (a small venomous snake of dry heaths, the European adder) as the dry rise's creature.

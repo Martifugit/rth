@@ -2,7 +2,7 @@
   "area": "tolling",
   "status": "draft",
   "doc": "docs/areas/tolling-plan.md",
-  "region": "the heartland, the empire's green river country (proposed): Tolling is its start and its door to the realm of the dead; it holds what its own land gives at every level (hematite, bog myrtle, Wennow's fish, an old elm), not one of everything",
+  "region": "the heartland, the empire's green river country (proposed): Tolling is its start; it holds what its own land gives at every level (hematite, bog myrtle, Wennow's fish, an old elm), not one of everything",
   "places": [
     {
       "id": "town",
@@ -40,7 +40,7 @@
         1,
         99
       ],
-      "why": "the oldest ground in town, where the chapel and the bell tower stand; the graves hold Wennow's drowned; the dead-house beneath is where players wake, and later their door to the realm of the dead",
+      "why": "the oldest ground in town, where the chapel and the bell tower stand; the graves hold Wennow's drowned; the dead-house beneath is where players wake",
       "foundBy": "they wake in it",
       "hook": "the bell tower"
     },
@@ -210,7 +210,7 @@
         "the ledger chest",
         "trapdoor_down to the crypt"
       ],
-      "why": "the church is why the town is here; prayer restores devotion"
+      "why": "the church the town grew round; The Bell ends here"
     },
     {
       "id": "bell-tower",
@@ -275,11 +275,11 @@
         47
       ],
       "storeys": 1,
-      "use": "smithy",
+      "use": "unassigned",
       "contents": [
-        "the smith (new), who mends and sells tools (the tinker's stock)"
+        "kept for stage 3's quests"
       ],
-      "why": "carts and horses on a toll road need a smith; no Smithing stations proposed (an open question)"
+      "why": "Tolling has no forge (decided); the blockout's building stays and gets its use and name at stage 3"
     },
     {
       "id": "house-sere-east",
@@ -884,36 +884,6 @@
       ]
     },
     {
-      "id": "bell-view",
-      "kind": "view",
-      "object": "view_point",
-      "new": true,
-      "count": 1,
-      "rect": [
-        21,
-        54,
-        24,
-        57
-      ],
-      "place": "church-close",
-      "why": "the top of the bell tower (plane 2): the town, the mill, the quarry, the monument on Palmerway"
-    },
-    {
-      "id": "cairn-view",
-      "kind": "view",
-      "object": "view_point",
-      "new": true,
-      "count": 1,
-      "rect": [
-        121,
-        -51,
-        126,
-        -46
-      ],
-      "place": "dry-rise",
-      "why": "the cairn on the tor: Wennow, the landing, the Wenn's outlet, the edge farm"
-    },
-    {
       "id": "wenn-ford",
       "kind": "shortcut",
       "object": "ford",
@@ -1024,21 +994,6 @@
       ],
       "place": "toll-house",
       "why": "the old tolls (a readable)"
-    },
-    {
-      "id": "smith",
-      "kind": "npc",
-      "npc": "smith",
-      "new": true,
-      "count": 1,
-      "rect": [
-        17,
-        43,
-        21,
-        47
-      ],
-      "place": "town",
-      "why": "mends and sells tools on the toll road"
     },
     {
       "id": "quarry-hematite",
@@ -1185,13 +1140,9 @@
         {
           "name": "the vault",
           "contents": "three biers (the player's, two empty), a shelf of winding sheets, the stairs up into the bell tower"
-        },
-        {
-          "name": "the inner door",
-          "contents": "behind the biers, shut until the player has learned enough of the ferryman (quests elsewhere); leads to his landing (the realm_of_the_dead region)"
         }
       ],
-      "why": "where the player came back, so the way to the dead belongs here",
+      "why": "where the player wakes; why they woke there is for the bell's quest line",
       "supports": [
         "quest:the-bell"
       ]
@@ -1632,7 +1583,7 @@
         "the Wenn's outlet",
         "the edge farm"
       ],
-      "why": "the first climb, and the view of the mere from its far side"
+      "why": "the first climb, with a view back over the mere and the landing (within the fog)"
     },
     {
       "id": "heath-ridge",
