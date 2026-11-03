@@ -1,5 +1,7 @@
 # Skills (v1)
 
+> **The GDD is the truth** (2026-11-03): this subject is now written in docs/gdd/2-gameplay (progression, skills/, religion, items, economy). Where they disagree, the GDD wins; this doc is raw material, to be cut down once the GDD page is approved.
+
 The reference for every skill R'th launches with: what it is for, how it is trained, what it
 takes in and gives out, and what each level band unlocks. Combat resources and the rules of a
 fight are in `docs/systems.md`; this file says which skill feeds which of them. The lore behind

@@ -1,5 +1,7 @@
 # Tolling's bell tower and the undercroft
 
+> **The GDD is the truth** (2026-11-03): this subject is now written in docs/gdd/4-content/areas/tolling/the-dead-house.md. Where they disagree, the GDD wins; this doc is raw material, to be cut down once the GDD page is approved.
+
 **Status:** design (2026-10-28), for the owner's review. Decided with the owner so far: the
 dead-house is a cool undercroft below the tower, not a room in its base or a house beside it; the
 stone is the soft coursed `Fieldstone` chosen on the tower's studies (`docs/assets.md` section 4).

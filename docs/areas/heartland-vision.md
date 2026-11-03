@@ -1,5 +1,7 @@
 # The heartland (wave 1): what is there, what players do, and the land for it
 
+> **The GDD is the truth** (2026-11-03): this subject is now written in docs/gdd/4-content/areas/ (each area's paper design) and 3-story/areas.md. Where they disagree, the GDD wins; this doc is raw material, to be cut down once the GDD page is approved.
+
 **Superseded as the plan's form (2026-11-03):** each area is now planned to
 [plan-template.md](plan-template.md), as a design document and `world/plans/<area>.json`. This page
 is the starting point for wave 1's four plans.

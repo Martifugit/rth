@@ -1,35 +1,39 @@
 # III. Story, setting and characters
 
-*Draft.* The world and who lives in it. Written in Cain's order: the setting first, then the story
-the player meets in it; the systems in II serve both. (Baldwin section III.)
+*Draft (2026-11-03).* The world and who lives in it, written in Cain's order: the setting first,
+then the story the player meets in it; the systems in II serve both. (Baldwin section III.) The
+canon this is written from is `docs/lore.md` (2026-10-22) and the decided parts of
+`docs/lore-rework/`; proposals there that were never decided are listed as open questions, not
+written in as truth.
 
 ## Story
 
 | Page | Holds |
 | --- | --- |
-| `back-story.md` | What happened before the player woke. |
-| `threads.md` | The plot elements: the threads that run through the game, and what is sealed (true, but never told yet). |
-| `unfolding.md` | How the story unfolds as the player progresses (with the beat chart). |
+| [back-story.md](back-story.md) | What happened before the player woke. |
+| [threads.md](threads.md) | The threads that run through the game, and what is sealed. |
+| [unfolding.md](unfolding.md) | How the story unfolds, as far as it is designed. |
 
 ## Setting
 
 | Page | Holds |
 | --- | --- |
-| `universe.md` | What kind of universe R'th is: the humours, the constants, the Dreaming. |
-| `powers/` | The gods and powers, one page each (the [power template](../templates/power.md)). |
-| `peoples.md` | The peoples of the continent. |
+| [universe.md](universe.md) | An unfinished world: the revisions, the spoil, the humours, the constants, the Dreaming. |
+| [powers/](powers/index.md) | The gods and great powers, one page each. |
+| [peoples.md](peoples.md) | The powers of the continent and how they stand with each other. |
+| [names.md](names.md) | Which names are picked, which are working names, which are placeholders. |
 
 ## Game world
 
 | Page | Holds |
 | --- | --- |
-| `world.md` | The general look and feel, and the continent's shape, as a map. |
-| `realms/` | Each realm: who holds it, its land, what it offers, its areas. |
-| `areas.md` | **Every area in brief**: Baldwin's area entry (description, physical characteristics, the quests and activities that use it, connections) and Ryan's level seed (goals, gameplay, story link, needs, difficulty), one block each. The paper designs are in IV. |
+| [world.md](world.md) | The continent's shape, how its land is read, its landmarks and gates. |
+| [realms/](realms/index.md) | Each realm: who holds it, its land, what it offers. |
+| [areas.md](areas.md) | Every area's seed. |
 
 ## Characters
 
 | Page | Holds |
 | --- | --- |
-| `people/` | Everyone the player meets with a name or a part in a quest, one page each (the [character template](../templates/character.md)); anyone else is a line in their area's design. |
-| `creatures/` | Creatures by family (the [creature template](../templates/creature.md)). |
+| [people/](people/index.md) | Everyone the player meets with a name or a part in a quest, one page each; anyone else is a line in their area's design. |
+| [creatures/](creatures/index.md) | Creatures by family. |

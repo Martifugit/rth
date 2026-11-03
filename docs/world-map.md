@@ -1,5 +1,7 @@
 # World map
 
+> **The GDD is the truth** (2026-11-03): this subject is now written in docs/gdd/3-story/names.md and world.md. Where they disagree, the GDD wins; this doc is raw material, to be cut down once the GDD page is approved.
+
 The reference is the concept map, `docs/lore-rework/concept-map.png` (drawn by
 `tools/areas/concept_map.py` from `docs/lore-rework/powers.md`). It is a concept, not a layout:
 positions are rough and will be settled by the area plan. The old sketch, `images/map.png`, is

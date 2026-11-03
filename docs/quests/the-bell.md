@@ -1,5 +1,7 @@
 # The Bell: the first quest
 
+> **The GDD is the truth** (2026-11-03): this subject is now written in docs/gdd/4-content/quests/the-bell.md. Where they disagree, the GDD wins; this doc is raw material, to be cut down once the GDD page is approved.
+
 **Status:** skeleton (2026-10-27). The premise is canon (`docs/lore.md` VI); the steps, names and
 rewards are a first shape, to be filled in when Tolling reaches stage 3. Working title.
 

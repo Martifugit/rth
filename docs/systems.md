@@ -1,5 +1,7 @@
 # Gameplay systems
 
+> **The GDD is the truth** (2026-11-03): this subject is now written in docs/gdd/2-gameplay (humours, combat, options). Where they disagree, the GDD wins; this doc is raw material, to be cut down once the GDD page is approved.
+
 Working notes on combat resources and the rules of a fight. All names and numbers are
 provisional. Sections marked **Proposal** are suggestions that the designer has not yet
 confirmed. Every skill (what it does, how it trains, what it feeds) is in `docs/skills.md`; the

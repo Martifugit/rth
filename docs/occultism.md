@@ -1,5 +1,7 @@
 # Distillation
 
+> **The GDD is the truth** (2026-11-03): this subject is now written in docs/gdd/2-gameplay/skills/occultism.md. Where they disagree, the GDD wins; this doc is raw material, to be cut down once the GDD page is approved.
+
 ## Occultism, briefly
 
 Occultism is one of three combat styles. It has three layers:

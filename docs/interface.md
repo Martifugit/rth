@@ -1,5 +1,7 @@
 # Interface
 
+> **The GDD is the truth** (2026-11-03): this subject is now written in docs/gdd/5-interface/. Where they disagree, the GDD wins; this doc is raw material, to be cut down once the GDD page is approved.
+
 The world looks like Old School RuneScape; the interface is a modern dark-fantasy RPG interface
 (the designer's RS3 screenshots in `images/` are references, not templates). The game has more
 combat resources than either RuneScape, so it has more interface than OSRS. This file lists

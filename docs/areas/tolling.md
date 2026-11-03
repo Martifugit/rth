@@ -1,5 +1,7 @@
 # Tolling and Wennow: the brief
 
+> **The GDD is the truth** (2026-11-03): this subject is now written in docs/gdd/4-content/areas/tolling/index.md. Where they disagree, the GDD wins; this doc is raw material, to be cut down once the GDD page is approved.
+
 **Status:** agreed (2026-10-27; the owner left the open calls to the brief, decided at the end).
 Wennow reshaped and stage 2's structure blocked out as data (2026-11-02, findings 11-17): the town on
 its knoll, the mill, the toll-house, the monument's plot, the waygate, the fishers' landing, the dry

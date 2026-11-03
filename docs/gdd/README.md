@@ -5,7 +5,7 @@ School RuneScape, set in its own world built around the four humours.*
 
 | | |
 | --- | --- |
-| Version | 0.1, structure only (2026-11-03) |
+| Version | 0.2, first draft of every section (2026-11-03): every page a draft until the owner approves it |
 | Owner | Martin (the game's designer; approves every design) |
 | Design history | [design-history.md](design-history.md) |
 
@@ -31,30 +31,27 @@ here.
 **[One-sheet](one-sheet.md)**: the game on one page.
 
 **[I. Game overview](1-overview/index.md)**
-- Concept · Pillars and non-goals · Feature set · Genre · Audience · Game flow summary · Look and feel · Scope
+- [Concept](1-overview/concept.md) · [Pillars and non-goals](1-overview/pillars.md) (for the owner) · [Features](1-overview/features.md) · [Genre and audience](1-overview/genre-and-audience.md) · [Game flow](1-overview/game-flow.md) · [Look and feel](1-overview/look-and-feel.md) · [Scope](1-overview/scope.md)
 
 **[II. Gameplay and mechanics](2-gameplay/index.md)**
-- Gameplay: progression and the beat chart · challenge structure (quests, tasks, achievements) · play flow
-- Mechanics: movement · actions and objects · combat · the humours · Religion · skills · items · economy · death
-- Saving · options · easter eggs
+- Gameplay: [progression](2-gameplay/progression.md) · [beat chart](2-gameplay/beat-chart.md) · [challenges](2-gameplay/challenges.md) · [play flow](2-gameplay/play-flow.md)
+- Mechanics: [movement](2-gameplay/movement.md) · [actions](2-gameplay/actions.md) · [combat](2-gameplay/combat.md) · [the humours](2-gameplay/humours.md) · [Religion](2-gameplay/religion.md) · [skills](2-gameplay/skills/index.md) · [items](2-gameplay/items/index.md) · [economy](2-gameplay/economy.md) · [death](2-gameplay/death.md)
+- [Saving](2-gameplay/saving.md) · [options](2-gameplay/options.md)
 
 **[III. Story, setting and characters](3-story/index.md)**
-- Story: back story · threads · how the story unfolds
-- Setting: the universe · the powers · the peoples
-- Game world: look and feel · the continent · realms · every area in brief
-- Characters: people · creatures
+- Story: [back story](3-story/back-story.md) · [threads](3-story/threads.md) · [how it unfolds](3-story/unfolding.md)
+- Setting: [the universe](3-story/universe.md) · [the powers](3-story/powers/index.md) · [peoples](3-story/peoples.md) · [names](3-story/names.md)
+- Game world: [the world](3-story/world.md) · [realms](3-story/realms/index.md) · [every area in brief](3-story/areas.md)
+- Characters: [people](3-story/people/index.md) · [creatures](3-story/creatures/index.md)
 
-**[IV. Areas, dungeons and quests](4-content/index.md)** (the game's "levels")
-- An area's design: synopsis, objectives, physical description, map, critical path, encounters, walkthrough
-- Dungeons · Quests · Activities (bosses, trials)
+**[IV. Areas, dungeons and quests](4-content/index.md)** (the game's levels)
+- [Tolling and Wennow](4-content/areas/tolling/index.md) · [The Bell](4-content/quests/the-bell.md) · [Dreamless](4-content/quests/dreamless.md) · [the long way back](4-content/activities/the-long-way-back.md) · [the Unquiet Saint](4-content/activities/the-unquiet-saint.md)
 
-**[V. Interface](5-interface/index.md)**
-- The windows and HUD · camera · controls · audio (music, sound) · help
+**[V. Interface](5-interface/index.md)**: [windows](5-interface/windows.md) · [controls](5-interface/controls.md) · [camera](5-interface/camera.md) · [help](5-interface/help.md)
 
-**[VI. Behaviour](6-behaviour/index.md)**
-- Creatures · non-combat characters · pathfinding as the player sees it
+**[VI. Behaviour](6-behaviour/index.md)**: [creatures](6-behaviour/creatures.md) · [people](6-behaviour/people.md)
 
-**[VII. Technical](7-technical.md)** · **[VIII. Art](8-art.md)** · **[IX. Tools](9-tools.md)** · **[X. Management](10-management.md)**: short pages pointing to the bibles and the plan.
+**[VII. Technical](7-technical.md)** · **[VIII. Art](8-art.md)** · **[IX. Tools](9-tools.md)** · **[X. Management](10-management.md)**: short pages pointing to the bibles and the plan; X also maps every old doc to the page that replaces it.
 
 **Appendices:** [asset lists](appendices/assets.md) · [glossary](appendices/glossary.md)
 

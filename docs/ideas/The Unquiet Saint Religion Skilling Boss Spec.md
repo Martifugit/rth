@@ -1,5 +1,7 @@
 # The Unquiet Saint: Religion Skilling Boss Spec
 
+> **The GDD is the truth** (2026-11-03): this subject is now written in docs/gdd/4-content/activities/the-unquiet-saint.md (in brief; the detail is still here). Where they disagree, the GDD wins; this doc is raw material, to be cut down once the GDD page is approved.
+
 Oct 21, 2026 · @Martin
 
 ## Overview

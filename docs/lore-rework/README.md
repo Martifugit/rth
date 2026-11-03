@@ -1,5 +1,7 @@
 # The lore rework
 
+> **The GDD is the truth** (2026-11-03): this subject is now written in docs/gdd/3-story/. Where they disagree, the GDD wins; this doc is raw material, to be cut down once the GDD page is approved.
+
 A rebuild of `docs/lore.md` so that every power that survives it has a strong foundation: where
 it came from, what it wants, what it holds and why, and where it is heading. The goal is lore you
 can build places and quests from, not lore to read. `docs/lore.md` and `docs/world-map.md` are the canon

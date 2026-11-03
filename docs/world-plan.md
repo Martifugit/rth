@@ -1,5 +1,7 @@
 # The world plan: R'th rethought
 
+> **The GDD is the truth** (2026-11-03): this subject is now written in docs/gdd/3-story/world.md, realms/ and areas.md. Where they disagree, the GDD wins; this doc is raw material, to be cut down once the GDD page is approved.
+
 Status: **built in data, waiting on the owner's walk** (2026-10-25), on `claude/world-remake`. It
 replaces the first layout's geography (`layout.md` keeps the data format). The layout
 (`world/layout/continent.json`), the generator (`Landscape`) and the ground painting

@@ -1,5 +1,7 @@
 # Creatures of R'th (draft for discussion, 2026-11-01)
 
+> **The GDD is the truth** (2026-11-03): this subject is now written in docs/gdd/3-story/creatures/. Where they disagree, the GDD wins; this doc is raw material, to be cut down once the GDD page is approved.
+
 *A wide brainstorm of the creature families R'th could hold, drawn from myth, folklore, legend and
 fantastic stories the world over. Nothing here is decided. It is a menu to choose from, area by area.*
 

@@ -1,5 +1,7 @@
 # Fishing in depth
 
+> **The GDD is the truth** (2026-11-03): this subject is now written in docs/gdd/2-gameplay/skills/fishing.md (in brief; the detail is still here). Where they disagree, the GDD wins; this doc is raw material, to be cut down once the GDD page is approved.
+
 Fishing end to end: the three ways to fish, the ten species, trophy angling (finding, rigging,
 the fight, the log, markets and the collector), how players learn it, and how it ties into the
 other skills and the story. `docs/skills.md` (Fishing) keeps the summary; this file is the full

@@ -1,5 +1,7 @@
 # The lore of R'th
 
+> **The GDD is the truth** (2026-11-03): this subject is now written in docs/gdd/3-story/index.md (III). Where they disagree, the GDD wins; this doc is raw material, to be cut down once the GDD page is approved.
+
 *Canon as of 2026-10-22, from the lore rework (`docs/lore-rework/`, where each part was decided and
 where the open questions live). Names written `p-something` are placeholders that never reach
 players; until a real name is chosen, the game keeps its current wording. Truths marked **sealed**

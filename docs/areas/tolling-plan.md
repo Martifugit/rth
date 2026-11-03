@@ -1,5 +1,7 @@
 # Tolling and Wennow: the plan
 
+> **The GDD is the truth** (2026-11-03): this subject is now written in docs/gdd/4-content/areas/tolling/index.md. Where they disagree, the GDD wins; this doc is raw material, to be cut down once the GDD page is approved.
+
 **Status:** draft 2 (2026-11-03), stage 0 ([plan-template.md](plan-template.md)), for the owner's
 review. The data is `world/plans/tolling.json`, drawn by `tools/world plan render tolling 8`. The
 brief and the record of the work so far are [tolling.md](tolling.md).

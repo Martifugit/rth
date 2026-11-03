@@ -1,39 +1,36 @@
 # II. Gameplay and mechanics
 
-*Draft.* How the game plays: how a player progresses, what challenges they take on, and the rules
-of every mechanic, written from the player's side. (Baldwin section II; Ryan's functional
-specification, "game mechanics"; Librande's loops and resource flow.)
+*Draft (2026-11-03).* How the game plays: how a player progresses, what challenges they take on,
+and the rules of every mechanic, written from the player's side. (Baldwin section II; Ryan's
+functional specification; Librande's loops and resource flow.)
 
 ## Gameplay
 
 | Page | Holds |
 | --- | --- |
-| `progression.md` | How a player grows: levels, tiers, the stages of an account; pace per skill. |
-| `beat-chart.md` | Rogers' beat chart: the player's journey through the game, area by area and quest by quest, with what each gives them (a skill's tier, a story beat, a mechanic taught). The seeds in III must fit it. |
-| `challenges.md` | The challenge structure: quests, tasks, achievements, activities; how each kind works. |
-| `play-flow.md` | A typical session and its loops (go out, gather or fight, come back, bank, make), as one-page diagrams. |
+| [progression.md](progression.md) | Levels, tiers, requirements, pace, the stages of an account. |
+| [beat-chart.md](beat-chart.md) | The player's journey through the world, as far as it is designed. |
+| [challenges.md](challenges.md) | Quests, tasks, achievements, activities, collections. |
+| [play-flow.md](play-flow.md) | The loops of a session, as diagrams. |
 
 ## Mechanics
 
-One page per mechanic, to the [mechanic template](../templates/mechanic.md): its goals, its rules,
-what the player sees, the odd cases.
-
 | Page | Holds |
 | --- | --- |
-| `movement.md` | The tile world, walking and running, the tick. |
-| `actions.md` | Talking, using, picking up, reading, using one thing on another. |
-| `combat.md` | Fighting: styles, abilities, the global cooldown, targets, line of sight. |
-| `humours.md` | Blood, phlegm, bile: the resources of a fight and what they mean in the world. |
-| `religion.md` | Hymns, verses, devotion, monuments, pledges. |
-| `skills/` | Each skill, one page (the [skill template](../templates/skill.md)), and the rules all skills share. |
-| `items/` | Items by kind (Ryan's "game play elements"): an opening paragraph per kind, then the items, rated. |
-| `economy.md` | Where everything enters the game and where it leaves (Librande's resource flow), banks, shops, currencies. |
-| `death.md` | Dying, the ferryman, the long way back. |
+| [movement.md](movement.md) | The tile world, walking and running, floors, shortcuts. |
+| [actions.md](actions.md) | Talking, using, picking up, examining, climbing. |
+| [combat.md](combat.md) | Fighting: styles, abilities, targets, the global cooldown. |
+| [humours.md](humours.md) | Blood, phlegm, bile and devotion. |
+| [religion.md](religion.md) | Hymns, verses, monuments, pledges, scriptures. |
+| [skills/](skills/index.md) | The rules every skill follows, then each of the sixteen. |
+| [items/](items/index.md) | Items by kind. |
+| [economy.md](economy.md) | Where things enter the game and where they leave; banks, shops, currencies. |
+| [death.md](death.md) | Dying, the ferryman, the long way back. |
 
 ## Other
 
 | Page | Holds |
 | --- | --- |
-| `saving.md` | What is kept, when; logging out and in. |
-| `options.md` | Options that change play (combat modes, defence training). |
-| `easter-eggs.md` | Secrets that aren't any quest's. |
+| [saving.md](saving.md) | What is kept, and when. |
+| [options.md](options.md) | Settings that change play. |
+| `easter-eggs.md` | Secrets that aren't any quest's. None designed yet. |
