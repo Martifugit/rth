@@ -524,7 +524,8 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(r.ok ? 200 : 400, { "Content-Type": "text/html; charset=utf-8" });
       return res.end(`<!doctype html><meta charset="utf-8"><title>R'th Codex</title><body style="font:16px system-ui;background:#0c0b09;color:#ddd3bf;display:grid;place-items:center;height:90vh;text-align:center"><div><p>${String(r.message).replace(/[<&]/g, "")}</p><p style="color:#a89c86">You can close this tab and go back to the Codex.</p></div>`);
     }
-    const noteRoute = url.pathname.match(/^\/api\/notes\/(n-[\w-]+)(?:\/(reply|move|run|stop))?$/);
+    // A comment's id: n-... in docs/.notes/, the forum post's number in Discord.
+    const noteRoute = url.pathname.match(/^\/api\/notes\/(n-[\w-]+|\d{5,25})(?:\/(reply|move|run|stop))?$/);
     if (noteRoute) {
       const result = await noteApi(req, noteRoute[1], noteRoute[2] || null);
       return Array.isArray(result) ? send(res, result[0], result[1]) : send(res, 200, result);

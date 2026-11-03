@@ -588,7 +588,8 @@ export function makeNotes(ctx) {
   }
 
   async function resolve(n) {
-    await api("/api/notes/" + n.id, { method: "PATCH", body: JSON.stringify({ status: "done" }) });
+    const r = await api("/api/notes/" + n.id, { method: "PATCH", body: JSON.stringify({ status: "done" }) });
+    if (!r.ok) return toast("Couldn't resolve it: " + (r.error || r.status), "bad");
     if (N.active === n.id) N.active = null;
     toast("Resolved. It's in the comment history.");
     await reload();
@@ -642,7 +643,8 @@ export function makeNotes(ctx) {
     const c = await ask("Delete this comment?", `“${ctx.esc(clip(n.thread[0]?.text || "", 140))}”` + (n.thread.length > 1 ? ` and its ${n.thread.length - 1} ${n.thread.length === 2 ? "reply" : "replies"}` : "") + ". Resolving keeps it in the history; deleting doesn't.",
       [{ key: "cancel", label: "Cancel" }, { key: "del", label: "Delete", cls: "btn-danger" }]);
     if (c !== "del") return;
-    await api("/api/notes/" + n.id, { method: "DELETE" });
+    const r = await api("/api/notes/" + n.id, { method: "DELETE" });
+    if (!r.ok) return toast("Couldn't delete it: " + (r.error || r.status), "bad");
     if (N.active === n.id) N.active = null;
     await reload();
   }
