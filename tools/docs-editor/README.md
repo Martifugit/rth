@@ -153,6 +153,14 @@ If the file changes on disk while it's open (an agent, git, another window), a p
 waiting to save just reloads; one you're editing asks which version to keep before anything is
 overwritten.
 
+## Shipping it
+
+`npm run release` (after raising `version` in `package.json`) builds the Windows installer into `dist/`
+(`npm run dist`: the page, MinGit fetched by `scripts/fetch-mingit.mjs`, the game's look) and publishes
+it on the repository's GitHub Releases (`scripts/release.mjs`, with `gh`). Installed Codexes check the
+latest release every few hours, download it quietly and install it when closed. The installer isn't
+signed, so Windows warns the first time (More info, Run anyway).
+
 ## Files
 
 - `server.js`: a small Node server (no framework): the page, the docs, search, saving, and change

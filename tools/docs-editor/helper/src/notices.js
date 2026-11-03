@@ -13,20 +13,28 @@ export async function onPush(env, push, origin) {
   if (push.ref !== `refs/heads/${branch}` || push.deleted || /^0+$/.test(push.before || "0")) return;
   const isPage = (f) => f.endsWith(".md") && (f.startsWith("docs/") || !f.includes("/")) && !f.startsWith("docs/.notes/");
 
-  // Who changed what, from the commits; how much, from the comparison.
-  const authors = new Map(); // name -> Set of files
-  for (const c of push.commits || []) {
-    const files = [...(c.added || []), ...(c.modified || []), ...(c.removed || [])].filter(isPage);
-    if (!files.length) continue;
-    const name = codexName(c.author?.name || c.committer?.name || "Someone");
-    if (!authors.has(name)) authors.set(name, new Set());
-    for (const f of files) authors.get(name).add(f);
-  }
-  if (!authors.size) return;
-
   const token = (await installationToken(env)).token;
   const cmp = await gh(env, `/repos/${env.REPO}/compare/${push.before}...${push.after}`, token);
-  const stat = new Map((cmp.files || []).map((f) => [f.filename, f]));
+  const stat = new Map((cmp.files || []).filter((f) => isPage(f.filename)).map((f) => [f.filename, f]));
+  if (!stat.size) return;
+
+  // Who changed what, from the commits. GitHub's message names at most 20 commits: for a bigger push,
+  // the pages come from the whole comparison, under everyone who wrote its commits.
+  const authors = new Map(); // name -> Set of files
+  const commits = push.commits || [];
+  if (commits.length >= 20 || (push.size && push.size > commits.length)) {
+    const names = [...new Set((cmp.commits || []).map((c) => codexName(c.commit?.author?.name || "Someone")))];
+    authors.set(names.length > 3 ? names.slice(0, 3).join(", ") + " and others" : join(names), new Set(stat.keys()));
+  } else {
+    for (const c of commits) {
+      const files = [...(c.added || []), ...(c.modified || []), ...(c.removed || [])].filter(isPage);
+      if (!files.length) continue;
+      const name = codexName(c.author?.name || c.committer?.name || "Someone");
+      if (!authors.has(name)) authors.set(name, new Set());
+      for (const f of files) authors.get(name).add(f);
+    }
+  }
+  if (!authors.size) return;
 
   const lines = [];
   for (const [name, files] of authors) {

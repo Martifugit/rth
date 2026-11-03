@@ -29,7 +29,8 @@ const REPO = process.env.CODEX_REPO ? path.resolve(process.env.CODEX_REPO) : pat
 const PUBLIC = path.join(HERE, "public");
 // The Codex's own look (the game's fonts, frames and icons) comes from where the Codex is, not from the
 // repository it works on: a contributor's copy holds only the docs. (Shipping copies these into the app.)
-const LOOK = path.resolve(HERE, "..", "..", "client", "Assets", "Resources");
+// (The installed app brings its own copy: CODEX_LOOK.)
+const LOOK = process.env.CODEX_LOOK ? path.resolve(process.env.CODEX_LOOK) : path.resolve(HERE, "..", "..", "client", "Assets", "Resources");
 const UI = path.join(LOOK, "UI");
 const ICONS = path.join(LOOK, "Icons");
 const PORT = Number(process.env.PORT || 5178);
@@ -78,7 +79,7 @@ async function allDocs() {
 
 function gitStatus() {
   return new Promise((resolve) => {
-    execFile("git", ["status", "--porcelain", "-z", "--untracked-files=all", "--", ...ROOTS, "*.md"],
+    execFile(process.env.CODEX_GIT || "git", ["status", "--porcelain", "-z", "--untracked-files=all", "--", ...ROOTS, "*.md"],
       { cwd: REPO, maxBuffer: 16 << 20 }, (err, stdout) => {
         const status = {};
         if (!err) for (const entry of stdout.split("\0")) {
@@ -113,7 +114,7 @@ const localNotes = makeStore(REPO, { onWrite: (file, opts) => { if (!opts?.quiet
 
 // The name on the owner's comments: git's user.name (the Codex is one person's tool).
 let owner = null;
-const ownerName = () => owner ?? new Promise((resolve) => execFile("git", ["config", "user.name"], { cwd: REPO }, (err, out) => resolve(owner = (!err && out.trim()) || "You")));
+const ownerName = () => owner ?? new Promise((resolve) => execFile(process.env.CODEX_GIT || "git", ["config", "user.name"], { cwd: REPO }, (err, out) => resolve(owner = (!err && out.trim()) || "You")));
 // The AI tab's conversations stay on this computer: CODEX_DATA, else .local/ beside this tool.
 const DATA = process.env.CODEX_DATA ? path.resolve(process.env.CODEX_DATA) : path.join(HERE, ".local");
 // Who's using this Codex (Sign in with Discord, through the helper): src/discord-account.js. Signing in
@@ -162,7 +163,7 @@ async function linkIndex() {
 }
 
 // Spelling: British English, the docs' own repeated words, and words.txt beside this tool.
-const speller = makeSpell({ wordsFile: path.join(HERE, "words.txt"), texts: async () => (await linkIndex()).texts });
+const speller = makeSpell({ wordsFile: process.env.CODEX_WORDS || path.join(HERE, "words.txt"), texts: async () => (await linkIndex()).texts });
 
 /** Open notes per page: { page: { note, ask, task, answered, total } } ("" is scratch). */
 async function noteCounts() {

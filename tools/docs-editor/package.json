@@ -2,16 +2,23 @@
   "name": "rth-docs-editor",
   "private": true,
   "version": "0.1.0",
-  "description": "Local reader and editor for R'th's design docs. A dev tool: never shipped with the game.",
+  "description": "The R'th Codex: the design docs of R'th, with Discord and AI built in. A tool for the team, never shipped with the game.",
   "type": "module",
   "scripts": {
     "build": "esbuild src/app.js --bundle --format=esm --minify --sourcemap --outfile=public/app.js",
     "app": "npm run build && node electron/launch.js",
     "start": "npm run build && node server.js",
     "test": "node test/merge.test.js && node test/notes.test.js && node test/spell.test.js && node test/sync.test.js && node test/discord.test.js && node test/ai-diff.test.js && node test/openrouter.test.js",
-    "notes": "node notes.js"
+    "notes": "node notes.js",
+    "dist": "npm run build && node scripts/fetch-mingit.mjs && electron-builder --win --publish never",
+    "release": "node scripts/release.mjs"
   },
   "dependencies": {
+    "dictionary-en": "^4.0.0",
+    "electron-updater": "^6.8.11",
+    "nspell": "^2.1.5"
+  },
+  "devDependencies": {
     "@tiptap/core": "^2.27.3",
     "@tiptap/extension-code": "^2.27.3",
     "@tiptap/extension-image": "^2.27.3",
@@ -27,15 +34,78 @@
     "@tiptap/extension-text": "^2.27.3",
     "@tiptap/pm": "^2.27.3",
     "@tiptap/starter-kit": "^2.27.3",
-    "dictionary-en": "^4.0.0",
+    "electron": "^45.2.1",
+    "electron-builder": "^26.18.0",
+    "esbuild": "^0.25.0",
     "markdown-it": "^14.1.0",
-    "nspell": "^2.1.5",
+    "rcedit": "^5.0.2",
     "tiptap-markdown": "^0.8.10"
   },
-  "devDependencies": {
-    "electron": "^45.2.1",
-    "esbuild": "^0.25.0",
-    "rcedit": "^5.0.2"
-  },
-  "main": "electron/main.js"
+  "main": "electron/main.js",
+  "build": {
+    "appId": "rth.codex",
+    "productName": "R'th Codex",
+    "copyright": "",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "electron/**",
+      "server.js",
+      "src/**",
+      "public/**",
+      "assets/**",
+      "package.json",
+      "!public/app.js.map"
+    ],
+    "extraResources": [
+      {
+        "from": "../../client/Assets/Resources/UI",
+        "to": "look/UI",
+        "filter": [
+          "**/*",
+          "!**/*.meta"
+        ]
+      },
+      {
+        "from": "../../client/Assets/Resources/Icons",
+        "to": "look/Icons",
+        "filter": [
+          "**/*",
+          "!**/*.meta"
+        ]
+      },
+      {
+        "from": "build/mingit",
+        "to": "git"
+      }
+    ],
+    "protocols": [
+      {
+        "name": "R'th Codex",
+        "schemes": [
+          "rth-codex"
+        ]
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/logo.ico",
+      "artifactName": "RthCodexSetup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "shortcutName": "R'th Codex",
+      "uninstallDisplayName": "R'th Codex",
+      "deleteAppDataOnUninstall": false
+    },
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://github.com/Martifugit/rth/releases/latest/download"
+      }
+    ]
+  }
 }

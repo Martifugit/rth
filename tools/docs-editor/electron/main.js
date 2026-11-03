@@ -58,6 +58,7 @@ function saveBounds() {
 
 /** Rebuild the page (public/app.js) if its source is newer, so a shortcut always opens the current Codex. */
 async function buildIfStale() {
+  if (app.isPackaged) return; // the installed app is built already
   const out = path.join(ROOT, "public", "app.js");
   const built = fs.existsSync(out) ? fs.statSync(out).mtimeMs : 0;
   const src = path.join(ROOT, "src");
@@ -69,6 +70,15 @@ async function buildIfStale() {
 
 async function open() {
   await buildIfStale();
+  // The installed app brings the game's look (fonts, frames, icons) and its own git (MinGit), and keeps
+  // the words you add to the dictionary in its own folder.
+  if (app.isPackaged) {
+    const res = process.resourcesPath;
+    process.env.CODEX_LOOK ||= path.join(res, "look");
+    const git = path.join(res, "git", "cmd", "git.exe");
+    if (fs.existsSync(git)) process.env.CODEX_GIT ||= git;
+    process.env.CODEX_WORDS ||= path.join(app.getPath("userData"), "words.txt");
+  }
   // Where the docs are: known, or asked once (electron/firstrun.js). A copy the Codex fetched belongs
   // to a contributor, who edits once signed in with Discord with the Codex role.
   const where = knownRepo() || (await firstRun({ icon: fs.existsSync(ICON) ? ICON : undefined }));
@@ -136,6 +146,28 @@ async function open() {
   const first = pendingLink ? new URL(pendingLink).searchParams.get("p") : null;
   pendingLink = null;
   await win.loadURL(origin + "/" + (first && /\.md$/.test(first) && !first.includes("..") ? "?p=" + encodeURI(first) : ""));
+  if (app.isPackaged) watchForUpdates();
+}
+
+/**
+ * Updates (PLAN.md, step 6): the installed Codex looks for a newer release on GitHub (the repository's
+ * latest release; see package.json's "build.publish"), downloads it quietly and installs it when you
+ * close the Codex. The page says when one is ready.
+ */
+async function watchForUpdates() {
+  try {
+    const { default: updater } = await import("electron-updater");
+    const { autoUpdater } = updater;
+    autoUpdater.autoDownload = true;
+    autoUpdater.autoInstallOnAppQuit = true;
+    autoUpdater.on("update-downloaded", (info) => {
+      if (win && !win.isDestroyed()) win.webContents.executeJavaScript(`window.__codex && window.__codex.toast && window.__codex.toast(${JSON.stringify(`R'th Codex ${info.version} is ready: it installs when you close the Codex`)}, "good")`).catch(() => {});
+    });
+    autoUpdater.on("error", (e) => { if (process.env.CODEX_DEBUG) console.log("update:", e.message); });
+    const check = () => autoUpdater.checkForUpdates().catch(() => {});
+    check();
+    setInterval(check, 6 * 60 * 60 * 1000);
+  } catch (e) { if (process.env.CODEX_DEBUG) console.log("updates off:", e.message); }
 }
 
 // No visible menu bar, but the usual keys still work (reload, zoom, developer tools).

@@ -222,11 +222,15 @@ Later, only if wanted (the helper can answer Discord's commands the same way): `
 5. **First run** *(done)*: choose a folder (or fetch the docs: a blobless, sparse clone of `docs/`, about
    12 MB and seconds), a welcome offering Sign in with Discord and, without Claude, Sign in with
    OpenRouter (or Not now); a fetched copy is read-only until signed in with the Codex role.
-6. **Shipping**: installers and automatic updates.
+6. **Shipping** *(done)*: `npm run release` builds an unsigned Windows installer (electron-builder, NSIS,
+   one click, per user; it carries the game's look and MinGit) and publishes it on the game repository's
+   GitHub Releases as `codex-v<version>`; installed Codexes update themselves from the latest release
+   (electron-updater), installing when closed. Windows warns once about the unsigned installer.
 
 ## Open questions
 
-1. Where releases are published.
+1. *(Decided 2026-11-03: the game repository's GitHub Releases, which are public; the Codex is no use
+   without the Discord role, and the docs are public anyway. Installers unsigned.)*
 2. Whether anyone will use it on a Mac.
 3. Which free models to start with, chosen when building by measuring real questions.
 4. One Codex role, or a second one that can read and comment but not edit.

@@ -1248,7 +1248,7 @@ start();
 
 // For checking in the browser's console: the state, and the merge.
 window.__codex = {
-  S, mergeEdit, renderHtml, editorMarkdown: () => editorMarkdown(), openDoc, notes, panels,
+  S, mergeEdit, renderHtml, editorMarkdown: () => editorMarkdown(), openDoc, notes, panels, toast,
   // The desktop app calls this before closing: save whatever is still being typed.
   flush: async () => { clearTimeout(autoTimer); refreshDirty(); return !S.dirty || S.noSave || (await save(false, { quiet: true })); },
 };
