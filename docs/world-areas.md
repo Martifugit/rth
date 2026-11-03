@@ -23,12 +23,13 @@ enough to finish, big enough to mean something ([world-guide.md](world-guide.md)
 
 ## The standard
 
-Four stages ([world-guide.md](world-guide.md) section 5), each a few work packages. An area reaches a
-stage when every package of it, and of every stage before it, is ticked. The full text of each
-package's "done when" is in `world/areas.json`.
+A plan, then four stages ([world-guide.md](world-guide.md) section 5), each a few work packages. An
+area reaches a stage when every package of it, and of every stage before it, is ticked. The full text
+of each package's "done when" is in `world/areas.json`.
 
 | Stage | Goal | Packages |
 | --- | --- | --- |
+| **0. Plan** | What is physically there, and why, is decided before any ground is changed, and the owner has approved it. | 0.1 Design document · 0.2 Plan data · 0.3 Plan map · 0.4 Reviewed · 0.5 Approved |
 | **1. Geography** | The land is right: its shape, water and ground read as the brief says, walked at player height. | 1.1 Brief · 1.2 Taken over · 1.3 Landforms · 1.4 Water · 1.5 Ground · 1.6 Walked |
 | **2. Structure** | The layout is right: roads, settlements, landmarks and edges are where they will stay. | 2.1 Routes · 2.2 Settlements · 2.3 Landmarks · 2.4 Edges · 2.5 Sites · 2.6 Walked |
 | **3. Life** | It is a place to play: resources, creatures, people and hooks, counted against the brief. | 3.1 Resources · 3.2 Creatures · 3.3 People and services · 3.4 Hooks · 3.5 Checked · 3.6 Played |
@@ -37,10 +38,30 @@ package's "done when" is in `world/areas.json`.
 The packages that end in **Walked** or **Played** are the owner's: a stage is signed off by walking
 it, not by looking at it from above.
 
+**The planning gate (decided 2026-11-03).** No ground work starts in an area until its plan is
+approved:
+- **The plan** is a design document written to [areas/plan-template.md](areas/plan-template.md) and
+  the same plan as data in `world/plans/<area>.json`. It covers:
+  - every place, how players first find it and what catches their eye;
+  - every skill's content, its counts, levels and why it fits there;
+  - the quests it supports, the buildings, every dungeon's floor plan, each height's job;
+  - the ties to every neighbour and the area's part in its region;
+  - a walkthrough for each level band.
+- **The tools hold the gate:**
+  - `tools/world strokes` writes nothing in an area without 0.5 (`--sketch` overrides it, for a
+    throwaway branch);
+  - `tools/world areas` fails on any package past stage 0 ticked without it;
+  - `tools/world plan check <area>` fails until the plan is complete.
+- **0.5 Approved is the owner's** alone to tick, like the walks.
+- **Grandfathered:** work ticked before the gate (wave 1's first passes) is reported as a warning, to
+  redo against the plan once it is approved.
+
 ## The order
 
 The areas come in waves, nearest the start first. The rule:
 
+0. **Plan a wave together.** The areas of a wave share borders, rims, rivers and roads, so their plans
+   are written and reviewed side by side (0.1-0.4 for the whole wave) before any of them is approved.
 1. **Wave 1 goes to stage 2 first**: *Tolling and Wennow*, *Knellmere and the lake road*, *Cruor and
    the meander* and *the western march*. It is where every player's first hours happen, and taking it
    all the way through structure proves the standard, the tools and the briefs before they are used
@@ -74,8 +95,10 @@ region to another area is an edit to the same file.
 
 ## The brief (package 1.1)
 
-One page, `docs/areas/<area id>.md`, before any work on the ground ([world-example.md](world-example.md)
-is a worked one). It takes its facts from [world-plan.md](world-plan.md) and the layout, and answers:
+The design document's geography, written for stage 1 once the plan is approved (the plan itself is
+stage 0, to [areas/plan-template.md](areas/plan-template.md)). [world-example.md](world-example.md)
+is a worked brief. It takes its facts from the plan, [world-plan.md](world-plan.md) and the layout,
+and answers:
 
 | Heading | What it says |
 | --- | --- |

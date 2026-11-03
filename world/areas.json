@@ -1,8 +1,15 @@
 {
   "about": "The world in areas, and the standard each is raised to (docs/world-areas.md). Every region belongs to one area. Tick a package by adding its id to the area's \"done\" with the date. Check with `dotnet run --project tools/world -- areas`.",
   "stages": [
+    { "number": 0, "name": "Plan", "goal": "What is physically there, and why, is decided before any ground is changed, and the owner has approved it.", "packages": [
+      {"id": "0.1", "name": "Design document", "done": "docs/areas/<id>.md answers every question in docs/areas/plan-template.md: each place, how players find it and what catches the eye; each activity, skill by skill, with its objects, counts and levels and why it belongs here; the quests it supports; every building and dungeon; each height's job; routes and walking times; space kept for later; ties to its neighbours and its part in the wider region; a walkthrough per level band; what is not decided."},
+      {"id": "0.2", "name": "Plan data", "done": "world/plans/<id>.json holds the plan's places, buildings, content, dungeons, routes, heights, reserves and neighbours; tools/world plan check <id> is clean."},
+      {"id": "0.3", "name": "Plan map", "done": "tools/world plan render <id> drawn and read against the document; the areas of its wave (or its built neighbours) planned alongside it, so roads, rivers, rims and resources agree across borders."},
+      {"id": "0.4", "name": "Reviewed", "done": "A reviewer who didn't write it (a fresh agent) checked the document and the data against the template, the pace table (docs/skills.md 2.1) and the neighbours' plans; every finding answered in the document."},
+      {"id": "0.5", "name": "Approved", "done": "The owner has read the plan and its map and approved it. Only the owner ticks this; until it is ticked no package past stage 0 counts and tools/world strokes changes none of the area's ground."}
+    ] },
     { "number": 1, "name": "Geography", "goal": "The land is right: its shape, water and ground read as the brief says, walked at player height.", "packages": [
-      {"id": "1.1", "name": "Brief", "done": "docs/areas/<id>.md written from the template (docs/world-areas.md) and agreed: what it is for, who lives there, palette, landmarks and views, routes in and out, resources and creatures by count, its sites."},
+      {"id": "1.1", "name": "Brief", "done": "docs/areas/<id>.md's geography (shape, landforms, water, ground, landmarks and views, routes) follows the approved plan and is agreed"},
       {"id": "1.2", "name": "Taken over", "done": "Its generated regions are frozen into their own data (\"generated\" removed) and their scenes moved to Assets/Scenes/<Area>/; tools/world check clean."},
       {"id": "1.3", "name": "Landforms", "done": "Terrain shaped to the brief (hills, valleys, cliffs where meant, nowhere else); no seams at its borders; no unreachable pockets."},
       {"id": "1.4", "name": "Water", "done": "Every river rises and ends somewhere visible, lakes sit level, shores and banks read right, falls where the river steps, a crossing wherever a route meets water."},

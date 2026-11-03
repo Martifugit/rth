@@ -91,6 +91,8 @@ switch (command)
             .ToDictionary(e => e.Region.Id, e => (e.Region.OriginX, e.Region.OriginY, e.Region.Width, e.Region.Height));
         List<string> errors = areas.Check(regionRects.Keys);
         foreach (string e in errors) Console.Error.WriteLine("error: " + e);
+        foreach (var g in areas.Ungated().Where(u => u.grandfathered).GroupBy(u => u.area.Id))
+            Console.WriteLine($"warning: {g.Key}: {string.Join(", ", g.Select(u => u.package))} ticked before the planning gate; redo against its plan once approved");
         int n = 0;
         Console.WriteLine($"  {"#",3} {"wave",4} {"stage",5}  {"area",-42} {"regions",7}  next");
         foreach (WorldAreas.Area a in areas.Areas)
@@ -116,6 +118,9 @@ switch (command)
         }
         return errors.Count == 0 ? 0 : 1;
     }
+
+    case "plan":
+        return PlanCommand(root, ws, rest);
 
     case "probe":
     {
@@ -191,9 +196,11 @@ switch (command)
     case "strokes":
     {
         // Paths and rivers redrawn from a plan of points (GroundStrokes): strokes <plan.json>
+        bool sketch = rest.Contains("--sketch");
+        rest = rest.Where(a => a != "--sketch").ToArray();
         if (rest.Length != 1 || !File.Exists(rest[0]))
         {
-            Console.Error.WriteLine("Usage: strokes <plan.json> (see shared/World/Ground/GroundStrokes.cs)");
+            Console.Error.WriteLine("Usage: strokes <plan.json> [--sketch] (see shared/World/Ground/GroundStrokes.cs)");
             return 2;
         }
         StrokePlan plan = StrokePlan.Parse(File.ReadAllText(rest[0]));
@@ -231,6 +238,17 @@ switch (command)
         TerrainSeams.Result seams = TerrainSeams.Follow(ws.Regions.Select(e => e.Region).ToList(), edited);
         foreach (string m in seams.Messages) Console.WriteLine("note: " + m);
         if (seams.GeneratedNeighbours.Count > 0) Console.WriteLine($"note: run `blockout` so the generated land meets them ({string.Join(", ", seams.GeneratedNeighbours)}).");
+        // The planning gate (docs/world-areas.md, stage 0): no ground changes in an area whose plan the owner hasn't approved.
+        WorldAreas gate = WorldAreas.Load(WorldAreas.PathIn(root));
+        var unplanned = ws.Regions.Where(e => before.TryGetValue(e.Region.Id, out string was) && was != RegionFiles.Format(e.Region))
+            .Select(e => gate.AreaOf(e.Region.Id)).Where(a => a != null && !gate.Approved(a)).Select(a => a!.Id).Distinct().ToList();
+        if (unplanned.Count > 0 && !sketch)
+        {
+            Console.Error.WriteLine($"error: nothing written: the plan for {string.Join(", ", unplanned)} isn't approved ({WorldAreas.PlanApproved} in world/areas.json). " +
+                                    "Plan first (docs/areas/plan-template.md); --sketch writes anyway, for a throwaway branch.");
+            return 1;
+        }
+        if (unplanned.Count > 0) Console.WriteLine($"sketch: writing ground in {string.Join(", ", unplanned)} without an approved plan; not for main.");
         foreach (WorldWorkspace.Entry e in ws.Regions)
             if (before.TryGetValue(e.Region.Id, out string was) && was != RegionFiles.Format(e.Region))
             {
@@ -288,10 +306,108 @@ switch (command)
               blockout [check]   generate the walkable blockout from the layout: world/regions/land_*.json for
                                  every region with core land and the ring around it, then export their maps
                                  (check: only check that the generated regions are up to date)
+              plan [check|render|built] <area>
+                                 an area's plan (world/plans/<area>.json, docs/areas/plan-template.md): check it is
+                                 complete (every place found and hooked, every thing with a why, ties to every
+                                 neighbour); render it over the area's ground to world/renders/plan-<area>.png;
+                                 compare the regions as built with it. plan alone lists every area's plan
+              strokes <plan> [--sketch]
+                                 apply a strokes plan (world/strokes); refused in an area whose plan isn't approved
               chart [x0 y0 x1 y1] draw the players' world map's ground (WorldChart + ChartPainter) to
                                  world/renders/chart.png, with rivers and roads roughly on top
             """);
         return command == "help" ? 0 : 2;
+}
+
+static AreaPlan.World PlanWorld(string root, WorldWorkspace ws)
+{
+    string content = Path.Combine(root, "server", "data", "content");
+    HashSet<string> Ids(string file)
+    {
+        var set = new HashSet<string>(StringComparer.Ordinal);
+        string path = Path.Combine(content, file);
+        if (!File.Exists(path)) return set;
+        foreach (var item in Newtonsoft.Json.Linq.JArray.Parse(File.ReadAllText(path)))
+            if (item["id"] is Newtonsoft.Json.Linq.JToken id) set.Add((string)id!);
+        return set;
+    }
+    var w = new AreaPlan.World
+    {
+        Areas = WorldAreas.Load(WorldAreas.PathIn(root)),
+        Objects = Ids("objects.json"),
+        Npcs = Ids("npcs.json"),
+        Quests = Ids("quests.json"),
+        FileExists = f => File.Exists(Path.Combine(root, f)),
+    };
+    foreach (WorldWorkspace.Entry e in ws.Regions.Where(e => !e.Region.Instanced))
+        w.Regions[e.Region.Id] = (e.Region.OriginX, e.Region.OriginY, e.Region.Width, e.Region.Height);
+    string quests = Path.Combine(root, "docs", "quests");
+    if (Directory.Exists(quests))
+        foreach (string f in Directory.GetFiles(quests, "*.md")) w.Quests.Add(Path.GetFileNameWithoutExtension(f));
+    var skills = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(Path.Combine(content, "skills.json")))["skills"];
+    if (skills is Newtonsoft.Json.Linq.JArray list)
+        foreach (var sk in list)
+            if (sk["id"] is Newtonsoft.Json.Linq.JToken id) w.Skills.Add((string)id!);
+    return w;
+}
+
+static int PlanCommand(string root, WorldWorkspace ws, string[] args)
+{
+    AreaPlan.World w = PlanWorld(root, ws);
+    if (args.Length == 0)
+    {
+        foreach (WorldAreas.Area a in w.Areas.Areas.Where(a => a.Wave > 0))
+        {
+            string path = AreaPlan.PathFor(root, a.Id);
+            string state = !File.Exists(path) ? "no plan" : AreaPlan.Parse(File.ReadAllText(path)).Status;
+            Console.WriteLine($"  {a.Wave,2}  {a.Id,-34} {state,-8} {(w.Areas.Approved(a) ? "approved " + a.Done[WorldAreas.PlanApproved] : "")}");
+        }
+        return 0;
+    }
+    string verb = args.Length >= 2 ? args[0] : "check";
+    string areaId = args[^1];
+    string file = AreaPlan.PathFor(root, areaId);
+    if (!File.Exists(file)) { Console.Error.WriteLine($"No plan: world/plans/{areaId}.json (docs/areas/plan-template.md)."); return 2; }
+    AreaPlan plan;
+    try { plan = AreaPlan.Parse(File.ReadAllText(file)); }
+    catch (FormatException e) { Console.Error.WriteLine($"error: {areaId}.json: {e.Message}"); return 1; }
+    WorldAreas.Area? area = w.Areas.Areas.FirstOrDefault(a => a.Id == areaId);
+    var regions = area == null ? new List<RegionData>() : ws.Regions.Where(e => area.Regions.Contains(e.Region.Id)).Select(e => e.Region).ToList();
+    switch (verb)
+    {
+        case "check":
+        {
+            List<string> errors = plan.Check(w);
+            foreach (string e in errors) Console.Error.WriteLine("error: " + e);
+            Console.WriteLine($"{plan.Places.Count} places, {plan.Buildings.Count} buildings, {plan.Contents.Count} content groups " +
+                              $"({plan.Contents.Sum(c => c.Count)} things), {plan.Dungeons.Count} below ground, {plan.Heights.Count} heights, {plan.Reserved.Count} kept for later.");
+            foreach (var kv in plan.Skills()) Console.WriteLine($"  {kv.Key}: {string.Join(", ", kv.Value)}");
+            Console.WriteLine(errors.Count == 0 ? "The plan is complete." : $"{errors.Count} things missing.");
+            return errors.Count == 0 ? 0 : 1;
+        }
+        case "render":
+        {
+            if (regions.Count == 0) { Console.Error.WriteLine($"No regions for area '{areaId}'."); return 2; }
+            MapRender.LoadPalette(root);
+            string outDir = Path.Combine(root, "world", "renders");
+            Directory.CreateDirectory(outDir);
+            string png = Path.Combine(outDir, "plan-" + areaId + ".png");
+            int ppt = args.Length >= 3 && int.TryParse(args[1], out int p) ? p : 4;
+            File.WriteAllBytes(png, PlanRender.Draw(plan, regions, ppt));
+            Console.WriteLine("wrote " + Path.GetRelativePath(root, png).Replace(Path.DirectorySeparatorChar, '/'));
+            return 0;
+        }
+        case "built":
+        {
+            List<string> notes = plan.Built(regions);
+            foreach (string n in notes) Console.WriteLine(n);
+            Console.WriteLine(notes.Count == 0 ? "Built as planned." : $"{notes.Count} differences from the plan.");
+            return 0;
+        }
+        default:
+            Console.Error.WriteLine("Usage: plan [check|render [pixels]|built] <area>");
+            return 2;
+    }
 }
 
 static int Layout(string root, string[] args)

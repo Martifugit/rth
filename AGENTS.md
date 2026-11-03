@@ -38,7 +38,8 @@ Design docs:
 - `docs/world-guide.md`: **read before any work on the game world.** The reference: what the world
   is, scale, from lore to ground, how a place gets made, the design checklist, working together.
 - `docs/workflow.md`: how the owner and agents (with and without Unity) build the world together, as data.
-- `docs/areas/`: the area plan for the whole continent, built in passes. Start with `rules.md` (how the research targets are used); the evidence is in `docs/research/`.
+- `docs/areas/`: the area plan for the whole continent, built in passes. **No ground work in an area until its plan is
+  approved** (stage 0: `docs/areas/plan-template.md`, `world/plans/<area>.json`, `tools/world plan`); the tools enforce it. Start with `rules.md` (how the research targets are used); the evidence is in `docs/research/`.
 
 ---
 
@@ -563,7 +564,8 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | Stairs, ladders, trapdoors | An object with a `climb` action (`stairs_up`/`stairs_down`/`ladder_up`/`ladder_down` exist) placed with `MapObject` + a collider, and its `climbTo` set to an empty object on the landing tile under the target floor's `MapLevel`. One object per end. The exporter warns about a blocked landing; `ClimbSystem` moves the player. |
 | A new region of the world | A file `world/regions/<id>.json` (id, title, scene path, zone-aligned origin and size, ground, materials, pieces); `tools/world export`, then Sync World creates its scene. No server code. Over the open land, it replaces the generated `land_*` region there at the next `tools/world blockout`. |
 | The open land between places (the blockout) | Change `world/layout/continent.json` and run `tools/world blockout` (`docs/world-plan.md` section 10); see it first with `tools/world paint` and `probe`. `Landscape` builds it: grounds, `relief` (landforms), rivers and lakes, routed roads (`RoadRouter`), platforms, painted detail. Never edit a `land_*.json` that still says `"generated"`. |
-| Work on a part of the world | Its area in `world/areas.json` (`docs/world-areas.md`): write the brief, do the next package, tick it, run `tools/world areas`. A new region goes into an area too (`WorldAreasTests`). |
+| Work on a part of the world | Its area in `world/areas.json` (`docs/world-areas.md`). **Plan it first** (stage 0): the design document to `docs/areas/plan-template.md` and `world/plans/<area>.json` (`tools/world plan check`, `plan render`), reviewed, and approved by the owner (0.5) before any ground changes; `tools/world strokes` refuses otherwise. Then do the next package, tick it, run `tools/world areas`. A new region goes into an area too (`WorldAreasTests`). |
+| What an area's plan holds as data | `shared/World/Data/AreaPlan.cs`: places (`foundBy`, `hook`), buildings, content (object or npc, count, rect, skill, levels, `why`, `supports`), dungeons and their rooms, routes, heights (a `job` from `AreaPlan.HeightJobs`), reserves, neighbours. A new required question is a field and a line in `Check`; `plan built` compares the regions with it. |
 | A landform (hill, scarp, mesa, crater, dunes, canyons) | An entry in continent.json's `relief`; a new kind is a case in `Relief.Contribution`. |
 | How water and shores look | `Shore` (shared/World/Ground: how far the bank dips under the water, by how much water lies near) and `TileGround.BuildWater` (one flat surface over the water and the ring round it; per corner: shallow, flow direction and speed), drawn by `Resources/Shaders/Water.shader`. |
 | A spot kept for future content (a dungeon mouth, a boss arena) | An entry in continent.json's `sites` (kind, stage, note): marked in the blockout, never on the players' map. |

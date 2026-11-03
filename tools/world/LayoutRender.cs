@@ -241,6 +241,18 @@ namespace Rth.WorldTool
                 Array.Fill(_px, new Rgb(20, 24, 30));
             }
 
+            /// <summary>A canvas holding a picture already drawn (RGBA, rows from the top).</summary>
+            public static Canvas FromRgba(byte[] rgba, int w, int h)
+            {
+                var c = new Canvas(w, h);
+                for (int i = 0; i < w * h; i++) c._px[i] = new Rgb(rgba[i * 4], rgba[i * 4 + 1], rgba[i * 4 + 2]);
+                return c;
+            }
+
+            public int Width => _w;
+            public int Height => _h;
+
+            public Rgb Get(int x, int y) => x >= 0 && y >= 0 && x < _w && y < _h ? _px[y * _w + x] : default;
             public void Set(int x, int y, Rgb c) { if (x >= 0 && y >= 0 && x < _w && y < _h) _px[y * _w + x] = c; }
             public void Blend(int x, int y, Rgb c, float t) { if (x >= 0 && y >= 0 && x < _w && y < _h) _px[y * _w + x] = _px[y * _w + x].Mix(c, t); }
 

@@ -1,5 +1,9 @@
 # The heartland (wave 1): what is there, what players do, and the land for it
 
+**Superseded as the plan's form (2026-11-03):** each area is now planned to
+[plan-template.md](plan-template.md), as a design document and `world/plans/<area>.json`. This page
+is the starting point for wave 1's four plans.
+
 **Status:** proposed (2026-11-03, second draft), for the owner. Replaces the first levels pass
 (2026-11-02), which was rejected as arbitrary height. The first draft of this plan was rejected too:
 it described story instead of things in the world. This draft lists only **what is physically

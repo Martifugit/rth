@@ -93,9 +93,16 @@ public static class PaintRender
     /// <summary>Several painted regions from their data, side by side in one picture (north up).</summary>
     public static byte[] Regions(IReadOnlyList<RegionData> regions, int ppt)
     {
-        int x0 = regions.Min(r => r.OriginX), y0 = regions.Min(r => r.OriginY);
+        byte[] all = RegionsRgba(regions, ppt, out int w, out int h, out _, out _);
+        return ToPng(all, w, h);
+    }
+
+    /// <summary>The regions painted, as RGBA rows from the north; (x0, y0) is the south-west tile.</summary>
+    public static byte[] RegionsRgba(IReadOnlyList<RegionData> regions, int ppt, out int w, out int h, out int x0, out int y0)
+    {
+        x0 = regions.Min(r => r.OriginX); y0 = regions.Min(r => r.OriginY);
         int x1 = regions.Max(r => r.OriginX + r.Width), y1 = regions.Max(r => r.OriginY + r.Height);
-        int w = (x1 - x0) * ppt, h = (y1 - y0) * ppt;
+        w = (x1 - x0) * ppt; h = (y1 - y0) * ppt;
         var all = new byte[w * h * 4];
         foreach (RegionData region in regions)
         {
@@ -110,7 +117,7 @@ public static class PaintRender
             for (int y = 0; y < rh; y++)
                 Buffer.BlockCopy(rgba, y * rw * 4, all, ((oy + y) * w + ox) * 4, rw * 4);
         }
-        return ToPng(all, w, h);
+        return all;
     }
 
     /// <summary>Small marks for places (white) and sites (red), so a picture can be read against the layout.</summary>

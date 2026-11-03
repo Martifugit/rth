@@ -18,6 +18,15 @@ namespace Rth.Shared.World.Data
     {
         public const string FileName = "areas.json";
 
+        /// <summary>
+        /// Stage 0's last package: the owner has approved the area's plan (world/plans, its design
+        /// document). Nothing of stage 1 or later counts, and the tools change no ground, until it is ticked.
+        /// </summary>
+        public const string PlanApproved = "0.5";
+
+        /// <summary>When the planning gate came in: work ticked before it is grandfathered (a warning, not an error).</summary>
+        public const string GateSince = "2026-11-03";
+
         public sealed class Package
         {
             /// <summary>"1.3": stage 1, the third package.</summary>
@@ -70,7 +79,10 @@ namespace Rth.Shared.World.Data
 
         public IEnumerable<Package> AllPackages => Stages.SelectMany(s => s.Packages);
 
-        /// <summary>The highest stage whose packages are all done (and every one before it); 0: none yet.</summary>
+        /// <summary>
+        /// The highest stage whose packages are all done (and every one before it); 0: none past the
+        /// plan yet (stage 0, the plan, has to be done before stage 1 counts).
+        /// </summary>
         public int StageOf(Area a)
         {
             int reached = 0;
@@ -80,6 +92,22 @@ namespace Rth.Shared.World.Data
                 reached = s.Number;
             }
             return reached;
+        }
+
+        /// <summary>Whether the owner has approved the area's plan, so its ground may be worked.</summary>
+        public bool Approved(Area a) => a.Done.ContainsKey(PlanApproved);
+
+        /// <summary>
+        /// Packages past the plan ticked without an approved plan: before <see cref="GateSince"/> they
+        /// are grandfathered (to redo against the plan once it is approved), after it they are errors.
+        /// </summary>
+        public List<(Area area, string package, bool grandfathered)> Ungated()
+        {
+            var found = new List<(Area, string, bool)>();
+            foreach (Area a in Areas.Where(a => !Approved(a)))
+                foreach (var tick in a.Done.Where(t => !t.Key.StartsWith("0.", StringComparison.Ordinal)))
+                    found.Add((a, tick.Key, string.CompareOrdinal(tick.Value.Length >= 10 ? tick.Value.Substring(0, 10) : tick.Value, GateSince) < 0));
+            return found;
         }
 
         /// <summary>The first package not yet done, in order; null when the area is finished.</summary>
@@ -111,6 +139,8 @@ namespace Rth.Shared.World.Data
                 foreach (string p in a.Done.Keys)
                     if (!packages.Contains(p)) errors.Add($"area {a.Id}: '{p}' is not a package of the standard");
             }
+            foreach (var (area, package, grandfathered) in Ungated())
+                if (!grandfathered) errors.Add($"area {area.Id}: {package} is ticked, but its plan isn't approved ({PlanApproved}): plan first (docs/world-areas.md, stage 0)");
             foreach (string r in known.Where(r => !owner.ContainsKey(r)).OrderBy(r => r, StringComparer.Ordinal))
                 errors.Add($"region {r} is in no area: add it to one in world/{FileName}");
             return errors;
