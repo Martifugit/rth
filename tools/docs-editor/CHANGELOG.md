@@ -4,6 +4,14 @@ A few plain lines per version, for the people using it: `npm run release` puts t
 the GitHub release and announces it in #codex (`scripts/release.mjs`, `scripts/announce.mjs`). Write the
 section before releasing; the release refuses without one.
 
+## 0.1.5
+
+- See who else has the Codex open: their avatars by yours (hover to see where they are, click to go
+  there), and beside the page's path for those on the same page.
+- A note when you and someone else are editing the same section.
+- Comments arrive straight away, with "… is typing" in a thread.
+- Right-click in the page list: make a page in a folder, delete a page, copy a link for Discord.
+
 ## 0.1.4
 
 - The first start asks nothing: it gets the docs ready by itself, with a progress bar.

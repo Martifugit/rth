@@ -43,6 +43,8 @@ uncommitted work in the folder are never staged, committed, set aside or overwri
 - **Pages** (left): *Design docs* is the GDD (`docs/gdd/`) in its own order, with *Open questions*
   at the top; *General* is everything else under `docs/`, and the repository's own Markdown. A gold
   dot is a page changed since the last commit, a green one a page not in git yet. Type to filter.
+  Right-click a folder for **New page here**, or a page to open it, make a page beside it, copy a link
+  for Discord or its path, or delete it.
 - **Spelling** is checked by the Codex, not the browser (whose dictionary follows its language): US
   English, plus any word the docs use three times or more (R'th's names). Right-click an underlined
   word for suggestions, or to add it to `words.txt` beside this tool.
@@ -88,6 +90,18 @@ the Codex is open (the Discord app on this computer; off in the logo's menu).
 **The helper** (`helper/`): `npx wrangler deploy` from that folder. Its settings are in `wrangler.toml`;
 its secrets live in `helper/.dev.vars` and `helper/github-app.pem` on the owner's computer (git ignores
 both) and are sent to Cloudflare with `wrangler secret`. See [PLAN.md](PLAN.md), "The helper".
+
+## Together
+
+While you're signed in with the Codex role, the Codex shows who else has one open (`src/together.js`,
+`src/together-ui.js`; the room is `helper/src/live.js`):
+
+- **By your avatar** (top right): the others' small avatars. Hover them to fan them out; hover one to see
+  where they are (reading, editing which section, away); click it to go there.
+- **Beside the page's path**: who's on this page; a gold ring while they're editing.
+- **Editing the same section** as someone: a quiet note says so. Nothing is locked.
+- **Comments** arrive at once, with "Kari is typing…" in a thread.
+- **Show me as online** in the layout menu (the logo) hides you from the others.
 
 ## The AI tab
 

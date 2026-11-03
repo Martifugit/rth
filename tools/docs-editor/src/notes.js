@@ -409,6 +409,7 @@ export function makeNotes(ctx) {
           h("div", { class: "cm-typing" }, h("span", { class: "dots" }, h("i"), h("i"), h("i")),
             run.state === "queued" ? "Waiting for another answer to finish" : run.activity || "Thinking",
             h("button", { class: "cm-link", onclick: (ev) => { ev.stopPropagation(); api(`/api/notes/${n.id}/stop`, { method: "POST" }); } }, "Stop"))) : null,
+        h("div", { class: "cm-others-typing" + (ctx.othersTyping?.(n.id) ? "" : " hidden"), "data-for": n.id }, ctx.othersTyping?.(n.id) || ""),
         replyBox(n)));
   }
 

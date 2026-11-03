@@ -28,6 +28,7 @@ import { makeAccountButton } from "./account-button.js";
 import { makePasteHandler, forDiscord } from "./discord-extras.js";
 import { AiMarks, makeAiChanges } from "./ai-changes.js";
 import { altGrChar, isKeyFor } from "./keys.js";
+import { makeTogetherUi } from "./together-ui.js";
 import { Spelling, configureSpelling } from "./spellcheck.js";
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -202,7 +203,7 @@ function makeEditor(text) {
       Spelling,
     ],
     content: text,
-    onUpdate: () => { clearHits(); scheduleDirty(); scheduleOutline(); notes?.docChanged(); aiChanges?.docChanged(); },
+    onUpdate: () => { clearHits(); scheduleDirty(); scheduleOutline(); notes?.docChanged(); aiChanges?.docChanged(); together?.typed(); },
     editorProps: {
       attributes: { spellcheck: "false" }, handlePaste: (view, event) => discordPaste(view, event),
       // AltGr is Ctrl+Alt: a character typed with it (@, {, [, $ on Norwegian) is typed, never taken as
@@ -321,6 +322,7 @@ async function openDoc(path, { hash = "", push = true, find = null, keepScroll =
   drawNav();
   localStorage.setItem("codex.last", S.path);
   tellPresence();
+  together.pageChanged();
   renderCrumbs(); markTreeCurrent(); buildOutline(); refreshDirty();
   notes.load(S.path);
   ai.pageChanged();
@@ -427,6 +429,7 @@ function listen() {
   es.addEventListener("run", (e) => notes.onRun(JSON.parse(e.data)));
   es.addEventListener("sync", (e) => showSync(JSON.parse(e.data)));
   es.addEventListener("news", (e) => showNews(JSON.parse(e.data)));
+  es.addEventListener("here", (e) => together.onEvent(JSON.parse(e.data)));
   es.addEventListener("ai", (e) => { const ev = JSON.parse(e.data); ai.onEvent(ev); if (ev.state === "reviewed" || ev.pages?.includes(S.path)) aiChanges.load(); });
   es.addEventListener("account", (e) => account.onEvent(JSON.parse(e.data)));
   es.onmessage = (e) => {
@@ -482,6 +485,49 @@ const fileOrder = (a, b) => {
 };
 const countFiles = (n) => n.files.length + [...n.dirs.values()].reduce((s, d) => s + countFiles(d), 0);
 
+// ----------------------------------------------------------------------------- right-click in the page list
+
+/** A small menu where the mouse is: [label, run, { danger, disabled, hint }], or "-" for a line. */
+function rowMenu(ev, rowEl, items) {
+  ev.preventDefault();
+  document.querySelector(".tree-menu")?.remove();
+  const close = () => { m.remove(); rowEl.classList.remove("menu-on"); document.removeEventListener("mousedown", outside, true); document.removeEventListener("keydown", onKey, true); };
+  const outside = (e) => { if (!e.target.closest(".tree-menu")) close(); };
+  const onKey = (e) => { if (e.key === "Escape") { e.stopPropagation(); close(); } };
+  const m = h("div", { class: "cm-menu tree-menu" }, items.filter(Boolean).map((x) => x === "-" ? h("div", { class: "spell-sep" }) :
+    h("button", { class: "cm-menu-item" + (x[2]?.danger ? " danger" : ""), disabled: x[2]?.disabled || null, title: x[2]?.hint || null, onclick: () => { close(); x[1](); } }, x[0])));
+  document.body.append(m);
+  m.style.left = Math.min(ev.clientX, window.innerWidth - m.offsetWidth - 8) + "px";
+  m.style.top = Math.min(ev.clientY, window.innerHeight - m.offsetHeight - 8) + "px";
+  rowEl.classList.add("menu-on");
+  setTimeout(() => { document.addEventListener("mousedown", outside, true); document.addEventListener("keydown", onKey, true); }, 0);
+}
+const codexLink = (page) => `https://rth-codex.rthapp.workers.dev/open?p=${encodeURIComponent(page)}`;
+const copyText = (text, what) => navigator.clipboard.writeText(text).then(() => toast("Copied " + what, "good"), () => toast("Couldn't copy", "bad"));
+const signInHint = (what) => (S.readOnly ? { disabled: true, hint: `Sign in with Discord (with the Codex role) to ${what}` } : {});
+
+function pageMenu(ev, f) {
+  const inDocs = f.path.startsWith("docs/");
+  const name = f.title || f.path.split("/").pop().replace(/\.md$/, "");
+  rowMenu(ev, ev.currentTarget, [
+    ["Open", () => openDoc(f.path)],
+    inDocs && ["New page in this folder…", () => newPageDialog(dirOf(f.path)), signInHint("make pages")],
+    "-",
+    ["Copy link for Discord", () => copyText(`[${name.replace(/[\[\]]/g, "")}](<${codexLink(f.path)}>)`, "a link to " + name)],
+    ["Copy path", () => copyText(f.path, f.path)],
+    inDocs && "-",
+    inDocs && ["Delete page…", () => deletePage(f.path), { danger: true, ...signInHint("delete pages") }],
+  ]);
+}
+
+function folderMenu(ev, d) {
+  const inDocs = d.path === "docs" || d.path.startsWith("docs/");
+  rowMenu(ev, ev.currentTarget, [
+    inDocs && ["New page here…", () => newPageDialog(d.path), signInHint("make pages")],
+    ["Copy path", () => copyText(d.path, d.path)],
+  ]);
+}
+
 function renderTree() {
   const filter = $("#treeFilter").value.trim().toLowerCase();
   const tree = $("#tree");
@@ -496,6 +542,7 @@ function renderTree() {
   const fileRow = (f) => h("div", {
     class: "t-row file" + (f.path === S.path ? " current" : ""), "data-path": f.path, title: (f.title ? f.title + "\n" : "") + f.path,
     onclick: () => openDoc(f.path),
+    oncontextmenu: (ev) => pageMenu(ev, f),
   }, h("span", { class: "caret" }), h("span", { class: "ico ico-note" }), h("span", { class: "t-name" }, mark(f.path.split("/").pop().replace(/\.md$/, ""))),
   f.git ? h("span", { class: "t-git " + f.git, title: f.git === "new" ? "New, not in git yet" : "Changed since the last commit" }) : null);
   const dirNode = (d) => {
@@ -504,6 +551,7 @@ function renderTree() {
       [...d.dirs.values()].sort((a, b) => collator.compare(a.name, b.name)).map(dirNode), d.files.sort(fileOrder).map(fileRow));
     const row = h("div", {
       class: "t-row folder" + (open ? " open" : ""), title: d.path,
+      oncontextmenu: (ev) => folderMenu(ev, d),
       onclick: () => {
         const isOpen = !kids.classList.toggle("closed");
         row.classList.toggle("open", isOpen);
@@ -972,9 +1020,9 @@ function quickOpen() {
   setTimeout(() => input.focus(), 0);
 }
 
-function newPageDialog() {
+function newPageDialog(inFolder = null) {
   const dirs = [...new Set(S.files.map((f) => dirOf(f.path)).filter((d) => d.startsWith("docs")))].sort(collator.compare);
-  const here = S.path && dirOf(S.path).startsWith("docs") ? dirOf(S.path) : "docs/gdd";
+  const here = inFolder && dirs.includes(inFolder) ? inFolder : S.path && dirOf(S.path).startsWith("docs") ? dirOf(S.path) : "docs/gdd";
   const folder = h("select", { class: "field" }, dirs.map((d) => h("option", { value: d, selected: d === here }, d)));
   const name = h("input", { class: "field", placeholder: "The page's title", spellcheck: "true" });
   const file = h("div", { class: "muted small new-file" });
@@ -1052,13 +1100,13 @@ function showNews({ pages }) {
 
 // ----------------------------------------------------------------------------- deleting a page
 
-async function deletePage() {
-  const page = S.path;
+async function deletePage(page = S.path) {
   if (!page || S.readOnly) return;
-  const title = pageTitle() || page;
+  const open = page === S.path;
+  const title = (open ? pageTitle() : S.files.find((f) => f.path === page)?.title) || page.split("/").pop().replace(/\.md$/, "");
   const links = await panels.linksFor(page).catch(() => null);
   const inbound = links?.inbound?.length || 0;
-  const comments = notes.state.page === page ? notes.state.notes.length : 0;
+  const comments = open && notes.state.page === page ? notes.state.notes.length : 0;
   const more = [
     inbound ? `${inbound} page${inbound > 1 ? "s link" : " links"} to it; those links will show as broken.` : "",
     comments ? `Its ${comments} comment${comments > 1 ? "s stay" : " stays"} in the comment history.` : "",
@@ -1066,15 +1114,17 @@ async function deletePage() {
   const c = await ask("Delete this page?", `<b>${esc(title)}</b> (${esc(page)}) is deleted for everyone. ${more} You can undo it straight after, and its history stays in git.`,
     [{ key: "cancel", label: "Cancel" }, { key: "del", label: "Delete page", cls: "btn-danger" }]);
   if (c !== "del") return;
-  await save(false, { quiet: true });
+  if (open) await save(false, { quiet: true });
   S.deleting = page;
   const r = await api("/api/doc?path=" + encodeURIComponent(page), { method: "DELETE" });
   if (!r.ok) { S.deleting = null; return toast("Couldn't delete it: " + (r.error || r.status), "bad"); }
-  S.dirty = false;
   await loadTree();
-  const parent = page.replace(/\/[^/]+$/, "/index.md");
-  await openDoc(S.fileSet.has(parent) && parent !== page ? parent : DEFAULT_DOC, { push: false });
-  history.replaceState({ path: S.path }, "", "?p=" + encodeURI(S.path)); // the address no longer names the deleted page
+  if (open) {
+    S.dirty = false;
+    const parent = page.replace(/\/[^/]+$/, "/index.md");
+    await openDoc(S.fileSet.has(parent) && parent !== page ? parent : DEFAULT_DOC, { push: false });
+    history.replaceState({ path: S.path }, "", "?p=" + encodeURI(S.path)); // the address no longer names the deleted page
+  }
   S.deleting = null;
   toast(`Deleted “${title}”`, "", { actions: [{ label: "Undo", run: async () => {
     const u = await api("/api/doc/restore", { method: "POST", body: JSON.stringify({ path: page, content: r.content }) });
@@ -1295,9 +1345,16 @@ const notes = makeNotes({
   setCommentCount, notesChanged, saveNow: () => { refreshDirty(); return S.dirty ? save(false, { quiet: true }) : Promise.resolve(true); }, banner: (text) => showBanner(text, [{ label: "OK", run: hideBanner }]),
   hasPage: (p) => S.fileSet.has(p), titleOf: (p) => S.files.find((f) => f.path === p)?.title || null,
   askAi: () => ai.focus({ selection: true }),
+  othersTyping: (id) => together.typingIn(id),
 });
 
-const layout = makeLayout({ $, h, notes, help: () => helpDialog(), presence: { on: () => presenceOn(), toggle: () => { localStorage.setItem("codex.presence", presenceOn() ? "off" : "on"); tellPresence(); } } });
+// Who's here (src/together-ui.js, src/together.js): the others with a Codex open.
+const together = makeTogetherUi({
+  S, $, h, api, currentHeadingPos: () => currentHeadingPos(), pageTitle: () => pageTitle(),
+  goTo: (page, leaf) => { if (page === S.path) { if (leaf) scrollToHeading(slug(leaf), true); } else openDoc(page, { hash: leaf ? slug(leaf) : "" }); },
+});
+
+const layout = makeLayout({ $, h, notes, help: () => helpDialog(), online: together.online, presence: { on: () => presenceOn(), toggle: () => { localStorage.setItem("codex.presence", presenceOn() ? "off" : "on"); tellPresence(); } } });
 
 // ----------------------------------------------------------------------------- Discord (src/discord-extras.js)
 
@@ -1333,6 +1390,7 @@ function copyForDiscord() {
 // A contributor's copy is read-only until they sign in with Discord and have the Codex role.
 const account = makeAccountButton({ $, h, api, toast, onChange: (v) => {
   notes.setMe(v.signedIn ? v.user : null);
+  together.setMe(v.signedIn ? v.user : null);
   const ro = v.canEdit === false;
   if (ro !== !!S.readOnly) { S.readOnly = ro; if (S.editor) applyMode(); }
 } });
@@ -1355,6 +1413,7 @@ async function start() {
   wire();
   ai.init($("#outlineWin .win-body"));
   account.init();
+  together.init();
   showRightTab(rightTab);
   notes.init();
   aiChanges.init();
@@ -1401,7 +1460,7 @@ async function installUpdate() {
 }
 
 window.__codex = {
-  S, mergeEdit, renderHtml, editorMarkdown: () => editorMarkdown(), openDoc, notes, panels, toast,
+  S, mergeEdit, renderHtml, editorMarkdown: () => editorMarkdown(), openDoc, notes, panels, toast, together,
   // The desktop app calls this before closing: save whatever is still being typed.
   // The desktop app tells the page about updates (electron/main.js).
   updateState: (v) => showUpdate(v),

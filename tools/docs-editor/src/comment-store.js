@@ -80,6 +80,8 @@ export function makeCommentStore({ repo, local, account, emit, titleOf, watching
     // The local store's file helpers (the file watcher uses them for docs/.notes/).
     root: local.root, fileFor: local.fileFor, pageFor: local.pageFor, lastWrites: local.lastWrites,
     reset,
+    /** Someone changed a comment (the room said so): ask the helper now, not at the next look. */
+    poke() { if (online()) refresh().catch(() => {}); },
     get where() { return online() ? "discord" : "local"; },
 
     async load(page) {

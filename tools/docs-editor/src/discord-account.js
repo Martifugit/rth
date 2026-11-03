@@ -95,5 +95,8 @@ export async function makeAccount({ dir, emit, contributor = false }) {
   /** The Authorization header for the helper, or null when not signed in. */
   const authHeader = () => (A ? "Bearer " + A.session : null);
 
-  return { view, check, signInUrl, done, signOut, gitAuth, authHeader, canEdit };
+  /** The session itself, for the room of who's here (src/together.js). */
+  const session = () => A?.session || null;
+
+  return { view, check, signInUrl, done, signOut, gitAuth, authHeader, canEdit, session };
 }

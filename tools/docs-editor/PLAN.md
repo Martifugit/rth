@@ -167,6 +167,24 @@ Small things that make the two feel like one place:
 Later, only if wanted (the helper can answer Discord's commands the same way): `/codex search`,
 `/codex page` as embeds; *Send to Codex* on a message's menu, filing it as a comment on a page.
 
+## Together
+
+Who else has a Codex open, and where (owner, 2026-11-04). One room on the helper (a Cloudflare Durable
+Object, `helper/src/live.js`) that every open Codex keeps a WebSocket to while signed in with the Codex
+role; it keeps nothing, and a closed Codex drops out. Each Codex says its page, section, whether it's
+editing, which comment it's typing in, and whether it's away (5 minutes untouched).
+
+- **By your avatar**: the others' small avatars, tucked at its top-right corner; hovering fans them out,
+  hovering one says where they are, clicking it goes there.
+- **Beside the page's path**: the avatars of those on this page (a gold ring while editing).
+- **"Kari is editing this section too"**: a quiet note when two people type in the same section. Nothing
+  is locked; sync still merges, and asks only when the same lines changed.
+- **Comments at once**: a changed comment tells every Codex to fetch now; "Kari is typing…" in a thread.
+- **Show me as online** (the layout menu) hides you from the others.
+
+Later, to explore: "Ask Kari about this" (a Discord ping to the exact spot), and editing together live
+(shared cursors; a live copy first, git behind it).
+
 ## Setup, once
 
 | Who | What |
@@ -226,6 +244,9 @@ Later, only if wanted (the helper can answer Discord's commands the same way): `
    one click, per user; it carries the game's look and MinGit) and publishes it on the game repository's
    GitHub Releases as `codex-v<version>`; installed Codexes update themselves from the latest release
    (electron-updater), installing when closed. Windows warns once about the unsigned installer.
+7. **After the first friends** *(done, 0.1.1-0.1.5)*: AI setup and comments from the AI, an Update
+   button, releases announced in #codex, a first run with no question, a clean uninstall, deleting pages
+   (from the page or the page list's right-click menu), news of others' changes, and Together (above).
 
 ## Open questions
 

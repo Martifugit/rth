@@ -15,7 +15,7 @@ const ICON = {
 };
 
 export function makeLayout(ctx) {
-  const { $, h, notes, help, presence } = ctx;
+  const { $, h, notes, help, presence, online } = ctx;
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch {}
   const L = { pages: saved.pages !== false, outline: saved.outline !== false, sheet: null, docked: { pages: false, outline: false } };
@@ -84,6 +84,7 @@ export function makeLayout(ctx) {
       item(L.pages, "Pages", narrow("pages") ? "Too narrow to keep beside the page: opens over it" : "The list of pages, on the left", "Ctrl ,", () => choose("pages", !L.pages)),
       item(L.outline, "Outline and links", narrow("outline") ? "Too narrow to keep beside the page: opens over it" : "This page's headings and links, on the right", "Ctrl .", () => choose("outline", !L.outline)),
       item(!notes.state.hidden, "Comments beside the page", "Off: folded to small markers", null, () => notes.toggleMargin()),
+      online ? item(online.on(), "Show me as online", "Others in the Codex see where you are", null, () => online.toggle()) : null,
       presence ? item(presence.on(), "Show what I'm editing on Discord", "“Editing …” on your Discord profile", null, () => presence.toggle()) : null,
       h("div", { class: "spell-sep" }),
       item(false, "Show everything", null, null, () => { L.pages = L.outline = true; store(); if (notes.state.hidden) notes.toggleMargin(); L.sheet = null; apply(); }),

@@ -19,6 +19,8 @@ import { makeOpenRouterAccount } from "./src/openrouter-account.js";
 import { makeCommentStore } from "./src/comment-store.js";
 import { agentKey } from "./src/helper-comments.js";
 import { makePresence } from "./src/discord-presence.js";
+import { makeTogether } from "./src/together.js";
+import { HELPER } from "./src/discord-account.js";
 import { buildIndex, linksFor, pageState } from "./src/links.js";
 import { makeSpell } from "./src/spell.js";
 import { makeSync } from "./src/sync.js";
@@ -119,7 +121,7 @@ const ownerName = () => owner ?? new Promise((resolve) => execFile(process.env.C
 const DATA = process.env.CODEX_DATA ? path.resolve(process.env.CODEX_DATA) : path.join(HERE, ".local");
 // Who's using this Codex (Sign in with Discord, through the helper): src/discord-account.js. Signing in
 // or out moves the comments between the Discord forum and docs/.notes/.
-const account = await makeAccount({ dir: DATA, contributor: process.env.CODEX_CONTRIBUTOR === "1", emit: (type, data) => { broadcast(type, data); if (type === "account") { try { store.reset(); } catch {} } } });
+const account = await makeAccount({ dir: DATA, contributor: process.env.CODEX_CONTRIBUTOR === "1", emit: (type, data) => { broadcast(type, data); if (type === "account") { try { store.reset(); } catch {} try { joinRoom(); } catch {} } } });
 // Sign in with OpenRouter: free AI for anyone without Claude on their computer (src/openrouter-account.js).
 const openrouter = await makeOpenRouterAccount({ dir: DATA, emit: (type, data) => broadcast(type, data) });
 // Comments: in the Discord forum when signed in, in docs/.notes/ when not (src/comment-store.js). On
@@ -129,6 +131,17 @@ const store = makeCommentStore({
   titleOf: (p) => titleOf(p), watching: () => listeners.size > 0, exportCopy: !!agentKey(HERE),
 });
 // "Editing <page> in the Codex" on the person's Discord profile, through their Discord app.
+// Who's here: the room of everyone with a Codex open (src/together.js), while signed in.
+const together = makeTogether({ helper: HELPER, session: () => account.session(), emit: (type, data) => broadcast(type, data), onComments: () => store.poke() });
+let roomFor; // whose session is in the room (only signing in or out changes it)
+function joinRoom() {
+  const v = account.view();
+  const who = v.signedIn ? v.user?.id || "signed-in" : null;
+  if (who === roomFor) return;
+  roomFor = who;
+  if (who) together.restart(); else together.stop();
+}
+setTimeout(joinRoom); // once the engine is set up (its events go to the page)
 const presence = makePresence({ clientId: process.env.CODEX_DISCORD_APP || "1567232969637109922" });
 const runner = makeRunner({ repo: REPO, store, emit: (type, data) => broadcast(type, data) });
 runner.check().then((a) => console.log(a.ok ? `Agents: ${a.version}` : `Agents: off (${a.error})`));
@@ -411,6 +424,10 @@ const api = {
   },
   async "GET /api/spell/suggest"(url) { return { suggestions: speller.suggest(url.searchParams.get("w") || "") }; },
   async "POST /api/spell/add"(url, req) { const { word } = await body(req); return { ok: await speller.add(word) }; },
+
+  // Where you are, for the others (src/together.js), and who they are.
+  async "GET /api/here"() { return together.view(); },
+  async "POST /api/here"(url, req) { together.set(await body(req)); return { ok: true }; },
 
   async "POST /api/presence"(url, req) {
     const { page } = await body(req);

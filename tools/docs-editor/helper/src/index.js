@@ -9,6 +9,7 @@
 //   POST /git-token                      an hour's key to send docs to GitHub, for someone with the role
 //   POST /announce                       a new Codex release, posted in #codex (the agent key only)
 //   /comments...                         comments in the Discord forum (src/comments.js)
+//   GET  /live                           a WebSocket to the room of who's here (src/live.js)
 //
 // Comments take a session (a person) or, for agents on the owner's computer, "Authorization: Agent
 // <AGENT_KEY>" (they post as Claude).
@@ -23,6 +24,9 @@ import { member, post } from "./discord.js";
 import { installationToken, verifyWebhook } from "./github.js";
 import { comments } from "./comments.js";
 import { same } from "./crypto.js";
+import { Live, room } from "./live.js";
+
+export { Live };
 
 export default {
   async fetch(req, env, ctx) {
@@ -32,6 +36,7 @@ export default {
       switch (route) {
         case "GET /": return text("R'th Codex helper");
         case "GET /open": return openPage(url, env);
+        case "GET /live": return room(env).fetch(req); // who's here (src/live.js)
         case "POST /github": {
           const body = await req.text();
           if (!(await verifyWebhook(env, body, req.headers.get("x-hub-signature-256")))) return text("bad signature", 401);
@@ -70,6 +75,8 @@ export default {
           if (!as) return json({ error: "Not signed in." }, 401);
           const r = await comments(req, env, url, as);
           if (!r) return text("not found", 404);
+          // A comment changed: every open Codex fetches comments now, not at its next look.
+          if (req.method === "POST" && !r.status) ctx.waitUntil(room(env).fetch("https://room/live/notify", { method: "POST", body: JSON.stringify({ type: "comments" }) }).catch(() => {}));
           return r.status ? json({ error: r.error }, r.status) : json(r);
         }
       }
