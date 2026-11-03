@@ -1,49 +1,34 @@
----
-id: dungeon-id
-kind: dungeon
-status: proposed
-areas: [area-id]
-regions: []                 # its instanced region, if it has one
-data: []
-updated: 2026-11-03
----
+# <Dungeon name>
 
-<!-- A dungeon, cave, cellar, crypt or interior region. Copy to
-     docs/gdd/world/areas/<area-id>/<dungeon-id>.md. Rules: ../../rules.md -->
+*Draft. A dungeon, cave, cellar or crypt: Baldwin's level outline for a place below or inside.*
 
-# <Name>
+## Synopsis
 
-## At a glance
+## Objectives
 
-| | |
-| --- | --- |
-| Entrance | object id and tile, in which place |
-| Found by | how a player finds the way in |
-| Size | tiles, and how many levels |
-| Stages | the levels it serves |
-| Requirements | to get in (a quest, a level, a key), or none |
-| Committed | yes or no: can you always walk back out? (the world's no-traps rule) |
-| For | what it supports: a quest, a skill's tier, a boss, a task |
+The goals it serves; what players come for.
 
-## Why it is here
+## Introductory material
 
-## The way through
+Where the way in is, how a player finds it, and what they need to enter.
 
-The rooms or stretches in order, from the entrance to the end and back out:
+## Physical description
 
-| # | Room | What is there (creatures, nodes, objects, the boss) | Way on |
-| --- | --- | --- | --- |
+## Map
 
-## Look and feel
+To scale: the rooms in order, from the way in to the end and back out.
 
-## Rewards
+## Critical path
 
-What players come for: drops, nodes, a quest's item, a record, a view. Links to their pages.
+## Encounters
 
-## How it changes
+Room by room: creatures (rated), resources, objects, the boss.
 
-## Set aside
+## Walkthrough
 
-## Not decided
+## Closing material
 
-**Sources:**
+The reward, and the way out. Whether you can always walk out (or it is a deliberate one-way trip,
+and the player is warned).
+
+## Open questions

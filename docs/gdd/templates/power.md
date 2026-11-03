@@ -1,46 +1,19 @@
----
-id: power-id
-kind: power
-status: proposed
-areas: []
-data: []
-updated: 2026-11-03
----
+# <Power>
 
-<!-- A god, power, faction or people in the setting. Copy to docs/gdd/setting/<power-id>.md.
-     Rules: ../rules.md -->
+*Draft. A god, power or faction of the setting.*
 
-# <Name>
+## Summary
 
-## At a glance
+## Back story
 
-| | |
-| --- | --- |
-| What | god, power, house, people, order |
-| Holds | the land or thing it holds, linked to its realm |
-| Wants | in a line |
-| Players meet it | where and how |
+## What it wants, and its weakness
 
-## Origin
+## Relationships
 
-## Belief and daily life
+## In the game
 
-## Wants and weakness
-
-## Relations
-
-With each other power that matters.
-
-## In play
-
-What a player sees of it: places, people, quests, items, a combat style or skill it teaches.
+What the player meets of it: places, people, quests, a style or skill it teaches.
 
 ## Sealed
 
-## Clock
-
-What happens if no one acts.
-
-## Not decided
-
-**Sources:**
+## Open questions

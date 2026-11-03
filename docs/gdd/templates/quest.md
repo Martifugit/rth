@@ -1,61 +1,35 @@
----
-id: quest-id
-kind: quest
-status: proposed
-areas: []
-line: line-id               # its quest line, if any
-data: []                    # quest id, dialogue ids, flags
-updated: 2026-11-03
----
+# <Quest name>
 
-<!-- Copy to docs/gdd/quests/<quest-id>.md. Rules: ../rules.md -->
+*Draft. A quest is a level made of story: Baldwin's level outline, told as steps.*
 
-# <Quest name> *(working name)*
+## Synopsis
 
-## At a glance
+The premise in a paragraph, and why the player is drawn in.
 
-| | |
-| --- | --- |
-| Start | who and where |
-| Stage | early, mid or late; length (short, medium, long) |
-| Requirements | quests, levels, items, or none |
-| Areas | linked |
-| People | linked |
-| Rewards | XP, items, unlocks, what opens next |
-| Line | the quest line, linked, and where in it |
+## Objectives
 
-## Goals
+What the quest is for: what it teaches, which threads it opens, which pillar it serves. Its
+requirements and its rewards.
 
-What the quest is for in play, as two to four goals, each naming the pillar it serves and one thing it
-rules out. ([../rules.md](../rules.md) section 5.)
+## Introductory material
 
-## The premise
+Who starts it, where, and how a player comes across them.
 
-What is going on, and why the player is drawn in.
+## Critical path
 
-## What it does
-
-What it teaches, which threads it opens, what the player comes away knowing (and not knowing).
-
-## Steps
-
-| # | Where | Who | What happens | Needs (objects, items, creatures) | Teaches |
+| # | Where | Who | What happens | What it needs | What it teaches |
 | --- | --- | --- | --- | --- | --- |
 
-## What it changes
+## Encounters
 
-Flags set, doors opened, people moved, dialogue that changes afterwards.
+The people, creatures and objects it uses, linked to their pages.
 
-## Hooks it leaves
+## Closing material
+
+The ending, the reward, what changes in the world afterwards, and the hooks it leaves.
 
 ## Sealed
 
-What the quest must not reveal, linked to the setting page that holds the truth.
+What it must not reveal.
 
-## Needs
-
-Places, people, objects, items and mechanisms it needs that don't exist yet.
-
-## Not decided
-
-**Sources:**
+## Open questions

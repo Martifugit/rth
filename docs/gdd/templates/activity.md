@@ -1,45 +1,21 @@
----
-id: activity-id
-kind: activity
-status: idea
-areas: []
-data: []
-updated: 2026-11-03
----
+# <Activity name>
 
-<!-- A boss, trial, minigame or event. Copy to docs/gdd/activities/<activity-id>.md.
-     Rules: ../rules.md -->
+*Draft. A boss, trial or minigame.*
 
-# <Activity>
+## Synopsis
 
-## At a glance
+## Objectives
 
-| | |
-| --- | --- |
-| Kind | boss, trial, minigame, event |
-| Where | area and place, linked |
-| Stage | and requirements |
-| Players | solo, group, how many |
-| Committed | can you leave mid-way? |
-| Rewards | what players come back for |
+Its goals and the pillar each serves; what it tests.
 
-## Goals
+## Introductory material
 
-What the activity is for in play, as two to four goals, each naming the pillar it serves and one thing it
-rules out. ([../rules.md](../rules.md) section 5.)
-
-## The idea
-
-What makes it worth doing, and what it tests.
+Where it is, how a player finds it, what they need.
 
 ## How it plays
 
-The loop, the phases, how you win and fail.
+The loop and its phases, drawn on one page; how you win and how you fail.
 
-## Rewards and progression
+## Rewards
 
-## Look and feel
-
-## Not decided
-
-**Sources:**
+## Open questions

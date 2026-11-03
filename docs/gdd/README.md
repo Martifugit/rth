@@ -1,109 +1,69 @@
----
-id: gdd
-kind: index
-status: proposed
-updated: 2026-11-03
----
+# R'th: Game Design Document
 
-# R'th: the game design document
+*A private multiplayer RPG for an invited group of friends. Plays like RuneScape 3, looks like Old
+School RuneScape, set in its own world built around the four humours.*
 
-**Status:** structure agreed in outline (2026-11-03). The move is under way: [migration.md](migration.md)
-maps every existing doc onto this structure. Tolling and Wennow is the first area written to it
-([world/areas/tolling/](world/areas/tolling/index.md)), as the worked example.
+| | |
+| --- | --- |
+| Version | 0.1, structure only (2026-11-03) |
+| Owner | Martin (the game's designer; approves every design) |
+| Design history | [design-history.md](design-history.md) |
 
-**The GDD is the truth.** Where any other doc disagrees with it, the GDD wins and the other doc is
-out of date ([rules.md](rules.md)).
+This is the game's design: **what the player experiences and why**. It is the truth: where any other
+doc in the repository disagrees with it, this wins and the other doc is out of date. How the game is
+*built* (engine, code, tools, the art pipeline) is in the technical and art bibles it links to, not
+here.
 
-The GDD describes **the game as a player meets it**: the world and what is in it, the people, the
-creatures, the quests, the items, the skills and the rules they play by, and why each thing is the
-way it is. One place to look up "what is in Tolling", "who is Corvin Sallow", "where does hematite
-come from" or "how does The Bell go", and find one answer.
+## How to use this document
 
-It is not the plan of work, the pipeline or the engine. How we build the game (tools, art methods,
-Unity, the server's code, the stages of an area's work) lives in the production docs outside this
-folder (`docs/workflow.md`, `docs/world-guide.md`, `docs/assets.md`, `docs/plan.md`, `CLAUDE.md`).
-The boundary is set out in [rules.md](rules.md) section 1.
+- **Start with the [one-sheet](one-sheet.md).** The whole game on one page. Then read the section
+  you need; every section and every page opens with a summary paragraph, so reading the first
+  paragraph of each is a quick tour of the game.
+- **It is a reference, not a novel.** Look things up through the contents below. Each subject has
+  one page, and other pages link to it rather than repeat it.
+- **It is a living document.** It changes as the game is designed, built and played. Every change
+  that alters the design is dated in the [design history](design-history.md).
+- **Before writing in it, read [writing.md](writing.md)** (how pages are written and changed) and copy
+  a [template](templates/).
 
-## How to read it
+## Contents
 
-- Start at the index of the section you need. Every folder has an `index.md` listing its pages, one
-  line each, with their status.
-- Every page opens with a header (its id, kind, status and what data it is built as), then an
-  **at a glance** box, then the detail. Read the box first; most questions end there.
-- Every page ends with **Not decided**: the open questions, for the owner.
+**[One-sheet](one-sheet.md)**: the game on one page.
 
-### Status
+**[I. Game overview](1-overview/index.md)**
+- Concept · Pillars and non-goals · Feature set · Genre · Audience · Game flow summary · Look and feel · Scope
 
-Every page, and any entry on it that differs from the page, carries one of:
+**[II. Gameplay and mechanics](2-gameplay/index.md)**
+- Gameplay: progression and the beat chart · challenge structure (quests, tasks, achievements) · play flow
+- Mechanics: movement · actions and objects · combat · the humours · Religion · skills · items · economy · death
+- Saving · options · easter eggs
 
-| Status | Means | Who sets it |
-| --- | --- | --- |
-| `idea` | A possibility, not yet argued for. A menu to choose from. | anyone |
-| `proposed` | Argued for, with reasons, waiting on the owner. | anyone |
-| `agreed` | The owner has said yes. Changed only through a proposal ([rules.md](rules.md) section 6). | the owner |
-| `built` | In the game: in `server/data/content`, `world/regions` or code, with its ids named. | whoever builds it |
+**[III. Story, setting and characters](3-story/index.md)**
+- Story: back story · threads · how the story unfolds
+- Setting: the universe · the powers · the peoples
+- Game world: look and feel · the continent · realms · every area in brief
+- Characters: people · creatures
 
-Lore that is `agreed` is canon. Something cut is deleted, not marked (git keeps it); an alternative
-that was weighed and turned down can be kept in a page's **Set aside** with one line on why, so it
-isn't argued again.
+**[IV. Areas, dungeons and quests](4-content/index.md)** (the game's "levels")
+- An area's design: synopsis, objectives, physical description, map, critical path, encounters, walkthrough
+- Dungeons · Quests · Activities (bosses, trials)
 
-## The sections
+**[V. Interface](5-interface/index.md)**
+- The windows and HUD · camera · controls · audio (music, sound) · help
 
-| Folder | Holds | One page per |
-| --- | --- | --- |
-| [vision/](vision/) | What R'th is, and the tests everything else is held to: the overview, the pillars and non-goals, the audience and scope, the core loops, progression, the economy's resource flow, the art and audio direction. **Read first.** | topic |
-| [setting/](setting/) | The canon: the universe, the gods and powers, the peoples and factions, history, death as the world understands it, the threads that run through the game. What is true, including what is sealed. | power, people or thread |
-| [world/](world/) | The continent: its realms, its areas and the places in them. **Where everything is, how much of it, and why it is there.** | realm; area (a folder); large place or dungeon |
-| [people/](people/) | Named people with a part to play: who they are, what they want, what they know, what they offer, where they appear. | person (minor folk stay in their area's cast list) |
-| [creatures/](creatures/) | The bestiary: what each creature is, its kinds and levels, how it behaves, what it drops and yields. | family (rats, mites, shades...) |
-| [quests/](quests/) | Every quest and quest line: premise, steps, what it needs, what it changes, what it leaves open. | quest; quest line |
-| [achievements/](achievements/) | Achievement sets: an area's set by tier, a skill's, the game's. | set |
-| [items/](items/) | Items by family: what they are, their tiers, where they come from, what uses them up. | family (bars, pickaxes, draughts, trophies...) |
-| [skills/](skills/) | Every skill: what it is for, how it is trained, what each level bracket unlocks and where in the world that is. The rules every skill follows. | skill |
-| [systems/](systems/) | The rules of play: combat and its resources, Religion's hymns and verses, death and the ferry, banks, shops and currencies, tasks, travel, the interface as the player sees it. | system |
-| [activities/](activities/) | Repeatable things beyond a skill: bosses, trials, minigames, events. | activity |
-| [templates/](templates/) | The page templates. Copy one to start a page. | kind |
+**[VI. Behaviour](6-behaviour/index.md)**
+- Creatures · non-combat characters · pathfinding as the player sees it
 
-Beside them:
-- [rules.md](rules.md): how the GDD is written and edited. **Read it before changing anything here.**
-- [decisions.md](decisions.md): every decision the owner has made, dated, one line each, with a link
-  to the page it settled.
-- [glossary.md](glossary.md): the words the game and its designers use (tier, stage, area, place,
-  site, humour...).
-- [migration.md](migration.md): where each existing doc goes. Deleted when the move is done.
+**[VII. Technical](7-technical.md)** · **[VIII. Art](8-art.md)** · **[IX. Tools](9-tools.md)** · **[X. Management](10-management.md)**: short pages pointing to the bibles and the plan.
 
-## How the pieces fit
+**Appendices:** [asset lists](appendices/assets.md) · [glossary](appendices/glossary.md)
 
-Each kind of fact has **one home**, and every other page links to it. The full table is
-[rules.md](rules.md) section 2; in short:
+## Where this structure comes from
 
-```
-          setting/  what is true                  vision/  what the game is
-               \                                     /
-   world/  where it is, how many, why here  ── links ──  people/ creatures/ items/
-               |                                         what it is and does
-   quests/ achievements/ activities/  what you do   skills/ systems/  the rules
-               \___________________________________________/
-                                    |
-           server/data/content, world/regions, world/plans: the built numbers
-```
-
-An area page says *eight fen rats in the reeds at the river's mouth, because...* and links to
-[creatures/rats](creatures/). The rats' page says what a fen rat is, its level, what it drops and
-yields, and lists the areas it lives in. Neither repeats the other.
-
-## How this structure was chosen
-
-From what practising designers recommend, fitted to a game built by its owner and agents together:
-- **Vision first, kept short; pillars and non-goals as the filter** every feature is judged by
-  (Tim Ryan's concept-document guidelines; Jagex's design pillars for new OSRS content; the GDC
-  "four one-page designs": vision, pillars, loops, resource flow).
-- **Setting, then story, then systems, and systems that serve the setting,** each mechanic with
-  stated goals agreed before its details are argued (Tim Cain).
-- **Many short pages that stand alone, under one index,** each section with a clear home, rather
-  than one long document nobody reads; visible history and dates on every change; pictures where
-  they say more than words (Librande's one-page designs; wiki-style documentation practice).
-- **A living document that records decisions, not a substitute for discussing them** (Ryan).
-- **Zones planned from a map and a flow**: key locations, then the path through them, then the
-  people and creatures that bring them to life (Blizzard's world-creation talks).
-- **Content inventories as data, design intent as prose:** numbers live where the game reads them.
+The order and contents follow Mark Baldwin's *Game Design Document Outline*, the most complete
+published GDD template, cut and extended for an online RPG as Baldwin himself advises ("no generic
+outline fits every genre"). The writing rules come from Tim Ryan's *The Anatomy of a Design
+Document* (Gamasutra, 1999). The one-sheet and the beat chart are Scott Rogers' (*Level Up!*); the
+pillars follow how Jagex states pillars for new Old School content; one-page diagrams are Stone
+Librande's; setting before story before systems, with every mechanic's goals stated, is Tim Cain's.
+Sources are listed in [writing.md](writing.md).
