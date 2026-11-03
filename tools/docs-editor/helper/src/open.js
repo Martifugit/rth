@@ -25,7 +25,27 @@ export function openPage(url, env) {
   <a class="open" href="${esc(target)}">Open in the Codex</a>
   <p>Nothing happened? Open the Codex once (it registers itself), then click the button.</p>
 </main>
-<script>location.href = ${JSON.stringify(target)};</script>
+<script>
+  // Hand over to the Codex. When it opens, it takes the focus from the browser (straight away, or once
+  // "Open" is clicked in the browser's question): then this tab has done its job and closes itself.
+  // Browsers let a page close its own tab when it's the tab's only page, as with a link from Discord;
+  // otherwise it says so.
+  const target = ${JSON.stringify(target)};
+  let asked = 0;
+  function go() { asked = Date.now(); location.href = target; }
+  function done() {
+    if (!asked || Date.now() - asked > 60000) return;
+    asked = 0;
+    setTimeout(() => {
+      window.close();
+      document.querySelector("main").innerHTML = "<h1>R'th Codex</h1><p>Opened in the Codex. You can close this tab.</p>";
+    }, 300);
+  }
+  window.addEventListener("blur", done);
+  document.addEventListener("visibilitychange", () => { if (document.hidden) done(); });
+  document.querySelector("a.open").addEventListener("click", (e) => { e.preventDefault(); go(); });
+  go();
+</script>
 </body></html>`;
   return new Response(html, { headers: { "content-type": "text/html; charset=utf-8" } });
 }
