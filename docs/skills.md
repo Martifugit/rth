@@ -36,9 +36,9 @@ provisional.
 | Making | **Cooking** | Fish and meat into food. | Blood |
 | Making | **Medicine** | Herbs and extracts into potions. | Phlegm, bile, boosts, cures |
 
-Sixteen skills, against RuneScape 3's 29. A small group has no real player economy, so each
-player trains every pipeline they use themselves. That keeps the list short, and every skill
-has to feed something that matters in a fight.
+Sixteen skills, against RuneScape 3's 29. A small group has no real player economy, so each player
+trains every pipeline they use themselves. That keeps the list short, and every skill has to feed
+something that matters in a fight.
 
 **Not in v1:** Farming (a big system; Foraging covers herbs for now), Firemaking (anyone can
 light a fire), Construction, Agility (went with Breath; see 2.8), Thieving, Summoning, Hunter
