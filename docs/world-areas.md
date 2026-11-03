@@ -82,7 +82,7 @@ is a worked one). It takes its facts from [world-plan.md](world-plan.md) and the
 | **For** | What the area is for in the game and when players come (early, mid, late). |
 | **Who** | Who lives here, and which powers' stories pass through. |
 | **Shape** | The one shape you remember; its landforms, water and ground (four or five colours). |
-| **Vision and levels** | What the area is for and why players come at each stage (things to do, points of interest, what is below ground, its futures in a year, five, ten), then its vertical plan from that ([world-scale.md](world-scale.md) section 3): each height's job and routes; busy ground stays level, height in towns is built and below. Example: [areas/heartland-vision.md](areas/heartland-vision.md). |
+| **Vision and levels** | What is physically there and what players do with it, at which levels (buildings, stations, nodes, creatures, entrances; what is below ground; space kept for later content; why early, mid and late players come), then its vertical plan from that ([world-scale.md](world-scale.md) section 3): each height's job and routes; busy ground stays level, height in towns is built and below. Example: [areas/heartland-vision.md](areas/heartland-vision.md). |
 | **Landmarks and views** | One or two landmarks and where each is seen from; the views to keep clear. |
 | **Routes** | Every road, path and river in and out, and where each meets its neighbour area. |
 | **Places** | Its settlements and sites, each with a line on what it will hold. |

@@ -1,455 +1,364 @@
-# The heartland (wave 1): vision and layout plan
+# The heartland (wave 1): what is there, what players do, and the land for it
 
-**Status:** proposed (2026-11-03), for the owner. Written after the owner rejected the first levels
-pass (2026-11-02) as arbitrary height: Tolling raised on a 4.6 knoll with a cliff bank and a
-cutting, Cruor in three tiers of cliffs, a 7-tile face along the Edge. The height went where the
-content is, and nothing said what it was for. This plan starts from what each place is for and
-what players do there, and only then decides where the land rises. It replaces the "Levels"
-sections of the four briefs ([tolling.md](tolling.md), [lake-road.md](lake-road.md),
-[cruor.md](cruor.md), [western-march.md](western-march.md)) once agreed. No ground changes until
-then.
+**Status:** proposed (2026-11-03, second draft), for the owner. Replaces the first levels pass
+(2026-11-02), which was rejected as arbitrary height. The first draft of this plan was rejected too:
+it described story instead of things in the world. This draft lists only **what is physically
+there and what a player does with it**: buildings, stations, nodes, creatures, entrances, routes,
+the levels they are for, and the ground they stand on. Story belongs to dialogue and quests; it is
+left out here except where it decides an object.
+
+Counts and levels are proposals, tuned at stage 3. Object ids in `code` exist in
+`server/data/content` today; anything else is new. Coordinates are tiles.
 
 The areas: **Tolling and Wennow** (the start), **the western march** (the first walk west),
 **Knellmere and the lake road** (the first long road), **Cruor and the meander** (the capital).
 
 ---
 
-## 1. What height is for here
+## 1. Rules for height in these areas
 
-Height is worth adding only where it does one of these jobs. Each feature in this plan names its job.
-
-| Job | What it does for play | Example in this plan |
-| --- | --- | --- |
-| **The reveal** | You climb, you top a rise, and the next place opens all at once. | Palmerway cresting the heath ridge at the waygate, Knellmere appearing below. |
-| **The threshold** | You see a line on the skyline and know it's the edge of what you know. Crossing it means something. | The waygate on the ridge's crest, seen from Tolling's east edge. |
-| **The wall with a way through** | A barrier the world is shaped around, with a few designed ways through. It makes a funnel, a chokepoint, or a place reached only one way. | The Downs' chalk cliff over the south shore, climbed by one combe and one ledge path. |
-| **The narrow** | The land closes in. Tension rises and something waits at the end. | The gorge up to the first cave. |
-| **The vantage** | A designed top where the world is laid out. It rewards the climb and points to what's next. | The bell tower, the dry rise's cairn, the cathedral's tower, the observatory, the hill figure's eye. |
-| **Below** | Depth is where the game goes big. It costs the overworld nothing because it's a separate region. | The dead-house, Corvin's cellar, the drowned village, the undercroft's three depths, the cave. |
-| **Change over time** | Land shaped now so that a later update can change it believably. | Knellmere's bed laid out so a falling lake can uncover the village; the march's plateau keeping open ground for a moonfall. |
-
-**Towns and other busy ground stay broadly level.** Their verticality is **built**: towers to climb,
-upper floors, walls with a wall-walk, quays, stairs. It also goes **down**: cellars, crypts,
-drains, undercrofts. A town may sit on a hill, but the hill rises outside it, over a long approach.
-Height belongs to the landscape: it spans long distances, has a reason in how the land formed,
-and is placed where there's room and little content. A sheer face is rare and always one of the
-set pieces below.
-
-**What limits the views.** The fog closes 85 tiles from the camera and regions load within 48 of
-the player (Tolling's finding 18), so a vantage sees about 85 tiles, not a whole basin. Every
-vantage here is placed so that what it shows is within that range. Section 6 proposes lookouts
-that see further.
+- **Busy ground is level:** a town, yard or camp changes by a tile or so across it. Height in a town
+  is built: towers with a ladder to a view point, upper floors, wall-walks, quay steps.
+- **Below ground is where the big depth goes:** cellars, crypts, caves, drains, as instanced
+  regions entered by a `climb` object.
+- **Every height outside a town does a job you can name in play:**
+  - it makes a destination (a gorge with a cave at its end);
+  - it makes a shortcut (steps out of it);
+  - it holds nodes (a quarry face, a gorge wall);
+  - it makes a view point you climb to;
+  - it gates a place behind one or two routes (a cliff with a combe);
+  - it keeps ground clear for a later event.
+- If a height does none of these, it isn't there.
+- **The fog reaches 85 tiles,** so a view point shows what is within about 85 tiles of it. Each view
+  point here lists what is actually in range.
 
 ---
 
-## 2. The heartland as one landscape
+## 2. Tolling and Wennow (levels 1 to 15)
 
-The land's logic first, then the places on it.
+### What a player does here
 
-- **Water runs east.** Tolling's river comes off the march into Wennow, the Wenn carries it to
-  Knellmere, the outflow takes the lake to the great river below Cruor, and the great river leaves
-  east. So the heartland is a chain of basins stepping gently down from west to east: Wennow about
-  0.1, Knellmere 0.1, the great river below Cruor about 0.1 to 0. Every lake is held level, and
-  rivers step down only at falls and weirs.
-- **The land rises west towards the spine.** The march climbs steadily from Tolling's basin to the
-  high valley before the salt pass. The spine stands behind it as a wall: backdrop, crossed at the
-  pass.
-- **The Downs are the heartland's southern wall,** a chalk upland rolling gently south towards the
-  war (p-camp, the burned farms, s-downs-fort facing the Scarp). The chalk stands as a cliff only
-  where Knellmere has cut into it, along the lake's south-east lobe. Everywhere else the downs come
-  down in long slopes. The cliff faces into the heartland and the gentle side faces the war: the
-  empire's heartland sits behind the Downs.
-- **North is open.** The land stays low towards the dry valley and the great bridge.
-- **Two low swells inside the basin:** the dry rise south of Wennow (the rain shadow beginning) and
-  the heath ridge between Wennow and Knellmere. Both are broad and walkable from every side.
-- **One hill:** Cruor's, inside the great river's loop, with river bluffs where the river undercuts
-  it.
-
-| Shape | Height | How it rises | Its job |
+| Activity | Where | What is physically there | Levels |
 | --- | --- | --- | --- |
-| Wennow's basin floor | 0.1 to 1.5 | flat to gently rolling | home, calm |
-| Tolling's terrace | 1.5 to 2.5 | a grassy bank of about 1.5 to the river over 4 to 6 tiles | a level town just above the water |
-| The dry rise | up to about 6 | gravel slopes of about 1 in 8 from Wennow's south shore, a small tor on top | vantage over the mere; the dry begins |
-| The heath ridge | crest about 4.5 | slopes of 1 in 10 either side, 40 to 50 tiles each | threshold and reveal |
-| The march | from 1.5 rising to about 10 at the salt road's crest (x about -60) | long downs, about 1 in 7 on average, no scarp | the climb towards the mountains, seen ahead |
-| The gorge | walls 8 to 12 | cut by Tolling's river into the march's north | the narrow, the first dungeon |
-| The observatory's spur | about 15 | a promontory off the plateau, cliffs of about 10 on its far side over the high valley | vantage, the surface people's place |
-| The Downs | top 12 to 13, falling south to about 8 | long slopes south, west and east | the southern wall |
-| The chalk cliff | about 9 to 10 | sheer, over a shingle strip 8 to 12 wide, only along the lake's south-east lobe | the set piece: the wall with a way through |
-| Cruor's hill | the walled top about 7 to 8, the cathedral close about 8.5 | a long ramp up the neck (1 in 12), a slope to the meander (about 1 in 8), bluffs of about 7 into the great river north and east | a capital on a hill, level inside its walls |
+| Wake up, first steps | the dead-house under the bell tower (below) | the spawn; stairs up into the tower's ground floor, a door onto the church close | new |
+| Bank | the church house, south side of the square | `synod_strongbox` behind a counter, Clerk Ambrose | all |
+| Buy potions, tools | the apothecary; the smithy | Corvin (shop); the `tinker` in the smithy (tools) | 1+ |
+| Smithing | the smithy, on the west road | `furnace`, `forge`, an anvil; copper and iron bars, tier 1 to 2 tools and gear | 1 to 20 |
+| Cooking | the church house's back kitchen; campfires anywhere | `range` | 1 to 20 |
+| Butchering | the skinning yard, down by the river | `skinning_rack`, `lye_vat`, Wenna (tasks, token shop) | 1 to 15 |
+| Medicine | the apothecary | `apothecary_bench` | 1 to 20 |
+| Mining | **the quarry**, north of town on Hollow lane (below) | 5 `copper_seam`, 3 `ironstone_seam` in its face | 1 to 15 |
+| Woodcutting | the river below the mill; the west road's hedgerow | 6 `alder_tree` in one stand (tending), 3 `ash_tree` | 1 to 15 |
+| Fishing | the fishers' landing; the river by the bridge; the Wenn's outlet | 2 `river_spot` (perch), 1 `eel_weir` at the outlet, 1 `perch_rise` (trophy) off the landing | 1 to 15 |
+| Foraging | verges of the four roads; the river mouth | 6 `yarrow_patch`, 2 `rue_patch` at the edge farm, 2 `berry_bush`, 1 `reed_bed` | 1 to 15 |
+| Combat | the river mouth's reed margin; the dry rise | 9 `fen_rat` (reed margin); 6 of a new tier-2 creature on the dry rise (about level 8, gives a carcass) | 1 to 10 |
+| Religion | the monument plot on Palmerway (78, 50) | `monument_fount` x4, Brother Hollis (pledges for scriptures) | 1 to 10 |
+| Quests | the town | The Bell (dead-house, church house, apothecary, landing, pond, church); Dreamless (the pond, Corvin's still) | new |
+| Climb the bell tower | the church close | a ladder in the tower to the bell chamber; a view point at the top | after The Bell |
 
-Set pieces with a sheer face: the gorge, the chalk cliff, Cruor's river bluffs and the
-observatory's far side. That's four across four areas, each with a reason and its routes.
+### Places and what they hold
+- **The town:** 13 buildings (as built, finding 12). Each building that matters gets a job above. The
+  houses hold Edda, the bell-ringer and stage-3 townsfolk. The square has the fingerpost, the notice
+  board and two stalls.
+- **The quarry** (new, about (40, 70), east of Hollow lane): an open pit about 14 by 10, 2.5 deep,
+  with a cart ramp in from the lane. The rocks are in its north and east faces. It's the town's one
+  dug-out place, and it gives Mining a home that isn't a rock dropped on grass.
+- **The bell tower:** three floors:
+  - the ground floor, with the stairs down to the dead-house;
+  - the ringing chamber (plane 1);
+  - the bell chamber (plane 2), with a view point (`view` action, a message).
+  - In range from the top (85 tiles): the whole town, the mill, the quarry, the monument on
+    Palmerway, Wennow's west half and the fishers' landing.
+- **Widdermill** (35, 80): the miller (an errand), the wheel, an upper floor (plane 1) with the
+  millstones. No station until there is something to grind.
+- **The fishers' landing** (109, -31): a hut, a jetty, two boats; the fishers (The Bell's step 4);
+  the perch spots and the trophy rise.
+- **The dry rise** (123, -49): a gravel hill about 6 high, with a rock tor on top and the cairn as a
+  view point (in range: Wennow, the landing, the edge farm). Its slopes are the area's one hunting
+  ground: the tier-2 creature.
+- **The edge farm** (38, -50): a longhouse and byre in a walled yard. The farmer gives small
+  errands, and 2 rue patches stand in the yard.
+- **The waygate** (180, 48) on the heath ridge's crest: the gatehouse (open) and the wardens' hut.
 
----
+### Below ground
 
-## 3. Tolling and Wennow: home
+| Place | Entrance | Size | Inside | For |
+| --- | --- | --- | --- | --- |
+| The dead-house | stairs in the bell tower's ground floor | about 10 x 8 | the bier where new characters appear; the bell-ringer at the foot of the stairs (The Bell step 1) | every new player |
+| The church crypt | a trapdoor in the chapel's floor, opened in The Bell | about 16 x 12 | ossuary niches, the ledger chest (step 6's object) | The Bell, Dreamless's follow-up |
+| Corvin's cellar | a trapdoor behind the apothecary's counter, after Dreamless | about 10 x 10 | the hidden `apothecary_still` (recipes that need it: Occultism's first reagents), shelves to read | 10+ |
 
-**What it is.** Every player's first hour and the place they keep coming home to: calm, a little
-strange, open on every side. It's the only place in the game that remembers the player's arrival.
-The bell rang for them, the ledger had them dead, and the dead-house is where they got up. Tolling
-should stay small and quiet for the life of the game and change slowly, so returning feels like
-coming home.
+### Why each kind of player comes
+- **New players:** everything above. The ring round the town is walked in the first hour.
+- **Mid players:** the bank and smithy when they're passing; Corvin's cellar still; respawning after
+  the ferry (`death.json` `returnTo` is null, so a paid ferry brings them to the spawn here).
+- **Late players:** rarely, and that's accepted. The respawn, quests that come back to the town, and
+  the trophy perch.
 
-**Things to do**
+### Later content slots (space kept, nothing built)
+- **The edge farm's yard:** room for 4 farming plots if Farming is ever added.
+- **The square's east side:** a plot of about 8 by 6 for one more building (an inn) when Tolling
+  needs a place for players to meet.
+- **The crypt:** a wall to open into a second, older vault for a later quest.
 
-| Band | What |
-| --- | --- |
-| First hour (1 to 10) | The Bell (the first quest); the bank at the church house; Corvin's first potions; Wenna's skinning yard (Butchering tasks on fen rats); the first copper and alder; perch at the fishers' landing; the miller's errand; a hand at the edge farm; Brother Hollis's monument on Palmerway (the first Religion and pledges). |
-| Early (10 to 20) | Dreamless (Edda, the pond, the first touch of the Dreaming); Corvin's back room, his secret still, the first sign he is more than an apothecary; the dry rise's creatures at the basin's edge. |
-| Mid and later | Coming home: the house of Sallow's thread (Corvin's cellar, below); the Dreaming's Tolling (an orb of the town as people remember it, Edda's thread grown up); the bell. |
-
-**Features and points of interest**
-- **The bell tower: the game's first climb.** The town's height comes from the tower, not the
-  ground. A ladder up through the ringing chamber to the bell. At the top is the first vantage in
-  the game: the mere, the mill, the monument on the road east and the waygate on the ridge.
-  Everything in the "Outwards" table is in view or pointed at. The bell-ringer lets you up once
-  The Bell is done.
-- **The dead-house**, under the bell tower, where the player wakes. The first thing anyone does in
-  R'th is climb **up** out of it.
-- **The church close:** the chapel, the churchyard where Wennow's drowned are buried, the ledger
-  stone.
-- **Widdermill:** the wheel against the river, a two-storey mill (the grinding floor upstairs).
-- **The fishers' landing** (s-wennow-south), where the player was pulled out.
-- **The dry rise's tor** (s-dry-rise): a small outcrop with the cairn, the first walk up anything.
-  The basin is laid out below, and the gravel runs on south into the dry.
-- **The waygate** on the heath ridge's crest, open: the start area's threshold, seen on the skyline
-  from the east edge of town.
-- **The edge farm,** its field walls running out into the gravel, broken where the dry has taken
-  them.
-
-**Below ground**
-
-| Place | Who for | What it is |
-| --- | --- | --- |
-| The dead-house | every new player | a small vault under the bell tower; the spawn |
-| The church crypt | early, story | under the chapel, the drowned's ossuary; The Bell's last step looks in, and Dreamless's sequel comes back to it |
-| Corvin's cellar | early to mid | the secret still under the apothecary, reached by a trapdoor behind the counter once Corvin trusts you; later the way into the house of Sallow's story (Occultism) |
-| The Dreaming's Tolling | mid, Dreaming | an orb of the town as its people remember it: older, the field walls whole, the dry not yet come |
-
-**Futures**
-- **In a year:** stage 3 brings the town's people back; The Bell and Dreamless; the monument's
-  founts; fishing at the landing.
-- **In five years:** "someone comes looking" for the player arrives here, because Tolling is where
-  the player's story is written down. The house of Sallow's thread runs out of Corvin's cellar.
-  The dead-house may wake another stranger, in an event tied to the revision.
-- **In ten years:** Tolling is deliberately left mostly alone. Its slow change is **the dry
-  spreading**: the gravel line south of the mere creeps north in updates, more field walls break,
-  and the edge farm is first struggling, then abandoned. Refugees from the dry come up the Sere
-  road. The town itself stays home.
-
-**Why players come:** new players start here. Early players come for the first quests, skills and
-monument. Mid and late players come back for the threads that started here (Sallow, the Dreaming,
-the bell) and because it is home: the bank, the quiet.
-
-**The land to support it**
-- **The town on a level river terrace,** 1.5 to 2.5 over the river (0.1) and the water meadows (0.4
-  to 0.6), varying by about a tile across the whole town. This is the brief's own decision of
-  2026-10-27; the first levels pass's 4.6 knoll goes.
-  - The church close stands on the terrace's highest corner, about 2.5, so the tower stands over
-    everything.
-  - The east side meets the river in a grassy bank of about 1.5 over 4 to 6 tiles: no cliff, no
-    cutting.
-  - Palmerway comes off the bridge and rises gently into the square.
-  - The skinning yard is down on the meadow by the river (0.5), smells and all.
-- **Wennow** stays as reshaped (finding 11).
-- **The dry rise:**
-  - a gravel slope from the south shore, about 1 in 8, rising to about 6 over 50 tiles, with a tor
-    of rock about 2 high on top carrying the cairn (s-dry-rise, about (123, -49));
-  - the far side falls away slowly south into the dry;
-  - the fishers' landing below at the shore, its path walking straight up.
-  - The 7-tile face goes.
-- **The heath ridge:**
-  - a broad swell between Wennow's east shore and Knellmere's fens, crest about 4.5, slopes about
-    1 in 10;
-  - Palmerway climbs it in one long straight so the waygate stands on the skyline ahead;
-  - at the crest the lake opens (s-lake-view stays at the crest, (205, 51));
-  - the Wenn leaves Wennow through a shallow glen in the ridge's south, its banks steep for a short
-    stretch (about 3), with no content in it but a ford.
-  - The rock face towards the basin goes.
-- **Streets and the square** level (finding 12's layout stays). The skinning yard's lane slopes
-  gently down to the meadow.
+### The ground for it
+- **The town on a level river terrace,** 1.5 to 2.5 over the river (0.1), varying by about a tile
+  across the town:
+  - the church close on the highest corner (about 2.5);
+  - a grassy bank of about 1.5 down to the river on the east, with Palmerway rising gently off the
+    bridge into the square;
+  - the skinning yard down on the meadow at about 0.5;
+  - the quarry dug into the terrace north of town.
+  - The first pass's 4.6 knoll, its cliff bank and its cutting go.
+- **The dry rise:** a gravel hill about 6 high with slopes of about 1 in 8, so it's walkable from
+  every side, and a tor of rock about 2 high on top. The first pass's 7-tile face goes.
+- **The heath ridge:** a broad swell with its crest about 4.5 and slopes of about 1 in 10. Palmerway
+  climbs it in a straight line to the waygate on the crest. The rock face goes.
+- **Everything else** is the basin floor at 0.1 to 1.5, with Wennow as reshaped (finding 11).
 
 ---
 
-## 4. The western march: leaving the green
+## 3. The western march (levels 5 to 30)
 
-**What it is.** Where the player first walks towards the mountains and feels the world get bigger
-and harder: the green ends, the land climbs, the spine fills the west. The march is **the first
-real climb** and **the first dungeon**. It's also the empire's soft edge and the surface people's
-doorstep, so in the long run it is a place to fight over.
+### What a player does here
 
-**Things to do**
+| Activity | Where | What is physically there | Levels |
+| --- | --- | --- | --- |
+| The first dungeon | the cave at the head of the gorge (below) | an entrance by the fall | 5 to 15 |
+| Mining | **the gorge's walls**; the salt road's cutting | in the gorge: 4 `copper_seam`, 4 `ironstone_seam`, 3 `hematite_seam` (the nearest hematite to Tolling); in the cutting: 3 `ironstone_seam` | 1 to 30 |
+| Hunting | the plateau | 8 of a new tier-2 creature (about level 12, a carcass for Butchering); 4 of a tier-3 one near the spur (about level 22) | 10 to 25 |
+| Foraging | the plateau and the farm | 4 `rue_patch`, 3 `feverfew_patch`, 2 `flax_patch` at the farm | 10 to 25 |
+| Farm errands | p-west-march (-30, 110) | a farmhouse, a barn; the farmer; a bank chest (`bank_chest`) in the farmhouse, the area's only bank | 5+ |
+| The observatory | p-observatory (-94, 140) | 3 buildings: the dome tower (a ladder to the telescope room, a view point), the watchers' hall, a workshop (`instrument_bench`, for Artifice when it exists); 2 to 3 watchers | 10+ |
+| Ranged practice (when Ranged exists) | the spur, by the observatory | a row of targets along the spur's level top | 1 to 30 |
+| The salt road | from Tolling west to the pass | caravans (`caravaneer`) walking it on a patrol; a waystation at the crest (a shelter, a well, a cairn as a view point) | all |
+| The vault | s-observatory-vault (-112, 124), under the spur (below) | a sealed door in the cliff below the spur | 30 to 50 |
 
-| Band | What |
-| --- | --- |
-| Early (5 to 15) | Corvin's errand to the cave (the first dungeon); the last farm (p-west-march): herding, the farm's errands; the first foothill rocks (copper, ironstone, a first gem seam); the downs' creature. |
-| Early to mid (10 to 30) | The observatory: Magister Varrow's watchers, the first unexplained moonfall forecast, the surface people's introduction (Ranged and Artifice when they exist); the salt road's caravans (Sere's trade, a moving thing on the road). |
-| Mid (30 to 50) | The observatory vault (s-observatory-vault); the cave's far end; the salt road on to the pass and the toll. |
-| Late | Moonfall (below); passing through towards the spine and Selenfall. |
+### Places and what they hold
+- **The gorge** (about x -45 to -15, y 135 to 175): Tolling's river's cut into the march.
+  - A bank path 3 to 4 wide runs along the river, the rocks along the foot of its walls.
+  - At its head is a fall of about 5, with the cave entrance beside it.
+  - Steps cut beside the fall climb out of the gorge's head onto the plateau. They make a loop:
+    walk in along the river, mine or do the cave, and leave by the steps onto the plateau without
+    walking back out.
+  - A fallen ash across the gorge halfway along is a Woodcutting shortcut (level 15) between the
+    two rims.
+- **The salt road's crest** (about (-60, 50)): the waystation and the cairn view point. In range:
+  the plateau, the gorge's rim, the observatory, and the high valley falling away west.
+- **The observatory's spur:** the three buildings on its level top. The dome's telescope room is
+  the highest point in the area. In range: the whole march, Tolling's west edge and the high
+  valley.
 
-**Features and points of interest**
-- **The salt road's crest** (x about -60): the climb seen ahead all the way up from Tolling's
-  west edge. At the crest the spine rises beyond it and fills the screen. A cairn marks the top.
-- **The gorge:** Tolling's river comes off the plateau through a cut 8 to 12 deep in the march's
-  north. A path along the bank goes in, the walls close in, and a fall of about 5 waits at the head
-  with **the cave** beside it (s-tolling-cave, about (-40, 156)).
-- **Steps cut beside the fall** climb out of the gorge's head onto the plateau, a way up that's
-  only found by going in. A fallen tree across the gorge further down is a Woodcutting shortcut
-  over it.
-- **The observatory's spur** (p-observatory, about (-94, 140)): a promontory off the plateau, its
-  far side a cliff of about 10 over the high valley. The surface people want horizon and height,
-  and the dome and the telescope are the vantage. It is seen from the salt road, the farm and the
-  gorge's mouth.
-- **The old salt track** beside the road, and cairns over the downs.
-- **Sere's valley,** green and low in the south-west, against the dry march above it: the contrast
-  the brief is built on.
+### Below ground
 
-**Below ground**
+| Place | Entrance | Size | Inside | For |
+| --- | --- | --- | --- | --- |
+| The cave | a mouth in the gorge wall beside the fall | about 48 x 40, two levels | upper: a mouth chamber and passages, 8 cave rats (tier 1 to 2); a ladder down about 4 to a lower chamber with an underground pool (1 `river_spot`, eels) and 4 of a tier-2 cave creature; at the far end a named tier-2 creature (about level 15) guarding Corvin's item, and a dressed-stone door that doesn't open (an examine line; kept for later) | 5 to 15 |
+| The observatory vault | a door in the spur's cliff, reached from the high valley below; a hatch in the dome's floor opens it from above once solved | about 32 x 32 | instrument rooms, a puzzle (align three telescopes), guardians (tier 4, about level 35), a chest | 30 to 50 |
 
-| Place | Who for | What it is |
-| --- | --- | --- |
-| The cave behind the fall | early (5 to 15) | the first dungeon, short and wet: the mouth, a drop by ladder to a pool under the river, rats and something worse, a reward for Corvin. It shows early that dungeons exist and that they go **down**. |
-| The cave's far end | mid, later | a door of dressed stone deep in the cave, sealed and not the cave's own: the dwarves' work (the caves of the spine are theirs). It stays shut for now. |
-| The observatory vault | mid (30 to 50) | a sealed vault under the old observatory, cut into the spur's cliff, opened from the dome's floor or found from the high valley below |
+### Why each kind of player comes
+- **Early:** the cave, the first hematite, the farm's bank and errands.
+- **Mid:** the plateau's tier-3 creature, the vault, the observatory's Artifice and Ranged when
+  they exist, and the salt road through to the pass.
+- **Late:** passing through on the salt road, and the moonfall event below.
 
-**Futures**
-- **In a year:** the cave, the farm, the observatory and Varrow's first forecast.
-- **In five years:** **a moonfall on the march.** Varrow's forecasts come true and a fragment
-  comes down on the plateau. A fall marks an area for a while, with strange growth, moonborn
-  creatures and perhaps a world boss (`docs/lore.md` V). The plateau keeps a broad open bowl
-  north of the salt road for it, seen from the observatory. The dwarven door in the cave opens
-  (the treaty, the deep).
-- **In ten years:** the empire pushes into the foothills (`lore.md` IV): a fort on the crest, the
-  salt road garrisoned, a dispute with the surface people over the toll. The march becomes
-  contested ground.
+### Later content slots (space kept, nothing built)
+- **A moonfall site:** an open stretch of plateau about 60 by 40, north of the salt road between x
+  about -80 and -40, with no roads, sites or nodes in it. When moonfalls exist it holds the event:
+  a crater with verdigris rocks (Mining tier 8), a crater pool with lightfin spots (Fishing tier 8),
+  moonborn creatures, and a world boss for the largest.
+- **The cave's far door:** opens into a later dungeon (a mine) without changing the cave.
+- **The crest:** a plot about 20 by 20 beside the waystation for a fort, if the salt road later gets
+  a garrison and tasks.
 
-**Why players come:** early players for the first dungeon, the first mining beyond the town and the
-first climb. Mid players for the observatory, the vault and the road west. Late players for the
-moonfall when it lands, and on their way to the spine.
-
-**The land to support it**
-- **The march climbs openly.** From Tolling's west edge (about 1.5) the downs rise west in long
-  slopes to about 10 at the salt road's crest (about 1 in 7 on average, broken into swells), then
-  fall into the high valley (about 4) before the salt pass.
-  - The salt road climbs it without switchbacks: the climb is the point, and you watch the crest
-    come nearer.
-  - The escarpment of the first levels pass, a 6-tile face down the march's whole east side,
-    goes.
-- **The gorge:**
-  - cut into the march's north where Tolling's river comes off the high ground, walls 8 to 12,
-    about 60 tiles long;
-  - a bank path 3 to 4 wide inside, the fall at its head;
-  - the west road and the farm stay outside its mouth, where the river comes out into the open.
-- **The spur** stands about 15 at its west end, reached by a lane along its spine from the
-  plateau. It needs no switchbacks: it is high because the plateau is.
-- **The moonfall bowl:** an open, empty stretch of plateau north of the salt road, kept clear of
-  sites and roads.
-- Sere's valley stays low and green, Sere's river leaving it in the south-east.
+### The ground for it
+- **The march climbs openly** from Tolling's west edge (about 1.5) to about 10 at the salt road's
+  crest, about 1 in 7 on average, in long swells. It then falls to about 4 in the high valley before
+  the salt pass. The salt road climbs it with no switchbacks.
+  - The first pass's escarpment, a 6-tile face down the march's whole east side, goes.
+- **The gorge:** walls of 8 to 12, about 60 tiles long, the river and its bank path inside, the fall
+  of about 5 at the head, and the steps beside it.
+- **The spur:** a promontory off the plateau about 15 high, its level top holding the observatory.
+  Its west and north sides are cliffs of about 10 over the high valley, with the vault's door at
+  their foot. A lane runs along the spur from the plateau.
+- **The moonfall site:** level, open plateau.
+- **Sere's valley** low and green in the south-west.
 
 ---
 
-## 5. Knellmere and the lake road: the world opens
+## 4. Knellmere and the lake road (levels 5 to 50, fishing to 99)
 
-**What it is.** After Tolling's small basin, the world opens: a great lake, boats, a market town,
-Cruor's hill ahead, and under the Downs a white wall with a giant figure cut into it. It's the
-first long road, the home of fishing, and **a promise**: the drowned belfry stands in the water
-from the first moment and can't be reached until later.
+### What a player does here
 
-**Things to do**
+| Activity | Where | What is physically there | Levels |
+| --- | --- | --- | --- |
+| Fishing | the whole shore | about 10 `river_spot` (perch), 3 `eel_weir` in the fens, 4 pike spots (new, a lake spot like `river_spot` with pike) off the north shore and the isle | 1 to 30 |
+| **Trophy angling** | Knellmere | `perch_rise`, `eel_rise` and `pike_rise` trophy spots round the lake, a few active at a time; the deep water east of the isle for the high species | 1 to 99 |
+| Sell and rig | p-lakeport | the `fishmonger` (trophies to fish boxes), the `tackle_maker` (tackle, mending), the `collector` (revised fish) | all |
+| Bank, cook | p-lakeport | a `bank_chest` in the harbour office; a `range` in the inn | all |
+| Boats | p-lakeport's quay; p-lake-south's landing | a boatman at each: a ferry across the lake (p-lakeport to p-lake-south), and to the isle once The Bell's sequel opens it | 5+ |
+| Fen rats, reeds | the reed fens (s-reed-fens, (210, 36)) | 10 `fen_rat`, 2 `reed_bed`, the eel weirs | 1 to 10 |
+| The Downs | above the chalk cliff | 8 of a tier-3 downland creature (about level 22); 4 `feverfew_patch`; s-downs-fort (420, -140) with tier-4 enemies (about level 35) | 20 to 40 |
+| The drowned village | under the lake, through the belfry (below) | a dungeon | 25 to 45 |
+| The figure's eye | the hill figure on the cliff face (below) | a small chamber and a view point | 15+ |
+| Milling | p-weir (356, 92) | the miller, the mill, `eel_weir` at the weir | 10+ |
 
-| Band | What |
-| --- | --- |
-| Early (5 to 20) | Fishing round the lake (tiers 1 to 3); Wenna's errand to the reed fens (fen rats); p-lakeport's market and the first boats; the south shore's fishers; the combe up the Downs and the hill figure. |
-| Mid (20 to 50) | The belfry and the drowned village (The Bell's sequel: the twin bell); the Downs above the cliff, s-downs-fort facing the war; flint and chalk on the cliff (Mining). |
-| Late | **Trophy angling** in Knellmere's deep water (`docs/fishing.md`): the lake is the showcase for the big fish, worth coming back for all game. |
-
-**Features and points of interest**
-- **The crest at the waygate** (s-lake-view): the lake revealed whole, the belfry in the water,
-  Cruor's hill beyond.
-- **The reed fens:** Palmerway on a raised causeway through the reeds, the narrow before the lake.
-- **p-lakeport:** a level shore town; the quay is a built stone edge with steps down to the boats.
-  A ferry to the south shore and, later, to the isle.
-- **The drowned belfry** standing out of the water off the isle (s-belfry, (300, -15)): seen from
-  everywhere on the north shore.
-- **The chalk cliff** over the south-east lobe (the wall with a way through), about 9 to 10, white,
-  with a shingle strip under it and the downs brook falling over it into a pool.
-- **The hill figure** (s-hill-figure, (330, -54)), cut into the cliff's face and seen across the
-  water. Its eye is a hollow you can reach.
-- **The ways up the cliff:**
-  - the combe at p-lake-south, a dry valley breaking the cliff and climbed gently;
-  - the figure path, a ledge cut along the face by the recutters, from the combe's top to the
+### Places and what they hold
+- **p-lakeport** (262, 70), level on the north shore, about 8 buildings:
+  - the harbour office (bank chest);
+  - the fishmonger's, the tackle shop and the collector's house;
+  - the inn (range);
+  - two houses and a boathouse.
+  - The quay is a stone edge about 1.2 high with steps down to the boats and the jetty. It's the
+    best place to watch the lake.
+- **The isle** (300, -15): a low island of shingle and rock with the belfry standing in shallow
+  water off its east end. On the isle are a landing, two pike spots and a pike trophy rise.
+- **p-lake-south** (262, -28): a fishing village of 3 or 4 buildings at the foot of the combe. Its
+  landing has the ferry.
+- **The chalk cliff:** about 9 to 10 high along the lake's south-east lobe, with a shingle strip 8
+  to 12 wide under it. The ways up:
+  - **the combe** at p-lake-south: a dry valley breaking the cliff, the camp lane climbing it at
+    about 1 in 8;
+  - **the figure path:** a ledge 2 to 3 wide cut along the face from the combe's top to the hill
     figure;
-  - steps cut down from the figure's foot to the shingle, a Mining shortcut.
-- **p-weir** on the outflow: the weir as a built structure.
+  - **chalk steps** from the figure's foot down to the shingle: a Mining shortcut (level 20), which
+    saves walking back round by the combe.
+- **The hill figure** (330, -54): cut into the cliff's face and seen from p-lakeport's quay (about
+  70 tiles away, in range). The figure path reaches its eye.
 
-**Below ground and beyond**
+### Below ground and beyond
 
-| Place | Who for | What it is |
-| --- | --- | --- |
-| The drowned village | mid (25 to 45) | Take a boat to the belfry and climb **down** inside the tower, out of its door onto the lake bed. A village under the water, the lake as a ceiling (green light, slow currents), its houses and church as they were. It is a **moved place** (`lore.md` I): the old maps put the village here, dry. The twin of Tolling's bell is here. |
-| The village in the Dreaming | mid to late, Dreaming | The same village, **dry**, as its people remember it, because old maps are true in the Dreaming. Seen twice, once drowned and once dreamed, it's one of the clearest early pictures of what the revision does. |
-| The figure's eye | early to mid | a hollow behind the figure's eye: the recutters' shrine, older than the empire, with their tallies of every recutting. A lookout over the lake, and a thread for later. |
-| Chalk galleries | mid, Mining | flint workings in the downs behind the cliff, entered from the top |
+| Place | Entrance | Size | Inside | For |
+| --- | --- | --- | --- | --- |
+| The drowned village | the boat to the belfry; a ladder down inside the tower | about 64 x 64 | a village street on the lake bed, the water as a ceiling (green light): 8 house shells, a church, a well; 15 drowned creatures (about levels 25 to 40); lamprey spots in flooded cellars (Fishing tier 4); a boss in the church (about level 45); the twin bell, a quest item | 25 to 45 |
+| The figure's eye | the end of the figure path | about 12 x 8 | a chamber behind the eye with an opening in the face, a view point over the lake, a shrine object (lore text) | 15+ |
+| The chalk galleries | a shaft on the downs behind the cliff | about 40 x 40 | old flint workings: `hematite_seam`s and a few gem-rich rocks, tier-3 creatures | 20 to 35 |
 
-**Futures**
-- **In a year:** fishing tiers, boats, p-lakeport's market, the hill figure.
-- **In five years:** the drowned village and The Bell's sequel. The recutters' thread: what the
-  figure shows, and who cut it first. Trophy angling's big species live in the deep water.
-- **In ten years:** **the lake falls.** In a revision event Knellmere's level drops for a while,
-  uncovering terraces of the drowned village along the isle's flank, walkable for the first
-  time. Or a moon fragment comes down in the lake. The lake bed is shaped now so that either would
-  make sense: the village lies on a slope of the bed by the isle, the deep water east of it.
+### Why each kind of player comes
+- **Early:** the road, the ferry, perch and eels, fen rats, the market.
+- **Mid:** pike, the Downs' creatures, the chalk galleries, the drowned village.
+- **Late:** trophy angling, which runs to 99 and is the area's reason to come back all game; and the
+  Downs fort.
 
-**Why players come:** early players for the road, fishing and the market. Mid players for the
-belfry, the drowned village and the Downs. Late players for trophy angling and the Downs' war
-front. Everyone passes through on the way to Cruor.
+### Later content slots (space kept, nothing built)
+- **A fishing contest at p-lakeport's quay:** a timed trophy-angling competition, a minigame with a
+  leaderboard (a trial-like mechanism). The quay and the water in front of it stay clear of other
+  spots.
+- **The lake bed by the isle:** a shelf about 40 by 20, at a depth that a "low water" version of the
+  region could uncover, with village ruins and nodes on it. That needs a region that can switch
+  between two states, which is a new mechanism: only if such an event is wanted.
 
-**The land to support it**
-- **Knellmere** stays at 0.1 as reshaped (finding 4). The bed is shaped where it matters: a
-  sloping shelf by the isle for the village, deep water east.
-- **The north shore** rolls gently, 0.5 to 3. **p-lakeport** stands level about 1.2 over the
-  water, with the quay wall a built edge; the "terrace about 2 above its quay" goes.
-- **The isle:** low, about 2 to 2.5, shingle and rock, holding the landing and the belfry's
-  churchyard; the 5 with a rock face goes. The belfry stands in the water just off it.
-- **The reed fens** flat at 0.1 to 0.4, Palmerway's causeway about 0.6 through them.
+### The ground for it
+- **Knellmere** at 0.1 as reshaped (finding 4), with the shelf by the isle and deep water east of it.
+- **The north shore** rolls gently, 0.5 to 3. p-lakeport is level about 1.2 over the water. The
+  first pass's terrace (about 2 over the quay) goes.
+- **The isle** low, about 2 to 2.5. The first pass's height of 5 and its rock face go.
+- **The reed fens** flat (0.1 to 0.4), with Palmerway on a causeway about 0.6 through them.
 - **The Downs:**
-  - the cliff about 9 to 10 along the south-east lobe only, its ends dying into slopes where the
-    shore turns away (west at the combe, east towards the outflow);
-  - the top 12 to 13, falling south to about 8;
-  - the camp lane up the combe at about 1 in 8, the figure path along the face, the brook's fall.
-  - This is most of what the first pass built (finding 8). It stays, with the ends softened.
+  - the cliff of about 9 to 10 along the south-east lobe only, its ends dying into slopes where the
+    shore turns away;
+  - the top at 12 to 13, falling south to about 8;
+  - the combe, the figure path, the brook's fall.
+  - Most of this was built in the first pass (finding 8) and stays.
 
 ---
 
-## 6. Cruor and the meander: the capital
+## 5. Cruor and the meander (levels 10 to 99)
 
-**What it is.** The centre of the world for a new player and the hub for everyone after: every
-main road starts here. It's rich, devout, proud and a little feverish, and it's a city of trusted
-faces, where any of them might be one of the Faceless. **The city is level on top of its hill.**
-The hill gives it its silhouette and its defences. The city's verticality is built: walls, towers
-and the cathedral. Its real depth is **below**: the undercroft, where the empire's secrets are
-kept, layer under layer.
+### What a player does here
 
-**Things to do**
+| Activity | Where | What is physically there | Levels |
+| --- | --- | --- | --- |
+| Bank | the counting-house on the main square | a strongbox counter, two bankers | all |
+| Shops | the market square | about 6 stalls and shops: weapons (melee), armour, robes and occult supplies, tools, food, a general store | all |
+| Smithing | the city smithy by the east gate | `furnace`, `forge`, anvils x2 (a busier forge: the draw shared by more players) | 10 to 50 |
+| Cooking | the tavern | `range` | all |
+| Religion | the First Monument in the main square; the cathedral | founts for Religion tiers 2 to 4 (levels 10 to 40); `vigil_altar` (pray, devotion); the cantor's hymn lessons | 10 to 40 |
+| Melee training | the knights' yard by the west gate | training dummies (low Melee XP to level 20), the knights, Sister Odile (quests) | 1 to 20 |
+| Quests | the notice board in the square; the cathedral; the knights | the empire's quests, sending players out along each road | 10+ |
+| The cathedral tower | the cathedral | stairs to a gallery (plane 2) with a view point. In range: the loop, the confluence, the meander's monument, the lake's north shore | all |
+| The wall-walk | the city wall | a walk along the wall top (plane 1) round the city, up and down by stairs in 4 towers | all |
+| The drains | grates in the lower streets; outfalls in the bluff (below) | a dungeon | 25 to 40 |
+| The old city | below the drains, and from the cathedral crypt (below) | a dungeon | 40 to 70 |
 
-| Band | What |
-| --- | --- |
-| Early (10 to 25) | Arriving: the meander's monument (the gate before the gate), the bridges, the city; the bank, the market and shops for every style; the First Monument (Religion); the cathedral's hymns; the knights' yard (Melee training, Sister Odile); the Letting House. |
-| Mid (25 to 60) | The undercroft's first two depths; the Faceless thread inside the city; the empire's quests, sending players down every road; the war's recruiters. |
-| Late (60+) | The deepest undercroft; the bleeding god's thread; the Unquiet Saint; high Religion at the cathedral; the city as the social hub where everyone meets. |
+### Places and what they hold
+- **The city** (322, 176): about 30 buildings within the budget of `docs/regions/cruor.md`:
+  - the cathedral in its open precinct;
+  - the main square with the First Monument, the counting-house and the market;
+  - the knights' yard by the west gate;
+  - the smithy by the east gate;
+  - the tavern, the Letting House, the chapter house;
+  - 6 to 8 homes in short rows.
+- **The walls** follow the hill's brow, with 4 gates (west, south, north, east), each at least 2 wide
+  with no roof over the gateway.
+- **The Watch:** a terrace on the east bluff over the great river, with a view point.
+- **The north stair:** a stair cut down the north bluff from a postern to the north bridge. It's the
+  short way to the north road, saving the walk round the hill's west shoulder.
+- **The meander's monument** (s-lake-monument, (282, 132)): founts for Religion tier 1 to 2, on the
+  road in.
+- **The towpath:** a path along the great river under the north and east bluffs, from the north
+  bridge to the confluence. It reaches the drains' outfalls.
 
-**Features and points of interest**
-- **The approach:** from the meander's monument, the city on its hill inside the bright loop. The
-  lake road crosses the meander twice, then climbs the neck in one long ramp to the west gate on
-  the skyline. Arriving means going up.
-- **The walls on the brow,** following the hill's edge, with a **wall-walk** (an upper plane) and
-  towers: a route round the city above its streets, looking down into the loop.
-- **The cathedral** in its open precinct on the highest ground, with **its tower, the highest
-  vantage in wave 1**: the loop, the confluence, the lake, the Downs' white edge and Eller's
-  trees.
-- **The Watch:** a terrace on the east bluff over the great river, looking down the river towards
-  the east road.
-- **The north stair:** steps cut down the north bluff from a postern to the river and the north
-  bridge. It's the city's back way: steep, narrow and memorable. The main north road goes round.
-- **The confluence** below the hill, seen from the precinct and the Watch.
-- **The south slope** under the walls: gardens, vines and the pilgrims' camp, kept open (below).
+### Below ground
 
-**Below ground**
+| Place | Entrance | Size | Inside | For |
+| --- | --- | --- | --- | --- |
+| The drains | 3 grates in the city's lower streets; 2 outfalls in the bluff face, reached from the towpath | about 96 x 64 | brick tunnels with walkways beside the channels; 15 drain rats and thieves (about levels 25 to 40); a smugglers' room with a shop that buys anything (a fence); a way down to the old city | 25 to 40 |
+| The old city | from the drains' lowest point; a stair in the cathedral crypt | about 96 x 96 | buried streets and houses, the catacombs; undead (about levels 40 to 70); `hematite_seam`s in an old quarry; the Saint's crypt (`SaintsCrypt`, existing) joined at its door | 40 to 70 |
+| The deepest | a sealed door in the old city | not built | kept for an end-game dungeon and boss | 80+ |
 
-| Depth | Who for | What it is |
-| --- | --- | --- |
-| The drains | mid (25 to 40) | Cellars and the city's drains. Their **outfalls open in the bluff face** above the great river, reached from the towpath below: the Faceless' way into the city. Thieves, smugglers, a market that isn't there. |
-| The old city | mid to late (40 to 70) | The older walls inside the newer ones go down here: streets of the first Cruor, buried under the new. The catacombs of the martyrs, with the Unquiet Saint's crypt (the existing `SaintsCrypt` region belongs here). |
-| The deepest | late, much later | Where the monuments' channels lead. The blood gathered across the empire ends up somewhere, and this is a candidate for **p-sworn's place in the world** (`lore.md` II: it "will make an entrance"). Shut and sealed until the bleeding god's story is told. Owner's call. |
-| The Dreaming's Cruor | Dreaming | the city as remembered, before the new walls, with the old city on the surface |
+### Why each kind of player comes
+- **Early:** arrival, the bank, the shops, the knights' yard, the meander's monument.
+- **Mid:** the drains and the old city, the empire's quests, Religion at the First Monument, the
+  busy forge.
+- **Late:** the old city's depths, the end-game door, and the city as the place players meet: every
+  road out starts at one of its gates.
 
-**Futures**
-- **In a year:** the city laid out (about 30 buildings, `docs/regions/cruor.md`), its services, the
-  First Monument, the cathedral, the knights.
-- **In five years:** the drains and the old city; the Faceless questline (trusted faces in the
-  city, and districts that change as it plays out); the war drawing on the city.
-- **In ten years:** the bleeding god's story reaches the deepest undercroft, and the city changes
-  visibly with it. The empire grows, so **the city grows**: an outer town on the south slope,
-  outside the walls, reserved for it now.
+### Later content slots (space kept, nothing built)
+- **The south slope outside the walls:** about 100 by 40, kept as open gardens. It's room for an
+  outer district (more shops, guild halls, player-facing services) when the city needs it.
+- **The deepest undercroft:** the sealed door, for an end-game dungeon.
 
-**Why players come:** early players arrive here and get set up. Mid players go down for the
-undercroft and the Faceless. Late players come for the deepest content and the hub. Every road out
-starts at a gate.
-
-**The land to support it**
+### The ground for it
 - **One broad hill:**
-  - the meadows 0.3 to 1;
-  - the walled top about 7 to 8, varying by a tile or so across the city;
+  - the meadows at 0.3 to 1;
+  - the walled top at about 7 to 8, varying by a tile or so across the city;
   - the cathedral precinct on a gentle crown at about 8.5.
-  - The three tiers of the first pass (6, 10.5, 14) and their inner cliffs go.
+  - The first pass's three tiers (6, 10.5, 14) and their inner cliffs go.
 - **The rise happens outside the walls:**
-  - the neck in the west, a ramp of about 1 in 12 over about 100 tiles;
-  - the south slope to the meander, about 1 in 8, kept as open gardens for the future outer
-    town;
-  - **the bluffs** north and east, about 7 straight down to the great river, where it undercuts the
-    hill. The walls run along their brow, and the drains' outfalls are in their face.
+  - **the neck** on the west, a ramp of about 1 in 12 over about 100 tiles, which the lake road
+    climbs to the west gate;
+  - **the south slope** to the meander at about 1 in 8, kept open;
+  - **the bluffs** on the north and east, about 7 straight down to the great river, with the walls
+    along their brow, the towpath at their foot, the drains' outfalls in their face and the north
+    stair cut down them.
 - **Roads:**
-  - the lake road up the neck to the west gate;
+  - the lake road up the neck;
   - the south road down the slope to the south bridge;
-  - the north road round the hill's west shoulder to the north bridge, with the north stair as the
-    short way;
+  - the north road round the west shoulder to the north bridge;
   - the east road from the east gate down the river's valley.
-  - Inside the walls, streets on the level (stage 2).
 
 ---
 
-## 7. Mechanics that height could carry
+## 6. What changes in the data, once agreed
 
-Proposals for the owner. Each is data on existing mechanisms unless it says otherwise.
-
-1. **Lookouts.** A `survey` action on a vantage object (the bell tower's bell, the dry rise's
-   cairn, the hill figure's eye, the observatory's telescope, the cathedral tower, the salt road's
-   crest cairn). Surveying:
-   - adds the places in view to the world map;
-   - counts towards an achievement set;
-   - **pulls the fog back while you stand there**, drawing far silhouettes of the landmarks in view.
-   - This is the answer to Tolling's finding 18: long views happen where they are earned.
-   - The fog and silhouettes are new client work. The rest is data plus a dialogue action.
-2. **One-way drops.** A `climb` object with no way back (jump down a bank, slide down scree): a
-   quick way down that doesn't work in reverse, so some places are reached from above and left
-   below. Data only.
-3. **Skill shortcuts on climbs** (`skills.md` 2.8):
-   - Mining cuts the chalk steps;
-   - Woodcutting fells the tree across the gorge;
-   - Fishing wades the Wenn's ford in its glen.
-   - Data only.
-4. **High ground for Ranged** (with Ranged, not now). A tile flag `vantage` that the server reads,
-   so a crossbow on a vantage gains range or accuracy. The server stays flat; it only reads a flag.
-   That's a new combat rule, so it's a decision for when Ranged is designed.
-5. **Water that changes** (much later). A region that can swap between states (Knellmere high or
-   low) for an event. That's a new mechanism, and only worth building when such an event is
-   planned. The plan only keeps the land ready for it.
-
----
-
-## 8. What changes in the data, once agreed
-
-Applied as new strokes plans over today's tiles (they stay the truth). Each area is walked in Play
-mode before it is called done.
+Applied as new strokes plans over today's tiles (they stay the truth), then walked in Play mode.
 
 | Area | Lowered or softened | Kept | Added |
 | --- | --- | --- | --- |
-| Tolling | the knoll back to a level terrace at 1.5 to 2.5; the river bank and the cutting; the dry rise's 7-tile face to a long gravel slope with a tor; the heath ridge's rock face to a broad swell | Wennow, the town's pieces (they stand level on their foundations), the roads' lines | the Wenn's glen and ford |
-| Western march | the escarpment along the march's east side, to long downs climbing west | the observatory's spur, Sere's valley, the roads' lines (regraded) | the gorge with its fall and the cave, the steps out of it, the moonfall bowl kept clear |
-| Knellmere | p-lakeport's terrace; the isle's height and rock face | the Downs' cliff, the combe, the figure path, the brook's fall | the cliff's ends softened; the lake bed's shelf by the isle |
-| Cruor | the three tiers and their inner cliffs, to one level top on a broad hill | the meander, its bridges, the river bluffs | the neck's ramp, the south slope kept open; the north stair, the Watch and the outfalls at stage 2 |
+| Tolling | the knoll back to a level terrace at 1.5 to 2.5; the river bank and the cutting; the dry rise's 7-tile face to a hill with slopes of 1 in 8 and a tor; the heath ridge's rock face to a broad swell | Wennow, the town's pieces, the roads' lines | the quarry pit |
+| Western march | the escarpment to long swells climbing west | the spur, Sere's valley, the roads' lines (regraded) | the gorge with its fall and steps; the moonfall site kept clear |
+| Knellmere | p-lakeport's terrace; the isle's height and rock face | the Downs' cliff, the combe, the figure path, the brook's fall | the cliff's ends softened; the shelf by the isle |
+| Cruor | the three tiers and inner cliffs, to one level top on a broad hill | the meander, its bridges, the river bluffs | the neck's ramp; the south slope kept open; the towpath |
 
-Then the standard ([world-scale.md](../world-scale.md) section 3) and the four briefs follow this
-plan; their "Levels" sections are replaced by a pointer here.
+Buildings, view points and dungeons come at stages 2 and 3 as the briefs' work packages.
 
-## 9. Questions for the owner
+## 7. Questions for the owner
 
-1. **The vision of each area:** does it match yours, especially the futures?
-2. **Lookouts** (7.1): do long views that are earned at a vantage, with the fog pulled back, answer
-   finding 18?
-3. **The drowned village** as a moved place, with its dry twin in the Dreaming: canon?
-4. **The deepest undercroft** as a candidate for p-sworn's place in the world, or should that stay
-   wholly sealed?
-5. **The four set pieces** (the gorge, the chalk cliff, Cruor's bluffs, the observatory's far
-   side): the right ones?
+1. **Are the activity tables right for each area?** What's missing, or in the wrong place?
+2. **The quarry, the gorge, the chalk cliff, Cruor's bluffs and the spur:** are these the right
+   places for height?
+3. **View points** are a `view` action with a message today. Should they also pull the fog back
+   while you stand there, so the views reach further than 85 tiles? That would be new client work.
+4. **The later content slots** (a moonfall site, the fishing contest, Cruor's outer district, the
+   sealed doors): keep the space for them now?

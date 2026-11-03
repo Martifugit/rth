@@ -83,11 +83,13 @@ uneven ground. A city may stand on a hill, but the hill rises outside it. The wo
 [areas/heartland-vision.md](areas/heartland-vision.md).
 
 **The rules**
-1. **Every area has a vision before it has heights** (its brief, [world-areas.md](world-areas.md)):
-   what is done there, its points of interest, what is below ground, its futures (a year, five, ten)
-   and why low, mid and late players come. Its vertical plan follows from that: each height names
-   its **job** (a reveal, a threshold, a wall with a way through, a narrow, a vantage, depth below,
-   or room for a later change) and its routes.
+1. **Every area lists what is physically there before it has heights** (its brief,
+   [world-areas.md](world-areas.md)): what a player does there and at which levels, with the
+   buildings, stations, nodes, creatures and entrances that make it; what is below ground (entrance,
+   size, contents); space kept for later content; and why early, mid and late players come. Its
+   heights follow from that: each names its **job in play** (a destination, a shortcut, a face that
+   holds nodes, a view point, a gate with one or two routes, ground kept clear for an event) and its
+   routes. Story belongs to quests and dialogue, not to this plan.
 2. **Busy ground stays level.** A town, a yard, a camp, a quest spot changes by about a tile or so
    across it, gently. Height there is built: towers to climb, upper floors (`MapLevel`), wall-walks,
    quays and stairs; and below: cellars, crypts, drains, undercrofts (small instanced regions).
