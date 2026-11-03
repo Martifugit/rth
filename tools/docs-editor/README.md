@@ -34,7 +34,9 @@ uncommitted work in the folder are never staged, committed, set aside or overwri
   Outline and links pane, and the comments. The choice is kept and holds at any window size. When the
   window is too narrow for a pane, or you have hidden it, its button in the title bar (beside the logo
   for Pages, beside help for the Outline) opens it over the page as a sheet; picking a page or a heading
-  closes it. Ctrl+\ toggles Pages, Ctrl+Shift+\ the Outline.
+  closes it. Ctrl+, toggles Pages, Ctrl+. the Outline (Ctrl+\ and Ctrl+Shift+\ too, on whichever key types \).
+  Alt+← and Alt+→ (or the mouse's back button, or the arrows in the page's title bar) go back to where
+  you were and forward again.
 - **Pages** (left): *Design docs* is the GDD (`docs/gdd/`) in its own order, with *Open questions*
   at the top; *General* is everything else under `docs/`, and the repository's own Markdown. A gold
   dot is a page changed since the last commit, a green one a page not in git yet. Type to filter.
@@ -104,14 +106,14 @@ applies, so Show changes and Undo work the same. The engine is `src/assistant.js
 
 Comments work as in Google Docs, and never go into the page.
 
-- **On some text:** select it and click the comment button beside it (or Ctrl+Alt+M). The text is
+- **On some text:** select it and click the comment button beside it (or Ctrl+M). The text is
   highlighted and the comment sits beside it in the margin.
 - **The margin:** closed comments are short cards (two lines, the reply count, "New answer" when
   Claude has answered). Click one to open its thread: the passage it's on, the comment, and the replies
   hung from it on one line; long messages and long threads are cut short with *Show more* / *Show
   earlier replies*. **Hide** (above the margin, or the comment count in the status bar) folds the
   margin to small markers; it stays folded until you show it again.
-- **On the whole page:** the comment button at the top of the page (or Ctrl+Alt+M with nothing selected).
+- **On the whole page:** the comment button at the top of the page (or Ctrl+M with nothing selected).
   Page comments sit at the top of the margin, marked "On this page".
 - **Reply, resolve, more:** click a comment to reply. The tick resolves it; ⋮ has edit, attach to the
   selected text, add to the page's Open questions (left unsaved for you to check), move, copy its

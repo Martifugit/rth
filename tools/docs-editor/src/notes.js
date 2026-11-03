@@ -531,7 +531,7 @@ export function makeNotes(ctx) {
     return h("div", { class: "cm-reply-box" }, ed.el);
   }
 
-  /** Start a comment on what you're on (Ctrl+Alt+M, or the button beside a selection). */
+  /** Start a comment on what you're on (Ctrl+M, or the button beside a selection). */
   function compose({ wholePage = false } = {}) {
     if (!S.editor || !S.path || S.mode === "source") return;
     hideAdd();
@@ -544,7 +544,7 @@ export function makeNotes(ctx) {
   }
 
   // The "add comment" button beside a selection, in the margin.
-  const addBtn = h("button", { class: "cm-add hidden", title: "Add comment (Ctrl+Alt+M)", html: ICON.add, onmousedown: (ev) => ev.preventDefault(), onclick: () => compose() });
+  const addBtn = h("button", { class: "cm-add hidden", title: "Add comment (Ctrl+M)", html: ICON.add, onmousedown: (ev) => ev.preventDefault(), onclick: () => compose() });
   // ...and Ask beside it: the AI tab, with that passage as a chip (src/ai.js).
   const askBtn = h("button", { class: "cm-add cm-ask hidden", title: "Ask the AI about this (Ctrl+J)", html: ICON.ask, onmousedown: (ev) => ev.preventDefault(), onclick: () => { ctx.askAi?.(); hideAdd(); } });
   document.body.append(addBtn, askBtn);

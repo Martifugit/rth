@@ -38,9 +38,11 @@
 
   <main id="main" class="window">
     <div class="titlebar doc-titlebar">
+      <button id="backBtn" class="tb nav-btn" title="Back (Alt+←)"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+      <button id="fwdBtn" class="tb nav-btn" title="Forward (Alt+→)"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
       <div id="crumbs" class="crumbs"></div>
       <button id="sourceBtn" class="tb source-btn" title="Edit the Markdown source"><svg viewBox="0 0 24 24"><path d="m8 7-5 5 5 5M16 7l5 5-5 5"/></svg></button>
-      <button id="commentBtn" class="tb comment-btn" title="Comment on this page (Ctrl+Alt+M with nothing selected)"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M12 8v5M9.5 10.5h5"/></svg></button>
+      <button id="commentBtn" class="tb comment-btn" title="Comment on this page (Ctrl+M with nothing selected)"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M12 8v5M9.5 10.5h5"/></svg></button>
       <button id="historyBtn" class="tb history-btn" title="All comments, across every page"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg><span id="historyCount"></span></button>
     </div>
     <div id="toolbar" class="toolbar hidden"></div>

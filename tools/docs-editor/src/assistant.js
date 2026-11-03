@@ -19,7 +19,8 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { spawn, execFile } from "node:child_process";
 import { places } from "./ai-diff.js";
-import { openRouterProvider, EDIT_FORMAT, editsIn, applyEdits, shown } from "./openrouter-provider.js";
+import { openRouterProvider, OPENROUTER_MODELS, EDIT_FORMAT, editsIn, applyEdits, shown } from "./openrouter-provider.js";
+import { COMMENT_FORMAT, commentsIn, withoutComments, anchorFor } from "./ai-comments.js";
 
 const STREAM_EVERY_MS = 120;
 
@@ -30,14 +31,47 @@ const STREAM_EVERY_MS = 120;
 export function makeAssistant({ repo, dir, store, emit, pages, read, write, changed = () => {}, openrouterKey = () => null, claude = process.env.CODEX_CLAUDE || "claude" }) {
   // Claude when it's on this computer (it reads the repository itself); otherwise OpenRouter's free
   // models, once signed in (CODEX_AI=openrouter tries OpenRouter even with Claude here).
+  // The AI tab's cog (AI setup) can choose one instead, and OpenRouter's model; kept in ai.json beside
+  // the conversations.
+  const settingsFile = path.join(dir, "..", "ai.json");
+  let settings = { use: "auto", model: "" };
+  try { settings = { ...settings, ...JSON.parse(fs.readFileSync(settingsFile, "utf8")) }; } catch {}
+  const models = () => (settings.model ? [settings.model] : OPENROUTER_MODELS);
   const claudeP = claudeProvider({ repo, claude });
-  const openP = openRouterProvider({ key: openrouterKey });
-  let hasClaude = null; // looked for once
+  const openP = openRouterProvider({ key: openrouterKey, models });
+  let hasClaude = null; // looked for once (Check again in AI setup looks again)
   async function pick() {
-    if (hasClaude === null) hasClaude = process.env.CODEX_AI !== "openrouter" && (await claudeP.check()).ok;
+    if (settings.use === "openrouter" || process.env.CODEX_AI === "openrouter") return openP;
+    if (hasClaude === null) hasClaude = (await claudeP.check()).ok;
+    if (settings.use === "claude") return claudeP;
     return hasClaude ? claudeP : openP;
   }
   const provider = { check: async () => (await pick()).check() };
+
+  /** What AI setup shows: which AI answers, and how each way in stands. */
+  async function setup({ recheck = false } = {}) {
+    if (recheck) hasClaude = null;
+    const c = await claudeP.check();
+    hasClaude = c.ok;
+    const using = await pick();
+    return {
+      use: settings.use, using: using === claudeP ? "claude" : "openrouter",
+      claude: { found: c.ok, version: c.version || null, error: c.ok ? null : c.error },
+      openrouter: { signedIn: !!openrouterKey(), model: settings.model || "", defaultModel: OPENROUTER_MODELS.join(", ") },
+      provider: await (using).check(),
+    };
+  }
+  async function configure({ use, model }) {
+    if (use !== undefined) {
+      if (!["auto", "claude", "openrouter"].includes(use)) return { error: "Unknown choice." };
+      settings.use = use;
+    }
+    if (model !== undefined) settings.model = String(model || "").trim().slice(0, 200);
+    fs.mkdirSync(path.dirname(settingsFile), { recursive: true });
+    fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 1));
+    emit("ai", { state: "provider" });
+    return setup();
+  }
   const runs = new Map(); // conversation id -> { text, activity, handle }
   fs.mkdirSync(dir, { recursive: true });
 
@@ -67,7 +101,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
 
   const view = (id) => {
     const r = runs.get(id);
-    return r ? { id, state: "running", text: r.open ? shown(r.text) : r.text, activity: r.activity } : { id, state: "idle" };
+    return r ? { id, state: "running", text: withoutComments(r.open ? shown(r.text) : r.text), activity: r.activity } : { id, state: "idle" };
   };
 
   async function get(id) {
@@ -110,7 +144,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
       // One request: the engine's gathered reading, the conversation so far, then this message.
       r.open = true;
       const history = c.messages.slice(0, -1).slice(-12).map((m) => ({ role: m.by === "you" ? "user" : "assistant", content: m.text || "" })).filter((m) => m.content);
-      const system = SYSTEM_OPEN + "\n\n" + EDIT_FORMAT + "\n\n" + (await reading(context));
+      const system = SYSTEM_OPEN + "\n\n" + EDIT_FORMAT + "\n\n" + COMMENT_FORMAT + "\n\n" + (await reading(context));
       r.handle = ai.run({ messages: [{ role: "system", content: system }, ...history, { role: "user", content: (ctx.text ? "What they're looking at:\n\n" + ctx.text + "\n\n" : "") + "They say:\n\n" + text + (suggest ? SUGGEST_NOTE : "") }], ...handlers });
     } else {
       const prompt = (c.session ? followUp : firstPrompt)(text, ctx) + (suggest ? SUGGEST_NOTE : "");
@@ -128,10 +162,37 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
         res = { ...res, text: clean };
         r.text = clean;
       }
+      // Comments it was asked to leave: posted where comments are (Discord when signed in).
+      const posted = [];
+      if (!res.error) {
+        const { comments, replies, text: clean } = commentsIn(res.text || r.text || "");
+        res = { ...res, text: clean };
+        r.text = clean;
+        const failed = [];
+        for (const x of comments) {
+          try {
+            if (!/^docs\/[^]+\.md$/.test(x.page) || x.page.includes("..")) throw new Error("not a page under docs/");
+            const pageText = await read(x.page);
+            if (pageText == null) throw new Error("no such page");
+            const { anchor, title } = anchorFor(pageText, x.section, x.quote);
+            const made = await store.create(x.page, { kind: "note", text: x.text, anchor, by: "agent", title });
+            posted.push({ id: made.note.id, page: x.page, quote: anchor.quote || null });
+          } catch (e) { failed.push(`a comment on ${x.page} (${e.message})`); }
+        }
+        for (const x of replies) {
+          try {
+            const made = await store.reply(x.to, { by: "agent", text: x.text });
+            if (!made) throw new Error("no such thread");
+            posted.push({ id: x.to, page: made.page ?? null, reply: true });
+          } catch (e) { failed.push(`a reply (${e.message})`); }
+        }
+        if (failed.length) note += "\n\n*Couldn't post " + failed.join("; ") + ".*";
+      }
       runs.delete(c.id);
       const fresh = (await readConv(c.id)) || c;
       const msg = { by: "ai", at: new Date().toISOString(), text: (res.error ? r.text : (res.text || r.text || "")) + note };
       if (res.model) msg.model = res.model;
+      if (posted.length) msg.comments = posted;
       const changes = await compare(before);
       if (changes.length && suggest) {
         for (const x of changes) { x.suggest = true; await write(x.page, x.before); }
@@ -207,8 +268,8 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
       if (hit) {
         const n = hit.note;
         chips.thread = { id: n.id, quote: n.anchor?.quote?.slice(0, 200) || "" };
-        const lines = n.thread.map((e) => `${e.by === "agent" ? "Claude" : "The owner"}: ${e.text}`).join("\n\n");
-        parts.push(`The comment thread open beside the page${n.anchor?.quote ? `, on "${n.anchor.quote.slice(0, 300)}"` : ""}:\n${lines}`);
+        const lines = n.thread.map((e) => `${e.by === "agent" ? "Claude" : e.who?.name || "The owner"}: ${e.text}`).join("\n\n");
+        parts.push(`The comment thread open beside the page (thread ID ${n.id})${n.anchor?.quote ? `, on "${n.anchor.quote.slice(0, 300)}"` : ""}:\n${lines}`);
       }
     }
     return { chips, text: parts.join("\n\n") };
@@ -280,7 +341,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     return { ok: true, undone: done, open };
   }
 
-  return { list, get, send, stop, remove, changesFor, reviewed, undo, check: provider.check, status: () => ({ running: [...runs.keys()] }) };
+  return { list, get, send, stop, remove, changesFor, reviewed, undo, setup, configure, signInClaude: () => claudeP.signIn(), check: provider.check, status: () => ({ running: [...runs.keys()] }) };
 }
 
 const titleFrom = (text) => {
@@ -301,6 +362,7 @@ function firstPrompt(text, ctx) {
     "You're talking with someone in the Codex's side panel. Discuss, explain and argue the design with them; look things up in the repository whenever it helps (you can read the docs, code and data). Say plainly when the docs don't settle something.",
     "You may change pages, but only when they ask you to change something (tighten this, write the missing sections, draft the decision). Discussing, explaining or arguing never changes a page. You can edit and create files under docs/ only; read docs/gdd/writing.md first and follow it and the page's own conventions, and change only what the request needs. The Codex shows them exactly what you changed, so after editing just say in a sentence or two what you did and where.",
     "Your reply shows in a narrow side panel as Markdown: short paragraphs, lists where they help, no big headings. Cite pages as repository paths.",
+    COMMENT_FORMAT,
     "",
     ctx.text ? "What they're looking at:\n\n" + ctx.text : "They have no page open.",
     "",
@@ -325,7 +387,9 @@ function followUp(text, ctx) {
 const READ_TOOLS = ["Read", "Glob", "Grep"];
 // Pages only: anything not allowed is refused in print mode.
 const EDIT_TOOLS = ["Edit(docs/**)", "Write(docs/**)", "MultiEdit(docs/**)"];
-const NEVER = ["Bash", "NotebookEdit", "WebFetch", "WebSearch", "Agent", "Task"];
+// Comments go through the Codex (COMMENT_FORMAT), never as files: docs/.notes/ is only a copy, and
+// what's shown comes from Discord when signed in.
+const NEVER = ["Bash", "NotebookEdit", "WebFetch", "WebSearch", "Agent", "Task", "Edit(docs/.notes/**)", "Write(docs/.notes/**)", "MultiEdit(docs/.notes/**)"];
 
 function claudeProvider({ repo, claude }) {
   let available = null;
@@ -381,7 +445,16 @@ function claudeProvider({ repo, claude }) {
     return { done, stop: () => { stopped = true; try { proc?.kill(); } catch {} } };
   }
 
-  return { check, run };
+  /** Claude signs in in its own terminal (its first run asks); the Codex can open one for it. */
+  function signIn() {
+    if (process.platform !== "win32") return { ok: false, error: "Open a terminal and run claude once to sign in." };
+    const p = spawn("cmd.exe", ["/c", `start "Sign in to Claude" cmd.exe /k "${claude}"`], { cwd: repo, detached: true, stdio: "ignore", windowsVerbatimArguments: true });
+    p.on("error", () => {});
+    p.unref();
+    return { ok: true };
+  }
+
+  return { check, run, signIn };
 }
 
 function describe(c) {

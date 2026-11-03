@@ -2,7 +2,7 @@
 // sit beside the page, and whether comments sit in the margin. Chosen in the menu on the logo, kept
 // in localStorage, and the same at any window size: a pane you've chosen to show stays docked while
 // there's room, and when the window is too narrow for it (or you've hidden it) it opens over the page
-// as a sheet instead, from its button in the title bar or Ctrl+\ (Pages) / Ctrl+Shift+\ (Outline).
+// as a sheet instead, from its button in the title bar or Ctrl+, (Pages) / Ctrl+. (Outline).
 
 const KEY = "codex.layout";
 // Room for a docked pane: the page keeps at least about 500 px beside them.
@@ -40,7 +40,7 @@ export function makeLayout(ctx) {
     for (const pane of ["pages", "outline"]) {
       const btn = $("#" + pane + "Btn"), shown = L.docked[pane] || L.sheet === pane;
       btn.classList.toggle("on", shown);
-      btn.title = (shown ? "Hide " : "Show ") + (pane === "pages" ? "the pages" : "the outline and links") + (pane === "pages" ? " (Ctrl+\\)" : " (Ctrl+Shift+\\)");
+      btn.title = (shown ? "Hide " : "Show ") + (pane === "pages" ? "the pages" : "the outline and links") + (pane === "pages" ? " (Ctrl+,)" : " (Ctrl+.)");
     }
     // The page's width changed: put the comments level with their text again.
     requestAnimationFrame(() => notes.layout());
@@ -81,8 +81,8 @@ export function makeLayout(ctx) {
       check(on), h("span", { class: "lm-label" }, label, hint ? h("span", { class: "lm-hint" }, hint) : null), keys ? h("kbd", {}, keys) : null);
     const m = h("div", { class: "cm-menu layout-menu" },
       h("div", { class: "lm-head" }, "Layout"),
-      item(L.pages, "Pages", narrow("pages") ? "Too narrow to keep beside the page: opens over it" : "The list of pages, on the left", "Ctrl \\", () => choose("pages", !L.pages)),
-      item(L.outline, "Outline and links", narrow("outline") ? "Too narrow to keep beside the page: opens over it" : "This page's headings and links, on the right", "Ctrl Shift \\", () => choose("outline", !L.outline)),
+      item(L.pages, "Pages", narrow("pages") ? "Too narrow to keep beside the page: opens over it" : "The list of pages, on the left", "Ctrl ,", () => choose("pages", !L.pages)),
+      item(L.outline, "Outline and links", narrow("outline") ? "Too narrow to keep beside the page: opens over it" : "This page's headings and links, on the right", "Ctrl .", () => choose("outline", !L.outline)),
       item(!notes.state.hidden, "Comments beside the page", "Off: folded to small markers", null, () => notes.toggleMargin()),
       presence ? item(presence.on(), "Show what I'm editing on Discord", "“Editing …” on your Discord profile", null, () => presence.toggle()) : null,
       h("div", { class: "spell-sep" }),

@@ -13,6 +13,7 @@ const ICON = {
   stop: '<svg viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1.5"/></svg>',
   new: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
   list: '<svg viewBox="0 0 24 24"><path d="M12 7v5l3 2"/><circle cx="12" cy="12" r="8"/></svg>',
+  cog: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v2.6M12 18.9v2.6M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M2.5 12h2.6M18.9 12h2.6M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"/><circle cx="12" cy="12" r="6.5"/></svg>',
   close: '<svg viewBox="0 0 24 24"><path d="m7 7 10 10M17 7 7 17"/></svg>',
   page: '<svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>',
   quote: '<svg viewBox="0 0 24 24"><path d="M5 7h14M5 12h10M5 17h12"/></svg>',
@@ -107,7 +108,8 @@ export function makeAi(ctx) {
     head.replaceChildren(
       h("button", { class: "ai-title" + (A.listOpen ? " on" : ""), title: "Earlier conversations", onclick: toggleList },
         h("span", { class: "ai-title-ico", html: ICON.list }), h("span", { class: "ai-title-text" }, title)),
-      h("button", { class: "ai-new", title: "New conversation", html: ICON.new, onclick: () => { newConversation(); input.focus(); } }));
+      h("button", { class: "ai-new", title: "New conversation", html: ICON.new, onclick: () => { A.setupOpen = false; newConversation(); input.focus(); } }),
+      h("button", { class: "ai-new ai-cog" + (A.setupOpen ? " on" : ""), title: "AI setup: which AI answers, and ways to connect", html: ICON.cog, onclick: toggleSetup }));
     if (A.listOpen) head.append(listEl());
   }
 
@@ -139,13 +141,83 @@ export function makeAi(ctx) {
   async function openConversation(id) {
     const r = await api("/api/ai/conversation?id=" + encodeURIComponent(id));
     if (!r.ok) { if (id === A.id) newConversation(); return; }
-    A.id = id; A.conv = r;
+    A.id = id; A.conv = r; A.setupOpen = false;
     A.run = r.run?.state === "running" ? { text: r.run.text, activity: r.run.activity } : null;
     localStorage.setItem(KEY, id);
     drawHead(); drawLog(); syncSend();
   }
 
+  // ----------------------------------------------------------------------------- AI setup (the cog)
+
+  async function toggleSetup() {
+    A.setupOpen = !A.setupOpen;
+    A.listOpen = false;
+    drawHead();
+    if (A.setupOpen) { A.setup = await api("/api/ai/setup"); }
+    drawLog();
+  }
+  async function configure(change) {
+    const r = await api("/api/ai/setup", { method: "POST", body: JSON.stringify(change) });
+    if (!r.ok && r.error) return toast(r.error, "bad");
+    A.setup = r; A.provider = r.provider || A.provider;
+    drawLog();
+  }
+
+  function setupEl() {
+    const st = A.setup;
+    if (!st) return h("div", { class: "ai-setup" }, h("div", { class: "ai-note" }, "Looking…"));
+    const choice = (value, label, note) => h("label", { class: "ai-choice" + (st.use === value ? " on" : "") },
+      h("input", { type: "radio", name: "ai-use", checked: st.use === value ? "" : null, onchange: () => configure({ use: value }) }),
+      h("span", {}, h("b", {}, label), note ? h("span", { class: "ai-choice-note" }, note) : null));
+    const usingName = st.using === "claude" ? "Claude, on this computer" : "OpenRouter";
+    const ready = st.provider?.ok;
+    const or = st.openrouter, cl = st.claude;
+    const keyInput = h("input", { class: "field ai-key", type: "password", placeholder: "sk-or-…", autocomplete: "off", spellcheck: "false" });
+    const modelInput = h("input", { class: "field ai-model", value: or.model, placeholder: or.defaultModel, spellcheck: "false" });
+    return h("div", { class: "ai-setup" },
+      h("div", { class: "ai-setup-now" + (ready ? "" : " warn") }, ready ? "Answering now: " : "Not ready: ", h("b", {}, usingName), ready && st.provider.version ? h("span", { class: "ai-choice-note" }, " (" + st.provider.version + ")") : null,
+        !ready && st.provider?.error ? h("div", { class: "ai-note" }, st.provider.error) : null),
+
+      h("h4", {}, "Which AI"),
+      choice("auto", "Automatic", "Claude when it's on this computer, otherwise OpenRouter"),
+      choice("claude", "Claude", "Claude Code on this computer, with your own Claude subscription"),
+      choice("openrouter", "OpenRouter", "Free models (or any model, with credit), through your own OpenRouter account"),
+
+      h("h4", {}, "Claude"),
+      cl.found
+        ? h("p", { class: "ai-note" }, "Found: " + cl.version + ". It reads the docs and code itself and edits pages when asked.")
+        : h("p", { class: "ai-note" }, "Not found on this computer. Install Claude Code (it needs a Claude subscription), then check again."),
+      h("div", { class: "ai-setup-row" },
+        cl.found ? null : h("button", { class: "btn", onclick: () => window.open("https://claude.com/claude-code", "_blank") }, "Get Claude Code"),
+        cl.found ? h("button", { class: "btn", title: "Opens a terminal running Claude; its first run asks you to sign in", onclick: async () => { const r = await api("/api/ai/claude-signin", { method: "POST" }); if (r.error) toast(r.error, "bad"); else toast("Sign in in the terminal, then close it"); } }, "Sign in to Claude") : null,
+        h("button", { class: "btn", onclick: async () => { A.setup = await api("/api/ai/setup?recheck=1"); A.provider = A.setup.provider || A.provider; drawLog(); } }, "Check again")),
+
+      h("h4", {}, "OpenRouter"),
+      or.signedIn
+        ? h("p", { class: "ai-note" }, "Connected.")
+        : h("p", { class: "ai-note" }, "Not connected. Sign in to make a key for the Codex, or paste a key you made on openrouter.ai."),
+      h("div", { class: "ai-setup-row" },
+        or.signedIn
+          ? h("button", { class: "btn", onclick: async () => { await api("/api/openrouter/signout", { method: "POST" }); A.setup = await api("/api/ai/setup"); drawLog(); } }, "Disconnect")
+          : h("button", { class: "btn btn-gold", onclick: signInOpenRouter }, "Sign in with OpenRouter")),
+      or.signedIn ? null : h("div", { class: "ai-setup-row" }, keyInput,
+        h("button", { class: "btn", onclick: async () => {
+          const r = await api("/api/openrouter/key", { method: "POST", body: JSON.stringify({ key: keyInput.value }) });
+          keyInput.value = "";
+          if (!r.ok) return toast(r.error || "Couldn't use that key", "bad");
+          toast("Connected to OpenRouter", "good");
+          A.setup = await api("/api/ai/setup"); drawLog();
+        } }, "Use key")),
+      h("label", { class: "ai-setup-label" }, "Model", h("span", { class: "ai-choice-note" }, " (empty: " + or.defaultModel + ", which picks a free model that's up)")),
+      h("div", { class: "ai-setup-row" }, modelInput,
+        h("button", { class: "btn", onclick: () => configure({ model: modelInput.value }) }, "Save")),
+      h("p", { class: "ai-note" }, "A model is its id from OpenRouter's list (provider/name); paid models need credit on your OpenRouter account. ",
+        h("a", { href: "https://openrouter.ai/models", target: "_blank" }, "All models")),
+      h("p", { class: "ai-note" }, "Keys and conversations stay on this computer."));
+  }
+
   function drawLog() {
+    if (A.setupOpen) { log.replaceChildren(setupEl()); return; }
     const msgs = A.conv?.messages || [];
     const out = [];
     if (!msgs.length && !A.run) out.push(emptyState());
@@ -223,6 +295,7 @@ export function makeAi(ctx) {
     return h("div", { class: "ai-msg ai-msg-ai" },
       m.text ? body(m.text) : null,
       m.changes?.length ? h("div", { class: "ai-changes" }, m.changes.map((x) => changeLine(x, m))) : null,
+      m.comments?.length ? h("div", { class: "ai-changes" }, m.comments.map(commentLine)) : null,
       m.error && m.error !== "Stopped." ? h("div", { class: "ai-warn" }, "It stopped: " + m.error) : null,
       m.error === "Stopped." ? h("div", { class: "ai-note" }, "Stopped.") : null);
   }
@@ -241,6 +314,14 @@ export function makeAi(ctx) {
       h("span", { class: "ai-change-text" }, what + " ", h("b", {}, title)),
       x.after !== null ? h("button", { class: "ai-link", onclick: () => ctx.showChanges(x.page) }, "Show") : null,
       h("button", { class: "ai-link", onclick: () => undoTurn(idx, x.page) }, "Undo"));
+  }
+
+  /** A comment the AI left (or a reply it posted): where, and Show to open it beside its page. */
+  function commentLine(x) {
+    const title = x.page ? ctx.titleOf(x.page) || x.page.split("/").pop() : "a thread";
+    return h("div", { class: "ai-change" },
+      h("span", { class: "ai-change-text" }, (x.reply ? "Replied in a comment on " : "Commented on ") + "", h("b", {}, title)),
+      h("button", { class: "ai-link", onclick: () => ctx.notes.focus(x.id, x.page) }, "Show"));
   }
 
   async function undoTurn(msg, page) {
@@ -311,7 +392,10 @@ export function makeAi(ctx) {
 
   /** From the server: the answer streaming in, or finished. */
   function onEvent(ev) {
-    if (ev.state === "provider") return refreshProvider(); // signed in or out of OpenRouter
+    if (ev.state === "provider") { // signed in or out of OpenRouter, or AI setup changed
+      if (A.setupOpen) api("/api/ai/setup").then((r) => { A.setup = r; drawLog(); });
+      return refreshProvider();
+    }
     if (ev.id !== A.id) return;
     if (ev.state === "running") {
       A.run = { text: ev.text, activity: ev.activity };

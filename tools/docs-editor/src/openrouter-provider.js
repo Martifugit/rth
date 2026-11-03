@@ -24,9 +24,9 @@ export const EDIT_FORMAT = [
   "For a new page: <edit page=\"docs/...md\"><find></find><replace>the whole page</replace></edit>. Edit blocks are taken out of your answer before it's shown, so say in a sentence what you changed.",
 ].join("\n");
 
-export function openRouterProvider({ key }) {
+export function openRouterProvider({ key, models = () => OPENROUTER_MODELS }) {
   const check = async () => (key()
-    ? { ok: true, name: "OpenRouter", version: "free models" }
+    ? { ok: true, name: "OpenRouter", version: models().join(", ") === "openrouter/free" ? "free models" : models().join(", ") }
     : { ok: false, needsSignIn: "openrouter", error: "Claude isn't on this computer. Sign in with OpenRouter for free AI (your own daily allowance)." });
 
   /** messages: [{ role, content }]. */
@@ -37,12 +37,13 @@ export function openRouterProvider({ key }) {
       const k = key();
       if (!k) return { error: "Not signed in with OpenRouter." };
       onActivity("Thinking");
+      const list = models();
       let r;
       try {
         r = await fetch(URL, {
           method: "POST", signal: ctrl.signal,
           headers: { Authorization: "Bearer " + k, "Content-Type": "application/json", "HTTP-Referer": "https://github.com/Martifugit/rth", "X-Title": "R'th Codex" },
-          body: JSON.stringify({ model: OPENROUTER_MODELS[0], models: OPENROUTER_MODELS.length > 1 ? OPENROUTER_MODELS : undefined, messages, stream: true }),
+          body: JSON.stringify({ model: list[0], models: list.length > 1 ? list : undefined, messages, stream: true }),
         });
       } catch (e) { return { error: stopped ? "Stopped." : "Couldn't reach OpenRouter: " + e.message }; }
       if (r.status === 429) return { error: "Today's free AI allowance is used up (OpenRouter allows about 50 requests a day). It comes back tomorrow; everything else in the Codex keeps working." };

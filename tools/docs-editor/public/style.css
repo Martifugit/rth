@@ -720,7 +720,7 @@ body.in-app #topbar button, body.in-app #topbar input { -webkit-app-region: no-d
 body.in-app .search-trigger { height: 28px; }
 
 /* ------------------------------------------------------------------ the AI tab (src/ai.js) */
-.ico-ai { --icon: url("/icons/dreaming.png"); }
+.ico-ai { --icon: url("/robot.svg"); }
 /* Talking needs more room than the outline: the right-hand pane widens while the AI tab is open,
    where the window has room for it (the page keeps about 500 px). */
 @media (min-width: 1100px) { body.right-ai.outline-docked:not(.pages-docked) #app { grid-template-columns: 0 minmax(0, 1fr) 360px; } }
@@ -857,3 +857,21 @@ body.right-ai.sheet-outline #outlineWin { width: min(400px, calc(100vw - 48px));
 .welcome-step > div { flex: 1; }
 .welcome-step b { color: var(--silver); }
 .welcome-step p { margin: 2px 0 0; color: var(--silver-dim); font-size: 14px; }
+
+/* ------------------------------------------------------------------ AI setup (the AI tab's cog) */
+.ai-new.on { color: var(--title); background: rgba(255, 255, 255, .04); border-color: var(--hair); }
+.ai-setup { padding: 10px 12px 16px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.ai-setup h4 { margin: 12px 0 2px; font: 600 12px/1 var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--title); }
+.ai-setup p { margin: 0; }
+.ai-setup-now { padding: 8px 10px; border: 1px solid var(--hair); border-radius: 5px; background: rgba(255, 255, 255, .03); }
+.ai-setup-now.warn { border-color: rgba(243, 164, 147, .45); }
+.ai-choice { display: flex; gap: 8px; align-items: flex-start; padding: 6px 8px; border: 1px solid transparent; border-radius: 5px; cursor: pointer; }
+.ai-choice:hover { background: rgba(255, 255, 255, .03); }
+.ai-choice.on { border-color: var(--hair); background: rgba(255, 255, 255, .04); }
+.ai-choice input { margin-top: 2px; accent-color: #b8955a; }
+.ai-choice > span { display: flex; flex-direction: column; gap: 2px; }
+.ai-choice-note { color: var(--silver-dim); font-size: 12px; font-weight: normal; }
+.ai-setup-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.ai-setup-row .field { flex: 1; min-width: 0; }
+.ai-setup-label { margin-top: 6px; color: var(--silver); }
+.ai-setup a { color: var(--title); }

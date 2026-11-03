@@ -54,5 +54,17 @@ export async function makeOpenRouterAccount({ dir, emit }) {
 
   function signOut() { store(null); emit("ai", { state: "provider" }); return view(); }
 
-  return { view, signInUrl, done, signOut, key: () => key };
+  /** Another way in (AI setup): a key the person made on openrouter.ai themselves, checked first. */
+  async function useKey(k) {
+    k = String(k || "").trim();
+    if (!/^sk-or-[\w-]{10,}$/.test(k)) return { ok: false, error: "That doesn't look like an OpenRouter key (they start with sk-or-)." };
+    const r = await fetch("https://openrouter.ai/api/v1/key", { headers: { Authorization: "Bearer " + k } }).catch(() => null);
+    if (!r) return { ok: false, error: "Couldn't reach OpenRouter to check the key." };
+    if (!r.ok) return { ok: false, error: "OpenRouter didn't accept that key." };
+    store(k);
+    emit("ai", { state: "provider" });
+    return { ok: true, ...view() };
+  }
+
+  return { view, signInUrl, done, signOut, useKey, key: () => key };
 }

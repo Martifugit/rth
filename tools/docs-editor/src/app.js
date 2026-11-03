@@ -27,6 +27,7 @@ import { makeAi } from "./ai.js";
 import { makeAccountButton } from "./account-button.js";
 import { makePasteHandler, forDiscord } from "./discord-extras.js";
 import { AiMarks, makeAiChanges } from "./ai-changes.js";
+import { altGrChar, isKeyFor } from "./keys.js";
 import { Spelling, configureSpelling } from "./spellcheck.js";
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -202,7 +203,17 @@ function makeEditor(text) {
     ],
     content: text,
     onUpdate: () => { clearHits(); scheduleDirty(); scheduleOutline(); notes?.docChanged(); aiChanges?.docChanged(); },
-    editorProps: { attributes: { spellcheck: "false" }, handlePaste: (view, event) => discordPaste(view, event) },
+    editorProps: {
+      attributes: { spellcheck: "false" }, handlePaste: (view, event) => discordPaste(view, event),
+      // AltGr is Ctrl+Alt: a character typed with it (@, {, [, $ on Norwegian) is typed, never taken as
+      // one of the editor's Ctrl+Alt shortcuts (headings). src/keys.js.
+      handleKeyDown: (view, e) => {
+        const ch = altGrChar(e);
+        if (!ch || !view.editable) return false;
+        view.dispatch(view.state.tr.insertText(ch).scrollIntoView());
+        return true;
+      },
+    },
     onTransaction: () => updateToolbar(),
   });
   S.base = text;
@@ -259,12 +270,36 @@ async function loadTree() {
   renderTree();
 }
 
-async function openDoc(path, { hash = "", push = true, find = null, keepScroll = false, mode = null } = {}) {
+// ----------------------------------------------------------------------------- back and forward
+
+// Following a link, a search hit or a page in the list adds a step to the history; Back (Alt+←, the
+// mouse's back button, the arrow in the title bar) goes back to where you were, scrolled as you left it.
+// Each step keeps its scroll position, written as you scroll.
+let scrollTimer = null;
+function rememberScroll() {
+  clearTimeout(scrollTimer); scrollTimer = null;
+  if (!S.path || S.view === "status" || !history.state) return;
+  history.replaceState({ ...history.state, scroll: $("#scroller").scrollTop }, "");
+}
+function go(dir) {
+  rememberScroll();
+  if (dir < 0) history.back(); else history.forward();
+}
+function drawNav() {
+  const nav = window.navigation;
+  const b = $("#backBtn"), f = $("#fwdBtn");
+  if (!b || !f) return;
+  b.disabled = nav ? !nav.canGoBack : false;
+  f.disabled = nav ? !nav.canGoForward : false;
+}
+
+async function openDoc(path, { hash = "", push = true, find = null, keepScroll = false, mode = null, scroll = null } = {}) {
   if (S.path && path !== S.path) {
     clearTimeout(autoTimer);
     refreshDirty();
     if (S.dirty && !S.noSave && !(await save(false, { quiet: true }))) return;
   }
+  if (push) rememberScroll();
   const r = await api("/api/doc?path=" + encodeURIComponent(path));
   hideStatus();
   if (!r.ok) {
@@ -272,7 +307,7 @@ async function openDoc(path, { hash = "", push = true, find = null, keepScroll =
     if (!S.path && path !== DEFAULT_DOC) return openDoc(DEFAULT_DOC, { push: false });
     return;
   }
-  const scroll = $("#scroller").scrollTop;
+  const before = $("#scroller").scrollTop;
   const samePage = r.path === S.path;
   S.path = r.path; S.disk = r.content; S.diskHash = r.hash; S.eol = r.eol;
   hideBanner();
@@ -283,6 +318,7 @@ async function openDoc(path, { hash = "", push = true, find = null, keepScroll =
   $("#source").value = r.content;
   applyMode();
   if (push) history.pushState({ path: S.path, hash }, "", "?p=" + encodeURI(S.path) + (hash ? "#" + hash : ""));
+  drawNav();
   localStorage.setItem("codex.last", S.path);
   tellPresence();
   renderCrumbs(); markTreeCurrent(); buildOutline(); refreshDirty();
@@ -292,7 +328,8 @@ async function openDoc(path, { hash = "", push = true, find = null, keepScroll =
   S.wantChanges = null;
   if (rightTab === "links") panels.renderLinks(); else panels.linksFor(S.path).then((r) => r && setLinksCount(r.inbound.length));
   requestAnimationFrame(() => {
-    if (keepScroll) $("#scroller").scrollTop = scroll;
+    if (keepScroll) $("#scroller").scrollTop = before;
+    else if (scroll != null) $("#scroller").scrollTop = scroll;
     else if (hash) scrollToHeading(hash);
     else $("#scroller").scrollTop = 0;
     if (find) findInPage(find.q, find.occurrence);
@@ -592,7 +629,13 @@ function updateStatus() {
 function followLink(href) {
   if (!href) return;
   if (isExternal(href)) { window.open(href, "_blank", "noopener"); return; }
-  if (href.startsWith("#")) { scrollToHeading(href.slice(1), true); return; }
+  if (href.startsWith("#")) { // a step in the history too, so Back returns to the link
+    rememberScroll();
+    history.pushState({ path: S.path, hash: href.slice(1) }, "", "?p=" + encodeURI(S.path) + href);
+    scrollToHeading(href.slice(1));
+    drawNav();
+    return;
+  }
   const { path, hash, dir } = resolveHref(S.path, href);
   if (path.endsWith(".md")) {
     if (S.fileSet.has(path) || !path.startsWith("docs/")) return openDoc(path, { hash });
@@ -960,11 +1003,11 @@ function helpDialog() {
   const k = (keys, what) => [h("span", {}, keys.split(" ").map((x) => h("kbd", { style: "margin-right:3px" }, x))), h("span", {}, what)];
   modal("Keys", h("div", { class: "keys" },
     k("Ctrl P", "Search: pages by name, then the text of every page"),
-    k("Ctrl Alt M", "Comment on the selected text"), k("Ctrl Enter", "Post a comment. Write @agent in it to leave it for the next agent session"),
+    k("Ctrl M", "Comment on the selected text"), k("Ctrl Enter", "Post a comment. Write @agent in it to leave it for the next agent session"),
     k("Ctrl J", "Ask the AI (with the selected text, if any)"), k("Ctrl Shift C", "Copy for Discord: the selection, or the section you're in, with a link back"),
     k("Ctrl K", "Add or edit a link"), k("Ctrl B", "Bold"), k("Ctrl I", "Italic"), k("Ctrl Z", "Undo"),
-    k("Ctrl S", "Save now (pages also save by themselves)"), k("Alt ←", "Back"),
-    k("Ctrl \\", "Show or hide the pages"), k("Ctrl Shift \\", "Show or hide the outline and links"),
+    k("Ctrl S", "Save now (pages also save by themselves)"), k("Alt ←", "Back to where you were (also the mouse's back button)"), k("Alt →", "Forward again"),
+    k("Ctrl ,", "Show or hide the pages"), k("Ctrl .", "Show or hide the outline, links and AI"),
     h("span", { class: "muted small", style: "grid-column:1/-1;margin-top:8px" },
       "Markdown shortcuts work as you type: ## for a heading, - or 1. for a list, > for a quote, ``` for code. Saving only rewrites the paragraphs you changed; the rest of the file stays exactly as written.")));
 }
@@ -1011,23 +1054,38 @@ function wire() {
   window.addEventListener("popstate", (e) => {
     if (e.state?.view === "status" || /^(status|questions)$/.test(new URLSearchParams(location.search).get("view") || "")) { showStatus(false); return; }
     const p = e.state?.path || new URLSearchParams(location.search).get("p");
-    if (p && (p !== S.path || S.view === "status")) openDoc(p, { push: false, hash: e.state?.hash || location.hash.slice(1) });
+    const scroll = typeof e.state?.scroll === "number" ? e.state.scroll : null;
+    if (p && (p !== S.path || S.view === "status")) openDoc(p, { push: false, hash: e.state?.hash || location.hash.slice(1), scroll });
+    else if (p && scroll != null) $("#scroller").scrollTop = scroll;
     else if (p) scrollToHeading(location.hash.slice(1));
+    drawNav();
   });
+  // The scroll position of each step, kept as you scroll (for Back).
+  $("#scroller").addEventListener("scroll", () => { if (!scrollTimer) scrollTimer = setTimeout(rememberScroll, 250); }, { passive: true });
+  // The mouse's back and forward buttons.
+  window.addEventListener("mouseup", (e) => { if (e.button === 3 || e.button === 4) { e.preventDefault(); go(e.button === 3 ? -1 : 1); } });
+  $("#backBtn").addEventListener("click", () => go(-1));
+  $("#fwdBtn").addEventListener("click", () => go(1));
+  drawNav();
   window.addEventListener("beforeunload", (e) => { if (S.dirty) { e.preventDefault(); e.returnValue = ""; } });
 
   document.addEventListener("keydown", (e) => {
     const mod = e.ctrlKey || e.metaKey;
     const key = e.key.toLowerCase();
     if ($("#modalHost").childElementCount) return;
+    if (altGrChar(e)) return; // a character typed with AltGr, not a shortcut
+    if (e.altKey && !mod && !e.shiftKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")) { e.preventDefault(); go(e.key === "ArrowLeft" ? -1 : 1); return; }
     if (mod && key === "s") { e.preventDefault(); save(); }
     else if (mod && key === "p") { e.preventDefault(); quickOpen(); }
     else if (mod && e.shiftKey && key === "f") { e.preventDefault(); quickOpen(); }
     else if (mod && key === "k" && S.mode === "edit") { e.preventDefault(); linkDialog(); }
-    else if (mod && key === "m") { e.preventDefault(); notes.compose(); } // Ctrl+Alt+M, as in Google Docs (Ctrl+M too)
+    else if (mod && key === "m") { e.preventDefault(); notes.compose(); } // Ctrl+M (Ctrl+Alt+M as in Google Docs, where Ctrl+Alt isn't AltGr)
     else if (mod && key === "j") { e.preventDefault(); ai.focus(); }
     else if (mod && e.shiftKey && key === "c" && S.editor && S.mode === "edit") { e.preventDefault(); copyForDiscord(); }
-    else if (mod && e.code === "Backslash") { e.preventDefault(); layout.toggle(e.shiftKey ? "outline" : "pages"); }
+    // The panes: Ctrl+, (left) and Ctrl+. (right), on the same keys on every layout; Ctrl+ as in Notion,
+    // on whichever key types  here.
+    else if (mod && !e.altKey && (e.code === "Comma" || e.code === "Period")) { e.preventDefault(); layout.toggle(e.code === "Comma" ? "pages" : "outline"); }
+    else if (mod && isKeyFor(e, "\\", "Backslash")) { e.preventDefault(); layout.toggle(e.shiftKey ? "outline" : "pages"); }
     else if (key === "escape") {
       if (account.escape() || aiChanges.escape() || layout.escape() || notes.escape()) e.preventDefault();
       else if (CSS.highlights?.has("codex-hit")) clearHits();

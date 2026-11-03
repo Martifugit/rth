@@ -420,6 +420,11 @@ const api = {
   async "GET /api/openrouter"() { return openrouter.view(); },
   async "POST /api/openrouter/signin"(url, req) { return { url: openrouter.signInUrl("http://" + req.headers.host) }; },
   async "POST /api/openrouter/signout"() { return openrouter.signOut(); },
+  async "POST /api/openrouter/key"(url, req) { const r = await openrouter.useKey((await body(req)).key); return r.ok ? r : [400, r]; },
+  // AI setup (the AI tab's cog): which AI answers, and the ways in.
+  async "GET /api/ai/setup"(url) { return assistant.setup({ recheck: url.searchParams.get("recheck") === "1" }); },
+  async "POST /api/ai/setup"(url, req) { const r = await assistant.configure(await body(req)); return r.error ? [400, r] : r; },
+  async "POST /api/ai/claude-signin"() { return assistant.signInClaude(); },
   async "POST /api/account/signin"(url, req) { return { url: account.signInUrl("http://" + req.headers.host) }; },
   async "POST /api/account/signout"() { return account.signOut(); },
 
