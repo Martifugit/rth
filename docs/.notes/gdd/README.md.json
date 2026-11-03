@@ -1,0 +1,36 @@
+{
+  "page": "docs/gdd/README.md",
+  "notes": [
+    {
+      "id": "n-20261103-a31be0",
+      "kind": "note",
+      "status": "open",
+      "created": "2026-11-03T16:42:44Z",
+      "updated": "2026-11-03T16:43:02Z",
+      "anchor": {
+        "section": [],
+        "quote": "",
+        "prefix": "",
+        "suffix": ""
+      },
+      "thread": [
+        {
+          "by": "owner",
+          "at": "2026-11-03T16:42:44Z",
+          "text": "Test"
+        },
+        {
+          "by": "owner",
+          "at": "2026-11-03T16:42:49Z",
+          "text": "Test reply"
+        },
+        {
+          "by": "owner",
+          "at": "2026-11-03T16:43:02Z",
+          "text": "Test reply reply"
+        }
+      ],
+      "tags": []
+    }
+  ]
+}
