@@ -2,9 +2,7 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("codex", {
-  defaults: () => ipcRenderer.invoke("firstrun:defaults"),
+  fetch: () => ipcRenderer.invoke("firstrun:fetch"),
   choose: () => ipcRenderer.invoke("firstrun:choose"),
-  pickParent: () => ipcRenderer.invoke("firstrun:pickParent"),
-  fetch: (folder) => ipcRenderer.invoke("firstrun:fetch", folder),
-  onProgress: (cb) => ipcRenderer.on("firstrun", (e, m) => { if (m.type === "progress") cb(m.text); }),
+  onProgress: (cb) => ipcRenderer.on("firstrun", (e, m) => { if (m.type === "progress") cb(m); }),
 });

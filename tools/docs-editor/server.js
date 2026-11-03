@@ -309,7 +309,38 @@ const api = {
     await fsp.mkdir(path.dirname(abs), { recursive: true });
     await fsp.writeFile(abs, text, "utf8");
     recentWrites.set(relOf(abs), { hash: hash(text), until: Date.now() + 3000 });
-    syncer.saved(relOf(abs));
+    syncer.saved(relOf(abs), { soon: true });
+    return { ok: true, path: relOf(abs) };
+  },
+
+  // Deleting a page: gone from the docs (git keeps its history), sent within seconds. The reply holds
+  // its text, so the page can offer Undo (POST /api/doc/restore). Its comments stay, as comments on a
+  // page that's gone (the comment history lists them, and they can be moved to another page).
+  async "DELETE /api/doc"(url) {
+    if (!account.canEdit()) return [403, { error: "Sign in with Discord (with the Codex role) to delete pages." }];
+    const rel = url.searchParams.get("path") || "";
+    const abs = safe(rel);
+    if (!abs || !isDoc(rel)) return [400, { error: "Only pages under docs/ can be deleted." }];
+    let text;
+    try { text = await fsp.readFile(abs, "utf8"); } catch { return [404, { error: "No such page." }]; }
+    await fsp.rm(abs);
+    // A folder left empty goes too (git doesn't keep empty folders anyway).
+    try { const dir = path.dirname(abs); if (dir.startsWith(path.join(REPO, "docs") + path.sep) && !(await fsp.readdir(dir)).length) await fsp.rmdir(dir); } catch {}
+    index = null;
+    syncer.saved(relOf(abs), { soon: true });
+    return { ok: true, path: relOf(abs), content: text };
+  },
+  async "POST /api/doc/restore"(url, req) {
+    if (!account.canEdit()) return [403, { error: "Sign in with Discord (with the Codex role) to edit." }];
+    const { path: rel, content } = await body(req);
+    const abs = safe(rel);
+    if (!abs || !isDoc(rel) || typeof content !== "string") return [400, { error: "bad page" }];
+    if (fs.existsSync(abs)) return [409, { error: "A page with that name is there again already." }];
+    await fsp.mkdir(path.dirname(abs), { recursive: true });
+    await fsp.writeFile(abs, content, "utf8");
+    recentWrites.set(relOf(abs), { hash: hash(content), until: Date.now() + 3000 });
+    index = null;
+    syncer.saved(relOf(abs), { soon: true });
     return { ok: true, path: relOf(abs) };
   },
 

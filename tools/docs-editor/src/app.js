@@ -379,6 +379,7 @@ function applyMode() {
   $("#source").classList.toggle("hidden", S.mode !== "source");
   $("#toolbar").classList.toggle("hidden", S.mode !== "edit" || !!S.readOnly);
   $("#readOnlyBar").classList.toggle("hidden", !S.readOnly);
+  $("#deleteBtn").classList.toggle("hidden", !!S.readOnly);
   $("#docWrap").classList.toggle("source", S.mode === "source");
   updateToolbar();
   if (typeof notes !== "undefined") requestAnimationFrame(() => notes.layout());
@@ -425,6 +426,7 @@ function listen() {
   es.addEventListener("notes", (e) => notes.onNotes(JSON.parse(e.data)));
   es.addEventListener("run", (e) => notes.onRun(JSON.parse(e.data)));
   es.addEventListener("sync", (e) => showSync(JSON.parse(e.data)));
+  es.addEventListener("news", (e) => showNews(JSON.parse(e.data)));
   es.addEventListener("ai", (e) => { const ev = JSON.parse(e.data); ai.onEvent(ev); if (ev.state === "reviewed" || ev.pages?.includes(S.path)) aiChanges.load(); });
   es.addEventListener("account", (e) => account.onEvent(JSON.parse(e.data)));
   es.onmessage = (e) => {
@@ -433,7 +435,7 @@ function listen() {
     notesChanged();
     if (S.view === "status") panels.renderStatus();
     for (const ev of events) {
-      if (ev.path !== S.path || ev.hash === S.diskHash) continue;
+      if (ev.path !== S.path || ev.hash === S.diskHash || ev.path === S.deleting) continue;
       if (!ev.hash) { showBanner(`This page was deleted or moved on disk.`, []); continue; }
       clearTimeout(dirtyTimer); refreshDirty(); // count keystrokes from the last moment too
       if (!S.dirty) { openDoc(S.path, { push: false, keepScroll: true }); toast("Reloaded: the page changed on disk"); }
@@ -1014,10 +1016,73 @@ function helpDialog() {
 
 // ----------------------------------------------------------------------------- toasts
 
-function toast(text, kind = "") {
-  const t = h("div", { class: "toast " + kind }, text);
+/**
+ * A short message at the bottom. With actions ([{ label, run }]) it stays longer (ms), has buttons, and
+ * an ✕; running an action closes it.
+ */
+function toast(text, kind = "", { actions = null, ms = null } = {}) {
+  const go = () => { if (!t.isConnected) return; t.style.transition = "opacity .3s"; t.style.opacity = "0"; setTimeout(() => t.remove(), 300); };
+  const t = h("div", { class: "toast " + kind + (actions ? " with-actions" : "") }, h("span", {}, text),
+    actions ? actions.map((a) => h("button", { class: "toast-btn", onclick: () => { go(); a.run(); } }, a.label)) : null,
+    actions ? h("button", { class: "toast-x", title: "Close", onclick: go }, "✕") : null);
   $("#toasts").append(t);
-  setTimeout(() => { t.style.transition = "opacity .3s"; t.style.opacity = "0"; setTimeout(() => t.remove(), 300); }, 2200);
+  setTimeout(go, ms || (actions ? 12000 : 2200));
+  return t;
+}
+
+// ----------------------------------------------------------------------------- others' changes
+
+// Sync brought in what others sent (src/sync.js, "news"): say who made, changed or deleted which pages,
+// with a button to open each (as Google Docs and Notion say who changed what).
+function showNews({ pages }) {
+  const who = (x) => x.by?.length ? x.by.join(" and ") : "Someone";
+  const title = (x) => "“" + x.title + "”";
+  for (const x of pages.filter((p) => p.status === "added").slice(0, 3))
+    toast(`${who(x)} made a new page: ${title(x)}`, "", { actions: [{ label: "Open", run: () => openDoc(x.path) }] });
+  for (const x of pages.filter((p) => p.status === "deleted").slice(0, 3)) toast(`${who(x)} deleted ${title(x)}`, "", { actions: [] });
+  const changed = pages.filter((p) => p.status === "changed" && p.path !== S.path);
+  if (changed.length === 1) toast(`${who(changed[0])} changed ${title(changed[0])}`, "", { actions: [{ label: "Open", run: () => openDoc(changed[0].path) }], ms: 8000 });
+  else if (changed.length > 1) {
+    const names = [...new Set(changed.flatMap((x) => x.by || []))];
+    toast(`${names.length ? names.join(" and ") : "Others"} changed ${changed.length} pages: ${changed.slice(0, 3).map(title).join(", ")}${changed.length > 3 ? " and more" : ""}`, "", { actions: changed.slice(0, 3).map((x) => ({ label: x.title.length > 18 ? x.title.slice(0, 17) + "…" : x.title, run: () => openDoc(x.path) })), ms: 10000 });
+  }
+  // The open page was deleted by someone: go somewhere that exists.
+  if (pages.some((x) => x.status === "deleted" && x.path === S.path)) openDoc(DEFAULT_DOC, { push: false });
+}
+
+// ----------------------------------------------------------------------------- deleting a page
+
+async function deletePage() {
+  const page = S.path;
+  if (!page || S.readOnly) return;
+  const title = pageTitle() || page;
+  const links = await panels.linksFor(page).catch(() => null);
+  const inbound = links?.inbound?.length || 0;
+  const comments = notes.state.page === page ? notes.state.notes.length : 0;
+  const more = [
+    inbound ? `${inbound} page${inbound > 1 ? "s link" : " links"} to it; those links will show as broken.` : "",
+    comments ? `Its ${comments} comment${comments > 1 ? "s stay" : " stays"} in the comment history.` : "",
+  ].filter(Boolean).join(" ");
+  const c = await ask("Delete this page?", `<b>${esc(title)}</b> (${esc(page)}) is deleted for everyone. ${more} You can undo it straight after, and its history stays in git.`,
+    [{ key: "cancel", label: "Cancel" }, { key: "del", label: "Delete page", cls: "btn-danger" }]);
+  if (c !== "del") return;
+  await save(false, { quiet: true });
+  S.deleting = page;
+  const r = await api("/api/doc?path=" + encodeURIComponent(page), { method: "DELETE" });
+  if (!r.ok) { S.deleting = null; return toast("Couldn't delete it: " + (r.error || r.status), "bad"); }
+  S.dirty = false;
+  await loadTree();
+  const parent = page.replace(/\/[^/]+$/, "/index.md");
+  await openDoc(S.fileSet.has(parent) && parent !== page ? parent : DEFAULT_DOC, { push: false });
+  history.replaceState({ path: S.path }, "", "?p=" + encodeURI(S.path)); // the address no longer names the deleted page
+  S.deleting = null;
+  toast(`Deleted “${title}”`, "", { actions: [{ label: "Undo", run: async () => {
+    const u = await api("/api/doc/restore", { method: "POST", body: JSON.stringify({ path: page, content: r.content }) });
+    if (!u.ok) return toast("Couldn't bring it back: " + (u.error || u.status), "bad");
+    await loadTree();
+    openDoc(page);
+    toast("Brought it back", "good");
+  } }] });
 }
 
 // ----------------------------------------------------------------------------- wiring
@@ -1030,6 +1095,7 @@ function wire() {
   api("/api/update").then(showUpdate, () => {});
   $("#syncBtn").addEventListener("click", syncNow);
   $("#newPage").addEventListener("click", newPageDialog);
+  $("#deleteBtn").addEventListener("click", deletePage);
   $("#helpBtn").addEventListener("click", helpDialog);
   $("#treeFilter").addEventListener("input", renderTree);
   $("#treeFilter").addEventListener("keydown", (e) => {

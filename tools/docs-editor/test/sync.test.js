@@ -127,6 +127,36 @@ await test("the owner's own unsent commits are never sent, nor anything on top o
   assert.match(g(remote, "show", "main:docs/combat.md"), /A new line/);
 });
 
+await test("says what others sent: a page made, one changed, one deleted, and by whom", async () => {
+  const d = path.join(root, "d"), e = path.join(root, "e");
+  g(root, "clone", "--quiet", remote, d); ident(d, "Me");
+  g(root, "clone", "--quiet", remote, e); ident(e, "Kari (Discord)");
+  write(e, "docs/fun.md", "# Just for fun\n\nHello.\n");
+  write(e, "docs/combat.md", read(e, "docs/combat.md") + "\nKari was here.\n");
+  fs.rmSync(path.join(e, "docs/death.md"));
+  g(e, "add", "-A"); g(e, "commit", "--quiet", "-m", "Docs: fun"); g(e, "push", "--quiet", "origin", "main");
+  const news = [];
+  const v = await makeSync({ repo: d, emit: (type, data) => { if (type === "news") news.push(data); } }).sync({ why: "auto" });
+  assert.equal(v.problem, null);
+  assert.equal(news.length, 1);
+  const by = Object.fromEntries(news[0].pages.map((x) => [x.path, x]));
+  assert.deepEqual(by["docs/fun.md"], { path: "docs/fun.md", title: "Just for fun", status: "added", by: ["Kari"] });
+  assert.equal(by["docs/combat.md"].status, "changed");
+  assert.equal(by["docs/death.md"].status, "deleted");
+});
+
+await test("a page made or deleted is sent within seconds when automatic sync is on", async () => {
+  const f = path.join(root, "f");
+  g(root, "clone", "--quiet", remote, f); ident(f, "Quick");
+  const s = makeSync({ repo: f });
+  s.startAuto();
+  write(f, "docs/quick.md", "# Quick\n");
+  s.saved("docs/quick.md", { soon: true });
+  await new Promise((r) => setTimeout(r, 9000));
+  s.stopAuto();
+  assert.match(g(remote, "show", "main:docs/quick.md"), /# Quick/);
+});
+
 await test("a branch with no remote says so instead of syncing", async () => {
   const c = path.join(root, "c");
   g(root, "init", "--quiet", "--initial-branch=main", c);

@@ -883,3 +883,11 @@ body.right-ai.sheet-outline #outlineWin { width: min(400px, calc(100vw - 48px));
 .update-btn:disabled { cursor: default; opacity: .8; }
 .update-btn.busy svg { animation: updatePulse 1.2s ease-in-out infinite; }
 @keyframes updatePulse { 50% { transform: translateY(2px); opacity: .6; } }
+
+/* ------------------------------------------------------------------ toasts with buttons; deleting a page */
+.toast.with-actions { display: flex; align-items: center; gap: 10px; pointer-events: auto; }
+.toast-btn { padding: 3px 10px; border: 1px solid #6b5838; border-radius: 4px; background: rgba(201, 162, 94, .16); color: var(--value); font: 600 13px/1.2 var(--sans); cursor: pointer; }
+.toast-btn:hover { background: rgba(201, 162, 94, .3); color: #fff1d2; }
+.toast-x { border: 0; background: none; color: var(--silver-dim); cursor: pointer; font-size: 12px; padding: 2px 4px; }
+.toast-x:hover { color: var(--silver); }
+.tb.delete-btn:hover { color: #f3a493; }

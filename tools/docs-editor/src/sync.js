@@ -3,8 +3,9 @@
 // One rule above all: the Codex only ever commits files under docs/. Whatever else is in the folder
 // (code, Unity scenes, your uncommitted work) is never staged, committed, set aside or overwritten.
 //
-//   automatic   every few minutes, when nothing has been typed for a while, and when the app closes:
-//               commits the pages saved *in the Codex* since the last sync, fetches, and sends.
+//   automatic   every minute, when nothing has been typed for half a minute, and when the app closes:
+//               commits the pages saved *in the Codex* since the last sync, fetches, and sends. A page
+//               made or deleted goes within seconds. What others sent is told to the page ("news").
 //   on demand   the Sync button: the same, plus doc changes made outside the Codex (an agent, another
 //               editor), which automatic sync leaves alone so half-done work is never sent.
 //
@@ -18,8 +19,9 @@ import fs from "node:fs";
 import path from "node:path";
 
 const MARK = "Synced by the Codex."  // every commit the Codex makes says so: it only ever sends those
-const AUTO_EVERY_MS = 3 * 60 * 1000;   // how often automatic sync looks
-const QUIET_MS = 45 * 1000;            // ...and how long since the last save before it acts
+const AUTO_EVERY_MS = 60 * 1000;       // how often automatic sync looks
+const QUIET_MS = 30 * 1000;            // ...and how long since the last save before it acts
+const SOON_MS = 4 * 1000;              // a page made or deleted: sent this soon
 
 export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = () => {}, scope = "docs", auth = async () => null }) {
   const S = {
@@ -98,7 +100,13 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
       if (files.length) {
         const add = await run(["add", "-A", "--", ...files]);
         if (!add.ok) throw new Error(add.err.trim() || "git couldn't stage the pages");
-        const pages = [...new Set(files.filter((f) => f.endsWith(".md")).map(titleOf))];
+        // A deleted page is named by its title as it was ("deleted Combat").
+        const named = await Promise.all(files.filter((f) => f.endsWith(".md")).map(async (f) => {
+          if (fs.existsSync(path.join(repo, f))) return titleOf(f);
+          const was = (await run(["show", `HEAD:${f}`])).out.match(/^#\s+(.+)$/m);
+          return "deleted " + (was ? was[1].replace(/[*_`]/g, "").trim() : path.basename(f, ".md"));
+        }));
+        const pages = [...new Set(named)];
         const subject = pages.length
           ? "Docs: " + (pages.length > 3 ? pages.slice(0, 3).join(", ") + ` and ${pages.length - 3} more` : pages.join(", "))
           : "Docs: comments";
@@ -129,6 +137,7 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
           return view();
         }
         got = Number((await run(["rev-list", "--count", `${before}..HEAD`])).out.trim()) || 0;
+        if (got) await tellNews(before);
       }
 
       // 3. Send, but only the Codex's own commits. Git sends a branch's history in order, so if commits
@@ -168,6 +177,23 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
   }
 
   /**
+   * What others' commits just brought (pages made, changed, deleted, and by whom), for the page to say:
+   * emitted as "news" { pages: [{ path, title, status: "added" | "changed" | "deleted", by }] }.
+   */
+  async function tellNews(before) {
+    const d = await run(["diff", "--name-status", "--no-renames", `${before}..HEAD`, "--", scope]);
+    const pages = [];
+    for (const line of d.out.split("\n")) {
+      const [st, f] = line.split("\t");
+      if (!f || !f.endsWith(".md") || f.startsWith(scope + "/.notes/")) continue;
+      const names = (await run(["log", "--format=%an", `${before}..HEAD`, "--", f])).out.split("\n").map((n) => n.replace(/\s*\(Discord\)$/, "").trim()).filter(Boolean);
+      const by = [...new Set(names)];
+      pages.push({ path: f, title: st === "D" ? path.basename(f, ".md").replace(/[-_]/g, " ") : titleOf(f), status: st === "A" ? "added" : st === "D" ? "deleted" : "changed", by });
+    }
+    if (pages.length) emit("news", { pages });
+  }
+
+  /**
    * Settle a clash: merge others' work again, and for the pages changed on both sides keep "mine" or
    * "theirs" whole. Only ever for pages under docs/; anything else and the merge is undone untouched.
    */
@@ -202,17 +228,24 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
     sync,
     resolve,
     /** The Codex saved this page (or comment file): automatic sync may send it. */
-    saved(rel, { ai = false } = {}) { if (rel.startsWith(scope + "/")) { saved.add(rel); if (ai) byAi.add(rel); lastSave = Date.now(); refresh().then(tell); } },
+    saved(rel, { ai = false, soon = false } = {}) {
+      if (!rel.startsWith(scope + "/")) return;
+      saved.add(rel); if (ai) byAi.add(rel);
+      // A page made or deleted is sent within seconds (it isn't being typed in); edits wait for a pause.
+      if (soon && timer) { clearTimeout(soonTimer); soonTimer = setTimeout(() => sync({ why: "soon" }), SOON_MS); }
+      if (!soon) lastSave = Date.now();
+      refresh().then(tell);
+    },
     /** A doc changed on disk (anyone): the waiting count changes. */
     touched() { clearTimeout(touchTimer); touchTimer = setTimeout(() => refresh().then(tell), 400); },
     /** Automatic sync: shortly after starting, then every few minutes once typing has paused. */
     startAuto() {
       const tick = () => { if (Date.now() - lastSave > QUIET_MS) sync({ why: "auto" }); };
-      setTimeout(tick, 15 * 1000);
+      firstTick = setTimeout(tick, 15 * 1000);
       timer = setInterval(tick, AUTO_EVERY_MS);
     },
-    stopAuto() { clearInterval(timer); },
+    stopAuto() { clearInterval(timer); clearTimeout(firstTick); clearTimeout(soonTimer); timer = null; },
     view,
   };
 }
-let touchTimer = null;
+let touchTimer = null, soonTimer = null, firstTick = null;

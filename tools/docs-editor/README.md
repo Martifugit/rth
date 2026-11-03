@@ -5,8 +5,9 @@ and Alegreya Sans, the icons from `client/Assets/Resources/UI`). A dev tool: not
 of the game, the client or the server, and it serves on `127.0.0.1` only.
 
 **Start it:** double-click `codex.cmd`. The first time on a computer without the game's repository, it
-asks where the docs should be and fetches just `docs/` (`electron/firstrun.js`); that copy is read-only
-until you sign in with Discord with the Codex role. It opens the Codex as a desktop app (Electron; `npm run app`). On Windows it runs its own copy of Electron, `node_modules/.codex-app/Codex.exe`, stamped "R'th Codex" with the logo so Task Manager names it (`electron/launch.js`, made once and again when Electron or the logo changes).
+fetches just `docs/` into its own folder (`%APPDATA%th-docs-editorDocs`), with a progress bar and no
+questions (`electron/firstrun.js`; a small link lets someone with the game's repository use that
+instead). That copy is read-only until you sign in with Discord with the Codex role. It opens the Codex as a desktop app (Electron; `npm run app`). On Windows it runs its own copy of Electron, `node_modules/.codex-app/Codex.exe`, stamped "R'th Codex" with the logo so Task Manager names it (`electron/launch.js`, made once and again when Electron or the logo changes).
 Closing it saves anything still being typed. The same Codex also runs in a browser: `npm start`, then
 <http://127.0.0.1:5178/> (another port: `set PORT=5179` first).
 
@@ -18,11 +19,13 @@ The app syncs the docs through git by itself, and the **Sync** icon in the title
 it for where things stand). It only ever commits files under `docs/`: code, scenes and any other
 uncommitted work in the folder are never staged, committed, set aside or overwritten.
 
-- **By itself**, every few minutes once you've stopped typing, and when the app closes: it commits the
-  pages you saved *in the Codex*, takes in others' changes, and sends yours. Doc changes made outside
+- **By itself**, every minute once you've stopped typing for half a minute, and when the app closes: it
+  commits the pages you saved *in the Codex*, takes in others' changes, and sends yours. A page made or
+  deleted goes within seconds. Doc changes made outside
   the Codex (an agent, another editor) wait for the button, so half-done work is never sent.
 - **The button** does the same, plus those outside changes.
-- **Others' changes** come in with a merge. If they touch a file you have uncommitted changes in, the
+- **Others' changes** come in with a merge, and the Codex says what came: who made a new page (with
+  Open), changed pages or deleted one. If they touch a file you have uncommitted changes in, the
   Codex waits and says so. If someone changed the same lines of a page as you, nothing is merged and
   it asks: **Keep mine** or **Use theirs**.
 - The browser version (`npm start`) only syncs on the button. `src/sync.js`; tests in
@@ -54,6 +57,9 @@ uncommitted work in the folder are never staged, committed, set aside or overwri
 - **Open questions** (top of the page list): every GDD page's "Open questions" gathered on one
   page, by section and page. Click a question to go to it.
 - **New page**: a title and a folder under `docs/`, blank or from a template in `docs/gdd/templates/`.
+- **Delete a page**: the bin in the page's title bar. It asks first (saying how many pages link to it),
+  deletes it for everyone, and offers Undo straight after; git keeps its history. Its comments stay in
+  the comment history.
 
 Markdown shortcuts work as you type: `## ` for a heading, `- ` or `1. ` for a list, `> ` for a
 quote, `**bold**`, `` `code` ``, three backticks for a code block. The toolbar has the rest
@@ -160,7 +166,13 @@ overwritten.
 `npm run release` (after raising `version` in `package.json`) builds the Windows installer into `dist/`
 (`npm run dist`: the page, MinGit fetched by `scripts/fetch-mingit.mjs`, the game's look) and publishes
 it on the repository's GitHub Releases (`scripts/release.mjs`, with `gh`). Installed Codexes check the
-latest release every few hours, download it quietly and install it when closed. The installer isn't
+latest release every few hours and download it quietly; a blue Update button in the title bar then
+installs it and opens the Codex again (closing it installs it too).
+
+**Uninstalling** (Windows' Installed apps) leaves nothing behind: the program, the Codex's folder
+(settings, sign-in, AI conversations, the docs it fetched), the updates it downloaded and the
+`rth-codex://` link (`scripts/installer.nsh`). Pages not yet sent would go too, but the Codex sends
+them whenever it closes. The installer isn't
 signed, so Windows warns the first time (More info, Run anyway).
 
 ## Files

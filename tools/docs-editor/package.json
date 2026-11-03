@@ -1,7 +1,7 @@
 {
   "name": "rth-docs-editor",
   "private": true,
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "The R'th Codex: the design docs of R'th, with Discord and AI built in. A tool for the team, never shipped with the game.",
   "type": "module",
   "scripts": {
@@ -99,7 +99,8 @@
       "perMachine": false,
       "shortcutName": "R'th Codex",
       "uninstallDisplayName": "R'th Codex",
-      "deleteAppDataOnUninstall": false
+      "deleteAppDataOnUninstall": true,
+      "include": "scripts/installer.nsh"
     },
     "publish": [
       {
