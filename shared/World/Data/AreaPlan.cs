@@ -266,11 +266,12 @@ namespace Rth.Shared.World.Data
                     Need(w.Quests.Contains(s.Substring(6)), $"{what}: supports {s}, which is neither in quests.json nor docs/quests");
             }
 
+            // Ids are unique within their kind: a place and its building may share one.
             var ids = new HashSet<string>(StringComparer.Ordinal);
             void Id(string kind, string id)
             {
                 if (!Has(id)) errors.Add($"a {kind} has no id");
-                else if (!ids.Add(id)) errors.Add($"'{id}' is used twice");
+                else if (!ids.Add(kind + ":" + id)) errors.Add($"{kind} '{id}' is used twice");
             }
 
             var places = new HashSet<string>(Places.Select(p => p.Id), StringComparer.Ordinal);
@@ -374,7 +375,7 @@ namespace Rth.Shared.World.Data
             List<Piece> pieces = regions.SelectMany(r => r.Pieces).ToList();
             foreach (Building b in Buildings)
             {
-                Piece? p = pieces.FirstOrDefault(x => x.Id == b.Id && (x.Kind == PieceKind.Building || x.Kind == PieceKind.House));
+                Piece? p = pieces.FirstOrDefault(x => x.Id == b.Id);   // a building piece, a house, or a landmark drawn as a prop
                 if (p == null) notes.Add($"building {b.Id}: not built");
                 else if (b.Rect != null && p.Rect != null && !b.Rect.SequenceEqual(p.Rect))
                     notes.Add($"building {b.Id}: built at [{string.Join(", ", p.Rect)}], planned at [{string.Join(", ", b.Rect)}]");

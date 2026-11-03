@@ -2,7 +2,7 @@
 
 Every area is planned to this template **before any of its ground is changed** (stage 0 in
 [../world-areas.md](../world-areas.md)). The plan is two files:
-- **The design document,** `docs/areas/<area>.md`: every question below answered, in plain, concrete
+- **The design document,** `docs/areas/<area>-plan.md` (beside the brief, `<area>.md`, which records the stages' work): every question below answered, in plain, concrete
   terms;
 - **The plan data,** `world/plans/<area>.json`: the same plan as things with positions, which the
   tools can check, draw and compare with what gets built.
@@ -186,7 +186,7 @@ y1)` in tiles; `at` is `[x, y]`. Everything has a `why`.
 {
   "area": "tolling",
   "status": "draft",
-  "doc": "docs/areas/tolling.md",
+  "doc": "docs/areas/tolling-plan.md",
   "region": "the heartland: its start, the green river country at the empire's western edge",
   "places": [
     { "id": "town", "name": "Tolling", "kind": "town", "at": [30, 48], "levels": [1, 15],
