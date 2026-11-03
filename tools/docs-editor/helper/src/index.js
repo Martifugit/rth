@@ -7,6 +7,7 @@
 //   GET  /auth/discord/callback          ...Discord sends the person back here, then to the Codex
 //   GET  /me                             who a session is, and whether they still have the Codex role
 //   POST /git-token                      an hour's key to send docs to GitHub, for someone with the role
+//   POST /announce                       a new Codex release, posted in #codex (the agent key only)
 //   /comments...                         comments in the Discord forum (src/comments.js)
 //
 // Comments take a session (a person) or, for agents on the owner's computer, "Authorization: Agent
@@ -18,7 +19,7 @@
 import { onPush } from "./notices.js";
 import { openPage } from "./open.js";
 import { signIn, callback, sessionFrom } from "./auth.js";
-import { member } from "./discord.js";
+import { member, post } from "./discord.js";
 import { installationToken, verifyWebhook } from "./github.js";
 import { comments } from "./comments.js";
 import { same } from "./crypto.js";
@@ -37,6 +38,15 @@ export default {
           const event = req.headers.get("x-github-event");
           if (event === "push") ctx.waitUntil(onPush(env, JSON.parse(body), url.origin).catch((e) => console.error("push", e.stack || e)));
           return text("ok");
+        }
+        // A new Codex release (scripts/announce.mjs, on the owner's computer): posted in #codex.
+        case "POST /announce": {
+          const h = req.headers.get("authorization") || "";
+          if (!h.startsWith("Agent ") || !env.AGENT_KEY || !same(h.slice(6), env.AGENT_KEY)) return json({ error: "Only the owner's computer announces." }, 401);
+          const b = await req.json().catch(() => ({}));
+          if (typeof b.text !== "string" || !b.text.trim()) return json({ error: "Nothing to announce." }, 400);
+          await post(env, env.DISCORD_NOTICES_CHANNEL, b.text.slice(0, 1990));
+          return json({ ok: true });
         }
         case "GET /auth/discord/start": return signIn(url, env);
         case "GET /auth/discord/callback": return callback(url, env);

@@ -163,7 +163,7 @@ overwritten.
 
 ## Shipping it
 
-`npm run release` (after raising `version` in `package.json`) builds the Windows installer into `dist/`
+`npm run release` (after raising `version` in `package.json` and writing its section in `CHANGELOG.md`) builds the Windows installer into `dist/`
 (`npm run dist`: the page, MinGit fetched by `scripts/fetch-mingit.mjs`, the game's look) and publishes
 it on the repository's GitHub Releases (`scripts/release.mjs`, with `gh`). Installed Codexes check the
 latest release every few hours and download it quietly; a blue Update button in the title bar then
@@ -173,7 +173,9 @@ installs it and opens the Codex again (closing it installs it too).
 (settings, sign-in, AI conversations, the docs it fetched), the updates it downloaded and the
 `rth-codex://` link (`scripts/installer.nsh`). Pages not yet sent would go too, but the Codex sends
 them whenever it closes. The installer isn't
-signed, so Windows warns the first time (More info, Run anyway).
+signed, so Windows warns the first time (More info, Run anyway). The release is announced in #codex with its lines from
+`CHANGELOG.md` and a download link (`scripts/announce.mjs`, through the helper with the owner's agent
+key; `node scripts/announce.mjs <version>` announces one that's out already).
 
 ## Files
 
