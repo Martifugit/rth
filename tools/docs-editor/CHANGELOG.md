@@ -7,6 +7,7 @@ section before releasing; the release refuses without one.
 ## 0.3.2
 
 - An open Codex looks for a new version every hour (it was every 6 hours), so updates reach you sooner.
+- Things only fixed outside the Codex (a commit someone hasn't pushed, a merge in progress) no longer sit in the bottom-left box with a Try again that can't help: the status line says "Saved, not sent yet", with why on hover, and it clears by itself.
 
 ## 0.3.1
 

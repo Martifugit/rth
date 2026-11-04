@@ -131,7 +131,7 @@ await test("others' changes touching the owner's uncommitted files: refused safe
   write(b, "code/game.cs", "class Game { /* friend's code */ }\n");
   g(b, "commit", "--quiet", "-am", "code"); g(b, "push", "--quiet");
   const v = await sync.sync({ why: "auto" });
-  assert.match(v.problem, /uncommitted changes/);
+  assert.match(v.wait, /uncommitted changes/);
   assert.match(read(a, "code/game.cs"), /owner's uncommitted work/);
   assert.ok(!fs.existsSync(path.join(a, ".git/MERGE_HEAD")));
   assert.ok(fs.existsSync(path.join(a, "client/scene.unity")));
@@ -146,7 +146,7 @@ await test("the owner's own unsent commits are never sent, nor anything on top o
   write(a, "docs/combat.md", read(a, "docs/combat.md") + "\nA new line.\n");
   sync.saved("docs/combat.md");
   const v = await sync.sync({ why: "auto" });
-  assert.match(v.problem, /1 commit not on GitHub yet that the Codex didn't make/);
+  assert.match(v.wait, /A commit made outside the Codex isn.t on GitHub yet/);
   assert.equal(g(remote, "rev-parse", "main"), before, "nothing was sent");
   assert.match(g(a, "log", "-1", "--format=%s"), /^Docs: Combat$/, "the page is still committed here");
   // Once the owner has pushed their own work, the Codex sends its own again.
@@ -215,6 +215,21 @@ await test("Share and Undo wait for a sync that is already running instead of be
   await again;
   assert.equal(fs.existsSync(path.join(a, "docs/stray2.md")), false);
   assert.equal(v.held.length, 0);
+});
+
+await test("a commit made outside the Codex is waited on, not asked about, and the pages go once it's pushed", async () => {
+  write(a, "code/other.cs", "class Other {}\n");
+  g(a, "add", "code/other.cs"); g(a, "commit", "--quiet", "-m", "someone's own commit");
+  write(a, "docs/kept.md", "# Kept\n\nTyped in the Codex while blocked.\n");
+  sync.saved("docs/kept.md");
+  let v = await sync.sync({ why: "auto" });
+  assert.equal(v.problem, null, "nothing to click, so no problem in the box");
+  assert.match(v.wait, /A commit made outside the Codex isn't on GitHub yet/);
+  assert.doesNotMatch(g(remote, "show", "main:docs/kept.md"), /while blocked/);
+  g(a, "push", "--quiet", "origin", "main");
+  v = await sync.sync({ why: "auto" });
+  assert.equal(v.wait, null);
+  assert.match(g(remote, "show", "main:docs/kept.md"), /while blocked/);
 });
 
 await test("a branch with no remote says so instead of syncing", async () => {

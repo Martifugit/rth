@@ -34,6 +34,9 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
   const S = {
     busy: false, enabled: null, reason: null, branch: null, upstream: null,
     lastSync: null, lastResult: null, problem: null, offline: false, again: false,
+    // Waiting on something only done outside the Codex (a push, a commit, a merge to finish): said on the
+    // status line, not asked in the box, since there's nothing to click; it clears itself once done.
+    wait: null,
     ahead: 0, behind: 0, waiting: [], outside: [],
   };
   const saved = new Set();   // pages saved in the Codex since the last sync (relative paths)
@@ -83,7 +86,7 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
   const NOTES = scope + "/.notes/";
   const sendable = (f) => f.startsWith(NOTES) || (saved.has(f) && !byAi.has(f));
   const view = () => ({
-    enabled: S.enabled, reason: S.reason, busy: S.busy, clash: S.problem ? S.clash || null : null, branch: S.branch, lastSync: S.lastSync, lastResult: S.lastResult, problem: S.problem,
+    enabled: S.enabled, reason: S.reason, busy: S.busy, wait: S.wait, clash: S.problem ? S.clash || null : null, branch: S.branch, lastSync: S.lastSync, lastResult: S.lastResult, problem: S.problem,
     offline: S.offline, auto: !!timer, sending: !!sendTimer || (!!timer && saved.size > 0), // auto: this Codex shares by itself (the app)
     waiting: S.waiting.length, ahead: S.ahead, behind: S.behind,
     held: (S.heldPages || []).map((f) => ({ path: f, title: titleOf(f), by: byAi.has(f) ? "ai" : "other", gone: !fs.existsSync(path.join(repo, f)) })),
@@ -106,11 +109,11 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
     for (const f of share) shareNext.add(f);
     if (S.busy) { S.again = true; return; }
     share = [...shareNext]; shareNext.clear();
-    S.busy = true; tell();
+    S.busy = true; S.wait = null; tell(); // what it waits on is found again on every run
     try {
       await refresh();
       if (!S.enabled) return view();
-      if (midOperation()) { S.problem = "git is in the middle of something else in this folder (a merge or rebase). Syncing waits until that's finished."; return view(); }
+      if (midOperation()) { S.problem = null; S.wait = "git is in the middle of something else in this folder (a merge or rebase). Sending waits until that's finished."; return view(); }
       let sent = 0, got = 0;
       const a = await auth();
       if (a?.error) { S.problem = a.error + " Pages are still saved and committed here."; creds = null; }
@@ -158,11 +161,14 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
           const conflicts = (await run(["diff", "--name-only", "--diff-filter=U"])).out.split("\n").filter(Boolean);
           if (fs.existsSync(path.join(repo, ".git", "MERGE_HEAD"))) await run(["merge", "--abort"]);
           S.clash = conflicts.length && conflicts.every((f) => f.startsWith(scope + "/")) ? conflicts.map(titleOf) : null;
+          if (!conflicts.length && /would be overwritten|untracked working tree files/i.test(text)) {
+            S.problem = null;
+            S.wait = "Others' changes touch files you have uncommitted changes in, outside the Codex. Syncing tries again once those are committed.";
+            return view();
+          }
           S.problem = conflicts.length
             ? `Someone else changed the same lines of ${conflicts.map(titleOf).join(", ")}. Nothing was merged; your version is as it was.`
-            : /would be overwritten|untracked working tree files/i.test(text)
-              ? "Others' changes touch files you have uncommitted changes in, outside the Codex. Syncing will try again after those are committed."
-              : "Couldn't take in others' changes: " + text.trim().split("\n").pop();
+            : "Couldn't take in others' changes: " + text.trim().split("\n").pop();
           return view();
         }
         got = Number((await run(["rev-list", "--count", `${before}..HEAD`])).out.trim()) || 0;
@@ -176,22 +182,22 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
         const log = await run(["log", "--format=%B%n==codex-commit-end==", "@{u}..HEAD"]);
         const others = log.out.split("==codex-commit-end==").map((x) => x.trim()).filter(Boolean).filter((x) => !x.includes(MARK)).length;
         if (others) {
-          S.problem = `This branch has ${others} commit${others > 1 ? "s" : ""} not on GitHub yet that the Codex didn't make. It only sends its own, and git sends a branch's history in order, so nothing is sent until you push ${others > 1 ? "those" : "that"} yourself. Pages are still saved and committed here.`;
-          S.held = true;
+          S.wait = `${others > 1 ? `${others} commits` : "A commit"} made outside the Codex ${others > 1 ? "aren't" : "isn't"} on GitHub yet. Git sends a branch's history in order and the Codex only sends its own, so your pages go out once ${others > 1 ? "those are" : "it's"} pushed. They're saved and committed here meanwhile.`;
+          S.problem = null;
           return view();
         }
-        S.held = false;
         const p = await run([...key(), "push", "--quiet", remote, `HEAD:${S.upstream.slice(remote.length + 1)}`]);
         if (!p.ok) {
-          S.problem = /rejected|fetch first|non-fast-forward/i.test(p.err)
-            ? "Someone sent changes at the same moment. Syncing again shortly."
-            : "Couldn't send to GitHub: " + p.err.trim().split("\n").pop();
-          if (/rejected|fetch first/i.test(p.err)) setTimeout(() => sync({ why: "retry" }), 5000);
+          // Someone sent at the same moment: it tries again by itself, so that's a wait, not a question.
+          if (/rejected|fetch first|non-fast-forward/i.test(p.err)) {
+            S.wait = "Someone sent changes at the same moment. Sending again in a few seconds.";
+            setTimeout(() => sync({ why: "retry" }), 5000);
+          } else S.problem = "Couldn't send to GitHub: " + p.err.trim().split("\n").pop();
           return view();
         }
         sent = S.ahead;
       }
-      S.problem = null;
+      S.problem = null; S.wait = null;
       S.lastSync = Date.now();
       S.lastResult = { sent, got, why };
       await refresh();

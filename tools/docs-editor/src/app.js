@@ -1490,6 +1490,8 @@ function syncWords() {
   if (heldHere) return { text: "Saved, not shared yet", cls: "unsaved", title: "Waiting for you to share it (bottom left)" };
   if (v.offline) return { text: "Saved, offline: sent when you're back", cls: "muted", title: v.problem };
   if (v.problem) return { text: "Saved, not sent", cls: "unsaved", title: v.problem };
+  // Waiting on something done outside the Codex (src/sync.js, wait): nothing to click, so no box, just why.
+  if (v.wait) return { text: "Saved, not sent yet", cls: "muted", title: v.wait };
   if (v.busy || v.sending || v.ahead) return { text: "Sending…", cls: "muted" };
   return { text: "Saved and sent", cls: "saved", title: v.lastSync ? "Sent " + agoText(v.lastSync) : "" };
 }
