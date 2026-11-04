@@ -26,10 +26,38 @@ import path from "node:path";
 
 // git refusing for want of a login (no Discord key, and no git login of its own on this computer).
 const AUTH_FAILED = /Authentication failed|could not read Username|terminal prompts disabled|Permission to .* denied|\b40[13]\b/i;
+// GitHub itself failing (its servers, not the connection or a login): said plainly, as GitHub's trouble.
+const GITHUB_TROUBLE = /\b50[0-4]\b|Internal Server Error|Service Unavailable|Bad Gateway|Gateway Time-?out/i;
+const STATUS_URL = "https://www.githubstatus.com/api/v2/components.json";
+let statusSeen = { at: 0, down: false };
+/** Whether GitHub's own status page says pushing and fetching are in trouble (looked up at most every 5 minutes). */
+async function githubSaysDown() {
+  if (Date.now() - statusSeen.at < 5 * 60 * 1000) return statusSeen.down;
+  let down = false;
+  try {
+    const r = await fetch(process.env.CODEX_GITHUB_STATUS || STATUS_URL, { signal: AbortSignal.timeout(4000) });
+    const git = (await r.json()).components?.find((c) => c.name === "Git Operations");
+    down = !!git && git.status !== "operational";
+  } catch {}
+  statusSeen = { at: Date.now(), down };
+  return down;
+}
+/** What the status line says while GitHub is failing: short on the line, the rest on hover. */
+export function githubTrouble(confirmed) {
+  return confirmed
+    ? { short: "Saved · GitHub is down, sending later",
+        long: "GitHub, where the Codex keeps everyone's pages, is having problems right now. It's on their side, not yours (their own status page says so). Your changes are safe on this computer, and the Codex sends them by itself once GitHub works again. There's nothing you need to do." }
+    : { short: "Saved · GitHub hiccup, trying again",
+        long: "GitHub, where the Codex keeps everyone's pages, didn't answer properly just now. That's usually a short hiccup on their side. Your changes are safe on this computer, and the Codex tries again every minute by itself." };
+}
+
 const MARK = "Synced by the Codex."  // every commit the Codex makes says so: it only ever sends those
 const AUTO_EVERY_MS = 60 * 1000;       // the safety net: how often it looks anyway
-const SEND_AFTER_MS = 10 * 1000;       // a saved page is sent once typing has paused this long...
-const SEND_AT_MOST_MS = 2 * 60 * 1000; // ...or this long after its first unsent save, whatever the typing
+// How often edits go out: each send is a commit, and others only see a page once it's sent. A minute's
+// pause and at most ten minutes keeps the history readable (it was 10 s / 2 min: a commit a pause) and
+// still shows others an edit about a minute after you stop. Closing the Codex sends everything.
+const SEND_AFTER_MS = 60 * 1000;        // a saved page is sent once typing has paused this long...
+const SEND_AT_MOST_MS = 10 * 60 * 1000; // ...or this long after its first unsent save, whatever the typing
 const SOON_MS = 4 * 1000;              // a page made or deleted: sent this soon
 
 export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = () => {}, scope = "docs", auth = async () => null }) {
@@ -38,7 +66,7 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
     lastSync: null, lastResult: null, problem: null, offline: false, again: false,
     // Waiting on something only done outside the Codex (a push, a commit, a merge to finish): said on the
     // status line, not asked in the box, since there's nothing to click; it clears itself once done.
-    wait: null,
+    wait: null, waitShort: null,
     // Not signed in, and this copy can't send any other way (git has no login of its own here): the one
     // sending trouble the person can fix in the Codex, so the box asks them to sign in.
     signIn: false, authError: null,
@@ -53,7 +81,7 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
 
   function run(args, { ok = [0] } = {}) {
     return new Promise((resolve) => {
-      execFile(git, args, { cwd: repo, maxBuffer: 32 << 20, windowsHide: true, env: { ...process.env, GIT_TERMINAL_PROMPT: "0", GIT_MERGE_AUTOEDIT: "no" } },
+      execFile(git, args, { cwd: repo, maxBuffer: 32 << 20, windowsHide: true, env: { ...process.env, GIT_TERMINAL_PROMPT: "0", GIT_MERGE_AUTOEDIT: "no", GIT_OPTIONAL_LOCKS: "0" } }, // OPTIONAL_LOCKS: a status run beside a commit (a save while sending) never holds the index lock the commit needs
         (err, stdout, stderr) => resolve({ code: err ? (typeof err.code === "number" ? err.code : 1) : 0, out: stdout.toString(), err: stderr.toString(), ok: !err || ok.includes(err.code) }));
     });
   }
@@ -80,7 +108,7 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
     const changed = st.out.split("\0").filter((e) => e.length > 3).map((e) => e.slice(3)).filter((f) => !/\.codex-tmp$/.test(f));
     S.waiting = changed;
     // Held: the AI's or another program's changes to pages, which wait to be shared (or put back).
-    S.heldPages = changed.filter((f) => !f.startsWith(NOTES) && (byAi.has(f) || !saved.has(f)));
+    S.heldPages = changed.filter((f) => !always(f) && (byAi.has(f) || !saved.has(f)));
     const ab = await run(["rev-list", "--left-right", "--count", "HEAD...@{u}"]);
     const [a, b] = ab.out.trim().split(/\s+/).map(Number);
     S.ahead = a || 0; S.behind = b || 0;
@@ -88,10 +116,12 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
   }
   function disable(reason) { S.enabled = false; S.reason = reason; return view(); }
 
-  const NOTES = scope + "/.notes/";
-  const sendable = (f) => f.startsWith(NOTES) || (saved.has(f) && !byAi.has(f));
+  // Always sent, never asked about: comments, and the Codex's own files (the shared word list).
+  const NOTES = scope + "/.notes/", OWN = scope + "/.codex/";
+  const always = (f) => f.startsWith(NOTES) || f.startsWith(OWN);
+  const sendable = (f) => always(f) || (saved.has(f) && !byAi.has(f));
   const view = () => ({
-    enabled: S.enabled, reason: S.reason, busy: S.busy, wait: S.wait, signIn: S.signIn, clash: S.problem ? S.clash || null : null, branch: S.branch, lastSync: S.lastSync, lastResult: S.lastResult, problem: S.problem,
+    enabled: S.enabled, reason: S.reason, busy: S.busy, wait: S.wait, waitShort: S.waitShort, signIn: S.signIn, clash: S.problem ? S.clash || null : null, branch: S.branch, lastSync: S.lastSync, lastResult: S.lastResult, problem: S.problem,
     offline: S.offline, auto: !!timer, sending: !!sendTimer || (!!timer && saved.size > 0), // auto: this Codex shares by itself (the app)
     waiting: S.waiting.length, ahead: S.ahead, behind: S.behind,
     held: (S.heldPages || []).map((f) => ({ path: f, title: titleOf(f), by: byAi.has(f) ? "ai" : "other", gone: !fs.existsSync(path.join(repo, f)) })),
@@ -104,6 +134,13 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
     return path.basename(f).replace(/\.(md|json)$/, "");
   };
 
+  /** GitHub answered with a server error: a wait (it tries again by itself), said in plain words. */
+  async function troubled() {
+    const t = githubTrouble(await githubSaysDown());
+    S.offline = false; S.problem = null; S.wait = t.long; S.waitShort = t.short;
+    return view();
+  }
+
   /** Commit (docs only), fetch, merge, send. `share`: held pages someone said to share (share()). */
   // The reply is built after the work and its `finally` (which marks it done), never inside them.
   async function sync(opts) { await doSync(opts); return view(); }
@@ -114,7 +151,7 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
     for (const f of share) shareNext.add(f);
     if (S.busy) { S.again = true; return; }
     share = [...shareNext]; shareNext.clear();
-    S.busy = true; S.wait = null; tell(); // what it waits on is found again on every run
+    S.busy = true; S.wait = null; S.waitShort = null; tell(); // what it waits on is found again on every run
     try {
       await refresh();
       if (!S.enabled) return view();
@@ -157,6 +194,7 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
       // 2. Fetch and merge others' work.
       const [remote] = S.upstream.split("/");
       const f = await run([...key(), "fetch", "--quiet", remote]);
+      if (!f.ok && GITHUB_TROUBLE.test(f.err)) return troubled();
       if (!f.ok) { S.offline = true; S.problem = "Couldn't reach GitHub. Your pages are saved here and go out when it's back."; return view(); }
       S.offline = false;
       await refresh();
@@ -203,12 +241,13 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
             // never pass by retrying, and used to retry every 5 seconds for ever.
             S.wait = "Someone sent changes at the same moment. Sending again in a few seconds.";
             setTimeout(() => sync({ why: "retry" }), 5000);
-          } else S.problem = "Couldn't send to GitHub: " + p.err.trim().split("\n").pop();
+          } else if (GITHUB_TROUBLE.test(p.err)) return troubled();
+          else S.problem = "Couldn't send to GitHub: " + p.err.trim().split("\n").pop();
           return view();
         }
         sent = S.ahead;
       }
-      S.problem = null; S.wait = null; S.signIn = false;
+      S.problem = null; S.wait = null; S.waitShort = null; S.signIn = false;
       S.lastSync = Date.now();
       S.lastResult = { sent, got, why };
       await refresh();

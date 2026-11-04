@@ -6,26 +6,18 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+import { secretFile } from "./secret-file.js";
 
 export async function makeOpenRouterAccount({ dir, emit }) {
   fs.mkdirSync(dir, { recursive: true });
-  const file = path.join(dir, "openrouter.bin");
-  let safe = null;
-  try { const e = await import("electron"); if (e.safeStorage?.isEncryptionAvailable?.()) safe = e.safeStorage; } catch {}
+  const secret = await secretFile(path.join(dir, "openrouter.bin")); // locked on this computer (src/secret-file.js)
 
-  let key = load();
+  let key = ((await secret.read()) || "").trim() || null;
   let verifier = null; // the PKCE secret of the sign-in under way
 
-  function load() {
-    try {
-      const raw = fs.readFileSync(file);
-      return (safe ? safe.decryptString(raw) : raw.toString("utf8")).trim() || null;
-    } catch { return null; }
-  }
   function store(v) {
     key = v;
-    if (!v) { fs.rmSync(file, { force: true }); return; }
-    fs.writeFileSync(file, safe ? safe.encryptString(v) : v);
+    secret.write(v || null);
   }
 
   const view = () => ({ signedIn: !!key });

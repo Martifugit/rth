@@ -273,10 +273,13 @@ select.field option { background: #16130f; }
 /* ------------------------------------------------------------------ the document window */
 .doc-titlebar { gap: 10px; }
 .crumbs { display: flex; align-items: center; gap: 2px; flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; font: 600 12.5px/1 var(--serif); letter-spacing: .5px; }
-.crumbs a { color: #9c8f78; text-decoration: none; padding: 3px 4px; border-radius: 3px; cursor: pointer; }
+/* Cinzel's capitals sit high in their line box (it keeps room for descenders it hardly uses), so centring
+   the box left the words about 2px above the buttons' middle: trim the box to the capitals instead. */
+.crumbs a, .crumbs .leaf, .crumbs .sep { text-box: trim-both cap alphabetic; }
+.crumbs a { color: #9c8f78; text-decoration: none; padding: 5px 4px; border-radius: 3px; cursor: pointer; }
 .crumbs a:hover { color: var(--value); background: var(--hover); }
 .crumbs .sep { color: #5a4e3c; padding: 0 2px; font: 400 13px/1 var(--sans); }
-.crumbs .leaf { color: var(--title); padding: 3px 4px; }
+.crumbs .leaf { color: var(--title); padding: 5px 4px; }
 .crumbs .copy { margin-left: 4px; opacity: 0; transition: opacity .15s; }
 .crumbs:hover .copy { opacity: 1; }
 .dirty-mark { color: var(--value); font-size: 13px; text-shadow: 0 0 6px var(--value); }
@@ -597,6 +600,7 @@ select.field option { background: #16130f; }
 .cm-head.inline .cm-who { flex-direction: row; align-items: baseline; gap: 7px; white-space: nowrap; overflow: hidden; }
 .cm-name { font: 700 13px/1.2 var(--sans); color: #e3d8c2; letter-spacing: .2px; }
 .cm-time { font-size: 12px; color: var(--dim); overflow: hidden; text-overflow: ellipsis; }
+.cm-time.cm-pending { color: #c9a25e; font-style: italic; } /* waiting to be posted (src/notes.js, head) */
 .cm-tools { display: flex; gap: 0; opacity: 0; transition: opacity .12s; }
 .cm-card:hover .cm-tools, .cm-card.active .cm-tools { opacity: 1; }
 .cm-icon { width: 24px; height: 24px; border-radius: 3px; border: 0; background: none; color: var(--dim); display: grid; place-items: center; }

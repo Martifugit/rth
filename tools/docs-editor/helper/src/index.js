@@ -22,7 +22,7 @@
 import { onPush, sendDue } from "./notices.js";
 import { openPage } from "./open.js";
 import { signIn, callback, sessionFrom } from "./auth.js";
-import { member, post } from "./discord.js";
+import { member, post, pinOnly, findOwn } from "./discord.js";
 import { installationToken, verifyWebhook } from "./github.js";
 import { comments } from "./comments.js";
 import { same } from "./crypto.js";
@@ -57,8 +57,21 @@ export default {
           if (!h.startsWith("Agent ") || !env.AGENT_KEY || !same(h.slice(6), env.AGENT_KEY)) return json({ error: "Only the owner's computer announces." }, 401);
           const b = await req.json().catch(() => ({}));
           if (typeof b.text !== "string" || !b.text.trim()) return json({ error: "Nothing to announce." }, 400);
-          await post(env, env.DISCORD_NOTICES_CHANNEL, b.text.slice(0, 1990));
-          return json({ ok: true });
+          const msg = await post(env, env.DISCORD_NOTICES_CHANNEL, b.text.slice(0, 1990));
+          // The latest release stays pinned (the one before is unpinned), so it isn't lost among the notices.
+          const pinned = await pinRelease(env, msg.id).then(() => true, (e) => e.message);
+          return json({ ok: true, pinned });
+        }
+        // Pin a release that was announced already (the owner's computer: scripts/announce.mjs --pin).
+        case "POST /announce/pin": {
+          const h = req.headers.get("authorization") || "";
+          if (!h.startsWith("Agent ") || !env.AGENT_KEY || !same(h.slice(6), env.AGENT_KEY)) return json({ error: "Only the owner's computer pins releases." }, 401);
+          const b = await req.json().catch(() => ({}));
+          if (typeof b.version !== "string" || !/^\d+\.\d+\.\d+$/.test(b.version)) return json({ error: "Which version?" }, 400);
+          const msg = await findOwn(env, env.DISCORD_NOTICES_CHANNEL, `**R'th Codex ${b.version}** is out.`);
+          if (!msg) return json({ error: `No announcement of ${b.version} among the last 100 messages.` }, 404);
+          await pinRelease(env, msg.id);
+          return json({ ok: true, pinned: msg.id });
         }
         // An update the Codex must have before it changes anything (src/version.js).
         case "GET /version": return json({ min: env.MIN_CODEX || null });
@@ -110,6 +123,13 @@ export default {
     ctx.waitUntil(sendDue(env).catch((e) => console.error("notices", e.stack || e)));
   },
 };
+
+/** Pin a release announcement in #codex in place of the last one (remembered in D1's config table). */
+async function pinRelease(env, id) {
+  const before = (await env.DB.prepare("SELECT v FROM config WHERE k = 'release_pin'").first())?.v || null;
+  await pinOnly(env, env.DISCORD_NOTICES_CHANNEL, id, before);
+  await env.DB.prepare("INSERT INTO config (k, v) VALUES ('release_pin', ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v").bind(id).run();
+}
 
 /** A person (by their session) or an agent (by the owner's agent key), or null. */
 async function whoAsks(req, env) {

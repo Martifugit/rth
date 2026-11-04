@@ -16,6 +16,7 @@ import { Extension } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { capture, sectionsOf, locate } from "./anchor.js";
+import { failed } from "./plain-errors.js";
 
 const KEY = new PluginKey("codexComments");
 
@@ -344,7 +345,10 @@ export function makeNotes(ctx) {
     const p = person(e.by, e.who);
     return h("div", { class: "cm-head" + (inline ? " inline" : "") },
       p.avatar ? h("img", { class: "cm-avatar img " + (inline ? " small" : ""), src: p.avatar, alt: "" }) : h("span", { class: "cm-avatar " + p.cls + (inline ? " small" : "") }, p.initial),
-      h("div", { class: "cm-who" }, h("span", { class: "cm-name" }, p.name), h("span", { class: "cm-time", title: e.at }, when(e.at))),
+      h("div", { class: "cm-who" }, h("span", { class: "cm-name" }, p.name),
+        // Waiting in the outbox (src/comment-store.js): written here, posted once Discord can be reached.
+        e.pending ? h("span", { class: "cm-time cm-pending", title: "Discord can't be reached just now. It's saved on this computer and posted by itself once Discord answers." }, "Not posted yet")
+          : h("span", { class: "cm-time", title: e.at }, when(e.at))),
       tools || null);
   }
 
@@ -542,6 +546,7 @@ export function makeNotes(ctx) {
   function draftCard() {
     const ed = editor({
       key: "draft", placeholder: N.draft?.wholePage ? "Comment on this page" : "Comment", submitLabel: "Comment",
+      initial: N.draft?.text || "", // a comment that couldn't be posted comes back with its words
       onCancel: () => { N.draft = null; draw(); render(); },
       onSubmit: async ({ text, claude, agent, assign }) => {
         const kind = assign || (agent && !claude) ? "task" : claude ? "ask" : "note";
@@ -550,7 +555,8 @@ export function makeNotes(ctx) {
         if (run && assign && d.page === S.path && !(await ctx.saveNow())) return;
         N.draft = null;
         const r = await api("/api/notes", { method: "POST", body: JSON.stringify({ page: d.page, kind, text, anchor: d.anchor, run }) });
-        if (!r.ok) { toast("Couldn't add the comment: " + (r.error || r.status), "bad"); draw(); render(); return; }
+        // Not posted (the helper or Discord down, say): the draft and its words come back, to try again.
+        if (!r.ok) { N.draft = { ...d, text }; toast(failed("Couldn't post the comment, so it's kept here to try again", r), "bad"); draw(); render(); return; }
         if (r.runError) toast(r.runError, "bad");
         N.active = r.note.id;
         if (d.page === S.path) { N.notes.push(r.note); place(true); }
@@ -575,7 +581,7 @@ export function makeNotes(ctx) {
         if (assign && n.kind !== "task") await api("/api/notes/" + n.id, { method: "PATCH", body: JSON.stringify({ kind: "task" }) });
         else if (claude && n.kind === "note") await api("/api/notes/" + n.id, { method: "PATCH", body: JSON.stringify({ kind: "ask" }) });
         const r = await api(`/api/notes/${n.id}/reply`, { method: "POST", body: JSON.stringify({ text, run }) });
-        if (!r.ok) { toast("Couldn't reply: " + (r.error || r.status), "bad"); return; }
+        if (!r.ok) { toast(failed("Couldn't send the reply", r), "bad"); return; }
         if (r.runError) toast(r.runError, "bad");
         N.drafts.delete(n.id);
         await reload();
@@ -643,7 +649,7 @@ export function makeNotes(ctx) {
 
   async function resolve(n) {
     const r = await api("/api/notes/" + n.id, { method: "PATCH", body: JSON.stringify({ status: "done" }) });
-    if (!r.ok) return toast("Couldn't resolve it: " + (r.error || r.status), "bad");
+    if (!r.ok) return toast(failed("Couldn't resolve it", r), "bad");
     if (N.active === n.id) N.active = null;
     toast("Resolved. It's in the comment history.");
     await reload();
@@ -697,7 +703,7 @@ export function makeNotes(ctx) {
       [{ key: "cancel", label: "Cancel" }, { key: "del", label: "Delete", cls: "btn-danger" }]);
     if (c !== "del") return;
     const r = await api("/api/notes/" + n.id, { method: "DELETE" });
-    if (!r.ok) return toast("Couldn't delete it: " + (r.error || r.status), "bad");
+    if (!r.ok) return toast(failed("Couldn't delete the comment", r), "bad");
     if (N.active === n.id) N.active = null;
     await reload();
   }

@@ -141,6 +141,7 @@ const openrouter = await makeOpenRouterAccount({ dir: DATA, emit: (type, data) =
 const store = makeCommentStore({
   repo: REPO, local: localNotes, account, emit: (type, data) => broadcast(type, data),
   titleOf: (p) => titleOf(p), watching: () => listeners.size > 0, exportCopy: !!agentKey(HERE),
+  outboxFile: path.join(DATA, "comments-outbox.json"), // comments waiting for Discord (src/comment-store.js)
 });
 // "Editing <page> in the Codex" on the person's Discord profile, through their Discord app.
 // Who's here: the room of everyone with a Codex open (src/together.js), while signed in.
@@ -226,8 +227,13 @@ async function recentChanges() {
   return entries(changeLog.commits.map((c) => ({ ...c, files: c.files.filter((f) => !f.path.startsWith("docs/.notes/")) })), { titles: idx.titles, me });
 }
 
-// Spelling: British English, the docs' own repeated words, and words.txt beside this tool.
-const speller = makeSpell({ wordsFile: process.env.CODEX_WORDS || path.join(HERE, "words.txt"), texts: async () => (await linkIndex()).texts });
+// Spelling: US English, the docs' own repeated words, and the shared word list in the docs (src/spell.js),
+// sent like comments. CODEX_WORDS is where an older installed Codex kept its own list: moved in once.
+const WORDS_REL = "docs/.codex/words.txt";
+const speller = makeSpell({
+  wordsFile: path.join(REPO, WORDS_REL), legacy: [process.env.CODEX_WORDS],
+  texts: async () => (await linkIndex()).texts, onWrite: () => syncer.saved(WORDS_REL, { soon: true }),
+});
 
 /** Open notes per page: { page: { note, ask, task, answered, total } } ("" is scratch). */
 async function noteCounts() {
@@ -279,6 +285,7 @@ for (const r of ["docs"]) {
       const rel = r + "/" + name.toString().split(path.sep).join("/");
       if (rel.endsWith(".md") && isDoc(rel)) changed(rel);
       else if (rel.endsWith(".json") && rel.startsWith("docs/.notes/")) notesChanged(rel);
+      else if (rel === WORDS_REL) speller.reload(); // others' words, fetched
     });
   } catch (e) { console.warn("Not watching", r, e.message); }
 }
@@ -494,7 +501,7 @@ const api = {
     if (page && !(safe(page) && page.endsWith(".md"))) return [400, { error: "notes go on pages" }];
     if (!text || !String(text).trim()) return [400, { error: "an empty note" }];
     const made = await store.create(page, { kind, text, anchor });
-    if (run && (made.note.kind === "ask" || made.note.kind === "task")) {
+    if (run && !made.note.pending && (made.note.kind === "ask" || made.note.kind === "task")) { // a waiting comment isn't in Discord yet
       const r = await runner.start(made.note.id);
       if (r.error) made.runError = r.error;
     }
@@ -782,7 +789,7 @@ async function noteApi(req, id, action) {
     if (!text || !String(text).trim()) return [400, { error: "an empty reply" }];
     const done = await store.reply(id, { by: "owner", text, status });
     if (!done) return missing;
-    if (run) { const r = await runner.start(id); if (r.error) done.runError = r.error; }
+    if (run && !done.note?.pending) { const r = await runner.start(id); if (r.error) done.runError = r.error; }
     return done;
   }
   if (action === "move" && m === "POST") {
@@ -813,8 +820,9 @@ const server = http.createServer(async (req, res) => {
       return res.end(codexPage({ heading: r.ok ? "Signed in" : "Couldn't sign in",
         body: `<p${r.ok ? "" : ' class="bad"'}>${esc(r.message)}</p><p>You can close this tab and go back to the Codex.</p>` }));
     }
-    // A comment's id: n-... in docs/.notes/, the forum post's number in Discord.
-    const noteRoute = url.pathname.match(/^\/api\/notes\/(n-[\w-]+|\d{5,25})(?:\/(reply|move|run|stop))?$/);
+    // A comment's id: n-... in docs/.notes/, the forum post's number in Discord, pending-... while it waits
+    // to be posted (src/comment-store.js, the outbox).
+    const noteRoute = url.pathname.match(/^\/api\/notes\/(n-[\w-]+|\d{5,25}|pending-[a-z0-9]+)(?:\/(reply|move|run|stop))?$/);
     if (noteRoute) {
       const result = await noteApi(req, noteRoute[1], noteRoute[2] || null);
       return Array.isArray(result) ? send(res, result[0], result[1]) : send(res, 200, result);

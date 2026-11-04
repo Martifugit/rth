@@ -4,7 +4,12 @@
 // "build.publish": the latest release) and update. Then it's announced in #codex (scripts/announce.mjs).
 // Needs `gh` signed in with the right to make releases.
 //
-//   1. raise "version" in package.json   2. write its section in CHANGELOG.md   3. npm run release
+//   1. raise "version" in package.json   2. write its section in CHANGELOG.md   3. commit and push
+//   4. npm run release
+//
+// It releases exactly what's on GitHub: it refuses while the Codex's folder has changes that aren't
+// committed, or commits that aren't pushed, and tags the commit GitHub has (not whatever main points
+// at by the time GitHub gets round to it). GitHub's passing server errors are retried.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -27,6 +32,22 @@ try {
 const whatsNew = changes(v);
 if (!whatsNew) { console.error(`Write what's new in ${v} first: a "## ${v}" section in CHANGELOG.md.`); process.exit(1); }
 
+// What's released is what's on GitHub: this folder committed and pushed, nothing of it only here.
+const git = (...args) => execFileSync("git", args, { cwd: ROOT, encoding: "utf8" }).trim();
+const dirty = git("status", "--porcelain", "--", ".");
+if (dirty) {
+  console.error("The Codex's folder has changes that aren't committed. Commit and push them first, or set them aside:\n" + dirty);
+  process.exit(1);
+}
+git("fetch", "--quiet", "origin");
+const branch = git("rev-parse", "--abbrev-ref", "HEAD");
+const upstream = `origin/${branch}`;
+if (git("diff", "--name-only", upstream, "HEAD", "--", ".")) {
+  console.error(`Commits to the Codex aren't on GitHub yet (${upstream}). Push them first, so the release is what everyone can see.`);
+  process.exit(1);
+}
+const target = git("rev-parse", upstream);
+
 sh("npm", ["run", "dist"]);
 const exe = `RthCodexSetup-${v}.exe`;
 const files = [exe, `${exe}.blockmap`, "latest.yml"].map((f) => path.join(ROOT, "dist", f));
@@ -41,6 +62,20 @@ const notes = [
   "",
   "Sign in with Discord inside it. You need the **Codex** role in the R'th Discord to edit and comment.",
 ].join("\n");
-sh("gh", ["release", "create", tag, ...files, "--repo", repo, "--title", `R'th Codex ${v}`, "--notes", notes, "--latest"], { shell: false });
+// GitHub's own server errors (a 500 mid-upload) pass: try again a few times. gh removes a half-made
+// release itself, so each try starts clean; one that did get published is never made twice.
+for (let attempt = 1; ; attempt++) {
+  try {
+    sh("gh", ["release", "create", tag, ...files, "--repo", repo, "--title", `R'th Codex ${v}`, "--notes", notes, "--latest", "--target", target], { shell: false });
+    break;
+  } catch (e) {
+    let published = false;
+    try { execFileSync("gh", ["release", "view", tag, "--repo", repo], { stdio: "ignore" }); published = true; } catch {}
+    if (published) { console.log(`${tag} was published despite the error.`); break; }
+    if (attempt >= 3) { console.error(`GitHub kept failing (${attempt} tries). Nothing was published; run it again later.`); process.exit(1); }
+    console.error(`GitHub failed (try ${attempt} of 3). Trying again in 30 seconds...`);
+    await new Promise((r) => setTimeout(r, 30000));
+  }
+}
 console.log(`Published ${tag}: https://github.com/${repo}/releases/tag/${tag}`);
 await announce(v, repo);

@@ -26,6 +26,31 @@ export function avatarUrl(env, user, m) {
   return `https://cdn.discordapp.com/embed/avatars/${i}.png`;
 }
 
+/**
+ * Keep one message pinned in a channel, replacing the one pinned before (`previous`, if any): the latest
+ * Codex release in #codex, so it doesn't drown in "what changed". Discord then posts "... pinned a
+ * message" in the channel; that's removed, the release itself was the news. Needs the bot's Pin
+ * Messages (and Manage Messages, for the notice) in the channel; without them it says so.
+ */
+export async function pinOnly(env, channel, id, previous) {
+  if (previous && previous !== id) await fetch(`${API}/channels/${channel}/pins/${previous}`, { method: "DELETE", headers: bot(env) }).catch(() => {});
+  const r = await fetch(`${API}/channels/${channel}/pins/${id}`, { method: "PUT", headers: bot(env) });
+  if (!r.ok) throw new Error(r.status === 403 ? "The bot may not pin messages in that channel: give it Pin Messages (and Manage Messages) there." : `Discord pin failed (${r.status}): ${await r.text()}`);
+  try {
+    const recent = await (await fetch(`${API}/channels/${channel}/messages?limit=10`, { headers: bot(env) })).json();
+    for (const m of Array.isArray(recent) ? recent : [])
+      if (m.type === 6 && m.message_reference?.message_id === id) await fetch(`${API}/channels/${channel}/messages/${m.id}`, { method: "DELETE", headers: bot(env) });
+  } catch {}
+}
+
+/** The bot's latest message in a channel whose text starts with `start` (among the last 100), or null. */
+export async function findOwn(env, channel, start) {
+  const r = await fetch(`${API}/channels/${channel}/messages?limit=100`, { headers: bot(env) });
+  if (!r.ok) throw new Error(`Discord read failed (${r.status})`);
+  const list = await r.json();
+  return list.find((m) => m.author?.bot && typeof m.content === "string" && m.content.startsWith(start)) || null;
+}
+
 /** Post a message in a channel as the bot. Links aren't unfurled into previews. */
 export async function post(env, channel, content) {
   const r = await fetch(`${API}/channels/${channel}/messages`, {

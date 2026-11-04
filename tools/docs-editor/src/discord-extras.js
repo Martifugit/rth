@@ -7,6 +7,8 @@
 //     with who said what; an image (copied, or a Discord image link) is saved into the docs, because
 //     Discord's links expire within a day.
 
+import { failed } from "./plain-errors.js";
+
 const HELPER = "https://rth-codex.rthapp.workers.dev";
 const LIMIT = 2000;
 
@@ -92,7 +94,7 @@ const toBase64 = (file) => new Promise((resolve, reject) => {
 export function makePasteHandler({ S, api, toast }) {
   async function saveImage(body) {
     const r = await api("/api/image", { method: "POST", body: JSON.stringify({ page: S.path, ...body }) });
-    if (!r.ok) { toast(r.error || "Couldn't save the image", "bad"); return; }
+    if (!r.ok) { toast(failed("Couldn't save the image", r), "bad"); return; }
     S.editor.chain().focus().setImage({ src: r.src, alt: body.alt || "" }).run();
     toast("Saved the image in " + r.saved);
   }

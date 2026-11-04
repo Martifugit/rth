@@ -7,6 +7,7 @@
 // This step only talks; edits and Show changes are step 4.2.
 
 import { discordConversation } from "./discord-extras.js";
+import { failed } from "./plain-errors.js";
 
 const ICON = {
   send: '<svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></svg>',
@@ -158,7 +159,7 @@ export function makeAi(ctx) {
   }
   async function configure(change) {
     const r = await api("/api/ai/setup", { method: "POST", body: JSON.stringify(change) });
-    if (!r.ok && r.error) return toast(r.error, "bad");
+    if (!r.ok) return toast(failed("Couldn't change the AI setup", r), "bad");
     A.setup = r; A.provider = r.provider || A.provider;
     drawLog();
   }
@@ -191,7 +192,7 @@ export function makeAi(ctx) {
         : cl.signedIn === false
           ? [h("p", { class: "ai-note" }, "Installed, but not signed in."),
              h("div", { class: "ai-setup-row" },
-               h("button", { class: "btn btn-gold", title: "Opens a terminal running Claude Code", onclick: async () => { const r = await api("/api/ai/claude-signin", { method: "POST" }); if (r.error) toast(r.error, "bad"); else toast("Sign in in the terminal, then check again"); } }, "Sign in"),
+               h("button", { class: "btn btn-gold", title: "Opens a terminal running Claude Code", onclick: async () => { const r = await api("/api/ai/claude-signin", { method: "POST" }); if (r.error) toast(failed("Couldn't open the sign-in", r), "bad"); else toast("Sign in in the terminal, then check again"); } }, "Sign in"),
                recheck())]
           : h("p", { class: "ai-note" }, (cl.signedIn ? "Signed in" : "Installed") + (cl.version ? ", " + cl.version : "")),
 
@@ -204,7 +205,7 @@ export function makeAi(ctx) {
              h("button", { class: "btn", onclick: async () => {
                const r = await api("/api/openrouter/key", { method: "POST", body: JSON.stringify({ key: keyInput.value }) });
                keyInput.value = "";
-               if (!r.ok) return toast(r.error || "Couldn't use that key", "bad");
+               if (!r.ok) return toast(failed("Couldn't use that key", r), "bad");
                toast("Connected to OpenRouter", "good");
                A.setup = await api("/api/ai/setup"); drawLog();
              } }, "Use key"))],
@@ -325,7 +326,7 @@ export function makeAi(ctx) {
 
   async function undoTurn(msg, page) {
     const r = await api("/api/ai/undo", { method: "POST", body: JSON.stringify({ conv: A.id, msg, page }) });
-    if (!r.ok) return toast(r.error || "Couldn't undo", "bad");
+    if (!r.ok) return toast(failed("Couldn't undo it", r), "bad");
     if (r.open?.length) {
       toast("That page was edited since: undo its changes one by one where they're marked", "bad");
       ctx.showChanges(r.open[0]);
@@ -371,7 +372,7 @@ export function makeAi(ctx) {
     if (!r.ok) {
       A.pending = null; A.run = null;
       input.value = text; grow();
-      toast(r.error || "Couldn't send", "bad");
+      toast(failed("Couldn't send your message", r), "bad");
       if (r.needsSignIn) refreshProvider();
       drawLog(); syncSend();
       return;

@@ -21,7 +21,7 @@ export function makeHelperComments({ auth }) {
     const j = await r.json().catch(() => ({}));
     noteAnswer(r.status, j); // 426: this Codex is out of date
     if (r.status === 404 && /No such comment/.test(j.error || "")) return null;
-    if (!r.ok) throw new Error(j.error || `The helper said ${r.status}`);
+    if (!r.ok) { const e = new Error(j.error || `The helper said ${r.status}`); e.status = r.status; throw e; }
     return j;
   }
 

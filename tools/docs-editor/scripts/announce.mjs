@@ -2,7 +2,9 @@
 // the helper (POST /announce, with the owner's agent key, helper/.dev.vars). `npm run release` runs it
 // after publishing; on its own it announces a release that's out already.
 //
-//   node scripts/announce.mjs [version]     (default: package.json's)
+//   node scripts/announce.mjs [version]         (default: package.json's)
+//   node scripts/announce.mjs [version] --pin   pin that release's announcement, already posted, in place
+//                                               of the one pinned before (new announcements pin themselves)
 
 import fs from "node:fs";
 import path from "node:path";
@@ -28,22 +30,40 @@ export function message(version, repo) {
   ].filter(Boolean).join("\n");
 }
 
+const agentKey = () => { try { return fs.readFileSync(path.join(ROOT, "helper", ".dev.vars"), "utf8").match(/^AGENT_KEY=(\S+)/m)?.[1] || null; } catch { return null; } };
+
+/** Pin a release whose announcement is out already (the latest release stays pinned in #codex). */
+export async function pinAnnounced(version) {
+  const key = agentKey();
+  if (!key) { console.log("Not pinned: no agent key (helper/.dev.vars) on this computer."); return false; }
+  const r = await fetch(HELPER + "/announce/pin", {
+    method: "POST", headers: { Authorization: "Agent " + key, "Content-Type": "application/json" },
+    body: JSON.stringify({ version }),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) { console.log(`Not pinned: ${j.error || r.status}`); return false; }
+  console.log(`Pinned the ${version} announcement in #codex.`);
+  return true;
+}
+
 export async function announce(version, repo) {
-  let key = null;
-  try { key = fs.readFileSync(path.join(ROOT, "helper", ".dev.vars"), "utf8").match(/^AGENT_KEY=(\S+)/m)?.[1] || null; } catch {}
+  const key = agentKey();
   if (!key) { console.log("Not announced in Discord: no agent key (helper/.dev.vars) on this computer."); return false; }
   const r = await fetch(HELPER + "/announce", {
     method: "POST", headers: { Authorization: "Agent " + key, "Content-Type": "application/json" },
     body: JSON.stringify({ text: message(version, repo) }),
   });
   if (!r.ok) { console.log(`Not announced in Discord: the helper said ${r.status} ${await r.text()}`); return false; }
+  const j = await r.clone().json().catch(() => ({}));
+  if (j.pinned && j.pinned !== true) console.log("Announced, but not pinned: " + j.pinned);
   console.log(`Announced ${version} in #codex.`);
   return true;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"));
-  const version = process.argv[2] || pkg.version;
+  const version = process.argv.slice(2).find((a) => !a.startsWith("--")) || pkg.version;
+  if (process.argv.includes("--pin")) { await pinAnnounced(version); process.exit(0); }
   const repo = pkg.build.publish[0].url.match(/github\.com\/([^/]+\/[^/]+)\//)[1];
   if (!changes(version)) { console.error(`CHANGELOG.md has no "## ${version}" section.`); process.exit(1); }
   await announce(version, repo);

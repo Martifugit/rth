@@ -6,7 +6,14 @@ section before releasing; the release refuses without one.
 
 ## 0.3.2
 
+- The page path at the top sits level with the buttons beside it (it was about 2px high).
+- When GitHub itself is having trouble, the status line says so in plain words ("GitHub is down, sending later"), with more on hover: your changes are safe and go out by themselves. It no longer looks like something is wrong with your Codex or your connection.
+- Comments, replies and edits wait on your computer when Discord can't be reached, marked "Not posted yet", and post by themselves once it answers. Before, they failed, and a new comment's text was lost.
+- Error messages say in plain words what went wrong, whether your work is safe and what to do, instead of codes like "Couldn't save: 500".
+- Your edits go out about a minute after you stop typing (it was ten seconds), so the history is one change per sitting rather than one per pause.
+- One dictionary for everyone: a word you add is accepted in everyone's Codex (it was kept on your own computer only). Words you added before move into it by themselves.
 - An open Codex looks for a new version every hour (it was every 6 hours), so updates reach you sooner.
+- R'th AI writes pages like a wiki: each page keeps to its own thing and links out to everything else instead of explaining it in place. It now gets the Charter and the new Writing a Page in full every time (it was only told to go and read them), and you can change how it writes by editing those two pages.
 - Things only fixed outside the Codex (a commit someone hasn't pushed, a merge in progress) no longer sit in the bottom-left box with a Try again that can't help: the status line says "Saved, not sent yet", with why on hover, and it clears by itself.
 - The bottom-left box only asks what you can answer in the Codex: pages to share, a clash between versions, or signing in when that's what stops your changes going out. Any other trouble sending is on the status line, with why on hover, and a send GitHub refuses is no longer retried every few seconds for ever.
 

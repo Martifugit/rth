@@ -9,32 +9,26 @@
 import fs from "node:fs";
 import path from "node:path";
 import { VERSION, VERSION_HEADERS, noteAnswer } from "./codex-version.js";
+import { secretFile } from "./secret-file.js";
 
 export const HELPER = (process.env.CODEX_HELPER || "https://rth-codex.rthapp.workers.dev").replace(/\/+$/, "");
 
 /** contributor: this is a copy of the docs the Codex fetched; editing waits for the Codex role. */
 export async function makeAccount({ dir, emit, contributor = false }) {
   fs.mkdirSync(dir, { recursive: true });
-  const file = path.join(dir, "account.bin");
-  let safe = null;
-  try { const e = await import("electron"); if (e.safeStorage?.isEncryptionAvailable?.()) safe = e.safeStorage; } catch {}
+  const secret = await secretFile(path.join(dir, "account.bin")); // locked on this computer (src/secret-file.js)
 
-  let A = load();          // { session, user: { id, name, avatar } } or null
+  let A = await load();    // { session, user: { id, name, avatar } } or null
   let member = null;       // whether the helper last said they have the Codex role
   let key = null;          // { token, expires, name, email }
 
-  function load() {
-    try {
-      const raw = fs.readFileSync(file);
-      return JSON.parse(safe ? safe.decryptString(raw) : raw.toString("utf8"));
-    } catch { return null; }
+  async function load() {
+    try { const text = await secret.read(); return text ? JSON.parse(text) : null; } catch { return null; }
   }
   function store(v) {
     A = v;
     key = null;
-    if (!v) { fs.rmSync(file, { force: true }); return; }
-    const text = JSON.stringify(v);
-    fs.writeFileSync(file, safe ? safe.encryptString(text) : text);
+    secret.write(v ? JSON.stringify(v) : null);
   }
 
   const canEdit = () => !contributor || (!!A && member !== false);

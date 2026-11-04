@@ -4,6 +4,7 @@
 
 import { slug } from "./links.js";
 import { pagePicker } from "./page-picker.js";
+import { failed } from "./plain-errors.js";
 
 
 export function makePanels(ctx) {
@@ -146,7 +147,7 @@ export function makePanels(ctx) {
     }
     if (S.path && !(await ctx.save())) return ctx.toast("Couldn't save the open page first, so nothing was changed", "bad");
     const r = await api("/api/fix", { method: "POST", body: JSON.stringify({ fix }) });
-    if (!r.ok) return ctx.toast(r.error || "Couldn't do that", "bad");
+    if (!r.ok) return ctx.toast(failed("Couldn't do that", r), "bad");
     if (r.pages.some((p) => p.path === S.path)) S.reloadOpen = true; // the open page is read again when it's next shown
     ctx.toast(`${what}: ${plural(r.pages.length, "page")} changed`, "good", { actions: [{ label: "Undo", run: async () => {
       const u = await api("/api/fix/undo", { method: "POST", body: JSON.stringify({ token: r.token }) });
@@ -252,7 +253,7 @@ export function makePanels(ctx) {
       "move-folder": s.to ? [h("button", { class: "btn btn-gold btn-small", onclick: async () => {
         if (S.path && !(await ctx.save())) return;
         const r = await api("/api/move", { method: "POST", body: JSON.stringify({ from: s.from, to: s.to }) });
-        if (!r.ok) return ctx.toast("Couldn't move it: " + (r.error || r.status), "bad");
+        if (!r.ok) return ctx.toast(failed("Couldn't move it", r), "bad");
         ctx.toast(`Moved to ${where(s.to)}; links to it follow`, "good");
         if (S.path === s.from) { S.path = s.to; S.reloadOpen = true; }
         refresh();

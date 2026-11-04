@@ -33,8 +33,11 @@ const PROTOCOL = "rth-codex";
 // Unpackaged, the link starts the branded copy electron/launch.js makes (Codex.exe, "R'th Codex"), so
 // the browser asks to open "R'th Codex", not "Electron", however this copy was started.
 const BRANDED = path.join(ROOT, "node_modules", ".codex-app", "Codex.exe");
+// Run from this folder while an installed Codex is on the computer (npm run dev), the links stay the
+// installed one's: a link from Discord shouldn't open the copy being tried out.
+const INSTALLED_EXE = path.join(process.env.LOCALAPPDATA || "", "Programs", "rth-docs-editor", "R'th Codex.exe");
 if (INSTALLED) app.setAsDefaultProtocolClient(PROTOCOL);
-else app.setAsDefaultProtocolClient(PROTOCOL, process.platform === "win32" && fs.existsSync(BRANDED) ? BRANDED : process.execPath, [ROOT]);
+else if (!fs.existsSync(INSTALLED_EXE)) app.setAsDefaultProtocolClient(PROTOCOL, process.platform === "win32" && fs.existsSync(BRANDED) ? BRANDED : process.execPath, [ROOT]);
 const linkIn = (argv) => argv.find((a) => typeof a === "string" && a.startsWith(PROTOCOL + "://")) || null;
 let pendingLink = linkIn(process.argv);
 
@@ -96,6 +99,7 @@ async function open() {
     process.env.CODEX_LOOK ||= path.join(res, "look");
     const git = path.join(res, "git", "cmd", "git.exe");
     if (fs.existsSync(git)) process.env.CODEX_GIT ||= git;
+    // Where Codexes before 0.3.2 kept their own word list: its words move into the shared one once.
     process.env.CODEX_WORDS ||= path.join(app.getPath("userData"), "words.txt");
   }
   // Where the docs are: known, or asked once (electron/firstrun.js). A copy the Codex fetched belongs

@@ -35,6 +35,7 @@ import { GDD, README, TOP, TEMPLATES, isMeta, undeletable, folderPath, typeAt } 
 import { split as splitFront, make as makeFront } from "./frontmatter.js";
 import { makeGddUi } from "./gdd-ui.js";
 import { pagePicker } from "./page-picker.js";
+import { failed } from "./plain-errors.js";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -293,7 +294,10 @@ function refreshDirty() {
 // ----------------------------------------------------------------------------- loading pages
 
 async function api(url, opts) {
-  const r = await fetch(url, opts && { headers: { "Content-Type": "application/json" }, ...opts });
+  let r;
+  try { r = await fetch(url, opts && { headers: { "Content-Type": "application/json" }, ...opts }); }
+  catch { return { ok: false, status: 0, error: "The Codex's engine isn't answering." }; } // src/plain-errors.js says what to do
+
   const j = await r.json().catch(() => ({}));
   return { ok: r.ok, status: r.status, ...j };
 }
@@ -449,7 +453,7 @@ async function save(force = false, { quiet = false } = {}) {
     if (choice === "theirs") { S.conflict = false; S.dirty = false; await openDoc(S.path, { push: false, keepScroll: true }); }
     return false;
   }
-  if (!r.ok) { toast("Couldn't save: " + (r.error || r.status), "bad"); updateStatus(); return false; }
+  if (!r.ok) { toast(failed("Couldn't save the page", r), "bad"); updateStatus(); return false; }
   S.conflict = false;
   S.disk = content; S.diskHash = r.hash;
   if (S.mode !== "source") { S.base = content.slice(S.front.length); S.baseline = editorMarkdown(); notes.saved(); }
@@ -473,6 +477,8 @@ async function save(force = false, { quiet = false } = {}) {
 function listen() {
   const es = new EventSource("/api/events");
   es.addEventListener("notes", (e) => notes.onNotes(JSON.parse(e.data)));
+  // A waiting comment change that Discord then refused outright (src/comment-store.js, flush): said once.
+  es.addEventListener("notes-failed", (e) => { const v = JSON.parse(e.data); toast("A comment change that was waiting to be posted was refused by Discord, so it was dropped: " + v.error, "bad"); });
   es.addEventListener("run", (e) => notes.onRun(JSON.parse(e.data)));
   es.addEventListener("sync", (e) => showSync(JSON.parse(e.data)));
   es.addEventListener("news", (e) => showNews(JSON.parse(e.data)));
@@ -1218,7 +1224,7 @@ function newPageDialog(inFolder = null, prefill = {}) {
     if (same) { toast(`${path.split("/").pop()} is already ${same.title || same.path}: file names are unique across the GDD`, "bad"); return; }
     if (S.fileSet.has(path)) { toast(`There's already a page at ${path.slice(GDD.length + 1)}`, "bad"); return; }
     const r = await api("/api/new", { method: "POST", body: JSON.stringify({ path, title: title.trim(), type: type.type, components: [...picked] }) });
-    if (!r.ok) { toast(r.error || "Couldn't create it", "bad"); return; }
+    if (!r.ok) { toast(failed("Couldn't make the page", r), "bad"); return; }
     close();
     if (fixed && r.path !== fixed) relinkOpenPage(fixed, r.path); // the link that asked for it follows it to its folder
     await loadTree();
@@ -1361,7 +1367,7 @@ async function deletePage(page = S.path) {
   if (open) await save(false, { quiet: true });
   S.deleting = page;
   const r = await api("/api/doc?path=" + encodeURIComponent(page), { method: "DELETE" });
-  if (!r.ok) { S.deleting = null; return toast("Couldn't delete it: " + (r.error || r.status), "bad"); }
+  if (!r.ok) { S.deleting = null; return toast(failed("Couldn't delete the page", r), "bad"); }
   await loadTree();
   if (open) {
     S.dirty = false;
@@ -1491,7 +1497,7 @@ function syncWords() {
   if (v.offline) return { text: "Saved, offline: sent when you're back", cls: "muted", title: v.problem };
   if (v.problem) return { text: "Saved, not sent", cls: "unsaved", title: v.problem };
   // Waiting on something done outside the Codex (src/sync.js, wait): nothing to click, so no box, just why.
-  if (v.wait) return { text: "Saved, not sent yet", cls: "muted", title: v.wait };
+  if (v.wait) return { text: v.waitShort || "Saved, not sent yet", cls: "muted", title: v.wait };
   if (v.busy || v.sending || v.ahead) return { text: "Sending…", cls: "muted" };
   return { text: "Saved and sent", cls: "saved", title: v.lastSync ? "Sent " + agoText(v.lastSync) : "" };
 }
@@ -1845,7 +1851,7 @@ async function installUpdate() {
   if (updateView.state !== "ready") return;
   showUpdate({ ...updateView, state: "installing" });
   const r = await api("/api/update/install", { method: "POST" });
-  if (!r.ok) { toast(r.error || "Couldn't update", "bad"); showUpdate({ ...updateView, state: "ready" }); }
+  if (!r.ok) { toast(failed("Couldn't update", r), "bad"); showUpdate({ ...updateView, state: "ready" }); }
 }
 
 window.__codex = {

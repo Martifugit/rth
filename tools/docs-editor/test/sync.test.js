@@ -5,7 +5,7 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { makeSync } from "../src/sync.js";
+import { makeSync, githubTrouble } from "../src/sync.js";
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "codex-sync-"));
 const g = (cwd, ...args) => execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
@@ -217,6 +217,15 @@ await test("Share and Undo wait for a sync that is already running instead of be
   assert.equal(v.held.length, 0);
 });
 
+await test("the shared word list is sent by itself, never held as a page to share", async () => {
+  write(a, "docs/.codex/words.txt", "# words\nwennow\n");
+  let v = await sync.refresh();
+  assert.equal(v.held.length, 0, "not asked about");
+  v = await sync.sync({ why: "auto" });
+  assert.match(g(remote, "show", "main:docs/.codex/words.txt"), /wennow/);
+  assert.equal(v.waiting, 0);
+});
+
 await test("a commit made outside the Codex is waited on, not asked about, and the pages go once it's pushed", async () => {
   write(a, "code/other.cs", "class Other {}\n");
   g(a, "add", "code/other.cs"); g(a, "commit", "--quiet", "-m", "someone's own commit");
@@ -260,6 +269,26 @@ await test("refused for another reason: said on the status line, not asked in th
   const v = await s.sync({ why: "auto" });
   assert.equal(v.signIn, false);
   assert.match(v.problem, /Couldn't send to GitHub/);
+});
+
+await test("GitHub failing on its side: said in plain words on the status line, never in the box", async () => {
+  process.env.CODEX_GITHUB_STATUS = "http://127.0.0.1:9/nothing-here"; // the status page can't be asked: a hiccup
+  const dir = refusingCopy("outage", "Internal Server Error");
+  const s = makeSync({ repo: dir });
+  write(dir, "docs/combat.md", "# Combat\n\nWritten during an outage.\n");
+  s.saved("docs/combat.md");
+  const v = await s.sync({ why: "auto" });
+  assert.equal(v.problem, null, "nothing for the box");
+  assert.equal(v.signIn, false);
+  assert.equal(v.offline, false, "you're not offline: GitHub is in trouble");
+  assert.match(v.waitShort, /GitHub hiccup/);
+  assert.match(v.wait, /safe on this computer/);
+  delete process.env.CODEX_GITHUB_STATUS;
+});
+
+await test("GitHub's own status page saying it's down: the words say so", () => {
+  assert.match(githubTrouble(true).short, /GitHub is down, sending later/);
+  assert.match(githubTrouble(true).long, /not yours/);
 });
 
 await test("a branch with no remote says so instead of syncing", async () => {

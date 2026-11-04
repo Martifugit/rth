@@ -9,6 +9,9 @@ fetches just `docs/` into its own folder (`%APPDATA%
 th-docs-editorDocs`), with a progress bar and no
 questions (`electron/firstrun.js`; a small link lets someone with the game's repository use that
 instead). That copy is read-only until you sign in with Discord with the Codex role. It opens the Codex as a desktop app (Electron; `npm run app`). On Windows it runs its own copy of Electron, `node_modules/.codex-app/Codex.exe`, stamped "R'th Codex" with the logo so Task Manager names it (`electron/launch.js`, made once and again when Electron or the logo changes).
+To try changes beside an installed Codex, `npm run dev` (add `-- --people` for pretend people in the
+room): its own settings folder, your sign-in copied from the installed one the first time, and the
+`rth-codex://` links left to the installed Codex (`scripts/dev.mjs`). It's a real Codex on the same docs.
 Closing it saves anything still being typed. The same Codex also runs in a browser: `npm start`, then
 <http://127.0.0.1:5178/> (another port: `set PORT=5179` first).
 
@@ -21,7 +24,7 @@ scenes and any other uncommitted work in the folder are never staged, committed,
 overwritten. The status line says how the open page stands: Saving…, Sending…, Saved and sent, Saved
 and offline (sent when you're back), or Saved, not shared yet.
 
-- **What you type in the Codex** is sent by itself, once you pause for about ten seconds (at most two
+- **What you type in the Codex** is sent by itself, once you pause for about a minute (at most ten
   minutes after the first unsent save, however long the typing goes on), so a burst of editing is one
   commit. A page made or deleted goes within seconds; closing the app sends everything.
 - **Others' changes** arrive within seconds: when anyone sends, the helper tells every open Codex
@@ -54,7 +57,8 @@ and offline (sent when you're back), or Saved, not shared yet.
   for Discord or its path, or delete it.
 - **Spelling** is checked by the Codex, not the browser (whose dictionary follows its language): US
   English, plus any word the docs use three times or more (R'th's names). Right-click an underlined
-  word for suggestions, or to add it to `words.txt` beside this tool.
+  word for suggestions, or to add it to the dictionary: the shared list in `docs/.codex/words.txt`,
+  sent like comments, so a word anyone adds is accepted for everyone.
 - **Search** (the box at the top, Ctrl+P or `/`): pages whose title or name match, then every line
   in every page with those words. Click one to go there, highlighted.
 - **Editing:** the page is always editable, like a Google Doc, and saves itself a moment after

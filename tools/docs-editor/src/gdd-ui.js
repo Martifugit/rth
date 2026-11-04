@@ -24,6 +24,7 @@ import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Fragment } from "@tiptap/pm/model";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { split, setField, make, slugOf, STATUSES } from "./frontmatter.js";
+import { failed } from "./plain-errors.js";
 import { pagePicker } from "./page-picker.js";
 import {
   GDD,
@@ -985,7 +986,7 @@ export function makeGddUi(get) {
     const clash = S.files.find((f) => inGdd(f.path) && !f.path.startsWith(TEMPLATES + "/") && slugOf(f.path) === id);
     if (clash) { toast(`“${id}” is already ${clash.title || clash.path}: names are unique across the GDD`, "bad"); return null; }
     const r = await api("/api/new", { method: "POST", body: JSON.stringify({ path: folderPath(t) + "/" + id + ".md", title: title.trim(), type }) });
-    if (!r.ok) { toast(r.error || "Couldn't make it", "bad"); return null; }
+    if (!r.ok) { toast(failed("Couldn't make the page", r), "bad"); return null; }
     await get().loadTree();
     toast(`Made “${title.trim()}”, a stub`, "good");
     return id;
@@ -1002,7 +1003,7 @@ export function makeGddUi(get) {
     if (clash) { toast(`“${id}” is already ${clash.title || clash.path}: names are unique across the GDD`, "bad"); return; }
     if (!(await get().save())) { toast("Couldn't save the page first, so it wasn't renamed", "bad"); return; }
     const r = await api("/api/move", { method: "POST", body: JSON.stringify({ from, to, title }) });
-    if (!r.ok) { toast("Couldn't rename it: " + (r.error || r.status), "bad"); return; }
+    if (!r.ok) { toast(failed("Couldn't rename it", r), "bad"); return; }
     closeSettings?.();
     await get().loadTree();
     await get().openDoc(to, { push: false, mode: "edit" });
@@ -1032,7 +1033,7 @@ export function makeGddUi(get) {
         body: JSON.stringify({ from, to }),
       });
       if (!r.ok) {
-        toast("Couldn't move it: " + (r.error || r.status), "bad");
+        toast(failed("Couldn't move it", r), "bad");
         return;
       }
       await get().loadTree();
