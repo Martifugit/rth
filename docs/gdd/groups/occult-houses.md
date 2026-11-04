@@ -11,7 +11,7 @@ status: stub
 ## What unites them
 
 The occult houses are where [Occultism](../skills/occultism.md) comes from. Each has its own
-[spellbook](spellbooks.md), a site for [Distillation](../activities/distillation.md), and
+[spellbook](occult-spellbooks.md), a site for [Distillation](../activities/distillation.md), and
 [favour](../systems/house-favour.md) a player earns with it.
 
 ## Members

@@ -6,7 +6,7 @@ based-on:
 status: stub
 ---
 
-# Spellbooks
+# Occult Spellbooks
 
 ## What unites them
 

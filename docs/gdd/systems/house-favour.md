@@ -19,7 +19,7 @@ and their sites.
 
 ## Interactions
 
-- [Spellbooks](../groups/spellbooks.md): higher spells need favour.
+- [Spellbooks](../groups/occult-spellbooks.md): higher spells need favour.
 - [Distillation](../activities/distillation.md): higher rites need favour.
 
 ## Open questions

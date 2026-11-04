@@ -18,19 +18,12 @@ fight asks how far to push.
 
 ## How it feels to train
 
-- **In a fight** (the main source of XP): the active spell from a
-  [spellbook](../groups/spellbooks.md) is the [auto-attack](../systems/auto-attack.md), and each cast
-  burns [reagents](../groups/reagents.md). [Occult abilities](../groups/occult-abilities.md) build
-  and spend [phlegm](../systems/phlegm.md) and push [bile](../systems/bile.md); the strongest ask for
-  a lean before they can be used.
-- **What can go wrong:** a deeper lean makes you stronger and more exposed at once
-  ([bile's rules](../systems/bile.md#rules)), so pushing too far can lose the fight.
-- **Between fights:** you make your own reagents through
-  [Distillation](../activities/distillation.md) at a house's site.
+Gain experience through using [Occult abilities](occult-abilities.md) in active combat, or through
+more relaxed [Distillation](../activities/distillation.md) sessions.
 
 ## What it unlocks
 
-- **Spells** from the [spellbooks](../groups/spellbooks.md), one per house.
+- **Spells** from the [spellbooks](../groups/occult-spellbooks.md), one per house.
 - **Higher spells and rites** ask for [house favour](../systems/house-favour.md) as well as an
   Occultism level.
 
