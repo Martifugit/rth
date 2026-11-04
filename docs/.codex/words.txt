@@ -13,3 +13,4 @@ spellbooks
 stackable
 tradeable
 ultimates
+unlink

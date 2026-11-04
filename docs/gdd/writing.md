@@ -11,8 +11,9 @@ For every sentence, ask: **is this about the page's thing, or about something it
 - About the page's thing: write it here.
 - About something else: name it, link it, and stop. Its facts go on its own page.
 
-A page that explains its neighbours is a page that will contradict them. When a reader wants to know
-what bile is, they click the link to Bile. They don't need it explained on every page that mentions it.
+A page that explains its neighbors is a page that will contradict them. When a reader wants to know
+what bile is, they click the link to Bile. They don't need it explained on every page that mentions
+it.
 
 ## Link, don't explain
 
