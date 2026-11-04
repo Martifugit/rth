@@ -165,7 +165,7 @@ export function makeLayout(ctx) {
       item(false, "Show everything", "Pages, outline and comments", null, () => { L.pages = L.outline = true; store(); if (notes.state.hidden) notes.toggleMargin(); L.sheet = null; apply(); }),
       item(false, "Just the page", "Hide both side panes", null, () => { L.pages = L.outline = false; store(); L.sheet = null; apply(); }),
       online || presence ? [sep(), head("Presence")] : null,
-      online ? item(online.on(), "Show me as online", "Others in the Codex see where you are", null, () => online.toggle()) : null,
+      online ? item(online.on(), "Show me as online", "Others in Codex see where you are", null, () => online.toggle()) : null,
       presence ? item(presence.on(), "Show what I'm editing on Discord", "“Editing …” on your Discord profile", null, () => presence.toggle()) : null,
       sep(),
       item(false, "Keys and help", null, "?", help));

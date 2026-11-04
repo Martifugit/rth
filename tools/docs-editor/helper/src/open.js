@@ -23,7 +23,7 @@ export function openPage(url, env) {
     asked = 0;
     setTimeout(() => {
       window.close();
-      document.querySelector("section").innerHTML = "<h1>Opened in the Codex</h1><p>You can close this tab.</p>";
+      document.querySelector("section").innerHTML = "<h1>Opened in Codex</h1><p>You can close this tab.</p>";
     }, 300);
   }
   window.addEventListener("blur", done);
@@ -31,10 +31,10 @@ export function openPage(url, env) {
   document.querySelector("a.btn").addEventListener("click", (e) => { e.preventDefault(); go(); });
   go();`;
   const html = codexPage({
-    title: `${title} - R'th Codex`, heading: "Opening in the Codex", assets: REPO, script,
+    title: `${title} - R'th Codex`, heading: "Opening in Codex", assets: REPO, script,
     body: `<p>${where}</p>
-    <a class="btn" href="${esc(target)}">Open in the Codex</a>
-    <p><small>Nothing happened? Open the Codex once (it registers itself), then click the button.</small></p>`,
+    <a class="btn" href="${esc(target)}">Open in Codex</a>
+    <p><small>Nothing happened? Open Codex once (it registers itself), then click the button.</small></p>`,
   });
   return new Response(html, { headers: { "content-type": "text/html; charset=utf-8" } });
 }

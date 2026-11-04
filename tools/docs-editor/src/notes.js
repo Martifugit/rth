@@ -146,7 +146,7 @@ export function makeNotes(ctx) {
   // A server started before comments existed serves this page but not the comments: say so (opening a
   // page clears banners, so this runs again after each one loads).
   function outdated() {
-    if (N.outdated) ctx.banner("The Codex server is older than this page, so comments won't work until you restart it: close the Codex window and run codex.cmd again.");
+    if (N.outdated) ctx.banner("Codex's server is older than this page, so comments won't work until you restart it: close Codex's window and run codex.cmd again.");
   }
 
   function place(fromAnchors = false) {

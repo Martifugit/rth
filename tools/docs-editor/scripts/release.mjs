@@ -36,14 +36,14 @@ if (!whatsNew) { console.error(`Write what's new in ${v} first: a "## ${v}" sect
 const git = (...args) => execFileSync("git", args, { cwd: ROOT, encoding: "utf8" }).trim();
 const dirty = git("status", "--porcelain", "--", ".");
 if (dirty) {
-  console.error("The Codex's folder has changes that aren't committed. Commit and push them first, or set them aside:\n" + dirty);
+  console.error("Codex's folder has changes that aren't committed. Commit and push them first, or set them aside:\n" + dirty);
   process.exit(1);
 }
 git("fetch", "--quiet", "origin");
 const branch = git("rev-parse", "--abbrev-ref", "HEAD");
 const upstream = `origin/${branch}`;
 if (git("diff", "--name-only", upstream, "HEAD", "--", ".")) {
-  console.error(`Commits to the Codex aren't on GitHub yet (${upstream}). Push them first, so the release is what everyone can see.`);
+  console.error(`Commits to Codex aren't on GitHub yet (${upstream}). Push them first, so the release is what everyone can see.`);
   process.exit(1);
 }
 const target = git("rev-parse", upstream);
@@ -54,7 +54,7 @@ const files = [exe, `${exe}.blockmap`, "latest.yml"].map((f) => path.join(ROOT, 
 for (const f of files) if (!fs.existsSync(f)) throw new Error("Missing " + f);
 
 const notes = [
-  `The R'th Codex ${v}, for Windows.`,
+  `R'th Codex ${v}, for Windows.`,
   "",
   whatsNew,
   "",

@@ -1,8 +1,14 @@
-# What's new in the R'th Codex
+# What's new in R'th Codex
 
 A few plain lines per version, for the people using it: `npm run release` puts the version's section in
 the GitHub release and announces it in #codex (`scripts/release.mjs`, `scripts/announce.mjs`). Write the
 section before releasing; the release refuses without one.
+
+## 0.3.5
+
+- Updates arrive as soon as they're released: Codex starts downloading a new version within moments instead of within the hour.
+- While Codex updates, a small window with the logo and a progress bar shows until it opens again, so it no longer just vanishes for a few seconds. (You'll see it from the next update on.)
+- Codex calls itself by its name everywhere: "Codex", not "the Codex".
 
 ## 0.3.4
 

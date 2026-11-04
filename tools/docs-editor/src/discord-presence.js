@@ -58,7 +58,7 @@ export function makePresence({ clientId }) {
 
   function send() {
     if (!sock || !ready) return;
-    const activity = want ? { details: clip("Editing " + want.title), state: "in the R'th Codex", timestamps: { start: since }, instance: false } : undefined;
+    const activity = want ? { details: clip("Editing " + want.title), state: "in R'th Codex", timestamps: { start: since }, instance: false } : undefined;
     sock.write(frame(1, { cmd: "SET_ACTIVITY", args: { pid: process.pid, activity }, nonce: String(Date.now()) }));
   }
 

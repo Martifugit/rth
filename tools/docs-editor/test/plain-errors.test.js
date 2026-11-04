@@ -12,8 +12,8 @@ assert.match(failed(S, { status: 500, error: "ENOSPC: no space left on device" }
 assert.match(failed(S, { status: 500, error: "The helper failed: The helper said 502" }), /not on your side/);
 assert.match(failed(S, { status: 500, error: "TypeError: fetch failed" }), /couldn't be reached/);
 assert.match(failed(S, { status: 0 }), /engine isn't answering/);
-assert.match(failed(S, { status: 500, error: "TypeError: Cannot read properties of undefined (reading 'x')" }), /went wrong inside the Codex.*safe/);
-assert.match(failed(S, { status: 500 }), /went wrong inside the Codex/, "a bare status");
+assert.match(failed(S, { status: 500, error: "TypeError: Cannot read properties of undefined (reading 'x')" }), /went wrong inside Codex.*safe/);
+assert.match(failed(S, { status: 500 }), /went wrong inside Codex/, "a bare status");
 for (const r of [{ status: 500, error: "TypeError: x" }, { status: 0 }, { status: 502 }])
   assert.doesNotMatch(failed(S, r), /TypeError|\b50\d\b|ENO|EBUSY/, "no codes shown to people");
 console.log("plain errors: passed");

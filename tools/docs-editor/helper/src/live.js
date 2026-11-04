@@ -10,6 +10,7 @@
 //
 //   Codex -> room   { type: "hello", session }      then   { type: "state", state: {...} }
 //   room -> Codex   { type: "welcome", conn }  { type: "here", people: [...] }  { type: "comments" }
+//                   { type: "pages" }  { type: "release", version }   (from the Worker, through /live/notify)
 
 import { DurableObject } from "cloudflare:workers";
 import { unseal } from "./crypto.js";

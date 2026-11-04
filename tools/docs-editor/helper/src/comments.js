@@ -176,7 +176,7 @@ export async function comments(req, env, url, as) {
     const anchor = cleanAnchor(b.anchor);
     const title = one(b.title) || (b.page ? b.page.split("/").pop().replace(/\.md$/, "") : "Comment");
     const name = anchor.quote ? `${title}: “${one(anchor.quote)}”` : title;
-    const link = b.page ? `\n-# [Open in the Codex](<${url.origin}/open?${new URLSearchParams({ p: b.page })}>)` : "";
+    const link = b.page ? `\n-# [Open in Codex](<${url.origin}/open?${new URLSearchParams({ p: b.page })}>)` : "";
     const quote = anchor.quote ? clip(anchor.quote, 600).split("\n").map((l) => "> " + l).join("\n") + "\n" : "";
     const msg = await postAs(env, who, quote + text + link, { name });
     const at = now();

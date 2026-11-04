@@ -177,7 +177,7 @@ function threadText(note) {
 function firstPrompt(note, page, brief) {
   const task = note.kind === "task";
   return [
-    "You are answering a note the owner of R'th (a private RPG; its game design document is docs/gdd) left in the Codex, the app the GDD is written in. The note is attached to a place in a page.",
+    "You are answering a note the owner of R'th (a private RPG; its game design document is docs/gdd) left in Codex, the app the GDD is written in. The note is attached to a place in a page.",
     "",
     where(note, page),
     "",
@@ -187,7 +187,7 @@ function firstPrompt(note, page, brief) {
       ? "This is a task: do it by editing the docs (you may edit and create pages under docs/gdd/ only). Read docs/gdd/how-the-gdd-works.md and the page type's template (docs/gdd/templates/) first, and write as the rules below say. Change only what the task needs. Then reply in a few sentences: what you changed, where, and anything left open."
       : "This is a question: answer it. You can read the repository (docs, code, data) but not change it. Read the page first. Answer briefly and plainly, in the docs' own voice; cite pages as repository paths and say where in them. If the docs don't settle it, say so and what would.",
     "Your reply is shown in a narrow side panel as Markdown: short paragraphs, no big headings.",
-    "Write in US English (color, armor, center, -ize), in your reply and in anything you write into a page, as the Codex's spelling check does.",
+    "Write in US English (color, armor, center, -ize), in your reply and in anything you write into a page, as Codex's spelling check does.",
     "",
     brief,
   ].join("\n");

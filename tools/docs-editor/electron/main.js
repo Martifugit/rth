@@ -7,6 +7,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { knownRepo, firstRun } from "./firstrun.js";
+import { showUpdateSplash, updateSplashDone } from "./update-splash.js";
 
 // Installed, or run from this folder (electron/launch.js)? Not app.isPackaged alone: Electron decides that by
 // the exe's name, and the dev copy is renamed Codex.exe, so it looked installed (no look, update checks).
@@ -127,7 +128,7 @@ async function open() {
   });
   if (b?.maximized) win.maximize();
   win.setMenuBarVisibility(false);
-  win.once("ready-to-show", () => win.show());
+  win.once("ready-to-show", () => { win.show(); updateSplashDone(); }); // an "Updating" window fades out
   win.on("resize", saveBounds);
   win.on("move", saveBounds);
 
@@ -186,6 +187,9 @@ async function installUpdate() {
   update.state = "installing"; tellUpdate();
   await saveAndSync();
   flushed = true; // saved and sent: the window may close now
+  // The small "Updating" window stands in for the Codex while the installer runs (electron/update-splash.js).
+  await showUpdateSplash(update.version);
+  if (win && !win.isDestroyed()) win.hide();
   // Silently (one-click installer), then start the new Codex.
   setTimeout(() => updater.quitAndInstall(true, true), 100);
   return { ok: true };

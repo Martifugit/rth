@@ -25,8 +25,8 @@ export function tooOld(req, env) {
   const v = req.headers.get(HEADER);
   if (!outdated(v, env)) return null;
   // The words an old Codex shows as they are (as a sync problem, or with a comment that wasn't sent).
-  const error = "This Codex is out of date: a new release has changes it can't work with, so it can't send anything. "
-    + "Close the Codex and open it again to update it (if it opens unchanged, wait a minute for the update to download, then close it again).";
+  const error = "This version of Codex is out of date: a new release has changes it can't work with, so it can't send anything. "
+    + "Close Codex and open it again to update it (if it opens unchanged, wait a minute for the update to download, then close it again).";
   return new Response(JSON.stringify({ error, update: true, min }), { status: 426, headers: { "content-type": "application/json" } });
 }
 
@@ -38,15 +38,15 @@ const RELEASES = "https://github.com/Martifugit/rth/releases/latest";
 
 export function updatePage(env) {
   const html = codexPage({
-    title: "Update your R'th Codex", heading: "An update is needed", assets: REPO,
-    body: `<p>A new release of the R'th Codex has changes this version can't work with. Update to the latest version to keep using the Codex; until then it can only show pages.</p>
+    title: "Update R'th Codex", heading: "An update is needed", assets: REPO,
+    body: `<p>A new release of R'th Codex has changes this version can't work with. Update to the latest version to keep using Codex; until then it can only show pages.</p>
     <ol>
-      <li>Close the Codex.</li>
+      <li>Close Codex.</li>
       <li>Open it again. It installs the update it has already downloaded; if it opens unchanged, wait a minute and close it once more.</li>
       <li>Sign in with Discord again, top right.</li>
     </ol>
-    <p>This is the last time it works like this: from this update on, the Codex tells you itself when an update is needed and installs it with one click.</p>
-    <p class="alt">If it still doesn't update, <a href="${RELEASES}">download the new Codex</a> and run it.
+    <p>This is the last time it works like this: from this update on, Codex tells you itself when an update is needed and installs it with one click.</p>
+    <p class="alt">If it still doesn't update, <a href="${RELEASES}">download the new version of Codex</a> and run it.
       <small>Version ${esc(env.MIN_CODEX || "")} or newer is needed. You can close this page.</small></p>`,
   });
   return new Response(html, { status: 200, headers: { "content-type": "text/html; charset=utf-8" } });

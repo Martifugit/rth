@@ -57,7 +57,7 @@ export function openRouterProvider({ key, models = () => OPENROUTER_MODELS }) {
             body: JSON.stringify({ model: list[0], models: list.length > 1 ? list : undefined, messages: convo, stream: true, ...(offer ? { tools: offer, tool_choice: "auto", provider: { require_parameters: true } } : {}) }),
           });
         } catch (e) { return { error: stopped ? "Stopped." : "Couldn't reach OpenRouter: " + e.message, text: all }; }
-        if (r.status === 429) return { error: "Today's free AI allowance is used up (OpenRouter allows about 50 requests a day). It comes back tomorrow; everything else in the Codex keeps working.", text: all };
+        if (r.status === 429) return { error: "Today's free AI allowance is used up (OpenRouter allows about 50 requests a day). It comes back tomorrow; everything else in Codex keeps working.", text: all };
         if (r.status === 401) return { error: "OpenRouter didn't accept your key. Sign in with OpenRouter again." };
         if (r.status === 402) return { error: "OpenRouter says the account needs credit for this model." };
         if (!r.ok) {

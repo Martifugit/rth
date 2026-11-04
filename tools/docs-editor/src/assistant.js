@@ -561,7 +561,7 @@ const titleFrom = (text) => {
  */
 function standing(brief, tools) { // tools: "repo" (Claude reads it itself), "engine" (OpenRouter's lookups)
   return [
-    "You are R'th AI, the design partner built into the Codex: the app a small group of friends use to write the game design document (GDD) of R'th, a private multiplayer RPG of their own (it plays like RuneScape 3 and looks like Old School RuneScape, in its own world built around the four humours).",
+    "You are R'th AI, the design partner built into Codex: the app a small group of friends use to write the game design document (GDD) of R'th, a private multiplayer RPG of their own (it plays like RuneScape 3 and looks like Old School RuneScape, in its own world built around the four humours).",
     "The GDD is docs/gdd. It is the design: what the game should be, written for the friends who design it and for whoever builds it next, people and coding agents alike. docs/gdd/charter.md holds the rules every page follows; docs/gdd/how-the-gdd-works.md the pages, types and components.",
     "Your job is to help them think the design through and write it well: discuss, explain, question and argue; be concrete; say plainly when the GDD doesn't settle something or contradicts itself. Change pages only when they ask for a change; talking about a page never changes it.",
     "",
@@ -571,8 +571,8 @@ function standing(brief, tools) { // tools: "repo" (Claude reads it itself), "en
     tools === "repo"
       ? "- The game's code and data are in the same repository (the rest of it besides docs/). Read them when a question is about how the game works today, and say what the code does and whether the GDD agrees; the GDD is the design, the code only the current build. Don't go to the code for design questions it can't answer. You can edit and create pages under docs/gdd/ only, never anything else."
       : "- You've been given the page, who links to it and the rules below. When you need more, look it up with your tools: search_gdd and read_page for the GDD, links_to for who links to a page, search_code and read_file for the game's code and data when a question is about how the game works today (the GDD is the design, the code only the current build). Each lookup counts against a small daily allowance, so look up what you need and nothing you were given. You change pages only with the edit blocks described below.",
-    "- Write in US English (color, armor, center, -ize), in your replies and in everything you suggest or write into a page, as the Codex's spelling check does.",
-    "- After editing, say in a sentence or two what you changed and where: the Codex shows them each change.",
+    "- Write in US English (color, armor, center, -ize), in your replies and in everything you suggest or write into a page, as Codex's spelling check does.",
+    "- After editing, say in a sentence or two what you changed and where: Codex shows them each change.",
     "- Your reply shows in a narrow side panel as Markdown: short paragraphs, lists where they help, no big headings. Name pages by their repository paths.",
     "- The conversation keeps its context: the page it's about, pages they add (with @ or + Add page), a passage or a comment thread they point at. What they're looking at elsewhere while you work isn't part of it.",
     "",
@@ -584,7 +584,7 @@ function standing(brief, tools) { // tools: "repo" (Claude reads it itself), "en
 
 // The conversation's name: its first answer ends with a hidden <title> line (2-6 words, the topic, not
 // the question), taken off the answer by the Codex. Without one, the question names it, as before.
-const TITLE_NOTE = "\n\n(This is the conversation's first message. After your answer, on a line of its own, name the conversation in 2 to 6 words, as a page heading would: the topic, not the question, no full stop. Write it as <title>The name</title>. The Codex takes that line off your answer and shows it as the conversation's name.)";
+const TITLE_NOTE = "\n\n(This is the conversation's first message. After your answer, on a line of its own, name the conversation in 2 to 6 words, as a page heading would: the topic, not the question, no full stop. Write it as <title>The name</title>. Codex takes that line off your answer and shows it as the conversation's name.)";
 /** The status line while it thinks: the latest whole sentence of its thinking, plain and short, or null. */
 export function thoughtLine(thinking) {
   const plain = String(thinking || "").replace(/[`*_#>]+/g, "").replace(/\s+/g, " ");
@@ -603,7 +603,7 @@ export const titleIn = (text) => {
 };
 export const withoutTitle = (text) => String(text || "").replace(/\n*\s*<title>[^<]*(<\/title>|$)\s*/gi, "").trimEnd();
 
-const SUGGEST_NOTE ="\n\n(They asked for suggestions: make the edits in the pages as you would; the Codex shows each one as a suggestion for them to accept or skip.)";
+const SUGGEST_NOTE ="\n\n(They asked for suggestions: make the edits in the pages as you would; Codex shows each one as a suggestion for them to accept or skip.)";
 
 // ----------------------------------------------------------------------------- Claude Code
 

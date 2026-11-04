@@ -15,7 +15,7 @@ const local = (u) => {
 
 export async function signIn(url, env) {
   const redirect = url.searchParams.get("redirect");
-  if (!local(redirect)) return page("Sign-in has to start from the Codex.", 400);
+  if (!local(redirect)) return page("Sign-in has to start from Codex.", 400);
   const state = await seal(env.SESSION_SECRET, { redirect }, 600);
   const q = new URLSearchParams({
     client_id: env.DISCORD_APP_ID, response_type: "code", scope: "identify",
@@ -26,7 +26,7 @@ export async function signIn(url, env) {
 
 export async function callback(url, env) {
   const st = await unseal(env.SESSION_SECRET, url.searchParams.get("state"));
-  if (!st || !local(st.redirect)) return page("That sign-in link has expired. Start again from the Codex.", 400);
+  if (!st || !local(st.redirect)) return page("That sign-in link has expired. Start again from Codex.", 400);
   const back = (params) => Response.redirect(st.redirect + (st.redirect.includes("?") ? "&" : "?") + new URLSearchParams(params), 302);
   if (url.searchParams.get("error")) return back({ error: "You didn't allow the sign-in." });
 

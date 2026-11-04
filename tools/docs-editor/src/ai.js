@@ -369,7 +369,7 @@ export function makeAi(ctx) {
       p && p.needsSignIn === "openrouter" ? h("div", { class: "ai-signin" },
         h("p", {}, "R'th AI isn't set up on this computer yet. Sign in with OpenRouter and it runs on free models, on your own daily allowance (about 50 messages a day)."),
         h("button", { class: "btn btn-gold", onclick: signInOpenRouter }, "Sign in with OpenRouter"),
-        h("p", { class: "ai-note" }, "Not now? Everything else in the Codex works without it.")) : null,
+        h("p", { class: "ai-note" }, "Not now? Everything else in Codex works without it.")) : null,
       p?.ok ? h("div", { class: "ai-starts" }, starters().map((t) => h("button", { class: "ai-start", onclick: () => ask(t) }, t))) : null,
       p?.ok && p.name === "OpenRouter" ? h("p", { class: "ai-note ai-provider" }, "Using OpenRouter's free models. ",
         h("button", { class: "ai-link", onclick: async () => { await api("/api/openrouter/signout", { method: "POST" }); } }, "Sign out of OpenRouter")) : null);

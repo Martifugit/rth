@@ -84,7 +84,7 @@ export async function makeAccount({ dir, emit, contributor = false }) {
       if (r.status === 401) { store(null); emit("account", view()); }
       return { error: r.error || "The helper wouldn't give a key to send changes." };
     } catch (e) {
-      return { error: "Couldn't reach the Codex's helper: " + e.message };
+      return { error: "Couldn't reach Codex's helper: " + e.message };
     }
   }
 

@@ -14,7 +14,7 @@ import dictionary from "dictionary-en";
 
 const WORD = /[\p{L}][\p{L}'’]*/gu;
 const REPEATED = 3; // a word the docs use this often is taken to be meant
-const HEADER = "# Words the Codex's spelling check accepts, for everyone (one a line). \"Add to dictionary\" adds here.";
+const HEADER = "# Words Codex's spelling check accepts, for everyone (one a line). \"Add to dictionary\" adds here.";
 
 /** wordsFile: the shared list. legacy: older per-computer lists, merged in once and then renamed.
  *  onWrite(): the shared list was written (server.js has it sent). */

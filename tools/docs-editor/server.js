@@ -145,7 +145,13 @@ const store = makeCommentStore({
 });
 // "Editing <page> in the Codex" on the person's Discord profile, through their Discord app.
 // Who's here: the room of everyone with a Codex open (src/together.js), while signed in.
-const together = makeTogether({ helper: HELPER, session: () => account.session(), emit: (type, data) => broadcast(type, data), onComments: () => store.poke(), onPages: () => syncer.news() });
+const together = makeTogether({ helper: HELPER, session: () => account.session(), emit: (type, data) => broadcast(type, data), onComments: () => store.poke(), onPages: () => syncer.news(), onRelease: lookForRelease });
+// A release was just published (the room says so): look for it now, and twice more in case GitHub's
+// "latest" hadn't caught up yet. The hourly check (electron/main.js) stays for anyone not in the room.
+function lookForRelease(version) {
+  console.log(`Codex ${version || "release"} is out: looking for the update.`);
+  for (const ms of [0, 60 * 1000, 3 * 60 * 1000]) setTimeout(() => globalThis.codexUpdate?.check?.(), ms).unref?.();
+}
 let roomFor; // whose session is in the room (only signing in or out changes it)
 function joinRoom() {
   const v = account.view();
@@ -836,7 +842,7 @@ const server = http.createServer(async (req, res) => {
       const r = await (url.pathname === "/api/account/done" ? account : openrouter).done(url.searchParams);
       res.writeHead(r.ok ? 200 : 400, { "Content-Type": "text/html; charset=utf-8" });
       return res.end(codexPage({ heading: r.ok ? "Signed in" : "Couldn't sign in",
-        body: `<p${r.ok ? "" : ' class="bad"'}>${esc(r.message)}</p><p>You can close this tab and go back to the Codex.</p>` }));
+        body: `<p${r.ok ? "" : ' class="bad"'}>${esc(r.message)}</p><p>You can close this tab and go back to Codex.</p>` }));
     }
     // A comment's id: n-... in docs/.notes/, the forum post's number in Discord, pending-... while it waits
     // to be posted (src/comment-store.js, the outbox).

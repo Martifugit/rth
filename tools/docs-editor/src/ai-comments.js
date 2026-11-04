@@ -7,7 +7,7 @@
 //   <reply to="THREAD-ID">text</reply>
 
 export const COMMENT_FORMAT = [
-  "Comments: only when they ask you to leave something as a comment (or to answer the comment that's open), write a block in your reply; the Codex posts it as a comment from you and takes the block out of what's shown. Never write comment files yourself.",
+  "Comments: only when they ask you to leave something as a comment (or to answer the comment that's open), write a block in your reply; Codex posts it as a comment from you and takes the block out of what's shown. Never write comment files yourself.",
   "A new comment on a page: <comment page=\"docs/gdd/path/to/page.md\" section=\"Heading > Subheading\" quote=\"a few exact words from the page\">the comment, in Markdown</comment> (section and quote are optional; without them it's on the whole page).",
   "A reply in an existing comment thread: <reply to=\"THREAD-ID\">the reply</reply>.",
 ].join("\n");

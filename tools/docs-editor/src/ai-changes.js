@@ -88,7 +88,7 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
     bar.replaceChildren(...[
       h("span", { class: "ai-bar-ico" }, "✦"),
       h("span", { class: "ai-bar-text" }, C.other
-        ? (C.showing ? (n ? `${n} change${n > 1 ? "s" : ""} not saved yet` : "No changes left") : "Changed outside the Codex")
+        ? (C.showing ? (n ? `${n} change${n > 1 ? "s" : ""} not saved yet` : "No changes left") : "Changed outside Codex")
         : C.showing ? (n ? `${n} change${n > 1 ? "s" : ""} by the AI` : "No changes left") : "The AI changed this page"),
       C.showing && n ? h("span", { class: "ai-bar-nav" },
         h("button", { class: "ai-bar-btn", title: "Previous change", onclick: () => step(-1) }, "‹"),

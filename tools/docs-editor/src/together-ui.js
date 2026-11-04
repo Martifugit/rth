@@ -92,7 +92,7 @@ export function makeTogetherUi(ctx) {
 
   /** Where someone is, in words. */
   function where(p) {
-    if (!p.page) return p.away ? "Away" : "In the Codex";
+    if (!p.page) return p.away ? "Away" : "In Codex";
     const t = p.title || p.page.split("/").pop().replace(/\.md$/, "");
     const sec = p.section?.length > 1 ? p.section[p.section.length - 1] : null;
     const what = p.away ? "Away, on" : p.editing ? "Editing" : "Reading";

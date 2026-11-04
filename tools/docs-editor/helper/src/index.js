@@ -9,7 +9,8 @@
 //   GET  /me                             who a session is, and whether they still have the Codex role
 //   GET  /version                        the oldest Codex that may change things (MIN_CODEX; src/version.js)
 //   POST /git-token                      an hour's key to send docs to GitHub, for someone with the role
-//   POST /announce                       a new Codex release, posted in #codex (the agent key only)
+//   POST /announce                       a new Codex release, posted in #codex (the agent key only), and
+//                                        every open Codex told to look for the update (the live room, "release")
 //   /comments...                         comments in the Discord forum (src/comments.js)
 //   GET  /live                           a WebSocket to the room of who's here (src/live.js)
 //
@@ -60,6 +61,9 @@ export default {
           const msg = await post(env, env.DISCORD_NOTICES_CHANNEL, b.text.slice(0, 1990));
           // The latest release stays pinned (the one before is unpinned), so it isn't lost among the notices.
           const pinned = await pinRelease(env, msg.id).then(() => true, (e) => e.message);
+          // Every open Codex looks for the update now, instead of at its next hourly check (src/together.js).
+          if (typeof b.version === "string" && /^\d+\.\d+\.\d+$/.test(b.version))
+            ctx.waitUntil(room(env).fetch("https://room/live/notify", { method: "POST", body: JSON.stringify({ type: "release", version: b.version }) }).catch(() => {}));
           return json({ ok: true, pinned });
         }
         // Pin a release that was announced already (the owner's computer: scripts/announce.mjs --pin).
@@ -81,7 +85,7 @@ export default {
         case "GET /me": {
           // A Codex from before versions were sent (0.1.x), once a minimum is set: signed out, so it opens
           // reading only and its Sign in button shows the update page (version.js, updatePage).
-          if (env.MIN_CODEX && !req.headers.get(HEADER)) return json({ error: "This Codex is out of date. Close it and open it again to update it." }, 401);
+          if (env.MIN_CODEX && !req.headers.get(HEADER)) return json({ error: "This version of Codex is out of date. Close it and open it again to update it." }, 401);
           const s = await sessionFrom(req, env);
           if (!s) return json({ error: "Not signed in." }, 401);
           const m = await member(env, s.sub);

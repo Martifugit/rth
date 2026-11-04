@@ -31,7 +31,7 @@ export async function makeOpenRouterAccount({ dir, emit }) {
 
   async function done(params) {
     const code = params.get("code");
-    if (!code || !verifier) return { ok: false, message: "That sign-in didn't finish. Start again from the Codex." };
+    if (!code || !verifier) return { ok: false, message: "That sign-in didn't finish. Start again from Codex." };
     const r = await fetch("https://openrouter.ai/api/v1/auth/keys", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code, code_verifier: verifier, code_challenge_method: "S256" }),

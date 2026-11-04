@@ -146,7 +146,7 @@ await test("the owner's own unsent commits are never sent, nor anything on top o
   write(a, "docs/combat.md", read(a, "docs/combat.md") + "\nA new line.\n");
   sync.saved("docs/combat.md");
   const v = await sync.sync({ why: "auto" });
-  assert.match(v.wait, /A commit made outside the Codex isn.t on GitHub yet/);
+  assert.match(v.wait, /A commit made outside Codex isn.t on GitHub yet/);
   assert.equal(g(remote, "rev-parse", "main"), before, "nothing was sent");
   assert.match(g(a, "log", "-1", "--format=%s"), /^Docs: Combat$/, "the page is still committed here");
   // Once the owner has pushed their own work, the Codex sends its own again.
@@ -233,7 +233,7 @@ await test("a commit made outside the Codex is waited on, not asked about, and t
   sync.saved("docs/kept.md");
   let v = await sync.sync({ why: "auto" });
   assert.equal(v.problem, null, "nothing to click, so no problem in the box");
-  assert.match(v.wait, /A commit made outside the Codex isn't on GitHub yet/);
+  assert.match(v.wait, /A commit made outside Codex isn.t on GitHub yet/);
   assert.doesNotMatch(g(remote, "show", "main:docs/kept.md"), /while blocked/);
   g(a, "push", "--quiet", "origin", "main");
   v = await sync.sync({ why: "auto" });

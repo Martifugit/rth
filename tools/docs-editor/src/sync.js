@@ -46,9 +46,9 @@ async function githubSaysDown() {
 export function githubTrouble(confirmed) {
   return confirmed
     ? { short: "Saved here · GitHub is down, trying later",
-        long: "GitHub, where the Codex keeps everyone's pages, is having problems right now. It's on their side, not yours (their own status page says so). Your changes are safe on this computer, and the Codex saves them for everyone by itself once GitHub works again. There's nothing you need to do." }
+        long: "GitHub, where Codex keeps everyone's pages, is having problems right now. It's on their side, not yours (their own status page says so). Your changes are safe on this computer, and Codex saves them for everyone by itself once GitHub works again. There's nothing you need to do." }
     : { short: "Saved here · GitHub hiccup, trying again",
-        long: "GitHub, where the Codex keeps everyone's pages, didn't answer properly just now. That's usually a short hiccup on their side. Your changes are safe on this computer, and the Codex tries again every minute by itself." };
+        long: "GitHub, where Codex keeps everyone's pages, didn't answer properly just now. That's usually a short hiccup on their side. Your changes are safe on this computer, and Codex tries again every minute by itself." };
 }
 
 const MARK = "Synced by the Codex."  // every commit the Codex makes says so: it only ever sends those
@@ -208,7 +208,7 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
           S.clash = conflicts.length && conflicts.every((f) => f.startsWith(scope + "/")) ? conflicts.map(titleOf) : null;
           if (!conflicts.length && /would be overwritten|untracked working tree files/i.test(text)) {
             S.problem = null;
-            S.wait = "Others' changes touch files you have uncommitted changes in, outside the Codex. Syncing tries again once those are committed.";
+            S.wait = "Others' changes touch files you have uncommitted changes in, outside Codex. Syncing tries again once those are committed.";
             return view();
           }
           S.problem = conflicts.length
@@ -227,7 +227,7 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
         const log = await run(["log", "--format=%B%n==codex-commit-end==", "@{u}..HEAD"]);
         const others = log.out.split("==codex-commit-end==").map((x) => x.trim()).filter(Boolean).filter((x) => !x.includes(MARK)).length;
         if (others) {
-          S.wait = `${others > 1 ? `${others} commits` : "A commit"} made outside the Codex ${others > 1 ? "aren't" : "isn't"} on GitHub yet. Git sends a branch's history in order and the Codex only sends its own, so your pages go out once ${others > 1 ? "those are" : "it's"} pushed. They're saved and committed here meanwhile.`;
+          S.wait = `${others > 1 ? `${others} commits` : "A commit"} made outside Codex ${others > 1 ? "aren't" : "isn't"} on GitHub yet. Git sends a branch's history in order and Codex only sends its own, so your pages go out once ${others > 1 ? "those are" : "it's"} pushed. They're saved and committed here meanwhile.`;
           S.problem = null;
           return view();
         }
@@ -326,7 +326,7 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
       if (!conflicts.length || conflicts.some((f) => !f.startsWith(scope + "/"))) {
         if (fs.existsSync(path.join(repo, ".git", "MERGE_HEAD"))) await run(["merge", "--abort"]);
         S.clash = null; // nothing here can settle it, so it's no longer asked about (the status line says why)
-        S.problem = "That clash isn't only in the docs, so the Codex left it alone. It has to be settled in git.";
+        S.problem = "That clash isn't only in the docs, so Codex left it alone. It has to be settled in git.";
         return false;
       }
       await run(["checkout", keep === "mine" ? "--ours" : "--theirs", "--", ...conflicts]);

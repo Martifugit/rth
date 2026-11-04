@@ -30,7 +30,7 @@ const LIMIT = 1990; // Discord takes 2000 characters a message
 export function message(version, repo) {
   const url = `https://github.com/${repo}/releases/tag/codex-v${version}`;
   const head = `**R'th Codex ${version}** is out: [release notes and installer](<${url}>)`;
-  const foot = "-# Installed Codexes update themselves: once the update has downloaded, the Codex asks you to restart it.";
+  const foot = "-# Codex updates itself: once the update has downloaded, it asks you to restart.";
   const lines = (changes(version) || "").split("\n").filter(Boolean);
   const fits = (list, more) => [head, ...list, more, foot].filter(Boolean).join("\n").length <= LIMIT;
   let shown = lines.length;
@@ -60,7 +60,7 @@ export async function announce(version, repo) {
   if (!key) { console.log("Not announced in Discord: no agent key (helper/.dev.vars) on this computer."); return false; }
   const r = await fetch(HELPER + "/announce", {
     method: "POST", headers: { Authorization: "Agent " + key, "Content-Type": "application/json" },
-    body: JSON.stringify({ text: message(version, repo) }),
+    body: JSON.stringify({ text: message(version, repo), version }),
   });
   if (!r.ok) { console.log(`Not announced in Discord: the helper said ${r.status} ${await r.text()}`); return false; }
   const j = await r.clone().json().catch(() => ({}));

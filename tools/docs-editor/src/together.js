@@ -5,7 +5,7 @@
 
 const PING_MS = 30 * 1000;
 
-export function makeTogether({ helper, session, emit, onComments = () => {}, onPages = () => {} }) {
+export function makeTogether({ helper, session, emit, onComments = () => {}, onPages = () => {}, onRelease = () => {} }) {
   let ws = null, me = null, people = [], state = {}, wanted = false, retry = 2000, retryTimer = null, pinger = null, refused = null;
 
   // CODEX_DEMO_PEOPLE=1 (a look at the header, never in a release): pretend people join the room.
@@ -28,6 +28,7 @@ export function makeTogether({ helper, session, emit, onComments = () => {}, onP
       else if (m.type === "here") { people = Array.isArray(m.people) ? m.people : []; tell(); }
       else if (m.type === "comments") onComments();
       else if (m.type === "pages") onPages(); // someone sent pages: fetch them now
+      else if (m.type === "release") onRelease(String(m.version || "")); // a new Codex is out: look for it now
     };
     sock.onclose = (e) => {
       if (ws === sock) ws = null;

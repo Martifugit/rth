@@ -297,7 +297,7 @@ function refreshDirty() {
 async function api(url, opts) {
   let r;
   try { r = await fetch(url, opts && { headers: { "Content-Type": "application/json" }, ...opts }); }
-  catch { return { ok: false, status: 0, error: "The Codex's engine isn't answering." }; } // src/plain-errors.js says what to do
+  catch { return { ok: false, status: 0, error: "Codex's engine isn't answering." }; } // src/plain-errors.js says what to do
 
   const j = await r.json().catch(() => ({}));
   return { ok: r.ok, status: r.status, ...j };
@@ -906,7 +906,7 @@ async function welcome() {
   const step = (title, text, label, go) => h("div", { class: "welcome-step" },
     h("div", {}, h("b", {}, title), h("p", {}, text)),
     h("button", { class: "btn btn-gold", onclick: go }, label));
-  const close = modal("Welcome to the R'th Codex", [
+  const close = modal("Welcome to R'th Codex", [
     h("p", { class: "welcome-lead" }, "The game design document of R'th, grown page by page: read it, write it, comment and talk it through." + (needDiscord && needAi ? " Two things make it yours:" : "")),
     needDiscord ? step("Sign in with Discord", acc.contributor ? "To edit pages and comment under your name. You need the Codex role in the R'th Discord." : "To comment under your name, and send your changes without a GitHub account.", "Sign in", async () => {
       const r = await api("/api/account/signin", { method: "POST" });
@@ -1517,7 +1517,7 @@ function syncWords() {
   if (!v || v.enabled !== true) return { text: "Saved", cls: "saved", title: v?.reason || "" };
   const heldHere = (v.held || []).some((x) => x.path === S.path);
   if (!v.auto && !heldHere) return { text: "Saved", cls: "saved", title: "This version doesn't share by itself" };
-  if (heldHere) return { text: "Not saved yet", cls: "unsaved", title: "Changed by R'th AI or outside the Codex: waiting for you to save it (bottom left)" };
+  if (heldHere) return { text: "Not saved yet", cls: "unsaved", title: "Changed by R'th AI or outside Codex: waiting for you to save it (bottom left)" };
   if (v.offline) return { text: "Saved here: offline", cls: "muted", title: "Saved on this computer; everyone gets it when you're back online. " + (v.problem || "") };
   if (v.problem) return { text: "Saved here only", cls: "unsaved", title: "Saved on this computer, not yet for everyone: " + v.problem };
   // Waiting on something done outside the Codex (src/sync.js, wait): nothing to click, so no box, just why.
@@ -1532,7 +1532,7 @@ function drawSharePanel() {
   const v = syncState || {};
   const cards = [];
   const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
-  const groups = [["ai", "R'th AI"], ["other", "outside the Codex"]];
+  const groups = [["ai", "R'th AI"], ["other", "outside Codex"]];
   for (const [by, who] of groups) {
     const pages = heldShown.filter((x) => x.by === by);
     if (!pages.length) continue;
@@ -1540,7 +1540,7 @@ function drawSharePanel() {
     cards.push(h("div", { class: "sp-card" },
       h("div", { class: "sp-title" }, by === "ai"
         ? `${who} changed ${plural(pages.length, "page", "pages")}. Save ${pages.length === 1 ? "it" : "them"}?`
-        : `${plural(pages.length, "page was", "pages were")} changed outside the Codex. Save ${pages.length === 1 ? "it" : "them"}?`),
+        : `${plural(pages.length, "page was", "pages were")} changed outside Codex. Save ${pages.length === 1 ? "it" : "them"}?`),
       // The first few by name; a long list ends "and 39 more" (all of them are in what Save and Undo do).
       h("div", { class: "sp-pages" }, pages.slice(0, 6).map((x, i) => [i ? ", " : "",
         x.gone ? h("span", { class: "sp-gone" }, "deleted " + x.title) : h("a", { onclick: () => reviewPages([x]) }, x.title)]),
@@ -1591,7 +1591,7 @@ async function reviewPages(pages) {
 async function undoPages(pages, who, btn = null) {
   const n = pages.length;
   const list = pages.map((x) => `<li>${esc(x.title)}</li>`).join("");
-  const k = await ask(who === "outside the Codex" ? "Undo the changes made outside the Codex?" : `Undo ${who}'s changes?`, `${n === 1 ? "This page goes" : "These pages go"} back to how ${n === 1 ? "it was" : "they were"} last shared:<ul>${list}</ul>`,
+  const k = await ask(who === "outside Codex" ? "Undo the changes made outside Codex?" : `Undo ${who}'s changes?`, `${n === 1 ? "This page goes" : "These pages go"} back to how ${n === 1 ? "it was" : "they were"} last shared:<ul>${list}</ul>`,
     [{ key: "no", label: "Cancel" }, { key: "yes", label: "Undo the changes", cls: "btn-danger" }]);
   if (k !== "yes") return;
   const v = await busy(btn, "Undoing…", () => api("/api/sync/discard", { method: "POST", body: JSON.stringify({ files: pages.map((x) => x.path) }) }));
@@ -1831,17 +1831,17 @@ function showUpdateScreen() {
   // Where to get the new Codex by hand: the latest release's page (its installer updates this one in place).
   const download = (label) => h("a", { class: "rq-download", href: "https://github.com/Martifugit/rth/releases/latest", target: "_blank", rel: "noopener" }, label);
   const status = !installed
-    ? h("p", { class: "rq-status" }, download("Download the new Codex"), ", run it, then open the Codex again.")
+    ? h("p", { class: "rq-status" }, download("Download the new version of Codex"), ", run it, then open Codex again.")
     : st === "ready" ? h("div", {}, h("button", { class: "btn btn-gold rq-go", onclick: installUpdate }, "Restart and update"),
-        h("p", { class: "rq-alt" }, "Your work is saved before the Codex restarts."))
-    : st === "installing" ? h("p", { class: "rq-status" }, "Saving your work and updating: the Codex opens again in a moment…")
+        h("p", { class: "rq-alt" }, "Your work is saved before Codex restarts."))
+    : st === "installing" ? h("p", { class: "rq-status" }, "Saving your work and updating: Codex opens again in a moment…")
     : st === "downloading" ? h("div", { class: "rq-progress" }, h("div", { class: "rq-bar" }, h("span", { style: `width:${updateView.percent || 0}%` })), h("p", { class: "rq-status" }, `Downloading ${updateView.version || "the update"}… ${updateView.percent || 0}%`))
     : h("div", {}, h("p", { class: "rq-status" }, "Looking for the update…"),
-        h("p", { class: "rq-alt" }, "If it doesn't come, ", download("download the new Codex"), " and run it."));
+        h("p", { class: "rq-alt" }, "If it doesn't come, ", download("download the new version of Codex"), " and run it."));
   const [title, text] = required
-    ? ["An update is needed", `A new release of the R'th Codex has changes this version (${requiredView.current}) can't work with. `
-      + `Update to version ${requiredView.min} or newer to keep using the Codex.`]
-    : ["An update is ready", `Version ${updateView.version || "a new version"} of the R'th Codex is here. Restart to start using it.`];
+    ? ["An update is needed", `A new release of R'th Codex has changes this version (${requiredView.current}) can't work with. `
+      + `Update to version ${requiredView.min} or newer to keep using Codex.`]
+    : ["An update is ready", `Version ${updateView.version || "a new version"} of R'th Codex is here. Restart to start using it.`];
   // The same pane as the Codex's other pages (src/codex-page.js): a title bar, then the message.
   const box = h("div", { class: "rq-box" },
     h("div", { class: "rq-bar-top" }, h("img", { src: "/logo.png", alt: "" }), h("span", {}, "R'th Codex")),

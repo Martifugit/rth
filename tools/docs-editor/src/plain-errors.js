@@ -24,8 +24,8 @@ function forPeople(r) {
 export function failed(what, r = {}) {
   if (forPeople(r)) return `${what}: ${r.error}`;
   const raw = String(r.error || ""); // the cause is in the words: the engine's own status is 500 for anything
-  if (r.status === 0) return `${what}: the Codex's engine isn't answering. Close the Codex and open it again; your saved work is safe.`;
+  if (r.status === 0) return `${what}: Codex's engine isn't answering. Close Codex and open it again; your saved work is safe.`;
   console.warn(what + ":", r.status, r.error);
   for (const [re, why] of CAUSES) if (re.test(raw)) return `${what}: ${why}`;
-  return `${what}: something went wrong inside the Codex. Try again; if it keeps happening, close the Codex and open it again. Your saved work is safe.`;
+  return `${what}: something went wrong inside Codex. Try again; if it keeps happening, close Codex and open it again. Your saved work is safe.`;
 }

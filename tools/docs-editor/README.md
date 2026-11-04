@@ -227,8 +227,9 @@ overwritten.
 
 `npm run release` (after raising `version` in `package.json` and writing its section in `CHANGELOG.md`) builds the Windows installer into `dist/`
 (`npm run dist`: the page, MinGit fetched by `scripts/fetch-mingit.mjs`, the game's look) and publishes
-it on the repository's GitHub Releases (`scripts/release.mjs`, with `gh`). Installed Codexes check the
-latest release every few hours and download it quietly; once it's here, an "An update is ready" screen
+it on the repository's GitHub Releases (`scripts/release.mjs`, with `gh`). Announcing it (`scripts/announce.mjs`)
+tells the helper's live room, which tells every signed-in open Codex to look for it at once; the rest
+check the latest release every hour. They download it quietly; once it's here, an "An update is ready" screen
 covers the Codex (the open page is saved at once), and Restart and update saves and sends everything,
 installs it and opens the Codex again (closing it installs it too). There is no carrying on without it.
 
