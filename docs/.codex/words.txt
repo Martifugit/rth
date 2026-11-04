@@ -1,5 +1,6 @@
 # Words Codex's spelling check accepts, for everyone (one a line). "Add to dictionary" adds here.
 axe
+cruor
 cutscenes
 debuff
 debuffs
@@ -20,3 +21,4 @@ tradeable
 ultimates
 unlink
 unticking
+venaria
