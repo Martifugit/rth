@@ -4,6 +4,16 @@ A few plain lines per version, for the people using it: `npm run release` puts t
 the GitHub release and announces it in #codex (`scripts/release.mjs`, `scripts/announce.mjs`). Write the
 section before releasing; the release refuses without one.
 
+## 0.3.0
+
+- Each page's type, status, components and groups sit in a card over it; change the status there.
+- New pages start with their type's headings; + on the card adds a component and its section.
+- A link to a page not written yet is a to-do: click it to make the page as a stub.
+- Links in are named by what they mean: Dropped by, Found in, Appears in, Sold by.
+- Lists that write themselves: a group's members, a skill's training, or any query, in a `query` block.
+- To-do (in the page list): pages to write, and pages whose type or sections need a look.
+- A coloured dot shows each page's status in the page list, with chips to show only stubs, drafts...
+
 ## 0.2.0
 
 - The Codex is now for the GDD alone: it opens on the Charter, and a new page asks for its type.

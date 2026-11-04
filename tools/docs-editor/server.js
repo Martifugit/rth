@@ -25,7 +25,9 @@ import { buildIndex, linksFor, pageState, brokenLinks } from "./src/links.js";
 import { LOG_FORMAT, parseLog, entries } from "./src/changelog.js";
 import os from "node:os";
 import { makeSpell } from "./src/spell.js";
-import { GDD, SYSTEM, inGdd, readTypes, newPageText } from "./src/gdd.js";
+import { GDD, SYSTEM, inGdd, readSystem, newPageText } from "./src/gdd.js";
+import { make as makeFront, split as splitFront } from "./src/frontmatter.js";
+import { buildGdd, runQuery, checks, labelFor } from "./src/gdd-index.js";
 import { makeSync } from "./src/sync.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -96,15 +98,18 @@ function gitStatus() {
   });
 }
 
-/** First heading of a file, for titles in the tree and quick open. */
-async function titleOf(rel) {
+/** First heading of a file, and its frontmatter's type and status, for the page list and quick open. */
+const titleOf = async (rel) => (await headOf(rel)).title;
+async function headOf(rel) {
   try {
     const fd = await fsp.open(path.join(REPO, rel));
-    const { buffer, bytesRead } = await fd.read(Buffer.alloc(2048), 0, 2048, 0);
+    const { buffer, bytesRead } = await fd.read(Buffer.alloc(4096), 0, 4096, 0);
     await fd.close();
-    const m = buffer.slice(0, bytesRead).toString("utf8").match(/^#\s+(.+)$/m);
-    return m ? m[1].replace(/[*_`]/g, "").trim() : null;
-  } catch { return null; }
+    const text = buffer.slice(0, bytesRead).toString("utf8").replace(/^﻿/, "");
+    const { data } = splitFront(text);
+    const m = text.match(/^#\s+(.+)$/m);
+    return { title: m ? m[1].replace(/[*_`]/g, "").trim() : null, type: data?.type || null, status: data?.status || null };
+  } catch { return { title: null, type: null, status: null }; }
 }
 
 const readText = async (abs) => (await fsp.readFile(abs, "utf8")).replace(/^﻿/, "");
@@ -178,8 +183,12 @@ async function linkIndex() {
 }
 
 // The GDD's types, read from How the GDD Works (src/gdd.js).
-async function gddTypes() {
-  try { return readTypes(await readText(path.join(REPO, SYSTEM))); } catch { return []; }
+// The GDD's system (types, components, who writes what), read from How the GDD Works (src/gdd.js), and
+// what its pages say (src/gdd-index.js): both kept with the link index, rebuilt when a page changes.
+async function gdd() {
+  const idx = await linkIndex();
+  if (!idx.gdd) { idx.system = readSystem(idx.texts.get(SYSTEM) || ""); idx.gdd = buildGdd(idx.texts); }
+  return idx;
 }
 
 // Recent changes (src/changelog.js): the docs' git history, read again only when HEAD moves.
@@ -299,8 +308,8 @@ async function serveFile(res, abs) {
 const api = {
   async "GET /api/tree"() {
     const [files, status, counts] = await Promise.all([allDocs(), gitStatus(), noteCounts()]);
-    const titles = await Promise.all(files.map(titleOf));
-    return { files: files.map((p, i) => ({ path: p, title: titles[i], git: status[p] || null, notes: counts[p]?.total || 0, answered: counts[p]?.answered || 0 })) };
+    const heads = await Promise.all(files.map(headOf));
+    return { files: files.map((p, i) => ({ path: p, title: heads[i].title, type: heads[i].type, status: heads[i].status, git: status[p] || null, notes: counts[p]?.total || 0, answered: counts[p]?.answered || 0 })) };
   },
 
   async "GET /api/doc"(url) {
@@ -341,7 +350,7 @@ const api = {
     if (!abs || !isDoc(rel)) return [400, { error: "New pages go in the GDD." }];
     if (fs.existsSync(abs)) return [409, { error: "A page with that name already exists in that folder." }];
     const name = String(title || "").trim() || path.basename(rel, ".md").replace(/[-_]/g, " ").replace(/^./, (c) => c.toUpperCase());
-    const text = newPageText(name, (await gddTypes()).find((t) => t.type === type));
+    const text = newPageText(name, (await gdd()).system.types.find((t) => t.type === type), makeFront);
     await fsp.mkdir(path.dirname(abs), { recursive: true });
     await fsp.writeFile(abs, text, "utf8");
     recentWrites.set(relOf(abs), { hash: hash(text), until: Date.now() + 3000 });
@@ -511,10 +520,26 @@ const api = {
   async "GET /api/links"(url) {
     const page = url.searchParams.get("page");
     if (!page) return [400, { error: "which page?" }];
-    return linksFor(await linkIndex(), page);
+    const idx = await gdd();
+    const r = linksFor(idx, page);
+    // Links in, named by the section they sit in ("Dropped by" from a rewards section): How the GDD Works, "Who writes what".
+    for (const l of r.inbound) l.label = labelFor(idx.gdd, idx.system, l.from, l.section);
+    return r;
   },
 
-  async "GET /api/gdd"() { return { types: await gddTypes() }; },
+  async "GET /api/gdd"() { return (await gdd()).system; },
+
+  // A generated list: a query block's text, run from the page it's on (src/gdd-index.js).
+  async "POST /api/query"(url, req) {
+    const { page, q } = await body(req);
+    const idx = await gdd();
+    return runQuery(idx.gdd, idx, page, q);
+  },
+
+  async "GET /api/checks"() {
+    const idx = await gdd();
+    return { problems: checks(idx.gdd, idx.system) };
+  },
 
   async "GET /api/changes"() { return { changes: await recentChanges() }; },
 

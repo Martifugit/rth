@@ -37,14 +37,21 @@ export function makePanels(ctx) {
     const group = (title, help, items, empty) => h("section", { class: "lk-group" },
       h("h3", { class: "lk-title", title: help }, title, items.length ? h("span", { class: "lk-n" }, String(items.length)) : null),
       items.length ? items : h("p", { class: "lk-empty" }, empty));
-    const inbound = byPage(r.inbound, "from").map(([from, ls]) =>
+    // Links in, by what they mean: "Dropped by" from a rewards section, "Found in" from spawns (How the
+    // GDD Works, "Who writes what"); any other link in is "Linked from".
+    const labels = new Map();
+    for (const l of r.inbound) { const k = l.label || ""; if (!labels.has(k)) labels.set(k, []); labels.get(k).push(l); }
+    const inboundOf = (list) => byPage(list, "from").map(([from, ls]) =>
       item(from, ls[0].title, ls[0].section || null, () => ctx.openDoc(from, { find: { q: ls[0].text, occurrence: 0 } })));
+    const labelled = [...labels].filter(([k]) => k).sort(([a], [b]) => a.localeCompare(b));
+    const inbound = inboundOf(labels.get("") || []);
     const outbound = byPage(r.outbound, "to").map(([to, ls]) => ls[0].broken
-      ? item(to, to.split("/").pop(), "This page doesn't exist", () => ctx.findInPage(ls[0].text), "broken")
+      ? item(to, ls[0].text || to.split("/").pop(), "Not written yet: click to make it", () => ctx.newPage({ path: to, title: ls[0].text || "" }), "broken")
       : item(to, ls[0].title, null, () => ctx.openDoc(to)));
     const mentions = r.mentions.map((m) => item(m.from, m.title, m.section || null, () => ctx.openDoc(m.from, { find: { q: r.title, occurrence: 0 } })));
     pane.replaceChildren(
-      group("Linked from", "Pages with a link to this one", inbound, "No page links here yet."),
+      ...labelled.map(([label, ls]) => group(label, `Links to this page from those pages' sections that own the relationship`, inboundOf(ls), "")),
+      group(labelled.length ? "Also linked from" : "Linked from", "Pages with a link to this one", inbound, labelled.length ? "No other links." : "No page links here yet."),
       group("Links to", "Pages this one links to", outbound, "This page has no links to other pages."),
       r.title ? group("Mentioned in", `Pages that name “${r.title}” without linking to it`, mentions, "Not mentioned anywhere else.") : null);
   }
@@ -141,32 +148,63 @@ export function makePanels(ctx) {
     return parts;
   }
 
-  // ----------------------------------------------------------------------------- broken links
+  // ----------------------------------------------------------------------------- to-do
 
+  // What the GDD still needs, in one list: pages that links (or groups, or based-on) point to but that
+  // aren't written yet, each one click from being made; links to headings that aren't there; and the
+  // structure checks (src/gdd-index.js): a page with no type, a component without its section...
   async function broken(force = false) {
-    if (force || !lists.broken) { const r = await api("/api/broken"); if (r.ok) lists.broken = r.links || []; }
+    if (force || !lists.broken) {
+      const [b, c] = await Promise.all([api("/api/broken"), api("/api/checks")]);
+      if (b.ok && c.ok) {
+        const pages = new Map();
+        for (const l of b.links || []) if (l.kind === "page" && l.to.startsWith("docs/gdd/")) {
+          if (!pages.has(l.to)) pages.set(l.to, { to: l.to, text: l.text, from: [] });
+          pages.get(l.to).from.push(l);
+        }
+        // A group or a variant's original named in frontmatter but not written: a page to write, in its type's folder.
+        const groups = S.types.find((t) => t.type === "group");
+        const problems = [];
+        for (const p of c.problems || []) {
+          const slug = p.kind === "missing-group" ? p.text.match(/“(.+?)”/)?.[1] : null;
+          if (!slug || !groups) { problems.push(p); continue; }
+          const to = "docs/gdd/" + groups.folder + "/" + slug + ".md";
+          if (!pages.has(to)) pages.set(to, { to, text: slug.replace(/-/g, " ").replace(/^./, (x) => x.toUpperCase()), from: [] });
+          pages.get(to).from.push({ from: p.path, title: p.title, text: "" });
+        }
+        lists.broken = { pages: [...pages.values()], headings: (b.links || []).filter((l) => l.kind === "heading" || (l.kind === "page" && !l.to.startsWith("docs/gdd/"))), problems };
+        lists.broken.length = lists.broken.pages.length + lists.broken.headings.length + lists.broken.problems.length;
+      }
+    }
     return lists.broken;
   }
 
   async function renderBroken() {
     const view = $("#statusView");
     if (!lists.broken) view.replaceChildren(h("p", { class: "st-loading" }, "Loading…"));
-    const list = await broken(true);
-    if (S.view !== "broken" || !list) return;
-    const byPage = new Map();
-    for (const l of list) { if (!byPage.has(l.from)) byPage.set(l.from, []); byPage.get(l.from).push(l); }
-    const where = (p) => p.replace(/^docs\//, "");
-    const why = (l) => (l.kind === "heading" ? `“${l.href.split("#").pop()}” isn't a heading on ${where(l.to)}` : `${where(l.to)} doesn't exist`);
+    const todo = await broken(true);
+    if (S.view !== "broken" || !todo) return;
+    const where = (p) => p.replace(/^docs\/gdd\//, "");
+    const pageLink = (p, title, opts) => h("a", { onclick: () => ctx.openDoc(p, opts), title: p }, title || where(p));
+    const byPage = (list) => { const m = new Map(); for (const x of list) { const k = x.from || x.path; if (!m.has(k)) m.set(k, []); m.get(k).push(x); } return [...m]; };
     view.replaceChildren(h("article", { class: "prose oq bl" },
-      h("h1", {}, "Broken links"),
-      h("p", { class: "oq-intro" }, list.length
-        ? `${list.length} link${list.length > 1 ? "s" : ""} on ${byPage.size} page${byPage.size > 1 ? "s" : ""} go${list.length > 1 ? "" : "es"} nowhere. Click one to go to it.`
-        : "Every link goes somewhere."),
-      [...byPage].map(([from, ls]) => h("section", { class: "oq-page" },
-        h("h3", {}, h("a", { onclick: () => ctx.openDoc(from), title: from }, ls[0].title || from.split("/").pop())),
+      h("h1", {}, "To-do"),
+      h("p", { class: "oq-intro" }, todo.length
+        ? "What the GDD still needs. A link to a page that isn't written yet is a to-do, not a mistake: make it as a stub, two sentences, and follow the links from there."
+        : "Nothing to do: every link goes to a written page, and every page has its type and its sections."),
+      todo.pages.length ? [h("h2", {}, "Pages to write"), h("ul", { class: "td-list" }, todo.pages.map((x) => h("li", {},
+        h("button", { class: "btn btn-gold td-make", onclick: () => ctx.newPage({ path: x.to, title: x.text || "" }) }, "Write it"),
+        h("b", {}, x.text || where(x.to)), h("span", { class: "bl-why" }, " " + where(x.to) + " · from "),
+        x.from.slice(0, 3).map((l, i) => [i ? ", " : "", pageLink(l.from, l.title, { find: { q: l.text, occurrence: 0 } })]),
+        x.from.length > 3 ? h("span", { class: "bl-why" }, ` and ${x.from.length - 3} more`) : null)))] : null,
+      todo.problems.length ? [h("h2", {}, "Structure"), byPage(todo.problems).map(([path, ps]) => h("section", { class: "oq-page" },
+        h("h3", {}, pageLink(path, ps[0].title)),
+        h("ul", { class: "bl-list" }, ps.map((p) => h("li", { class: "td-" + p.kind }, p.text)))))] : null,
+      todo.headings.length ? [h("h2", {}, "Links that go nowhere"), byPage(todo.headings).map(([from, ls]) => h("section", { class: "oq-page" },
+        h("h3", {}, pageLink(from, ls[0].title)),
         h("ul", { class: "bl-list" }, ls.map((l) => h("li", {},
           h("a", { class: "oq-q", title: l.href, onclick: () => ctx.openDoc(from, { find: { q: l.text, occurrence: 0 } }) }, l.text || l.href),
-          h("span", { class: "bl-why" }, (l.section ? l.section + " · " : "") + why(l)))))))));
+          h("span", { class: "bl-why" }, (l.section ? l.section + " · " : "") + (l.kind === "heading" ? `“${l.href.split("#").pop()}” isn't a heading on ${where(l.to)}` : `${l.to} isn't in the GDD`)))))))] : null));
   }
 
   return { linksFor, renderLinks, renderStatus, renderChanges, renderBroken, changes, broken, unseen, invalidate };

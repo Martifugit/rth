@@ -62,7 +62,23 @@ uncommitted work in the folder are never staged, committed, set aside or overwri
   page, by section and page. Click a question to go to it.
 - **New page**: a title and a type ("entity | monsters, NPCs, pets"). The type decides the folder and
   the core headings, both read from the Types table in How the GDD Works (`src/gdd.js`), so changing
-  the system is an edit to that page, never to code.
+  the system is an edit to that page, never to code. The page starts with its frontmatter, as a stub.
+- **The card over a page** shows its frontmatter (`src/frontmatter.js`): type, status (change it there),
+  components (click one to go to its section; **+** adds one, writing it into the frontmatter and its
+  standard section into the page, its fields as `- Field:` lines), groups and based-on (**⋯**). The
+  frontmatter never goes into the editor: it is kept aside and written back in front of the page.
+- **To-dos:** a link to a page not written yet is gold and dashed; a click makes it, as a stub of its
+  folder's type. **To-do** (in the page list) gathers them, groups named in frontmatter with no page,
+  and the structure checks: no type, an unknown type or component, a component without its section, a
+  component section not in the frontmatter, a page outside its type's folder (`src/gdd-index.js`).
+- **Links in** are named by the section they come from, as How the GDD Works' "Who writes what" says:
+  a link from a rewards section shows as *Dropped by*, from spawns as *Found in*.
+- **Generated lists:** a code block of language `query` shows, under it, what it finds. Lines are
+  filters: `type`, `status`, `groups`, `components`, `based-on`, `links-to`, and `<component>.<field>`
+  for component instances (`action.skill: this` is a skill's training table); `this` is the page it's
+  on; `sort: <field>`. A new group page gets its Members list this way; **⋯** inserts others.
+- **Status at a glance:** a dot per page in the page list (stub, draft, agreed, cut) and chips to show
+  only one.
 - **Delete a page**: the bin in the page's title bar. It asks first (saying how many pages link to it),
   deletes it for everyone, and offers Undo straight after; git keeps its history. Its comments stay in
   the comment history.

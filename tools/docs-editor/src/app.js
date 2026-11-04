@@ -31,7 +31,9 @@ import { AiMarks, makeAiChanges } from "./ai-changes.js";
 import { altGrChar, isKeyFor } from "./keys.js";
 import { makeTogetherUi } from "./together-ui.js";
 import { Spelling, configureSpelling } from "./spellcheck.js";
-import { GDD, CHARTER, TOP } from "./gdd.js";
+import { GDD, CHARTER, TOP, isMeta } from "./gdd.js";
+import { split as splitFront, make as makeFront } from "./frontmatter.js";
+import { makeGddUi } from "./gdd-ui.js";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -67,6 +69,8 @@ const S = {
   dirty: false,
   open: new Set(JSON.parse(localStorage.getItem("codex.open") || '["docs","docs/gdd"]')),
   types: [],          // the GDD's types, read from How the GDD Works: [{ type, folder, covers, examples, headings }]
+  components: [],     // and its components: [{ name, group, answers, fields, foundOn, generated }]
+  front: "",          // the page's frontmatter as written (never in the editor; put back in front when saving)
 };
 
 // ----------------------------------------------------------------------------- paths
@@ -116,7 +120,7 @@ function linkClass(href) {
   if (href.startsWith("#")) return null;
   const { path, dir } = resolveHref(S.path, href);
   if (dir || !/\.[a-z0-9]+$/i.test(path)) return null;
-  if (path.endsWith(".md") && !S.fileSet.has(path) && (path.startsWith("docs/") || !path.includes("/"))) return "link-broken";
+  if (path.endsWith(".md") && !S.fileSet.has(path) && path.startsWith(GDD + "/")) return "link-todo";
   return null;
 }
 
@@ -146,7 +150,7 @@ function linkDecorations(doc) {
     const link = node.marks.find((m) => m.type.name === "link");
     if (!link) return;
     const cls = linkClass(link.attrs.href);
-    if (cls) decos.push(Decoration.inline(pos, pos + node.nodeSize, { class: cls, title: cls === "link-broken" ? "No such page: " + link.attrs.href : null }));
+    if (cls) decos.push(Decoration.inline(pos, pos + node.nodeSize, { class: cls, title: cls === "link-todo" ? "Not written yet: click to make it" : null }));
   });
   return DecorationSet.create(doc, decos);
 }
@@ -178,8 +182,21 @@ const PlainText = Text.extend({
   },
 });
 
+// The GDD's card over the page, component sections and generated lists (src/gdd-ui.js).
+const gddUi = makeGddUi(() => ({
+  S, h, api, toast, modal, openDoc, editor: () => S.editor,
+  menu: (ev, items) => rowMenu(ev, ev.currentTarget, items),
+  setFront: (front) => { S.front = front; scheduleDirty(); },
+  newPage: (prefill) => newPageDialog(null, prefill),
+}));
+
 function makeEditor(text) {
   if (S.editor) S.editor.destroy();
+  // Frontmatter stays out of the editor (it would read as a rule and a heading): kept aside, and shown
+  // as the card over the page.
+  const parts = splitFront(text);
+  S.front = parts.front;
+  text = parts.body;
   const page = $("#page");
   page.innerHTML = "";
   S.editor = new Editor({
@@ -203,6 +220,7 @@ function makeEditor(text) {
       NoteMarks,
       AiMarks,
       Spelling,
+      gddUi.Extension,
     ],
     content: text,
     onUpdate: () => { clearHits(); scheduleDirty(); scheduleOutline(); notes?.docChanged(); aiChanges?.docChanged(); together?.typed(); },
@@ -237,7 +255,7 @@ const editorMarkdown = () => S.editor.storage.markdown.getMarkdown();
 function draft() {
   if (S.mode === "source") return $("#source").value;
   const cur = editorMarkdown();
-  return cur === S.baseline ? S.base : mergeEdit(S.base, S.baseline, cur);
+  return S.front + (cur === S.baseline ? S.base : mergeEdit(S.base, S.baseline, cur));
 }
 
 // Pages save themselves a moment after you stop typing, as in Google Docs (Ctrl+S saves at once).
@@ -268,7 +286,7 @@ async function api(url, opts) {
 
 async function loadTree() {
   const [r, g] = await Promise.all([api("/api/tree"), api("/api/gdd")]);
-  if (g.ok) S.types = g.types || [];
+  if (g.ok) { S.types = g.types || []; S.components = g.components || []; }
   S.files = r.files || [];
   S.fileSet = new Set(S.files.map((f) => f.path));
   renderTree();
@@ -358,7 +376,7 @@ function setMode(mode) {
   if (S.mode === "source") {
     const text = $("#source").value;
     S.mode = mode;
-    if (text !== S.base) { makeEditor(text); buildOutline(); }
+    if (text !== S.front + S.base) { makeEditor(text); buildOutline(); }
   } else if (mode === "source") {
     $("#source").value = draft();
     S.mode = mode;
@@ -413,13 +431,19 @@ async function save(force = false, { quiet = false } = {}) {
   if (!r.ok) { toast("Couldn't save: " + (r.error || r.status), "bad"); updateStatus(); return false; }
   S.conflict = false;
   S.disk = content; S.diskHash = r.hash;
-  if (S.mode !== "source") { S.base = content; S.baseline = editorMarkdown(); notes.saved(); }
+  if (S.mode !== "source") { S.base = content.slice(S.front.length); S.baseline = editorMarkdown(); notes.saved(); }
   panels.invalidate();
+  gddUi.refresh({ lists: true });
   hideBanner();
   refreshDirty();
   if (!quiet) toast("Saved", "good");
   const f = S.files.find((x) => x.path === S.path);
-  if (f && !f.git) { f.git = "changed"; renderTree(); }
+  if (f) {
+    const fm = splitFront(content).data;
+    const moved = f.status !== (fm?.status || null) || f.type !== (fm?.type || null) || !f.git;
+    f.status = fm?.status || null; f.type = fm?.type || null; f.git = f.git || "changed";
+    if (moved) renderTree();
+  }
   return true;
 }
 
@@ -437,6 +461,7 @@ function listen() {
   es.onmessage = (e) => {
     const events = JSON.parse(e.data);
     panels.invalidate();
+    gddUi.refresh({ lists: true });
     notesChanged();
     if (S.view) VIEWS[S.view].render();
     refreshSpecialCounts();
@@ -536,7 +561,9 @@ function folderMenu(ev, d) {
 function renderTree() {
   const filter = $("#treeFilter").value.trim().toLowerCase();
   const tree = $("#tree");
-  const matches = (f) => !filter || f.path.toLowerCase().includes(filter) || (f.title || "").toLowerCase().includes(filter);
+  const matches = (f) => (!filter || f.path.toLowerCase().includes(filter) || (f.title || "").toLowerCase().includes(filter))
+    && (!S.statusFilter || (S.statusFilter === "none" ? !f.status && !isMeta(f.path) : f.status === S.statusFilter));
+  renderStatusFilter();
   const files = S.files.filter(matches);
   const data = buildTreeData(files);
   const mark = (text) => {
@@ -549,6 +576,7 @@ function renderTree() {
     onclick: () => openDoc(f.path),
     oncontextmenu: (ev) => pageMenu(ev, f),
   }, h("span", { class: "caret" }), h("span", { class: "ico ico-note" }), h("span", { class: "t-name" }, mark(f.path.split("/").pop().replace(/\.md$/, ""))),
+  isMeta(f.path) ? null : h("span", { class: "st-dot st-" + (f.status || "none"), title: f.status ? "Status: " + f.status + (f.type ? " · " + f.type : "") : "No status yet" }),
   f.git ? h("span", { class: "t-git " + f.git, title: f.git === "new" ? "New, not in git yet" : "Changed since the last commit" }) : null);
   const dirNode = (d) => {
     const open = filter || S.open.has(d.path);
@@ -576,7 +604,7 @@ function renderTree() {
   const special = !filter ? h("div", { class: "t-specials" },
     specialRow("status", "quests", "Every open question in the GDD, in one list"),
     specialRow("changes", "scripture", "Who changed which page, and where, newest first"),
-    S.brokenCount ? specialRow("broken", "compass", "Links to pages or headings that don't exist") : null) : null;
+    S.brokenCount ? specialRow("broken", "compass", "Pages to write, and pages whose structure needs a look") : null) : null;
   if (gdd || special) groups.push(h("div", { class: "t-group" }, h("div", { class: "t-group-title" }, "The GDD"), special,
     gdd ? gddOrder(gdd).map((x) => (x.dirs ? dirNode(x) : fileRow(x))) : null));
   if (!groups.length) groups.push(h("div", { class: "o-empty" }, "No pages match."));
@@ -590,6 +618,16 @@ function gddOrder(gdd) {
   const top = (x) => (x.dirs ? -1 : TOP.indexOf(x.path));
   const rank = (x) => (top(x) >= 0 ? top(x) : x.dirs ? TOP.length : TOP.length + 1);
   return [...gdd.files, ...gdd.dirs.values()].sort((a, b) => rank(a) - rank(b) || collator.compare(name(a), name(b)));
+}
+
+// Status at a glance: a coloured dot on each page (stub, draft, agreed, cut), and these chips to show only one.
+const STATUS_CHIPS = [["", "All"], ["stub", "Stub"], ["draft", "Draft"], ["agreed", "Agreed"], ["cut", "Cut"], ["none", "No status"]];
+function renderStatusFilter() {
+  const counts = {};
+  for (const f of S.files) if (!isMeta(f.path)) { const k = f.status || "none"; counts[k] = (counts[k] || 0) + 1; }
+  $("#statusFilter").replaceChildren(...STATUS_CHIPS.filter(([k]) => !k || counts[k] || S.statusFilter === k).map(([k, label]) =>
+    h("button", { class: "st-chip" + ((S.statusFilter || "") === k ? " on" : ""), title: k ? `Only ${label.toLowerCase()} pages` : "Every page", onclick: () => { S.statusFilter = k || null; renderTree(); } },
+      k ? h("span", { class: "st-dot st-" + k }) : null, label, k ? h("span", { class: "st-n" }, String(counts[k] || 0)) : null)));
 }
 
 function markTreeCurrent() {
@@ -678,7 +716,7 @@ function updateStatus() {
 
 // ----------------------------------------------------------------------------- following links
 
-function followLink(href) {
+function followLink(href, text = "") {
   if (!href) return;
   if (isExternal(href)) { window.open(href, "_blank", "noopener"); return; }
   if (href.startsWith("#")) { // a step in the history too, so Back returns to the link
@@ -690,7 +728,9 @@ function followLink(href) {
   }
   const { path, hash, dir } = resolveHref(S.path, href);
   if (path.endsWith(".md")) {
-    if (S.fileSet.has(path) || !path.startsWith("docs/")) return openDoc(path, { hash });
+    if (S.fileSet.has(path)) return openDoc(path, { hash });
+    // A link to a page not written yet is a to-do: make it, as a stub of its folder's type.
+    if (path.startsWith(GDD + "/")) return newPageDialog(null, { path, title: text.trim() });
     toast("No such page: " + path, "bad");
     return;
   }
@@ -1024,26 +1064,31 @@ function quickOpen() {
 
 /**
  * A new page: its title and its type. The type decides its folder and its core headings (How the GDD
- * Works, "Types"). Made from a folder, the folder's type is picked.
+ * Works, "Types"). Made from a folder, the folder's type is picked. `prefill`: { title, path } from a link
+ * to a page not written yet (the path is kept; the type follows its folder).
  */
-function newPageDialog(inFolder = null) {
+function newPageDialog(inFolder = null, prefill = {}) {
   if (typeof inFolder !== "string") inFolder = null; // a button's click passes its event
-  const typeOf = (dir) => S.types.find((t) => typeof dir === "string" && (dir === GDD + "/" + t.folder || dir.startsWith(GDD + "/" + t.folder + "/")));
-  const start = typeOf(inFolder) || typeOf(S.path && dirOf(S.path)) || null;
-  const folderOf = (t) => (t === start && inFolder && typeOf(inFolder) === t ? inFolder : GDD + "/" + t.folder);
   if (!S.types.length) { toast("No types found: How the GDD Works needs its Types table", "bad"); return; }
-  const kind = h("select", { class: "field" }, S.types.map((t) => h("option", { value: t.type, selected: t === start }, t.type + "  |  " + t.examples)));
+  const typeOf = (dir) => S.types.find((t) => typeof dir === "string" && (dir === GDD + "/" + t.folder || dir.startsWith(GDD + "/" + t.folder + "/")));
+  const fixed = prefill.path || null;
+  const start = typeOf(fixed && dirOf(fixed)) || typeOf(inFolder) || typeOf(S.path && dirOf(S.path)) || null;
+  const folderOf = (t) => (inFolder && typeOf(inFolder) === t ? inFolder : GDD + "/" + t.folder);
+  const kind = h("select", { class: "field" }, S.types.map((t) => h("option", { value: t.type, selected: t === start || null }, t.type + "  |  " + t.examples)));
   const chosen = () => S.types.find((t) => t.type === kind.value);
-  const folder = { get value() { return folderOf(chosen()); } };
-  const name = h("input", { class: "field", placeholder: "The page's title", spellcheck: "true" });
+  const name = h("input", { class: "field", placeholder: "The page's title", spellcheck: "true", value: prefill.title || "" });
   const file = h("div", { class: "muted small new-file" });
   const fileName = () => name.value.trim().replace(/\.md$/i, "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/['’]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-  const showFile = () => { file.textContent = fileName() ? `Saved as ${folder.value}/${fileName()}.md` : ""; };
+  const target = () => fixed || (fileName() ? folderOf(chosen()) + "/" + fileName() + ".md" : null);
+  const showFile = () => {
+    const t = target();
+    const off = fixed && typeOf(dirOf(fixed)) && typeOf(dirOf(fixed)) !== chosen() ? ` (not the ${chosen().type} folder)` : "";
+    file.textContent = t ? `Saved as ${t.slice(GDD.length + 1)}${off}, a stub` : "";
+  };
   name.addEventListener("input", showFile); kind.addEventListener("change", showFile);
   const create = async () => {
-    const n = fileName();
-    if (!n) { name.focus(); return; }
-    const path = folder.value + "/" + n + ".md";
+    const path = target();
+    if (!path) { name.focus(); return; }
     const r = await api("/api/new", { method: "POST", body: JSON.stringify({ path, title: name.value.trim(), type: kind.value }) });
     if (!r.ok) { toast(r.error || "Couldn't create it", "bad"); return; }
     close();
@@ -1053,8 +1098,11 @@ function newPageDialog(inFolder = null) {
     toast("Page created", "good");
   };
   name.addEventListener("keydown", (e) => { if (e.key === "Enter") create(); });
-  const close = modal("New page", [h("label", {}, "Title"), name, h("label", {}, "Type"), kind, file,
+  const close = modal(fixed ? "Write this page" : "New page", [
+    fixed ? h("p", { class: "muted small" }, "A link points here, but the page isn't written yet. Make it as a stub: two sentences are a complete page for now.") : null,
+    h("label", {}, "Title"), name, h("label", {}, "Type"), kind, file,
     h("div", { class: "modal-actions" }, h("button", { class: "btn", onclick: () => close() }, "Cancel"), h("button", { class: "btn btn-gold", onclick: create }, "Create"))]);
+  showFile();
   setTimeout(() => name.focus(), 0);
 }
 
@@ -1176,7 +1224,7 @@ function wire() {
     // A link opens on a click, as in Notion; Ctrl+K edits it.
     if (window.getSelection()?.toString()) return;
     e.preventDefault();
-    followLink(a.getAttribute("href"));
+    followLink(a.getAttribute("href"), a.textContent);
   });
 
   window.addEventListener("popstate", (e) => {
@@ -1293,11 +1341,11 @@ const typing = () => !!document.activeElement?.closest?.(".ProseMirror, input, t
 
 // The special pages in the page list, shown in the main window over the page (which stays loaded
 // underneath): Open questions (every GDD page's, in one list), Recent changes (who changed what, from
-// git) and Broken links (only listed while there are any).
+// git) and To-do (pages to write and structure to fix; only listed while there's any).
 const VIEWS = {
   status: { title: "Open questions", url: "questions", render: () => panels.renderStatus() },
   changes: { title: "Recent changes", url: "changes", render: () => panels.renderChanges() },
-  broken: { title: "Broken links", url: "broken-links", render: () => panels.renderBroken() },
+  broken: { title: "To-do", url: "to-do", render: () => panels.renderBroken() },
 };
 const viewOfUrl = (v) => (v === "status" ? "status" : Object.keys(VIEWS).find((k) => VIEWS[k].url === v) || null);
 
@@ -1331,7 +1379,7 @@ async function refreshSpecialCounts() {
   VIEWS.changes.count = fresh ? String(fresh) : "";
   VIEWS.changes.hot = !!fresh;
   const had = S.brokenCount || 0;
-  S.brokenCount = b ? b.length : 0;
+  S.brokenCount = b ? b.length || 0 : 0;
   VIEWS.broken.count = S.brokenCount ? String(S.brokenCount) : "";
   VIEWS.broken.hot = !!S.brokenCount;
   if (!!had !== !!S.brokenCount) { renderTree(); return; }
@@ -1375,7 +1423,7 @@ function scrollToPos(pos, onlyIfHidden = false) {
   } catch {}
 }
 
-const panels = makePanels({ S, $, h, api, toast, openDoc: (...a) => openDoc(...a), findInPage: (q) => findInPage(q), setLinksCount, countsChanged: () => refreshSpecialCounts() });
+const panels = makePanels({ S, $, h, api, toast, openDoc: (...a) => openDoc(...a), newPage: (prefill) => newPageDialog(null, prefill), findInPage: (q) => findInPage(q), setLinksCount, countsChanged: () => refreshSpecialCounts() });
 window.__showStatus = () => showView("status");
 const notes = makeNotes({
   S, $, $$, h, esc, api, toast, modal, ask, renderHtml,
