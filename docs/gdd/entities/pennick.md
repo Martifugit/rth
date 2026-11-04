@@ -6,7 +6,7 @@ based-on:
 status: draft
 ---
 
-# Pennick the Ferryman
+# Pennick, the Ferryman
 
 ## What it is
 
