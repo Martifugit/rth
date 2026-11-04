@@ -6,7 +6,7 @@
       "kind": "note",
       "status": "open",
       "created": "2026-11-04T09:51:52Z",
-      "updated": "2026-11-04T09:52:01Z",
+      "updated": "2026-11-04T09:54:56Z",
       "anchor": {
         "section": [
           "Welcome"
@@ -20,6 +20,16 @@
           "by": "person",
           "at": "2026-11-04T09:51:52Z",
           "text": "rewrwe",
+          "who": {
+            "id": "290175317392490497",
+            "name": "Ibux",
+            "avatar": "https://cdn.discordapp.com/avatars/290175317392490497/76727f1381ad15fa007347ba542baedc.png?size=64"
+          }
+        },
+        {
+          "by": "person",
+          "at": "2026-11-04T09:54:56Z",
+          "text": "rewrew",
           "who": {
             "id": "290175317392490497",
             "name": "Ibux",
