@@ -66,7 +66,7 @@ export function makeAi(ctx) {
   /** What the next message may read, from what's on screen, minus what was clicked away. */
   function context() {
     const c = {};
-    if (S.path && S.view !== "status" && !A.left.has("page")) c.page = S.path;
+    if (S.path && !S.view && !A.left.has("page")) c.page = S.path;
     if (A.selection && A.selection.page === S.path && !A.left.has("selection")) c.selection = { quote: A.selection.quote, section: A.selection.section };
     const thread = ctx.notes.state.active;
     if (thread && thread !== "draft" && !A.left.has("thread")) c.thread = thread;
@@ -169,50 +169,48 @@ export function makeAi(ctx) {
     const choice = (value, label, note) => h("label", { class: "ai-choice" + (st.use === value ? " on" : "") },
       h("input", { type: "radio", name: "ai-use", checked: st.use === value ? "" : null, onchange: () => configure({ use: value }) }),
       h("span", {}, h("b", {}, label), note ? h("span", { class: "ai-choice-note" }, note) : null));
-    const usingName = st.using === "claude" ? "Claude, on this computer" : "OpenRouter";
+    const usingName = st.using === "claude" ? "Claude" : "OpenRouter";
     const ready = st.provider?.ok;
     const or = st.openrouter, cl = st.claude;
-    const keyInput = h("input", { class: "field ai-key", type: "password", placeholder: "sk-or-…", autocomplete: "off", spellcheck: "false" });
-    const modelInput = h("input", { class: "field ai-model", value: or.model, placeholder: or.defaultModel, spellcheck: "false" });
+    const recheck = () => h("button", { class: "btn", onclick: async () => { A.setup = await api("/api/ai/setup?recheck=1"); A.provider = A.setup.provider || A.provider; drawLog(); } }, "Check again");
+    const keyInput = h("input", { class: "field ai-key", type: "password", placeholder: "or paste a key (sk-or-…)", autocomplete: "off", spellcheck: "false" });
+    const modelInput = h("input", { class: "field ai-model", value: or.model, placeholder: "Free (automatic)", spellcheck: "false" });
     return h("div", { class: "ai-setup" },
-      h("div", { class: "ai-setup-now" + (ready ? "" : " warn") }, ready ? "Answering now: " : "Not ready: ", h("b", {}, usingName), ready && st.provider.version ? h("span", { class: "ai-choice-note" }, " (" + st.provider.version + ")") : null,
+      h("div", { class: "ai-setup-now" + (ready ? "" : " warn") }, ready ? "Using " : "Not ready: ", h("b", {}, usingName),
         !ready && st.provider?.error ? h("div", { class: "ai-note" }, st.provider.error) : null),
 
       h("h4", {}, "Which AI"),
-      choice("auto", "Automatic", "Claude when it's on this computer, otherwise OpenRouter"),
-      choice("claude", "Claude", "Claude Code on this computer, with your own Claude subscription"),
-      choice("openrouter", "OpenRouter", "Free models (or any model, with credit), through your own OpenRouter account"),
+      choice("auto", "Automatic", "Claude if it's set up, otherwise OpenRouter"),
+      choice("claude", "Claude", "Claude Code, on your Claude subscription"),
+      choice("openrouter", "OpenRouter", "Free models, or any model with credit"),
 
       h("h4", {}, "Claude"),
-      cl.found
-        ? h("p", { class: "ai-note" }, "Found: " + cl.version + ". It reads the docs and code itself and edits pages when asked.")
-        : h("p", { class: "ai-note" }, "Not found on this computer. Install Claude Code (it needs a Claude subscription), then check again."),
-      h("div", { class: "ai-setup-row" },
-        cl.found ? null : h("button", { class: "btn", onclick: () => window.open("https://claude.com/claude-code", "_blank") }, "Get Claude Code"),
-        cl.found ? h("button", { class: "btn", title: "Opens a terminal running Claude; its first run asks you to sign in", onclick: async () => { const r = await api("/api/ai/claude-signin", { method: "POST" }); if (r.error) toast(r.error, "bad"); else toast("Sign in in the terminal, then close it"); } }, "Sign in to Claude") : null,
-        h("button", { class: "btn", onclick: async () => { A.setup = await api("/api/ai/setup?recheck=1"); A.provider = A.setup.provider || A.provider; drawLog(); } }, "Check again")),
+      !cl.found
+        ? [h("p", { class: "ai-note" }, "Claude Code isn't installed."),
+           h("div", { class: "ai-setup-row" }, h("button", { class: "btn", onclick: () => window.open("https://claude.com/claude-code", "_blank") }, "Get Claude Code"), recheck())]
+        : cl.signedIn === false
+          ? [h("p", { class: "ai-note" }, "Installed, but not signed in."),
+             h("div", { class: "ai-setup-row" },
+               h("button", { class: "btn btn-gold", title: "Opens a terminal running Claude Code", onclick: async () => { const r = await api("/api/ai/claude-signin", { method: "POST" }); if (r.error) toast(r.error, "bad"); else toast("Sign in in the terminal, then check again"); } }, "Sign in"),
+               recheck())]
+          : h("p", { class: "ai-note" }, (cl.signedIn ? "Signed in" : "Installed") + (cl.version ? " · " + cl.version : "")),
 
       h("h4", {}, "OpenRouter"),
       or.signedIn
-        ? h("p", { class: "ai-note" }, "Connected.")
-        : h("p", { class: "ai-note" }, "Not connected. Sign in to make a key for the Codex, or paste a key you made on openrouter.ai."),
-      h("div", { class: "ai-setup-row" },
-        or.signedIn
-          ? h("button", { class: "btn", onclick: async () => { await api("/api/openrouter/signout", { method: "POST" }); A.setup = await api("/api/ai/setup"); drawLog(); } }, "Disconnect")
-          : h("button", { class: "btn btn-gold", onclick: signInOpenRouter }, "Sign in with OpenRouter")),
-      or.signedIn ? null : h("div", { class: "ai-setup-row" }, keyInput,
-        h("button", { class: "btn", onclick: async () => {
-          const r = await api("/api/openrouter/key", { method: "POST", body: JSON.stringify({ key: keyInput.value }) });
-          keyInput.value = "";
-          if (!r.ok) return toast(r.error || "Couldn't use that key", "bad");
-          toast("Connected to OpenRouter", "good");
-          A.setup = await api("/api/ai/setup"); drawLog();
-        } }, "Use key")),
-      h("label", { class: "ai-setup-label" }, "Model", h("span", { class: "ai-choice-note" }, " (empty: " + or.defaultModel + ", which picks a free model that's up)")),
+        ? h("div", { class: "ai-setup-row" }, h("span", { class: "ai-note" }, "Connected."),
+            h("button", { class: "btn", onclick: async () => { await api("/api/openrouter/signout", { method: "POST" }); A.setup = await api("/api/ai/setup"); drawLog(); } }, "Disconnect"))
+        : [h("div", { class: "ai-setup-row" }, h("button", { class: "btn btn-gold", onclick: signInOpenRouter }, "Sign in with OpenRouter")),
+           h("div", { class: "ai-setup-row" }, keyInput,
+             h("button", { class: "btn", onclick: async () => {
+               const r = await api("/api/openrouter/key", { method: "POST", body: JSON.stringify({ key: keyInput.value }) });
+               keyInput.value = "";
+               if (!r.ok) return toast(r.error || "Couldn't use that key", "bad");
+               toast("Connected to OpenRouter", "good");
+               A.setup = await api("/api/ai/setup"); drawLog();
+             } }, "Use key"))],
+      h("label", { class: "ai-setup-label" }, "Model ", h("a", { href: "https://openrouter.ai/models", target: "_blank", class: "ai-choice-note" }, "browse")),
       h("div", { class: "ai-setup-row" }, modelInput,
         h("button", { class: "btn", onclick: () => configure({ model: modelInput.value }) }, "Save")),
-      h("p", { class: "ai-note" }, "A model is its id from OpenRouter's list (provider/name); paid models need credit on your OpenRouter account. ",
-        h("a", { href: "https://openrouter.ai/models", target: "_blank" }, "All models")),
       h("p", { class: "ai-note" }, "Keys and conversations stay on this computer."));
   }
 

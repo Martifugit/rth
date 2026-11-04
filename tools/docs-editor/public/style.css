@@ -493,7 +493,26 @@ select.field option { background: #16130f; }
 .oq li { margin: .3em 0; }
 .prose .oq-q { color: var(--text); text-decoration: none; cursor: pointer; border-radius: 3px; padding: 1px 3px; margin: 0 -3px; }
 .prose .oq-q:hover { color: #fff; background: rgba(255, 255, 255, .07); }
+/* Recent changes and Broken links (src/panels.js) */
+.t-specials { margin: 0 0 8px; }
+.t-specials .t-special { margin: 0; }
+.t-special .t-special-n { margin-left: auto; padding-left: 6px; }
+.t-special .t-special-n.hot { color: var(--value); font-weight: 600; }
+.ch .ch-list, .bl .bl-list { list-style: none; padding: 0; margin: 0 0 .4em; }
+.ch .ch-row { display: flex; gap: 12px; align-items: baseline; margin: 0; padding: 4px 8px; border-radius: 4px; line-height: 1.45; }
+.ch .ch-row.new { background: rgba(201, 162, 94, .08); box-shadow: inset 2px 0 0 var(--value); }
+.ch .ch-time { flex: none; width: 42px; white-space: nowrap; color: var(--dim); font-size: .85em; font-variant-numeric: tabular-nums; }
+.ch .ch-what { min-width: 0; color: var(--muted); }
+.ch .ch-who { color: var(--text); font-weight: 600; }
+.ch .ch-what a { color: var(--text); cursor: pointer; text-decoration: none; }
+.ch .ch-what a:hover { color: #fff; text-decoration: underline; text-decoration-color: var(--silver-dim); }
+.ch .ch-gone { color: var(--dim); text-decoration: line-through; }
+.ch .ch-sec, .ch .ch-more { font-size: .95em; }
+.ch .ch-ai { margin-left: 8px; padding: 0 6px; border: 1px solid var(--hair-2); border-radius: 8px; font-size: .75em; color: var(--silver-dim); white-space: nowrap; }
+.bl li { display: flex; flex-direction: column; margin: .45em 0; }
+.bl .bl-why { color: var(--dim); font-size: .85em; }
 .t-special { margin: 0 0 8px; }
+.t-specials .t-special { margin: 0; }
 
 /* ------------------------------------------------------------------ comments (as in Google Docs) */
 /* The page and, when it has comments, a margin beside it where each comment sits level with its text. */
@@ -738,6 +757,7 @@ body.right-ai.sheet-outline #outlineWin { width: min(400px, calc(100vw - 48px));
 .ai-title:hover, .ai-title.on { background: rgba(255, 255, 255, .04); border-color: var(--hair); color: var(--silver); }
 .ai-title-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 13.5px/1 var(--sans); }
 .ai-title-ico, .ai-new, .ai-send, .ai-chip-ico, .ai-chip-x, .ai-li-x { display: grid; place-items: center; }
+.ai-new, .ai-send, .ai-chip-x, .ai-li-x { flex: none; padding: 0; line-height: 0; }
 .ai-title-ico svg, .ai-new svg, .ai-send svg, .ai-chip-ico svg, .ai-chip-x svg, .ai-li-x svg, .cm-ask svg {
   fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
 }
@@ -873,6 +893,7 @@ body.right-ai.sheet-outline #outlineWin { width: min(400px, calc(100vw - 48px));
 .ai-choice-note { color: var(--silver-dim); font-size: 12px; font-weight: normal; }
 .ai-setup-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .ai-setup-row .field { flex: 1; min-width: 0; }
+.ai-setup-row .ai-note { margin-top: 0; flex: 1; }
 .ai-setup-label { margin-top: 6px; color: var(--silver); }
 .ai-setup a { color: var(--title); }
 

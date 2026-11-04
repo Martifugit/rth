@@ -56,7 +56,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     const using = await pick();
     return {
       use: settings.use, using: using === claudeP ? "claude" : "openrouter",
-      claude: { found: c.ok, version: c.version || null, error: c.ok ? null : c.error },
+      claude: { found: !!c.installed, signedIn: c.signedIn ?? null, version: c.version || null, error: c.ok ? null : c.error },
       openrouter: { signedIn: !!openrouterKey(), model: settings.model || "", defaultModel: OPENROUTER_MODELS.join(", ") },
       provider: await (using).check(),
     };
@@ -396,8 +396,17 @@ function claudeProvider({ repo, claude }) {
   function check() {
     return new Promise((resolve) => {
       execFile(claude, ["--version"], { timeout: 15000, windowsHide: true }, (err, stdout) => {
-        available = err ? { ok: false, error: "Claude wasn't found on this computer (the claude command; or set CODEX_CLAUDE to its path)." } : { ok: true, name: "Claude", version: stdout.trim() };
-        resolve(available);
+        if (err) { available = { ok: false, installed: false, error: "Claude Code isn't installed (or set CODEX_CLAUDE to its path)." }; return resolve(available); }
+        const version = stdout.trim();
+        // `claude auth status` prints JSON with loggedIn; older versions lack it, so unknown counts as signed in.
+        execFile(claude, ["auth", "status"], { timeout: 15000, windowsHide: true }, (err2, out2) => {
+          let signedIn = null;
+          try { signedIn = JSON.parse(out2).loggedIn === true; } catch { signedIn = null; }
+          available = signedIn === false
+            ? { ok: false, installed: true, signedIn: false, version, error: "Claude Code isn't signed in." }
+            : { ok: true, installed: true, signedIn, name: "Claude", version };
+          resolve(available);
+        });
       });
     });
   }

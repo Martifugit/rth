@@ -1,5 +1,8 @@
-// The Links tab (what links to this page, what it links to, where it's mentioned) and Open questions
-// (every GDD page's open questions in one list), shown in the main window.
+// The Links tab (what links to this page, what it links to, where it's mentioned), and the special pages
+// shown in the main window: Open questions (every GDD page's, in one list), Recent changes (who changed
+// which page and where, from git) and Broken links (links to pages or headings that don't exist).
+
+import { slug } from "./links.js";
 
 const SECTION_NAMES = {
   "1-overview": "Overview", "2-gameplay": "Gameplay", "3-story": "Story", "4-content": "Content",
@@ -10,6 +13,7 @@ export function makePanels(ctx) {
   const { S, $, h, api } = ctx;
   const cache = new Map();
   const table = { data: null };
+  const lists = { changes: null, broken: null };
 
   // ----------------------------------------------------------------------------- links
 
@@ -17,7 +21,7 @@ export function makePanels(ctx) {
     if (!cache.has(page)) cache.set(page, api("/api/links?page=" + encodeURIComponent(page)).then((r) => (r.ok ? r : null)));
     return cache.get(page);
   }
-  function invalidate() { cache.clear(); table.data = null; }
+  function invalidate() { cache.clear(); table.data = null; lists.broken = null; }
 
   async function renderLinks() {
     const pane = $("#linksPane");
@@ -88,10 +92,103 @@ export function makePanels(ctx) {
       ])));
   }
 
-  return { linksFor, renderLinks, renderStatus, invalidate };
+  // ----------------------------------------------------------------------------- recent changes
+
+  // When you last looked at Recent changes: others' changes after it are new (marked, and counted in
+  // the page list). Before the first look, nothing counts as new.
+  const SEEN = "codex.changesSeen";
+  const seenAt = () => { let t = Number(localStorage.getItem(SEEN)); if (!t) { t = Date.now(); localStorage.setItem(SEEN, String(t)); } return t; };
+  const unseen = (list, since = seenAt()) => list.filter((e) => !e.mine && Date.parse(e.date) > since);
+
+  async function changes(force = false) {
+    if (force || !lists.changes) { const r = await api("/api/changes"); if (r.ok) lists.changes = r.changes || []; }
+    return lists.changes;
+  }
+
+  async function renderChanges() {
+    const view = $("#statusView");
+    if (!lists.changes) view.replaceChildren(h("p", { class: "st-loading" }, "Loading…"));
+    const list = await changes(true);
+    if (S.view !== "changes" || !list) return;
+    const since = seenAt();
+    localStorage.setItem(SEEN, String(Date.now()));
+    ctx.countsChanged?.();
+    const fresh = unseen(list, since).length;
+    const days = new Map();
+    for (const e of list) { if (!days.has(e.day)) days.set(e.day, []); days.get(e.day).push(e); }
+    const open = (e, section) => e.exists && ctx.openDoc(e.path, section ? { hash: slug(section) } : {});
+    const verb = { added: "made", deleted: "deleted", changed: "changed" };
+    const row = (e) => h("li", { class: "ch-row" + (!e.mine && Date.parse(e.date) > since ? " new" : "") },
+      h("span", { class: "ch-time", title: new Date(e.date).toLocaleString() }, timeOf(e.date)),
+      h("span", { class: "ch-what" },
+        h("b", { class: "ch-who" }, e.mine ? "You" : e.author), " " + verb[e.status] + " ",
+        e.exists ? h("a", { onclick: () => open(e), title: e.path }, e.title) : h("span", { class: "ch-gone", title: e.path }, e.title),
+        e.sections.length ? [h("span", { class: "ch-in" }, " in "), sectionLinks(e, open)] : null,
+        e.ai ? h("span", { class: "ch-ai", title: "Made with the AI" }, "with AI") : null));
+    view.replaceChildren(h("article", { class: "prose oq ch" },
+      h("h1", {}, "Recent changes"),
+      h("p", { class: "oq-intro" }, list.length
+        ? (fresh ? `${fresh} new since you last looked. ` : "") + "Who changed which page, and where, newest first. Click a page or a section to go to it."
+        : "No changes to the docs yet."),
+      [...days].map(([day, es]) => [h("h2", {}, dayName(day)), h("ul", { class: "ch-list" }, es.map(row))])));
+  }
+
+  function sectionLinks(e, open) {
+    const shown = e.sections.slice(0, 3);
+    const parts = [];
+    shown.forEach((sec, i) => {
+      if (i) parts.push(", ");
+      parts.push(e.exists ? h("a", { class: "ch-sec", onclick: () => open(e, sec) }, sec) : h("span", { class: "ch-sec" }, sec));
+    });
+    if (e.sections.length > shown.length) parts.push(h("span", { class: "ch-more", title: e.sections.slice(3).join(", ") }, ` and ${e.sections.length - 3} more`));
+    return parts;
+  }
+
+  // ----------------------------------------------------------------------------- broken links
+
+  async function broken(force = false) {
+    if (force || !lists.broken) { const r = await api("/api/broken"); if (r.ok) lists.broken = r.links || []; }
+    return lists.broken;
+  }
+
+  async function renderBroken() {
+    const view = $("#statusView");
+    if (!lists.broken) view.replaceChildren(h("p", { class: "st-loading" }, "Loading…"));
+    const list = await broken(true);
+    if (S.view !== "broken" || !list) return;
+    const byPage = new Map();
+    for (const l of list) { if (!byPage.has(l.from)) byPage.set(l.from, []); byPage.get(l.from).push(l); }
+    const where = (p) => p.replace(/^docs\//, "");
+    const why = (l) => (l.kind === "heading" ? `“${l.href.split("#").pop()}” isn't a heading on ${where(l.to)}` : `${where(l.to)} doesn't exist`);
+    view.replaceChildren(h("article", { class: "prose oq bl" },
+      h("h1", {}, "Broken links"),
+      h("p", { class: "oq-intro" }, list.length
+        ? `${list.length} link${list.length > 1 ? "s" : ""} on ${byPage.size} page${byPage.size > 1 ? "s" : ""} go${list.length > 1 ? "" : "es"} nowhere. Click one to go to it.`
+        : "Every link goes somewhere."),
+      [...byPage].map(([from, ls]) => h("section", { class: "oq-page" },
+        h("h3", {}, h("a", { onclick: () => ctx.openDoc(from), title: from }, ls[0].title || from.split("/").pop())),
+        h("ul", { class: "bl-list" }, ls.map((l) => h("li", {},
+          h("a", { class: "oq-q", title: l.href, onclick: () => ctx.openDoc(from, { find: { q: l.text, occurrence: 0 } }) }, l.text || l.href),
+          h("span", { class: "bl-why" }, (l.section ? l.section + " · " : "") + why(l)))))))));
+  }
+
+  return { linksFor, renderLinks, renderStatus, renderChanges, renderBroken, changes, broken, unseen, invalidate };
 }
 
 // The first few words of a question, to find it in the page (a search can't cross bold or links).
 function firstWords(text) {
   return text.split(/\s+/).slice(0, 4).join(" ");
+}
+
+const timeOf = (iso) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+
+/** "Today", "Yesterday", or the date ("Monday 2 November"; the year too when it isn't this one). */
+function dayName(day) {
+  const [y, m, d] = day.split("-").map(Number);
+  const date = new Date(y, m - 1, d), today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const ago = Math.round((today - date) / 86400000);
+  if (ago === 0) return "Today";
+  if (ago === 1) return "Yesterday";
+  return date.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", ...(y !== today.getFullYear() ? { year: "numeric" } : {}) });
 }

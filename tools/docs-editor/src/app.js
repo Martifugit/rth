@@ -22,6 +22,7 @@ import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { mergeEdit, renderHtml } from "./merge.js";
 import { makeNotes, NoteMarks } from "./notes.js";
 import { makePanels } from "./panels.js";
+import { slug } from "./links.js";
 import { makeLayout } from "./layout.js";
 import { makeAi } from "./ai.js";
 import { makeAccountButton } from "./account-button.js";
@@ -96,9 +97,7 @@ function folderPage(dir) {
   return null;
 }
 
-export function slug(text) {
-  return text.toLowerCase().trim().replace(/[^\p{L}\p{N}\s_-]/gu, "").replace(/\s/g, "-");
-}
+export { slug };
 
 // ----------------------------------------------------------------------------- editor
 
@@ -252,7 +251,7 @@ async function autosave() {
 }
 function refreshDirty() {
   S.dirty = !!S.path && draft() !== S.disk;
-  document.title = S.view === "status" ? "Open questions · Codex" : (S.dirty ? "● " : "") + (pageTitle() || "R'th Codex") + " · Codex";
+  document.title = S.view ? VIEWS[S.view].title + " · Codex" : (S.dirty ? "● " : "") + (pageTitle() || "R'th Codex") + " · Codex";
   updateStatus();
 }
 
@@ -279,7 +278,7 @@ async function loadTree() {
 let scrollTimer = null;
 function rememberScroll() {
   clearTimeout(scrollTimer); scrollTimer = null;
-  if (!S.path || S.view === "status" || !history.state) return;
+  if (!S.path || S.view || !history.state) return;
   history.replaceState({ ...history.state, scroll: $("#scroller").scrollTop }, "");
 }
 function go(dir) {
@@ -302,7 +301,7 @@ async function openDoc(path, { hash = "", push = true, find = null, keepScroll =
   }
   if (push) rememberScroll();
   const r = await api("/api/doc?path=" + encodeURIComponent(path));
-  hideStatus();
+  hideView();
   if (!r.ok) {
     toast(`Can't open ${path}: ${r.error || r.status}`, "bad");
     if (!S.path && path !== DEFAULT_DOC) return openDoc(DEFAULT_DOC, { push: false });
@@ -436,7 +435,8 @@ function listen() {
     const events = JSON.parse(e.data);
     panels.invalidate();
     notesChanged();
-    if (S.view === "status") panels.renderStatus();
+    if (S.view) VIEWS[S.view].render();
+    refreshSpecialCounts();
     for (const ev of events) {
       if (ev.path !== S.path || ev.hash === S.diskHash || ev.path === S.deleting) continue;
       if (!ev.hash) { showBanner(`This page was deleted or moved on disk.`, []); continue; }
@@ -568,8 +568,13 @@ function renderTree() {
   // the repository's own Markdown (README, CLAUDE.md...) in a folder of its own.
   const byName = (a, b) => collator.compare(a.name, b.name);
   const gdd = docs?.dirs.get("gdd");
-  const special = !filter ? h("div", { class: "t-row file t-special" + (S.view === "status" ? " current" : ""), title: "Every open question in the GDD, in one list", onclick: showStatus },
-    h("span", { class: "caret" }), h("span", { class: "ico ico-quests" }), h("span", { class: "t-name" }, "Open questions")) : null;
+  const specialRow = (kind, icon, help) => h("div", { class: "t-row file t-special" + (S.view === kind ? " current" : ""), "data-view": kind, title: help, onclick: () => showView(kind) },
+    h("span", { class: "caret" }), h("span", { class: "ico ico-" + icon }), h("span", { class: "t-name" }, VIEWS[kind].title),
+    h("span", { class: "t-count t-special-n" + (VIEWS[kind].hot ? " hot" : "") }, VIEWS[kind].count || ""));
+  const special = !filter ? h("div", { class: "t-specials" },
+    specialRow("status", "quests", "Every open question in the GDD, in one list"),
+    specialRow("changes", "scripture", "Who changed which page, and where, newest first"),
+    S.brokenCount ? specialRow("broken", "compass", "Links to pages or headings that don't exist") : null) : null;
   if (gdd || special) groups.push(h("div", { class: "t-group" }, h("div", { class: "t-group-title" }, "Design docs"), special,
     gdd ? gddOrder(gdd).map((x) => (x.dirs ? dirNode(x) : fileRow(x))) : null));
   const otherDirs = docs ? [...docs.dirs.values()].filter((d) => d.name !== "gdd").sort(byName) : [];
@@ -665,7 +670,7 @@ function spy() {
 function updateStatus() {
   if (!S.editor) return;
   const words = (S.editor.state.doc.textContent.match(/[\p{L}\p{N}'’]+/gu) || []).length;
-  $("#statusLeft").textContent = `${words.toLocaleString()} words · ${Math.max(1, Math.round(words / 230))} min read · ${headings.length} headings`;
+  $("#statusLeft").textContent = `${words.toLocaleString()} words · ${Math.max(1, Math.round(words / 230))} min read`;
   const git = S.files.find((f) => f.path === S.path)?.git;
   $("#statusRight").innerHTML = S.conflict ? '<span class="unsaved">Not saved: the page changed somewhere else</span>'
     : S.saving ? '<span class="muted">Saving…</span>'
@@ -1083,6 +1088,7 @@ function toast(text, kind = "", { actions = null, ms = null } = {}) {
 // Sync brought in what others sent (src/sync.js, "news"): say who made, changed or deleted which pages,
 // with a button to open each (as Google Docs and Notion say who changed what).
 function showNews({ pages }) {
+  refreshSpecialCounts();
   const who = (x) => x.by?.length ? x.by.join(" and ") : "Someone";
   const title = (x) => "“" + x.title + "”";
   for (const x of pages.filter((p) => p.status === "added").slice(0, 3))
@@ -1170,10 +1176,11 @@ function wire() {
   });
 
   window.addEventListener("popstate", (e) => {
-    if (e.state?.view === "status" || /^(status|questions)$/.test(new URLSearchParams(location.search).get("view") || "")) { showStatus(false); return; }
+    const v = e.state?.view || viewOfUrl(new URLSearchParams(location.search).get("view"));
+    if (v) { showView(v, false); return; }
     const p = e.state?.path || new URLSearchParams(location.search).get("p");
     const scroll = typeof e.state?.scroll === "number" ? e.state.scroll : null;
-    if (p && (p !== S.path || S.view === "status")) openDoc(p, { push: false, hash: e.state?.hash || location.hash.slice(1), scroll });
+    if (p && (p !== S.path || S.view)) openDoc(p, { push: false, hash: e.state?.hash || location.hash.slice(1), scroll });
     else if (p && scroll != null) $("#scroller").scrollTop = scroll;
     else if (p) scrollToHeading(location.hash.slice(1));
     drawNav();
@@ -1220,7 +1227,7 @@ function wire() {
 let syncState = null, syncAgo = null;
 function showSync(v) {
   // A sync just finished: the page list's "changed" dots follow git, so refresh them.
-  if (syncState && v.lastSync && v.lastSync !== syncState.lastSync) notesChanged();
+  if (syncState && v.lastSync && v.lastSync !== syncState.lastSync) { notesChanged(); refreshSpecialCounts(); }
   syncState = v;
   const btn = $("#syncBtn");
   btn.classList.toggle("hidden", v.enabled === null);
@@ -1280,27 +1287,54 @@ async function syncNow() {
 /** Is the keyboard busy with text (the page, a field)? Then single-key shortcuts stay out of the way. */
 const typing = () => !!document.activeElement?.closest?.(".ProseMirror, input, textarea, select, [contenteditable]");
 
-// Open questions: every page's "Open questions" in one list, shown in the main window over the page
-// (which stays loaded underneath).
-function showStatus(push = true) {
-  S.view = "status";
+// The special pages in the page list, shown in the main window over the page (which stays loaded
+// underneath): Open questions (every GDD page's, in one list), Recent changes (who changed what, from
+// git) and Broken links (only listed while there are any).
+const VIEWS = {
+  status: { title: "Open questions", url: "questions", render: () => panels.renderStatus() },
+  changes: { title: "Recent changes", url: "changes", render: () => panels.renderChanges() },
+  broken: { title: "Broken links", url: "broken-links", render: () => panels.renderBroken() },
+};
+const viewOfUrl = (v) => (v === "status" ? "status" : Object.keys(VIEWS).find((k) => VIEWS[k].url === v) || null);
+
+function showView(kind, push = true) {
+  if (!VIEWS[kind]) return;
+  S.view = kind;
   document.body.classList.add("view-status");
   $("#main").classList.add("view-status");
   $("#statusView").classList.remove("hidden");
-  $("#crumbs").replaceChildren(h("span", { class: "leaf" }, "Open questions"));
-  document.title = "Open questions · Codex";
-  if (push) history.pushState({ view: "status" }, "", "?view=questions");
+  $("#statusView").replaceChildren();
+  $("#crumbs").replaceChildren(h("span", { class: "leaf" }, VIEWS[kind].title));
+  document.title = VIEWS[kind].title + " · Codex";
+  if (push) history.pushState({ view: kind }, "", "?view=" + VIEWS[kind].url);
   $$(".t-row.current").forEach((r) => r.classList.remove("current"));
-  $(".t-special")?.classList.add("current");
-  panels.renderStatus();
+  $(`.t-special[data-view="${kind}"]`)?.classList.add("current");
+  VIEWS[kind].render();
 }
-function hideStatus() {
-  if (S.view !== "status") return;
+function hideView() {
+  if (!S.view) return;
   S.view = null;
   document.body.classList.remove("view-status");
   $("#main").classList.remove("view-status");
   $("#statusView").classList.add("hidden");
-  $(".t-special")?.classList.remove("current");
+  $$(".t-special").forEach((r) => r.classList.remove("current"));
+}
+
+// The counts beside Recent changes (others' changes since you last looked) and Broken links.
+async function refreshSpecialCounts() {
+  const [c, b] = await Promise.all([panels.changes(true), panels.broken(true)]);
+  const fresh = c ? panels.unseen(c).length : 0;
+  VIEWS.changes.count = fresh ? String(fresh) : "";
+  VIEWS.changes.hot = !!fresh;
+  const had = S.brokenCount || 0;
+  S.brokenCount = b ? b.length : 0;
+  VIEWS.broken.count = S.brokenCount ? String(S.brokenCount) : "";
+  VIEWS.broken.hot = !!S.brokenCount;
+  if (!!had !== !!S.brokenCount) { renderTree(); return; }
+  for (const k of ["changes", "broken"]) {
+    const n = $(`.t-special[data-view="${k}"] .t-special-n`);
+    if (n) { n.textContent = VIEWS[k].count || ""; n.classList.toggle("hot", !!VIEWS[k].hot); }
+  }
 }
 
 let rightTab = ["outline", "links", "ai"].includes(localStorage.getItem("codex.rightTab")) ? localStorage.getItem("codex.rightTab") : "outline";
@@ -1337,8 +1371,8 @@ function scrollToPos(pos, onlyIfHidden = false) {
   } catch {}
 }
 
-const panels = makePanels({ S, $, h, api, toast, openDoc: (...a) => openDoc(...a), findInPage: (q) => findInPage(q), setLinksCount });
-window.__showStatus = showStatus;
+const panels = makePanels({ S, $, h, api, toast, openDoc: (...a) => openDoc(...a), findInPage: (q) => findInPage(q), setLinksCount, countsChanged: () => refreshSpecialCounts() });
+window.__showStatus = () => showView("status");
 const notes = makeNotes({
   S, $, $$, h, esc, api, toast, modal, ask, renderHtml,
   openDoc: (...a) => openDoc(...a), refreshDirty: () => refreshDirty(), currentHeadingPos, scrollToPos,
@@ -1364,7 +1398,7 @@ const discordPaste = makePasteHandler({ S, api, toast });
 // "Editing <page>" on your Discord profile, unless switched off in the logo's menu.
 const presenceOn = () => localStorage.getItem("codex.presence") !== "off";
 function tellPresence() {
-  api("/api/presence", { method: "POST", body: JSON.stringify({ page: presenceOn() && S.path && S.view !== "status" ? S.path : null }) });
+  api("/api/presence", { method: "POST", body: JSON.stringify({ page: presenceOn() && S.path && !S.view ? S.path : null }) });
 }
 
 /** Ctrl+Shift+C: the selection, or else the section the cursor is in, as Discord's Markdown. */
@@ -1423,10 +1457,12 @@ async function start() {
   const params = new URLSearchParams(location.search);
   const first = params.get("p") || localStorage.getItem("codex.last") || DEFAULT_DOC;
   await openDoc(S.fileSet.has(first) ? first : DEFAULT_DOC, { push: false, hash: location.hash.slice(1) });
-  if (/^(status|questions)$/.test(params.get("view") || "")) { history.replaceState({ path: S.path }, "", "?p=" + encodeURI(S.path)); showStatus(); }
+  const firstView = viewOfUrl(params.get("view"));
+  if (firstView) { history.replaceState({ path: S.path }, "", "?p=" + encodeURI(S.path)); showView(firstView); }
   else history.replaceState({ path: S.path, hash: location.hash.slice(1) }, "", "?p=" + encodeURI(S.path) + location.hash);
   listen();
   welcome();
+  refreshSpecialCounts();
 }
 
 start();

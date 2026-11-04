@@ -144,3 +144,60 @@ export function pageState(text) {
   });
   return { status, statusLine, questions };
 }
+
+/** A heading's id in the page, as the Codex makes it (the same rule as GitHub's, near enough). */
+export function slug(text) {
+  return text.toLowerCase().trim().replace(/[^\p{L}\p{N}\s_-]/gu, "").replace(/\s/g, "-");
+}
+
+/** The ids of a page's headings: slugs, with -1, -2... after repeats, as the page's outline gives them. */
+export function headingIds(text) {
+  const ids = new Set(), seen = new Map();
+  eachLine(text, (line, i, section, code) => {
+    if (code) return;
+    const hd = line.match(/^#{1,6}\s+(.*?)\s*#*\s*$/);
+    if (!hd) return;
+    let id = slug(plain(hd[1]));
+    const n = seen.get(id) || 0;
+    seen.set(id, n + 1);
+    ids.add(n ? id + "-" + n : id);
+  });
+  return ids;
+}
+
+/**
+ * Every link in the docs that goes nowhere: to a page or file that doesn't exist, or to a heading that
+ * isn't on its page. [{ from, title, line, section, text, href, to, kind: "page" | "heading" }].
+ * `exists(rel)`: is there a file or folder at this path (for links outside the indexed pages)?
+ */
+export function brokenLinks(index, exists = () => false) {
+  const out = [], ids = new Map();
+  const idsOf = (p) => { if (!ids.has(p)) ids.set(p, headingIds(index.texts.get(p))); return ids.get(p); };
+  for (const [from, text] of index.texts) {
+    eachLine(text, (line, i, section, code) => {
+      if (code) return;
+      LINK.lastIndex = 0;
+      for (let m = LINK.exec(line); m; m = LINK.exec(line)) {
+        if (m.index > 0 && line[m.index - 1] === "!") continue; // an image
+        const href = m[2];
+        if (isExternal(href)) continue;
+        const hash = href.includes("#") ? href.slice(href.indexOf("#") + 1) : "";
+        let to = href.startsWith("#") ? from : targetOf(from, href);
+        if (!to) continue;
+        const report = (kind) => out.push({ from, title: index.titles.get(from), line: i + 1, section: section.slice(1).join(" › ") || null, text: plain(m[1]), href, to: typeof to === "string" ? to : to.dir, kind });
+        if (typeof to === "object") {
+          const page = [to.dir + "/README.md", to.dir + "/index.md"].find((p) => index.files.has(p));
+          if (!page) { if (!exists(to.dir)) report("page"); continue; }
+          to = page;
+        }
+        if (!index.files.has(to)) { if (!exists(to)) report("page"); continue; }
+        if (!hash) continue;
+        let id = hash;
+        try { id = decodeURIComponent(hash); } catch {}
+        const have = idsOf(to);
+        if (!have.has(id) && !have.has(slug(id))) report("heading");
+      }
+    });
+  }
+  return out;
+}

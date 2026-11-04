@@ -21,7 +21,9 @@ import { agentKey } from "./src/helper-comments.js";
 import { makePresence } from "./src/discord-presence.js";
 import { makeTogether } from "./src/together.js";
 import { HELPER } from "./src/discord-account.js";
-import { buildIndex, linksFor, pageState } from "./src/links.js";
+import { buildIndex, linksFor, pageState, brokenLinks } from "./src/links.js";
+import { LOG_FORMAT, parseLog, entries } from "./src/changelog.js";
+import os from "node:os";
 import { makeSpell } from "./src/spell.js";
 import { makeSync } from "./src/sync.js";
 
@@ -173,6 +175,25 @@ async function linkIndex() {
   const pages = await Promise.all(files.map(async (p) => ({ path: p, text: (await readText(path.join(REPO, p))).replace(/\r\n/g, "\n") })));
   index = buildIndex(pages);
   return index;
+}
+
+// Recent changes (src/changelog.js): the docs' git history, read again only when HEAD moves.
+const ATTRS = path.join(os.tmpdir(), "codex-md-attributes");
+let changeLog = { head: null, commits: [] };
+const gitOut = (args) => new Promise((resolve) => execFile(process.env.CODEX_GIT || "git", args, { cwd: REPO, maxBuffer: 128 << 20, windowsHide: true }, (err, out) => resolve(err ? null : out)));
+async function recentChanges() {
+  const head = (await gitOut(["rev-parse", "HEAD"]))?.trim();
+  if (!head) return [];
+  if (head !== changeLog.head) {
+    if (!fs.existsSync(ATTRS)) fs.writeFileSync(ATTRS, "*.md diff=markdown\n");
+    // diff=markdown makes each hunk header name the heading above it.
+    const out = await gitOut(["-c", "core.attributesFile=" + ATTRS, "-c", "core.quotePath=false", "log", "-n", "400", "--no-merges", "--no-renames",
+      "-U0", "--no-color", "--no-ext-diff", "--format=" + LOG_FORMAT, "--", ...ROOTS, ":(top,glob)*.md"]);
+    changeLog = { head, commits: out ? parseLog(out) : [] };
+  }
+  const idx = await linkIndex();
+  const me = [await ownerName(), account.view()?.user?.name];
+  return entries(changeLog.commits.map((c) => ({ ...c, files: c.files.filter((f) => !f.path.startsWith("docs/.notes/")) })), { titles: idx.titles, me });
 }
 
 // Spelling: British English, the docs' own repeated words, and words.txt beside this tool.
@@ -489,6 +510,14 @@ const api = {
     const page = url.searchParams.get("page");
     if (!page) return [400, { error: "which page?" }];
     return linksFor(await linkIndex(), page);
+  },
+
+  async "GET /api/changes"() { return { changes: await recentChanges() }; },
+
+  async "GET /api/broken"() {
+    const idx = await linkIndex();
+    const links = brokenLinks(idx, (rel) => fs.existsSync(path.join(REPO, rel))).filter((l) => !l.from.startsWith("docs/gdd/templates/"));
+    return { links };
   },
 
   async "GET /api/board"() {
