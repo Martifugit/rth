@@ -18,14 +18,17 @@ fight asks how far to push.
 
 ## How it feels to train
 
-Gain experience through using [Occult abilities](occult-abilities.md) in active combat, or through
-more relaxed [Distillation](../activities/distillation.md) sessions.
+Gain experience through using [Occult abilities](../groups/occult-abilities.md) in active combat, or
+through more relaxed [Distillation](../activities/distillation.md) sessions.
 
 ## What it unlocks
 
-- **Spells** from the [spellbooks](../groups/occult-spellbooks.md), one per house.
-- **Higher spells and rites** ask for [house favour](../systems/house-favour.md) as well as an
-  Occultism level.
+- Spells from the [Occult spellbooks](../groups/occult-spellbooks.md) of the [Occult
+  houses](../groups/occult-houses.md), one per house.
+- Higher spells and rites ask for [house favour](../systems/house-favour.md) as well as an Occultism
+  level.
+- Armor and weapons.
+- [Quests](../groups/quests.md).
 
 ## Open questions
 
