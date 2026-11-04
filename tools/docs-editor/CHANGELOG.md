@@ -4,6 +4,10 @@ A few plain lines per version, for the people using it: `npm run release` puts t
 the GitHub release and announces it in #codex (`scripts/release.mjs`, `scripts/announce.mjs`). Write the
 section before releasing; the release refuses without one.
 
+## 0.3.2
+
+- An open Codex looks for a new version every hour (it was every 6 hours), so updates reach you sooner.
+
 ## 0.3.1
 
 - Share works for every page in the bottom-left box again: a page deleted outside the Codex made the whole Share fail.

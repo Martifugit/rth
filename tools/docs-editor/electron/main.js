@@ -174,7 +174,7 @@ const tellUpdate = () => {
 };
 // The engine (server.js, in this process) asks for it: the page's GET /api/update and its button.
 globalThis.codexUpdate = { view: () => ({ ...update }), install: () => installUpdate(), check: () => checkNow() };
-// Out of date (src/codex-version.js): look for the update now rather than at the next 6-hourly check.
+// Out of date (src/codex-version.js): look for the update now rather than at the next hourly check.
 let checkNow = () => {};
 
 async function installUpdate() {
@@ -186,6 +186,10 @@ async function installUpdate() {
   setTimeout(() => updater.quitAndInstall(true, true), 100);
   return { ok: true };
 }
+
+// How often an open Codex looks for a new release (at start too): an hour, so a release reaches everyone
+// with a Codex open within the hour rather than the next day. A look is one small file (latest.yml).
+const CHECK_EVERY_MS = 60 * 60 * 1000;
 
 async function watchForUpdates() {
   try {
@@ -204,7 +208,7 @@ async function watchForUpdates() {
     const check = () => autoUpdater.checkForUpdates().catch(() => {});
     checkNow = () => { if (update.state === "none") check(); };
     check();
-    setInterval(check, 6 * 60 * 60 * 1000);
+    setInterval(check, CHECK_EVERY_MS);
   } catch (e) { if (process.env.CODEX_DEBUG) console.log("updates off:", e.message); }
 }
 
