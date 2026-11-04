@@ -1,6 +1,6 @@
 ---
 type: skill
-components: [unlocks, progression]
+components: []
 groups: []
 based-on:
 status: stub
@@ -13,11 +13,3 @@ status: stub
 ## How it feels to train
 
 ## What it unlocks
-
-## Unlocks
-
-## Progression
-
-- Stages:
-- Curves: Normal
-- Milestones:
