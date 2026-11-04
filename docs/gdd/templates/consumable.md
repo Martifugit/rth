@@ -1,0 +1,5 @@
+## Consumable
+
+- Effect:
+- Amount:
+- Doses:

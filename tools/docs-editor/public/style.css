@@ -483,7 +483,6 @@ select.field option { background: #16130f; }
 #main.view-status #scroller, #main.view-status #toolbar, #main.view-status .modes, #main.view-status #saveBtn,
 #main.view-status #historyBtn, #main.view-status #sourceBtn, #main.view-status #commentBtn, #main.view-status #banner, #main.view-status #status { display: none !important; }
 #statusView { flex: 1; min-height: 0; overflow: auto; }
-.st-loading { padding: 40px; color: var(--dim); text-align: center; }
 .oq { padding-bottom: 80px; }
 .oq .oq-intro { color: var(--muted); text-align: center; margin-bottom: 1.6em; }
 .oq h3 { margin-top: 1.3em; }
@@ -945,35 +944,7 @@ body.right-ai.sheet-outline #outlineWin { width: min(400px, calc(100vw - 48px));
 
 /* ---------------------------------------------------------------- the GDD: status, frontmatter, lists, to-dos */
 
-/* Status at a glance: stub, draft, agreed, cut (src/gdd-ui.js, the page list). */
-.st-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; flex: none; background: transparent; border: 1px solid var(--dim); }
-.st-dot.st-stub { background: #6f7f92; border-color: #6f7f92; }
-.st-dot.st-draft { background: #c9a25e; border-color: #c9a25e; }
-.st-dot.st-agreed { background: var(--good); border-color: var(--good); }
-.st-dot.st-cut { background: transparent; border-color: var(--bad); }
-.t-row .st-dot { margin: 0 4px 0 2px; }
-.st-filter { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 8px; }
-.st-chip { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); background: rgba(0, 0, 0, .25); color: var(--muted); border-radius: 10px; padding: 1px 8px; font-size: 12px; }
-.st-chip:hover { color: var(--ink); border-color: var(--hair-2); }
-.st-chip.on { color: var(--title); border-color: var(--accent); }
-.st-chip .st-n { color: var(--dim); }
 
-/* The card over a page: its frontmatter. */
-.fm-card { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0 0 18px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; background: rgba(0, 0, 0, .28); font-family: var(--sans); font-size: 13.5px; line-height: 1.4; color: var(--muted); user-select: none; white-space: normal; }
-.fm-type { font-family: var(--serif); color: var(--title); text-transform: uppercase; letter-spacing: .06em; font-size: 12.5px; }
-.fm-type.fm-bad { color: var(--bad); }
-.fm-label { color: var(--dim); font-size: 12px; margin-left: 6px; }
-.fm-chips { display: inline-flex; flex-wrap: wrap; gap: 4px; align-items: center; }
-.fm-chip { border: 1px solid var(--line); border-radius: 10px; padding: 0 8px; color: var(--silver-soft); cursor: pointer; text-decoration: none !important; }
-.fm-chip:hover { color: var(--ink); border-color: var(--hair-2); }
-.fm-link { cursor: pointer; color: var(--silver); }
-.fm-missing { color: var(--accent) !important; border-style: dashed !important; }
-.fm-dim, .fm-none { color: var(--dim); }
-.fm-btn { border: 1px solid var(--line); background: none; color: var(--muted); border-radius: 10px; padding: 0 8px; font-size: 13px; line-height: 18px; }
-.fm-btn:hover { color: var(--title); border-color: var(--accent); }
-.fm-more { margin-left: auto; }
-.fm-status { background: var(--well); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; font-size: 12.5px; padding: 1px 4px; }
-.fm-status.st-stub { color: #9fb0c3; } .fm-status.st-draft { color: #e0c387; } .fm-status.st-agreed { color: var(--good); } .fm-status.st-cut { color: var(--bad); }
 
 /* A link to a page not written yet: a to-do, not an error. */
 .prose .link-todo, .prose .link-todo a { color: var(--accent) !important; text-decoration-style: dashed !important; text-decoration-color: rgba(201, 162, 94, .6) !important; }
@@ -999,4 +970,4 @@ body.right-ai.sheet-outline #outlineWin { width: min(400px, calc(100vw - 48px));
 .prose .td-list > li { display: flex !important; flex-direction: row !important; flex-wrap: wrap; align-items: baseline; gap: 6px; list-style: none; }
 .prose .td-list > li > * { margin: 0; flex: none; width: auto; display: inline; }
 .prose .td-list > li > .td-make { display: inline-flex; }
-.sv-n { font-family: var(--sans); font-size: 13px; color: var(--dim); text-transform: none; letter-spacing: 0; }
+.t-row.folder.empty .t-name { color: var(--dim); }

@@ -7,7 +7,7 @@
 // under it, each with its own fields.
 
 import { split, slugOf, STATUSES } from "./frontmatter.js";
-import { nameOf, isMeta, inGdd, GDD } from "./gdd.js";
+import { nameOf, isMeta, inGdd, GDD, TEMPLATES } from "./gdd.js";
 import { plain, targetOf, titleOf } from "./links.js";
 
 const FENCE = /^\s*(`{3,}|~{3,})/;
@@ -47,7 +47,7 @@ export function pageInfo(path, text) {
 export function buildGdd(texts) {
   const pages = new Map(), bySlug = new Map();
   for (const [path, text] of texts) {
-    if (!inGdd(path)) continue;
+    if (!inGdd(path) || path.startsWith(TEMPLATES + "/")) continue; // templates aren't pages of the GDD
     const info = pageInfo(path, text);
     pages.set(path, info);
     if (!bySlug.has(info.slug)) bySlug.set(info.slug, []);

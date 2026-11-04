@@ -31,7 +31,7 @@ import { AiMarks, makeAiChanges } from "./ai-changes.js";
 import { altGrChar, isKeyFor } from "./keys.js";
 import { makeTogetherUi } from "./together-ui.js";
 import { Spelling, configureSpelling } from "./spellcheck.js";
-import { GDD, CHARTER, TOP, isMeta } from "./gdd.js";
+import { GDD, README, TOP, TEMPLATES, isMeta } from "./gdd.js";
 import { split as splitFront, make as makeFront } from "./frontmatter.js";
 import { makeGddUi } from "./gdd-ui.js";
 
@@ -52,8 +52,8 @@ const h = (tag, props = {}, ...kids) => {
 const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const collator = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
 
-// The Codex opens on the Charter, the rules every page follows.
-const DEFAULT_DOC = CHARTER;
+// The Codex opens on the GDD's start page: a welcome, the reading order, the way to the Charter.
+const DEFAULT_DOC = README;
 
 const S = {
   files: [],          // [{path, title, git}]
@@ -286,7 +286,7 @@ async function api(url, opts) {
 
 async function loadTree() {
   const [r, g] = await Promise.all([api("/api/tree"), api("/api/gdd")]);
-  if (g.ok) { S.types = g.types || []; S.components = g.components || []; }
+  if (g.ok) { S.types = g.types || []; S.components = g.components || []; fillComponentMenu(); }
   S.files = r.files || [];
   S.fileSet = new Set(S.files.map((f) => f.path));
   renderTree();
@@ -343,7 +343,7 @@ async function openDoc(path, { hash = "", push = true, find = null, keepScroll =
   drawNav();
   tellPresence();
   together.pageChanged();
-  renderCrumbs(); markTreeCurrent(); buildOutline(); refreshDirty();
+  renderCrumbs(); markTreeCurrent(); buildOutline(); refreshDirty(); fillComponentMenu();
   notes.load(S.path);
   ai.pageChanged();
   aiChanges.pageOpened(S.wantChanges === S.path);
@@ -561,9 +561,7 @@ function folderMenu(ev, d) {
 function renderTree() {
   const filter = $("#treeFilter").value.trim().toLowerCase();
   const tree = $("#tree");
-  const matches = (f) => (!filter || f.path.toLowerCase().includes(filter) || (f.title || "").toLowerCase().includes(filter))
-    && (!S.statusFilter || (S.statusFilter === "none" ? !f.status && !isMeta(f.path) : f.status === S.statusFilter));
-  renderStatusFilter();
+  const matches = (f) => !filter || f.path.toLowerCase().includes(filter) || (f.title || "").toLowerCase().includes(filter);
   const files = S.files.filter(matches);
   const data = buildTreeData(files);
   const mark = (text) => {
@@ -575,15 +573,15 @@ function renderTree() {
     class: "t-row file" + (f.path === S.path ? " current" : ""), "data-path": f.path, title: (f.title ? f.title + "\n" : "") + f.path,
     onclick: () => openDoc(f.path),
     oncontextmenu: (ev) => pageMenu(ev, f),
-  }, h("span", { class: "caret" }), h("span", { class: "ico ico-note" }), h("span", { class: "t-name" }, mark(f.path.split("/").pop().replace(/\.md$/, ""))),
-  isMeta(f.path) ? null : h("span", { class: "st-dot st-" + (f.status || "none"), title: f.status ? "Status: " + f.status + (f.type ? " · " + f.type : "") : "No status yet" }),
+  }, h("span", { class: "caret" }), h("span", { class: "ico ico-note" }), h("span", { class: "t-name" }, mark((!f.path.startsWith(TEMPLATES + "/") && f.title) || f.path.split("/").pop().replace(/\.md$/, ""))), // templates by their type or component
   f.git ? h("span", { class: "t-git " + f.git, title: f.git === "new" ? "New, not in git yet" : "Changed since the last commit" }) : null);
   const dirNode = (d) => {
     const open = filter || S.open.has(d.path);
     const kids = h("div", { class: "t-children" + (open ? "" : " closed") },
       [...d.dirs.values()].sort((a, b) => collator.compare(a.name, b.name)).map(dirNode), d.files.sort(fileOrder).map(fileRow));
+    const n = countFiles(d);
     const row = h("div", {
-      class: "t-row folder" + (open ? " open" : ""), title: d.path,
+      class: "t-row folder" + (open ? " open" : "") + (n ? "" : " empty"), title: d.path,
       oncontextmenu: (ev) => folderMenu(ev, d),
       onclick: () => {
         const isOpen = !kids.classList.toggle("closed");
@@ -592,43 +590,35 @@ function renderTree() {
         localStorage.setItem("codex.open", JSON.stringify([...S.open]));
       },
     }, h("span", { class: "caret" }), h("span", { class: "ico ico-" + folderIcon(d) }), h("span", { class: "t-name" }, mark(d.name)),
-    h("span", { class: "t-count" }, String(countFiles(d))));
+    h("span", { class: "t-count" }, n ? String(n) : ""));
     return h("div", {}, row, kids);
   };
-  const groups = [];
-  // The GDD and nothing else: its top pages, then a folder per type (the server lists only docs/gdd).
-  const gdd = data.dirs.get("docs")?.dirs.get("gdd");
+  // The GDD, flat: its start page and the pages about it, templates/, then one folder per type in the
+  // order How the GDD Works lists them, shown even before they hold a page.
+  const gdd = data.dirs.get("docs")?.dirs.get("gdd") || { name: "gdd", path: GDD, dirs: new Map(), files: [] };
+  if (!filter) for (const name of ["templates", ...S.types.map((t) => t.folder)])
+    if (!gdd.dirs.has(name)) gdd.dirs.set(name, { name, path: GDD + "/" + name, dirs: new Map(), files: [] });
   const specialRow = (kind, icon, help) => h("div", { class: "t-row file t-special" + (S.view === kind ? " current" : ""), "data-view": kind, title: help, onclick: () => showView(kind) },
     h("span", { class: "caret" }), h("span", { class: "ico ico-" + icon }), h("span", { class: "t-name" }, VIEWS[kind].title),
     h("span", { class: "t-count t-special-n" + (VIEWS[kind].hot ? " hot" : "") }, VIEWS[kind].count || ""));
   const special = !filter ? h("div", { class: "t-specials" },
-    specialRow("overview", "book", "What exists: every page by type and status, from their frontmatter"),
-    specialRow("status", "quests", "Every open question in the GDD, in one list"),
     specialRow("changes", "scripture", "Who changed which page, and where, newest first"),
     S.brokenCount ? specialRow("broken", "compass", "Pages to write, and pages whose structure needs a look") : null) : null;
-  if (gdd || special) groups.push(h("div", { class: "t-group" }, h("div", { class: "t-group-title" }, "The GDD"), special,
-    gdd ? gddOrder(gdd).map((x) => (x.dirs ? dirNode(x) : fileRow(x))) : null));
-  if (!groups.length) groups.push(h("div", { class: "o-empty" }, "No pages match."));
-  tree.replaceChildren(...groups);
+  const rows = gddOrder(gdd).map((x) => (x.dirs ? dirNode(x) : fileRow(x)));
+  tree.replaceChildren(...(rows.length || special ? [special, ...rows].filter(Boolean) : [h("div", { class: "o-empty" }, "No pages match.")]));
 }
 
-/** The GDD's pages and folders in its own order: the Charter, How the GDD Works and Using Codex, then
- *  the type folders, then any other page at the top, alphabetically. */
+/** The GDD's own order: the top pages (README, the Charter...), templates/, the type folders as How the
+ *  GDD Works lists them, then any other folder or page alphabetically. */
 function gddOrder(gdd) {
   const name = (x) => (x.dirs ? x.name : x.path.split("/").pop());
-  const top = (x) => (x.dirs ? -1 : TOP.indexOf(x.path));
-  const rank = (x) => (top(x) >= 0 ? top(x) : x.dirs ? TOP.length : TOP.length + 1);
+  const folders = ["templates", ...S.types.map((t) => t.folder)];
+  const rank = (x) => {
+    if (!x.dirs) return TOP.includes(x.path) ? TOP.indexOf(x.path) : 1000;
+    const i = folders.indexOf(x.name);
+    return 100 + (i >= 0 ? i : 500);
+  };
   return [...gdd.files, ...gdd.dirs.values()].sort((a, b) => rank(a) - rank(b) || collator.compare(name(a), name(b)));
-}
-
-// Status at a glance: a coloured dot on each page (stub, draft, agreed, cut), and these chips to show only one.
-const STATUS_CHIPS = [["", "All"], ["stub", "Stub"], ["draft", "Draft"], ["agreed", "Agreed"], ["cut", "Cut"], ["none", "No status"]];
-function renderStatusFilter() {
-  const counts = {};
-  for (const f of S.files) if (!isMeta(f.path)) { const k = f.status || "none"; counts[k] = (counts[k] || 0) + 1; }
-  $("#statusFilter").replaceChildren(...STATUS_CHIPS.filter(([k]) => !k || counts[k] || S.statusFilter === k).map(([k, label]) =>
-    h("button", { class: "st-chip" + ((S.statusFilter || "") === k ? " on" : ""), title: k ? `Only ${label.toLowerCase()} pages` : "Every page", onclick: () => { S.statusFilter = k || null; renderTree(); } },
-      k ? h("span", { class: "st-dot st-" + k }) : null, label, k ? h("span", { class: "st-n" }, String(counts[k] || 0)) : null)));
 }
 
 function markTreeCurrent() {
@@ -794,6 +784,7 @@ const I = {
 
 const TOOLS = [
   { type: "select" },
+  { type: "component" },
   { sep: true },
   { id: "bold", icon: I.bold, title: "Bold (Ctrl+B)", run: (c) => c.toggleBold(), active: (e) => e.isActive("bold") },
   { id: "italic", icon: I.italic, title: "Italic (Ctrl+I)", run: (c) => c.toggleItalic(), active: (e) => e.isActive("italic") },
@@ -842,12 +833,38 @@ function buildToolbar() {
       bar.append(sel);
       continue;
     }
+    if (t.type === "component") {
+      // Add a component where the cursor is: its snippet from templates/, its name into the frontmatter.
+      const sel = h("select", { class: "field tb-select hidden", id: "componentSel", title: "Add a component: its section goes where the cursor is" });
+      sel.addEventListener("change", () => {
+        const c = S.components.find((x) => x.name === sel.value);
+        sel.value = "";
+        if (c) gddUi.addComponent(c).then(fillComponentMenu);
+      });
+      bar.append(sel);
+      continue;
+    }
     if (t.type === "tableOps") {
       bar.append(h("span", { class: "tb-group table-ops hidden", id: "tableOps" }, h("span", { class: "tb-label" }, "TABLE"), TABLE_OPS.map(btn)));
       continue;
     }
     bar.append(btn(t));
   }
+}
+
+/** The Component menu: only on a typed page, with the components that belong on its type first. */
+function fillComponentMenu() {
+  const sel = $("#componentSel");
+  if (!sel) return;
+  const fm = S.path && !isMeta(S.path) ? gddUi.front() : null;
+  sel.classList.toggle("hidden", !fm?.type || !S.components.length);
+  if (!fm?.type) return;
+  const fits = (c) => c.foundOn.includes(fm.type) || c.foundOn.some((x) => /almost anything/.test(x));
+  const opt = (c) => h("option", { value: c.name, title: c.answers }, (gddUi.has(c) ? "✓ " : "") + c.name);
+  const usual = S.components.filter(fits), rest = S.components.filter((c) => !fits(c));
+  sel.replaceChildren(h("option", { value: "" }, "Component"),
+    usual.length ? h("optgroup", { label: "For " + (/^[aeiou]/.test(fm.type) ? "an " : "a ") + fm.type }, usual.map(opt)) : null,
+    rest.length ? h("optgroup", { label: "Others" }, rest.map(opt)) : null);
 }
 
 function updateToolbar() {
@@ -1091,7 +1108,7 @@ function newPageDialog(inFolder = null, prefill = {}) {
     const path = target();
     if (!path) { name.focus(); return; }
     // File names are unique across the whole GDD (Workflow, "Naming").
-    const same = S.files.find((f) => f.path !== path && f.path.split("/").pop() === path.split("/").pop());
+    const same = S.files.find((f) => f.path !== path && !f.path.startsWith(TEMPLATES + "/") && f.path.split("/").pop() === path.split("/").pop());
     if (same) { toast(`${path.split("/").pop()} is already ${same.title || same.path}: file names are unique across the GDD`, "bad"); name.focus(); return; }
     const r = await api("/api/new", { method: "POST", body: JSON.stringify({ path, title: name.value.trim(), type: kind.value }) });
     if (!r.ok) { toast(r.error || "Couldn't create it", "bad"); return; }
@@ -1347,12 +1364,10 @@ const typing = () => !!document.activeElement?.closest?.(".ProseMirror, input, t
 // underneath): Open questions (every GDD page's, in one list), Recent changes (who changed what, from
 // git) and To-do (pages to write and structure to fix; only listed while there's any).
 const VIEWS = {
-  overview: { title: "Status", url: "status-of-pages", render: () => panels.renderOverview() },
-  status: { title: "Open questions", url: "questions", render: () => panels.renderStatus() },
   changes: { title: "Recent changes", url: "changes", render: () => panels.renderChanges() },
   broken: { title: "To-do", url: "to-do", render: () => panels.renderBroken() },
 };
-const viewOfUrl = (v) => (v === "status" ? "status" : Object.keys(VIEWS).find((k) => VIEWS[k].url === v) || null);
+const viewOfUrl = (v) => Object.keys(VIEWS).find((k) => VIEWS[k].url === v) || null;
 
 function showView(kind, push = true) {
   if (!VIEWS[kind]) return;
@@ -1429,7 +1444,6 @@ function scrollToPos(pos, onlyIfHidden = false) {
 }
 
 const panels = makePanels({ S, $, h, api, toast, isMeta, openDoc: (...a) => openDoc(...a), newPage: (prefill) => newPageDialog(null, prefill), findInPage: (q) => findInPage(q), setLinksCount, countsChanged: () => refreshSpecialCounts() });
-window.__showStatus = () => showView("status");
 const notes = makeNotes({
   S, $, $$, h, esc, api, toast, modal, ask, renderHtml,
   openDoc: (...a) => openDoc(...a), refreshDirty: () => refreshDirty(), currentHeadingPos, scrollToPos,

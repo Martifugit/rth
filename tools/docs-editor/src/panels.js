@@ -1,6 +1,6 @@
 // The Links tab (what links to this page, what it links to, where it's mentioned), and the special pages
-// shown in the main window: Open questions (every GDD page's, in one list), Recent changes (who changed
-// which page and where, from git) and Broken links (links to pages or headings that don't exist).
+// shown in the main window: Recent changes (who changed which page and where, from git) and To-do
+// (pages to write, and structure to fix).
 
 import { slug } from "./links.js";
 
@@ -17,7 +17,7 @@ export function makePanels(ctx) {
     if (!cache.has(page)) cache.set(page, api("/api/links?page=" + encodeURIComponent(page)).then((r) => (r.ok ? r : null)));
     return cache.get(page);
   }
-  function invalidate() { cache.clear(); table.data = null; lists.broken = null; }
+  function invalidate() { cache.clear(); lists.broken = null; }
 
   async function renderLinks() {
     const pane = $("#linksPane");
@@ -54,46 +54,6 @@ export function makePanels(ctx) {
       group(labelled.length ? "Also linked from" : "Linked from", "Pages with a link to this one", inbound, labelled.length ? "No other links." : "No page links here yet."),
       group("Links to", "Pages this one links to", outbound, "This page has no links to other pages."),
       r.title ? group("Mentioned in", `Pages that name “${r.title}” without linking to it`, mentions, "Not mentioned anywhere else.") : null);
-  }
-
-  // ----------------------------------------------------------------------------- open questions
-
-  // Every GDD page's "Open questions", gathered into one page that reads like the rest of the docs:
-  // under each GDD section, each page's questions under its title. A click goes to the question.
-  async function renderStatus() {
-    const view = $("#statusView");
-    if (!table.data) {
-      if (!view.childElementCount) view.replaceChildren(h("p", { class: "st-loading" }, "Loading…"));
-      const r = await api("/api/board");
-      table.data = r.pages || [];
-    }
-    const order = (p) => {
-      const rest = p.path.slice("docs/gdd/".length);
-      return (rest.includes("/") ? "1/" : "0/") + rest;
-    };
-    const pages = table.data.filter((p) => p.questions.length).sort((a, b) => order(a).localeCompare(order(b), "en", { numeric: true }));
-    const total = pages.reduce((n, p) => n + p.questions.length, 0);
-    const groups = new Map();
-    for (const p of pages) {
-      const rest = p.path.slice("docs/gdd/".length);
-      const folder = rest.includes("/") ? rest.split("/")[0] : "";
-      // Grouped by type folder ("entities" → "Entities"); the top pages under "The GDD".
-      const name = folder ? folder[0].toUpperCase() + folder.slice(1).replace(/-/g, " ") : "The GDD";
-      if (!groups.has(name)) groups.set(name, []);
-      groups.get(name).push(p);
-    }
-    const go = (p, q) => ctx.openDoc(p.path, { hash: "open-questions", find: { q: firstWords(q.text), occurrence: 0 } });
-    view.replaceChildren(h("article", { class: "prose oq" },
-      h("h1", {}, "Open questions"),
-      h("p", { class: "oq-intro" }, total
-        ? `${total} decisions still open, from the “Open questions” at the end of ${pages.length} GDD pages. Click one to go to it.`
-        : "No open questions: every GDD page's “Open questions” is empty."),
-      [...groups].map(([name, list]) => [
-        h("h2", {}, name),
-        list.map((p) => h("section", { class: "oq-page" },
-          h("h3", {}, h("a", { onclick: () => ctx.openDoc(p.path, { hash: "open-questions" }), title: p.path }, p.title || p.path.split("/").pop())),
-          h("ol", {}, p.questions.map((q) => h("li", {}, h("a", { class: "oq-q", onclick: () => go(p, q), title: "Go to it" }, q.text)))))),
-      ])));
   }
 
   // ----------------------------------------------------------------------------- recent changes
@@ -146,33 +106,6 @@ export function makePanels(ctx) {
     });
     if (e.sections.length > shown.length) parts.push(h("span", { class: "ch-more", title: e.sections.slice(3).join(", ") }, ` and ${e.sections.length - 3} more`));
     return parts;
-  }
-
-  // ----------------------------------------------------------------------------- status
-
-  // What exists and what's still a stub: every page by type, with its status, from the page list's
-  // frontmatter. Generated, never written (it changes all the time).
-  function renderOverview() {
-    const view = $("#statusView");
-    const pages = S.files.filter((f) => !ctx.isMeta(f.path));
-    const statuses = ["stub", "draft", "agreed", "cut"];
-    const count = (list, st) => list.filter((f) => (f.status || null) === st).length;
-    const typeOrder = S.types.map((t) => t.type);
-    const byType = new Map();
-    for (const f of pages) { const k = f.type || ""; if (!byType.has(k)) byType.set(k, []); byType.get(k).push(f); }
-    const types = [...byType.keys()].sort((a, b) => (a ? typeOrder.indexOf(a) : 1e9) - (b ? typeOrder.indexOf(b) : 1e9));
-    const dot = (st) => h("span", { class: "st-dot st-" + (st || "none") });
-    view.replaceChildren(h("article", { class: "prose oq sv" },
-      h("h1", {}, "Status"),
-      h("p", { class: "oq-intro" }, pages.length
-        ? `${pages.length} page${pages.length > 1 ? "s" : ""}: ` + statuses.map((st) => `${count(pages, st)} ${st}`).join(", ") + (count(pages, null) ? `, ${count(pages, null)} with no status` : "") + ". Gathered from every page's frontmatter."
-        : "No pages yet. Start at the game page, and follow the links."),
-      types.map((type) => {
-        const list = byType.get(type).sort((a, b) => statuses.indexOf(a.status) - statuses.indexOf(b.status) || String(a.title).localeCompare(String(b.title)));
-        return h("section", { class: "oq-page" },
-          h("h2", {}, type ? type[0].toUpperCase() + type.slice(1) : "No type", h("span", { class: "sv-n" }, " " + statuses.map((st) => count(list, st) ? `${count(list, st)} ${st}` : null).filter(Boolean).join(" · "))),
-          h("ul", { class: "q-list" }, list.map((f) => h("li", {}, dot(f.status), h("a", { class: "q-page", onclick: () => ctx.openDoc(f.path), title: f.path }, f.title || f.path.split("/").pop()), h("span", { class: "q-type" }, f.status || "no status")))));
-      })));
   }
 
   // ----------------------------------------------------------------------------- to-do
@@ -234,12 +167,7 @@ export function makePanels(ctx) {
           h("span", { class: "bl-why" }, (l.section ? l.section + " · " : "") + (l.kind === "heading" ? `“${l.href.split("#").pop()}” isn't a heading on ${where(l.to)}` : `${l.to} isn't in the GDD`)))))))] : null));
   }
 
-  return { linksFor, renderLinks, renderStatus, renderOverview, renderChanges, renderBroken, changes, broken, unseen, invalidate };
-}
-
-// The first few words of a question, to find it in the page (a search can't cross bold or links).
-function firstWords(text) {
-  return text.split(/\s+/).slice(0, 4).join(" ");
+  return { linksFor, renderLinks, renderChanges, renderBroken, changes, broken, unseen, invalidate };
 }
 
 const timeOf = (iso) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });

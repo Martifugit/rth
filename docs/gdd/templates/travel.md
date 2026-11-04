@@ -1,0 +1,5 @@
+## Travel
+
+- Destinations:
+- Cost:
+- Requirements:

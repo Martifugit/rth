@@ -3,14 +3,23 @@
 // from it, so changing the system is an edit to the page, never to code.
 
 export const GDD = "docs/gdd";
+export const README = GDD + "/README.md";
 export const CHARTER = GDD + "/charter.md";
 export const SYSTEM = GDD + "/how-the-gdd-works.md";
-/** The pages at the top of the page list, in this order, before the type folders. */
-export const TOP = [CHARTER, SYSTEM, GDD + "/using-codex.md", GDD + "/workflow.md", GDD + "/decisions-log.md"];
+/** The pages at the top of the page list, in this order: the start page and the pages about the GDD. */
+export const TOP = [README, CHARTER, SYSTEM, GDD + "/using-codex.md", GDD + "/workflow.md"];
+/** One template per type (templates/entity.md) and one snippet per component (templates/action.md). */
+export const TEMPLATES = GDD + "/templates";
+export const DECISIONS_LOG = GDD + "/decisions/decisions-log.md";
 
 export const inGdd = (rel) => typeof rel === "string" && rel.startsWith(GDD + "/");
-/** Pages about the GDD rather than in it: the top pages, and anything starting with "_". No type needed. */
-export const isMeta = (rel) => TOP.includes(rel) || /\/_[^/]*$/.test(rel);
+/** Pages about the GDD rather than in it: the top pages, the templates, the decisions log, anything starting with "_". No type needed. */
+export const isMeta = (rel) => TOP.includes(rel) || rel === DECISIONS_LOG || rel.startsWith(TEMPLATES + "/") || /\/_[^/]*$/.test(rel);
+
+/** A type's template made into a new page: its first title line becomes the page's title. */
+export function fromTemplate(template, title) {
+  return template.replace(/\r\n/g, "\n").replace(/^#\s+.*$/m, "# " + title);
+}
 
 const cells = (l) => l.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
 

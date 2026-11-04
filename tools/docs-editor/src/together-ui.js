@@ -37,9 +37,9 @@ export function makeTogetherUi(ctx) {
     return path.filter((x) => x != null);
   }
 
-  const editing = () => Date.now() - T.lastTyped < EDITING_MS && S.view !== "status";
+  const editing = () => Date.now() - T.lastTyped < EDITING_MS && !S.view;
   function myState() {
-    const onPage = S.path && S.view !== "status";
+    const onPage = S.path && !S.view;
     const pos = editing() ? S.editor?.state.selection.from : ctx.currentHeadingPos();
     return {
       page: onPage ? S.path : null, title: onPage ? ctx.pageTitle() : null,
@@ -136,7 +136,7 @@ export function makeTogetherUi(ctx) {
     // Beside the page's path: those on this page.
     const crumb = $("#crumbHere");
     if (crumb) {
-      const here = S.path && S.view !== "status" ? all.filter((p) => p.page === S.path) : [];
+      const here = S.path && !S.view ? all.filter((p) => p.page === S.path) : [];
       crumb.replaceChildren(...here.map((p) => avatar(p, "on-page")));
       crumb.classList.toggle("hidden", !here.length);
     }

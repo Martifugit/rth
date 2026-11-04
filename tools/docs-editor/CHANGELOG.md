@@ -6,15 +6,14 @@ section before releasing; the release refuses without one.
 
 ## 0.3.0
 
-- Each page's type, status, components and groups sit in a card over it; change the status there.
-- New pages start with their type's headings; + on the card adds a component and its section.
+- The GDD in its own order: the start page, the Charter, How the GDD Works, Using Codex, Workflow, templates, then a folder for every type.
+- New pages are made from their type's template in templates/; Component in the toolbar adds a component's snippet.
 - A link to a page not written yet is a to-do: click it to make the page as a stub.
 - Links in are named by what they mean: Dropped by, Found in, Appears in, Sold by.
 - Lists that write themselves: a group's members, a skill's training, or any query, in a `query` block.
-- To-do (in the page list): pages to write, and pages whose type or sections need a look.
-- A coloured dot shows each page's status in the page list, with chips to show only stubs, drafts...
-- Status (in the page list): every page by type and status, gathered from the pages themselves.
-- File names are unique across the GDD, and every p- placeholder name shows in To-do.
+- To-do (in the page list): pages to write, placeholder names, and pages whose type or sections need a look.
+- File names are unique across the GDD.
+- Open questions is gone from the page list: each page keeps its own.
 
 ## 0.2.0
 

@@ -25,7 +25,7 @@ import { buildIndex, linksFor, pageState, brokenLinks } from "./src/links.js";
 import { LOG_FORMAT, parseLog, entries } from "./src/changelog.js";
 import os from "node:os";
 import { makeSpell } from "./src/spell.js";
-import { GDD, SYSTEM, inGdd, readSystem, newPageText } from "./src/gdd.js";
+import { GDD, SYSTEM, TEMPLATES, inGdd, readSystem, newPageText, fromTemplate } from "./src/gdd.js";
 import { make as makeFront, split as splitFront } from "./src/frontmatter.js";
 import { buildGdd, runQuery, checks, labelFor } from "./src/gdd-index.js";
 import { makeSync } from "./src/sync.js";
@@ -350,7 +350,10 @@ const api = {
     if (!abs || !isDoc(rel)) return [400, { error: "New pages go in the GDD." }];
     if (fs.existsSync(abs)) return [409, { error: "A page with that name already exists in that folder." }];
     const name = String(title || "").trim() || path.basename(rel, ".md").replace(/[-_]/g, " ").replace(/^./, (c) => c.toUpperCase());
-    const text = newPageText(name, (await gdd()).system.types.find((t) => t.type === type), makeFront);
+    // Made from its type's template (templates/<type>.md); a type with no template yet gets its core headings.
+    let text = null;
+    if (type && /^[a-z-]+$/.test(type)) { try { text = fromTemplate(await readText(path.join(REPO, TEMPLATES, type + ".md")), name); } catch {} }
+    if (text == null) text = newPageText(name, (await gdd()).system.types.find((t) => t.type === type), makeFront);
     await fsp.mkdir(path.dirname(abs), { recursive: true });
     await fsp.writeFile(abs, text, "utf8");
     recentWrites.set(relOf(abs), { hash: hash(text), until: Date.now() + 3000 });

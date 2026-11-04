@@ -7,24 +7,22 @@ in service of that.
 ## Making a page
 
 - **New page** (top bar), or right-click a folder in the page list. Give it a title and pick its type:
-  the type decides its folder and its core headings ([How the GDD Works](how-the-gdd-works.md), "4.
-  Types"). It starts as a stub.
+  the type decides its folder, and the page is made from the type's template in `templates/`. It
+  starts as a stub.
 - **From a link.** Link to a page that isn't written yet and the link shows gold and dashed: a to-do,
   not a mistake. Click it to make the page, already titled and in its folder.
 - **To-do** in the page list gathers every page that something links to but nobody has written, and
   every page whose structure needs a look.
 
-## The card over a page
+## Templates and components
 
-Every page starts with a small block of frontmatter (its type, components, groups, based-on and
-status). Codex shows it as a card over the page instead of as text.
+`templates/` holds one template per type (`entity.md`) and one snippet per component (`action.md`).
+Change a template and every new page of that type follows it.
 
-- **Status**: change it on the card. Stub, draft, agreed or cut. The page list shows each page's status
-  as a dot, and the chips under the filter show only one kind.
-- **Components**: click one to go to its section. **+** adds a component: it goes into the frontmatter,
-  and its standard section, with a line per field, goes into the page.
-- **⋯**: the groups a page belongs to, the page it's a variant of, and lists to insert.
-- **<>** (top right) shows the page's raw text, frontmatter included.
+- **Component** (in the toolbar) adds a component where the cursor is: its snippet goes into the page,
+  and its name into the page's frontmatter. The components that belong on the page's type come first.
+- **<>** (top right) shows the page's raw text, frontmatter included: its type, components, groups,
+  based-on and status.
 
 ## Links
 

@@ -17,8 +17,8 @@ Short version: if it changes meaning on an agreed page, comment first.
 
 ## Decisions
 
-- Every decision is one line in the [Decisions log](decisions-log.md): the date, the decision, and a
-  link to the page it affects.
+- Every decision is one line in the [Decisions log](decisions/decisions-log.md): the date, the
+  decision, and a link to the page it affects.
 - The decision is also written into the page it affects, so the page stays the truth.
 - Only big, contested choices get their own decision page, with the full why.
 

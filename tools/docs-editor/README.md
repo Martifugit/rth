@@ -41,9 +41,9 @@ uncommitted work in the folder are never staged, committed, set aside or overwri
   closes it. Ctrl+, toggles Pages, Ctrl+. the Outline (Ctrl+\ and Ctrl+Shift+\ too, on whichever key types \).
   Alt+← and Alt+→ (or the mouse's back button, or the arrows in the page's title bar) go back to where
   you were and forward again.
-- **Pages** (left): the GDD (`docs/gdd/`) and nothing else: the Charter, How the GDD Works and Using
-  Codex, then a folder per type, with *Open questions* and *Recent changes* at the top. The rest of
-  `docs/` stays in the repository, out of the Codex's way. It opens on the Charter. A gold
+- **Pages** (left): the GDD (`docs/gdd/`) and nothing else, with *Recent changes* and *To-do* at the
+  top. The rest of `docs/` stays in the repository, out of the Codex's way. It opens on the start
+  page, `docs/gdd/README.md`. A gold
   dot is a page changed since the last commit, a green one a page not in git yet. Type to filter.
   Right-click a folder for **New page here**, or a page to open it, make a page beside it, copy a link
   for Discord or its path, or delete it.
@@ -58,32 +58,28 @@ uncommitted work in the folder are never staged, committed, set aside or overwri
   shows the raw text; Esc goes back.
 - **Outline and Links** (right): the page's headings, following where you are; what links here,
   what it links to, and where it's mentioned without a link.
-- **Open questions** (top of the page list): every GDD page's "Open questions" gathered on one
-  page, by section and page. Click a question to go to it.
-- **New page**: a title and a type ("entity | monsters, NPCs, pets"). The type decides the folder and
-  the core headings, both read from the Types table in How the GDD Works (`src/gdd.js`), so changing
-  the system is an edit to that page, never to code. The page starts with its frontmatter, as a stub.
-- **The card over a page** shows its frontmatter (`src/frontmatter.js`): type, status (change it there),
-  components (click one to go to its section; **+** adds one, writing it into the frontmatter and its
-  standard section into the page, its fields as `- Field:` lines), groups and based-on (**⋯**). The
-  frontmatter never goes into the editor: it is kept aside and written back in front of the page.
+- **New page**: a title and a type ("entity | monsters, NPCs, pets"). The type decides the folder (the
+  Types table in How the GDD Works, read by `src/gdd.js`), and the page is made from the type's
+  template, `templates/<type>.md`, its title line set to the page's title.
+- **Frontmatter** (`src/frontmatter.js`) never goes into the editor: it is kept aside and written back
+  in front of the page, exactly as typed. The raw view (**<>**) shows and edits it.
+- **Component** (in the toolbar, on a typed page): inserts the component's snippet,
+  `templates/<component>.md`, where the cursor is, and adds its name to the frontmatter. The
+  components found on the page's type come first.
 - **To-dos:** a link to a page not written yet is gold and dashed; a click makes it, as a stub of its
   folder's type. **To-do** (in the page list) gathers them, groups named in frontmatter with no page,
-  and the structure checks: no type, an unknown type or component, a component without its section, a
-  component section not in the frontmatter, a page outside its type's folder (`src/gdd-index.js`).
+  `p-` placeholders, and the structure checks: no type, an unknown type or component, a component
+  without its section, a component section not in the frontmatter, a page outside its type's folder,
+  two pages with one file name (`src/gdd-index.js`).
 - **Links in** are named by the section they come from, as How the GDD Works' "Who writes what" says:
   a link from a rewards section shows as *Dropped by*, from spawns as *Found in*.
 - **Generated lists:** a code block of language `query` shows, under it, what it finds. Lines are
   filters: `type`, `status`, `groups`, `components`, `based-on`, `links-to`, and `<component>.<field>`
   for component instances (`action.skill: this` is a skill's training table); `this` is the page it's
-  on; `sort: <field>`. A new group page gets its Members list this way; **⋯** inserts others.
-- **Status at a glance:** a dot per page in the page list (stub, draft, agreed, cut) and chips to show
-  only one. **Status** (in the page list) lists every page by type and status, generated from their
-  frontmatter, so no page has to keep "what exists" up to date.
-- **Naming** (the GDD's Workflow page): file names are unique across the GDD (New page refuses a
-  name in use, and To-do lists any two pages that share one), and each `p-` placeholder is a to-do.
-- **The top pages** (`src/gdd.js`, `TOP`): the Charter, How the GDD Works, Using Codex, Workflow and
-  the Decisions log. They need no type.
+  on; `sort: <field>`. The group template holds its Members list this way.
+- **The page list** is the GDD, flat (`src/gdd.js`, `TOP`): the start page (README), the Charter, How
+  the GDD Works, Using Codex and Workflow, then `templates/`, then a folder per type in the Types
+  table's order, shown even while empty. New page refuses a file name already used in the GDD.
 - **Delete a page**: the bin in the page's title bar. It asks first (saying how many pages link to it),
   deletes it for everyone, and offers Undo straight after; git keeps its history. Its comments stay in
   the comment history.
@@ -225,7 +221,7 @@ key; `node scripts/announce.mjs <version>` announces one that's out already).
 - Comments: `src/anchor.js` (where a comment belongs, and finding it again), `src/notes-store.js` (the
   files in `docs/.notes`), `src/notes.js` (the highlights, margin, cards and history), `src/agent-run.js`
   (running `claude -p` for asks and tasks), `notes.js` (the CLI). `src/links.js` and `src/panels.js`:
-  the link index, the Links tab and the Open questions page. `src/layout.js`: the logo's layout menu,
+  the link index, the Links tab, Recent changes and To-do. `src/layout.js`: the logo's layout menu,
   docked panes and sheets.
 - `public/`: the page shell and its stylesheet; `npm run build` bundles `src/` into `public/app.js`
   (git-ignored, built by `npm start`).
