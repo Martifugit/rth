@@ -20,14 +20,23 @@ export function changes(version) {
   return m ? m[1].trim().replace(/\n {2,}/g, " ") || null : null; // a wrapped line is one line in Discord
 }
 
-/** The Discord message for a release. */
+const LIMIT = 1990; // Discord takes 2000 characters a message
+
+/**
+ * The Discord message for a release. The link to the release comes first and the footer last, and they
+ * always fit: when the changes don't, the list is cut at a whole line and ends "...and N more in the
+ * release notes" (a long changelog once cut the message off mid-sentence, link and all).
+ */
 export function message(version, repo) {
   const url = `https://github.com/${repo}/releases/tag/codex-v${version}`;
-  return [
-    `**R'th Codex ${version}** is out.`,
-    changes(version) || "",
-    `-# Installed Codexes update themselves: once the update has downloaded, the Codex asks you to restart it. New here? [Download the installer](<${url}>).`,
-  ].filter(Boolean).join("\n");
+  const head = `**R'th Codex ${version}** is out: [release notes and installer](<${url}>)`;
+  const foot = "-# Installed Codexes update themselves: once the update has downloaded, the Codex asks you to restart it.";
+  const lines = (changes(version) || "").split("\n").filter(Boolean);
+  const fits = (list, more) => [head, ...list, more, foot].filter(Boolean).join("\n").length <= LIMIT;
+  let shown = lines.length;
+  const moreLine = (n) => (n ? `…and ${n} more in the [release notes](<${url}>).` : "");
+  while (shown > 0 && !fits(lines.slice(0, shown), moreLine(lines.length - shown))) shown--;
+  return [head, ...lines.slice(0, shown), moreLine(lines.length - shown), foot].filter(Boolean).join("\n");
 }
 
 const agentKey = () => { try { return fs.readFileSync(path.join(ROOT, "helper", ".dev.vars"), "utf8").match(/^AGENT_KEY=(\S+)/m)?.[1] || null; } catch { return null; } };
