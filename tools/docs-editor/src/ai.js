@@ -470,12 +470,23 @@ export function makeAi(ctx) {
     if (A.id) await api("/api/ai/stop", { method: "POST", body: JSON.stringify({ id: A.id }) });
   }
 
+  async function answered(ev) {
+    ctx.markTab(true);
+    const c = await api("/api/ai/conversation?id=" + encodeURIComponent(ev.id));
+    const name = c.ok ? c.title : "your question";
+    const go = () => { ctx.show(); if (ev.id !== A.id) openConversation(ev.id); };
+    toast(ev.error && ev.error !== "Stopped." ? `R'th AI couldn't finish “${name}”` : `R'th AI answered “${name}”`, ev.error ? "bad" : "", { actions: [{ label: "Open", run: go }] });
+  }
+
   /** From the server: the answer streaming in, or finished. */
   function onEvent(ev) {
     if (ev.state === "provider") { // signed in or out of OpenRouter, or AI setup changed
       if (A.setupOpen) api("/api/ai/setup").then((r) => { A.setup = r; drawLog(); });
       return refreshProvider();
     }
+    // An answer that lands while you're elsewhere (another tab, another conversation): a mark on the AI
+    // tab and a notice that opens it, so working on while it thinks doesn't mean checking back.
+    if (ev.state === "done" && (ev.id !== A.id || !ctx.visible())) answered(ev);
     if (ev.id !== A.id) return;
     if (ev.state === "running") {
       A.run = { text: ev.text, activity: ev.activity };
@@ -511,7 +522,7 @@ export function makeAi(ctx) {
 
   return {
     init, focus, onEvent, ask,
-    shown: () => { drawChips(); if (!A.conv && !A.run) drawLog(); },
+    shown: () => { ctx.markTab(false); drawChips(); if (!A.conv && !A.run) drawLog(); },
     pageChanged: () => { if (A.selection && A.selection.page !== S.path) A.selection = null; A.left.delete("page"); drawChips(); if (!A.conv?.messages?.length && !A.run) drawLog(); },
     notesChanged: () => drawChips(),
     get state() { return A; },

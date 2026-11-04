@@ -1748,6 +1748,9 @@ const ai = makeAi({
   openDoc: (...a) => openDoc(...a), hasPage: (p) => S.fileSet.has(p), titleOf: (p) => S.files.find((f) => f.path === p)?.title || null,
   saveNow: () => { refreshDirty(); return S.dirty ? save(false, { quiet: true }) : Promise.resolve(true); },
   show: () => { layout.show("outline"); showRightTab("ai"); },
+  // Whether the AI tab is on screen, and its mark for an answer that landed while it wasn't.
+  visible: () => rightTab === "ai" && document.body.classList.contains("outline-docked") || document.body.classList.contains("sheet-outline") && rightTab === "ai",
+  markTab: (on) => $('#outlineWin .tab[data-tab="ai"]')?.classList.toggle("has-news", !!on),
   // From a reply: open the page the AI changed with its changes shown.
   showChanges: (page) => { if (page === S.path) aiChanges.show(); else { S.wantChanges = page; openDoc(page); } },
   pageChanges: () => aiChanges.load(),

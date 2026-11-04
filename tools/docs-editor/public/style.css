@@ -194,6 +194,9 @@ body.in-app .brand-btn { height: 30px; }
 .tab:hover .ico { background-color: #a8925f; }
 .tab.active { color: var(--value); border-bottom-color: #c9a25e; }
 .tab.active .ico { background-color: #c9a25e; }
+/* R'th AI answered while the tab was out of sight (src/ai.js, answered): a gold dot until it's opened. */
+.tab.has-news { position: relative; }
+.tab.has-news::after { content: ""; position: absolute; top: 7px; right: 4px; width: 7px; height: 7px; border-radius: 50%; background: var(--value); box-shadow: 0 0 6px rgba(240, 213, 140, .6); }
 
 /* ------------------------------------------------------------------ buttons (the game's skin) */
 .btn {
