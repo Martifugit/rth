@@ -8,6 +8,7 @@
 // the editor as it is now, block by block (ProseMirror's own node equality), then word by word inside
 // blocks that changed. Undoing a change puts the old blocks back, formatting and all, as an edit.
 
+import { busy } from "./busy.js";
 import { Extension, createDocument } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
@@ -87,7 +88,7 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
     bar.replaceChildren(...[
       h("span", { class: "ai-bar-ico" }, "✦"),
       h("span", { class: "ai-bar-text" }, C.other
-        ? (C.showing ? (n ? `${n} change${n > 1 ? "s" : ""} not shared yet` : "No changes left") : "Changed outside the Codex")
+        ? (C.showing ? (n ? `${n} change${n > 1 ? "s" : ""} not saved yet` : "No changes left") : "Changed outside the Codex")
         : C.showing ? (n ? `${n} change${n > 1 ? "s" : ""} by the AI` : "No changes left") : "The AI changed this page"),
       C.showing && n ? h("span", { class: "ai-bar-nav" },
         h("button", { class: "ai-bar-btn", title: "Previous change", onclick: () => step(-1) }, "‹"),
@@ -96,7 +97,7 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
       h("span", { class: "ai-bar-gap" }),
       h("button", { class: "btn" + (C.showing ? " on" : ""), onclick: () => toggle() }, C.showing ? "Hide changes" : "Show changes"),
       held(S.path)
-        ? h("button", { class: "btn btn-gold", title: "Send this page to everyone, as it is now", onclick: () => share(S.path) }, "Share")
+        ? h("button", { class: "btn btn-gold", title: "Save this page for everyone, as it is now", onclick: (ev) => busy(ev, "Saving…", () => share(S.path)) }, "Save")
         : h("button", { class: "btn", title: "Stop marking these changes", onclick: done }, "Done"),
     ].filter(Boolean));
   }

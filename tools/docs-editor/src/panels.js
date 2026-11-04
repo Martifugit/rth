@@ -294,7 +294,7 @@ export function makePanels(ctx) {
     // Each kind is a section of the journal, under its own heading and icon; the tabs pick one or all.
     const CATS = [
       { key: "missing", tab: "To write", title: "Pages to write", icon: "scripture", blurb: "Linked to, but not written yet." },
-      { key: "references", tab: "Links", title: "Links to mend", icon: "compass", blurb: "References that lead somewhere wrong." },
+      { key: "references", tab: "Links", title: "Links to mend", icon: "links", blurb: "References that lead somewhere wrong." },
       { key: "placeholders", tab: "Names", title: "Names to choose", icon: "note", blurb: "Placeholder names still waiting for real ones." },
       { key: "structure", tab: "Tidying", title: "Pages to tidy", icon: "settings", blurb: "Pages whose sections and components disagree." },
     ];

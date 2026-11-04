@@ -8,6 +8,8 @@
 
 import { discordConversation } from "./discord-extras.js";
 import { failed } from "./plain-errors.js";
+import { answerStream } from "./ai-stream.js";
+import { busy } from "./busy.js";
 
 const ICON = {
   send: '<svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></svg>',
@@ -15,6 +17,7 @@ const ICON = {
   new: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
   list: '<svg viewBox="0 0 24 24"><path d="M12 7v5l3 2"/><circle cx="12" cy="12" r="8"/></svg>',
   cog: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v2.6M12 18.9v2.6M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M2.5 12h2.6M18.9 12h2.6M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"/><circle cx="12" cy="12" r="6.5"/></svg>',
+  check: '<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
   close: '<svg viewBox="0 0 24 24"><path d="m7 7 10 10M17 7 7 17"/></svg>',
   page: '<svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>',
   quote: '<svg viewBox="0 0 24 24"><path d="M5 7h14M5 12h10M5 17h12"/></svg>',
@@ -41,7 +44,7 @@ export function makeAi(ctx) {
   const head = h("div", { class: "ai-head" });
   const log = h("div", { class: "ai-log" });
   const chips = h("div", { class: "ai-chips" });
-  const input = h("textarea", { class: "ai-input", rows: "1", placeholder: "Ask, or talk an idea through… @ adds a page, /model and /effort set the AI", spellcheck: "true" });
+  const input = h("textarea", { class: "ai-input", rows: "1", placeholder: "Ask anything…",spellcheck: "true" });
   const sendBtn = h("button", { class: "ai-send", title: "Send (Enter)", html: ICON.send, onclick: () => (A.run ? stop() : send()) });
   const mention = h("div", { class: "ai-mention hidden" });
   const box = h("div", { class: "ai-box" }, mention, chips, h("div", { class: "ai-row" }, input, sendBtn));
@@ -52,7 +55,7 @@ export function makeAi(ctx) {
     if (ev.key === "Enter" && !ev.shiftKey && !ev.isComposing) { ev.preventDefault(); send(); }
     else if (ev.key === "Escape" && A.listOpen) { ev.stopPropagation(); A.listOpen = false; drawHead(); }
   });
-  input.addEventListener("input", () => { grow(); pane.classList.toggle("typing", !!input.value.trim()); drawMention(); });
+  input.addEventListener("input", () => { grow(); pane.classList.toggle("typing", !!input.value.trim()); drawMention(); mentionsEdited(); });
   input.addEventListener("blur", () => setTimeout(() => mention.classList.add("hidden"), 150));
   // A conversation pasted from Discord: who said what, so "turn this into the decision" works on it.
   input.addEventListener("paste", (ev) => {
@@ -64,7 +67,11 @@ export function makeAi(ctx) {
     grow();
     pane.classList.add("typing");
   });
-  function grow() { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 220) + "px"; }
+  function grow() {
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, 220) + "px";
+    input.style.overflowY = input.scrollHeight > 220 ? "auto" : "hidden"; // a scrollbar only once it's full
+  }
 
   // ----------------------------------------------------------------------------- chips
 
@@ -154,8 +161,33 @@ export function makeAi(ctx) {
     input.value = before + input.value.slice(input.selectionStart);
     input.setSelectionRange(before.length, before.length);
     mention.classList.add("hidden"); picks = [];
+    const token = "@" + (f.title || pageTitle(f.path));
+    // Remember what this mention brought in, so deleting it takes back that and nothing more: a page
+    // that was in the context already stays.
+    if (!inContext(f.path)) mentions.push({ token, page: f.path, drop: started() && !A.conv.context.page ? "page" : f.path, wasLeft: A.left.has("page") });
     changeContext({ add: { page: f.path } });
     grow();
+  }
+
+  // The pages @mentions added while writing this message: { token, page, drop, wasLeft }.
+  let mentions = [];
+  function inContext(page) {
+    if (started()) { const k = A.conv.context; return k.page === page || (k.pages || []).includes(page); }
+    const c = context();
+    return c.page === page || (c.pages || []).includes(page);
+  }
+  /** An @mention deleted from the message: the page it added leaves the context (and its chip), unless
+   *  another mention of it is still there. */
+  function mentionsEdited() {
+    const text = input.value;
+    const gone = mentions.filter((m) => !text.includes(m.token));
+    if (!gone.length) return;
+    mentions = mentions.filter((m) => text.includes(m.token));
+    for (const m of gone) {
+      if (mentions.some((x) => x.page === m.page)) continue;
+      if (!started() && m.page === S.path && m.wasLeft) { A.extra = A.extra.filter((p) => p !== m.page); A.left.add("page"); drawChips(); }
+      else changeContext({ drop: m.drop });
+    }
   }
   /** Arrow keys, Enter and Tab work the @ list while it's open. */
   function mentionKey(ev) {
@@ -198,20 +230,26 @@ export function makeAi(ctx) {
     drawHead();
   }
   function listEl() {
-    const items = listCache.map((c) => h("div", { class: "ai-li" + (c.id === A.id ? " current" : ""), onclick: () => { A.listOpen = false; openConversation(c.id); } },
-      h("span", { class: "ai-li-title" }, c.title),
-      h("span", { class: "ai-li-meta" }, ago(c.updated) + (c.page ? ", " + (ctx.titleOf(c.page) || c.page.split("/").pop()) : "")),
+    // As the logo's menu: one line a conversation, a tick by the open one, when on the right; the page
+    // it's about is its tooltip.
+    const items = listCache.map((c) => h("div", { class: "cm-menu-item lm-item ai-li" + (c.id === A.id ? " current" : ""),
+      title: c.page ? "About " + (ctx.titleOf(c.page) || c.page.split("/").pop()) : null,
+      onclick: () => { A.listOpen = false; openConversation(c.id); } },
+      h("span", { class: "lm-check" }, c.id === A.id ? "✓" : ""),
+      h("span", { class: "lm-label ai-li-title" }, c.title),
+      h("span", { class: "lm-keys ai-li-meta" }, ago(c.updated)),
       h("button", { class: "ai-li-x", title: "Delete this conversation", html: ICON.close, onclick: async (ev) => {
         ev.stopPropagation();
         await api("/api/ai/delete", { method: "POST", body: JSON.stringify({ id: c.id }) });
         listCache = listCache.filter((x) => x.id !== c.id);
         if (c.id === A.id) newConversation(); else drawHead();
       } })));
-    return h("div", { class: "ai-list" }, items.length ? items : h("div", { class: "ai-li-none" }, "No earlier conversations."));
+    return h("div", { class: "cm-menu ai-list" }, h("div", { class: "lm-head" }, "Conversations"),
+      items.length ? items : h("div", { class: "ai-li-none" }, "No earlier conversations."));
   }
 
   function newConversation() {
-    A.id = null; A.conv = null; A.run = null; A.listOpen = false; A.extra = []; A.left.clear();
+    A.id = null; A.conv = null; A.run = null; A.listOpen = false; A.extra = []; A.left.clear(); mentions = [];
     localStorage.removeItem(KEY);
     drawHead(); drawLog(); syncSend();
   }
@@ -219,6 +257,7 @@ export function makeAi(ctx) {
   async function openConversation(id) {
     const r = await api("/api/ai/conversation?id=" + encodeURIComponent(id));
     if (!r.ok) { if (id === A.id) newConversation(); return; }
+    if (id !== A.id) mentions = []; // another conversation: the message's mentions were about this one
     A.id = id; A.conv = r; A.setupOpen = false;
     queueMicrotask(drawChips); // its own context, not the screen's
     A.run = r.run?.state === "running" ? { text: r.run.text, activity: r.run.activity } : null;
@@ -300,13 +339,25 @@ export function makeAi(ctx) {
     if (!msgs.length && !A.run) out.push(emptyState());
     for (const m of msgs) out.push(message(m));
     if (A.pending) out.push(message({ by: "you", text: A.pending.text, context: A.pending.context }));
-    if (A.run) out.push(h("div", { class: "ai-msg ai-msg-ai" },
-      A.run.text ? body(A.run.text, true) : null,
-      h("div", { class: "ai-activity" }, h("span", { class: "ai-dots" }), A.run.activity || "Thinking")));
+    if (A.run) out.push(streamFor().el);
+    else dropStream();
     const atEnd = log.scrollHeight - log.scrollTop - log.clientHeight < 40;
     log.replaceChildren(...out);
     if (atEnd || !A.run) log.scrollTop = log.scrollHeight;
   }
+
+  // The answer under way (src/ai-stream.js): one block kept across redraws, so its reveal runs on.
+  let stream = null;
+  function streamFor() {
+    if (stream && stream.id !== A.id) dropStream();
+    if (!stream) {
+      stream = answerStream({ h, render: ctx.renderHtml, scroller: log });
+      stream.id = A.id;
+      stream.set(A.run, { instant: true }); // an answer already under way when it's opened: shown as it stands
+    } else stream.set(A.run);
+    return stream;
+  }
+  function dropStream() { stream?.destroy(); stream = null; }
 
   function emptyState() {
     const p = A.provider;
@@ -384,15 +435,40 @@ export function makeAi(ctx) {
     const title = ctx.titleOf(x.page) || x.page.split("/").pop();
     const n = `${x.places || 1} change${x.places === 1 ? "" : "s"}`;
     const idx = A.conv.messages.indexOf(m);
-    if (x.suggest) return h("div", { class: "ai-change" + (x.reviewed ? " reviewed" : "") },
+    const dismiss = async (ev, label = "Dismissing…") => busy(ev, label, async () => { await api("/api/ai/reviewed", { method: "POST", body: JSON.stringify({ conv: A.id, msg: idx, page: x.page }) }); await openConversation(A.id); });
+    // A new page it suggests: there's no page to review in yet, so it's previewed, then created or skipped.
+    if (x.suggest && x.before === null) {
+      const name = ctx.titleOf(x.page) || headingOf(x.after) || x.page.split("/").pop();
+      return h("div", { class: "ai-change" + (x.reviewed ? " reviewed" : ""), title: x.reviewed ? "Handled" : x.page },
+        x.reviewed ? h("span", { class: "ai-change-check", html: ICON.check }) : null,
+        h("span", { class: "ai-change-text" }, "Suggests a new page, ", h("b", {}, name)),
+        x.reviewed ? null : h("button", { class: "ai-link", onclick: () => ctx.previewNewPage({ page: x.page, name, text: x.after,
+          create: async () => {
+            const r = await api("/api/ai/create-page", { method: "POST", body: JSON.stringify({ conv: A.id, msg: idx, page: x.page }) });
+            if (!r.ok) { toast(failed("Couldn't make the page", r), "bad"); return false; }
+            openConversation(A.id);
+            return true;
+          },
+          skip: () => dismiss(null) }) }, "Preview"),
+        x.reviewed ? null : h("button", { class: "ai-link", onclick: (ev) => dismiss(ev, "Skipping…") }, "Skip"));
+    }
+    // Suggestions reviewed (accepted, skipped or dismissed): done, with a check and no actions.
+    if (x.suggest) return h("div", { class: "ai-change" + (x.reviewed ? " reviewed" : ""), title: x.reviewed ? "Reviewed" : null },
+      x.reviewed ? h("span", { class: "ai-change-check", html: ICON.check }) : null,
       h("span", { class: "ai-change-text" }, `Suggested ${n} to `, h("b", {}, title)),
       x.reviewed ? null : h("button", { class: "ai-link", onclick: () => ctx.showChanges(x.page) }, "Review"),
-      x.reviewed ? null : h("button", { class: "ai-link", onclick: async () => { await api("/api/ai/reviewed", { method: "POST", body: JSON.stringify({ conv: A.id, msg: idx, page: x.page }) }); openConversation(A.id); } }, "Dismiss"));
+      x.reviewed ? null : h("button", { class: "ai-link", onclick: dismiss }, "Dismiss"));
     const what = x.before === null ? "Made" : x.after === null ? "Deleted" : `Changed ${x.places || 1} place${x.places === 1 ? "" : "s"} in`;
     return h("div", { class: "ai-change" + (x.reviewed ? " reviewed" : "") },
       h("span", { class: "ai-change-text" }, what + " ", h("b", {}, title)),
       x.after !== null ? h("button", { class: "ai-link", onclick: () => ctx.showChanges(x.page) }, "Show") : null,
-      h("button", { class: "ai-link", onclick: () => undoTurn(idx, x.page) }, "Undo"));
+      h("button", { class: "ai-link", onclick: (ev) => busy(ev, "Undoing…", () => undoTurn(idx, x.page)) }, "Undo"));
+  }
+
+  /** A page's title from its text: its first heading. */
+  function headingOf(text) {
+    const m = String(text || "").match(/^#\s+(.+)$/m);
+    return m ? m[1].trim() : null;
   }
 
   /** A comment the AI left (or a reply it posted): where, and Show to open it beside its page. */
@@ -414,8 +490,8 @@ export function makeAi(ctx) {
   }
 
   /** An answer as Markdown, with repository paths that are pages opening them. */
-  function body(text, streaming = false) {
-    const el = h("div", { class: "cm-text ai-text" + (streaming ? " streaming" : ""), html: ctx.renderHtml(text) });
+  function body(text) {
+    const el = h("div", { class: "cm-text ai-text", html: ctx.renderHtml(text) });
     for (const c of el.querySelectorAll("code")) {
       const t = c.textContent.trim().replace(/^\.\//, "").replace(/[:#].*$/, "");
       if (ctx.hasPage(t)) { c.classList.add("doc"); c.title = "Open " + t; c.addEventListener("click", () => ctx.openDoc(t)); }
@@ -456,7 +532,7 @@ export function makeAi(ctx) {
       drawLog(); syncSend();
       return;
     }
-    A.left.clear(); A.extra = [];
+    A.left.clear(); A.extra = []; mentions = []; // sent: what the mentions added is the conversation's now
     if (r.id !== A.id) { A.id = r.id; localStorage.setItem(KEY, r.id); }
     A.pending = null;
     await openConversation(r.id);
@@ -487,13 +563,19 @@ export function makeAi(ctx) {
     // An answer that lands while you're elsewhere (another tab, another conversation): a mark on the AI
     // tab and a notice that opens it, so working on while it thinks doesn't mean checking back.
     if (ev.state === "done" && (ev.id !== A.id || !ctx.visible())) answered(ev);
+    // Changes reviewed (in the page, or dismissed here): the open conversation's cards show it at once.
+    if (ev.state === "reviewed" && A.id && !A.run && (ev.id === A.id || !ev.id) &&
+      A.conv?.messages?.some((m) => (m.changes || []).some((x) => !x.reviewed && (!ev.page || x.page === ev.page)))) return openConversation(A.id);
     if (ev.id !== A.id) return;
     if (ev.state === "running") {
       A.run = { text: ev.text, activity: ev.activity };
-      drawLog(); syncSend();
+      if (stream?.el.isConnected && stream.id === A.id) stream.set(A.run); else drawLog();
+      syncSend();
     } else if (ev.state === "done") {
-      A.run = null;
-      openConversation(ev.id);
+      // Let the reveal finish what has arrived, then draw the finished message in its place.
+      const s = stream?.el.isConnected && stream.id === ev.id ? stream : null;
+      const open = () => { if (A.id === ev.id) { A.run = null; openConversation(ev.id); } };
+      if (s) s.finish(open); else open();
     }
   }
 

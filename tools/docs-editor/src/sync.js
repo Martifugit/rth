@@ -45,9 +45,9 @@ async function githubSaysDown() {
 /** What the status line says while GitHub is failing: short on the line, the rest on hover. */
 export function githubTrouble(confirmed) {
   return confirmed
-    ? { short: "Saved · GitHub is down, sending later",
-        long: "GitHub, where the Codex keeps everyone's pages, is having problems right now. It's on their side, not yours (their own status page says so). Your changes are safe on this computer, and the Codex sends them by itself once GitHub works again. There's nothing you need to do." }
-    : { short: "Saved · GitHub hiccup, trying again",
+    ? { short: "Saved here · GitHub is down, trying later",
+        long: "GitHub, where the Codex keeps everyone's pages, is having problems right now. It's on their side, not yours (their own status page says so). Your changes are safe on this computer, and the Codex saves them for everyone by itself once GitHub works again. There's nothing you need to do." }
+    : { short: "Saved here · GitHub hiccup, trying again",
         long: "GitHub, where the Codex keeps everyone's pages, didn't answer properly just now. That's usually a short hiccup on their side. Your changes are safe on this computer, and the Codex tries again every minute by itself." };
 }
 

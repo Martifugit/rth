@@ -69,5 +69,35 @@ await test("the first answer's <title> names the conversation and is never shown
   assert.equal(titleIn("No title given."), null);
 });
 
+await test("a suggested new page is created as the AI wrote it, once, and never over a page", async () => {
+  const pages = { [BILE]: "# Bile\n" };
+  const changedPages = [];
+  const convs = path.join(dir, "conversations-new");
+  const a = makeAssistant({
+    repo: dir, dir: convs, store: null, emit: () => {},
+    pages: async () => Object.keys(pages), read: async (p) => pages[p] ?? null,
+    write: async (p, t) => { if (t === null) delete pages[p]; else pages[p] = t; }, changed: (ps) => changedPages.push(...ps),
+  });
+  const NEW = "docs/gdd/systems/yellow-bile.md", TEXT = "# Yellow bile\n\nHot and dry.\n";
+  const save = (c) => fs.writeFileSync(path.join(convs, "c-new.json"), JSON.stringify(c));
+  fs.mkdirSync(convs, { recursive: true });
+  save({ id: "c-new", title: "t", created: "2026-11-04T00:00:00Z", updated: "2026-11-04T00:00:00Z", messages: [
+    { by: "you", at: "2026-11-04T00:00:00Z", text: "suggest a page" },
+    { by: "ai", at: "2026-11-04T00:00:01Z", text: "Here.", changes: [{ page: NEW, before: null, after: TEXT, places: 1, reviewed: false, suggest: true }] },
+  ] });
+  const r = await a.createSuggested({ conv: "c-new", msg: 1, page: NEW });
+  assert.equal(r.ok, true);
+  assert.equal(pages[NEW], TEXT);
+  assert.deepEqual(changedPages, [NEW], "shared like any change");
+  assert.equal((await a.get("c-new")).messages[1].changes[0].reviewed, true, "the card shows it done");
+  assert.match((await a.createSuggested({ conv: "c-new", msg: 1, page: NEW })).error, /already handled/);
+  // Made meanwhile by someone else: never written over.
+  const c = await a.get("c-new");
+  c.messages[1].changes[0].reviewed = false; delete c.run; save(c);
+  pages[NEW] = "# Someone else's\n";
+  assert.match((await a.createSuggested({ conv: "c-new", msg: 1, page: NEW })).error, /already a page/);
+  assert.equal(pages[NEW], "# Someone else's\n");
+});
+
 fs.rmSync(dir, { recursive: true, force: true });
 console.log(`assistant: ${passed} passed`);

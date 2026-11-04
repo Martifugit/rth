@@ -35,7 +35,7 @@ export function openRouterProvider({ key, models = () => OPENROUTER_MODELS }) {
 
   /** messages: [{ role, content }]. tools: OpenAI-style function definitions, useTool(name, args) runs one
    *  (returns text, describe(name, args) says it in the activity line); model: this conversation's /model. */
-  function run({ messages, onText, onActivity, model = null, tools = null, useTool = null, describe = null }) {
+  function run({ messages, onText, onActivity, onThought = () => {}, model = null, tools = null, useTool = null, describe = null }) {
     const ctrl = new AbortController();
     let stopped = false;
     const done = (async () => {
@@ -67,7 +67,7 @@ export function openRouterProvider({ key, models = () => OPENROUTER_MODELS }) {
           return { error: `OpenRouter said ${r.status}: ${body.slice(0, 200)}`, text: all };
         }
         const start = all.length;
-        const got = await readStream(r, (d) => { all += d; onText(d); });
+        const got = await readStream(r, (d) => { all += d; onText(d); }, onThought);
         if (got.error) return { error: stopped ? "Stopped." : got.error, text: all };
         used = got.model || used;
         if (!got.calls.length && offer && /<tool_call>/i.test(got.text)) {
@@ -113,7 +113,7 @@ export function callsInText(text) {
 }
 
 /** One streamed reply: its text (handed on as it comes), the model, and any tool calls it made. */
-async function readStream(r, onText) {
+async function readStream(r, onText, onThought = () => {}) {
   let text = "", model = null, buf = "";
   const calls = []; // by index: { id, name, args }
   const dec = new TextDecoder();
@@ -130,6 +130,7 @@ async function readStream(r, onText) {
         if (ev.error) return { error: "OpenRouter: " + (ev.error.message || "an error"), text, calls: [] };
         model = ev.model || model;
         const delta = ev.choices?.[0]?.delta || {};
+        if (delta.reasoning) onThought(delta.reasoning); // a reasoning model's thinking, where the model shares it
         if (delta.content) { text += delta.content; onText(delta.content); }
         for (const t of delta.tool_calls || []) {
           const i = t.index ?? calls.length;

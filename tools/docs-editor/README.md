@@ -21,8 +21,8 @@ Where it's going (an app anyone can download, synced through git, with AI built 
 
 There's no Sync button: what's saved is shared. The Codex only ever commits files under `docs/`: code,
 scenes and any other uncommitted work in the folder are never staged, committed, set aside or
-overwritten. The status line says how the open page stands: Saving…, Sending…, Saved and sent, Saved
-and offline (sent when you're back), or Saved, not shared yet.
+overwritten. The status line says how the open page stands: Saving…, Saved (everyone has it), Saved
+here (only on this computer for now: offline, or GitHub trouble; hover for why), or Not saved yet.
 
 - **What you type in the Codex** is sent by itself, once you pause for about a minute (at most ten
   minutes after the first unsent save, however long the typing goes on), so a burst of editing is one
@@ -31,8 +31,8 @@ and offline (sent when you're back), or Saved, not shared yet.
   (the live room) and it fetches at once; a check every minute is the safety net. They come in with a
   merge, and the Codex says what came.
 - **Edits the Codex won't share by itself**, R'th AI's and those made outside it (an agent, another
-  editor), are asked about in a panel in the bottom-left corner: **Share**, **Review** (the page with
-  its changes marked, and Share in its bar) or **Undo** (back to how it was last shared). Unanswered,
+  editor), are asked about in a panel in the bottom-left corner: **Save**, **Review** (the page with
+  its changes marked, and Save in its bar) or **Undo** (back to how it was last shared). Unanswered,
   they stay on this computer and are asked about again next time. Comments (`docs/.notes/`) are
   always sent.
 - **Two people changing the same lines** of a page: nothing is merged, and the same panel asks **Keep

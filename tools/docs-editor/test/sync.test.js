@@ -287,7 +287,7 @@ await test("GitHub failing on its side: said in plain words on the status line, 
 });
 
 await test("GitHub's own status page saying it's down: the words say so", () => {
-  assert.match(githubTrouble(true).short, /GitHub is down, sending later/);
+  assert.match(githubTrouble(true).short, /GitHub is down, trying later/);
   assert.match(githubTrouble(true).long, /not yours/);
 });
 

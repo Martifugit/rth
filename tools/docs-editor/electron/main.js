@@ -118,11 +118,11 @@ async function open() {
     width: b?.width || 1500, height: b?.height || 920, x: b?.x, y: b?.y,
     minWidth: 900, minHeight: 600,
     title: "R'th Codex", icon: fs.existsSync(ICON) ? ICON : undefined,
-    backgroundColor: "#0c0b09", show: false,
+    backgroundColor: "#040404", show: false,
     // The Codex draws its own title bar (search, New page, Sync, help); Windows keeps its buttons in
     // the corner over it, as in VS Code.
     titleBarStyle: "hidden",
-    titleBarOverlay: { color: "#0c0b09", symbolColor: "#d9c9a6", height: 38 },
+    titleBarOverlay: { color: "#040404", symbolColor: "#d9c9a6", height: 38 },
     webPreferences: { contextIsolation: true, nodeIntegration: false, spellcheck: false },
   });
   if (b?.maximized) win.maximize();

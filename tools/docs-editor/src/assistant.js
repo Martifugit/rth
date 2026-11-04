@@ -164,7 +164,9 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     const handlers = {
       onText: (t) => { r.text += t; r.activity = "Writing"; push(); },
       onBreak: () => { if (r.text) r.text += "\n\n"; },
-      onActivity: (a) => { r.activity = a; push(); },
+      onActivity: (a) => { r.activity = a; r.thinking = ""; push(); },
+      // Its thinking, as it streams: the status line shows its latest whole sentence.
+      onThought: (t) => { r.thinking = t === null ? "" : (r.thinking || "") + t; r.activity = thoughtLine(r.thinking) || "Thinking"; push(); },
     };
     const brief = await writingBrief(read);
     const naming = !c.messages.some((m) => m.by === "ai") ? TITLE_NOTE : ""; // its first answer names the conversation
@@ -429,7 +431,15 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     const ai = await pick();
     c.settings = c.settings || {};
     const claudeNow = () => `model ${c.settings.model || settings.claudeModel || "Claude Code's default"}, effort ${c.settings.effort || settings.claudeEffort || "Claude Code's default"}`;
-    if (cmd === "help" || !cmd) return { text: "Commands for this conversation: **/model** *name* (Claude: fable, opus, sonnet, haiku or a full model id; OpenRouter: a model id), **/effort** *low, medium, high, xhigh or max* (Claude), **/model** or **/effort** alone to see what's set. Defaults for new conversations are in AI setup." };
+    if (cmd === "help" || !cmd) return { text: [
+      "**Commands** (this conversation only)",
+      "",
+      ai === openP ? "- `/model <id>`: an OpenRouter model id" : "- `/model <name>`: fable, opus, sonnet, haiku or a full id",
+      ...(ai === openP ? [] : ["- `/effort <level>`: low, medium, high, xhigh or max"]),
+      "- Alone, either one shows what's set",
+      "",
+      "Defaults for new conversations are in AI setup.",
+    ].join("\n") };
     if (cmd === "model") {
       if (!arg) return { text: ai === openP ? `This conversation uses ${c.settings.openrouterModel || settings.model || "OpenRouter's free models"}.` : `This conversation uses ${claudeNow()}.` };
       if (ai === openP) { c.settings.openrouterModel = arg.slice(0, 200); return { text: `From now on this conversation uses **${c.settings.openrouterModel}** on OpenRouter.` }; }
@@ -513,7 +523,26 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     return { ok: true, undone: done, open };
   }
 
-  return { list, get, send, stop, remove, changesFor, reviewed, undo, setup, configure, setContext, lookUp, signInClaude: () => claudeP.signIn(), check: provider.check, status: () => ({ running: [...runs.keys()] }) };
+  /**
+   * A new page the AI suggested, created as it wrote it (with whatever else it wrote into it that turn).
+   * Suggestions are put back as they were, which for a new page means not there, so it can't be reviewed
+   * in the page like an edit: it's previewed, then created or skipped.
+   */
+  async function createSuggested({ conv, msg, page }) {
+    const c = await readConv(conv);
+    const x = c?.messages[msg]?.changes?.find((y) => y.page === page && y.suggest && y.before === null);
+    if (!x || x.after == null) return { error: "That suggestion isn't there any more." };
+    if (x.reviewed) return { error: "That suggestion was already handled." };
+    if ((await read(page)) !== null) return { error: "There's already a page there." };
+    await write(page, x.after);
+    x.reviewed = true;
+    await writeConv(c);
+    changed([page]);
+    emit("ai", { id: conv, state: "reviewed", page });
+    return { ok: true, page };
+  }
+
+  return { list, get, send, stop, remove, changesFor, reviewed, undo, createSuggested, setup, configure, setContext, lookUp, signInClaude: () => claudeP.signIn(), check: provider.check, status: () => ({ running: [...runs.keys()] }) };
 }
 
 const titleFrom = (text) => {
@@ -542,6 +571,7 @@ function standing(brief, tools) { // tools: "repo" (Claude reads it itself), "en
     tools === "repo"
       ? "- The game's code and data are in the same repository (the rest of it besides docs/). Read them when a question is about how the game works today, and say what the code does and whether the GDD agrees; the GDD is the design, the code only the current build. Don't go to the code for design questions it can't answer. You can edit and create pages under docs/gdd/ only, never anything else."
       : "- You've been given the page, who links to it and the rules below. When you need more, look it up with your tools: search_gdd and read_page for the GDD, links_to for who links to a page, search_code and read_file for the game's code and data when a question is about how the game works today (the GDD is the design, the code only the current build). Each lookup counts against a small daily allowance, so look up what you need and nothing you were given. You change pages only with the edit blocks described below.",
+    "- Write in US English (color, armor, center, -ize), in your replies and in everything you suggest or write into a page, as the Codex's spelling check does.",
     "- After editing, say in a sentence or two what you changed and where: the Codex shows them each change.",
     "- Your reply shows in a narrow side panel as Markdown: short paragraphs, lists where they help, no big headings. Name pages by their repository paths.",
     "- The conversation keeps its context: the page it's about, pages they add (with @ or + Add page), a passage or a comment thread they point at. What they're looking at elsewhere while you work isn't part of it.",
@@ -555,6 +585,18 @@ function standing(brief, tools) { // tools: "repo" (Claude reads it itself), "en
 // The conversation's name: its first answer ends with a hidden <title> line (2-6 words, the topic, not
 // the question), taken off the answer by the Codex. Without one, the question names it, as before.
 const TITLE_NOTE = "\n\n(This is the conversation's first message. After your answer, on a line of its own, name the conversation in 2 to 6 words, as a page heading would: the topic, not the question, no full stop. Write it as <title>The name</title>. The Codex takes that line off your answer and shows it as the conversation's name.)";
+/** The status line while it thinks: the latest whole sentence of its thinking, plain and short, or null. */
+export function thoughtLine(thinking) {
+  const plain = String(thinking || "").replace(/[`*_#>]+/g, "").replace(/\s+/g, " ");
+  // Sentences end at . ! or ? before a capital (so "e.g. a" and "v1.2" don't); the last one counts once it's finished.
+  const parts = plain.trim().split(/(?<=[.!?])\s+(?=[A-Z"“(])/);
+  const whole = /[.!?]$/.test(parts[parts.length - 1]) ? parts : parts.slice(0, -1);
+  if (!whole.length) return null;
+  let s = whole[whole.length - 1].trim().replace(/[.!?]+$/, "");
+  if (s.length > 90) s = s.slice(0, 89).replace(/\s+\S*$/, "") + "…";
+  return s || null;
+}
+
 export const titleIn = (text) => {
   const m = String(text || "").match(/<title>\s*([^<\n]{1,80}?)\s*<\/title>/i);
   return m ? m[1].replace(/[*_`"“”]/g, "").replace(/[.\s]+$/, "").trim() || null : null;
@@ -592,7 +634,7 @@ function claudeProvider({ repo, claude, systemFile }) {
     });
   }
 
-  function run({ prompt, session, system = "", model = "", effort = "", onText, onBreak, onActivity }) {
+  function run({ prompt, session, system = "", model = "", effort = "", onText, onBreak, onActivity, onThought = () => {} }) {
     let proc = null, stopped = false;
     const done = (async () => {
       if (!available) await check();
@@ -622,8 +664,10 @@ function claudeProvider({ repo, claude, systemFile }) {
             if (ev.session_id) sid = ev.session_id;
             if (ev.type === "stream_event") {
               if (ev.event?.type === "content_block_start" && ev.event.content_block?.type === "text") onBreak();
+              if (ev.event?.type === "content_block_start" && ev.event.content_block?.type === "thinking") onThought(null);
               const d = ev.event?.delta;
               if (d?.type === "text_delta") onText(d.text);
+              else if (d?.type === "thinking_delta" && d.thinking) onThought(d.thinking);
             } else if (ev.type === "assistant") {
               for (const c of ev.message?.content || []) if (c.type === "tool_use") onActivity(describe(c));
             } else if (ev.type === "result") result = ev;

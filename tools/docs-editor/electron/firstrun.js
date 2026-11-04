@@ -57,7 +57,7 @@ export function firstRun({ icon }) {
   return new Promise((resolve) => {
     const win = new BrowserWindow({
       width: 560, height: 400, resizable: false, title: "R'th Codex", icon,
-      backgroundColor: "#0c0b09", autoHideMenuBar: true,
+      backgroundColor: "#040404", autoHideMenuBar: true,
       webPreferences: { preload: path.join(HERE, "firstrun-preload.cjs"), contextIsolation: true, nodeIntegration: false },
     });
     const send = (type, data) => { if (!win.isDestroyed()) win.webContents.send("firstrun", { type, ...data }); };

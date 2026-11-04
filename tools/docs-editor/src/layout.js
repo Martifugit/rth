@@ -3,10 +3,17 @@
 // in localStorage, and the same at any window size: a pane you've chosen to show stays docked while
 // there's room, and when the window is too narrow for it (or you've hidden it) it opens over the page
 // as a sheet instead, from its button in the title bar or Ctrl+, (Pages) / Ctrl+. (Outline).
+// A docked pane is resized by dragging the gap between it and the page (double-click: back to its
+// default width); its width is kept too.
 
 const KEY = "codex.layout";
-// Room for a docked pane: the page keeps at least about 500 px beside them.
-const PAGES_ROOM = 800, OUTLINE_ROOM_WITH_PAGES = 1250, OUTLINE_ROOM_ALONE = 980;
+// Pane widths: default, least and most. The right-hand pane is as wide as talking to the AI needs,
+// whichever tab is open.
+const WIDTH = { pages: { def: 240, min: 200, max: 340 }, outline: { def: 360, min: 280, max: 480 } };
+// Room for docked panes: the page keeps at least this much beside them (less with only Pages docked,
+// where the page is the only other thing); dragging a pane wider stops at PAGE_LEAST.
+const PAGE_KEEPS = 700, PAGE_KEEPS_PAGES_ONLY = 520, PAGE_LEAST = 480;
+const GRIP_WAKE_MS = 350; // the pointer rests on a pane's edge this long before it can be dragged
 
 const ICON = {
   pages: '<svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M9 4.5v15M5.8 8.5h1.4M5.8 11.5h1.4"/></svg>',
@@ -18,12 +25,20 @@ export function makeLayout(ctx) {
   const { $, h, notes, help, presence, online } = ctx;
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch {}
-  const L = { pages: saved.pages !== false, outline: saved.outline !== false, sheet: null, docked: { pages: false, outline: false } };
+  const clampW = (pane, v) => Math.round(Math.min(WIDTH[pane].max, Math.max(WIDTH[pane].min, Number(v) || WIDTH[pane].def)));
+  const L = { pages: saved.pages !== false, outline: saved.outline !== false, sheet: null, docked: { pages: false, outline: false },
+    width: { pages: clampW("pages", saved.widths?.pages), outline: clampW("outline", saved.widths?.outline) } };
 
-  const store = () => localStorage.setItem(KEY, JSON.stringify({ pages: L.pages, outline: L.outline }));
+  const store = () => localStorage.setItem(KEY, JSON.stringify({ pages: L.pages, outline: L.outline, widths: L.width }));
   const room = (pane, pagesDocked = L.docked.pages) => {
     const w = window.innerWidth;
-    return pane === "pages" ? w >= PAGES_ROOM : w >= (pagesDocked ? OUTLINE_ROOM_WITH_PAGES : OUTLINE_ROOM_ALONE);
+    return pane === "pages" ? w >= L.width.pages + PAGE_KEEPS_PAGES_ONLY
+      : w >= L.width.outline + (pagesDocked ? L.width.pages : 0) + PAGE_KEEPS;
+  };
+  const setWidths = () => {
+    const s = document.documentElement.style;
+    s.setProperty("--pages-w", L.width.pages + "px");
+    s.setProperty("--outline-w", L.width.outline + "px");
   };
 
   /** Dock what's chosen and fits; everything else is reachable as a sheet. */
@@ -42,8 +57,66 @@ export function makeLayout(ctx) {
       btn.classList.toggle("on", shown);
       btn.title = (shown ? "Hide " : "Show ") + (pane === "pages" ? "the pages" : "the outline and links") + (pane === "pages" ? " (Ctrl+,)" : " (Ctrl+.)");
     }
+    setWidths();
     // The page's width changed: put the comments level with their text again.
-    requestAnimationFrame(() => notes.layout());
+    requestAnimationFrame(() => { placeGrips(); notes.layout(); });
+  }
+
+  // ----------------------------------------------------------------------------- resizing
+
+  // A grip over the gap between each docked pane and the page: drag to resize, double-click to reset.
+  const grips = {};
+  function grip(pane) {
+    const el = h("div", { class: "pane-grip hidden" });
+    // Quiet until the pointer rests on it a moment: then the line, the resize cursor and the tooltip.
+    let wake = null;
+    el.addEventListener("pointerenter", () => { clearTimeout(wake); wake = setTimeout(() => { el.classList.add("ready"); el.title = "Drag to resize, double-click for the usual width"; }, GRIP_WAKE_MS); });
+    el.addEventListener("pointerleave", () => { clearTimeout(wake); if (!el.classList.contains("on")) { el.classList.remove("ready"); el.title = ""; } });
+    el.addEventListener("pointerdown", (ev) => {
+      if (ev.button !== 0 || !el.classList.contains("ready")) return;
+      ev.preventDefault();
+      el.setPointerCapture(ev.pointerId);
+      const r = paneEl(pane).getBoundingClientRect();
+      document.body.classList.add("panes-resizing");
+      el.classList.add("on");
+      const move = (e) => {
+        const want = pane === "pages" ? e.clientX - r.left : r.right - e.clientX;
+        // Never so wide the page drops under its least width.
+        const other = pane === "pages" ? (L.docked.outline ? L.width.outline : 0) : (L.docked.pages ? L.width.pages : 0);
+        const most = Math.max(WIDTH[pane].min, window.innerWidth - other - PAGE_LEAST - 32);
+        L.width[pane] = Math.min(most, clampW(pane, want));
+        setWidths(); placeGrips();
+      };
+      const up = () => {
+        el.removeEventListener("pointermove", move);
+        el.removeEventListener("pointerup", up);
+        el.removeEventListener("pointercancel", up);
+        document.body.classList.remove("panes-resizing");
+        el.classList.remove("on");
+        if (!el.matches(":hover")) el.classList.remove("ready");
+        store();
+        notes.layout();
+      };
+      el.addEventListener("pointermove", move);
+      el.addEventListener("pointerup", up);
+      el.addEventListener("pointercancel", up);
+    });
+    el.addEventListener("dblclick", () => { if (!el.classList.contains("ready")) return; L.width[pane] = WIDTH[pane].def; store(); apply(); });
+    document.body.append(el);
+    return el;
+  }
+  const paneEl = (pane) => (pane === "pages" ? $("#sidebar") : $("#outlineWin"));
+  function placeGrips() {
+    for (const pane of ["pages", "outline"]) {
+      const el = grips[pane];
+      if (!el) continue;
+      el.classList.toggle("hidden", !L.docked[pane]);
+      if (!L.docked[pane]) continue;
+      const r = paneEl(pane).getBoundingClientRect();
+      el.style.top = r.top + "px";
+      el.style.height = r.height + "px";
+      el.style.left = (pane === "pages" ? r.right : r.left - 8) + "px"; // over the 8 px gap beside the page
+    }
   }
 
   /** The pane's button (or key): hide it if docked, dock it if it fits, else open or close its sheet. */
@@ -124,8 +197,10 @@ export function makeLayout(ctx) {
     // Opening a page, a heading or a link from a sheet closes it.
     $("#tree").addEventListener("click", (ev) => { if (L.sheet === "pages" && ev.target.closest(".t-row.file")) closeSheet(); });
     $("#outlineWin").addEventListener("click", (ev) => { if (L.sheet === "outline" && ev.target.closest(".o-item, .lk-item, .ai-text code.doc, .ai-text a")) closeSheet(); });
+    grips.pages = grip("pages");
+    grips.outline = grip("outline");
     let t = null;
-    window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(apply, 50); });
+    window.addEventListener("resize", () => { placeGrips(); clearTimeout(t); t = setTimeout(apply, 50); });
     apply();
   }
 

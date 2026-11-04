@@ -279,7 +279,7 @@ export function makeNotes(ctx) {
   }
 
   /** Thin lines from passages to their cards, as a word processor joins a passage to its balloon: along
-   *  under the passage's last line out to the margin, then a soft curve into the card. The open comment
+   *  under the passage's last line out to the margin, then an elbow with rounded corners into the card. The open comment
    *  (or the one being written) always has one; a card or passage under the pointer gets one too, and
    *  its passage and card are lit, so a card pushed far down by its neighbours is easy to place. */
   function link() {
@@ -315,8 +315,12 @@ export function makeNotes(ctx) {
     const xm = Math.max(x0 + 8, (prose ? prose.right : last.right) - box.left - 4);
     const x1 = card.left - box.left, y1 = card.top - box.top + 13;
     if (x1 <= xm + 4) return null;
-    const bend = Math.min(40, (x1 - xm) / 2);
-    return { d: `M${x0},${y0} H${xm} C${xm + bend},${y0} ${x1 - bend},${y1} ${x1},${y1}`, x1, y1 };
+    // An elbow: along to the middle of the gutter, straight up or down, then along into the card, its two
+    // corners rounded (smaller when the card sits nearly level with the passage).
+    const xv = Math.round(xm + (x1 - xm) / 2), dy = y1 - y0, dir = Math.sign(dy);
+    const r = Math.min(8, Math.abs(dy) / 2, (x1 - xm) / 2);
+    if (r < 1) return { d: `M${x0},${y0} H${xm} L${x1},${y1}`, x1, y1 };
+    return { d: `M${x0},${y0} H${xv - r} Q${xv},${y0} ${xv},${y0 + dir * r} V${y1 - dir * r} Q${xv},${y1} ${xv + r},${y1} H${x1}`, x1, y1 };
   }
 
   /** The comment under the pointer (its card or its passage): lit on both sides, with its line. */

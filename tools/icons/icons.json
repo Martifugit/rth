@@ -127,5 +127,10 @@
   "sword": "lorc/broadsword",
   "mace": "lorc/spiked-mace",
   "scripture": "lorc/tied-scroll",
-  "verse": "lorc/burning-book"
+  "verse": "lorc/burning-book",
+  "links": "lorc/linked-rings",
+  "zap": "sbed/electric",
+  "camera": "delapouite/photo-camera",
+  "crate": "delapouite/wooden-crate",
+  "map_pin": "delapouite/position-marker"
 }

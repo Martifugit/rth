@@ -37,7 +37,7 @@
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
 body {
-  background: #090807 radial-gradient(ellipse at 50% 0%, #1d1913 0%, #0c0b09 55%, #070605 100%) fixed;
+  background: #040404; /* behind the panes: solid and darker than them, so they stand out */
   color: var(--text);
   font: 500 15px/1.45 var(--sans);
   text-shadow: 0 1px 1px rgba(0, 0, 0, .85);
@@ -66,6 +66,9 @@ kbd {
   display: inline-block; width: 18px; height: 18px; flex: none;
   background-color: var(--title);
   -webkit-mask: var(--icon) center / contain no-repeat; mask: var(--icon) center / contain no-repeat;
+  /* By brightness, not transparency: the game's icons are white with a soft dark edge baked in (for its
+     slots), and as a transparency mask that edge was coloured too, filling the shapes into blobs. */
+  -webkit-mask-source-type: luminance; mask-mode: luminance;
 }
 .ico-book { --icon: url("/icons/book.png"); }
 .ico-eye { --icon: url("/icons/eye.png"); }
@@ -85,6 +88,11 @@ kbd {
 .ico-pack { --icon: url("/icons/pack.png"); }
 .ico-fishing { --icon: url("/icons/fishing.png"); }
 .ico-padlock { --icon: url("/icons/padlock.png"); }
+.ico-links { --icon: url("/icons/links.png"); }
+.ico-zap { --icon: url("/icons/zap.png"); }
+.ico-camera { --icon: url("/icons/camera.png"); }
+.ico-crate { --icon: url("/icons/crate.png"); }
+.ico-map-pin { --icon: url("/icons/map_pin.png"); }
 
 /* ------------------------------------------------------------------ layout */
 #app {
@@ -94,26 +102,34 @@ kbd {
 }
 /* Which panes sit beside the page is chosen in the logo's menu (src/layout.js); a pane that isn't
    docked can open over the page as a sheet. */
-body.pages-docked #app { grid-template-columns: 280px minmax(0, 1fr) 0; }
-body.outline-docked #app { grid-template-columns: 0 minmax(0, 1fr) 270px; }
-body.pages-docked.outline-docked #app { grid-template-columns: 280px minmax(0, 1fr) 270px; }
+body.pages-docked #app { grid-template-columns: var(--pages-w, 240px) minmax(0, 1fr) 0; }
+body.outline-docked #app { grid-template-columns: 0 minmax(0, 1fr) var(--outline-w, 360px); }
+body.pages-docked.outline-docked #app { grid-template-columns: var(--pages-w, 240px) minmax(0, 1fr) var(--outline-w, 360px); }
+/* Resizing a docked pane (src/layout.js): a grip over the gap beside the page. It wakes (the line and
+   the resize cursor) only once the pointer has rested on the gap a moment, so passing over it is quiet. */
+.pane-grip { position: fixed; z-index: 30; width: 8px; touch-action: none; }
+.pane-grip.ready, .pane-grip.on { cursor: col-resize; }
+.pane-grip::after { content: ""; position: absolute; top: 6px; bottom: 6px; left: 3px; width: 2px; border-radius: 1px; background: transparent; transition: background .15s; }
+.pane-grip.ready::after, .pane-grip.on::after { background: rgba(201, 162, 94, .55); }
+.pane-grip.hidden { display: none; }
+body.panes-resizing, body.panes-resizing * { cursor: col-resize !important; user-select: none !important; }
 body.pages-docked #main { margin-left: 8px; }
 body.outline-docked #main { margin-right: 8px; }
 body:not(.pages-docked):not(.sheet-pages) #sidebar { display: none; }
 body:not(.outline-docked):not(.sheet-outline) #outlineWin { display: none; }
 body.sheet-pages #sidebar, body.sheet-outline #outlineWin {
-  position: fixed; top: 52px; bottom: 8px; width: min(320px, calc(100vw - 48px)); z-index: 46;
+  position: fixed; top: 52px; bottom: 8px; width: min(var(--pages-w, 240px) + 40px, calc(100vw - 48px)); z-index: 46;
   background-color: #0d0c0a; filter: none; box-shadow: 0 10px 40px rgba(0, 0, 0, .85); border-color: var(--hair-2);
   animation: sheet-in .14s ease-out;
 }
 body.sheet-pages #sidebar { left: 8px; }
-body.sheet-outline #outlineWin { right: 8px; --from: 12px; }
+body.sheet-outline #outlineWin { right: 8px; --from: 12px; width: min(var(--outline-w, 360px) + 40px, calc(100vw - 48px)); }
 body.in-app.sheet-pages #sidebar, body.in-app.sheet-outline #outlineWin { top: 42px; }
 @keyframes sheet-in { from { opacity: 0; transform: translateX(var(--from, -12px)); } }
 #sheetBackdrop { position: fixed; inset: 0; z-index: 45; background: rgba(4, 4, 4, .45); animation: fade .12s ease-out; }
 
-#topbar { grid-area: top; display: flex; align-items: center; gap: 16px; padding: 0 6px; }
-.brand { display: flex; align-items: center; gap: 4px; width: 280px; flex: none; }
+#topbar { grid-area: top; position: relative; display: flex; align-items: center; gap: 16px; padding: 0 6px; }
+.brand { display: flex; align-items: center; gap: 4px; width: var(--pages-w, 240px); flex: none; } /* its pane button over the Pages pane's edge */
 body:not(.pages-docked) .brand { width: auto; }
 .brand-btn {
   display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 8px 0 2px; margin-left: -2px;
@@ -129,11 +145,11 @@ body:not(.pages-docked) #pagesBtn { margin-left: 0; }
 /* The logo's menu (src/layout.js): a tick column, the label, its keys on the right. */
 .layout-menu { min-width: 236px; }
 .lm-head { padding: 6px 10px 3px 28px; font: 700 9.5px/1 var(--serif); letter-spacing: 1.6px; text-transform: uppercase; color: #7d725f; }
-.layout-menu .lm-item { display: flex; align-items: center; gap: 4px; padding: 0 10px 0 4px; }
+.layout-menu .lm-item, .ai-list .lm-item { display: flex; align-items: center; gap: 4px; padding: 0 10px 0 4px; }
 .lm-check { width: 20px; flex: none; text-align: center; font-size: 12px; color: var(--accent); }
 .lm-label { flex: 1; white-space: nowrap; }
 .lm-keys { flex: none; padding-left: 24px; font-size: 12px; color: var(--dim); }
-.layout-menu .lm-item:hover .lm-keys { color: #c9b48a; }
+.layout-menu .lm-item:hover .lm-keys, .ai-list .lm-item:hover .lm-keys { color: #c9b48a; }
 .brand .ico { width: 24px; height: 24px; align-self: center; }
 .brand-logo { width: 30px; height: 30px; align-self: center; flex: none; filter: drop-shadow(0 1px 2px #000); }
 body.in-app .brand-logo { width: 28px; height: 28px; }
@@ -141,7 +157,11 @@ body.in-app .brand-btn { height: 30px; }
 .brand-name { font: 700 15px/1 var(--serif); color: #a3a6a9; letter-spacing: 4px; text-transform: uppercase; text-shadow: 0 1px 1px #000; }
 .brand-sub { font: 600 13px/1 var(--serif); color: var(--muted); letter-spacing: 4px; text-transform: uppercase; }
 .search-trigger {
-  display: flex; align-items: center; gap: 10px; flex: 0 1 460px; min-width: 0; height: 32px; padding: 0 8px 0 10px; overflow: hidden;
+  display: flex; align-items: center; gap: 10px; min-width: 0; height: 32px; padding: 0 8px 0 10px; overflow: hidden;
+  /* Centred on the window, out of the row's flow, and never wide enough to reach what's either side
+     (the logo and Pages button on the left, the buttons and the window's own controls on the right). */
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(460px, calc(100vw - 2 * max(var(--pages-w, 240px) + 24px, 300px)));
   color: var(--dim); text-align: left; border: 1px solid var(--line); border-radius: 4px;
   background: linear-gradient(#0c0b09, #13110e); box-shadow: inset 0 1px 3px #000;
 }
@@ -160,19 +180,19 @@ body.in-app .brand-btn { height: 30px; }
   border: 1px solid #2c251c;
   border-radius: 5px;
   /* Dark stone (public/stone.jpg: assets/stone-source.png darkened to the panes' near-black and
-     calmed to about a quarter of its contrast, so text reads easily on it), a little darker below. */
-  background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, .18)), #0d0c0a url("/stone.jpg") 0 0 / 800px repeat;
+     calmed to about a quarter of its contrast, so text reads easily on it), darkened further by a
+     black wash, a little more below. */
+  background: linear-gradient(rgba(0, 0, 0, .3), rgba(0, 0, 0, .42)), #0d0c0a url("/stone.jpg") 0 0 / 800px repeat;
   box-shadow: inset 0 1px 0 rgba(255, 230, 180, .035);
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, .55));
 }
 #sidebar { grid-area: side; }
 #main { grid-area: main; }
 #outlineWin { grid-area: outline; }
-/* A pane's title bar: a darker band over the stone, ruled off with a thin bronze line. */
+/* A pane's title bar: a faint grey over the stone (see "bars" at the end), ruled off with a thin bronze line. */
 .titlebar {
   display: flex; align-items: center; gap: 8px; height: 34px; flex: none;
   padding: 0 8px 0 12px;
-  background: linear-gradient(rgba(0, 0, 0, .5), rgba(0, 0, 0, .32));
   border-bottom: 1px solid #2b241a;
   box-shadow: 0 1px 0 rgba(255, 230, 180, .025);
   border-radius: 4px 4px 0 0;
@@ -212,6 +232,16 @@ body.in-app .brand-btn { height: 30px; }
 .btn-gold { border-image-source: url("/ui/Skin/button-gold.png"); color: #231707; text-shadow: 0 1px 0 rgba(255, 230, 170, .45); font-weight: 700; }
 .btn-gold:hover { border-image-source: url("/ui/Skin/button-gold-hover.png"); color: #1a1004; }
 .btn-gold:disabled { border-image-source: url("/ui/Skin/button-gold.png"); filter: saturate(.3) brightness(.6); opacity: 1; }
+/* A button at work (src/busy.js): its label says what it's doing, with a small spinner; it stays
+   readable (not greyed out like a button that can't be used) and can't be pressed twice. */
+.is-busy { cursor: progress !important; }
+.btn.is-busy:disabled { opacity: 1; filter: none; }
+.btn-gold.is-busy:disabled { filter: saturate(.8); }
+.ai-link.is-busy { opacity: .85; display: inline-flex; align-items: center; }
+.busy-spin { display: inline-block; flex: none; width: .85em; height: .85em; margin-right: .45em; vertical-align: -.1em;
+  border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: busy-spin .7s linear infinite; }
+@keyframes busy-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .busy-spin { animation-duration: 2s; } }
 .btn-icon { width: 30px; padding: 0; }
 .btn-danger { color: #f3a493; }
 
@@ -309,7 +339,6 @@ select.field option { background: #16130f; }
 .toolbar {
   display: flex; flex-wrap: wrap; align-items: center; gap: 3px; flex: none;
   padding: 5px 10px; border-bottom: 1px solid #2b241a;
-  background: rgba(0, 0, 0, .3);
 }
 .tb {
   min-width: 28px; height: 26px; padding: 0 6px; border: 1px solid transparent; border-radius: 3px;
@@ -338,7 +367,7 @@ select.field option { background: #16130f; }
 }
 
 /* ------------------------------------------------------------------ the page itself */
-.prose { max-width: 860px; margin: 0 auto; padding: 30px 44px 40vh; font-size: 17px; line-height: 1.62; color: var(--ink); }
+.prose { max-width: 860px; margin: 0 auto; padding: 30px 44px 40vh; font-size: 17px; line-height: 1.62; color: #c6c2ba; } /* body text a shade dimmer than --ink, easier on the eye */
 .prose .ProseMirror { outline: none; min-height: 50vh; white-space: pre-wrap; word-wrap: break-word; }
 #main.mode-edit .prose .ProseMirror { caret-color: var(--silver); }
 #main.mode-edit .prose { cursor: text; }
@@ -347,8 +376,18 @@ select.field option { background: #16130f; }
 .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 { font-family: var(--serif); color: var(--silver); line-height: 1.25; letter-spacing: .5px; scroll-margin-top: 16px; }
 .prose h1 {
   font-size: 31px; font-weight: 700; margin: 0 0 22px; padding-bottom: 16px; text-align: center; letter-spacing: 1px;
-  background: linear-gradient(90deg, transparent, rgba(207, 210, 214, .32), transparent) center bottom / 100% 1px no-repeat;
+  position: relative;
+  /* A rule in two halves that meet at a knot (::after): gold where they reach it, fading to nothing. */
+  background:
+    linear-gradient(90deg, transparent, rgba(207, 210, 214, .3) 55%, rgba(201, 162, 94, .75)) left bottom / calc(50% - 15px) 1px no-repeat,
+    linear-gradient(90deg, rgba(201, 162, 94, .75), rgba(207, 210, 214, .3) 45%, transparent) right bottom / calc(50% - 15px) 1px no-repeat;
   text-shadow: 0 2px 0 #000;
+}
+/* In the middle: a Celtic knot diamond (public/title-knot.svg), centred on the rule. */
+.prose h1::after {
+  content: ""; position: absolute; left: 50%; bottom: -16.5px; width: 34px; height: 34px; transform: translateX(-50%); pointer-events: none;
+  background: url("/title-knot.svg") center / contain no-repeat;
+  filter: drop-shadow(0 1px 0 #000);
 }
 .prose h2 {
   font-size: 22px; font-weight: 700; margin: 1.9em 0 .6em; padding-bottom: 7px;
@@ -356,7 +395,9 @@ select.field option { background: #16130f; }
   box-shadow: 0 1px 0 rgba(0, 0, 0, .5);
 }
 .prose h2 { position: relative; }
-.prose h2::after { content: ""; position: absolute; left: 0; bottom: -1px; width: 56px; height: 1px; background: linear-gradient(90deg, var(--accent), transparent); }
+.prose h2::before, .prose h2::after { content: ""; position: absolute; bottom: -1px; width: 56px; height: 1px; pointer-events: none; }
+.prose h2::after { left: 0; background: linear-gradient(90deg, var(--accent), transparent); }
+.prose h2::before { right: 0; background: linear-gradient(270deg, var(--accent), transparent); }
 .prose h3 { font-size: 18px; font-weight: 700; margin: 1.6em 0 .5em; color: #c3c6ca; }
 .prose h4 { font: 700 16.5px/1.3 var(--sans); color: #c3c6ca; margin: 1.4em 0 .4em; letter-spacing: .3px; }
 .prose h5, .prose h6 { font: 700 15px/1.3 var(--sans); color: var(--muted); margin: 1.2em 0 .3em; text-transform: uppercase; letter-spacing: 1px; }
@@ -769,24 +810,14 @@ body.in-app #topbar .here, body.in-app #topbar .here-av { -webkit-app-region: no
 body.in-app .search-trigger { height: 28px; }
 
 /* ------------------------------------------------------------------ the AI tab (src/ai.js) */
-.ico-ai { --icon: url("/robot.svg"); }
-/* Talking needs more room than the outline: the right-hand pane widens while the AI tab is open,
-   where the window has room for it (the page keeps about 500 px). */
-@media (min-width: 1100px) { body.right-ai.outline-docked:not(.pages-docked) #app { grid-template-columns: 0 minmax(0, 1fr) 360px; } }
-@media (min-width: 1400px) { body.right-ai.pages-docked.outline-docked #app { grid-template-columns: 280px minmax(0, 1fr) 360px; } }
-body.right-ai.sheet-outline #outlineWin { width: min(400px, calc(100vw - 48px)); }
-/* Switching to or from the AI tab: the pane's width eases instead of jumping (only then: resizing the
-   window or docking a pane stays instant). src/app.js, showRightTab, sets cols-moving for the move. */
-body.cols-moving #app { transition: grid-template-columns .26s cubic-bezier(.25, .8, .25, 1); }
-body.cols-moving #outlineWin { transition: width .26s cubic-bezier(.25, .8, .25, 1); }
-@media (prefers-reduced-motion: reduce) { body.cols-moving #app, body.cols-moving #outlineWin { transition: none; } }
+.ico-ai { --icon: url("/ask.svg"); } /* the sparkle of Ask the AI on a selection (src/notes.js, ICON.ask) */
 .win-body.ai-body { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
 
 .ai { flex: 1; min-height: 0; display: flex; flex-direction: column; font-size: 14.5px; }
 .ai.hidden { display: none; }
-.ai-head { position: relative; display: flex; align-items: center; gap: 4px; padding: 6px 6px 6px 8px; border-bottom: 1px solid var(--hair); }
+.ai-head { position: relative; display: flex; align-items: center; gap: 4px; flex: none; padding: 5px 6px 5px 8px; border-bottom: 1px solid #2b241a; }
 .ai-title {
-  flex: 1; min-width: 0; display: flex; align-items: center; gap: 7px; height: 28px; padding: 0 7px;
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 7px; height: 26px; padding: 0 7px;
   border: 1px solid transparent; border-radius: 4px; background: none; color: var(--silver-soft); text-align: left;
 }
 .ai-title:hover, .ai-title.on { background: rgba(255, 255, 255, .04); border-color: var(--hair); color: var(--silver); }
@@ -797,21 +828,18 @@ body.cols-moving #outlineWin { transition: width .26s cubic-bezier(.25, .8, .25,
   fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
 }
 .ai-title-ico svg { width: 15px; height: 15px; }
-.ai-new { width: 28px; height: 28px; border: 1px solid transparent; border-radius: 4px; background: none; color: var(--silver-dim); }
+.ai-new { width: 26px; height: 26px; border: 1px solid transparent; border-radius: 4px; background: none; color: var(--silver-dim); }
 .ai-new:hover { color: var(--silver); background: rgba(255, 255, 255, .04); border-color: var(--hair); }
 .ai-new svg { width: 16px; height: 16px; }
 
-.ai-list {
-  position: absolute; z-index: 5; left: 6px; right: 6px; top: 38px; max-height: 60vh; overflow: auto; padding: 4px 0;
-  background: #19191a; border: 1px solid var(--hair-2); border-radius: 4px; box-shadow: 0 8px 20px rgba(0, 0, 0, .8);
-}
-.ai-li { position: relative; display: flex; flex-direction: column; gap: 3px; padding: 7px 34px 7px 12px; cursor: pointer; }
-.ai-li:hover { background: rgba(255, 255, 255, .05); }
-.ai-li.current .ai-li-title { color: #fff; }
-.ai-li-title { color: var(--silver); font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ai-li-meta { color: var(--silver-dim); font-size: 12px; }
-.ai-li-none { padding: 10px 12px; color: var(--silver-dim); }
-.ai-li-x { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; border: 0; border-radius: 3px; background: none; color: var(--silver-dim); opacity: 0; }
+/* Earlier conversations: the logo's menu (cm-menu, lm-item), placed under the bar. */
+.ai-list { position: absolute; z-index: 20; left: 6px; right: 6px; top: calc(100% + 2px); max-height: min(330px, 50vh); overflow: auto; overscroll-behavior: contain; } /* about ten conversations, then it scrolls */
+.ai-li { position: relative; cursor: pointer; padding-right: 32px !important; }
+.ai-li-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.ai-li.current .ai-li-title { color: #f6ecd8; }
+.ai-li-meta { padding-left: 16px; }
+.ai-li-none { padding: 6px 10px 6px 28px; color: var(--dim); font-size: 13px; }
+.ai-li-x { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; border: 0; border-radius: 3px; background: none; color: var(--silver-dim); opacity: 0; }
 .ai-li:hover .ai-li-x { opacity: 1; }
 .ai-li-x:hover { color: #f3a493; background: rgba(255, 255, 255, .06); }
 .ai-li-x svg { width: 14px; height: 14px; }
@@ -825,16 +853,24 @@ body.cols-moving #outlineWin { transition: width .26s cubic-bezier(.25, .8, .25,
 .ai-msg-ctx { margin-bottom: 4px; font-size: 12px; color: var(--silver-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ai-msg-ai { color: var(--ink); }
 .ai-msg-ai .ai-text { margin: 0; line-height: 1.5; font-size: 14.5px; }
-.ai-activity { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 12.5px; color: var(--silver-dim); }
-.ai-dots { width: 18px; height: 6px; background: radial-gradient(circle, var(--silver-dim) 2px, transparent 2.5px) 0 0 / 6px 6px repeat-x; animation: ai-dots 1.2s linear infinite; }
-@keyframes ai-dots { 50% { opacity: .35; } }
+/* The answer under way (src/ai-stream.js): text revealed and faded in by script; while it thinks or looks
+   things up, one quiet line in plain text colour with a glint running along it, letter by letter
+   (each letter a span, delayed in turn). The glint only brightens: between glints it's ordinary text. */
+.ai-status { margin-top: 6px; font-size: 13.5px; line-height: 1.4; display: flex; min-width: 0; }
+.ai-streaming .ai-text:empty + .ai-status { margin-top: 0; }
+.ai-shimmer { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--silver-soft); }
+.ai-shimmer span { animation: ai-glint 2.2s ease-in-out infinite; }
+.ai-swap { animation: ai-swap .35s ease-out; }
+@keyframes ai-glint { 0%, 30%, 100% { color: var(--silver-soft); } 12% { color: #ffffff; text-shadow: 0 0 8px rgba(255, 255, 255, .35); } }
+@keyframes ai-swap { from { opacity: 0; transform: translateY(3px); } }
+@media (prefers-reduced-motion: reduce) { .ai-shimmer span, .ai-swap { animation: none; } }
 .ai-warn { margin-top: 6px; color: #f3a493; font-size: 13px; }
 .ai-note { margin-top: 6px; color: var(--silver-dim); font-size: 12.5px; }
 .ai-empty { margin: auto 6px; padding: 18px 6px; text-align: center; color: var(--silver-dim); line-height: 1.5; }
 .ai-empty-title { font: 700 12px/1 var(--serif); letter-spacing: 1.5px; color: #c9b48a; margin-bottom: 10px; text-transform: uppercase; }
 .ai-empty p { margin: 0 0 8px; }
 
-.ai-box { padding: 8px 10px 10px; border-top: 1px solid var(--hair); }
+.ai-box { padding: 8px 10px 10px; border-top: 1px solid #2b241a; border-radius: 0 0 4px 4px; } /* the chips and the box: on the bars' stone */
 .ai-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 7px; }
 .ai-chips.hidden { display: none; }
 .ai-chip {
@@ -858,13 +894,17 @@ body.cols-moving #outlineWin { transition: width .26s cubic-bezier(.25, .8, .25,
 /* The Codex's own lines in a conversation (/model, /effort). */
 .ai-msg-codex { align-self: center; max-width: 92%; padding: 4px 10px; font-size: 12.5px; color: var(--silver-dim); border: 1px dashed var(--hair-2); border-radius: 6px; }
 .ai-msg-codex .ai-text { margin: 0; font-size: 12.5px; }
+.ai-msg-codex .ai-text > :last-child { margin-bottom: 0; }
+.ai-msg-codex .ai-text ul { padding-left: 1.1em; }
+.ai-msg-codex .ai-text li { margin: .15em 0; }
+.ai-msg-codex .ai-text strong { color: var(--text); }
 .ai-chip-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ai-chip-x { width: 18px; height: 18px; border: 0; border-radius: 50%; background: none; color: var(--silver-dim); }
 .ai-chip-x:hover { color: #fff; background: rgba(255, 255, 255, .08); }
 .ai-chip-x svg { width: 11px; height: 11px; }
 .ai-row { display: flex; align-items: flex-end; gap: 6px; padding: 5px 5px 5px 10px; border: 1px solid var(--line); border-radius: 6px; background: linear-gradient(#0b0a08, #12100d); box-shadow: inset 0 1px 3px #000; }
 .ai-row:focus-within { border-color: var(--accent); }
-.ai-input { flex: 1; min-width: 0; resize: none; border: 0; outline: none; background: none; color: var(--text); font: 14.5px/1.4 var(--sans); padding: 4px 0; max-height: 220px; }
+.ai-input { flex: 1; min-width: 0; resize: none; border: 0; outline: none; background: none; color: var(--text); font: 14.5px/1.4 var(--sans); padding: 4px 0; max-height: 220px; overflow-y: hidden; }
 .ai-input::placeholder { color: var(--dim); }
 .ai-send { flex: none; width: 28px; height: 28px; border: 0; border-radius: 5px; background: rgba(201, 162, 94, .18); color: var(--value); }
 .ai-send:hover { background: rgba(201, 162, 94, .3); }
@@ -905,8 +945,17 @@ body.cols-moving #outlineWin { transition: width .26s cubic-bezier(.25, .8, .25,
 .ai-undo-one.hidden { display: none; }
 .ai-changes { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
 .ai-change { display: flex; align-items: baseline; gap: 8px; padding: 5px 8px; border: 1px solid var(--hair); border-radius: 5px; background: rgba(255, 255, 255, .02); font-size: 13px; color: var(--silver-soft); }
-.ai-change.reviewed { opacity: .6; }
+.ai-change.reviewed { align-items: center; color: var(--silver-dim); }
+.ai-change.reviewed b { color: var(--silver-soft); font-weight: 600; }
+.ai-change-check { display: flex; flex: none; width: 16px; height: 16px; border-radius: 50%; background: rgba(124, 207, 98, .16); color: #8fd47a; }
+.ai-change-check svg { width: 12px; height: 12px; margin: auto; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 .ai-change-text { flex: 1; min-width: 0; }
+/* A new page the AI suggests, previewed before it's made (app.js, previewNewPage). */
+.np-preview-win { max-height: 86vh; display: flex; flex-direction: column; }
+.np-preview-win .win-body { display: flex; flex-direction: column; min-height: 0; }
+.np-preview-where { margin: 0 0 10px; }
+.np-preview { flex: 1; min-height: 0; overflow: auto; max-width: none; margin: 0 0 14px; padding: 6px 22px 18px; font-size: 15.5px;
+  border: 1px solid var(--hair); border-radius: 6px; background: rgba(0, 0, 0, .18); }
 .ai-change b { color: var(--silver); }
 .ai-link { border: 0; background: none; padding: 0; color: #a9bdd0; font: 600 12.5px/1 var(--sans); }
 .ai-link:hover { color: #fff; text-decoration: underline; }
@@ -918,18 +967,18 @@ body.cols-moving #outlineWin { transition: width .26s cubic-bezier(.25, .8, .25,
 .qo-ask-ico { color: var(--value); width: 16px; text-align: center; margin-right: 4px; }
 .prose .ai-del-live { background: rgba(224, 96, 78, .07); box-shadow: -3px 0 0 rgba(224, 96, 78, .6); }
 .prose .ai-add-widget { margin: .4em 0; padding: 2px 8px; background: rgba(124, 207, 98, .08); box-shadow: -3px 0 0 rgba(124, 207, 98, .6); user-select: none; }
-/* Stepping through the AI's changes (src/ai-changes.js): the one being looked at stands out (stronger,
-   ringed in gold, a gold mark in the margin by its paragraph); the others fade back but stay readable. */
+/* Stepping through the AI's changes (src/ai-changes.js): the one being looked at stands out (stronger
+   colours, a gold mark in the margin by its paragraph); the others fade back but stay readable. */
 /* The header change the AI suggests (status stub → draft): its own line under the bar, never squeezed. */
 #aiBar { flex-wrap: wrap; row-gap: 6px; }
 .ai-bar-front { order: 10; flex-basis: 100%; display: flex; align-items: baseline; gap: 10px; padding-left: 26px; color: var(--muted); font-size: 13px; white-space: nowrap; }
 .ai-bar-front b { color: var(--value); font-weight: 600; }
 .prose .ai-current { position: relative; }
 .prose .ai-current::before { content: ""; position: absolute; left: -16px; top: 2px; bottom: 2px; width: 3px; border-radius: 2px; background: var(--value); box-shadow: 0 0 6px rgba(240, 213, 140, .45); }
-.prose .ai-add.ai-now { background: rgba(124, 207, 98, .30); box-shadow: inset 0 -1px rgba(124, 207, 98, .8), 0 0 0 1px rgba(240, 213, 140, .7); }
-.prose .ai-del.ai-now { background: rgba(224, 96, 78, .30); box-shadow: inset 0 -1px rgba(224, 96, 78, .8), 0 0 0 1px rgba(240, 213, 140, .7); }
-.prose .ai-add-block.ai-now, .prose .ai-add-widget.ai-now { background: rgba(124, 207, 98, .13); outline: 1px solid rgba(240, 213, 140, .55); outline-offset: 3px; }
-.prose .ai-del-block.ai-now, .prose .ai-del-live.ai-now { background: rgba(224, 96, 78, .13); outline: 1px solid rgba(240, 213, 140, .55); outline-offset: 3px; }
+.prose .ai-add.ai-now { background: rgba(124, 207, 98, .30); box-shadow: inset 0 -1px rgba(124, 207, 98, .8); }
+.prose .ai-del.ai-now { background: rgba(224, 96, 78, .30); box-shadow: inset 0 -1px rgba(224, 96, 78, .8); }
+.prose .ai-add-block.ai-now, .prose .ai-add-widget.ai-now { background: rgba(124, 207, 98, .13); }
+.prose .ai-del-block.ai-now, .prose .ai-del-live.ai-now { background: rgba(224, 96, 78, .13); }
 .prose .ai-later { opacity: .5; }
 .prose .ai-add.ai-later { background: rgba(124, 207, 98, .08); box-shadow: inset 0 -1px rgba(124, 207, 98, .3); }
 .prose .ai-del.ai-later { background: rgba(224, 96, 78, .08); box-shadow: inset 0 -1px rgba(224, 96, 78, .3); }
@@ -1288,3 +1337,9 @@ body.cols-moving #outlineWin { transition: width .26s cubic-bezier(.25, .8, .25,
 
 /* The Pages pane's own button (New page), at the right of its title bar. */
 .titlebar .pane-tb { margin-left: auto; }
+
+/* ------------------------------------------------------------------ bars
+   Title bars, the edit toolbar and the AI tab's bars: a very transparent grey over the pane's stone,
+   which shows through. */
+.titlebar, .toolbar, .ai-head, .ai-box { background: rgba(70, 70, 76, .12); }
+.toolbar, .ai-head { position: relative; z-index: 3; } /* their menus open over what comes after them */

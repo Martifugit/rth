@@ -548,6 +548,11 @@ const api = {
     return { changes: page ? await assistant.changesFor(page) : [] };
   },
   async "POST /api/ai/reviewed"(url, req) { return assistant.reviewed(await body(req)); },
+  async "POST /api/ai/create-page"(url, req) {
+    if (!account.canEdit()) return [403, { error: "Sign in with Discord (with the Codex role) to make pages." }];
+    const r = await assistant.createSuggested(await body(req));
+    return r.error ? [400, r] : r;
+  },
   async "POST /api/ai/undo"(url, req) { const r = await assistant.undo(await body(req)); return r.error ? [400, r] : r; },
 
   async "POST /api/ai/delete"(url, req) {

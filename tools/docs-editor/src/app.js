@@ -33,6 +33,7 @@ import { makeTogetherUi } from "./together-ui.js";
 import { Spelling, configureSpelling } from "./spellcheck.js";
 import { GDD, README, TOP, TEMPLATES, isMeta, undeletable, folderPath, typeAt } from "./gdd.js";
 import { split as splitFront, make as makeFront } from "./frontmatter.js";
+import { busy } from "./busy.js";
 import { makeGddUi } from "./gdd-ui.js";
 import { pagePicker } from "./page-picker.js";
 import { failed } from "./plain-errors.js";
@@ -517,9 +518,9 @@ function hideBanner() { $("#banner").classList.add("hidden"); }
 
 // Each type's folder icon (the folders themselves come from How the GDD Works).
 const TYPE_ICONS = {
-  system: "settings", skill: "skills", entity: "bestiary", object: "compass", item: "pack",
-  ability: "spark", effect: "dreaming", quest: "quests", activity: "fishing", achievement: "task", location: "map",
-  group: "journal", lore: "scripture", media: "eye", guide: "guide", decision: "note",
+  system: "settings", skill: "skills", entity: "bestiary", object: "crate", item: "pack",
+  ability: "spark", effect: "zap", quest: "quests", activity: "fishing", achievement: "task", location: "map-pin",
+  group: "journal", lore: "scripture", media: "camera", guide: "guide", decision: "note",
 };
 const folderIcon = (d) => TYPE_ICONS[S.types.find((t) => t.folder && folderPath(t) === d.path)?.type] || "journal";
 
@@ -1135,6 +1136,29 @@ function quickOpen() {
 }
 
 /**
+ * A new page the AI suggested (src/ai.js): the page as it would be, read-only, with where it would go,
+ * then Create page (made as written, and opened) or Skip. create/skip are the AI tab's; create says
+ * whether it worked.
+ */
+function previewNewPage({ page, name, text, create, skip }) {
+  const parts = splitFront(text || "");
+  const where = h("p", { class: "muted small np-preview-where" }, "Would be saved as ", h("code", {}, page.startsWith(GDD + "/") ? page.slice(GDD.length + 1) : page));
+  const view = h("div", { class: "prose np-preview", html: renderHtml(parts.body) });
+  const go = async () => {
+    if (!(await busy(btn, "Creating…", create))) return;
+    close();
+    await loadTree();
+    await openDoc(page);
+    toast("Page created", "good");
+  };
+  const btn = h("button", { class: "btn btn-gold", onclick: go }, "Create page");
+  const close = modal("Suggested page: " + name, [where, view,
+    h("div", { class: "modal-actions" },
+      h("button", { class: "btn", onclick: async () => { close(); await skip(); } }, "Skip"),
+      h("button", { class: "btn", onclick: () => close() }, "Not now"), btn)], { width: "min(760px, 94vw)", cls: "np-preview-win" });
+}
+
+/**
  * A new page. The type comes first, by a picker: it decides the folder and the core headings (How the
  * GDD Works, "Types"). Then the title, and optionally a few components: the ones usual for the type are
  * offered, none ticked, since most pages start as stubs. Made from a folder, the folder's type is
@@ -1493,13 +1517,13 @@ function syncWords() {
   if (!v || v.enabled !== true) return { text: "Saved", cls: "saved", title: v?.reason || "" };
   const heldHere = (v.held || []).some((x) => x.path === S.path);
   if (!v.auto && !heldHere) return { text: "Saved", cls: "saved", title: "This version doesn't share by itself" };
-  if (heldHere) return { text: "Saved, not shared yet", cls: "unsaved", title: "Waiting for you to share it (bottom left)" };
-  if (v.offline) return { text: "Saved, offline: sent when you're back", cls: "muted", title: v.problem };
-  if (v.problem) return { text: "Saved, not sent", cls: "unsaved", title: v.problem };
+  if (heldHere) return { text: "Not saved yet", cls: "unsaved", title: "Changed by R'th AI or outside the Codex: waiting for you to save it (bottom left)" };
+  if (v.offline) return { text: "Saved here: offline", cls: "muted", title: "Saved on this computer; everyone gets it when you're back online. " + (v.problem || "") };
+  if (v.problem) return { text: "Saved here only", cls: "unsaved", title: "Saved on this computer, not yet for everyone: " + v.problem };
   // Waiting on something done outside the Codex (src/sync.js, wait): nothing to click, so no box, just why.
-  if (v.wait) return { text: v.waitShort || "Saved, not sent yet", cls: "muted", title: v.wait };
-  if (v.busy || v.sending || v.ahead) return { text: "Sending…", cls: "muted" };
-  return { text: "Saved and sent", cls: "saved", title: v.lastSync ? "Sent " + agoText(v.lastSync) : "" };
+  if (v.wait) return { text: v.waitShort || "Saved here for now", cls: "muted", title: v.wait };
+  if (v.busy || v.sending || v.ahead) return { text: "Saving…", cls: "muted" };
+  return { text: "Saved", cls: "saved", title: v.lastSync ? "Saved for everyone " + agoText(v.lastSync) : "Saved for everyone" };
 }
 
 /** The panel in the bottom-left corner: what the Codex needs an answer about before it can share. */
@@ -1515,24 +1539,24 @@ function drawSharePanel() {
     const files = pages.map((x) => x.path);
     cards.push(h("div", { class: "sp-card" },
       h("div", { class: "sp-title" }, by === "ai"
-        ? `${who} changed ${plural(pages.length, "page", "pages")}. Share ${pages.length === 1 ? "it" : "them"}?`
-        : `${plural(pages.length, "page was", "pages were")} changed outside the Codex. Share ${pages.length === 1 ? "it" : "them"}?`),
-      // The first few by name; a long list ends "and 39 more" (all of them are in what Share and Undo do).
+        ? `${who} changed ${plural(pages.length, "page", "pages")}. Save ${pages.length === 1 ? "it" : "them"}?`
+        : `${plural(pages.length, "page was", "pages were")} changed outside the Codex. Save ${pages.length === 1 ? "it" : "them"}?`),
+      // The first few by name; a long list ends "and 39 more" (all of them are in what Save and Undo do).
       h("div", { class: "sp-pages" }, pages.slice(0, 6).map((x, i) => [i ? ", " : "",
         x.gone ? h("span", { class: "sp-gone" }, "deleted " + x.title) : h("a", { onclick: () => reviewPages([x]) }, x.title)]),
         pages.length > 6 ? ` and ${pages.length - 6} more` : null),
       h("div", { class: "sp-actions" },
-        h("button", { class: "btn btn-gold btn-small", onclick: () => sharePages(files) }, "Share"),
+        h("button", { class: "btn btn-gold btn-small", title: "Save for everyone, as they are now", onclick: (ev) => busy(ev, "Saving…", () => sharePages(files)) }, "Save"),
         pages.some((x) => !x.gone) ? h("button", { class: "btn btn-small", onclick: () => reviewPages(pages) }, "Review") : null,
-        h("button", { class: "btn btn-small", onclick: () => undoPages(pages, who) }, "Undo"))));
+        h("button", { class: "btn btn-small", onclick: (ev) => undoPages(pages, who, ev.currentTarget) }, "Undo"))));
   }
   if (v.clash) cards.push(h("div", { class: "sp-card" },
     h("div", { class: "sp-title" }, `You and someone else changed the same lines of ${v.clash.join(", ")}. Which version should stay?`),
     h("div", { class: "sp-actions" },
-      h("button", { class: "btn btn-gold btn-small", onclick: () => settle("mine") }, "Keep mine"),
-      h("button", { class: "btn btn-small", onclick: () => settle("theirs") }, "Use theirs"))));
+      h("button", { class: "btn btn-gold btn-small", onclick: (ev) => busy(ev, "Saving…", () => settle("mine")) }, "Keep mine"),
+      h("button", { class: "btn btn-small", onclick: (ev) => busy(ev, "Saving…", () => settle("theirs")) }, "Use theirs"))));
   // Only what can be answered here goes in the box. Other trouble sending (no Codex role, GitHub or the
-  // helper refusing, a stray git error) is on the status line, "Saved, not sent", why on hover, and the
+  // helper refusing, a stray git error) is on the status line, "Saved here only", why on hover, and the
   // Codex tries again every minute by itself: a Try again here never did more than that.
   else if (v.signIn && !v.offline) cards.push(h("div", { class: "sp-card" },
     h("div", { class: "sp-title" }, "Sign in to send your changes."),
@@ -1554,23 +1578,23 @@ async function sharePages(files) {
   const v = await api("/api/sync/share", { method: "POST", body: JSON.stringify({ files }) });
   showSync(v);
   // Only say so if they really went: still held means they didn't (the problem, if any, is in the panel).
-  if (!v.problem && !(v.held || []).some((x) => files.includes(x.path))) toast(`Shared ${files.length === 1 ? "the page" : files.length + " pages"}`, "good");
+  if (!v.problem && !(v.held || []).some((x) => files.includes(x.path))) toast(`Saved ${files.length === 1 ? "the page" : files.length + " pages"}`, "good");
   aiChanges.load();
 }
-/** Open the pages one by one with their changes marked; the page's own bar then offers Share. */
+/** Open the pages one by one with their changes marked; the page's own bar then offers Save. */
 async function reviewPages(pages) {
   const first = pages.find((x) => !x.gone);
   if (!first) return;
   if (S.path !== first.path) await openDoc(first.path);
   aiChanges.show();
 }
-async function undoPages(pages, who) {
+async function undoPages(pages, who, btn = null) {
   const n = pages.length;
   const list = pages.map((x) => `<li>${esc(x.title)}</li>`).join("");
   const k = await ask(who === "outside the Codex" ? "Undo the changes made outside the Codex?" : `Undo ${who}'s changes?`, `${n === 1 ? "This page goes" : "These pages go"} back to how ${n === 1 ? "it was" : "they were"} last shared:<ul>${list}</ul>`,
     [{ key: "no", label: "Cancel" }, { key: "yes", label: "Undo the changes", cls: "btn-danger" }]);
   if (k !== "yes") return;
-  const v = await api("/api/sync/discard", { method: "POST", body: JSON.stringify({ files: pages.map((x) => x.path) }) });
+  const v = await busy(btn, "Undoing…", () => api("/api/sync/discard", { method: "POST", body: JSON.stringify({ files: pages.map((x) => x.path) }) }));
   showSync(v);
   if (pages.some((x) => x.path === S.path)) openDoc(S.path, { push: false, keepScroll: true });
   toast("Undone", "good");
@@ -1649,19 +1673,10 @@ function showRightTab(tab) {
   $("#outline").classList.toggle("hidden", tab !== "outline");
   $("#linksPane").classList.toggle("hidden", tab !== "links");
   $("#aiPane")?.classList.toggle("hidden", tab !== "ai");
-  // The AI tab widens the pane: ease it (style.css, cols-moving), then put the comments level again.
-  if (rightTabShown && document.body.classList.contains("right-ai") !== (tab === "ai")) { // not on opening the Codex
-    document.body.classList.add("cols-moving");
-    clearTimeout(colsMoving);
-    colsMoving = setTimeout(() => { document.body.classList.remove("cols-moving"); notes.layout(); }, 300);
-  }
-  document.body.classList.toggle("right-ai", tab === "ai");
   $("#outlineWin .win-body").classList.toggle("ai-body", tab === "ai");
   if (tab === "links") panels.renderLinks();
   if (tab === "ai") { ai.shown(); requestAnimationFrame(() => notes.layout()); }
-  rightTabShown = true;
 }
-let colsMoving = null, rightTabShown = false;
 function setCommentCount(n) { $("#statusComments").textContent = n ? `${n} comment${n > 1 ? "s" : ""}` : ""; }
 function setLinksCount(n) { $("#linksCount").textContent = n ? String(n) : ""; }
 
@@ -1753,6 +1768,7 @@ const ai = makeAi({
   markTab: (on) => $('#outlineWin .tab[data-tab="ai"]')?.classList.toggle("has-news", !!on),
   // From a reply: open the page the AI changed with its changes shown.
   showChanges: (page) => { if (page === S.path) aiChanges.show(); else { S.wantChanges = page; openDoc(page); } },
+  previewNewPage: (s) => previewNewPage(s),
   pageChanges: () => aiChanges.load(),
 });
 

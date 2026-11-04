@@ -4,6 +4,21 @@ A few plain lines per version, for the people using it: `npm run release` puts t
 the GitHub release and announces it in #codex (`scripts/release.mjs`, `scripts/announce.mjs`). Write the
 section before releasing; the release refuses without one.
 
+## 0.3.4
+
+- R'th AI's answers flow in smoothly, each new bit fading in. While it works, a line says what it's doing, with a soft glint running along it: thinking, reading a page, or its own thinking when the model shares it.
+- When R'th AI suggests a new page, you can preview it and create it (or skip it). Before, Review said the page didn't exist.
+- A suggestion card you've finished with shows a check instead of its buttons, and updates as soon as you're done.
+- Share is now Save, and the status line speaks of saving: "Saved" means everyone has it, "Saved here" means only your computer has it so far (hover for why).
+- Buttons that take a moment (Save, Undo, Create page, Skip) say what they're doing while they work, and can't be pressed twice.
+- Deleting an @mention from your message takes its page out of the conversation's context again.
+- R'th AI writes in US English, as the spelling check does.
+- Drag the edge of the Pages pane or the right-hand pane to resize it (double-click for the usual width). The Pages pane is a little narrower by default, and the right-hand pane keeps one width whichever tab is open.
+- The search box sits in the middle of the title bar, and your account is the rightmost button.
+- New icons for the Links and AI tabs and for the effects, media, objects and locations folders, and every icon is crisp again (they had gone blurry).
+- A darker look: a solid near-black behind the panes, darker stone in them, and a Celtic knot on the line under a page's title.
+- Smaller things: a shorter hint in the AI box, a tidier /help, the AI's conversation menu matches the logo's, headings have their gold detail at both ends, and the body text is a shade softer.
+
 ## 0.3.3
 
 - R'th AI's suggestions no longer show a made-up heading like "type: system components: [] groups: []" at the top of the page. When it suggests changing the page's header (its status, say), that's a line of its own in the bar: "Also: status stub → draft", to accept or skip.
