@@ -1525,15 +1525,18 @@ function drawSharePanel() {
     h("div", { class: "sp-actions" },
       h("button", { class: "btn btn-gold btn-small", onclick: () => settle("mine") }, "Keep mine"),
       h("button", { class: "btn btn-small", onclick: () => settle("theirs") }, "Use theirs"))));
-  else if (v.problem && !v.offline && v.enabled === true) cards.push(h("div", { class: "sp-card" },
-    h("div", { class: "sp-title" }, "Your changes couldn't be sent."),
-    h("div", { class: "sp-text" }, v.problem),
+  // Only what can be answered here goes in the box. Other trouble sending (no Codex role, GitHub or the
+  // helper refusing, a stray git error) is on the status line, "Saved, not sent", why on hover, and the
+  // Codex tries again every minute by itself: a Try again here never did more than that.
+  else if (v.signIn && !v.offline) cards.push(h("div", { class: "sp-card" },
+    h("div", { class: "sp-title" }, "Sign in to send your changes."),
+    h("div", { class: "sp-text" }, "They're saved on this computer meanwhile, and go out once you're signed in with Discord."),
     h("div", { class: "sp-actions" },
-      h("button", { class: "btn btn-small", onclick: async () => showSync(await api("/api/sync?why=retry", { method: "POST" })) }, "Try again"))));
+      h("button", { class: "btn btn-gold btn-small", onclick: async () => { const r = await api("/api/account/signin", { method: "POST" }); if (r.url) window.open(r.url, "_blank"); } }, "Sign in"))));
   if (!cards.length) { panel?.remove(); return; }
   // Every sync (each save) redraws; rebuilding the same cards would replay their fade-in, so it blinked.
   const said = JSON.stringify([heldShown.map((x) => [x.path, x.by, x.title, x.gone]), v.clash || null,
-    !v.clash && v.problem && !v.offline && v.enabled === true ? v.problem : null]);
+    !v.clash && v.signIn && !v.offline]);
   if (panel && panel.dataset.said === said) return;
   if (!panel) { panel = h("div", { id: "sharePanel" }); document.body.append(panel); }
   panel.dataset.said = said;

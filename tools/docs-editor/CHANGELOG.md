@@ -8,6 +8,7 @@ section before releasing; the release refuses without one.
 
 - An open Codex looks for a new version every hour (it was every 6 hours), so updates reach you sooner.
 - Things only fixed outside the Codex (a commit someone hasn't pushed, a merge in progress) no longer sit in the bottom-left box with a Try again that can't help: the status line says "Saved, not sent yet", with why on hover, and it clears by itself.
+- The bottom-left box only asks what you can answer in the Codex: pages to share, a clash between versions, or signing in when that's what stops your changes going out. Any other trouble sending is on the status line, with why on hover, and a send GitHub refuses is no longer retried every few seconds for ever.
 
 ## 0.3.1
 

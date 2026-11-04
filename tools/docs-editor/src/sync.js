@@ -24,6 +24,8 @@ import { execFile } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
+// git refusing for want of a login (no Discord key, and no git login of its own on this computer).
+const AUTH_FAILED = /Authentication failed|could not read Username|terminal prompts disabled|Permission to .* denied|\b40[13]\b/i;
 const MARK = "Synced by the Codex."  // every commit the Codex makes says so: it only ever sends those
 const AUTO_EVERY_MS = 60 * 1000;       // the safety net: how often it looks anyway
 const SEND_AFTER_MS = 10 * 1000;       // a saved page is sent once typing has paused this long...
@@ -37,6 +39,9 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
     // Waiting on something only done outside the Codex (a push, a commit, a merge to finish): said on the
     // status line, not asked in the box, since there's nothing to click; it clears itself once done.
     wait: null,
+    // Not signed in, and this copy can't send any other way (git has no login of its own here): the one
+    // sending trouble the person can fix in the Codex, so the box asks them to sign in.
+    signIn: false, authError: null,
     ahead: 0, behind: 0, waiting: [], outside: [],
   };
   const saved = new Set();   // pages saved in the Codex since the last sync (relative paths)
@@ -86,7 +91,7 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
   const NOTES = scope + "/.notes/";
   const sendable = (f) => f.startsWith(NOTES) || (saved.has(f) && !byAi.has(f));
   const view = () => ({
-    enabled: S.enabled, reason: S.reason, busy: S.busy, wait: S.wait, clash: S.problem ? S.clash || null : null, branch: S.branch, lastSync: S.lastSync, lastResult: S.lastResult, problem: S.problem,
+    enabled: S.enabled, reason: S.reason, busy: S.busy, wait: S.wait, signIn: S.signIn, clash: S.problem ? S.clash || null : null, branch: S.branch, lastSync: S.lastSync, lastResult: S.lastResult, problem: S.problem,
     offline: S.offline, auto: !!timer, sending: !!sendTimer || (!!timer && saved.size > 0), // auto: this Codex shares by itself (the app)
     waiting: S.waiting.length, ahead: S.ahead, behind: S.behind,
     held: (S.heldPages || []).map((f) => ({ path: f, title: titleOf(f), by: byAi.has(f) ? "ai" : "other", gone: !fs.existsSync(path.join(repo, f)) })),
@@ -116,6 +121,8 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
       if (midOperation()) { S.problem = null; S.wait = "git is in the middle of something else in this folder (a merge or rebase). Sending waits until that's finished."; return view(); }
       let sent = 0, got = 0;
       const a = await auth();
+      // Signed in but refused (no Codex role, the helper unreachable): said, and git's own login is tried.
+      S.authError = a?.error || null;
       if (a?.error) { S.problem = a.error + " Pages are still saved and committed here."; creds = null; }
       else creds = a;
 
@@ -188,8 +195,12 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
         }
         const p = await run([...key(), "push", "--quiet", remote, `HEAD:${S.upstream.slice(remote.length + 1)}`]);
         if (!p.ok) {
-          // Someone sent at the same moment: it tries again by itself, so that's a wait, not a question.
-          if (/rejected|fetch first|non-fast-forward/i.test(p.err)) {
+          if (!creds && !S.authError && AUTH_FAILED.test(p.err)) {
+            S.signIn = true; S.problem = "Sign in with Discord to send your changes. They're saved here meanwhile.";
+          } else if (/fetch first|non-fast-forward/i.test(p.err)) {
+            // Someone sent at the same moment: it tries again by itself, so that's a wait, not a question.
+            // Only these two words mean that: "remote rejected" (a protected branch, a refused login) would
+            // never pass by retrying, and used to retry every 5 seconds for ever.
             S.wait = "Someone sent changes at the same moment. Sending again in a few seconds.";
             setTimeout(() => sync({ why: "retry" }), 5000);
           } else S.problem = "Couldn't send to GitHub: " + p.err.trim().split("\n").pop();
@@ -197,7 +208,7 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
         }
         sent = S.ahead;
       }
-      S.problem = null; S.wait = null;
+      S.problem = null; S.wait = null; S.signIn = false;
       S.lastSync = Date.now();
       S.lastResult = { sent, got, why };
       await refresh();
@@ -275,7 +286,8 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
       const conflicts = (await run(["diff", "--name-only", "--diff-filter=U"])).out.split("\n").filter(Boolean);
       if (!conflicts.length || conflicts.some((f) => !f.startsWith(scope + "/"))) {
         if (fs.existsSync(path.join(repo, ".git", "MERGE_HEAD"))) await run(["merge", "--abort"]);
-        S.problem = "That clash isn't only in the docs, so the Codex left it alone.";
+        S.clash = null; // nothing here can settle it, so it's no longer asked about (the status line says why)
+        S.problem = "That clash isn't only in the docs, so the Codex left it alone. It has to be settled in git.";
         return false;
       }
       await run(["checkout", keep === "mine" ? "--ours" : "--theirs", "--", ...conflicts]);

@@ -232,6 +232,36 @@ await test("a commit made outside the Codex is waited on, not asked about, and t
   assert.match(g(remote, "show", "main:docs/kept.md"), /while blocked/);
 });
 
+// A "GitHub" that refuses every send, the way it refuses someone with no login (a hook on the bare remote).
+function refusingCopy(name, says) {
+  const rem = path.join(root, name + ".git");
+  g(root, "clone", "--quiet", "--bare", remote, rem);
+  fs.writeFileSync(path.join(rem, "hooks", "pre-receive"), `#!/bin/sh\necho "${says}" >&2\nexit 1\n`, { mode: 0o755 });
+  const dir = path.join(root, name);
+  g(root, "clone", "--quiet", rem, dir); ident(dir, "Contributor");
+  return dir;
+}
+
+await test("refused for want of a login: the box asks to sign in, with nothing else to do", async () => {
+  const dir = refusingCopy("nologin", "Permission to Martifugit/rth.git denied to someone.");
+  const s = makeSync({ repo: dir }); // no Discord key: auth gives nothing
+  write(dir, "docs/combat.md", "# Combat\n\nWritten while signed out.\n");
+  s.saved("docs/combat.md");
+  const v = await s.sync({ why: "auto" });
+  assert.equal(v.signIn, true);
+  assert.match(v.problem, /Sign in with Discord/);
+});
+
+await test("refused for another reason: said on the status line, not asked in the box", async () => {
+  const dir = refusingCopy("refused", "The branch is protected.");
+  const s = makeSync({ repo: dir });
+  write(dir, "docs/combat.md", "# Combat\n\nWritten anyway.\n");
+  s.saved("docs/combat.md");
+  const v = await s.sync({ why: "auto" });
+  assert.equal(v.signIn, false);
+  assert.match(v.problem, /Couldn't send to GitHub/);
+});
+
 await test("a branch with no remote says so instead of syncing", async () => {
   const c = path.join(root, "c");
   g(root, "init", "--quiet", "--initial-branch=main", c);
