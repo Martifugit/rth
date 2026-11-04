@@ -3,6 +3,7 @@
 // (pages to write, and structure to fix).
 
 import { slug } from "./links.js";
+import { pagePicker } from "./page-picker.js";
 
 
 export function makePanels(ctx) {
@@ -83,7 +84,7 @@ export function makePanels(ctx) {
     const open = (e, section) => e.exists && ctx.openDoc(e.path, section ? { hash: slug(section) } : {});
     const verb = { added: "made", deleted: "deleted", changed: "changed" };
     const row = (e) => h("li", { class: "ch-row" + (!e.mine && Date.parse(e.date) > since ? " new" : "") },
-      h("span", { class: "ch-time", title: new Date(e.date).toLocaleString() }, timeOf(e.date)),
+      h("span", { class: "ch-time", title: new Date(e.date).toLocaleString("en-GB", { hourCycle: "h23" }) }, timeOf(e.date)),
       h("span", { class: "ch-what" },
         h("b", { class: "ch-who" }, e.mine ? "You" : e.author), " " + verb[e.status] + " ",
         e.exists ? h("a", { onclick: () => open(e), title: e.path }, e.title) : h("span", { class: "ch-gone", title: e.path }, e.title),
@@ -113,30 +114,154 @@ export function makePanels(ctx) {
   // What the GDD still needs, in one list: pages that links (or groups, or based-on) point to but that
   // aren't written yet, each one click from being made; links to headings that aren't there; and the
   // structure checks (src/gdd-index.js): a page with no type, a component without its section...
+  // ----------------------------------------------------------------------------- To-do
+
+  // What the GDD still needs (server: src/todo.js), as cards with their fixes right on them. A fix that
+  // touches more than one page says which first; every fix can be undone straight after. Fixing a
+  // reference goes through the same machinery as renaming a page, so nothing is left half-pointed.
+
   async function broken(force = false) {
     if (force || !lists.broken) {
-      const [b, c] = await Promise.all([api("/api/broken"), api("/api/checks")]);
-      if (b.ok && c.ok) {
-        const pages = new Map();
-        for (const l of b.links || []) if (l.kind === "page" && l.to.startsWith("docs/gdd/")) {
-          if (!pages.has(l.to)) pages.set(l.to, { to: l.to, text: l.text, from: [] });
-          pages.get(l.to).from.push(l);
-        }
-        // A group or a variant's original named in frontmatter but not written: a page to write, in its type's folder.
-        const groups = S.types.find((t) => t.type === "group");
-        const problems = [];
-        for (const p of c.problems || []) {
-          const slug = p.kind === "missing-group" ? p.text.match(/“(.+?)”/)?.[1] : null;
-          if (!slug || !groups) { problems.push(p); continue; }
-          const to = "docs/gdd/" + groups.folder + "/" + slug + ".md";
-          if (!pages.has(to)) pages.set(to, { to, text: slug.replace(/-/g, " ").replace(/^./, (x) => x.toUpperCase()), from: [] });
-          pages.get(to).from.push({ from: p.path, title: p.title, text: "" });
-        }
-        lists.broken = { pages: [...pages.values()], headings: (b.links || []).filter((l) => l.kind === "heading" || (l.kind === "page" && !l.to.startsWith("docs/gdd/"))), problems };
-        lists.broken.length = lists.broken.pages.length + lists.broken.headings.length + lists.broken.problems.length;
-      }
+      const t = await api("/api/todo");
+      if (t.ok && Array.isArray(t.missing)) lists.broken = { ...t, length: t.count };
     }
     return lists.broken;
+  }
+
+  const todoState = { filter: "all", folder: "", open: new Set() };
+  const where = (p) => String(p || "").replace(/^docs\/gdd\//, "");
+  const folderOf = (p) => where(p).split("/").slice(0, -1).join("/");
+  const plural = (n, one, many = one + "s") => `${n} ${n === 1 ? one : many}`;
+  const gddPages = () => S.files.filter((f) => f.path.startsWith("docs/gdd/") && !ctx.isMeta(f.path)).map((f) => ({ path: f.path, title: f.title, note: folderOf(f.path) }));
+
+  /** Do a fix: say which pages it changes when it's more than one, do it, offer Undo, and draw the To-do again. */
+  async function applyFix(fix, what) {
+    const dry = await api("/api/fix", { method: "POST", body: JSON.stringify({ fix, dry: true }) });
+    if (!dry.ok) return ctx.toast(dry.error || "Couldn't plan that", "bad");
+    if (!dry.pages.length) { ctx.toast("Nothing to change"); return renderBroken(); }
+    if (dry.pages.length > 1) {
+      const list = dry.pages.map((p) => `<li>${esc(p.title || where(p.path))} <span class="muted">${esc(where(p.path))}</span></li>`).join("");
+      const ok = await ctx.ask(what, `This changes ${dry.pages.length} pages:<ul class="td-preview">${list}</ul>`, [{ key: "no", label: "Cancel" }, { key: "yes", label: "Change them", cls: "btn-gold" }]);
+      if (ok !== "yes") return;
+    }
+    if (S.path && !(await ctx.save())) return ctx.toast("Couldn't save the open page first, so nothing was changed", "bad");
+    const r = await api("/api/fix", { method: "POST", body: JSON.stringify({ fix }) });
+    if (!r.ok) return ctx.toast(r.error || "Couldn't do that", "bad");
+    if (r.pages.some((p) => p.path === S.path)) S.reloadOpen = true; // the open page is read again when it's next shown
+    ctx.toast(`${what}: ${plural(r.pages.length, "page")} changed`, "good", { actions: [{ label: "Undo", run: async () => {
+      const u = await api("/api/fix/undo", { method: "POST", body: JSON.stringify({ token: r.token }) });
+      if (!u.ok) return ctx.toast(u.error || "Couldn't undo it", "bad");
+      if (u.skipped?.length) ctx.toast(`${plural(u.skipped.length, "page")} changed since, so kept: ${u.skipped.map(where).join(", ")}`, "bad");
+      refresh();
+    } }] });
+    refresh();
+  }
+  const refresh = async () => { lists.broken = null; await ctx.loadTree?.(); ctx.countsChanged(); if (S.view === "broken") renderBroken(); };
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+  /** A picker that opens in place of a button: pick a page, then `done(page)`. */
+  function pickInPlace(label, placeholder, done, cls = "btn") {
+    const slot = h("span", { class: "td-pick-slot" });
+    const btn = h("button", { class: cls, onclick: () => {
+      const picker = pagePicker({ h, pages: gddPages(), placeholder, onPick: (p) => done(p) });
+      const cancel = h("button", { class: "td-x", title: "Cancel", onclick: () => slot.replaceChildren(btn) }, "✕");
+      slot.replaceChildren(h("span", { class: "td-pick" }, picker, cancel));
+      setTimeout(() => picker.querySelector("input")?.focus(), 0);
+    } }, label);
+    slot.append(btn);
+    return slot;
+  }
+
+  const openAt = (r) => ctx.openDoc(r.from, r.text ? { find: { q: r.text, occurrence: 0 } } : {});
+  const fromLink = (r) => h("a", { class: "td-from", onclick: () => openAt(r), title: r.from }, r.fromTitle || where(r.from));
+
+  function missingCard(c) {
+    const froms = [...new Set(c.refs.filter((r) => r.to).map((r) => r.to))];
+    const retarget = (p, what = `Pointed everything at “${p.title || where(p.path)}”`) => applyFix({ kind: "retarget", from: froms, id: c.id, to: p.path }, what);
+    const KIND = { link: "links to it", group: "lists it as a group", variant: "is a variant of it" };
+    const refRow = (r) => h("li", { class: "td-ref" },
+      h("div", { class: "td-ref-what" }, fromLink(r), h("span", { class: "td-dim" }, " " + KIND[r.kind]),
+        r.context ? h("div", { class: "td-context" }, r.context) : null),
+      h("div", { class: "td-ref-do" },
+        r.kind === "link"
+          ? [pickInPlace("Point elsewhere…", "The page this link means…", (p) => applyFix({ kind: "retarget-one", page: r.from, line: r.line, from: r.to, to: p.path }, "Link pointed elsewhere"), "td-link"),
+            h("button", { class: "td-link", title: "Keep the words, drop the link", onclick: () => applyFix({ kind: "unlink", page: r.from, line: r.line, target: r.to }, "Link removed") }, "Unlink")]
+          : [pickInPlace("Point elsewhere…", r.kind === "group" ? "The group it means…" : "The page it's a variant of…", (p) => applyFix({ kind: "retarget-ref", page: r.from, field: r.kind === "group" ? "groups" : "based-on", id: c.id, to: p.path }, "Pointed elsewhere"), "td-link"),
+            h("button", { class: "td-link", onclick: () => applyFix({ kind: "drop-ref", page: r.from, field: r.kind === "group" ? "groups" : "based-on", id: c.id }, "Taken off") }, "Take it off")]));
+    const open = todoState.open.has("m:" + c.id);
+    return h("div", { class: "td-item" + (open ? " open" : "") },
+      h("div", { class: "td-head" },
+        h("div", { class: "td-title" }, c.title),
+        h("span", { class: "td-count", title: `Wanted by ${plural(c.pages, "page")}` }, "wanted by ", plural(c.pages, "page"))),
+      h("div", { class: "td-sub td-path" }, c.path ? where(c.path) : c.id),
+      c.suggestions.length ? h("div", { class: "td-suggest" }, h("span", { class: "td-dim" }, "Did you mean "),
+        c.suggestions.map((s, i) => [i ? h("span", { class: "td-dim" }, " or ") : null,
+          h("button", { class: "td-sugg", title: `Point every reference at ${where(s.path)}`, onclick: () => retarget(s) }, s.title, h("span", { class: "td-why" }, s.why))]),
+        h("span", { class: "td-dim" }, "?")) : null,
+      h("div", { class: "td-actions" },
+        h("button", { class: "btn btn-gold btn-small", onclick: () => ctx.newPage({ path: c.path || "docs/gdd/" + c.id + ".md", title: c.title }) }, "Write it"),
+        pickInPlace("It's another page…", "The page that's meant…", (p) => retarget(p), "td-link"),
+        h("button", { class: "td-toggle", onclick: () => { if (open) todoState.open.delete("m:" + c.id); else todoState.open.add("m:" + c.id); renderBroken(); } },
+          h("span", { class: "td-caret" }), (open ? "Hide " : "Show ") + plural(c.refs.length, "reference"))),
+      open ? h("ul", { class: "td-refs" }, c.refs.map(refRow)) : null);
+  }
+
+  function referenceCard(r) {
+    const q = (x) => h("span", { class: "td-name" }, x);
+    const title = { plain: [q(r.text), " is named, not linked"], heading: ["A link to ", q("#" + r.anchor), ", which isn't a heading"], outside: ["A link out of the GDD"] }[r.problem];
+    const why = {
+      plain: `${r.field ? "In " + r.field + ". " : ""}Lists match it by its title, so renaming ${r.toTitle || where(r.to)} would quietly break it.`,
+      heading: `${where(r.to)} has no heading “${r.anchor}” (any more).`,
+      outside: `${r.to} isn't a page of the GDD.`,
+    }[r.problem];
+    const actions = {
+      plain: [h("button", { class: "btn btn-gold btn-small", onclick: () => applyFix({ kind: "link-field", page: r.from, line: r.line, text: r.text, to: r.to }, `Linked “${r.text}”`) }, "Make it a link")],
+      heading: [h("button", { class: "btn btn-gold btn-small", onclick: () => applyFix({ kind: "drop-anchor", page: r.from, line: r.line, target: r.to }, "Linked to the page instead") }, "Link to the page instead"),
+        h("button", { class: "td-link", onclick: () => ctx.openDoc(r.to) }, "Open " + where(r.to))],
+      outside: [pickInPlace("Point at a GDD page…", "The page this link means…", (p) => applyFix({ kind: "retarget-one", page: r.from, line: r.line, from: r.to, to: p.path }, "Link pointed elsewhere"), "btn btn-gold btn-small"),
+        h("button", { class: "td-link", onclick: () => applyFix({ kind: "unlink", page: r.from, line: r.line, target: r.to }, "Link removed") }, "Unlink")],
+    }[r.problem];
+    return h("div", { class: "td-item" },
+      h("div", { class: "td-head" }, h("div", { class: "td-title" }, title), h("span", { class: "td-count" }, "on ", fromLink(r))),
+      h("div", { class: "td-sub" }, why),
+      r.context ? h("div", { class: "td-context" }, r.context) : null,
+      h("div", { class: "td-actions" }, actions));
+  }
+
+  function placeholderCard(p) {
+    const input = h("input", { class: "field td-name", placeholder: "Its real name", spellcheck: "true" });
+    const go = () => input.value.trim() && applyFix({ kind: "name-placeholder", token: p.token, name: input.value.trim() }, `Named ${p.token}`);
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+    return h("div", { class: "td-item" },
+      h("div", { class: "td-head" }, h("div", { class: "td-title" }, h("span", { class: "td-token" }, p.token)),
+        h("span", { class: "td-count" }, "used on ", plural(p.pages, "page"))),
+      h("div", { class: "td-sub" }, "Waiting for its real name. On ", [...new Map(p.refs.map((r) => [r.from, r])).values()].map((r, i) => [i ? ", " : "", h("a", { class: "td-from", onclick: () => ctx.openDoc(r.from, { find: { q: p.token, occurrence: 0 } }) }, r.fromTitle || where(r.from))]), "."),
+      p.page
+        ? h("div", { class: "td-actions" }, h("span", { class: "td-dim" }, "It's also a page's file name: rename that page, and every reference follows. "), h("button", { class: "btn btn-gold btn-small", onclick: () => ctx.openDoc(p.page) }, "Open the page"))
+        : h("div", { class: "td-actions" }, input, h("button", { class: "btn btn-gold btn-small", onclick: go }, "Name it everywhere")));
+  }
+
+  function structureCard(s) {
+    const c = s.component ? s.component.replace(/-/g, " ").replace(/^./, (x) => x.toUpperCase()) : "";
+    const fixes = {
+      declare: [h("button", { class: "btn btn-gold btn-small", onclick: () => applyFix({ kind: "declare", page: s.from, component: s.component }, `${c} added to the components`) }, `Add ${c} to its components`)],
+      "add-section": [h("button", { class: "btn btn-gold btn-small", onclick: () => applyFix({ kind: "add-section", page: s.from, component: s.component }, `${c} section added`) }, `Add the ${c} section`),
+        h("button", { class: "td-link", onclick: () => applyFix({ kind: "undeclare", page: s.from, component: s.component }, `${c} taken off`) }, "Take it off the components")],
+      undeclare: [h("button", { class: "btn btn-gold btn-small", onclick: () => applyFix({ kind: "undeclare", page: s.from, component: s.component }, `${s.component} taken off`) }, "Take it off the components")],
+      reorder: [h("button", { class: "btn btn-gold btn-small", onclick: () => applyFix({ kind: "reorder", page: s.from }, "Sections put in order") }, "Put them in order")],
+      "move-folder": s.to ? [h("button", { class: "btn btn-gold btn-small", onclick: async () => {
+        if (S.path && !(await ctx.save())) return;
+        const r = await api("/api/move", { method: "POST", body: JSON.stringify({ from: s.from, to: s.to }) });
+        if (!r.ok) return ctx.toast("Couldn't move it: " + (r.error || r.status), "bad");
+        ctx.toast(`Moved to ${where(s.to)}; links to it follow`, "good");
+        if (S.path === s.from) { S.path = s.to; S.reloadOpen = true; }
+        refresh();
+      } }, `Move it to ${folderOf(s.to) || "the top"}/`)] : null,
+    }[s.fix];
+    return h("div", { class: "td-item" },
+      h("div", { class: "td-head" }, h("div", { class: "td-title" }, s.fromTitle || where(s.from)), h("span", { class: "td-count td-path" }, where(s.from))),
+      h("div", { class: "td-sub" }, s.text, "."),
+      h("div", { class: "td-actions" }, fixes || null, h("button", { class: fixes ? "td-link" : "btn btn-small", onclick: () => ctx.openDoc(s.from) }, fixes ? "Open" : "Open the page to fix it")));
   }
 
   async function renderBroken() {
@@ -144,33 +269,52 @@ export function makePanels(ctx) {
     if (!lists.broken) view.replaceChildren(h("p", { class: "st-loading" }, "Loading…"));
     const todo = await broken(true);
     if (S.view !== "broken" || !todo) return;
-    const where = (p) => p.replace(/^docs\/gdd\//, "");
-    const pageLink = (p, title, opts) => h("a", { onclick: () => ctx.openDoc(p, opts), title: p }, title || where(p));
-    const byPage = (list) => { const m = new Map(); for (const x of list) { const k = x.from || x.path; if (!m.has(k)) m.set(k, []); m.get(k).push(x); } return [...m]; };
-    view.replaceChildren(h("article", { class: "prose oq bl" },
+    const all = [
+      ...todo.missing.map((x) => ({ cat: "missing", pages: x.refs.map((r) => r.from).concat(x.path || []), el: () => missingCard(x) })),
+      ...todo.references.map((x) => ({ cat: "references", pages: [x.from], el: () => referenceCard(x) })),
+      ...todo.placeholders.map((x) => ({ cat: "placeholders", pages: x.refs.map((r) => r.from), el: () => placeholderCard(x) })),
+      ...todo.structure.map((x) => ({ cat: "structure", pages: [x.from], el: () => structureCard(x) })),
+    ];
+    const inFolder = (x) => !todoState.folder || x.pages.some((p) => folderOf(p) === todoState.folder);
+    // Each kind is a section of the journal, under its own heading and icon; the tabs pick one or all.
+    const CATS = [
+      { key: "missing", tab: "To write", title: "Pages to write", icon: "scripture", blurb: "Linked to, but not written yet." },
+      { key: "references", tab: "Links", title: "Links to mend", icon: "compass", blurb: "References that lead somewhere wrong." },
+      { key: "placeholders", tab: "Names", title: "Names to choose", icon: "note", blurb: "Placeholder names still waiting for real ones." },
+      { key: "structure", tab: "Tidying", title: "Pages to tidy", icon: "settings", blurb: "Pages whose sections and components disagree." },
+    ];
+    const count = (cat) => all.filter((x) => (cat === "all" || x.cat === cat) && inFolder(x)).length;
+    if (todoState.filter !== "all" && !count(todoState.filter)) todoState.filter = "all";
+    const shown = all.filter((x) => (todoState.filter === "all" || x.cat === todoState.filter) && inFolder(x));
+    const folders = [...new Set(all.flatMap((x) => x.pages.map(folderOf)))].filter(Boolean).sort();
+    const tab = (key, label) => h("button", { class: "td-tab" + (todoState.filter === key ? " on" : ""), onclick: () => { todoState.filter = key; renderBroken(); } },
+      label, h("span", { class: "td-tab-n" }, String(count(key))));
+    const group = (c) => {
+      const items = shown.filter((x) => x.cat === c.key);
+      return items.length ? h("section", { class: "td-group" },
+        h("div", { class: "td-group-head" },
+          h("span", { class: "ico ico-" + c.icon }),
+          h("span", { class: "td-group-title" }, c.title),
+          h("span", { class: "td-group-blurb" }, c.blurb)),
+        h("div", { class: "td-ledger" }, items.map((x) => x.el()))) : null;
+    };
+    view.replaceChildren(h("article", { class: "prose td" },
       h("h1", {}, "To-do"),
-      h("p", { class: "oq-intro" }, todo.length
-        ? "What the GDD still needs. A link to a page that isn't written yet is a to-do, not a mistake: make it as a stub, two sentences, and follow the links from there."
-        : "Nothing to do: every link goes to a written page, and every page has its type and its sections."),
-      todo.pages.length ? [h("h2", {}, "Pages to write"), h("ul", { class: "td-list" }, todo.pages.map((x) => h("li", {},
-        h("button", { class: "btn btn-gold td-make", onclick: () => ctx.newPage({ path: x.to, title: x.text || "" }) }, "Write it"),
-        h("b", {}, x.text || where(x.to)), h("span", { class: "bl-why" }, " " + where(x.to) + " · from "),
-        x.from.slice(0, 3).map((l, i) => [i ? ", " : "", pageLink(l.from, l.title, { find: { q: l.text, occurrence: 0 } })]),
-        x.from.length > 3 ? h("span", { class: "bl-why" }, ` and ${x.from.length - 3} more`) : null)))] : null,
-      todo.problems.length ? [h("h2", {}, "Structure"), byPage(todo.problems).map(([path, ps]) => h("section", { class: "oq-page" },
-        h("h3", {}, pageLink(path, ps[0].title)),
-        h("ul", { class: "bl-list" }, ps.map((p) => h("li", { class: "td-" + p.kind }, p.text)))))] : null,
-      todo.headings.length ? [h("h2", {}, "Links that go nowhere"), byPage(todo.headings).map(([from, ls]) => h("section", { class: "oq-page" },
-        h("h3", {}, pageLink(from, ls[0].title)),
-        h("ul", { class: "bl-list" }, ls.map((l) => h("li", {},
-          h("a", { class: "oq-q", title: l.href, onclick: () => ctx.openDoc(from, { find: { q: l.text, occurrence: 0 } }) }, l.text || l.href),
-          h("span", { class: "bl-why" }, (l.section ? l.section + " · " : "") + (l.kind === "heading" ? `“${l.href.split("#").pop()}” isn't a heading on ${where(l.to)}` : `${l.to} isn't in the GDD`)))))))] : null));
+      h("p", { class: "oq-intro td-intro" }, all.length
+        ? "What the GDD still needs. Every fix can be undone, and one that changes several pages names them first."
+        : "Nothing to do: every reference goes to a written page, every name is real, and every page's structure is in order."),
+      all.length ? h("div", { class: "td-filters" },
+        h("div", { class: "td-tabs" }, tab("all", "All"), CATS.map((c) => count(c.key) ? tab(c.key, c.tab) : null)),
+        folders.length > 1 ? h("select", { class: "field td-folder", onchange: (e) => { todoState.folder = e.target.value; renderBroken(); } },
+          h("option", { value: "" }, "Every folder"), folders.map((f) => h("option", { value: f, selected: todoState.folder === f || null }, f))) : null) : null,
+      all.length && !shown.length ? h("p", { class: "td-none" }, "Nothing here in this folder.") : null,
+      CATS.map(group)));
   }
 
   return { linksFor, renderLinks, renderChanges, renderBroken, changes, broken, unseen, invalidate };
 }
 
-const timeOf = (iso) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+const timeOf = (iso) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 
 /** "Today", "Yesterday", or the date ("Monday 2 November"; the year too when it isn't this one). */
 function dayName(day) {

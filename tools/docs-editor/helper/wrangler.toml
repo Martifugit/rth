@@ -19,6 +19,9 @@ DISCORD_COMMENTS_CHANNEL = "1567238197845692498"
 DISCORD_RESOLVED_TAG = "1567238306272641174"
 REPO = "Martifugit/rth"
 GITHUB_APP_ID = "5599564"
+# The oldest Codex that may send pages or write comments (src/version.js). Raise it only after the
+# release it names is published, then deploy. Older ones are refused and asked to update.
+MIN_CODEX = "0.3.0"
 
 # Who's here (src/live.js): one room every open Codex keeps a WebSocket to.
 [[durable_objects.bindings]]

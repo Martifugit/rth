@@ -8,6 +8,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { VERSION, VERSION_HEADERS, noteAnswer } from "./codex-version.js";
 
 export const HELPER = (process.env.CODEX_HELPER || "https://rth-codex.rthapp.workers.dev").replace(/\/+$/, "");
 
@@ -40,8 +41,9 @@ export async function makeAccount({ dir, emit, contributor = false }) {
   const view = () => ({ signedIn: !!A, user: A?.user || null, member, helper: HELPER, contributor, canEdit: canEdit() });
 
   async function helper(route, { method = "GET" } = {}) {
-    const r = await fetch(HELPER + route, { method, headers: { Authorization: "Bearer " + A.session } });
+    const r = await fetch(HELPER + route, { method, headers: { Authorization: "Bearer " + A.session, ...VERSION_HEADERS } });
     const j = await r.json().catch(() => ({}));
+    noteAnswer(r.status, j); // 426: this Codex is out of date
     return { status: r.status, ...j };
   }
 
@@ -57,7 +59,8 @@ export async function makeAccount({ dir, emit, contributor = false }) {
   }
 
   /** The link that starts signing in, coming back to this engine's address. */
-  const signInUrl = (origin) => HELPER + "/auth/discord/start?" + new URLSearchParams({ redirect: origin + "/api/account/done" });
+  // v: this Codex's version, so an out-of-date one is shown the update page instead (helper/src/version.js).
+  const signInUrl = (origin) => HELPER + "/auth/discord/start?" + new URLSearchParams({ redirect: origin + "/api/account/done", v: VERSION });
 
   /** The browser came back from the helper. */
   async function done(params) {

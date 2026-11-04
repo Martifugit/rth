@@ -7,7 +7,7 @@
 // under it, each with its own fields.
 
 import { split, slugOf, STATUSES } from "./frontmatter.js";
-import { nameOf, isMeta, inGdd, GDD, TEMPLATES, folderPath } from "./gdd.js";
+import { nameOf, isMeta, inGdd, GDD, TEMPLATES, folderPath, inOrder } from "./gdd.js";
 import { plain, targetOf, titleOf } from "./links.js";
 
 const FENCE = /^\s*(`{3,}|~{3,})/;
@@ -18,7 +18,7 @@ export function pageInfo(path, text) {
   const { data, body } = split(text);
   const offset = text.slice(0, text.length - body.length).split("\n").length - 1;
   const sections = [];
-  let sec = null, inst = null, fence = null;
+  let sec = null, inst = null, fence = null, table = null;
   body.split("\n").forEach((line, i) => {
     const f = line.match(FENCE);
     if (fence) { if (f && f[1][0] === fence[0]) fence = null; return; }
@@ -37,6 +37,18 @@ export function pageInfo(path, text) {
       sec.instances.push(inst);
       return;
     }
+    // A table in a section: each row is an instance, its columns the fields (a rewards row: item, amount, chance).
+    if (sec && /^\s*\|/.test(line)) {
+      const cells = line.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
+      if (!table) { table = cells.map((c) => plain(c).toLowerCase()); return; }
+      if (cells.every((c) => /^:?-{2,}:?$/.test(c))) return; // the line under the header
+      if (cells.every((c) => !c)) return;                    // a row not filled in yet
+      const last = sec.instances[sec.instances.length - 1];
+      if (last && !Object.keys(last.fields).length) sec.instances.pop(); // the empty instance these rows stand for (none, or an H3's)
+      sec.instances.push({ name: inst?.name || null, fields: Object.fromEntries(table.map((k, n) => [k, cells[n] || ""])) });
+      return;
+    }
+    table = null;
     const m = sec && line.match(FIELD);
     if (m && inst) inst.fields[m[1].trim().toLowerCase()] = m[2].trim();
   });
@@ -159,7 +171,7 @@ export function labelFor(gdd, system, from, section) {
 /**
  * What's wrong with the GDD's structure: [{ path, title, line, kind, text }]. Kinds: "no-frontmatter",
  * "no-type", "unknown-type", "wrong-folder", "unknown-component", "missing-section", "undeclared-section",
- * "unknown-status", "missing-group", "missing-based-on", "duplicate-name", "placeholder".
+ * "unknown-status", "missing-group", "missing-based-on", "duplicate-name", "placeholder", "section-order".
  * `texts`: page → text, for the placeholders (Workflow, "Naming": every p- name is a to-do).
  */
 export function checks(gdd, system, texts = new Map()) {
@@ -186,7 +198,7 @@ export function checks(gdd, system, texts = new Map()) {
   const comps = new Map(system.components.map((c) => [c.name, c]));
   for (const p of gdd.pages.values()) {
     if (isMeta(p.path)) continue;
-    const add = (kind, text, line = 1) => out.push({ path: p.path, title: p.title, line, kind, text });
+    const add = (kind, text, line = 1, component = null) => out.push({ path: p.path, title: p.title, line, kind, text, ...(component ? { component } : {}) });
     const fm = p.front;
     if (!fm) { add("no-frontmatter", "No frontmatter: every page starts with its type and status"); continue; }
     if (!fm.type) add("no-type", "No type");
@@ -201,11 +213,12 @@ export function checks(gdd, system, texts = new Map()) {
     const sectionNames = new Set(p.sections.map((s) => s.name));
     for (const c of declared) {
       const n = nameOf(c);
-      if (!comps.has(n)) add("unknown-component", `Unknown component “${c}”`);
-      else if (!sectionNames.has(n)) add("missing-section", `${c} is declared but has no section`);
+      if (!comps.has(n)) add("unknown-component", `Unknown component “${c}”`, 1, c);
+      else if (!sectionNames.has(n)) add("missing-section", `${c} is declared but has no section`, 1, n);
     }
     const declaredSet = new Set(declared.map(nameOf));
-    for (const s of p.sections) if (comps.has(s.name) && !declaredSet.has(s.name)) add("undeclared-section", `“${s.heading}” is a component section, but ${s.name} isn't in its components`, s.line);
+    for (const s of p.sections) if (comps.has(s.name) && !declaredSet.has(s.name)) add("undeclared-section", `“${s.heading}” is a component section, but ${s.name} isn't in its components`, s.line, s.name);
+    if (types.has(fm.type) && !inOrder(p.sections.map((s) => s.heading), types.get(fm.type), system.components)) add("section-order", "Sections out of the usual order (Page settings puts them in order)");
     for (const g of fm.groups || []) if (!gdd.bySlug.has(g)) add("missing-group", `Group “${g}” has no page yet`);
     if (fm["based-on"] && !gdd.bySlug.has(fm["based-on"])) add("missing-based-on", `Based on “${fm["based-on"]}”, which has no page yet`);
   }

@@ -122,7 +122,7 @@ export function makeAi(ctx) {
   function listEl() {
     const items = listCache.map((c) => h("div", { class: "ai-li" + (c.id === A.id ? " current" : ""), onclick: () => { A.listOpen = false; openConversation(c.id); } },
       h("span", { class: "ai-li-title" }, c.title),
-      h("span", { class: "ai-li-meta" }, ago(c.updated) + (c.page ? " · " + (ctx.titleOf(c.page) || c.page.split("/").pop()) : "")),
+      h("span", { class: "ai-li-meta" }, ago(c.updated) + (c.page ? ", " + (ctx.titleOf(c.page) || c.page.split("/").pop()) : "")),
       h("button", { class: "ai-li-x", title: "Delete this conversation", html: ICON.close, onclick: async (ev) => {
         ev.stopPropagation();
         await api("/api/ai/delete", { method: "POST", body: JSON.stringify({ id: c.id }) });
@@ -193,7 +193,7 @@ export function makeAi(ctx) {
              h("div", { class: "ai-setup-row" },
                h("button", { class: "btn btn-gold", title: "Opens a terminal running Claude Code", onclick: async () => { const r = await api("/api/ai/claude-signin", { method: "POST" }); if (r.error) toast(r.error, "bad"); else toast("Sign in in the terminal, then check again"); } }, "Sign in"),
                recheck())]
-          : h("p", { class: "ai-note" }, (cl.signedIn ? "Signed in" : "Installed") + (cl.version ? " · " + cl.version : "")),
+          : h("p", { class: "ai-note" }, (cl.signedIn ? "Signed in" : "Installed") + (cl.version ? ", " + cl.version : "")),
 
       h("h4", {}, "OpenRouter"),
       or.signedIn
@@ -444,5 +444,5 @@ function ago(iso) {
   if (s < 3600) return Math.floor(s / 60) + " min ago";
   if (s < 86400) return Math.floor(s / 3600) + " h ago";
   const d = new Date(iso);
-  return d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }

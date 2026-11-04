@@ -48,16 +48,46 @@ await test("sends a page saved in the Codex, and only docs", async () => {
   assert.ok(fs.existsSync(path.join(a, "client/scene.unity")));
 });
 
-await test("automatic sync leaves doc changes made outside the Codex; the button sends them", async () => {
+await test("another program's change is held, and asked about; Share sends it", async () => {
   write(a, "docs/death.md", "# Death\n\nYou die. (An agent was here.)\n");
   let v = await sync.sync({ why: "auto" });
   assert.equal(v.waiting, 1);
-  assert.equal(v.outside, 1);
+  assert.deepEqual(v.held.map((x) => [x.path, x.by, x.title]), [["docs/death.md", "other", "Death"]]);
   assert.doesNotMatch(g(remote, "show", "main:docs/death.md"), /agent/);
-  v = await sync.sync({ everything: true, why: "button" });
+  v = await sync.share(["docs/death.md"]);
   assert.equal(v.waiting, 0);
+  assert.equal(v.held.length, 0);
   assert.match(g(remote, "show", "main:docs/death.md"), /agent/);
   assert.match(g(a, "status", "--porcelain"), /code\/game\.cs/);
+});
+
+await test("Undo puts a held page back as it was last shared, and removes a new one", async () => {
+  const before = read(a, "docs/death.md");
+  write(a, "docs/death.md", before + "\nHalf-done agent work.\n");
+  write(a, "docs/stray.md", "# Stray\n");
+  let v = await sync.refresh();
+  assert.equal(v.held.length, 2);
+  const lf = (t) => t.replace(/\r\n/g, "\n"); // git may give or restore it with CRLF
+  assert.equal(lf(await sync.base("docs/death.md")), lf(before));
+  assert.equal(await sync.base("docs/stray.md"), "");
+  v = await sync.discard(["docs/death.md", "docs/stray.md"]);
+  assert.equal(v.held.length, 0);
+  assert.equal(lf(read(a, "docs/death.md")), lf(before));
+  assert.equal(fs.existsSync(path.join(a, "docs/stray.md")), false);
+});
+
+await test("the AI's change to a page is held even after typing in it; comments are always sent", async () => {
+  write(a, "docs/death.md", read(a, "docs/death.md") + "\nThe AI wrote this.\n");
+  sync.saved("docs/death.md", { ai: true });
+  write(a, "docs/death.md", read(a, "docs/death.md") + "\nAnd a person typed this.\n");
+  sync.saved("docs/death.md");
+  write(a, "docs/.notes/death.md.json", "[]\n");
+  let v = await sync.sync({ why: "auto" });
+  assert.deepEqual(v.held.map((x) => [x.path, x.by]), [["docs/death.md", "ai"]]);
+  assert.match(g(remote, "show", "main:docs/.notes/death.md.json"), /\[\]/);
+  v = await sync.share(["docs/death.md"]);
+  assert.equal(v.held.length, 0);
+  assert.match(g(remote, "log", "-1", "--format=%s", "main"), /with AI/);
 });
 
 await test("takes in others' changes", async () => {

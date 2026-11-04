@@ -203,3 +203,44 @@ export function brokenLinks(index, exists = () => false) {
   }
   return out;
 }
+
+/** The href from page `from` to `to` ("../items/axe.md"). */
+export function hrefBetween(from, to) {
+  const a = dirOf(from).split("/").filter(Boolean), b = to.split("/");
+  let i = 0;
+  while (i < a.length && i < b.length - 1 && a[i] === b[i]) i++;
+  return "../".repeat(a.length - i) + b.slice(i).join("/");
+}
+
+/**
+ * A page moved from `from` to `to` (its type changed): the text of `page` with its links put right.
+ * Links to the moved page point to its new place; and when `page` is the moved page itself, its own
+ * relative links (pages, images) are rewritten from its new folder. Code and other links stay as written.
+ */
+export function relink(text, page, from, to) {
+  const self = page === from;
+  const here = self ? to : page;
+  const IN = /(!?\[(?:[^\[\]]|\[[^\]]*\])*\]\(\s*<?)([^)\s>]+)(>?(?:\s+"[^"]*")?\s*\))/g;
+  let fence = null;
+  return text.split("\n").map((line) => {
+    const f = line.match(FENCE);
+    if (fence) { if (f && f[1][0] === fence[0] && f[1].length >= fence.length) fence = null; return line; }
+    if (f) { fence = f[1]; return line; }
+    const blank = noCode(line);
+    let out = "", last = 0;
+    for (const m of blank.matchAll(IN)) {
+      const href = m[2];
+      if (isExternal(href) || href.startsWith("#") || href.startsWith("/")) continue;
+      const [p, ...rest] = href.split("#");
+      let target;
+      try { target = normalize(dirOf(page) + "/" + decodeURIComponent(p)); } catch { continue; }
+      const moved = target === from;
+      if (!moved && !self) continue;
+      const next = hrefBetween(here, moved ? to : target) + (p.endsWith("/") ? "/" : "") + (rest.length ? "#" + rest.join("#") : "");
+      const at = m.index + m[1].length;
+      out += line.slice(last, at) + next;
+      last = at + href.length;
+    }
+    return out + line.slice(last);
+  }).join("\n");
+}

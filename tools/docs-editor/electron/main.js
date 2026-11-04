@@ -159,8 +159,8 @@ async function open() {
 /**
  * Updates (PLAN.md, step 6): the installed Codex looks for a newer release on GitHub (the repository's
  * latest release; see package.json's "build.publish") and downloads it quietly. Once it's here, the
- * title bar shows a blue Update button: a click saves, sends, installs and opens the Codex again
- * (installUpdate). Closing the Codex installs it too.
+ * page covers itself with the update screen (src/app.js, showUpdateScreen): Restart and update saves,
+ * sends, installs and opens the Codex again (installUpdate). Closing the Codex installs it too.
  */
 const update = { state: "none", version: null, percent: 0 }; // none, downloading, ready, installing
 let updater = null;
@@ -168,7 +168,9 @@ const tellUpdate = () => {
   if (win && !win.isDestroyed()) win.webContents.executeJavaScript(`window.__codex && window.__codex.updateState && window.__codex.updateState(${JSON.stringify(update)})`).catch(() => {});
 };
 // The engine (server.js, in this process) asks for it: the page's GET /api/update and its button.
-globalThis.codexUpdate = { view: () => ({ ...update }), install: () => installUpdate() };
+globalThis.codexUpdate = { view: () => ({ ...update }), install: () => installUpdate(), check: () => checkNow() };
+// Out of date (src/codex-version.js): look for the update now rather than at the next 6-hourly check.
+let checkNow = () => {};
 
 async function installUpdate() {
   if (!updater || update.state !== "ready") return { ok: false, error: "No update is ready." };
@@ -195,6 +197,7 @@ async function watchForUpdates() {
       if (update.state === "downloading") { update.state = "none"; tellUpdate(); } // tried again at the next check
     });
     const check = () => autoUpdater.checkForUpdates().catch(() => {});
+    checkNow = () => { if (update.state === "none") check(); };
     check();
     setInterval(check, 6 * 60 * 60 * 1000);
   } catch (e) { if (process.env.CODEX_DEBUG) console.log("updates off:", e.message); }

@@ -76,20 +76,25 @@ export function makeLayout(ctx) {
   function menu() {
     if (closeMenu()) return;
     const narrow = (pane) => L[pane] && !room(pane);
-    const check = (on) => h("span", { class: "lm-check" }, on ? "✓" : "");
-    const item = (on, label, hint, keys, fn) => h("button", { class: "cm-menu-item lm-item", onclick: (ev) => { ev.stopPropagation(); closeMenu(); fn(); } },
-      check(on), h("span", { class: "lm-label" }, label, hint ? h("span", { class: "lm-hint" }, hint) : null), keys ? h("kbd", {}, keys) : null);
+    // A classic title-bar menu: one line an item, a tick column, the keys on the right; what an item
+    // does is its tooltip, not a second line.
+    const item = (on, label, hint, keys, fn) => h("button", { class: "cm-menu-item lm-item", title: hint || null, onclick: (ev) => { ev.stopPropagation(); closeMenu(); fn(); } },
+      h("span", { class: "lm-check" }, on ? "✓" : ""), h("span", { class: "lm-label" }, label), h("span", { class: "lm-keys" }, keys || ""));
+    const head = (text) => h("div", { class: "lm-head" }, text);
+    const sep = () => h("div", { class: "lm-sep" });
+    const tooNarrow = "Too narrow to keep beside the page: opens over it";
     const m = h("div", { class: "cm-menu layout-menu" },
-      h("div", { class: "lm-head" }, "Layout"),
-      item(L.pages, "Pages", narrow("pages") ? "Too narrow to keep beside the page: opens over it" : "The list of pages, on the left", "Ctrl ,", () => choose("pages", !L.pages)),
-      item(L.outline, "Outline and links", narrow("outline") ? "Too narrow to keep beside the page: opens over it" : "This page's headings and links, on the right", "Ctrl .", () => choose("outline", !L.outline)),
+      head("Panes"),
+      item(L.pages, "Pages", narrow("pages") ? tooNarrow : "The list of pages, on the left", "Ctrl+,", () => choose("pages", !L.pages)),
+      item(L.outline, "Outline and links", narrow("outline") ? tooNarrow : "This page's headings and links, on the right", "Ctrl+.", () => choose("outline", !L.outline)),
       item(!notes.state.hidden, "Comments beside the page", "Off: folded to small markers", null, () => notes.toggleMargin()),
+      sep(),
+      item(false, "Show everything", "Pages, outline and comments", null, () => { L.pages = L.outline = true; store(); if (notes.state.hidden) notes.toggleMargin(); L.sheet = null; apply(); }),
+      item(false, "Just the page", "Hide both side panes", null, () => { L.pages = L.outline = false; store(); L.sheet = null; apply(); }),
+      online || presence ? [sep(), head("Presence")] : null,
       online ? item(online.on(), "Show me as online", "Others in the Codex see where you are", null, () => online.toggle()) : null,
       presence ? item(presence.on(), "Show what I'm editing on Discord", "“Editing …” on your Discord profile", null, () => presence.toggle()) : null,
-      h("div", { class: "spell-sep" }),
-      item(false, "Show everything", null, null, () => { L.pages = L.outline = true; store(); if (notes.state.hidden) notes.toggleMargin(); L.sheet = null; apply(); }),
-      item(false, "Just the page", null, null, () => { L.pages = L.outline = false; store(); L.sheet = null; apply(); }),
-      h("div", { class: "spell-sep" }),
+      sep(),
       item(false, "Keys and help", null, "?", help));
     document.body.append(m);
     const r = $("#brandBtn").getBoundingClientRect();

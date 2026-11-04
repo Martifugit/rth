@@ -5,6 +5,7 @@
 
 import { seal, unseal } from "./crypto.js";
 import { member } from "./discord.js";
+import { codexPage, REPO, esc } from "../../src/codex-page.js";
 
 const SESSION_DAYS = 90;
 
@@ -54,5 +55,7 @@ export async function sessionFrom(req, env) {
 }
 
 function page(message, status = 200) {
-  return new Response(`<!doctype html><meta charset="utf-8"><title>R'th Codex</title><body style="font:16px system-ui;background:#0c0b09;color:#ddd3bf;display:grid;place-items:center;height:90vh"><p>${message.replace(/[<&]/g, "")}</p>`, { status, headers: { "content-type": "text/html; charset=utf-8" } });
+  const html = codexPage({ title: "Signing in - R'th Codex", heading: "Signing in", assets: REPO,
+    body: `<p class="bad">${esc(message)}</p><p>You can close this tab.</p>` });
+  return new Response(html, { status, headers: { "content-type": "text/html; charset=utf-8" } });
 }

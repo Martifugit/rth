@@ -3,9 +3,11 @@
 //
 //   GET  /open?p=docs/...&h=heading     a link Discord can show, that opens the page in the Codex
 //   POST /github                         GitHub tells it about pushes; it posts "what changed" to #codex
+//                                        and tells every open Codex to fetch (the live room, "pages")
 //   GET  /auth/discord/start?redirect=   Sign in with Discord (the Codex opens this in the browser)
 //   GET  /auth/discord/callback          ...Discord sends the person back here, then to the Codex
 //   GET  /me                             who a session is, and whether they still have the Codex role
+//   GET  /version                        the oldest Codex that may change things (MIN_CODEX; src/version.js)
 //   POST /git-token                      an hour's key to send docs to GitHub, for someone with the role
 //   POST /announce                       a new Codex release, posted in #codex (the agent key only)
 //   /comments...                         comments in the Discord forum (src/comments.js)
@@ -25,6 +27,7 @@ import { installationToken, verifyWebhook } from "./github.js";
 import { comments } from "./comments.js";
 import { same } from "./crypto.js";
 import { Live, room } from "./live.js";
+import { tooOld, outdated, updatePage, HEADER } from "./version.js";
 
 export { Live };
 
@@ -41,7 +44,11 @@ export default {
           const body = await req.text();
           if (!(await verifyWebhook(env, body, req.headers.get("x-hub-signature-256")))) return text("bad signature", 401);
           const event = req.headers.get("x-github-event");
-          if (event === "push") ctx.waitUntil(onPush(env, JSON.parse(body), url.origin).catch((e) => console.error("push", e.stack || e)));
+          if (event === "push") {
+            ctx.waitUntil(onPush(env, JSON.parse(body), url.origin).catch((e) => console.error("push", e.stack || e)));
+            // Every open Codex fetches now, so what someone sent shows within seconds (src/sync.js, news).
+            ctx.waitUntil(room(env).fetch("https://room/live/notify", { method: "POST", body: JSON.stringify({ type: "pages" }) }).catch(() => {}));
+          }
           return text("ok");
         }
         // A new Codex release (scripts/announce.mjs, on the owner's computer): posted in #codex.
@@ -53,15 +60,25 @@ export default {
           await post(env, env.DISCORD_NOTICES_CHANNEL, b.text.slice(0, 1990));
           return json({ ok: true });
         }
-        case "GET /auth/discord/start": return signIn(url, env);
+        // An update the Codex must have before it changes anything (src/version.js).
+        case "GET /version": return json({ min: env.MIN_CODEX || null });
+        // An out-of-date Codex's Sign in button lands here: the update page instead of Discord (version.js).
+        case "GET /auth/discord/start": return outdated(url.searchParams.get("v"), env) ? updatePage(env) : signIn(url, env);
         case "GET /auth/discord/callback": return callback(url, env);
         case "GET /me": {
+          // A Codex from before versions were sent (0.1.x), once a minimum is set: signed out, so it opens
+          // reading only and its Sign in button shows the update page (version.js, updatePage).
+          if (env.MIN_CODEX && !req.headers.get(HEADER)) return json({ error: "This Codex is out of date. Close it and open it again to update it." }, 401);
           const s = await sessionFrom(req, env);
           if (!s) return json({ error: "Not signed in." }, 401);
           const m = await member(env, s.sub);
-          return json({ user: { id: s.sub, name: m?.name || s.name, avatar: m?.avatar || s.avatar }, member: !!m?.codex });
+          // An out-of-date Codex is told it has no Codex role: that is what makes a 0.1.x Codex read-only
+          // the moment it opens (it can't be told anything else). Newer ones show the update screen.
+          return json({ user: { id: s.sub, name: m?.name || s.name, avatar: m?.avatar || s.avatar }, member: !!m?.codex && !tooOld(req, env) });
         }
         case "POST /git-token": {
+          const old = tooOld(req, env);
+          if (old) return old;
           const s = await sessionFrom(req, env);
           if (!s) return json({ error: "Not signed in." }, 401);
           const m = await member(env, s.sub);
@@ -73,6 +90,8 @@ export default {
           if (!url.pathname.startsWith("/comments")) return text("not found", 404);
           const as = await whoAsks(req, env);
           if (!as) return json({ error: "Not signed in." }, 401);
+          // An out-of-date Codex may read comments but not write them (agents on the owner's computer may).
+          if (req.method !== "GET" && as.kind === "person") { const old = tooOld(req, env); if (old) return old; }
           const r = await comments(req, env, url, as);
           if (!r) return text("not found", 404);
           // A comment changed: every open Codex fetches comments now, not at its next look.

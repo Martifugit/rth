@@ -6,6 +6,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { HELPER } from "./discord-account.js";
+import { VERSION_HEADERS, noteAnswer } from "./codex-version.js";
 
 /** `auth`: () => the Authorization header value, or null when it can't ask. */
 export function makeHelperComments({ auth }) {
@@ -14,10 +15,11 @@ export function makeHelperComments({ auth }) {
     if (!a) throw new Error("Not signed in to Discord, so comments can't be reached.");
     const r = await fetch(HELPER + route, {
       method: body ? "POST" : "GET",
-      headers: { Authorization: a, "Content-Type": "application/json" },
+      headers: { Authorization: a, "Content-Type": "application/json", ...VERSION_HEADERS },
       body: body ? JSON.stringify(body) : undefined,
     });
     const j = await r.json().catch(() => ({}));
+    noteAnswer(r.status, j); // 426: this Codex is out of date
     if (r.status === 404 && /No such comment/.test(j.error || "")) return null;
     if (!r.ok) throw new Error(j.error || `The helper said ${r.status}`);
     return j;

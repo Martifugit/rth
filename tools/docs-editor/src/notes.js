@@ -181,7 +181,7 @@ export function makeNotes(ctx) {
     for (const n of visible()) {
       const p = N.placed.get(n.id);
       if (!p || p.how === "lost" || p.how === "page" || p.how === "section") continue;
-      add(n.id, p.from, p.to, "cmt-hl" + (n.id === N.active ? " active" : ""));
+      add(n.id, p.from, p.to, "cmt-hl" + (n.id === N.active ? " active" : "") + (n.id === N.hover ? " cm-hover" : ""));
     }
     if (N.draft && N.draft.to > N.draft.from) add("draft", N.draft.from, N.draft.to, "cmt-hl active");
     S.editor.view.dispatch(S.editor.state.tr.setMeta(KEY, DecorationSet.create(doc, decos)).setMeta("addToHistory", false));
@@ -229,6 +229,7 @@ export function makeNotes(ctx) {
     const activeEl = document.activeElement;
     const typing = activeEl && r.contains(activeEl) && activeEl.tagName === "TEXTAREA" ? { key: activeEl.dataset.key, s: activeEl.selectionStart, e: activeEl.selectionEnd } : null;
     r.replaceChildren(railToggle(), ...cards);
+    N.hover = null;
     clampLong(r);
     if (typing) {
       const el = r.querySelector(`textarea[data-key="${typing.key}"]`);
@@ -255,7 +256,7 @@ export function makeNotes(ctx) {
       }
       return { el, id, want, h: el.offsetHeight };
     }).sort((a, b) => a.want - b.want);
-    const GAP = 8;
+    const GAP = 6;
     const focus = items.findIndex((x) => x.id === (N.draft ? "draft" : N.active));
     if (focus < 0) {
       let y = 0;
@@ -273,6 +274,58 @@ export function makeNotes(ctx) {
     let bottom = 0;
     for (const x of items) { x.el.style.top = x.top + "px"; bottom = Math.max(bottom, x.top + x.h); }
     r.style.minHeight = bottom + 40 + "px";
+    requestAnimationFrame(link);
+  }
+
+  /** Thin lines from passages to their cards, as a word processor joins a passage to its balloon: along
+   *  under the passage's last line out to the margin, then a soft curve into the card. The open comment
+   *  (or the one being written) always has one; a card or passage under the pointer gets one too, and
+   *  its passage and card are lit, so a card pushed far down by its neighbours is easy to place. */
+  function link() {
+    const wrap = $("#docWrap");
+    if (!wrap) return;
+    let svg = wrap.querySelector(".cm-link-line");
+    const open = N.draft ? "draft" : N.active;
+    const ids = [...new Set([open, N.hover].filter(Boolean))];
+    const paths = S.mode === "source" || N.hidden && !open ? [] : ids.map((id) => linePath(wrap, id)).filter(Boolean);
+    if (!paths.length) { svg?.remove(); return; }
+    if (!svg) {
+      svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("class", "cm-link-line");
+      wrap.append(svg);
+    }
+    svg.setAttribute("width", wrap.scrollWidth); svg.setAttribute("height", wrap.scrollHeight);
+    svg.innerHTML = paths.map((p) => `<path d="${p.d}"/><circle r="2.5" cx="${p.x1}" cy="${p.y1}"/>`).join("");
+  }
+
+  function linePath(wrap, id) {
+    const cardEl = rail()?.querySelector(`[data-id="${id}"]`);
+    const hls = [...(S.editor?.view.dom.querySelectorAll(`[data-comment="${id}"]`) || [])];
+    if (!cardEl || !hls.length) return null;
+    const box = wrap.getBoundingClientRect();
+    const rects = hls.flatMap((el) => [...el.getClientRects()]).filter((r) => r.width > 0);
+    if (!rects.length) return null;
+    const last = rects.reduce((a, b) => (b.bottom > a.bottom + 2 || Math.abs(b.bottom - a.bottom) <= 2 && b.right > a.right ? b : a));
+    const prose = wrap.querySelector(".prose")?.getBoundingClientRect();
+    const card = cardEl.getBoundingClientRect();
+    // The underline is the passage's bottom border, which the browser snaps to a whole pixel row (the last
+    // of its box): run along the middle of that same row, so the two read as one line.
+    const x0 = Math.round(last.right) - box.left, y0 = Math.round(last.bottom) - 0.5 - box.top;
+    const xm = Math.max(x0 + 8, (prose ? prose.right : last.right) - box.left - 4);
+    const x1 = card.left - box.left, y1 = card.top - box.top + 13;
+    if (x1 <= xm + 4) return null;
+    const bend = Math.min(40, (x1 - xm) / 2);
+    return { d: `M${x0},${y0} H${xm} C${xm + bend},${y0} ${x1 - bend},${y1} ${x1},${y1}`, x1, y1 };
+  }
+
+  /** The comment under the pointer (its card or its passage): lit on both sides, with its line. */
+  function hover(id) {
+    if (N.hover === id) return;
+    N.hover = id;
+    for (const el of rail()?.querySelectorAll(".cm-hover") || []) el.classList.remove("cm-hover");
+    if (id) rail()?.querySelector(`[data-id="${id}"]`)?.classList.add("cm-hover");
+    draw(); // the passage is lit as a decoration: ProseMirror undoes classes set on its own DOM
+    link();
   }
 
   // ----------------------------------------------------------------------------- cards
@@ -349,7 +402,8 @@ export function makeNotes(ctx) {
     if (replies) foot.push(h("span", { class: "cm-count" }, plural(replies, "reply", "replies")), h("span", { class: "cm-last" }, "· last from " + person(last.by, last.who).name));
     if (n.status === "answered") foot.push(h("span", { class: "cm-new" }, "New answer"));
     if (run) foot.push(h("span", { class: "cm-busy" }, h("span", { class: "dots" }, h("i"), h("i"), h("i")), "Claude is answering"));
-    return h("div", { class: "cm-card compact" + (n.status === "answered" ? " new" : ""), "data-id": n.id, onclick: openOnClick(n) },
+    return h("div", { class: "cm-card compact" + (n.status === "answered" ? " new" : ""), "data-id": n.id, onclick: openOnClick(n),
+      onmouseenter: () => hover(n.id), onmouseleave: () => hover(null) },
       whereLine(n),
       head(first, tools(n), true),
       h("div", { class: "cm-snippet" }, plain(first.text)),
@@ -381,7 +435,8 @@ export function makeNotes(ctx) {
     draw(); render();
   }
 
-  /** The open comment: the passage it's on, the comment, then its replies as one indented thread. */
+  /** The open comment: the comment, then its replies as one indented thread. Its passage is lit in the
+   *  page and joined to it by a line (link()), so it isn't quoted here. */
   function card(n) {
     const p = N.placed.get(n.id);
     const run = N.runs.get(n.id);
@@ -389,14 +444,12 @@ export function makeNotes(ctx) {
     const replies = n.thread.slice(1).map((e, i) => ({ e, i: i + 1 }));
     const fold = replies.length > 3 && !N.allReplies.has(n.id);
     const shown = fold ? replies.slice(-2) : replies;
-    const quote = n.anchor?.quote && (p?.how === "exact" || p?.how === "fuzzy") ? n.anchor.quote : "";
     const edits = (e) => {
       const files = e.run?.edits?.length ? new Set(e.run.edits.map((d) => d.file)).size : 0;
       return files ? h("button", { class: "cm-link", onclick: (ev) => { ev.stopPropagation(); showChanges(e.run.edits); } }, `See what Claude changed (${plural(files, "page", "pages")})`) : null;
     };
     return h("div", { class: "cm-card active", "data-id": n.id, onclick: openOnClick(n) },
       whereLine(n),
-      quote ? h("div", { class: "cm-quote", title: quote }, clip(quote, 140)) : null,
       head(first, tools(n)),
       body(first.text, n.id + ":0"),
       edits(first),
@@ -434,8 +487,8 @@ export function makeNotes(ctx) {
     const assignRow = h("label", { class: "cm-assign hidden", title: "Claude may edit pages under docs/ to do what this asks" }, assign, "Assign to Claude");
     const warn = h("div", { class: "cm-warn hidden" });
     const pop = h("div", { class: "cm-mentions hidden" });
-    const submit = h("button", { class: "btn btn-gold", disabled: true, onclick: (ev) => { ev.stopPropagation(); go(); } }, submitLabel);
-    const cancel = h("button", { class: "btn", onclick: (ev) => { ev.stopPropagation(); onCancel(); } }, "Cancel");
+    const submit = h("button", { class: "btn btn-gold btn-small", disabled: true, onclick: (ev) => { ev.stopPropagation(); go(); } }, submitLabel);
+    const cancel = h("button", { class: "cm-cancel", onclick: (ev) => { ev.stopPropagation(); onCancel(); } }, "Cancel");
     // @agent only: Claude is asked in the AI tab (PLAN.md, "AI, built in"), so @Claude points there.
     const mentions = () => ({ claude: false, agent: /(^|\s)@agent\b/i.test(ta.value) });
     const askedClaude = () => /(^|\s)@claude\b/i.test(ta.value);
@@ -611,7 +664,6 @@ export function makeNotes(ctx) {
     const items = [
       ["Edit", () => editFirst(n)],
       ["Attach to the selected text", () => reattach(n), !pageSelection()],
-      n.anchor && N.page?.startsWith("docs/") ? ["Add to the page's Open questions", () => toOpenQuestions(n)] : null,
       ["Move to another page…", () => moveDialog(n)],
       ["Copy comment id", () => { navigator.clipboard.writeText(n.id); toast("Copied " + n.id + " (agents: notes.js show " + n.id + ")"); }],
       ["Delete", () => del(n), false, "danger"],
@@ -672,35 +724,6 @@ export function makeNotes(ctx) {
     const close = ctx.modal("Move the comment", [h("label", {}, "To page"), input, h("datalist", { id: "commentPages" }, S.files.map((f) => h("option", { value: f.path }, f.title || ""))),
       h("div", { class: "modal-actions" }, h("button", { class: "btn", onclick: () => close() }, "Cancel"), h("button", { class: "btn btn-gold", onclick: go }, "Move"))]);
     setTimeout(() => input.select(), 0);
-  }
-
-  /** The comment as a new item at the end of the page's Open questions (left unsaved), then resolved. */
-  async function toOpenQuestions(n) {
-    const ed = S.editor, doc = ed.state.doc;
-    const text = n.thread[0].text.replace(/(^|\s)@(claude|agent)\b/gi, "$1").replace(/\s+/g, " ").trim();
-    const item = { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text }] }] };
-    let oq = null, oqEnd = null, sources = null, list = null;
-    doc.forEach((node, offset) => {
-      if (node.type.name === "heading" && node.attrs.level <= 2) {
-        const t = node.textContent.trim().toLowerCase();
-        if (oq !== null && oqEnd === null) oqEnd = offset;
-        if (t === "open questions" && node.attrs.level === 2) oq = offset;
-        if (t === "sources" && sources === null) sources = offset;
-      } else if (oq !== null && oqEnd === null && (node.type.name === "orderedList" || node.type.name === "bulletList")) list = { node, offset };
-    });
-    let at;
-    if (list) { at = list.offset + list.node.nodeSize - 1; ed.chain().insertContentAt(at, item).run(); }
-    else if (oq !== null) { at = oqEnd ?? doc.content.size; ed.chain().insertContentAt(at, { type: "orderedList", content: [item] }).run(); }
-    else {
-      at = sources ?? doc.content.size;
-      ed.chain().insertContentAt(at, [{ type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "Open questions" }] }, { type: "orderedList", content: [item] }]).run();
-    }
-    ctx.refreshDirty();
-    ctx.scrollToPos(at);
-    await api("/api/notes/" + n.id, { method: "PATCH", body: JSON.stringify({ status: "done" }) });
-    N.active = null;
-    await reload();
-    toast("Added to Open questions. Save the page to keep it (Ctrl+S)", "good");
   }
 
   function showChanges(edits) {
@@ -802,6 +825,11 @@ export function makeNotes(ctx) {
       if (el && el.dataset.comment !== "draft") open(el.dataset.comment);
       else if (N.active && !N.draft) { N.active = null; draw(); render(); }
     });
+    $("#page").addEventListener("mouseover", (ev) => {
+      const id = ev.target.closest?.("[data-comment]")?.dataset.comment;
+      hover(id && id !== "draft" ? id : null);
+    });
+    $("#page").addEventListener("mouseleave", () => hover(null));
     $("#historyBtn").addEventListener("click", toggleHistory);
     $("#statusComments").addEventListener("click", toggleMargin);
     $("#statusComments").title = "Show the comments beside the page, or fold them to markers";
@@ -830,9 +858,9 @@ function when(iso) {
   const s = (now - d) / 1000;
   if (!isFinite(s)) return "";
   if (s < 60) return "Just now";
-  const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  if (d.toDateString() === now.toDateString()) return time + " Today";
+  const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }); // the 24-hour clock
+  if (d.toDateString() === now.toDateString()) return "Today " + time;
   const y = new Date(now); y.setDate(now.getDate() - 1);
-  if (d.toDateString() === y.toDateString()) return time + " Yesterday";
-  return time + " " + d.toLocaleDateString([], { day: "numeric", month: "short" });
+  if (d.toDateString() === y.toDateString()) return "Yesterday " + time;
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }) + " " + time;
 }

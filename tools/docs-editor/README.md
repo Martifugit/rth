@@ -16,20 +16,25 @@ Where it's going (an app anyone can download, synced through git, with AI built 
 
 ## Syncing
 
-The app syncs the docs through git by itself, and the **Sync** icon in the title bar syncs now (hover
-it for where things stand). It only ever commits files under `docs/`: code, scenes and any other
-uncommitted work in the folder are never staged, committed, set aside or overwritten.
+There's no Sync button: what's saved is shared. The Codex only ever commits files under `docs/`: code,
+scenes and any other uncommitted work in the folder are never staged, committed, set aside or
+overwritten. The status line says how the open page stands: Saving…, Sending…, Saved and sent, Saved
+and offline (sent when you're back), or Saved, not shared yet.
 
-- **By itself**, every minute once you've stopped typing for half a minute, and when the app closes: it
-  commits the pages you saved *in the Codex*, takes in others' changes, and sends yours. A page made or
-  deleted goes within seconds. Doc changes made outside
-  the Codex (an agent, another editor) wait for the button, so half-done work is never sent.
-- **The button** does the same, plus those outside changes.
-- **Others' changes** come in with a merge, and the Codex says what came: who made a new page (with
-  Open), changed pages or deleted one. If they touch a file you have uncommitted changes in, the
-  Codex waits and says so. If someone changed the same lines of a page as you, nothing is merged and
-  it asks: **Keep mine** or **Use theirs**.
-- The browser version (`npm start`) only syncs on the button. `src/sync.js`; tests in
+- **What you type in the Codex** is sent by itself, once you pause for about ten seconds (at most two
+  minutes after the first unsent save, however long the typing goes on), so a burst of editing is one
+  commit. A page made or deleted goes within seconds; closing the app sends everything.
+- **Others' changes** arrive within seconds: when anyone sends, the helper tells every open Codex
+  (the live room) and it fetches at once; a check every minute is the safety net. They come in with a
+  merge, and the Codex says what came.
+- **Edits the Codex won't share by itself**, R'th AI's and another program's (an agent, another
+  editor), are asked about in a panel in the bottom-left corner: **Share**, **Review** (the page with
+  its changes marked, and Share in its bar) or **Undo** (back to how it was last shared). Unanswered,
+  they stay on this computer and are asked about again next time. Comments (`docs/.notes/`) are
+  always sent.
+- **Two people changing the same lines** of a page: nothing is merged, and the same panel asks **Keep
+  mine** or **Use theirs**. Sending that fails for another reason is asked there too, with Try again.
+- The browser version (`npm start`) doesn't sync by itself. `src/sync.js`; tests in
   `test/sync.test.js` (on throwaway repositories).
 
 ## Using it
@@ -208,8 +213,23 @@ overwritten.
 `npm run release` (after raising `version` in `package.json` and writing its section in `CHANGELOG.md`) builds the Windows installer into `dist/`
 (`npm run dist`: the page, MinGit fetched by `scripts/fetch-mingit.mjs`, the game's look) and publishes
 it on the repository's GitHub Releases (`scripts/release.mjs`, with `gh`). Installed Codexes check the
-latest release every few hours and download it quietly; a blue Update button in the title bar then
-installs it and opens the Codex again (closing it installs it too).
+latest release every few hours and download it quietly; once it's here, an "An update is ready" screen
+covers the Codex (the open page is saved at once), and Restart and update saves and sends everything,
+installs it and opens the Codex again (closing it installs it too). There is no carrying on without it.
+
+**Forcing an update.** When a release changes the GDD in ways older Codexes would damage, raise
+`MIN_CODEX` in `helper/wrangler.toml` to that release's version and deploy the helper
+(`npx wrangler deploy` in `helper/`), **after** the release is published, never before: older Codexes
+update to it. From then on the helper refuses older Codexes anything that changes shared things
+(sending pages, writing comments; reading still works), with a message to close and reopen the Codex,
+and a 0.1.x Codex (which sends no version) is signed out when it opens: it shows pages read-only with
+a Sign in button, and that button opens the helper's sign-in in the browser, where it gets an "Update
+your Codex" page (close and reopen, or download) instead of Discord. Newer Codexes put their version in
+the sign-in link (`v=`) to get through (`helper/src/version.js`, `updatePage`).
+Codexes from 0.3.0 on also cover themselves with an "An update is needed" screen that downloads the
+update and offers Restart and update (or, without the self-updater, a link to the latest release).
+Each Codex sends its version with every request to the helper (`X-Codex-Version`); 0.1.x sent none,
+so they count as too old once any minimum is set (`helper/src/version.js`, `src/codex-version.js`).
 
 **Uninstalling** (Windows' Installed apps) leaves nothing behind: the program, the Codex's folder
 (settings, sign-in, AI conversations, the docs it fetched), the updates it downloaded and the

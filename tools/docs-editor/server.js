@@ -21,12 +21,17 @@ import { agentKey } from "./src/helper-comments.js";
 import { makePresence } from "./src/discord-presence.js";
 import { makeTogether } from "./src/together.js";
 import { HELPER } from "./src/discord-account.js";
+import { required, onRequired, watchMinimum } from "./src/codex-version.js";
+import { codexPage, esc } from "./src/codex-page.js";
 import { buildIndex, linksFor, pageState, brokenLinks } from "./src/links.js";
+import { rewriteRefs, refsTo, retitle } from "./src/refs.js";
+import { buildTodo, renamesFromLog } from "./src/todo.js";
+import { planFix } from "./src/fixes.js";
 import { LOG_FORMAT, parseLog, entries } from "./src/changelog.js";
 import os from "node:os";
 import { makeSpell } from "./src/spell.js";
-import { GDD, SYSTEM, TEMPLATES, inGdd, readSystem, newPageText, fromTemplate } from "./src/gdd.js";
-import { make as makeFront, split as splitFront } from "./src/frontmatter.js";
+import { GDD, SYSTEM, TEMPLATES, undeletable, inGdd, readSystem, readPrompts, newPageText, fromTemplate, withComponents } from "./src/gdd.js";
+import { make as makeFront, split as splitFront, slugOf } from "./src/frontmatter.js";
 import { buildGdd, runQuery, checks, labelFor } from "./src/gdd-index.js";
 import { makeSync } from "./src/sync.js";
 
@@ -139,7 +144,7 @@ const store = makeCommentStore({
 });
 // "Editing <page> in the Codex" on the person's Discord profile, through their Discord app.
 // Who's here: the room of everyone with a Codex open (src/together.js), while signed in.
-const together = makeTogether({ helper: HELPER, session: () => account.session(), emit: (type, data) => broadcast(type, data), onComments: () => store.poke() });
+const together = makeTogether({ helper: HELPER, session: () => account.session(), emit: (type, data) => broadcast(type, data), onComments: () => store.poke(), onPages: () => syncer.news() });
 let roomFor; // whose session is in the room (only signing in or out changes it)
 function joinRoom() {
   const v = account.view();
@@ -187,13 +192,24 @@ async function linkIndex() {
 // what its pages say (src/gdd-index.js): both kept with the link index, rebuilt when a page changes.
 async function gdd() {
   const idx = await linkIndex();
-  if (!idx.gdd) { idx.system = readSystem(idx.texts.get(SYSTEM) || ""); idx.gdd = buildGdd(idx.texts); }
+  if (!idx.gdd) { idx.system = readSystem(idx.texts.get(SYSTEM) || ""); idx.system.prompts = readPrompts(idx.texts, idx.system); idx.gdd = buildGdd(idx.texts); }
   return idx;
 }
 
 // Recent changes (src/changelog.js): the docs' git history, read again only when HEAD moves.
 const ATTRS = path.join(os.tmpdir(), "codex-md-attributes");
 let changeLog = { head: null, commits: [] };
+
+// Pages renamed in git (for the To-do's "did you mean"), read again only when HEAD moves.
+let renameLog = { head: null, map: new Map() };
+async function gitRenames() {
+  const head = (await gitOut(["rev-parse", "HEAD"]))?.trim();
+  if (!head) return new Map();
+  if (renameLog.head !== head) renameLog = { head, map: renamesFromLog(await gitOut(["-c", "core.quotePath=false", "log", "-M", "--name-status", "--format=", "-n", "500", "--", GDD])) };
+  return renameLog.map;
+}
+// What each To-do fix changed, for Undo: token → [{ path, before, after }].
+const fixUndo = new Map();
 const gitOut = (args) => new Promise((resolve) => execFile(process.env.CODEX_GIT || "git", args, { cwd: REPO, maxBuffer: 128 << 20, windowsHide: true }, (err, out) => resolve(err ? null : out)));
 async function recentChanges() {
   const head = (await gitOut(["rev-parse", "HEAD"]))?.trim();
@@ -345,20 +361,85 @@ const api = {
 
   async "POST /api/new"(url, req) {
     if (!account.canEdit()) return [403, { error: "Sign in with Discord (with the Codex role) to make pages." }];
-    const { path: rel, title, type } = await body(req);
+    const { path: rel, title, type, components: picked } = await body(req);
     const abs = safe(rel);
     if (!abs || !isDoc(rel)) return [400, { error: "New pages go in the GDD." }];
     if (fs.existsSync(abs)) return [409, { error: "A page with that name already exists in that folder." }];
     const name = String(title || "").trim() || path.basename(rel, ".md").replace(/[-_]/g, " ").replace(/^./, (c) => c.toUpperCase());
+    const system = (await gdd()).system;
+    const t = system.types.find((x) => x.type === type) || null;
     // Made from its type's template (templates/<type>.md); a type with no template yet gets its core headings.
     let text = null;
     if (type && /^[a-z-]+$/.test(type)) { try { text = fromTemplate(await readText(path.join(REPO, TEMPLATES, type + ".md")), name); } catch {} }
-    if (text == null) text = newPageText(name, (await gdd()).system.types.find((t) => t.type === type), makeFront);
+    if (text == null) text = newPageText(name, t, makeFront);
+    // The components picked at creation (usually none): their sections from templates/<component>.md, in the canonical order.
+    const names = (Array.isArray(picked) ? picked : []).filter((c) => typeof c === "string" && system.components.some((x) => x.name === c));
+    if (names.length) {
+      const templates = new Map();
+      for (const c of names) { try { templates.set(c, await readText(path.join(REPO, TEMPLATES, c + ".md"))); } catch { templates.set(c, null); } }
+      text = withComponents(text, names, system.components, t, templates);
+    }
     await fsp.mkdir(path.dirname(abs), { recursive: true });
     await fsp.writeFile(abs, text, "utf8");
     recentWrites.set(relOf(abs), { hash: hash(text), until: Date.now() + 3000 });
     syncer.saved(relOf(abs), { soon: true });
     return { ok: true, path: relOf(abs) };
+  },
+
+  // Renaming or moving a page (a new title and file name, or a new type and so a new folder): written at
+  // its new place and gone from the old, with every reference to it rewritten in every page (links,
+  // groups, based-on, query blocks: src/refs.js) and its comments moved along. Sent within seconds.
+  async "POST /api/move"(url, req) {
+    if (!account.canEdit()) return [403, { error: "Sign in with Discord (with the Codex role) to move pages." }];
+    const { from, to, title } = await body(req);
+    const a = safe(from), b = safe(to);
+    if (!a || !b || !isDoc(from) || !isDoc(to)) return [400, { error: "Pages move within the GDD." }];
+    if (from === to && !title) return { ok: true, path: to, rewritten: [] };
+    if (from !== to && fs.existsSync(b)) return [409, { error: "A page with that name is already there." }];
+    const idx = await linkIndex();
+    // File names are unique across the whole GDD: they are the pages' IDs.
+    const id = slugOf(to);
+    const clash = [...idx.texts.keys()].find((p) => p !== from && inGdd(p) && !p.startsWith(TEMPLATES + "/") && slugOf(p) === id);
+    if (clash) return [409, { error: `“${id}” is already the name of ${clash.slice(GDD.length + 1)}: names are unique across the GDD.` }];
+    let text;
+    try { text = await readText(a); } catch { return [404, { error: "No such page." }]; }
+    const write = async (abs, content) => {
+      await fsp.mkdir(path.dirname(abs), { recursive: true });
+      await fsp.writeFile(abs, content, "utf8");
+      recentWrites.set(relOf(abs), { hash: hash(content), until: Date.now() + 3000 });
+    };
+    let moved = rewriteRefs(text, from, from, to);
+    if (typeof title === "string" && title.trim()) moved = retitle(moved, title.trim());
+    await write(b, moved);
+    if (from !== to) {
+      await fsp.rm(a);
+      try { const dir = path.dirname(a); if (dir.startsWith(path.join(REPO, "docs") + path.sep) && !(await fsp.readdir(dir)).length) await fsp.rmdir(dir); } catch {}
+    }
+    const rewritten = [];
+    if (from !== to) {
+      for (const p of idx.texts.keys()) {
+        if (p === from || p === to) continue;
+        const abs = safe(p);
+        if (!abs) continue;
+        let t;
+        try { t = await readText(abs); } catch { continue; }
+        const next = rewriteRefs(t, p, from, to);
+        if (next !== t) { await write(abs, next); rewritten.push(p); syncer.saved(p, { soon: true }); }
+      }
+      for (const n of await store.load(from).catch(() => [])) await store.move(n.id, to).catch(() => null);
+    }
+    index = null;
+    syncer.saved(from, { soon: true });
+    syncer.saved(to, { soon: true });
+    return { ok: true, path: to, rewritten };
+  },
+
+  // Everything that refers to a page (src/refs.js): links, groups, based-on and query blocks, by page.
+  async "GET /api/refs"(url) {
+    const page = url.searchParams.get("page");
+    if (!page || !safe(page)) return [400, { error: "which page?" }];
+    const idx = await linkIndex();
+    return { refs: refsTo(idx.texts, page).map((r) => ({ ...r, title: idx.titles.get(r.from) || null })) };
   },
 
   // Deleting a page: gone from the docs (git keeps its history), sent within seconds. The reply holds
@@ -369,6 +450,7 @@ const api = {
     const rel = url.searchParams.get("path") || "";
     const abs = safe(rel);
     if (!abs || !isDoc(rel)) return [400, { error: "Only pages under docs/ can be deleted." }];
+    if (undeletable(rel)) return [400, { error: "The top pages and the templates can't be deleted." }];
     let text;
     try { text = await fsp.readFile(abs, "utf8"); } catch { return [404, { error: "No such page." }]; }
     await fsp.rm(abs);
@@ -504,7 +586,9 @@ const api = {
   async "POST /api/openrouter/signin"(url, req) { return { url: openrouter.signInUrl("http://" + req.headers.host) }; },
   async "POST /api/openrouter/signout"() { return openrouter.signOut(); },
   // Updates of the desktop app (electron/main.js): the title bar's Update button.
-  async "GET /api/update"() { return globalThis.codexUpdate ? globalThis.codexUpdate.view() : { state: "none" }; },
+  // The update the installed Codex is downloading (electron/main.js), and whether this one is too old to
+  // use (src/codex-version.js): then the page shows the update screen until it's installed.
+  async "GET /api/update"() { return { ...(globalThis.codexUpdate ? globalThis.codexUpdate.view() : { state: "none" }), required: required(), installed: !!globalThis.codexUpdate }; },
   async "POST /api/update/install"() { return globalThis.codexUpdate ? globalThis.codexUpdate.install() : [400, { error: "Updates come with the installed Codex." }]; },
   async "POST /api/openrouter/key"(url, req) { const r = await openrouter.useKey((await body(req)).key); return r.ok ? r : [400, r]; },
   // AI setup (the AI tab's cog): which AI answers, and the ways in.
@@ -516,7 +600,19 @@ const api = {
 
   async "GET /api/sync"() { return syncer.refresh(); },
   async "POST /api/sync/resolve"(url, req) { const { keep } = await body(req); return syncer.resolve(keep); },
-  async "POST /api/sync"(url) { return syncer.sync({ everything: url.searchParams.get("all") === "1", why: url.searchParams.get("why") || "button" }); },
+  async "POST /api/sync"(url) { return syncer.sync({ why: url.searchParams.get("why") || "page" }); },
+  // Held pages (the AI's, another program's): share them, or put them back (src/sync.js).
+  async "POST /api/sync/share"(url, req) {
+    const { files } = await body(req);
+    for (const f of files || []) await assistant.reviewed({ page: f }); // shared: the AI's marks are done too
+    return syncer.share(files);
+  },
+  async "POST /api/sync/discard"(url, req) {
+    const { files } = await body(req);
+    for (const f of files || []) await assistant.reviewed({ page: f });
+    return syncer.discard(files);
+  },
+  async "GET /api/sync/base"(url) { return { text: await syncer.base(url.searchParams.get("page") || "") }; },
 
   async "GET /api/agent"() { return { ...runner.status(), owner: await ownerName() }; },
 
@@ -569,6 +665,65 @@ const api = {
 
   async "GET /api/changes"() { return { changes: await recentChanges() }; },
 
+  // The To-do (src/todo.js): missing pages, wrong references, placeholders and structure, as cards.
+  async "GET /api/todo"() {
+    const idx = await gdd();
+    const exists = (rel) => fs.existsSync(path.join(REPO, rel));
+    return buildTodo({
+      idx, gdd: idx.gdd, system: idx.system, problems: checks(idx.gdd, idx.system, idx.texts),
+      headings: brokenLinks(idx, exists).filter((l) => l.kind === "heading"), renames: await gitRenames(), exists,
+    });
+  },
+
+  // A To-do fix (src/fixes.js). With `dry`, only which pages it would change; otherwise it changes them
+  // (each keeping its line endings) and answers with a token for Undo.
+  async "POST /api/fix"(url, req) {
+    if (!account.canEdit()) return [403, { error: "Sign in with Discord (with the Codex role) to fix pages." }];
+    const { fix, dry } = await body(req);
+    const idx = await gdd();
+    let plan;
+    try { plan = planFix(fix || {}, { texts: idx.texts, system: idx.system, template: (name) => idx.texts.get(TEMPLATES + "/" + name + ".md") ?? null }); }
+    catch (e) { return [400, { error: e.message }]; }
+    const pages = [...plan.keys()].map((p) => ({ path: p, title: idx.titles.get(p) || null }));
+    if (dry || !plan.size) return { ok: true, pages };
+    const done = [];
+    for (const [rel, next] of plan) {
+      const abs = safe(rel);
+      if (!abs) continue;
+      const before = await readText(abs);
+      const after = before.includes("\r\n") ? next.replace(/\r?\n/g, "\r\n") : next;
+      await fsp.writeFile(abs, after, "utf8");
+      recentWrites.set(rel, { hash: hash(after), until: Date.now() + 3000 });
+      syncer.saved(rel, { soon: true });
+      done.push({ path: rel, before, after });
+    }
+    index = null;
+    const token = crypto.randomBytes(6).toString("hex");
+    fixUndo.set(token, done);
+    if (fixUndo.size > 50) fixUndo.delete(fixUndo.keys().next().value);
+    return { ok: true, pages, token };
+  },
+  // Undo a fix: each page goes back unless someone changed it since.
+  async "POST /api/fix/undo"(url, req) {
+    if (!account.canEdit()) return [403, { error: "Sign in with Discord (with the Codex role) to fix pages." }];
+    const { token } = await body(req);
+    const done = fixUndo.get(token);
+    if (!done) return [404, { error: "Nothing to undo." }];
+    const skipped = [];
+    for (const { path: rel, before, after } of done) {
+      const abs = safe(rel);
+      let now = null;
+      try { now = await readText(abs); } catch {}
+      if (now !== after) { skipped.push(rel); continue; }
+      await fsp.writeFile(abs, before, "utf8");
+      recentWrites.set(rel, { hash: hash(before), until: Date.now() + 3000 });
+      syncer.saved(rel, { soon: true });
+    }
+    fixUndo.delete(token);
+    index = null;
+    return { ok: true, skipped };
+  },
+
   async "GET /api/broken"() {
     const idx = await linkIndex();
     const links = brokenLinks(idx, (rel) => fs.existsSync(path.join(REPO, rel)));
@@ -595,6 +750,7 @@ const api = {
     const results = [];
     let total = 0;
     for (const file of await allDocs()) {
+      if (file.startsWith(TEMPLATES + "/")) continue; // the templates aren't pages to find (New page uses them)
       const lines = (await readText(path.join(REPO, file))).split(/\r?\n/);
       const hits = [];
       let count = 0;
@@ -654,7 +810,8 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === "/api/account/done" || url.pathname === "/api/openrouter/done") {
       const r = await (url.pathname === "/api/account/done" ? account : openrouter).done(url.searchParams);
       res.writeHead(r.ok ? 200 : 400, { "Content-Type": "text/html; charset=utf-8" });
-      return res.end(`<!doctype html><meta charset="utf-8"><title>R'th Codex</title><body style="font:16px system-ui;background:#0c0b09;color:#ddd3bf;display:grid;place-items:center;height:90vh;text-align:center"><div><p>${String(r.message).replace(/[<&]/g, "")}</p><p style="color:#a89c86">You can close this tab and go back to the Codex.</p></div>`);
+      return res.end(codexPage({ heading: r.ok ? "Signed in" : "Couldn't sign in",
+        body: `<p${r.ok ? "" : ' class="bad"'}>${esc(r.message)}</p><p>You can close this tab and go back to the Codex.</p>` }));
     }
     // A comment's id: n-... in docs/.notes/, the forum post's number in Discord.
     const noteRoute = url.pathname.match(/^\/api\/notes\/(n-[\w-]+|\d{5,25})(?:\/(reply|move|run|stop))?$/);
@@ -696,6 +853,9 @@ const server = http.createServer(async (req, res) => {
  */
 export function startServer(port = PORT, { autoSync = process.env.CODEX_AUTOSYNC === "1" } = {}) {
   if (autoSync) syncer.startAuto();
+  // Out of date (the helper's minimum, or a refusal): the page shows the update screen.
+  onRequired((r) => { broadcast("required", r); if (r.outdated) globalThis.codexUpdate?.check?.(); });
+  if (!process.env.CODEX_NO_VERSION_CHECK) watchMinimum(HELPER);
   return new Promise((resolve, reject) => {
     server.once("error", reject);
     server.listen(port, "127.0.0.1", () => {

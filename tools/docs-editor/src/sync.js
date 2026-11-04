@@ -3,11 +3,17 @@
 // One rule above all: the Codex only ever commits files under docs/. Whatever else is in the folder
 // (code, Unity scenes, your uncommitted work) is never staged, committed, set aside or overwritten.
 //
-//   automatic   every minute, when nothing has been typed for half a minute, and when the app closes:
-//               commits the pages saved *in the Codex* since the last sync, fetches, and sends. A page
-//               made or deleted goes within seconds. What others sent is told to the page ("news").
-//   on demand   the Sync button: the same, plus doc changes made outside the Codex (an agent, another
-//               editor), which automatic sync leaves alone so half-done work is never sent.
+//   saved is sent  a page saved *in the Codex* goes to GitHub once typing pauses (SEND_AFTER_MS), or
+//               at the latest SEND_AT_MOST_MS after its first unsent save while typing goes on: about one
+//               commit per burst of editing. A page made or deleted goes within seconds; closing the
+//               app sends everything. There is no Sync button: the status line says how it stands.
+//   others' work  when anyone sends, the helper tells every open Codex through the live room
+//               (src/together.js, "pages"), and it fetches at once (news()); a check every minute is
+//               the safety net. What others sent is told to the page ("news").
+//   asked first  pages R'th AI changed, or another program did (an agent, another editor), are held:
+//               the page asks (src/app.js, the share panel) and share() sends them, or discard() puts
+//               them back as they were last shared. They stay held until answered, across restarts.
+//               Comments (docs/.notes/) are always sent: they aren't pages, and agents write them too.
 //
 // Fetching merges others' commits into yours with `git merge` (never `--autostash`, never a rebase,
 // which both need a clean folder). git refuses on its own if incoming changes touch a file with
@@ -19,19 +25,20 @@ import fs from "node:fs";
 import path from "node:path";
 
 const MARK = "Synced by the Codex."  // every commit the Codex makes says so: it only ever sends those
-const AUTO_EVERY_MS = 60 * 1000;       // how often automatic sync looks
-const QUIET_MS = 30 * 1000;            // ...and how long since the last save before it acts
+const AUTO_EVERY_MS = 60 * 1000;       // the safety net: how often it looks anyway
+const SEND_AFTER_MS = 10 * 1000;       // a saved page is sent once typing has paused this long...
+const SEND_AT_MOST_MS = 2 * 60 * 1000; // ...or this long after its first unsent save, whatever the typing
 const SOON_MS = 4 * 1000;              // a page made or deleted: sent this soon
 
 export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = () => {}, scope = "docs", auth = async () => null }) {
   const S = {
     busy: false, enabled: null, reason: null, branch: null, upstream: null,
-    lastSync: null, lastResult: null, problem: null,
+    lastSync: null, lastResult: null, problem: null, offline: false, again: false,
     ahead: 0, behind: 0, waiting: [], outside: [],
   };
   const saved = new Set();   // pages saved in the Codex since the last sync (relative paths)
   const byAi = new Set();    // ...of those, pages the AI changed (their commit says "with AI")
-  let lastSave = 0, timer = null;
+  let timer = null;
 
   function run(args, { ok = [0] } = {}) {
     return new Promise((resolve) => {
@@ -61,7 +68,8 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
     const st = await run(["status", "--porcelain", "-z", "--untracked-files=all", "--", scope]);
     const changed = st.out.split("\0").filter((e) => e.length > 3).map((e) => e.slice(3)).filter((f) => !/\.codex-tmp$/.test(f));
     S.waiting = changed;
-    S.outside = changed.filter((f) => !saved.has(f));
+    // Held: the AI's or another program's changes to pages, which wait to be shared (or put back).
+    S.heldPages = changed.filter((f) => !f.startsWith(NOTES) && (byAi.has(f) || !saved.has(f)));
     const ab = await run(["rev-list", "--left-right", "--count", "HEAD...@{u}"]);
     const [a, b] = ab.out.trim().split(/\s+/).map(Number);
     S.ahead = a || 0; S.behind = b || 0;
@@ -69,22 +77,29 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
   }
   function disable(reason) { S.enabled = false; S.reason = reason; return view(); }
 
+  const NOTES = scope + "/.notes/";
+  const sendable = (f) => f.startsWith(NOTES) || (saved.has(f) && !byAi.has(f));
   const view = () => ({
     enabled: S.enabled, reason: S.reason, busy: S.busy, clash: S.problem ? S.clash || null : null, branch: S.branch, lastSync: S.lastSync, lastResult: S.lastResult, problem: S.problem,
-    waiting: S.waiting.length, outside: S.outside.length, ahead: S.ahead, behind: S.behind,
+    offline: S.offline, auto: !!timer, sending: !!sendTimer || (!!timer && saved.size > 0), // auto: this Codex shares by itself (the app)
+    waiting: S.waiting.length, ahead: S.ahead, behind: S.behind,
+    held: (S.heldPages || []).map((f) => ({ path: f, title: titleOf(f), by: byAi.has(f) ? "ai" : "other", gone: !fs.existsSync(path.join(repo, f)) })),
   });
   const tell = () => emit("sync", view());
 
   const titleOf = (f) => {
+    if (f.includes("/templates/")) return path.basename(f, ".md"); // a template's heading is a placeholder ("Title")
     try { const m = fs.readFileSync(path.join(repo, f), "utf8").match(/^#\s+(.+)$/m); if (m) return m[1].replace(/[*_`]/g, "").trim(); } catch {}
     return path.basename(f).replace(/\.(md|json)$/, "");
   };
 
-  /** Commit (docs only), fetch, merge, send. `everything`: include doc changes made outside the Codex. */
+  /** Commit (docs only), fetch, merge, send. `share`: held pages someone said to share (share()). */
   // The reply is built after the work and its `finally` (which marks it done), never inside them.
   async function sync(opts) { await doSync(opts); return view(); }
-  async function doSync({ everything = false, why = "auto" } = {}) {
-    if (S.busy) return;
+  // commit: false (news from others): fetch, merge and send what's committed, but leave pages being
+  // typed in for their own send, so a burst of editing stays one commit.
+  async function doSync({ share = [], why = "auto", commit = true } = {}) {
+    if (S.busy) { S.again = true; return; } // one at a time: it runs again once this one is done
     S.busy = true; tell();
     try {
       await refresh();
@@ -96,7 +111,7 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
       else creds = a;
 
       // 1. Commit: only files under docs/, only those this sync may send.
-      const files = (everything ? S.waiting : S.waiting.filter((f) => saved.has(f)));
+      const files = !commit ? [] : S.waiting.filter((f) => sendable(f) || share.includes(f));
       if (files.length) {
         const add = await run(["add", "-A", "--", ...files]);
         if (!add.ok) throw new Error(add.err.trim() || "git couldn't stage the pages");
@@ -114,12 +129,14 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
         const c = await run([...who(), "commit", "--quiet", "-m", subject + ai, "-m", MARK, "--only", "--", ...files]);
         if (!c.ok && !/nothing to commit|no changes added/i.test(c.out + c.err)) throw new Error(c.err.trim() || c.out.trim());
         for (const f of files) { saved.delete(f); byAi.delete(f); }
+        if (!saved.size) { clearTimeout(sendTimer); sendTimer = null; firstUnsent = 0; }
       }
 
       // 2. Fetch and merge others' work.
       const [remote] = S.upstream.split("/");
       const f = await run([...key(), "fetch", "--quiet", remote]);
-      if (!f.ok) { S.problem = "Couldn't reach GitHub. Your pages are saved here and will be sent next time."; return view(); }
+      if (!f.ok) { S.offline = true; S.problem = "Couldn't reach GitHub. Your pages are saved here and go out when it's back."; return view(); }
+      S.offline = false;
       await refresh();
       if (S.behind) {
         const before = (await run(["rev-parse", "HEAD"])).out.trim();
@@ -173,6 +190,7 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
     } finally {
       S.busy = false;
       tell();
+      if (S.again) { S.again = false; setTimeout(() => sync({ why: "again" }), 500); }
     }
   }
 
@@ -197,6 +215,32 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
    * Settle a clash: merge others' work again, and for the pages changed on both sides keep "mine" or
    * "theirs" whole. Only ever for pages under docs/; anything else and the merge is undone untouched.
    */
+  /** Send held pages: someone said so (the share panel, or the page's Share after reviewing). */
+  async function share(files) {
+    const ok = (files || []).filter((f) => typeof f === "string" && f.startsWith(scope + "/") && !f.includes(".."));
+    return sync({ why: "share", share: ok });
+  }
+
+  /** Put held pages back as they were last shared: changed ones restored, new ones removed. */
+  async function discard(files) {
+    if (S.busy) return view();
+    for (const f of (files || []).filter((x) => typeof x === "string" && x.startsWith(scope + "/") && !x.includes(".."))) {
+      const known = await run(["cat-file", "-e", `HEAD:${f}`]);
+      if (known.ok) await run(["checkout", "HEAD", "--", f]);
+      else fs.rmSync(path.join(repo, f), { force: true });
+      saved.delete(f); byAi.delete(f);
+    }
+    await refresh(); tell();
+    return view();
+  }
+
+  /** A held page as it was last shared (for Review): its text at HEAD, or "" for a new page. */
+  async function base(f) {
+    if (!f.startsWith(scope + "/") || f.includes("..")) return "";
+    const r = await run(["show", `HEAD:${f}`]);
+    return r.ok ? r.out : "";
+  }
+
   async function resolve(keep) { const again = await doResolve(keep); return again ? sync({ why: "resolve" }) : view(); }
   async function doResolve(keep) {
     if (S.busy || !["mine", "theirs"].includes(keep)) return false;
@@ -227,25 +271,36 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
     refresh: async () => { const v = await refresh(); tell(); return v; },
     sync,
     resolve,
-    /** The Codex saved this page (or comment file): automatic sync may send it. */
+    share,
+    discard,
+    base,
+    /** The Codex saved this page (or comment file): it's sent shortly (see SEND_AFTER_MS). */
     saved(rel, { ai = false, soon = false } = {}) {
       if (!rel.startsWith(scope + "/")) return;
       saved.add(rel); if (ai) byAi.add(rel);
-      // A page made or deleted is sent within seconds (it isn't being typed in); edits wait for a pause.
-      if (soon && timer) { clearTimeout(soonTimer); soonTimer = setTimeout(() => sync({ why: "soon" }), SOON_MS); }
-      if (!soon) lastSave = Date.now();
+      if (timer) {
+        // A page made or deleted goes within seconds (it isn't being typed in); edits once typing pauses,
+        // but never later than SEND_AT_MOST_MS after the first unsent save.
+        firstUnsent ||= Date.now();
+        const wait = soon ? SOON_MS : Math.max(0, Math.min(SEND_AFTER_MS, firstUnsent + SEND_AT_MOST_MS - Date.now()));
+        clearTimeout(sendTimer);
+        sendTimer = setTimeout(() => { sendTimer = null; firstUnsent = 0; sync({ why: soon ? "soon" : "saved" }); }, wait);
+      }
       refresh().then(tell);
     },
+    /** Someone sent changes (the helper said so through the live room): take them in now. */
+    news() { if (timer) sync({ why: "news", commit: false }); },
     /** A doc changed on disk (anyone): the waiting count changes. */
     touched() { clearTimeout(touchTimer); touchTimer = setTimeout(() => refresh().then(tell), 400); },
-    /** Automatic sync: shortly after starting, then every few minutes once typing has paused. */
+    /** Automatic sync: shortly after starting, then every minute as a safety net (a page waiting to be
+     *  sent is left to its own timer, so a burst of editing stays one commit). */
     startAuto() {
-      const tick = () => { if (Date.now() - lastSave > QUIET_MS) sync({ why: "auto" }); };
+      const tick = () => sync({ why: "auto", commit: !sendTimer });
       firstTick = setTimeout(tick, 15 * 1000);
       timer = setInterval(tick, AUTO_EVERY_MS);
     },
-    stopAuto() { clearInterval(timer); clearTimeout(firstTick); clearTimeout(soonTimer); timer = null; },
+    stopAuto() { clearInterval(timer); clearTimeout(firstTick); clearTimeout(sendTimer); timer = null; sendTimer = null; },
     view,
   };
 }
-let touchTimer = null, soonTimer = null, firstTick = null;
+let touchTimer = null, sendTimer = null, firstUnsent = 0, firstTick = null;

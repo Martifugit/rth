@@ -16,6 +16,11 @@ section before releasing; the release refuses without one.
 - To-do (in the page list): pages to write, placeholder names, and pages whose type or sections need a look.
 - File names are unique across the GDD.
 - Open questions is gone from the page list: each page keeps its own.
+- The templates are no longer in the page list or search: New page and + component still use them.
+- No more Sync button: what you type is shared by itself a few seconds after you pause, and others' changes arrive within seconds. The bottom line says Saved and sent, or why not.
+- Changes by R'th AI or another program are asked about in the bottom-left corner before they're shared: Share, Review or Undo.
+- Updates come as a screen over the Codex: once a new version has downloaded, Restart and update saves your work and updates. The Update button in the title bar is gone.
+- When a release has changes older Codexes can't work with, an older Codex stops and asks to be updated straight away.
 
 ## 0.2.0
 

@@ -5,7 +5,7 @@
 
 const PING_MS = 30 * 1000;
 
-export function makeTogether({ helper, session, emit, onComments = () => {} }) {
+export function makeTogether({ helper, session, emit, onComments = () => {}, onPages = () => {} }) {
   let ws = null, me = null, people = [], state = {}, wanted = false, retry = 2000, retryTimer = null, pinger = null, refused = null;
 
   const view = () => ({ connected: !!me, refused, people: people.filter((p) => p.conn !== me) });
@@ -25,6 +25,7 @@ export function makeTogether({ helper, session, emit, onComments = () => {} }) {
       if (m.type === "welcome") { me = m.conn; refused = null; retry = 2000; send(); tell(); }
       else if (m.type === "here") { people = Array.isArray(m.people) ? m.people : []; tell(); }
       else if (m.type === "comments") onComments();
+      else if (m.type === "pages") onPages(); // someone sent pages: fetch them now
     };
     sock.onclose = (e) => {
       if (ws === sock) ws = null;

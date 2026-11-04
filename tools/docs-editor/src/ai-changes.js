@@ -13,6 +13,7 @@ import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { DOMSerializer, Fragment } from "@tiptap/pm/model";
 import { diffSeq, diffWords, sameShare } from "./ai-diff.js";
+import { split as splitFront } from "./frontmatter.js";
 
 const KEY = new PluginKey("aiChanges");
 
@@ -31,7 +32,9 @@ export const AiMarks = Extension.create({
   },
 });
 
-export function makeAiChanges({ S, $, h, api, toast, scrollToPos }) {
+// A page waiting to be shared (src/sync.js, held) has Share in place of Done; one changed by another
+// program is compared with how it was last shared (GET /api/sync/base), the same way.
+export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => null, share = () => {} }) {
   const C = { changes: [], showing: false, hunks: [], at: -1, base: null, page: null, suggest: false, target: null, skipped: new Set() };
   const bar = h("div", { id: "aiBar", class: "ai-bar hidden" });
   const undoBtn = h("button", { class: "ai-undo-one hidden", title: "Undo this change", onmousedown: (e) => e.preventDefault(), onclick: () => undoHunk(Number(undoBtn.dataset.hunk)) }, "Undo");
@@ -64,14 +67,18 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos }) {
     }
     bar.replaceChildren(...[
       h("span", { class: "ai-bar-ico" }, "✦"),
-      h("span", { class: "ai-bar-text" }, C.showing ? (n ? `${n} change${n > 1 ? "s" : ""} by the AI` : "No changes left") : "The AI changed this page"),
+      h("span", { class: "ai-bar-text" }, C.other
+        ? (C.showing ? (n ? `${n} change${n > 1 ? "s" : ""} not shared yet` : "No changes left") : "Another program changed this page")
+        : C.showing ? (n ? `${n} change${n > 1 ? "s" : ""} by the AI` : "No changes left") : "The AI changed this page"),
       C.showing && n ? h("span", { class: "ai-bar-nav" },
         h("button", { class: "ai-bar-btn", title: "Previous change", onclick: () => step(-1) }, "‹"),
         h("span", { class: "ai-bar-pos" }, C.at >= 0 ? `${C.at + 1} of ${n}` : ""),
         h("button", { class: "ai-bar-btn", title: "Next change", onclick: () => step(1) }, "›")) : null,
       h("span", { class: "ai-bar-gap" }),
       h("button", { class: "btn" + (C.showing ? " on" : ""), onclick: () => toggle() }, C.showing ? "Hide changes" : "Show changes"),
-      h("button", { class: "btn", title: "Stop marking these changes", onclick: done }, "Done"),
+      held(S.path)
+        ? h("button", { class: "btn btn-gold", title: "Send this page to everyone, as it is now", onclick: () => share(S.path) }, "Share")
+        : h("button", { class: "btn", title: "Stop marking these changes", onclick: done }, "Done"),
     ].filter(Boolean));
   }
 
@@ -80,7 +87,7 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos }) {
   /** The page as it was before the AI's changes, as the editor would have it. */
   function baseDoc() {
     if (C.base) return C.base;
-    const md = C.changes[0]?.before ?? "";
+    const md = splitFront(C.changes[0]?.before ?? "").body; // the editor holds the page's frontmatter apart, so leave it out here too
     const html = S.editor.storage.markdown.parser.parse(md);
     C.base = createDocument(html, S.editor.schema);
     return C.base;
@@ -325,7 +332,16 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos }) {
     const page = S.path;
     const r = await api("/api/ai/changes?page=" + encodeURIComponent(page || ""));
     if (page !== S.path) return;
-    const all = r.changes || [];
+    let all = r.changes || [];
+    C.other = false;
+    // Another program's changes, waiting to be shared: compared with how the page was last shared.
+    const hp = held(page);
+    if (!all.length && hp?.by === "other") {
+      const b = await api("/api/sync/base?page=" + encodeURIComponent(page));
+      if (page !== S.path) return;
+      all = [{ before: b.text || "", suggest: false }];
+      C.other = true;
+    }
     // Suggestions waiting come first, and show straight away; otherwise the AI's edits.
     const sugg = all.filter((x) => x.suggest);
     C.suggest = sugg.length > 0;
@@ -345,6 +361,8 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos }) {
     /** The page was opened: its changes, if any (shown at once when the AI tab asked). */
     pageOpened(show = false) { C.showing = false; C.changes = []; C.base = null; C.target = null; C.suggest = false; drawBar(); return load({ show }); },
     show: () => load({ show: true }),
+    /** What's held changed (shared, undone): the bar's Share or Done follows. */
+    heldChanged: () => drawBar(),
     escape() { if (!C.showing || C.suggest) return false; toggle(false); return true; },
   };
 }

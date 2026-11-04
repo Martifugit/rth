@@ -5,20 +5,26 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self'">
 <title>R'th Codex</title>
 <style>
-  body { margin: 0; height: 100vh; display: grid; place-items: center; background: #0c0b09; color: #ddd3bf; font: 15px/1.5 "Segoe UI", system-ui, sans-serif; user-select: none; }
-  main { width: 420px; text-align: center; }
-  img { width: 64px; height: 64px; margin-bottom: 10px; }
-  h1 { font: 700 18px/1 Georgia, serif; letter-spacing: 3px; text-transform: uppercase; color: #e0c387; margin: 0 0 8px; }
-  .sub { color: #a89c86; margin: 0 0 26px; }
-  .bar { height: 8px; border-radius: 4px; background: #1d1912; border: 1px solid #3b3226; overflow: hidden; }
-  .fill { height: 100%; width: 0; background: linear-gradient(90deg, #a5824a, #e0c387); transition: width .25s ease-out; }
+  /* The Codex's look (src/codex-page.js), by hand: this window opens before anything else is running.
+     Fonts: the installed app's own copy (resources/look), else the repository's (running from source). */
+  @font-face { font-family: "Cinzel"; src: url("../../look/UI/Fonts/Cinzel.ttf"), url("../../../client/Assets/Resources/UI/Fonts/Cinzel.ttf"); font-weight: 400 900; }
+  @font-face { font-family: "Alegreya Sans"; src: url("../../look/UI/Fonts/AlegreyaSans-Medium.ttf"), url("../../../client/Assets/Resources/UI/Fonts/AlegreyaSans-Medium.ttf"); font-weight: 400 500; }
+  body { margin: 0; height: 100vh; display: grid; place-items: center; color: #ddd3bf; font: 500 15px/1.5 "Alegreya Sans", "Segoe UI", sans-serif; user-select: none;
+    background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, .25)), #0d0c0a url("../public/stone.jpg") 0 0 / 800px repeat; text-shadow: 0 1px 1px rgba(0, 0, 0, .85); }
+  main { width: 400px; text-align: center; }
+  img { width: 84px; height: 84px; margin-bottom: 8px; filter: drop-shadow(0 2px 4px #000); }
+  h1 { font: 700 19px/1.3 "Cinzel", Georgia, serif; letter-spacing: .5px; color: #e0c387; margin: 0 0 6px; }
+  .sub { color: #a89c86; margin: 0 0 22px; }
+  .bar { height: 6px; border-radius: 3px; background: #1d1912; border: 1px solid #3a3125; overflow: hidden; }
+  .fill { height: 100%; width: 0; background: linear-gradient(#d9b36a, #a8803f); transition: width .25s ease-out; }
   .bar.waiting .fill { width: 30%; animation: slide 1.2s ease-in-out infinite; }
   @keyframes slide { 0% { margin-left: -30%; } 100% { margin-left: 100%; } }
-  #what { margin-top: 10px; font-size: 13px; color: #a89c86; min-height: 1.5em; }
-  #problem { display: none; margin-top: 14px; color: #f0a08f; font-size: 13.5px; }
-  button { margin-top: 14px; height: 32px; padding: 0 18px; border: 1px solid #c9a25e; border-radius: 4px; background: #c9a25e; color: #231707; font: 600 13px/1 inherit; cursor: pointer; }
-  button:hover { background: #dcb46c; }
-  .other { position: fixed; bottom: 12px; left: 0; right: 0; text-align: center; font-size: 12px; }
+  #what { margin-top: 10px; font-size: 13.5px; color: #a89c86; min-height: 1.5em; }
+  #problem { display: none; margin-top: 14px; color: #f0a08f; font-size: 14px; }
+  button { margin-top: 14px; padding: 6px 16px; border: 1px solid #6b5838; border-radius: 4px; background: rgba(201, 162, 94, .1); color: #f0d58c;
+    font: 700 14px/1.2 "Alegreya Sans", "Segoe UI", sans-serif; text-shadow: inherit; cursor: pointer; }
+  button:hover { background: rgba(201, 162, 94, .2); border-color: #8a7148; }
+  .other { position: fixed; bottom: 12px; left: 0; right: 0; text-align: center; font-size: 12.5px; }
   .other a { color: #6f6553; text-decoration: none; cursor: pointer; }
   .other a:hover { color: #a89c86; text-decoration: underline; }
 </style>
@@ -26,8 +32,8 @@
 <body>
 <main>
   <img src="../assets/logo-96.png" alt="">
-  <h1>R'th Codex</h1>
-  <p class="sub">Getting the design docs ready. This happens once and takes about a minute.</p>
+  <h1>Getting the docs ready</h1>
+  <p class="sub">This happens once and takes about a minute.</p>
   <div class="bar waiting" id="bar"><div class="fill" id="fill"></div></div>
   <div id="what">Connecting…</div>
   <div id="problem"></div>

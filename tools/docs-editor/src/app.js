@@ -31,12 +31,16 @@ import { AiMarks, makeAiChanges } from "./ai-changes.js";
 import { altGrChar, isKeyFor } from "./keys.js";
 import { makeTogetherUi } from "./together-ui.js";
 import { Spelling, configureSpelling } from "./spellcheck.js";
-import { GDD, README, TOP, TEMPLATES, isMeta, folderPath, typeAt } from "./gdd.js";
+import { GDD, README, TOP, TEMPLATES, isMeta, undeletable, folderPath, typeAt } from "./gdd.js";
 import { split as splitFront, make as makeFront } from "./frontmatter.js";
 import { makeGddUi } from "./gdd-ui.js";
+import { pagePicker } from "./page-picker.js";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+// ?preview=... shows how updating looks (startPreview); read at once, as opening the start page replaces the address.
+const PREVIEW = new URLSearchParams(location.search).get("preview");
+let previewing = null; // up here: the start-up code below runs before the update section is reached
 const h = (tag, props = {}, ...kids) => {
   const el = document.createElement(tag);
   for (const [k, v] of Object.entries(props)) {
@@ -188,6 +192,10 @@ const gddUi = makeGddUi(() => ({
   menu: (ev, items) => rowMenu(ev, ev.currentTarget, items),
   setFront: (front) => { S.front = front; scheduleDirty(); },
   newPage: (prefill) => newPageDialog(null, prefill),
+  ask: (title, html, buttons) => ask(title, html, buttons),
+  save: () => save(false, { quiet: true }),
+  loadTree: () => loadTree(),
+  typeIcon: (type) => TYPE_ICONS[type] || "journal",
 }));
 
 function makeEditor(text) {
@@ -278,7 +286,7 @@ async function autosave() {
 }
 function refreshDirty() {
   S.dirty = !!S.path && draft() !== S.disk;
-  document.title = S.view ? VIEWS[S.view].title + " · Codex" : (S.dirty ? "● " : "") + (pageTitle() || "R'th Codex") + " · Codex";
+  document.title = S.view ? VIEWS[S.view].title + " - Codex" : (S.dirty ? "● " : "") + (pageTitle() || "R'th Codex") + " - Codex";
   updateStatus();
 }
 
@@ -292,7 +300,7 @@ async function api(url, opts) {
 
 async function loadTree() {
   const [r, g] = await Promise.all([api("/api/tree"), api("/api/gdd")]);
-  if (g.ok && Array.isArray(g.types)) { S.types = g.types; S.components = g.components || []; }
+  if (g.ok && Array.isArray(g.types)) { S.types = g.types; S.components = g.components || []; S.prompts = g.prompts || null; }
   // An engine older than the page (a Codex left running across an update) doesn't know the GDD's calls.
   else showBanner("Codex needs a restart: its engine is older than this page. Close Codex and open it again.", [{ label: "OK", run: hideBanner }]);
   S.files = r.files || [];
@@ -325,6 +333,7 @@ function drawNav() {
 }
 
 async function openDoc(path, { hash = "", push = true, find = null, keepScroll = false, mode = null, scroll = null } = {}) {
+  S.reloadOpen = false;
   if (S.path && path !== S.path) {
     clearTimeout(autoTimer);
     refreshDirty();
@@ -410,7 +419,8 @@ function applyMode() {
   $("#source").classList.toggle("hidden", S.mode !== "source");
   $("#toolbar").classList.toggle("hidden", S.mode !== "edit" || !!S.readOnly);
   $("#readOnlyBar").classList.toggle("hidden", !S.readOnly);
-  $("#deleteBtn").classList.toggle("hidden", !!S.readOnly);
+  $("#deleteBtn").classList.toggle("hidden", !!S.readOnly || undeletable(S.path)); // the top pages and templates stay
+  gddUi.refresh(); // "+ Add action" shows only while editing
   $("#docWrap").classList.toggle("source", S.mode === "source");
   updateToolbar();
   if (typeof notes !== "undefined") requestAnimationFrame(() => notes.layout());
@@ -469,6 +479,7 @@ function listen() {
   es.addEventListener("here", (e) => together.onEvent(JSON.parse(e.data)));
   es.addEventListener("ai", (e) => { const ev = JSON.parse(e.data); ai.onEvent(ev); if (ev.state === "reviewed" || ev.pages?.includes(S.path)) aiChanges.load(); });
   es.addEventListener("account", (e) => account.onEvent(JSON.parse(e.data)));
+  es.addEventListener("required", () => api("/api/update").then(showUpdate, () => {}));
   es.onmessage = (e) => {
     const events = JSON.parse(e.data);
     panels.invalidate();
@@ -500,7 +511,7 @@ function hideBanner() { $("#banner").classList.add("hidden"); }
 
 // Each type's folder icon (the folders themselves come from How the GDD Works).
 const TYPE_ICONS = {
-  overview: "book", system: "settings", skill: "skills", entity: "bestiary", object: "compass", item: "pack",
+  system: "settings", skill: "skills", entity: "bestiary", object: "compass", item: "pack",
   ability: "spark", effect: "dreaming", quest: "quests", activity: "fishing", achievement: "task", location: "map",
   group: "journal", lore: "scripture", media: "eye", guide: "guide", decision: "note",
 };
@@ -556,8 +567,8 @@ function pageMenu(ev, f) {
     "-",
     ["Copy link for Discord", () => copyText(`[${name.replace(/[\[\]]/g, "")}](<${codexLink(f.path)}>)`, "a link to " + name)],
     ["Copy path", () => copyText(f.path, f.path)],
-    inDocs && "-",
-    inDocs && ["Delete page…", () => deletePage(f.path), { danger: true, ...signInHint("delete pages") }],
+    inDocs && !undeletable(f.path) && "-",
+    inDocs && !undeletable(f.path) && ["Delete page…", () => deletePage(f.path), { danger: true, ...signInHint("delete pages") }],
   ]);
 }
 
@@ -573,7 +584,8 @@ function renderTree() {
   const filter = $("#treeFilter").value.trim().toLowerCase();
   const tree = $("#tree");
   const matches = (f) => !filter || f.path.toLowerCase().includes(filter) || (f.title || "").toLowerCase().includes(filter);
-  const files = S.files.filter(matches);
+  // The templates stay out of the list: they work behind New page and + component, not as pages to read.
+  const files = S.files.filter((f) => !f.path.startsWith(TEMPLATES + "/") && matches(f));
   const data = buildTreeData(files);
   const mark = (text) => {
     if (!filter) return text;
@@ -607,7 +619,7 @@ function renderTree() {
   // The GDD, flat: its start page and the pages about it, templates/, then one folder per type in the
   // order How the GDD Works lists them, shown even before they hold a page.
   const gdd = data.dirs.get("docs")?.dirs.get("gdd") || { name: "gdd", path: GDD, dirs: new Map(), files: [] };
-  if (!filter) for (const name of ["templates", ...S.types.filter((t) => t.folder).map((t) => t.folder)])
+  if (!filter) for (const name of S.types.filter((t) => t.folder).map((t) => t.folder)) // templates/ isn't listed
     if (!gdd.dirs.has(name)) gdd.dirs.set(name, { name, path: GDD + "/" + name, dirs: new Map(), files: [] });
   const specialRow = (kind, icon, help) => h("div", { class: "t-row file t-special" + (S.view === kind ? " current" : ""), "data-view": kind, title: help, onclick: () => showView(kind) },
     h("span", { class: "caret" }), h("span", { class: "ico ico-" + icon }), h("span", { class: "t-name" }, VIEWS[kind].title),
@@ -648,9 +660,12 @@ function markTreeCurrent() {
 
 function renderCrumbs() {
   const parts = S.path.split("/");
+  // "docs" and "gdd" say nothing (everything is in the GDD): the crumbs start at the type's folder.
+  const skip = S.path.startsWith(GDD + "/") ? GDD.split("/").length : S.path.startsWith("docs/") ? 1 : 0;
   const out = [];
   parts.forEach((part, i) => {
-    if (i) out.push(h("span", { class: "sep" }, "›"));
+    if (i < skip) return;
+    if (i > skip) out.push(h("span", { class: "sep" }, "/"));
     if (i === parts.length - 1) { out.push(h("span", { class: "leaf" }, part.replace(/\.md$/, ""))); return; }
     const dir = parts.slice(0, i + 1).join("/");
     const page = folderPage(dir);
@@ -707,12 +722,14 @@ function spy() {
 function updateStatus() {
   if (!S.editor) return;
   const words = (S.editor.state.doc.textContent.match(/[\p{L}\p{N}'’]+/gu) || []).length;
-  $("#statusLeft").textContent = `${words.toLocaleString()} words · ${Math.max(1, Math.round(words / 230))} min read`;
-  const git = S.files.find((f) => f.path === S.path)?.git;
-  $("#statusRight").innerHTML = S.conflict ? '<span class="unsaved">Not saved: the page changed somewhere else</span>'
+  $("#statusLeft").textContent = `${words.toLocaleString()} words, ${Math.max(1, Math.round(words / 230))} min read`;
+  const sync = syncWords();
+  const right = $("#statusRight");
+  right.innerHTML = S.conflict ? '<span class="unsaved">Not saved: the page changed somewhere else</span>'
     : S.saving ? '<span class="muted">Saving…</span>'
     : S.dirty ? '<span class="muted">Editing…</span>'
-    : `<span class="saved">All changes saved</span>${git ? ` · ${git === "new" ? "not in git yet" : "changed since the last commit"}` : ""}`;
+    : `<span class="${sync.cls}">${sync.text}</span>`;
+  right.title = !S.dirty && !S.saving ? sync.title || "" : "";
 }
 
 
@@ -731,8 +748,8 @@ function followLink(href, text = "") {
   const { path, hash, dir } = resolveHref(S.path, href);
   if (path.endsWith(".md")) {
     if (S.fileSet.has(path)) return openDoc(path, { hash });
-    // A link to a page not written yet is a to-do: make it, as a stub of its folder's type.
-    if (path.startsWith(GDD + "/")) return newPageDialog(null, { path, title: text.trim() });
+    // A link to a page not written yet is a to-do: write it, point it at the page meant, or unlink it.
+    if (path.startsWith(GDD + "/")) return deadLinkDialog(path, text);
     toast("No such page: " + path, "bad");
     return;
   }
@@ -920,36 +937,82 @@ function ask(title, html, buttons) {
   });
 }
 
-function docOptions() {
-  return h("datalist", { id: "docList" }, S.files.map((f) => h("option", { value: relativePath(S.path, f.path) }, f.title || "")));
-}
-
+/**
+ * Add or change a link (Ctrl+K). The target is picked from the GDD's pages, never typed as a path, so a
+ * link can't be misspelt into nowhere. A web address or a #heading is typed and offered as itself; a
+ * page that isn't written yet can be linked on purpose, as a to-do in this page's folder.
+ */
 function linkDialog() {
   const e = S.editor;
   const { from, to, empty } = e.state.selection;
   const current = e.getAttributes("link").href || "";
-  const url = h("input", { class: "field", value: current, placeholder: "A page (start typing), #a-heading or https://…", list: "docList", spellcheck: "false" });
   const text = h("input", { class: "field", placeholder: "Link text", value: empty ? "" : e.state.doc.textBetween(from, to, " ") });
-  const apply = () => {
-    const href = url.value.trim();
+  const apply = (href, title = "") => {
     close();
     const c = e.chain().focus();
     if (!href) { c.extendMarkRange("link").unsetLink().run(); return; }
     if (empty && !e.isActive("link")) {
-      const label = text.value.trim() || href.split("/").pop().replace(/\.md$/, "");
+      const label = text.value.trim() || title || href.split("/").pop().replace(/\.md$/, "");
       c.insertContent({ type: "text", text: label, marks: [{ type: "link", attrs: { href } }] }).run();
     } else c.extendMarkRange("link").setLink({ href }).run();
   };
-  const onEnter = (ev) => { if (ev.key === "Enter") { ev.preventDefault(); apply(); } };
-  url.addEventListener("keydown", onEnter); text.addEventListener("keydown", onEnter);
-  const close = modal(current ? "Edit link" : "Add a link", [
-    h("label", {}, "Where to"), url, docOptions(),
-    empty && !current ? [h("label", {}, "Text"), text] : null,
-    h("div", { class: "modal-actions" },
+  const slugOfText = (t) => t.trim().normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/['’]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const pages = S.files.filter((f) => f.path !== S.path && !f.path.startsWith(TEMPLATES + "/"))
+    .map((f) => ({ path: f.path, title: f.title || f.path.split("/").pop().replace(/\.md$/, ""), note: f.path.slice(GDD.length + 1).split("/").slice(0, -1).join("/") }));
+  const picker = pagePicker({
+    h, pages, placeholder: "Find a page, or type https://… or #a-heading",
+    onPick: (p) => apply(relativePath(S.path, p.path), p.title),
+    create: {
+      label: (q) => (/^(https?:|mailto:|#)/i.test(q) ? `Link to ${q}` : `Link to “${q}”, not written yet (a to-do)`),
+      run: (q) => apply(/^(https?:|mailto:|#)/i.test(q) ? q : slugOfText(q) + ".md", q),
+    },
+  });
+  const now = current ? resolveHref(S.path, current) : null;
+  const nowPage = now && S.files.find((f) => f.path === now.path);
+  const close = modal(current ? "Change link" : "Add a link", [
+    current ? h("p", { class: "muted small" }, "Now: ", nowPage ? h("b", {}, nowPage.title) : current, nowPage ? ", " + current : "") : null,
+    h("label", {}, "Where to"), picker,
+    empty && !current ? [h("label", { style: "margin-top:12px" }, "Text"), text] : null,
+    h("div", { class: "modal-actions", style: "margin-top:14px" },
       current ? h("button", { class: "btn btn-danger", onclick: () => { close(); e.chain().focus().extendMarkRange("link").unsetLink().run(); } }, "Remove link") : null,
-      h("button", { class: "btn", onclick: () => close() }, "Cancel"), h("button", { class: "btn btn-gold", onclick: apply }, "Apply")),
-  ]);
-  setTimeout(() => url.focus(), 0);
+      h("button", { class: "btn", onclick: () => close() }, "Cancel")),
+  ], { width: "min(560px, 94vw)" });
+  setTimeout(() => picker.querySelector("input")?.focus(), 0);
+}
+
+/**
+ * A link to a page that isn't written yet, clicked: write it, point it at the page that's meant, or keep
+ * the words and drop the link. Pointing and unlinking change every link to it on this page.
+ */
+function deadLinkDialog(path, text) {
+  const name = text.trim() || path.split("/").pop().replace(/\.md$/, "").replace(/-/g, " ");
+  const picker = pagePicker({
+    h, pages: S.files.filter((f) => f.path.startsWith(GDD + "/") && !isMeta(f.path)).map((f) => ({ path: f.path, title: f.title, note: f.path.slice(GDD.length + 1).split("/").slice(0, -1).join("/") })),
+    placeholder: "The page this link means…",
+    onPick: (p) => { close(); relinkOpenPage(path, p.path); toast(`Now links to “${p.title}”`, "good"); },
+  });
+  const close = modal("Not written yet", [
+    h("p", { class: "modal-text" }, h("b", {}, name), " has no page yet (", path.slice(GDD.length + 1), "). A link to a page that isn't written is a to-do, not a mistake."),
+    h("div", { class: "dl-options" },
+      h("div", { class: "dl-option" }, h("div", {}, h("b", {}, "Write it"), h("p", { class: "muted small" }, "Make the page now, as a stub.")),
+        h("button", { class: "btn btn-gold", onclick: () => { close(); newPageDialog(null, { path, title: text.trim() }); } }, "Write it")),
+      h("div", { class: "dl-option" }, h("div", {}, h("b", {}, "It's another page"), h("p", { class: "muted small" }, "Point the link at the page that's meant."), picker)),
+      h("div", { class: "dl-option" }, h("div", {}, h("b", {}, "Unlink"), h("p", { class: "muted small" }, "Keep the words, drop the link.")),
+        h("button", { class: "btn", onclick: () => { close(); unlinkOpenPage(path); } }, "Unlink"))),
+  ], { width: "min(560px, 94vw)" });
+}
+
+/** Links on the open page to `path` become plain text. */
+function unlinkOpenPage(path) {
+  const ed = S.editor;
+  if (!ed) return;
+  const link = ed.schema.marks.link;
+  const tr = ed.state.tr;
+  ed.state.doc.descendants((n, pos) => {
+    const m = n.isText && n.marks.find((x) => x.type === link);
+    if (m && resolveHref(S.path, m.attrs.href).path === path) tr.removeMark(pos, pos + n.nodeSize, link);
+  });
+  if (tr.docChanged) { ed.view.dispatch(tr); scheduleDirty(); }
 }
 
 function imageDialog() {
@@ -975,7 +1038,7 @@ function quickOpen() {
 
   // Lines as they read on the page: no Markdown marks, table cells joined.
   const tidy = (t) => t.replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/[*_`]/g, "")
-    .replace(/^\s*(?:#{1,6}|[-+*]|\d+[.)]|>)\s+/, "").replace(/^\s*\|\s*|\s*\|\s*$/g, "").replace(/\s*\|\s*/g, "  ·  ").trim();
+    .replace(/^\s*(?:#{1,6}|[-+*]|\d+[.)]|>)\s+/, "").replace(/^\s*\|\s*|\s*\|\s*$/g, "").replace(/\s*\|\s*/g, ", ").trim();
   const titleOf = (p) => S.files.find((f) => f.path === p)?.title || p.split("/").pop().replace(/\.md$/, "");
   const mark = (t, q) => {
     if (!q) return t;
@@ -1065,50 +1128,122 @@ function quickOpen() {
 }
 
 /**
- * A new page: its title and its type. The type decides its folder and its core headings (How the GDD
- * Works, "Types"). Made from a folder, the folder's type is picked. `prefill`: { title, path } from a link
- * to a page not written yet (the path is kept; the type follows its folder).
+ * A new page. The type comes first, by a picker: it decides the folder and the core headings (How the
+ * GDD Works, "Types"). Then the title, and optionally a few components: the ones usual for the type are
+ * offered, none ticked, since most pages start as stubs. Made from a folder, the folder's type is
+ * suggested. `prefill`: { title, path } from a link to a page not written yet: the path is kept when the
+ * type picked is its folder's, else the page goes to the picked type's folder and the link follows it.
  */
 function newPageDialog(inFolder = null, prefill = {}) {
   if (typeof inFolder !== "string") inFolder = null; // a button's click passes its event
   if (!S.types.length) { toast("No types found: How the GDD Works needs its Types table", "bad"); return; }
   const typeOf = (dir) => typeAt(S.types, dir);
   const fixed = prefill.path || null;
-  const start = typeOf(fixed && dirOf(fixed)) || typeOf(inFolder) || typeOf(S.path && dirOf(S.path)) || null;
-  const folderOf = (t) => (inFolder && typeOf(inFolder) === t ? inFolder : folderPath(t));
-  const kind = h("select", { class: "field" }, S.types.map((t) => h("option", { value: t.type, selected: t === start || null }, t.type + "  |  " + t.examples)));
-  const chosen = () => S.types.find((t) => t.type === kind.value);
-  const name = h("input", { class: "field", placeholder: "The page's title", spellcheck: "true", value: prefill.title || "" });
-  const file = h("div", { class: "muted small new-file" });
-  const fileName = () => name.value.trim().replace(/\.md$/i, "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/['’]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-  const target = () => fixed || (fileName() ? folderOf(chosen()) + "/" + fileName() + ".md" : null);
-  const showFile = () => {
-    const t = target();
-    const off = fixed && typeOf(dirOf(fixed)) && typeOf(dirOf(fixed)) !== chosen() ? ` (not the ${chosen().type} folder)` : "";
-    file.textContent = t ? `Saved as ${t.slice(GDD.length + 1)}${off}, a stub` : "";
+  const suggested = typeOf(fixed && dirOf(fixed)) || typeOf(inFolder) || null;
+  const an = (w) => (/^[aeiou]/.test(w) ? "an " : "a ") + w;
+  const cap = (w) => w.replace(/^./, (c) => c.toUpperCase());
+  let type = null, title = prefill.title || "";
+  const picked = new Set();
+  const body = h("div", { class: "np" });
+
+  // Step 1: the type.
+  const pickType = () => {
+    const filter = h("input", { class: "field", placeholder: "Filter: monster, sword, town…", spellcheck: "false" });
+    const grid = h("div", { class: "np-types" });
+    const draw = () => {
+      const q = filter.value.trim().toLowerCase();
+      const shown = S.types.filter((t) => !q || t.type.includes(q) || t.covers.toLowerCase().includes(q));
+      grid.replaceChildren(...shown.map((t) => h("button", { class: "np-type" + (t === suggested ? " suggested" : ""), title: t.covers, onclick: () => choose(t) },
+        h("span", { class: "ico ico-" + (TYPE_ICONS[t.type] || "journal") }),
+        h("span", { class: "np-type-name" }, cap(t.type), t === suggested ? h("span", { class: "np-type-tag" }, fixed ? "from the link" : "this folder") : null),
+        h("span", { class: "np-type-ex" }, t.examples))));
+    };
+    filter.addEventListener("input", draw);
+    filter.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); (grid.querySelector(".np-type.suggested") || grid.querySelector(".np-type"))?.click(); }
+      if (e.key === "ArrowDown") { e.preventDefault(); grid.querySelector(".np-type")?.focus(); }
+    });
+    grid.addEventListener("keydown", (e) => { // arrows move through the grid, two columns
+      const all = [...grid.querySelectorAll(".np-type")], i = all.indexOf(document.activeElement);
+      const step = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: 2, ArrowUp: -2 }[e.key];
+      if (i < 0 || !step) return;
+      e.preventDefault();
+      if (i + step < 0) filter.focus(); else all[Math.min(all.length - 1, i + step)]?.focus();
+    });
+    draw();
+    body.replaceChildren(
+      h("p", { class: "muted small np-lead" }, fixed ? "A link points here, but the page isn't written yet. What kind of page is it?" : "What kind of page is it? The type decides its folder and its headings."),
+      filter, grid);
+    setTimeout(() => (suggested ? grid.querySelector(".np-type.suggested") : filter)?.focus(), 0);
   };
-  name.addEventListener("input", showFile); kind.addEventListener("change", showFile);
+
+  // Step 2: the title, and components if wanted.
+  const fileName = () => title.trim().replace(/\.md$/i, "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/['’]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const keepFixed = () => fixed && typeOf(dirOf(fixed)) === type;
+  const target = () => (keepFixed() ? fixed
+    : fixed ? folderPath(type) + "/" + fixed.split("/").pop()
+    : fileName() ? (inFolder && typeOf(inFolder) === type ? inFolder : folderPath(type)) + "/" + fileName() + ".md" : null);
+  const choose = (t) => {
+    type = t;
+    const name = h("input", { class: "field", placeholder: "The page's title", spellcheck: "true", value: title });
+    const file = h("div", { class: "muted small new-file" });
+    const showFile = () => { const p = target(); file.textContent = p ? `Saved as ${p.slice(GDD.length + 1)}, a stub` : ""; };
+    name.addEventListener("input", () => { title = name.value; showFile(); });
+    name.addEventListener("keydown", (e) => { if (e.key === "Enter") create(); });
+    const usual = S.components.filter((c) => c.foundOn.includes(t.type));
+    const chip = (c) => h("button", { class: "np-comp" + (picked.has(c.name) ? " on" : ""), title: c.answers,
+      onclick: (e) => { if (picked.has(c.name)) picked.delete(c.name); else picked.add(c.name); e.currentTarget.classList.toggle("on", picked.has(c.name)); } },
+      cap(c.name.replace(/-/g, " ")));
+    body.replaceChildren(...[
+      h("div", { class: "np-chosen" }, h("span", { class: "gdd-badge gdd-type-badge" }, h("span", { class: "ico ico-" + (TYPE_ICONS[t.type] || "journal") }), cap(t.type)),
+        h("span", { class: "muted small np-heads" }, t.headings.join(", ")),
+        h("button", { class: "gdd-link np-back", onclick: pickType }, "Change")),
+      h("label", {}, "Title"), name, file,
+      usual.length ? [h("label", { class: "np-comps-label" }, "Sections to start with ", h("span", { class: "np-optional" }, "optional")),
+        h("div", { class: "np-comps" }, usual.map(chip)),
+        h("p", { class: "muted small np-note" }, "Most pages start as a stub with none. Add them later in Page settings.")] : null,
+      fixed && !keepFixed() ? h("p", { class: "muted small np-note" }, `The link points into ${dirOf(fixed).slice(GDD.length + 1) || "the top of the GDD"}; ${an(t.type)} page goes in ${t.folder || "the top"}, and the link on this page will follow it.`) : null,
+      h("div", { class: "modal-actions" }, h("button", { class: "btn", onclick: () => close() }, "Cancel"), h("button", { class: "btn btn-gold", onclick: create }, "Create")),
+    ].flat().filter(Boolean));
+    showFile();
+    setTimeout(() => { name.focus(); name.setSelectionRange(name.value.length, name.value.length); }, 0);
+  };
+
   const create = async () => {
     const path = target();
-    if (!path) { name.focus(); return; }
+    if (!path || !title.trim()) { body.querySelector("input.field")?.focus(); return; }
     // File names are unique across the whole GDD (Workflow, "Naming").
     const same = S.files.find((f) => f.path !== path && !f.path.startsWith(TEMPLATES + "/") && f.path.split("/").pop() === path.split("/").pop());
-    if (same) { toast(`${path.split("/").pop()} is already ${same.title || same.path}: file names are unique across the GDD`, "bad"); name.focus(); return; }
-    const r = await api("/api/new", { method: "POST", body: JSON.stringify({ path, title: name.value.trim(), type: kind.value }) });
+    if (same) { toast(`${path.split("/").pop()} is already ${same.title || same.path}: file names are unique across the GDD`, "bad"); return; }
+    if (S.fileSet.has(path)) { toast(`There's already a page at ${path.slice(GDD.length + 1)}`, "bad"); return; }
+    const r = await api("/api/new", { method: "POST", body: JSON.stringify({ path, title: title.trim(), type: type.type, components: [...picked] }) });
     if (!r.ok) { toast(r.error || "Couldn't create it", "bad"); return; }
     close();
+    if (fixed && r.path !== fixed) relinkOpenPage(fixed, r.path); // the link that asked for it follows it to its folder
     await loadTree();
     await openDoc(r.path, { mode: "edit" });
     focusEditor(S.editor.state.doc.content.size); // ready to type, as a new document is
     toast("Page created", "good");
   };
-  name.addEventListener("keydown", (e) => { if (e.key === "Enter") create(); });
-  const close = modal(fixed ? "Write this page" : "New page", [
-    fixed ? h("p", { class: "muted small" }, "A link points here, but the page isn't written yet. Make it as a stub: two sentences are a complete page for now.") : null,
-    h("label", {}, "Title"), name, h("label", {}, "Type"), kind, file,
-    h("div", { class: "modal-actions" }, h("button", { class: "btn", onclick: () => close() }, "Cancel"), h("button", { class: "btn btn-gold", onclick: create }, "Create"))]);
-  showFile();
-  setTimeout(() => name.focus(), 0);
+
+  const close = modal(fixed ? "Write this page" : "New page", body, { width: "min(620px, 94vw)" });
+  // Made from a folder of a type, the page is that type (Change still picks another); otherwise the type comes first.
+  if (inFolder && typeOf(inFolder) && !fixed) choose(typeOf(inFolder)); else pickType();
+}
+
+/** Links on the open page to `from` now point to `to` (a page made somewhere else than the link said). */
+function relinkOpenPage(from, to) {
+  const ed = S.editor;
+  if (!ed) return;
+  const link = ed.schema.marks.link;
+  const tr = ed.state.tr;
+  ed.state.doc.descendants((n, pos) => {
+    const m = n.isText && n.marks.find((x) => x.type === link);
+    if (!m || resolveHref(S.path, m.attrs.href).path !== from) return;
+    const hash = m.attrs.href.includes("#") ? m.attrs.href.slice(m.attrs.href.indexOf("#")) : "";
+    tr.removeMark(pos, pos + n.nodeSize, link).addMark(pos, pos + n.nodeSize, link.create({ ...m.attrs, href: relativePath(S.path, to) + hash }));
+  });
+  if (tr.docChanged) { ed.view.dispatch(tr); scheduleDirty(); }
 }
 
 function helpDialog() {
@@ -1130,14 +1265,56 @@ function helpDialog() {
  * A short message at the bottom. With actions ([{ label, run }]) it stays longer (ms), has buttons, and
  * an ✕; running an action closes it.
  */
+// Toasts: a deck at the bottom centre, newest in front, older ones tucked behind (at most three show).
+// Pointing at the deck spreads it out and holds every timer; the same message again only counts (×2).
+const TOASTS = [];
+let toastsHeld = false;
 function toast(text, kind = "", { actions = null, ms = null } = {}) {
-  const go = () => { if (!t.isConnected) return; t.style.transition = "opacity .3s"; t.style.opacity = "0"; setTimeout(() => t.remove(), 300); };
-  const t = h("div", { class: "toast " + kind + (actions ? " with-actions" : "") }, h("span", {}, text),
-    actions ? actions.map((a) => h("button", { class: "toast-btn", onclick: () => { go(); a.run(); } }, a.label)) : null,
-    actions ? h("button", { class: "toast-x", title: "Close", onclick: go }, "✕") : null);
-  $("#toasts").append(t);
-  setTimeout(go, ms || (actions ? 12000 : 2200));
-  return t;
+  const same = !actions && TOASTS.find((x) => !x.actions && x.text === text && x.kind === kind);
+  if (same) { same.n++; same.count.textContent = "×" + same.n; startToast(same); return same.el; }
+  const x = { text, kind, actions, n: 1, ms: ms || (actions ? 12000 : 2600) };
+  x.count = h("span", { class: "toast-n" });
+  x.el = h("div", { class: "toast " + kind, onmouseenter: () => holdToasts(true), onmouseleave: () => setTimeout(() => holdToasts(!!document.querySelector(".toast:hover")), 80) },
+    h("span", { class: "toast-ico" }, kind === "good" ? "✓" : kind === "bad" ? "!" : "✦"),
+    h("span", { class: "toast-text" }, text), x.count,
+    actions ? actions.map((a) => h("button", { class: "toast-btn", onclick: () => { closeToast(x); a.run(); } }, a.label)) : null,
+    actions ? h("button", { class: "toast-x", title: "Close", onclick: () => closeToast(x) }, "✕") : null);
+  TOASTS.unshift(x);
+  $("#toasts").append(x.el);
+  startToast(x);
+  return x.el;
+}
+function startToast(x) { clearTimeout(x.timer); if (!toastsHeld) x.timer = setTimeout(() => closeToast(x), x.ms); stackToasts(); }
+function closeToast(x) {
+  clearTimeout(x.timer);
+  const i = TOASTS.indexOf(x);
+  if (i < 0) return;
+  TOASTS.splice(i, 1);
+  x.el.classList.add("out");
+  setTimeout(() => x.el.remove(), 220);
+  stackToasts();
+}
+function holdToasts(on) {
+  if (on === toastsHeld) return;
+  toastsHeld = on;
+  for (const x of TOASTS) { clearTimeout(x.timer); if (!on) x.timer = setTimeout(() => closeToast(x), Math.min(x.ms, 2600)); }
+  stackToasts();
+}
+function stackToasts() {
+  let y = 0;
+  const front = TOASTS[0]?.el.offsetHeight || 0;
+  TOASTS.forEach((x, i) => {
+    const el = x.el;
+    el.style.zIndex = String(100 - i);
+    // Collapsed, each one behind shows its top edge a clear step above the one in front (whatever their
+    // heights) and is a little smaller and dimmer, so the deck shows there are more.
+    const scale = 1 - i * 0.04, lift = front + i * 10 - el.offsetHeight * scale;
+    el.style.transform = toastsHeld ? `translate(-50%, ${-y}px)` : `translate(-50%, ${-lift}px) scale(${scale})`;
+    el.style.opacity = toastsHeld || i < 3 ? "" : "0";
+    el.style.filter = toastsHeld || i === 0 ? "" : `brightness(${1 - i * 0.22})`; // darker, but solid: see-through would show the next one's words
+    el.style.pointerEvents = toastsHeld || i === 0 ? "auto" : "none";
+    y += el.offsetHeight + 8;
+  });
 }
 
 // ----------------------------------------------------------------------------- others' changes
@@ -1164,14 +1341,17 @@ function showNews({ pages }) {
 // ----------------------------------------------------------------------------- deleting a page
 
 async function deletePage(page = S.path) {
-  if (!page || S.readOnly) return;
+  if (!page || S.readOnly || undeletable(page)) return; // the top pages and templates can't be deleted
   const open = page === S.path;
   const title = (open ? pageTitle() : S.files.find((f) => f.path === page)?.title) || page.split("/").pop().replace(/\.md$/, "");
-  const links = await panels.linksFor(page).catch(() => null);
-  const inbound = links?.inbound?.length || 0;
+  // Everything that refers to it (links, groups, based-on, query blocks: src/refs.js) is left pointing at nothing.
+  const refs = (await api("/api/refs?page=" + encodeURIComponent(page)).catch(() => null))?.refs || [];
+  const by = (kind) => new Set(refs.filter((r) => r.kind === kind).map((r) => r.from)).size;
+  const n = (k, one, many) => (k ? `${k} page${k > 1 ? "s " + many : " " + one}` : "");
+  const said = [n(by("link"), "links to it", "link to it"), n(by("group"), "lists it as a group", "list it as a group"), n(by("variant"), "is a variant of it", "are variants of it"), n(by("query"), "has a list that names it", "have lists that name it")].filter(Boolean);
   const comments = open && notes.state.page === page ? notes.state.notes.length : 0;
   const more = [
-    inbound ? `${inbound} page${inbound > 1 ? "s link" : " links"} to it; those links will show as broken.` : "",
+    said.length ? said.join(", ").replace(/, ([^,]*)$/, " and $1") + "; all of those will point at nothing (To-do lists them)." : "",
     comments ? `Its ${comments} comment${comments > 1 ? "s stay" : " stays"} in the comment history.` : "",
   ].filter(Boolean).join(" ");
   const c = await ask("Delete this page?", `<b>${esc(title)}</b> (${esc(page)}) is deleted for everyone. ${more} You can undo it straight after, and its history stays in git.`,
@@ -1204,9 +1384,8 @@ function wire() {
   buildToolbar();
   $("#sourceBtn").addEventListener("click", () => setMode(S.mode === "source" ? "edit" : "source"));
   $("#quickOpen").addEventListener("click", quickOpen);
-  $("#updateBtn").addEventListener("click", installUpdate);
   api("/api/update").then(showUpdate, () => {});
-  $("#syncBtn").addEventListener("click", syncNow);
+  startPreview();
   $("#newPage").addEventListener("click", newPageDialog);
   $("#deleteBtn").addEventListener("click", deletePage);
   $("#helpBtn").addEventListener("click", helpDialog);
@@ -1279,44 +1458,105 @@ function wire() {
 
 // ----------------------------------------------------------------------------- syncing
 
-// The Sync icon in the title bar: its tooltip says where things stand; a click syncs now, including
-// doc changes made outside the Codex (automatic sync only sends what was saved here). src/sync.js.
-let syncState = null, syncAgo = null;
+// Sharing (src/sync.js). There's no Sync button: what's typed here is sent by itself, and the status line
+// says how it stands (updateStatus). Edits the Codex won't send by itself (R'th AI's, another program's)
+// are asked about in the panel in the bottom-left corner: Share, Review or Undo. Problems that need
+// someone (two people changing the same lines, sending failing) are asked there too. Unanswered, they
+// stay on this computer and are asked again when the Codex opens next.
+let syncState = null, syncAgo = null, heldTimer = null, heldShown = [];
 function showSync(v) {
   // A sync just finished: the page list's "changed" dots follow git, so refresh them.
   if (syncState && v.lastSync && v.lastSync !== syncState.lastSync) { notesChanged(); refreshSpecialCounts(); }
   syncState = v;
-  const btn = $("#syncBtn");
-  btn.classList.toggle("hidden", v.enabled === null);
-  btn.classList.toggle("busy", !!v.busy);
-  btn.classList.toggle("warn", !!(v.problem || v.enabled === false));
-  const waiting = v.waiting || 0;
-  $("#syncLabel").textContent = v.busy ? "Syncing…" : waiting ? String(waiting) : "";
-  const lines = [];
-  if (v.enabled === false) lines.push(v.reason);
-  else {
-    if (v.busy) lines.push("Syncing…");
-    else if (v.lastSync) lines.push("Synced " + agoText(v.lastSync));
-    else lines.push("Not synced yet this session");
-    if (waiting) lines.push(`${waiting} change${waiting > 1 ? "s" : ""} to pages waiting to be sent` + (v.outside ? ` (${v.outside} made outside the Codex: sent when you press Sync)` : ""));
-    if (v.behind) lines.push(`${v.behind} change${v.behind > 1 ? "s" : ""} from others to fetch`);
-    if (v.problem) lines.push(v.problem);
-    lines.push("Click to sync now");
-  }
-  btn.title = lines.join("\n");
+  updateStatus();
+  // Held pages are asked about once writing has settled for a moment, so a batch is one question.
+  const held = v.held || [];
+  clearTimeout(heldTimer);
+  if (!held.length) { heldShown = []; drawSharePanel(); }
+  else heldTimer = setTimeout(() => { heldShown = syncState.held || []; drawSharePanel(); }, 3000);
+  drawSharePanel();
+  aiChanges.heldChanged?.();
   clearInterval(syncAgo);
-  syncAgo = setInterval(() => syncState && !syncState.busy && showSync(syncState), 30000);
+  syncAgo = setInterval(() => syncState && updateStatus(), 30000); // "sent 2 minutes ago" stays true
 }
-// Two people changed the same lines of a page: keep one version whole.
-function clashBanner(v) {
-  showBanner(`${v.clash.join(", ")} ${v.clash.length > 1 ? "were" : "was"} changed in the same place by you and someone else. Which version should stay?`, [
-    { label: "Keep mine", cls: "btn-gold", run: () => settle("mine") },
-    { label: "Use theirs", run: () => settle("theirs") },
-    { label: "Decide later", run: hideBanner },
-  ]);
+
+/** The open page's place in sharing, in a few words for the status line. */
+function syncWords() {
+  const v = syncState;
+  if (!v || v.enabled !== true) return { text: "Saved", cls: "saved", title: v?.reason || "" };
+  const heldHere = (v.held || []).some((x) => x.path === S.path);
+  if (!v.auto && !heldHere) return { text: "Saved", cls: "saved", title: "This version doesn't share by itself" };
+  if (heldHere) return { text: "Saved, not shared yet", cls: "unsaved", title: "Waiting for you to share it (bottom left)" };
+  if (v.offline) return { text: "Saved, offline: sent when you're back", cls: "muted", title: v.problem };
+  if (v.problem) return { text: "Saved, not sent", cls: "unsaved", title: v.problem };
+  if (v.busy || v.sending || v.ahead) return { text: "Sending…", cls: "muted" };
+  return { text: "Saved and sent", cls: "saved", title: v.lastSync ? "Sent " + agoText(v.lastSync) : "" };
 }
+
+/** The panel in the bottom-left corner: what the Codex needs an answer about before it can share. */
+function drawSharePanel() {
+  let panel = $("#sharePanel");
+  const v = syncState || {};
+  const cards = [];
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  const groups = [["ai", "R'th AI"], ["other", "Another program"]];
+  for (const [by, who] of groups) {
+    const pages = heldShown.filter((x) => x.by === by);
+    if (!pages.length) continue;
+    const files = pages.map((x) => x.path);
+    cards.push(h("div", { class: "sp-card" },
+      h("div", { class: "sp-title" }, `${who} changed ${plural(pages.length, "page", "pages")}. Share ${pages.length === 1 ? "it" : "them"}?`),
+      // The first few by name; a long list ends "and 39 more" (all of them are in what Share and Undo do).
+      h("div", { class: "sp-pages" }, pages.slice(0, 6).map((x, i) => [i ? ", " : "",
+        x.gone ? h("span", { class: "sp-gone" }, "deleted " + x.title) : h("a", { onclick: () => reviewPages([x]) }, x.title)]),
+        pages.length > 6 ? ` and ${pages.length - 6} more` : null),
+      h("div", { class: "sp-actions" },
+        h("button", { class: "btn btn-gold btn-small", onclick: () => sharePages(files) }, "Share"),
+        pages.some((x) => !x.gone) ? h("button", { class: "btn btn-small", onclick: () => reviewPages(pages) }, "Review") : null,
+        h("button", { class: "btn btn-small", onclick: () => undoPages(pages, who) }, "Undo"))));
+  }
+  if (v.clash) cards.push(h("div", { class: "sp-card" },
+    h("div", { class: "sp-title" }, `You and someone else changed the same lines of ${v.clash.join(", ")}. Which version should stay?`),
+    h("div", { class: "sp-actions" },
+      h("button", { class: "btn btn-gold btn-small", onclick: () => settle("mine") }, "Keep mine"),
+      h("button", { class: "btn btn-small", onclick: () => settle("theirs") }, "Use theirs"))));
+  else if (v.problem && !v.offline && v.enabled === true) cards.push(h("div", { class: "sp-card" },
+    h("div", { class: "sp-title" }, "Your changes couldn't be sent."),
+    h("div", { class: "sp-text" }, v.problem),
+    h("div", { class: "sp-actions" },
+      h("button", { class: "btn btn-small", onclick: async () => showSync(await api("/api/sync?why=retry", { method: "POST" })) }, "Try again"))));
+  if (!cards.length) { panel?.remove(); return; }
+  if (!panel) { panel = h("div", { id: "sharePanel" }); document.body.append(panel); }
+  panel.replaceChildren(...cards);
+}
+
+async function sharePages(files) {
+  await save(false, { quiet: true });
+  const v = await api("/api/sync/share", { method: "POST", body: JSON.stringify({ files }) });
+  showSync(v);
+  if (!v.problem) toast(`Shared ${files.length === 1 ? "the page" : files.length + " pages"}`, "good");
+  aiChanges.load();
+}
+/** Open the pages one by one with their changes marked; the page's own bar then offers Share. */
+async function reviewPages(pages) {
+  const first = pages.find((x) => !x.gone);
+  if (!first) return;
+  if (S.path !== first.path) await openDoc(first.path);
+  aiChanges.show();
+}
+async function undoPages(pages, who) {
+  const n = pages.length;
+  const list = pages.map((x) => `<li>${esc(x.title)}</li>`).join("");
+  const k = await ask(`Undo ${who === "Another program" ? "another program" : who}'s changes?`, `${n === 1 ? "This page goes" : "These pages go"} back to how ${n === 1 ? "it was" : "they were"} last shared:<ul>${list}</ul>`,
+    [{ key: "no", label: "Cancel" }, { key: "yes", label: "Undo the changes", cls: "btn-danger" }]);
+  if (k !== "yes") return;
+  const v = await api("/api/sync/discard", { method: "POST", body: JSON.stringify({ files: pages.map((x) => x.path) }) });
+  showSync(v);
+  if (pages.some((x) => x.path === S.path)) openDoc(S.path, { push: false, keepScroll: true });
+  toast("Undone", "good");
+}
+
 async function settle(keep) {
-  hideBanner();
   const v = await api("/api/sync/resolve", { method: "POST", body: JSON.stringify({ keep }) });
   showSync(v);
   if (v.problem) toast(v.problem, "bad"); else toast(keep === "mine" ? "Kept your version, and synced" : "Took their version, and synced", "good");
@@ -1327,20 +1567,6 @@ function agoText(t) {
   const s = (Date.now() - t) / 1000;
   return s < 60 ? "just now" : s < 3600 ? `${Math.round(s / 60)} min ago` : `${Math.round(s / 3600)} h ago`;
 }
-async function syncNow() {
-  if (syncState?.enabled === false) { toast(syncState.reason, "bad"); return; }
-  if (syncState?.busy) return;
-  await save(false, { quiet: true }); // what's being typed goes too
-  const v = await api("/api/sync?all=1&why=button", { method: "POST" });
-  showSync(v);
-  if (v.clash) clashBanner(v);
-  else if (v.problem) toast(v.problem, "bad");
-  else if (v.lastResult) {
-    const { sent, got } = v.lastResult;
-    toast(sent || got ? `Synced: ${sent ? `sent ${sent} change${sent > 1 ? "s" : ""}` : ""}${sent && got ? ", " : ""}${got ? `fetched ${got} from others` : ""}` : "Synced: everything is up to date", "good");
-  }
-}
-
 /** Is the keyboard busy with text (the page, a field)? Then single-key shortcuts stay out of the way. */
 const typing = () => !!document.activeElement?.closest?.(".ProseMirror, input, textarea, select, [contenteditable]");
 
@@ -1361,7 +1587,7 @@ function showView(kind, push = true) {
   $("#statusView").classList.remove("hidden");
   $("#statusView").replaceChildren();
   $("#crumbs").replaceChildren(h("span", { class: "leaf" }, VIEWS[kind].title));
-  document.title = VIEWS[kind].title + " · Codex";
+  document.title = VIEWS[kind].title + " - Codex";
   if (push) history.pushState({ view: kind }, "", "?view=" + VIEWS[kind].url);
   $$(".t-row.current").forEach((r) => r.classList.remove("current"));
   $(`.t-special[data-view="${kind}"]`)?.classList.add("current");
@@ -1370,6 +1596,8 @@ function showView(kind, push = true) {
 function hideView() {
   if (!S.view) return;
   S.view = null;
+  // A To-do fix changed the open page while it was hidden: read it again.
+  if (S.reloadOpen && S.path) { S.reloadOpen = false; setTimeout(() => openDoc(S.path, { push: false, keepScroll: true }), 0); }
   document.body.classList.remove("view-status");
   $("#main").classList.remove("view-status");
   $("#statusView").classList.add("hidden");
@@ -1427,7 +1655,7 @@ function scrollToPos(pos, onlyIfHidden = false) {
   } catch {}
 }
 
-const panels = makePanels({ S, $, h, api, toast, isMeta, openDoc: (...a) => openDoc(...a), newPage: (prefill) => newPageDialog(null, prefill), findInPage: (q) => findInPage(q), setLinksCount, countsChanged: () => refreshSpecialCounts() });
+const panels = makePanels({ S, $, h, api, toast, isMeta, ask: (...a) => ask(...a), save: () => save(false, { quiet: true }), loadTree: () => loadTree(), openDoc: (...a) => openDoc(...a), newPage: (prefill) => newPageDialog(null, prefill), findInPage: (q) => findInPage(q), setLinksCount, countsChanged: () => refreshSpecialCounts() });
 const notes = makeNotes({
   S, $, $$, h, esc, api, toast, modal, ask, renderHtml,
   openDoc: (...a) => openDoc(...a), refreshDirty: () => refreshDirty(), currentHeadingPos, scrollToPos,
@@ -1484,7 +1712,8 @@ const account = makeAccountButton({ $, h, api, toast, onChange: (v) => {
   if (ro !== !!S.readOnly) { S.readOnly = ro; if (S.editor) applyMode(); }
 } });
 // Show changes: what the AI changed on the open page (src/ai-changes.js).
-const aiChanges = makeAiChanges({ S, $, h, api, toast, scrollToPos });
+const aiChanges = makeAiChanges({ S, $, h, api, toast, scrollToPos,
+  held: (page) => (syncState?.held || []).find((x) => x.path === page) || null, share: (page) => sharePages([page]) });
 const ai = makeAi({
   S, $, h, api, toast, renderHtml, notes,
   openDoc: (...a) => openDoc(...a), hasPage: (p) => S.fileSet.has(p), titleOf: (p) => S.files.find((f) => f.path === p)?.title || null,
@@ -1525,25 +1754,72 @@ start();
 // For checking in the browser's console: the state, and the merge.
 // ----------------------------------------------------------------------------- updates
 
-// The installed Codex downloads a new release quietly (electron/main.js); the title bar then shows a
-// blue Update button: a click saves, sends, installs and opens the new Codex. While it downloads, the
-// button shows how far along it is.
+// One way to update: the update screen, over the whole Codex, so it's always up to date when used.
+// - A new release: the installed Codex downloads it quietly (electron/main.js); once it's here, the
+//   screen says so and Restart and update is the only way on.
+// - Too old to use (the helper's MIN_CODEX, helper/src/version.js; src/codex-version.js): the screen
+//   comes at once, with the download's progress, and nothing more can be changed or sent.
+// The open page is saved the moment the screen appears; Restart and update saves and sends everything
+// before installing (electron/main.js, installUpdate).
 let updateView = { state: "none" };
-function showUpdate(v) {
+let requiredView = null; // { current, min, outdated }, from the engine (src/codex-version.js)
+let installed = true;    // the desktop app (it can update itself), not the browser version
+function showUpdate(v, fromPreview = false) {
+  if (previewing && !fromPreview) return; // a preview holds the screen still (startPreview)
+  if (v?.required) requiredView = v.required;
+  if (v && "installed" in v) installed = v.installed;
   updateView = v || { state: "none" };
-  const btn = $("#updateBtn");
-  if (!btn) return;
-  const st = updateView.state;
-  btn.classList.toggle("hidden", st === "none");
-  btn.classList.toggle("ready", st === "ready");
-  btn.classList.toggle("busy", st === "downloading" || st === "installing");
-  btn.disabled = st !== "ready";
-  $("#updateLabel").textContent = st === "downloading" ? updateView.percent + "%" : st === "installing" ? "Updating…" : "Update";
-  btn.title = st === "ready" ? `R'th Codex ${updateView.version} is ready. Click to update: your changes are saved and sent, and the Codex opens again`
-    : st === "downloading" ? `Downloading R'th Codex ${updateView.version}…`
-    : st === "installing" ? "Updating: the Codex opens again in a moment" : "";
+  showUpdateScreen();
 }
+
+function showUpdateScreen() {
+  let el = $("#requiredScreen");
+  const st = updateView.state;
+  const required = !!requiredView?.outdated;
+  const shown = required || st === "ready" || st === "installing";
+  $("#app").inert = shown; // nothing under the screen can be clicked or typed into
+  if (!shown) { el?.remove(); return; }
+  if (!el && !previewing) window.__codex.flush().catch(() => {}); // save the open page first, whatever happens next
+  // Where to get the new Codex by hand: the latest release's page (its installer updates this one in place).
+  const download = (label) => h("a", { class: "rq-download", href: "https://github.com/Martifugit/rth/releases/latest", target: "_blank", rel: "noopener" }, label);
+  const status = !installed
+    ? h("p", { class: "rq-status" }, download("Download the new Codex"), ", run it, then open the Codex again.")
+    : st === "ready" ? h("div", {}, h("button", { class: "btn btn-gold rq-go", onclick: installUpdate }, "Restart and update"),
+        h("p", { class: "rq-alt" }, "Your work is saved before the Codex restarts."))
+    : st === "installing" ? h("p", { class: "rq-status" }, "Saving your work and updating: the Codex opens again in a moment…")
+    : st === "downloading" ? h("div", { class: "rq-progress" }, h("div", { class: "rq-bar" }, h("span", { style: `width:${updateView.percent || 0}%` })), h("p", { class: "rq-status" }, `Downloading ${updateView.version || "the update"}… ${updateView.percent || 0}%`))
+    : h("div", {}, h("p", { class: "rq-status" }, "Looking for the update…"),
+        h("p", { class: "rq-alt" }, "If it doesn't come, ", download("download the new Codex"), " and run it."));
+  const [title, text] = required
+    ? ["An update is needed", `A new release of the R'th Codex has changes this version (${requiredView.current}) can't work with. `
+      + `Update to version ${requiredView.min} or newer to keep using the Codex.`]
+    : ["An update is ready", `Version ${updateView.version || "a new version"} of the R'th Codex is here. Restart to start using it.`];
+  // The same pane as the Codex's other pages (src/codex-page.js): a title bar, then the message.
+  const box = h("div", { class: "rq-box" },
+    h("div", { class: "rq-bar-top" }, h("img", { src: "/logo.png", alt: "" }), h("span", {}, "R'th Codex")),
+    h("div", { class: "rq-body" }, h("h2", { class: "rq-title" }, title), h("p", { class: "rq-text" }, text), status));
+  if (!el) { el = h("div", { id: "requiredScreen", class: "rq" }); document.body.append(el); }
+  el.replaceChildren(box);
+}
+
+/**
+ * How updating looks, without an update: ?preview=ready (a new release, ready), ?preview=required (too
+ * old: the screen while it downloads, over and over) or ?preview=required-ready.
+ * For judging the look only; nothing is downloaded or installed.
+ */
+function startPreview() {
+  previewing = PREVIEW;
+  if (!previewing) return;
+  const required = previewing.startsWith("required") ? { current: "0.3.0", min: "0.4.0", outdated: true } : null;
+  const show = (state, percent) => showUpdate({ state, version: "0.4.0", percent, installed: true, ...(required ? { required } : {}) }, true);
+  if (previewing.endsWith("ready")) return show("ready", 100);
+  let p = 0;
+  show("downloading", 0);
+  setInterval(() => { p = p >= 100 ? 0 : Math.min(100, p + 3 + Math.round(Math.random() * 6)); show("downloading", p); }, 350);
+}
+
 async function installUpdate() {
+  if (previewing) return toast("A preview: nothing to install");
   if (updateView.state !== "ready") return;
   showUpdate({ ...updateView, state: "installing" });
   const r = await api("/api/update/install", { method: "POST" });
