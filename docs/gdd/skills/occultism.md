@@ -19,5 +19,5 @@ status: stub
 ## Progression
 
 - Stages:
-- Curves:
+- Curves: Normal
 - Milestones:
