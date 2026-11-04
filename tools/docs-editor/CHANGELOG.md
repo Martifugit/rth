@@ -4,6 +4,10 @@ A few plain lines per version, for the people using it: `npm run release` puts t
 the GitHub release and announces it in #codex (`scripts/release.mjs`, `scripts/announce.mjs`). Write the
 section before releasing; the release refuses without one.
 
+## 0.3.3
+
+- The Add a link window is bigger, and its page list is part of it: always showing, with room for about fourteen results before it scrolls.
+
 ## 0.3.2
 
 - The page path at the top sits level with the buttons beside it (it was about 2px high).

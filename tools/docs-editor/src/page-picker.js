@@ -9,17 +9,19 @@ import { slugOf } from "./frontmatter.js";
  * { h, pages: [{ path, title, note }], placeholder, onPick(page), create: { label(q), run(q) } | null }.
  * Returns the element: an input with a list under it.
  */
-export function pagePicker({ h, pages, placeholder = "Find a page…", onPick, create = null }) {
+// inline: the list is part of the window, always shown and of a fixed height (the link window), rather
+// than a dropdown over it: a window that is mostly the list doesn't need to scroll at the fourth result.
+export function pagePicker({ h, pages, placeholder = "Find a page…", onPick, create = null, inline = false }) {
   const input = h("input", { class: "field pp-input", placeholder, spellcheck: "false", autocomplete: "off" });
-  const list = h("div", { class: "pp-list hidden" });
-  const wrap = h("div", { class: "pp" }, input, list);
+  const list = h("div", { class: "pp-list" + (inline ? "" : " hidden") });
+  const wrap = h("div", { class: "pp" + (inline ? " inline" : "") }, input, list);
   let items = [], at = 0;
   const norm = (s) => String(s || "").toLowerCase().trim();
 
   const draw = () => {
     const q = norm(input.value);
     const asId = q.replace(/[^a-z0-9]+/g, "-");
-    const hits = pages.filter((p) => !q || norm(p.title).includes(q) || slugOf(p.path).includes(asId)).slice(0, 40);
+    const hits = pages.filter((p) => !q || norm(p.title).includes(q) || slugOf(p.path).includes(asId)).slice(0, inline ? 200 : 40);
     items = hits.map((p) => ({ label: [h("span", { class: "pp-title" }, p.title || slugOf(p.path)), p.note ? h("span", { class: "pp-note" }, p.note) : null], run: () => onPick(p) }));
     const typed = input.value.trim(); // kept now: choosing clears the input before running
     if (create && q && !pages.some((p) => norm(p.title) === q)) items.push({ label: h("span", { class: "pp-create" }, create.label(typed)), run: () => create.run(typed) });
@@ -32,12 +34,13 @@ export function pagePicker({ h, pages, placeholder = "Find a page…", onPick, c
   };
   const mark = () => [...list.children].forEach((b, i) => b.classList.toggle("on", i === at));
   const open = () => { list.classList.remove("hidden"); draw(); };
-  const close = () => list.classList.add("hidden");
+  const close = () => { if (!inline) list.classList.add("hidden"); };
   const choose = (i) => {
     const it = items[i];
     if (!it?.run) return;
     input.value = "";
     close();
+    if (inline) draw();
     it.run();
   };
 
@@ -49,5 +52,6 @@ export function pagePicker({ h, pages, placeholder = "Find a page…", onPick, c
     else if (e.key === "ArrowUp") { e.preventDefault(); at = Math.max(0, at - 1); mark(); list.children[at]?.scrollIntoView({ block: "nearest" }); }
     else if (e.key === "Enter") { e.preventDefault(); choose(at); }
   });
+  if (inline) draw(); // shown from the start: every page, before anything's typed
   return wrap;
 }

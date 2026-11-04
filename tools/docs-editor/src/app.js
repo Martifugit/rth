@@ -919,12 +919,12 @@ async function welcome() {
   ], { width: "min(520px, 94vw)" });
 }
 
-function modal(title, body, { onClose, width } = {}) {
+function modal(title, body, { onClose, width, cls } = {}) { // cls: a class of its own (the link window)
   const host = $("#modalHost");
   const close = () => { host.replaceChildren(); document.removeEventListener("keydown", onKey, true); onClose && onClose(); };
   const onKey = (e) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(); } };
   document.addEventListener("keydown", onKey, true);
-  const win = h("div", { class: "window modal", style: width ? `width:${width}` : null },
+  const win = h("div", { class: "window modal" + (cls ? " " + cls : ""), style: width ? `width:${width}` : null },
     h("div", { class: "titlebar" }, h("span", { class: "ico ico-scripture" }), h("span", { class: "win-title" }, title), h("button", { class: "close-x", title: "Close (Esc)", onclick: close }, "✕")),
     h("div", { class: "win-body" }, body));
   const back = h("div", { class: "backdrop", onmousedown: (e) => { if (e.target === back) close(); } }, win);
@@ -966,7 +966,7 @@ function linkDialog() {
   const pages = S.files.filter((f) => f.path !== S.path && !f.path.startsWith(TEMPLATES + "/"))
     .map((f) => ({ path: f.path, title: f.title || f.path.split("/").pop().replace(/\.md$/, ""), note: f.path.slice(GDD.length + 1).split("/").slice(0, -1).join("/") }));
   const picker = pagePicker({
-    h, pages, placeholder: "Find a page, or type https://… or #a-heading",
+    h, pages, placeholder: "Find a page, or type https://… or #a-heading", inline: true,
     onPick: (p) => apply(relativePath(S.path, p.path), p.title),
     create: {
       label: (q) => (/^(https?:|mailto:|#)/i.test(q) ? `Link to ${q}` : `Link to “${q}”, not written yet (a to-do)`),
@@ -982,7 +982,7 @@ function linkDialog() {
     h("div", { class: "modal-actions", style: "margin-top:14px" },
       current ? h("button", { class: "btn btn-danger", onclick: () => { close(); e.chain().focus().extendMarkRange("link").unsetLink().run(); } }, "Remove link") : null,
       h("button", { class: "btn", onclick: () => close() }, "Cancel")),
-  ], { width: "min(560px, 94vw)" });
+  ], { width: "min(680px, 94vw)", cls: "link-modal" });
   setTimeout(() => picker.querySelector("input")?.focus(), 0);
 }
 
