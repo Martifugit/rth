@@ -18,7 +18,16 @@ import { Extension } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { split, setField, make, slugOf, STATUSES } from "./frontmatter.js";
-import { GDD, TEMPLATES, isMeta, inGdd, headingOf, nameOf, componentSection } from "./gdd.js";
+import { GDD, TEMPLATES, isMeta, inGdd, headingOf, nameOf, componentSection, folderPath, typeAt } from "./gdd.js";
+
+// A widget that fails to draw must never take the editor down with it (the page would no longer be
+// the page it says it is): it draws nothing and says why in the console.
+function safe(draw, h) {
+  return () => {
+    try { return draw() || document.createElement("span"); }
+    catch (e) { console.error("[gdd] couldn't draw part of the page", e); return document.createElement("span"); }
+  };
+}
 
 const cap = (s) => String(s || "").replace(/^./, (c) => c.toUpperCase());
 
@@ -38,7 +47,8 @@ export function makeGddUi(get) {
 
   const front = () => split(get().S.front + "\n").data;
   const shown = () => { const p = get().S.path; return !!p && inGdd(p) && !isMeta(p); };
-  const typeOfFolder = (path) => get().S.types.find((t) => path.startsWith(GDD + "/" + t.folder + "/"));
+  const typeOfFolder = (path) => typeAt(get().S.types, path);
+  const groupFolder = () => { const g = get().S.types.find((t) => t.type === "group"); return g ? folderPath(g) : GDD + "/groups"; };
   const pageOfSlug = (slug) => get().S.files.find((f) => slugOf(f.path) === slug && !f.path.startsWith(TEMPLATES + "/")) || null;
   const setFront = (key, value) => { get().setFront(setField(get().S.front, key, value)); refresh(); };
 
@@ -68,7 +78,7 @@ export function makeGddUi(get) {
     const chip = (g) => {
       const p = pageOfSlug(g);
       return h("a", { class: "gdd-chip" + (p ? "" : " todo"), title: p ? p.path : `No page for “${g}” yet: click to write it`,
-        onclick: () => (p ? get().openDoc(p.path) : get().newPage({ path: GDD + "/" + (S.types.find((t) => t.type === "group")?.folder || "groups") + "/" + g + ".md", title: cap(g.replace(/-/g, " ")) })) }, p?.title || cap(g.replace(/-/g, " ")));
+        onclick: () => (p ? get().openDoc(p.path) : get().newPage({ path: groupFolder() + "/" + g + ".md", title: cap(g.replace(/-/g, " ")) })) }, p?.title || cap(g.replace(/-/g, " ")));
     };
     el.append(...fm.groups.map(chip));
     if (!ro) el.append(h("button", { class: "gdd-add", title: "Groups this page belongs to, and what it's a variant of", onclick: (e) => groupPicker(e, fm) }, fm.groups.length ? "+" : "+ group"));
@@ -89,7 +99,7 @@ export function makeGddUi(get) {
 
   function groupPicker(ev, fm) {
     const { S } = get();
-    const folder = GDD + "/" + (S.types.find((t) => t.type === "group")?.folder || "groups") + "/";
+    const folder = groupFolder() + "/";
     const groups = S.files.filter((f) => f.path.startsWith(folder)).sort((a, b) => String(a.title).localeCompare(String(b.title)));
     const have = new Set(fm.groups);
     const toggle = (slug) => setFront("groups", have.has(slug) ? fm.groups.filter((g) => g !== slug) : [...fm.groups, slug]);
@@ -167,20 +177,20 @@ export function makeGddUi(get) {
     if (!r) {
       generated.set(page, "pending");
       const v = version;
-      api("/api/generated?page=" + encodeURIComponent(page)).then((x) => { if (v === version && x.ok) { generated.set(page, x); refresh(); } });
+      api("/api/generated?page=" + encodeURIComponent(page)).then((x) => { if (v === version && x.ok && Array.isArray(x.links)) { generated.set(page, x); refresh(); } });
     }
     const box = h("aside", { class: "gdd-box", contenteditable: "false" });
     if (!r || r === "pending") return box;
     const open = (p) => h("a", { onclick: () => get().openDoc(p.path), title: p.path }, p.title || slugOf(p.path));
     const row = (label, pages) => h("div", { class: "gdd-box-row" }, h("span", { class: "gdd-box-label" }, label), h("span", { class: "gdd-box-pages" }, pages.flatMap((p, i) => (i ? [", ", open(p)] : [open(p)]))));
     const parts = [];
-    if (r.members) parts.push(row("Members", r.members));
-    if (r.training) {
+    if (Array.isArray(r.members) && r.members.length) parts.push(row("Members", r.members));
+    if (r.training && Array.isArray(r.training.rows)) {
       const cols = r.training.columns.filter((c) => ["level", "verb", "xp", "tool"].includes(c));
       parts.push(h("div", { class: "gdd-box-row" }, h("span", { class: "gdd-box-label" }, "Trained by"),
         h("table", { class: "gdd-box-table" }, r.training.rows.map((x) => h("tr", {}, h("td", {}, open(x)), x.name ? h("td", {}, x.name) : null, cols.map((c) => h("td", {}, plain(x.fields[c] || ""))))))));
     }
-    for (const g of r.links) parts.push(row(g.label, g.pages));
+    for (const g of Array.isArray(r.links) ? r.links : []) parts.push(row(g.label, g.pages));
     if (!parts.length) parts.push(h("div", { class: "gdd-dim" }, "Nothing links here yet."));
     box.append(h("div", { class: "gdd-box-title" }, "Links to this page"), ...parts);
     return box;
@@ -207,6 +217,7 @@ export function makeGddUi(get) {
     if (!r || r === "pending") { box.append(h("div", { class: "q-note" }, "Gathering…")); return box; }
     if (r.error) { box.append(h("div", { class: "q-note bad" }, r.error)); return box; }
     const open = (p) => h("a", { class: "q-page", onclick: () => get().openDoc(p.path), title: p.path }, p.title || slugOf(p.path));
+    if (!Array.isArray(r.rows)) { box.append(h("div", { class: "q-note bad" }, "Codex needs a restart to gather this list.")); return box; }
     if (!r.rows.length) box.append(h("div", { class: "q-note" }, "Nothing yet. Pages appear here as they're written."));
     else if (r.kind === "pages") box.append(h("ul", { class: "q-list" }, r.rows.map((p) => h("li", {}, open(p), p.type ? h("span", { class: "q-type" }, p.type) : null))));
     else {
@@ -229,23 +240,28 @@ export function makeGddUi(get) {
       let title = null;
       doc.forEach((n, pos) => { if (!title && n.type.name === "heading" && n.attrs.level === 1) title = { n, pos }; });
       if (title) {
-        if (fm?.type) decos.push(Decoration.widget(title.pos + title.n.nodeSize - 1, () => typeLabel(fm), { side: 1, key: "type:" + key, ignoreSelection: true, stopEvent: () => true }));
+        if (fm?.type) decos.push(Decoration.widget(title.pos + title.n.nodeSize - 1, safe(() => typeLabel(fm)), { side: 1, key: "type:" + key, ignoreSelection: true, stopEvent: () => true }));
         if (fm?.status === "cut") decos.push(Decoration.node(title.pos, title.pos + title.n.nodeSize, { class: "gdd-cut" }));
       }
       const at = title ? title.pos + title.n.nodeSize : 0;
-      if (fm?.["based-on"]) decos.push(Decoration.widget(at, () => variantLine(fm), { side: -2, key: "variant:" + key, ignoreSelection: true, stopEvent: () => true }));
-      decos.push(Decoration.widget(at, () => strip(fm), { side: -1, key: "strip:" + key, ignoreSelection: true, stopEvent: () => true }));
+      if (fm?.["based-on"]) decos.push(Decoration.widget(at, safe(() => variantLine(fm)), { side: -2, key: "variant:" + key, ignoreSelection: true, stopEvent: () => true }));
+      decos.push(Decoration.widget(at, safe(() => strip(fm)), { side: -1, key: "strip:" + key, ignoreSelection: true, stopEvent: () => true }));
       const g = generated.get(S.path);
-      decos.push(Decoration.widget(doc.content.size, () => linksBox(), { side: 1, key: "box:" + version + ":" + S.path + ":" + (g ? (g === "pending" ? "p" : "r") : "n"), ignoreSelection: true, stopEvent: () => true }));
+      decos.push(Decoration.widget(doc.content.size, safe(() => linksBox()), { side: 1, key: "box:" + version + ":" + S.path + ":" + (g ? (g === "pending" ? "p" : "r") : "n"), ignoreSelection: true, stopEvent: () => true }));
     }
     doc.descendants((node, pos) => {
       if (node.type.name !== "codeBlock" || node.attrs.language !== "query") return node.isBlock && node.type.name !== "codeBlock";
       const key = S.path + "\n" + node.textContent;
       const r = results.get(key);
-      decos.push(Decoration.widget(pos + node.nodeSize, () => listView(node), { side: 1, key: "q:" + version + ":" + key + ":" + (r ? (r === "pending" ? "p" : "r") : "n"), ignoreSelection: true, stopEvent: () => true }));
+      decos.push(Decoration.widget(pos + node.nodeSize, safe(() => listView(node)), { side: 1, key: "q:" + version + ":" + key + ":" + (r ? (r === "pending" ? "p" : "r") : "n"), ignoreSelection: true, stopEvent: () => true }));
       return false;
     });
     return DecorationSet.create(doc, decos);
+  }
+
+  function safeDecorations(doc) {
+    try { return decorations(doc); }
+    catch (e) { console.error("[gdd] couldn't lay out the page's header", e); return DecorationSet.empty; }
   }
 
   const Extension_ = Extension.create({
@@ -254,8 +270,8 @@ export function makeGddUi(get) {
       return [new Plugin({
         key: refreshKey,
         state: {
-          init: (_, state) => decorations(state.doc),
-          apply: (tr, old) => (tr.docChanged || tr.getMeta(refreshKey) ? decorations(tr.doc) : old.map(tr.mapping, tr.doc)),
+          init: (_, state) => safeDecorations(state.doc),
+          apply: (tr, old) => (tr.docChanged || tr.getMeta(refreshKey) ? safeDecorations(tr.doc) : old.map(tr.mapping, tr.doc)),
         },
         props: { decorations(state) { return this.getState(state); } },
       })];

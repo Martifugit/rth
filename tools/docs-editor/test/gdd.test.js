@@ -1,7 +1,7 @@
 // The GDD's system as Codex reads it from How the GDD Works (src/gdd.js).
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { readTypes, newPageText } from "../src/gdd.js";
+import { readTypes, newPageText, typeAt, folderPath } from "../src/gdd.js";
 
 const page = `# How the GDD Works
 
@@ -31,5 +31,14 @@ assert.equal(newPageText("Loose", null), "# Loose\n");
 
 // The real page: every type has a folder and core headings.
 const real = readTypes(fs.readFileSync(new URL("../../../docs/gdd/how-the-gdd-works.md", import.meta.url), "utf8"));
-assert.ok(real.length >= 17 && real.every((t) => t.folder && t.headings.length), "How the GDD Works' Types table reads");
+assert.ok(real.length >= 17 && real.every((t) => typeof t.folder === "string" && t.headings.length), "How the GDD Works' Types table reads");
+
+// A type at the top of the GDD ("(top)" in its Folder cell): its pages sit beside the README.
+const top = readTypes("## Types\n\n| Type | Folder | What it covers | Core headings |\n| --- | --- | --- | --- |\n| overview | (top) | The game itself | Pitch |\n| entity | entities | Monsters: goblins | What it is |\n");
+assert.equal(top[0].folder, "");
+assert.equal(folderPath(top[0]), "docs/gdd");
+assert.equal(typeAt(top, "docs/gdd/rth-overview.md").type, "overview");
+assert.equal(typeAt(top, "docs/gdd/entities/goblin.md").type, "entity");
+assert.equal(typeAt(top, "docs/gdd/entities").type, "entity");
+assert.equal(typeAt(top, "docs/gdd/charter.md"), null); // a top page, not the game page
 console.log("gdd: types read from How the GDD Works");

@@ -7,7 +7,7 @@
 // under it, each with its own fields.
 
 import { split, slugOf, STATUSES } from "./frontmatter.js";
-import { nameOf, isMeta, inGdd, GDD, TEMPLATES } from "./gdd.js";
+import { nameOf, isMeta, inGdd, GDD, TEMPLATES, folderPath } from "./gdd.js";
 import { plain, targetOf, titleOf } from "./links.js";
 
 const FENCE = /^\s*(`{3,}|~{3,})/;
@@ -192,8 +192,9 @@ export function checks(gdd, system, texts = new Map()) {
     if (!fm.type) add("no-type", "No type");
     else if (!types.has(fm.type)) add("unknown-type", `Unknown type “${fm.type}”`);
     else {
-      const folder = GDD + "/" + types.get(fm.type).folder + "/";
-      if (!p.path.startsWith(folder)) add("wrong-folder", `A ${fm.type} page belongs in ${folder.slice(GDD.length + 1, -1)}/`);
+      const t = types.get(fm.type), want = folderPath(t);
+      const ok = t.folder ? p.path.startsWith(want + "/") : p.path.slice(0, p.path.lastIndexOf("/")) === GDD;
+      if (!ok) add("wrong-folder", t.folder ? `A ${fm.type} page belongs in ${t.folder}/` : `A ${fm.type} page belongs at the top of the GDD`);
     }
     if (fm.status && !STATUSES.includes(fm.status)) add("unknown-status", `Unknown status “${fm.status}” (${STATUSES.join(", ")})`);
     const declared = fm.components || [];

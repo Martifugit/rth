@@ -56,7 +56,7 @@ types few and broad.
 
 | Type | Folder | What it covers | Core headings |
 | --- | --- | --- | --- |
-| overview | overview | The game itself | Pitch · Pillars · Core loop |
+| overview | (top) | The game itself | Pitch · Pillars · Core loop |
 | system | systems | Rules that apply everywhere: death, banking, trading, the XP curve | Intent · Rules · Interactions |
 | skill | skills | A trainable skill | Intent · How it feels to train · What it unlocks |
 | entity | entities | Anything that lives or acts on its own: monsters, NPCs, pets | What it is · Intent · Appearance |

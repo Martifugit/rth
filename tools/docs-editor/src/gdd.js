@@ -16,6 +16,17 @@ export const inGdd = (rel) => typeof rel === "string" && rel.startsWith(GDD + "/
 /** Pages about the GDD rather than in it: the top pages, the templates, the decisions log, anything starting with "_". No type needed. */
 export const isMeta = (rel) => TOP.includes(rel) || rel === DECISIONS_LOG || rel.startsWith(TEMPLATES + "/") || /\/_[^/]*$/.test(rel);
 
+/** Where a type's pages live: its folder, or the GDD's top for a type at the top. */
+export const folderPath = (t) => (t.folder ? GDD + "/" + t.folder : GDD);
+/** The type whose folder a page (or folder) is in, by its path; a page at the top of the GDD belongs to the type at the top, unless it's one of the top pages. */
+export function typeAt(types, path) {
+  if (typeof path !== "string") return null;
+  const inside = types.filter((t) => t.folder && (path === folderPath(t) || path.startsWith(folderPath(t) + "/")));
+  if (inside.length) return inside.sort((a, b) => b.folder.length - a.folder.length)[0];
+  const atTop = path.endsWith(".md") && path.slice(0, path.lastIndexOf("/")) === GDD && !TOP.includes(path);
+  return atTop || path === GDD ? types.find((t) => !t.folder) || null : null;
+}
+
 /** A type's template made into a new page: its first title line becomes the page's title. */
 export function fromTemplate(template, title) {
   return template.replace(/\r\n/g, "\n").replace(/^#\s+.*$/m, "# " + title);
@@ -60,12 +71,13 @@ export const nameOf = (heading) => String(heading || "").toLowerCase().trim().re
  */
 export function readTypes(text) {
   return tablesIn(text, /\btypes\b/i).flatMap((t) => t.rows)
-    .filter((r) => r.type && r.folder)
+    .filter((r) => r.type && "folder" in r)
     .map((r) => {
       const covers = r["what it covers"] || "";
       return {
         type: r.type.toLowerCase(),
-        folder: r.folder.replace(/^\/+|\/+$/g, ""),
+        // "(top)" (or ".", or nothing) puts the type's pages at the top of the GDD, beside the README.
+        folder: /^(\(top\)|\.|—|-)?$/i.test(r.folder.trim()) ? "" : r.folder.replace(/^\/+|\/+$/g, ""),
         covers,
         examples: covers.includes(":") ? covers.slice(covers.indexOf(":") + 1).trim() : covers,
         headings: (r["core headings"] || "").split("·").map((x) => x.trim()).filter(Boolean),

@@ -6,7 +6,7 @@ based-on:
 status: stub
 ---
 
-# R'th
+# R'th overview
 
 ## Pitch
 
@@ -19,5 +19,5 @@ School RuneScape, and is set in its own world, R'th, built around the four humou
 
 ## Regions
 
-- [Sere](../locations/sere.md)
-- [Lowe](../locations/lowe.md)
+- [Sere](locations/sere.md)
+- [Lowe](locations/lowe.md)

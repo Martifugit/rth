@@ -31,7 +31,7 @@ import { AiMarks, makeAiChanges } from "./ai-changes.js";
 import { altGrChar, isKeyFor } from "./keys.js";
 import { makeTogetherUi } from "./together-ui.js";
 import { Spelling, configureSpelling } from "./spellcheck.js";
-import { GDD, README, TOP, TEMPLATES, isMeta } from "./gdd.js";
+import { GDD, README, TOP, TEMPLATES, isMeta, folderPath, typeAt } from "./gdd.js";
 import { split as splitFront, make as makeFront } from "./frontmatter.js";
 import { makeGddUi } from "./gdd-ui.js";
 
@@ -192,13 +192,17 @@ const gddUi = makeGddUi(() => ({
 
 function makeEditor(text) {
   if (S.editor) S.editor.destroy();
-  // Frontmatter stays out of the editor (it would read as a rule and a heading): kept aside, and shown
-  // as the card over the page.
+  // Frontmatter stays out of the editor (it would read as a rule and a heading): kept aside, shown as
+  // the strip under the title, and written back in front of the page when saving.
   const parts = splitFront(text);
-  S.front = parts.front;
   text = parts.body;
   const page = $("#page");
   page.innerHTML = "";
+  // Nothing about the page is taken as current until its editor exists: if making it fails, the old
+  // page's text must never be saved under this page's name (or the other way round).
+  S.editor = null;
+  S.unsafe = true;
+  S.front = parts.front;
   S.editor = new Editor({
     element: page,
     editable: S.mode === "edit" && !S.readOnly,
@@ -239,6 +243,7 @@ function makeEditor(text) {
   });
   S.base = text;
   S.baseline = editorMarkdown();
+  S.unsafe = false; // the page is whole: saving may go on
   if (notes && notes.state.page === S.path) notes.place(true);
 }
 
@@ -254,6 +259,7 @@ const editorMarkdown = () => S.editor.storage.markdown.getMarkdown();
 
 function draft() {
   if (S.mode === "source") return $("#source").value;
+  if (S.unsafe || !S.editor || S.editor.isDestroyed) return S.disk; // nothing to save from a page that didn't open
   const cur = editorMarkdown();
   return S.front + (cur === S.baseline ? S.base : mergeEdit(S.base, S.baseline, cur));
 }
@@ -286,7 +292,9 @@ async function api(url, opts) {
 
 async function loadTree() {
   const [r, g] = await Promise.all([api("/api/tree"), api("/api/gdd")]);
-  if (g.ok) { S.types = g.types || []; S.components = g.components || []; }
+  if (g.ok && Array.isArray(g.types)) { S.types = g.types; S.components = g.components || []; }
+  // An engine older than the page (a Codex left running across an update) doesn't know the GDD's calls.
+  else showBanner("Codex needs a restart: its engine is older than this page. Close Codex and open it again.", [{ label: "OK", run: hideBanner }]);
   S.files = r.files || [];
   S.fileSet = new Set(S.files.map((f) => f.path));
   renderTree();
@@ -412,6 +420,8 @@ function applyMode() {
 
 async function save(force = false, { quiet = false } = {}) {
   if (!S.path || S.saving) return false;
+  // A page whose editor failed to open is never saved: what's in the editor may be another page.
+  if (S.unsafe || !S.editor || S.editor.isDestroyed) { if (!quiet) toast("This page didn't open properly, so it isn't saved. Reload Codex.", "bad"); return false; }
   clearTimeout(autoTimer);
   const content = draft();
   if (content === S.disk && !force) { if (!quiet) toast("All changes saved"); return true; }
@@ -494,7 +504,7 @@ const TYPE_ICONS = {
   ability: "spark", effect: "dreaming", quest: "quests", activity: "fishing", achievement: "task", location: "map",
   group: "journal", lore: "scripture", media: "eye", guide: "guide", decision: "note",
 };
-const folderIcon = (d) => TYPE_ICONS[S.types.find((t) => GDD + "/" + t.folder === d.path)?.type] || "journal";
+const folderIcon = (d) => TYPE_ICONS[S.types.find((t) => t.folder && folderPath(t) === d.path)?.type] || "journal";
 
 function buildTreeData(files) {
   const root = { name: "", path: "", dirs: new Map(), files: [] };
@@ -597,7 +607,7 @@ function renderTree() {
   // The GDD, flat: its start page and the pages about it, templates/, then one folder per type in the
   // order How the GDD Works lists them, shown even before they hold a page.
   const gdd = data.dirs.get("docs")?.dirs.get("gdd") || { name: "gdd", path: GDD, dirs: new Map(), files: [] };
-  if (!filter) for (const name of ["templates", ...S.types.map((t) => t.folder)])
+  if (!filter) for (const name of ["templates", ...S.types.filter((t) => t.folder).map((t) => t.folder)])
     if (!gdd.dirs.has(name)) gdd.dirs.set(name, { name, path: GDD + "/" + name, dirs: new Map(), files: [] });
   const specialRow = (kind, icon, help) => h("div", { class: "t-row file t-special" + (S.view === kind ? " current" : ""), "data-view": kind, title: help, onclick: () => showView(kind) },
     h("span", { class: "caret" }), h("span", { class: "ico ico-" + icon }), h("span", { class: "t-name" }, VIEWS[kind].title),
@@ -613,9 +623,9 @@ function renderTree() {
  *  GDD Works lists them, then any other folder or page alphabetically. */
 function gddOrder(gdd) {
   const name = (x) => (x.dirs ? x.name : x.path.split("/").pop());
-  const folders = ["templates", ...S.types.map((t) => t.folder)];
+  const folders = ["templates", ...S.types.filter((t) => t.folder).map((t) => t.folder)];
   const rank = (x) => {
-    if (!x.dirs) return TOP.includes(x.path) ? TOP.indexOf(x.path) : 1000;
+    if (!x.dirs) return TOP.includes(x.path) ? TOP.indexOf(x.path) : 50; // other pages at the top (the game page) after the top pages
     const i = folders.indexOf(x.name);
     return 100 + (i >= 0 ? i : 500);
   };
@@ -1062,10 +1072,10 @@ function quickOpen() {
 function newPageDialog(inFolder = null, prefill = {}) {
   if (typeof inFolder !== "string") inFolder = null; // a button's click passes its event
   if (!S.types.length) { toast("No types found: How the GDD Works needs its Types table", "bad"); return; }
-  const typeOf = (dir) => S.types.find((t) => typeof dir === "string" && (dir === GDD + "/" + t.folder || dir.startsWith(GDD + "/" + t.folder + "/")));
+  const typeOf = (dir) => typeAt(S.types, dir);
   const fixed = prefill.path || null;
   const start = typeOf(fixed && dirOf(fixed)) || typeOf(inFolder) || typeOf(S.path && dirOf(S.path)) || null;
-  const folderOf = (t) => (inFolder && typeOf(inFolder) === t ? inFolder : GDD + "/" + t.folder);
+  const folderOf = (t) => (inFolder && typeOf(inFolder) === t ? inFolder : folderPath(t));
   const kind = h("select", { class: "field" }, S.types.map((t) => h("option", { value: t.type, selected: t === start || null }, t.type + "  |  " + t.examples)));
   const chosen = () => S.types.find((t) => t.type === kind.value);
   const name = h("input", { class: "field", placeholder: "The page's title", spellcheck: "true", value: prefill.title || "" });

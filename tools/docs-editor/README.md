@@ -84,7 +84,8 @@ uncommitted work in the folder are never staged, committed, set aside or overwri
   for component instances (`action.skill: this` is a skill's training table); `this` is the page it's
   on; `sort: <field>`.
 - **The page list** is the GDD, flat (`src/gdd.js`, `TOP`): the start page (README), the Charter, How
-  the GDD Works, Using Codex and Workflow, then `templates/`, then a folder per type in the Types
+  the GDD Works, Using Codex and Workflow, then the pages of a type whose Folder is `(top)` (the game
+  page, R'th overview), then `templates/`, then a folder per type in the Types
   table's order, shown even while empty. New page refuses a file name already used in the GDD.
 - **Delete a page**: the bin in the page's title bar. It asks first (saying how many pages link to it),
   deletes it for everyone, and offers Undo straight after; git keeps its history. Its comments stay in
