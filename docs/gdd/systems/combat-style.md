@@ -10,8 +10,8 @@ status: stub
 
 ## Intent
 
-A combat style offers a unique kit of [Combat Abilities](combat-abilities.md) with unique strengths
-and weaknesses against different targets and in different environments.
+A combat style offers a unique kit of [Combat Abilities](../groups/combat-abilities.md) with unique
+strengths and weaknesses against different targets and in different environments.
 
 ## Rules
 
@@ -19,10 +19,7 @@ and weaknesses against different targets and in different environments.
 2. The combat styles should be relatively balanced in damage, given the same tier of equipment. It
    is fine for one style to be stronger in a tier bracket or in certain encounters, as long as it
    does not dominate all brackets and/or encounters.
-3. Using multiple combat styles in longer encounters should be incentivized through higher sustained
-   damage per unit time.
+3. Using multiple combat styles in longer combat encounters should be incentivized through higher
+   sustained damage per unit time given optimal play.
 
 ## Interactions
-
-- [Occultism](../skills/occultism.md): makes its [reagents](../groups/reagents.md) through
-  [Distillation](../activities/distillation.md).
