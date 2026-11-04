@@ -3,7 +3,7 @@ type: guide
 components: []
 groups: []
 based-on:
-status: stub
+status: draft
 ---
 
 # Art direction

@@ -3,7 +3,7 @@ type: entity
 components: [dialogue]
 groups: []
 based-on:
-status: stub
+status: draft
 ---
 
 # Pennick the Ferryman

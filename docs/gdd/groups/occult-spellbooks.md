@@ -3,7 +3,7 @@ type: group
 components: []
 groups: []
 based-on:
-status: stub
+status: draft
 ---
 
 # Occult Spellbooks

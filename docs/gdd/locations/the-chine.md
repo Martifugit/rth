@@ -3,7 +3,7 @@ type: location
 components: []
 groups: []
 based-on:
-status: stub
+status: draft
 ---
 
 # The Chine
