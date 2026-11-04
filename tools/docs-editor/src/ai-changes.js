@@ -118,6 +118,11 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
     return map;
   }
 
+  // The change being looked at (stepped to with the bar's arrows): its highlights say "ai-now", the
+  // others "ai-later" (faded), and its paragraph gets a mark in the margin (currentMark).
+  const curIndex = () => (C.at < 0 ? 0 : C.at);
+  const tag = (id) => (id === curIndex() ? " ai-now" : " ai-later");
+
   function compute() {
     const doc = S.editor.state.doc, base = baseDoc();
     const A = [], B = [];
@@ -143,12 +148,12 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
           if (part.op === "=") { i += part.text.length; continue; }
           if (part.op === "+") {
             const a = pos[i], b = pos[i + part.text.length - 1];
-            if (a != null && b != null) { decos.push(Decoration.inline(a, b + 1, { class: "ai-add", "data-hunk": String(id) })); marked++; }
+            if (a != null && b != null) { decos.push(Decoration.inline(a, b + 1, { class: "ai-add" + tag(id), "data-hunk": String(id) })); marked++; }
             i += part.text.length;
           } else {
             const p = pos[i] ?? (pos[i - 1] != null ? pos[i - 1] + 1 : from + 1);
             const text = part.text;
-            decos.push(Decoration.widget(p, () => h("span", { class: "ai-del", "data-hunk": String(id) }, text), { side: -1, key: `del-${id}-${i}` }));
+            decos.push(Decoration.widget(p, () => h("span", { class: "ai-del" + tag(id), "data-hunk": String(id) }, text), { side: -1, key: `del-${id}-${i}${tag(id)}` }));
             marked++;
           }
         }
@@ -156,20 +161,21 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
       }
       if (!words && removed.length === 1 && added.length === 1 && removed[0].type === added[0].type) {
         // Same words, other formatting (bold, a link): mark the block.
-        decos.push(Decoration.node(from, to, { class: "ai-add-block", "data-hunk": String(id) }));
+        decos.push(Decoration.node(from, to, { class: "ai-add-block" + tag(id), "data-hunk": String(id) }));
         continue;
       }
       // Otherwise whole blocks: what was removed shown struck through, what was added highlighted.
       if (removed.length) {
         decos.push(Decoration.widget(from, () => {
-          const box = h("div", { class: "ai-del-block", "data-hunk": String(id), contenteditable: "false" });
+          const box = h("div", { class: "ai-del-block" + tag(id), "data-hunk": String(id), contenteditable: "false" });
           box.append(DOMSerializer.fromSchema(S.editor.schema).serializeFragment(Fragment.from(removed)));
           return box;
-        }, { side: -1, key: `delb-${id}` }));
+        }, { side: -1, key: `delb-${id}${tag(id)}` }));
       }
       let p = from;
-      for (const n of added) { decos.push(Decoration.node(p, p + n.nodeSize, { class: "ai-add-block", "data-hunk": String(id) })); p += n.nodeSize; }
+      for (const n of added) { decos.push(Decoration.node(p, p + n.nodeSize, { class: "ai-add-block" + tag(id), "data-hunk": String(id) })); p += n.nodeSize; }
     }
+    if (hunks.length) decos.push(...currentMark(hunks[Math.min(curIndex(), hunks.length - 1)], doc));
     C.hunks = hunks;
     if (C.at >= hunks.length) C.at = hunks.length - 1;
     return DecorationSet.create(doc, decos);
@@ -211,34 +217,38 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
           if (part.op === "=") { i += part.text.length; continue; }
           if (part.op === "-") {
             const a = pos[i], b = pos[i + part.text.length - 1];
-            if (a != null && b != null) decos.push(Decoration.inline(a, b + 1, { class: "ai-del", "data-hunk": String(id) }));
+            if (a != null && b != null) decos.push(Decoration.inline(a, b + 1, { class: "ai-del" + tag(id), "data-hunk": String(id) }));
             i += part.text.length;
           } else {
             const p = pos[i] ?? (pos[i - 1] != null ? pos[i - 1] + 1 : from + 1);
             const text = part.text;
-            decos.push(Decoration.widget(p, () => h("span", { class: "ai-add", "data-hunk": String(id) }, text), { side: 1, key: `sug-${id}-${i}` }));
+            decos.push(Decoration.widget(p, () => h("span", { class: "ai-add" + tag(id), "data-hunk": String(id) }, text), { side: 1, key: `sug-${id}-${i}${tag(id)}` }));
           }
         }
         continue;
       }
       let p = from;
-      for (const n of removed) { decos.push(Decoration.node(p, p + n.nodeSize, { class: "ai-del-live", "data-hunk": String(id) })); p += n.nodeSize; }
+      for (const n of removed) { decos.push(Decoration.node(p, p + n.nodeSize, { class: "ai-del-live" + tag(id), "data-hunk": String(id) })); p += n.nodeSize; }
       if (added.length) decos.push(Decoration.widget(to, () => {
-        const box = h("div", { class: "ai-add-widget", "data-hunk": String(id), contenteditable: "false" });
+        const box = h("div", { class: "ai-add-widget" + tag(id), "data-hunk": String(id), contenteditable: "false" });
         box.append(ser.serializeFragment(Fragment.from(added)));
         return box;
-      }, { side: -1, key: `sugb-${id}` }));
+      }, { side: -1, key: `sugb-${id}${tag(id)}` }));
     }
-    hunks.forEach((x, i) => { if (i === (C.at < 0 ? 0 : C.at)) decos.push(...currentMark(x, doc)); });
+    if (hunks.length) decos.push(...currentMark(hunks[Math.min(curIndex(), hunks.length - 1)], doc));
     C.hunks = hunks;
     if (C.at >= hunks.length) C.at = hunks.length - 1;
     return DecorationSet.create(doc, decos);
   }
 
-  /** The suggestion being looked at: a quiet outline round its blocks. */
+  /** The change being looked at: a mark in the margin by every block it touches. */
   function currentMark(x, doc) {
     const out = [];
-    if (x.to > x.from) doc.nodesBetween(x.from, x.to, (n, pos) => { if (pos >= x.from && pos + n.nodeSize <= x.to && doc.resolve(pos).depth === 0) out.push(Decoration.node(pos, pos + n.nodeSize, { class: "ai-current" })); return false; });
+    doc.forEach((n, pos) => {
+      const end = pos + n.nodeSize;
+      const touches = x.to > x.from ? pos < x.to && end > x.from : pos === x.from || (pos < x.from && end > x.from);
+      if (touches) out.push(Decoration.node(pos, end, { class: "ai-current" }));
+    });
     return out;
   }
 
@@ -282,8 +292,8 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
   function step(d) {
     if (!C.hunks.length) return;
     C.at = C.at < 0 ? (d > 0 ? 0 : C.hunks.length - 1) : (C.at + d + C.hunks.length) % C.hunks.length;
+    redraw(); // the highlights follow: this one stands out, the rest fade
     scrollToPos(C.hunks[C.at].from + 1);
-    drawBar();
   }
 
   function toggle(on = !C.showing) {

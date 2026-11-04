@@ -900,7 +900,17 @@ body.cols-moving #outlineWin { transition: width .26s cubic-bezier(.25, .8, .25,
 .prose .ai-del-live { background: rgba(224, 96, 78, .07); box-shadow: -3px 0 0 rgba(224, 96, 78, .6); }
 .prose .ai-del-live, .prose .ai-del-live * { color: #d99a8c; }
 .prose .ai-add-widget { margin: .4em 0; padding: 2px 8px; background: rgba(124, 207, 98, .08); box-shadow: -3px 0 0 rgba(124, 207, 98, .6); user-select: none; }
-.prose .ai-current { outline: 1px dashed rgba(240, 213, 140, .45); outline-offset: 4px; border-radius: 2px; }
+/* Stepping through the AI's changes (src/ai-changes.js): the one being looked at stands out (stronger,
+   ringed in gold, a gold mark in the margin by its paragraph); the others fade back but stay readable. */
+.prose .ai-current { position: relative; }
+.prose .ai-current::before { content: ""; position: absolute; left: -16px; top: 2px; bottom: 2px; width: 3px; border-radius: 2px; background: var(--value); box-shadow: 0 0 6px rgba(240, 213, 140, .45); }
+.prose .ai-add.ai-now { background: rgba(124, 207, 98, .30); box-shadow: inset 0 -1px rgba(124, 207, 98, .8), 0 0 0 1px rgba(240, 213, 140, .7); }
+.prose .ai-del.ai-now { background: rgba(224, 96, 78, .26); box-shadow: 0 0 0 1px rgba(240, 213, 140, .7); color: #f2b7aa; }
+.prose .ai-add-block.ai-now, .prose .ai-add-widget.ai-now { background: rgba(124, 207, 98, .13); outline: 1px solid rgba(240, 213, 140, .55); outline-offset: 3px; }
+.prose .ai-del-block.ai-now, .prose .ai-del-live.ai-now { background: rgba(224, 96, 78, .12); outline: 1px solid rgba(240, 213, 140, .55); outline-offset: 3px; opacity: 1; }
+.prose .ai-later { opacity: .5; }
+.prose .ai-add.ai-later { background: rgba(124, 207, 98, .08); box-shadow: inset 0 -1px rgba(124, 207, 98, .3); }
+.prose .ai-del.ai-later { background: rgba(224, 96, 78, .06); }
 .prose .ai-del + .ai-add, .prose .ai-del { margin-right: 2px; }
 .ai-signin { margin-top: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .ai-signin p { margin: 0; }

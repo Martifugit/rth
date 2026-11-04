@@ -6,6 +6,7 @@ section before releasing; the release refuses without one.
 
 ## 0.3.3
 
+- Stepping through R'th AI's changes (or changes made outside the Codex) shows which one you're on: it stands out, ringed in gold, with a gold mark in the margin by its paragraph, and the others fade back.
 - The Add a link window is bigger, and its page list is part of it: always showing, with room for about fourteen results before it scrolls.
 
 ## 0.3.2
