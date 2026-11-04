@@ -34,13 +34,27 @@ export const AiMarks = Extension.create({
 
 // A page waiting to be shared (src/sync.js, held) has Share in place of Done; one changed by another
 // program is compared with how it was last shared (GET /api/sync/base), the same way.
-export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => null, share = () => {} }) {
+export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => null, share = () => {}, setFront = null }) {
   const C = { changes: [], showing: false, hunks: [], at: -1, base: null, page: null, suggest: false, target: null, skipped: new Set() };
   const bar = h("div", { id: "aiBar", class: "ai-bar hidden" });
   const undoBtn = h("button", { class: "ai-undo-one hidden", title: "Undo this change", onmousedown: (e) => e.preventDefault(), onclick: () => undoHunk(Number(undoBtn.dataset.hunk)) }, "Undo");
   document.body.append(undoBtn);
 
   // ----------------------------------------------------------------------------- the bar
+
+  /** The AI's suggested frontmatter, when it differs from the page's: { front, says: "status stub → draft" }. */
+  function frontSuggestion() {
+    if (!C.suggest || C.frontDone || !setFront) return null;
+    const want = splitFront(C.changes[C.changes.length - 1]?.after ?? "");
+    if (!want.front || want.front.trim() === String(S.front || "").trim()) return null;
+    const now = splitFront((S.front || "") + "\n").data || {}, next = want.data || {};
+    const show = (v) => (Array.isArray(v) ? (v.length ? v.join(", ") : "none") : v == null || v === "" ? "none" : String(v));
+    const says = [...new Set([...Object.keys(now), ...Object.keys(next)])]
+      .filter((k) => show(now[k]) !== show(next[k])).map((k) => `${k} ${show(now[k])} → ${show(next[k])}`).join(", ");
+    return says ? { front: want.front, says } : null;
+  }
+  function acceptFront() { const f = frontSuggestion(); if (f) setFront(f.front); C.frontDone = true; after(); }
+  function skipFront() { C.frontDone = true; after(); }
 
   function drawBar() {
     const has = C.changes.length > 0 && C.page === S.path && S.mode !== "source";
@@ -50,9 +64,14 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
     if (C.suggest) {
       // Suggestions, gone through top to bottom: Accept or Skip each.
       const cur = C.at >= 0 ? C.at : 0;
+      const fs_ = frontSuggestion();
       bar.replaceChildren(...[
         h("span", { class: "ai-bar-ico" }, "✦"),
-        h("span", { class: "ai-bar-text" }, n ? `The AI suggests ${n} change${n > 1 ? "s" : ""}` : "No suggestions left"),
+        h("span", { class: "ai-bar-text" }, n ? `The AI suggests ${n} change${n > 1 ? "s" : ""}` : fs_ ? "One more suggestion" : "No suggestions left"),
+        // The page's header (status, type, groups...) changed too: said plainly, answered on its own.
+        fs_ ? h("span", { class: "ai-bar-front" }, "Also: ", h("b", {}, fs_.says),
+          h("button", { class: "ai-link", title: "Leave the page's header as it is", onclick: skipFront }, "Skip"),
+          h("button", { class: "ai-link", title: "Change the page's header", onclick: acceptFront }, "Accept")) : null,
         n ? h("span", { class: "ai-bar-nav" },
           h("button", { class: "ai-bar-btn", title: "Previous suggestion", onclick: () => step(-1) }, "‹"),
           h("span", { class: "ai-bar-pos" }, `${cur + 1} of ${n}`),
@@ -186,7 +205,9 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
   /** The page as the AI would have it (its latest suggestions). */
   function targetDoc() {
     if (C.target) return C.target;
-    const md = C.changes[C.changes.length - 1]?.after ?? "";
+    // Without its frontmatter, as the editor holds a page: left in, Markdown read the block as a rule and a
+    // heading ("type: system components: [] groups: [] ... status: draft"), shown as a suggested title.
+    const md = splitFront(C.changes[C.changes.length - 1]?.after ?? "").body;
     C.target = createDocument(S.editor.storage.markdown.parser.parse(md), S.editor.schema);
     return C.target;
   }
@@ -272,12 +293,14 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
     let tr = S.editor.state.tr;
     for (const x of [...C.hunks].reverse()) tr = tr.replaceWith(x.from, x.to, Fragment.from(x.now));
     S.editor.view.dispatch(tr);
+    const f = frontSuggestion(); if (f) setFront(f.front); C.frontDone = true; // the header too
     after();
   }
   /** After Accept or Skip: on to the next one; with none left, the suggestions are done. */
   function after() {
     redraw();
-    if (!C.hunks.length) { toast("All suggestions handled"); done(); return; }
+    if (!C.hunks.length && !frontSuggestion()) { toast("All suggestions handled"); done(); return; }
+    if (!C.hunks.length) return; // only the header's suggestion left: it's in the bar
     scrollToPos(C.hunks[Math.min(C.at < 0 ? 0 : C.at, C.hunks.length - 1)].from + 1);
   }
 
@@ -317,7 +340,7 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
 
   async function done() {
     await api("/api/ai/reviewed", { method: "POST", body: JSON.stringify({ page: S.path }) });
-    C.changes = []; C.base = null; C.target = null; C.showing = false; C.suggest = false;
+    C.changes = []; C.base = null; C.target = null; C.showing = false; C.suggest = false; C.frontDone = false;
     redraw();
   }
 
@@ -355,7 +378,7 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
     // Suggestions waiting come first, and show straight away; otherwise the AI's edits.
     const sugg = all.filter((x) => x.suggest);
     C.suggest = sugg.length > 0;
-    C.page = page; C.changes = C.suggest ? sugg : all.filter((x) => !x.suggest); C.base = null; C.target = null; C.skipped = new Set();
+    C.page = page; C.changes = C.suggest ? sugg : all.filter((x) => !x.suggest); C.base = null; C.target = null; C.skipped = new Set(); C.frontDone = false;
     if (!C.changes.length) C.showing = false;
     else if (show || C.suggest) C.showing = true;
     C.at = -1;

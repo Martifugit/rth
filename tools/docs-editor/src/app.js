@@ -1741,6 +1741,7 @@ const account = makeAccountButton({ $, h, api, toast, onChange: (v) => {
 } });
 // Show changes: what the AI changed on the open page (src/ai-changes.js).
 const aiChanges = makeAiChanges({ S, $, h, api, toast, scrollToPos,
+  setFront: (front) => { S.front = front; scheduleDirty(); gddUi.refresh?.(); }, // a suggested header change, accepted
   held: (page) => (syncState?.held || []).find((x) => x.path === page) || null, share: (page) => sharePages([page]) });
 const ai = makeAi({
   S, $, h, api, toast, renderHtml, notes,
