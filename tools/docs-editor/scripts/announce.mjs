@@ -24,7 +24,7 @@ export function message(version, repo) {
   return [
     `**R'th Codex ${version}** is out.`,
     changes(version) || "",
-    `-# Installed Codexes update themselves (a blue Update button appears). New here? [Download the installer](<${url}>).`,
+    `-# Installed Codexes update themselves: once the update has downloaded, the Codex asks you to restart it. New here? [Download the installer](<${url}>).`,
   ].filter(Boolean).join("\n");
 }
 
