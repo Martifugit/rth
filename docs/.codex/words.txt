@@ -8,6 +8,7 @@ frontmatter
 humours
 incentivized
 minigames
+pennick
 smithing
 spellbook
 spellbooks
