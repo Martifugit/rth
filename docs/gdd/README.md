@@ -11,6 +11,7 @@ Read in this order:
 4. [Using Codex](using-codex.md): making pages, links, templates and comments in the app.
 5. [Workflow](workflow.md): when to edit and when to comment, decisions, and naming.
 
-Then start at [the game page](rth-overview.md) and follow the links.
+Then start at [the game page](rth-overview.md) and follow the links. For how the game should look,
+see [Art direction](guides/art-direction.md).
 
 To see what has been decided and when, check the [Decisions log](decisions/decisions-log.md).
