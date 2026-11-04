@@ -7,7 +7,7 @@ in service of that.
 ## Making a page
 
 - **New page** (top bar): first pick its type. The type decides its folder and its core headings, and
-  the page is made from the type's template in `templates/`. Then give it a title. Right-click a
+  the page is made from the type's [template](#templates). Then give it a title. Right-click a
   type's folder in the page list to make a page of that type straight away. The components usual for that type are offered as optional
   sections, none ticked: most pages start as a stub.
 - **From a link.** Link to a page that isn't written yet and the link shows gold and dashed: a to-do,
@@ -68,16 +68,19 @@ from the page's own words. To change it, change the page that owns the relations
 
 ## Templates
 
-`templates/` holds one template per type (`entity.md`) and one snippet per component (`action.md`).
-Change a template and every new page of that type, or every new section of that component, follows it.
+Pages of the same kind always read the same, because each is put together from templates. The page's
+**type** gives it its skeleton: the core headings every entity, location or quest has. Each
+**component** it takes on (an action, a shop, rewards) adds its own section, with the fields that
+section always asks for. A template is the shape of one type or one component, and Codex fills a page
+from them when you make it or tick a component.
 
-- **Guidance** is written as HTML comments. One straight under a heading is the section's prompt; one
-  after a field (`- Skill: <!-- the skill's page, as a link -->`) is that field's hint. On a page they
-  show faintly while the section or field is empty, and they never go into the page itself, so every
-  page, old or new, gets the latest guidance.
-- **Tables** are for things that come in rows: rewards, spawns, stock, states, tunables, tasks. Each
-  row counts as one instance, so lists can gather them (`rewards.item: this`). **+ Add a row** sits
-  under the table.
+- **Prompts.** An empty section or field shows a faint line saying what belongs there. It goes as soon
+  as you write, and it's never part of the page.
+- **Tables** are for things that come in rows: rewards, spawns, stock, states. **+ Add a row** sits
+  under the table, and each row counts on its own, so a list elsewhere can gather them.
+- **When a template changes**, new pages and new sections follow it, and every page shows its newest
+  prompts. Templates aren't pages you read or search for: changing one changes the shape of the GDD,
+  so it's agreed in [How the GDD Works](how-the-gdd-works.md), not made on a page.
 
 ## Links
 
