@@ -21,6 +21,8 @@ import { spawn, execFile } from "node:child_process";
 import { places } from "./ai-diff.js";
 import { openRouterProvider, OPENROUTER_MODELS, EDIT_FORMAT, editsIn, applyEdits, shown } from "./openrouter-provider.js";
 import { COMMENT_FORMAT, commentsIn, withoutComments, anchorFor } from "./ai-comments.js";
+import { writingBrief, WIKI_REMINDER } from "./writing-brief.js";
+import { TEMPLATES } from "./gdd.js";
 
 const STREAM_EVERY_MS = 120;
 
@@ -147,7 +149,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
       const system = SYSTEM_OPEN + "\n\n" + EDIT_FORMAT + "\n\n" + COMMENT_FORMAT + "\n\n" + (await reading(context));
       r.handle = ai.run({ messages: [{ role: "system", content: system }, ...history, { role: "user", content: (ctx.text ? "What they're looking at:\n\n" + ctx.text + "\n\n" : "") + "They say:\n\n" + text + (suggest ? SUGGEST_NOTE : "") }], ...handlers });
     } else {
-      const prompt = (c.session ? followUp : firstPrompt)(text, ctx) + (suggest ? SUGGEST_NOTE : "");
+      const prompt = (c.session ? followUp(text, ctx) : firstPrompt(text, ctx, await writingBrief(read))) + (suggest ? SUGGEST_NOTE : "");
       r.handle = ai.run({ prompt, session: c.session, ...handlers });
     }
     r.handle.done.then(async (res) => {
@@ -238,8 +240,10 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     };
     let pageText = null;
     if (page) { pageText = await read(page); add(`The open page: ${page}`, pageText, 50000); }
-    add("docs/gdd/charter.md (the rules every page follows)", await read("docs/gdd/charter.md"), 8000);
+    add("How to write pages", await writingBrief(read), 24000);
     add("docs/gdd/how-the-gdd-works.md (pages, types and components)", await read("docs/gdd/how-the-gdd-works.md"), 16000);
+    const type = pageText?.match(/^---[\s\S]*?^type:\s*([\w-]+)/m)?.[1];
+    if (type) add(`The template for its type: ${TEMPLATES}/${type}.md`, await read(`${TEMPLATES}/${type}.md`), 4000);
     if (pageText) {
       const seen = new Set();
       for (const m of pageText.matchAll(/\]\(([^)#\s]+\.md)(?:#[^)]*)?\)/g)) {
@@ -353,17 +357,19 @@ const titleFrom = (text) => {
 // ----------------------------------------------------------------------------- prompts
 
 // For a model that can't read the repository itself (OpenRouter): the same job, the reading given.
-const SYSTEM_OPEN = "You are the assistant in the Codex, the app for writing the game design document (GDD) of R'th (a private RPG made by a group of friends), in docs/gdd. docs/gdd/charter.md holds the rules every page follows, and docs/gdd/how-the-gdd-works.md the pages, types and components. You're talking with someone in the Codex's side panel: discuss, explain and argue the design with them, from the pages given below. Say plainly when they don't settle something. Change pages only when they ask you to change something; discussing never changes a page. Change only what the request needs, in the page's own style. Your reply shows in a narrow side panel as Markdown: short paragraphs, lists where they help, no big headings.";
+const SYSTEM_OPEN = "You are the assistant in the Codex, the app for writing the game design document (GDD) of R'th (a private RPG made by a group of friends), in docs/gdd. docs/gdd/charter.md holds the rules every page follows, and docs/gdd/how-the-gdd-works.md the pages, types and components. You're talking with someone in the Codex's side panel: discuss, explain and argue the design with them, from the pages given below. Say plainly when they don't settle something. Change pages only when they ask you to change something; discussing never changes a page. Change only what the request needs, and write as the rules below say. Your reply shows in a narrow side panel as Markdown: short paragraphs, lists where they help, no big headings.";
 
 const SUGGEST_NOTE ="\n\n(They asked for suggestions: make the edits in the pages as you would; the Codex shows each one as a suggestion for them to accept or skip.)";
 
-function firstPrompt(text, ctx) {
+function firstPrompt(text, ctx, brief) {
   return [
     "You are the assistant in the Codex, the app for writing the game design document (GDD) of R'th (a private RPG made by a group of friends). The GDD is docs/gdd: docs/gdd/charter.md holds the rules every page follows, and docs/gdd/how-the-gdd-works.md the pages, types and components.",
     "You're talking with someone in the Codex's side panel. Discuss, explain and argue the design with them; look things up in the repository whenever it helps (you can read the docs, code and data). Say plainly when the docs don't settle something.",
-    "You may change pages, but only when they ask you to change something (tighten this, write the missing sections, draft the decision). Discussing, explaining or arguing never changes a page. You can edit and create pages under docs/gdd/ only; read docs/gdd/charter.md and docs/gdd/how-the-gdd-works.md first and follow them and the page's own conventions, and change only what the request needs. The Codex shows them exactly what you changed, so after editing just say in a sentence or two what you did and where.",
+    "You may change pages, but only when they ask you to change something (tighten this, write the missing sections, draft the decision). Discussing, explaining or arguing never changes a page. You can edit and create pages under docs/gdd/ only; read docs/gdd/how-the-gdd-works.md and the page type's template (docs/gdd/templates/) first, write as the rules below say, and change only what the request needs. The Codex shows them exactly what you changed, so after editing just say in a sentence or two what you did and where.",
     "Your reply shows in a narrow side panel as Markdown: short paragraphs, lists where they help, no big headings. Cite pages as repository paths.",
     COMMENT_FORMAT,
+    "",
+    brief,
     "",
     ctx.text ? "What they're looking at:\n\n" + ctx.text : "They have no page open.",
     "",
@@ -376,7 +382,7 @@ function firstPrompt(text, ctx) {
 function followUp(text, ctx) {
   return [
     ctx.text ? "What they're looking at now:\n\n" + ctx.text + "\n" : "",
-    "(As before: change pages only if this asks for a change.)",
+    "(As before: change pages only if this asks for a change.) " + WIKI_REMINDER,
     "They say:",
     "",
     text,

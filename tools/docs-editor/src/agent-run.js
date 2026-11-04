@@ -8,6 +8,8 @@
 
 import { spawn, execFile } from "node:child_process";
 import path from "node:path";
+import fsp from "node:fs/promises";
+import { writingBrief, WIKI_REMINDER } from "./writing-brief.js";
 
 const READ_TOOLS = ["Read", "Glob", "Grep"];
 const EDIT_TOOLS = ["Edit(docs/gdd/**)", "Write(docs/gdd/**)", "MultiEdit(docs/gdd/**)"];
@@ -72,7 +74,8 @@ export function makeRunner({ repo, store, emit, claude = process.env.CODEX_CLAUD
 
     const proc = spawn(claude, args, { cwd: repo, windowsHide: true, stdio: ["pipe", "pipe", "pipe"] });
     r.proc = proc;
-    proc.stdin.end(resume ? followUp(note, page) : firstPrompt(note, page));
+    const brief = resume ? "" : await writingBrief((rel) => fsp.readFile(path.join(repo, rel), "utf8"));
+    proc.stdin.end(resume ? followUp(note, page) : firstPrompt(note, page, brief));
     let buf = "", errText = "", result = null;
     proc.stdout.setEncoding("utf8");
     proc.stdout.on("data", (chunk) => {
@@ -171,7 +174,7 @@ function threadText(note) {
   return note.thread.map((e) => `${e.by === "agent" ? "You (earlier)" : "The owner"}: ${e.text}`).join("\n\n");
 }
 
-function firstPrompt(note, page) {
+function firstPrompt(note, page, brief) {
   const task = note.kind === "task";
   return [
     "You are answering a note the owner of R'th (a private RPG; its game design document is docs/gdd) left in the Codex, the app the GDD is written in. The note is attached to a place in a page.",
@@ -181,9 +184,11 @@ function firstPrompt(note, page) {
     threadText(note),
     "",
     task
-      ? "This is a task: do it by editing the docs (you may edit and create pages under docs/gdd/ only). Read docs/gdd/charter.md and docs/gdd/how-the-gdd-works.md first and follow them, and the page's own conventions. Change only what the task needs. Then reply in a few sentences: what you changed, where, and anything left open."
+      ? "This is a task: do it by editing the docs (you may edit and create pages under docs/gdd/ only). Read docs/gdd/how-the-gdd-works.md and the page type's template (docs/gdd/templates/) first, and write as the rules below say. Change only what the task needs. Then reply in a few sentences: what you changed, where, and anything left open."
       : "This is a question: answer it. You can read the repository (docs, code, data) but not change it. Read the page first. Answer briefly and plainly, in the docs' own voice; cite pages as repository paths and say where in them. If the docs don't settle it, say so and what would.",
     "Your reply is shown in a narrow side panel as Markdown: short paragraphs, no big headings.",
+    "",
+    brief,
   ].join("\n");
 }
 
@@ -194,7 +199,7 @@ function followUp(note, page) {
     "",
     last.text,
     "",
-    note.kind === "task" ? "It is still a task: you may edit files under docs/ only. Reply with what you changed." : "Answer in the same panel style. You can read but not change files.",
+    note.kind === "task" ? "It is still a task: you may edit files under docs/gdd/ only. Reply with what you changed. " + WIKI_REMINDER : "Answer in the same panel style. You can read but not change files.",
   ].join("\n");
 }
 

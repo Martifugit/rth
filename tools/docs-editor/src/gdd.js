@@ -11,7 +11,7 @@ export const SYSTEM = GDD + "/how-the-gdd-works.md";
 /** The pages at the top of the page list, in this order: the start page and the pages about the GDD. */
 /** The game page: about the game itself, so not a page of a type. */
 export const OVERVIEW = GDD + "/rth-overview.md";
-export const TOP = [README, CHARTER, SYSTEM, GDD + "/using-codex.md", GDD + "/workflow.md", OVERVIEW];
+export const TOP = [README, CHARTER, SYSTEM, GDD + "/writing.md", GDD + "/using-codex.md", GDD + "/workflow.md", OVERVIEW];
 /** One template per type (templates/entity.md) and one snippet per component (templates/action.md). */
 export const TEMPLATES = GDD + "/templates";
 export const DECISIONS_LOG = GDD + "/decisions/decisions-log.md";
