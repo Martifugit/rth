@@ -6,7 +6,7 @@ based-on:
 status: stub
 ---
 
-# Alder
+# Alder Tree
 
 ## What it is
 
