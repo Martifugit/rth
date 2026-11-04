@@ -12,3 +12,5 @@ Read in this order:
 5. [Workflow](workflow.md): when to edit and when to comment, decisions, and naming.
 
 Then start at [the game page](rth-overview.md) and follow the links.
+
+To see what has been decided and when, check the [Decisions log](decisions/decisions-log.md).
