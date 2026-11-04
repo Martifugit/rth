@@ -18,4 +18,4 @@ status: stub
 
 ## How you get it
 
-<!-- Mostly generated: Dropped by, Sold by and Made at appear under Links to this page. Write only ways that have no page of their own. -->
+<!-- Mostly generated: Dropped by, Sold by and Made at appear in the page's Links tab. Write only ways that have no page of their own. -->
