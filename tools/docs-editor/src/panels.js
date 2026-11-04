@@ -19,13 +19,18 @@ export function makePanels(ctx) {
     if (!cache.has(page)) cache.set(page, api("/api/links?page=" + encodeURIComponent(page)).then((r) => (r.ok ? r : null)));
     return cache.get(page);
   }
-  function invalidate() { cache.clear(); lists.broken = null; }
+  const generated = new Map(); // page -> a group's members, a skill's training (/api/generated)
+  async function generatedFor(page) {
+    if (!generated.has(page)) generated.set(page, api("/api/generated?page=" + encodeURIComponent(page)).then((r) => (r.ok ? r : null), () => null));
+    return generated.get(page);
+  }
+  function invalidate() { cache.clear(); generated.clear(); lists.broken = null; }
 
   async function renderLinks() {
     const pane = $("#linksPane");
     if (!S.path) return;
     const page = S.path;
-    const r = await linksFor(page);
+    const [r, gen] = await Promise.all([linksFor(page), generatedFor(page)]);
     if (page !== S.path || !r) return;
     ctx.setLinksCount(r.inbound.length);
     const byPage = (list, key) => {
@@ -51,11 +56,20 @@ export function makePanels(ctx) {
       ? item(to, ls[0].text || to.split("/").pop(), "Not written yet: click to make it", () => ctx.newPage({ path: to, title: ls[0].text || "" }), "broken")
       : item(to, ls[0].title, null, () => ctx.openDoc(to)));
     const mentions = r.mentions.map((m) => item(m.from, m.title, m.section || null, () => ctx.openDoc(m.from, { find: { q: r.title, occurrence: 0 } })));
-    pane.replaceChildren(
+    // From the GDD itself rather than links: pages that list this one as a group, and how a skill is trained.
+    const open = (p) => () => ctx.openDoc(p.path);
+    const members = (gen?.members || []).map((p) => item(p.path, p.title, null, open(p)));
+    const cols = (gen?.training?.columns || []).filter((c) => ["level", "verb", "xp", "tool"].includes(c));
+    const plain = (md) => String(md || "").replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/[*_`]/g, "");
+    const training = (gen?.training?.rows || []).map((x) => item(x.path, x.title, [x.name, ...cols.map((c) => (x.fields?.[c] ? `${c} ${plain(x.fields[c])}` : ""))].filter(Boolean).join(", ") || null, open(x)));
+    pane.replaceChildren(...[ // filtered: replaceChildren writes a missing group as the text "null"
+      members.length ? group("Members", "Pages that list this one among their groups", members, "") : null,
+      training.length ? group("Trained by", "What trains this skill, from those pages' actions", training, "") : null,
       ...labelled.map(([label, ls]) => group(label, `Links to this page from those pages' sections that own the relationship`, inboundOf(ls), "")),
       group(labelled.length ? "Also linked from" : "Linked from", "Pages with a link to this one", inbound, labelled.length ? "No other links." : "No page links here yet."),
       group("Links to", "Pages this one links to", outbound, "This page has no links to other pages."),
-      r.title ? group("Mentioned in", `Pages that name “${r.title}” without linking to it`, mentions, "Not mentioned anywhere else.") : null);
+      r.title ? group("Mentioned in", `Pages that name “${r.title}” without linking to it`, mentions, "Not mentioned anywhere else.") : null,
+    ].filter(Boolean));
   }
 
   // ----------------------------------------------------------------------------- recent changes

@@ -277,7 +277,7 @@ export function withComponents(text, names, components, type, templates = new Ma
  */
 export function newPageText(title, type, make = null) {
   const front = type && make ? make({ type: type.type, components: [], groups: [], "based-on": null, status: "stub" }) : "";
-  // (A group's members aren't written: the page's "Links to this page" box gathers them.)
+  // (A group's members aren't written: the page's Links tab gathers them (src/panels.js).)
   return front + "# " + title + "\n" + (type?.headings || []).map((hd) => "\n## " + hd + "\n").join("");
 }
 

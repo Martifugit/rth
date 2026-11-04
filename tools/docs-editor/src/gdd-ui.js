@@ -13,8 +13,6 @@
 //   one with something written in it asks whether to move the text to Open questions or delete it.
 // - A component that repeats (actions, trades) gets "+ Add action" at the end of its own section.
 // - A cut page's title is struck through.
-// - At the bottom, a muted "Links to this page" box: Dropped by, Found in, Appears in…, a group's
-//   members, a skill's training. Generated lists (query blocks) drawn under their block.
 //
 // The frontmatter itself never goes into the editor: app.js keeps it aside (S.front) and writes it back
 // in front of the page. Everything here edits it through setField, so nobody types YAML.
@@ -84,7 +82,6 @@ export function makeGddUi(get) {
   const refreshKey = new PluginKey("gddRefresh");
   let version = 0; // bumped when any page may have changed: computed parts are asked again
   const results = new Map(); // query lists: page + "\n" + query → result (or "pending")
-  const generated = new Map(); // the bottom box: page → result (or "pending")
   const templates = new Map(); // component → its template's text (null: none yet)
   let redrawSettings = null; // the open settings dialog's redraw, while it's open
   let closeSettings = null; // and its close
@@ -94,7 +91,6 @@ export function makeGddUi(get) {
     if (lists) {
       version++;
       results.clear();
-      generated.clear();
     }
     const ed = get().editor();
     if (ed && !ed.isDestroyed)
@@ -1136,77 +1132,6 @@ export function makeGddUi(get) {
 
   // ----------------------------------------------------------------------------- the bottom box
 
-  function linksBox() {
-    const { S, h, api } = get();
-    const page = S.path;
-    const r = generated.get(page);
-    if (!r) {
-      generated.set(page, "pending");
-      const v = version;
-      api("/api/generated?page=" + encodeURIComponent(page)).then((x) => {
-        if (v === version && x.ok && Array.isArray(x.links)) {
-          generated.set(page, x);
-          refresh();
-        }
-      });
-    }
-    const box = h("aside", { class: "gdd-box", contenteditable: "false" });
-    if (!r || r === "pending") return box;
-    const open = (p) =>
-      h(
-        "a",
-        { onclick: () => get().openDoc(p.path), title: p.path },
-        p.title || slugOf(p.path),
-      );
-    const row = (label, pages) =>
-      h(
-        "div",
-        { class: "gdd-box-row" },
-        h("span", { class: "gdd-box-label" }, label),
-        h(
-          "span",
-          { class: "gdd-box-pages" },
-          pages.flatMap((p, i) => (i ? [", ", open(p)] : [open(p)])),
-        ),
-      );
-    const parts = [];
-    if (Array.isArray(r.members) && r.members.length)
-      parts.push(row("Members", r.members));
-    if (r.training && Array.isArray(r.training.rows)) {
-      const cols = r.training.columns.filter((c) =>
-        ["level", "verb", "xp", "tool"].includes(c),
-      );
-      parts.push(
-        h(
-          "div",
-          { class: "gdd-box-row" },
-          h("span", { class: "gdd-box-label" }, "Trained by"),
-          h(
-            "table",
-            { class: "gdd-box-table" },
-            r.training.rows.map((x) =>
-              h(
-                "tr",
-                {},
-                h("td", {}, open(x)),
-                x.name ? h("td", {}, x.name) : null,
-                cols.map((c) => h("td", {}, plain(x.fields[c] || ""))),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-    for (const g of Array.isArray(r.links) ? r.links : [])
-      parts.push(row(g.label, g.pages));
-    if (!parts.length)
-      parts.push(h("div", { class: "gdd-dim" }, "Nothing links here yet."));
-    box.append(
-      h("div", { class: "gdd-box-title" }, "Links to this page"),
-      ...parts,
-    );
-    return box;
-  }
   const plain = (md) =>
     md.replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/[*_`]/g, "");
 
@@ -1380,25 +1305,8 @@ export function makeGddUi(get) {
         }
       }
       promptDecos(doc, fm, decos);
-      const g = generated.get(S.path);
-      decos.push(
-        Decoration.widget(
-          doc.content.size,
-          safe(() => linksBox()),
-          {
-            side: 1,
-            key:
-              "box:" +
-              version +
-              ":" +
-              S.path +
-              ":" +
-              (g ? (g === "pending" ? "p" : "r") : "n"),
-            ignoreSelection: true,
-            stopEvent: () => true,
-          },
-        ),
-      );
+      // (What links here, a group's members and a skill's training are in the Links tab, src/panels.js:
+      // the box that repeated them at the bottom of the page is gone.)
     }
     doc.descendants((node, pos) => {
       if (node.type.name !== "codeBlock" || node.attrs.language !== "query")

@@ -1150,19 +1150,6 @@ body.cols-moving #outlineWin { transition: width .26s cubic-bezier(.25, .8, .25,
 .np-comp.on::before { content: "✓ "; }
 .np-note { margin: 8px 0 4px; }
 
-/* At the bottom: what other pages say about this one, computed, kept apart from what the author wrote. */
-.prose .gdd-box { margin: 48px 0 0; padding: 12px 16px; border: 1px solid var(--line-soft); border-radius: 6px; background: rgba(0, 0, 0, .22);
-  font-family: var(--sans); font-size: 14px; line-height: 1.5; color: var(--muted); white-space: normal; user-select: none; }
-.prose .gdd-box:empty { display: none; }
-.prose .gdd-box-title { font-family: var(--serif); font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; }
-.prose .gdd-box-row { display: flex; gap: 12px; margin: 3px 0; align-items: baseline; }
-.prose .gdd-box-label { flex: 0 0 110px; color: var(--dim); }
-.prose .gdd-box-pages a { cursor: pointer; color: var(--silver-soft); }
-.prose .gdd-box-pages a:hover { color: var(--ink); }
-.prose .gdd-box-table { border-collapse: collapse; font-size: 13.5px; }
-.prose .gdd-box-table td { padding: 1px 12px 1px 0; border: 0; }
-.prose .gdd-box-table a { cursor: pointer; color: var(--silver-soft); }
-
 /* A template's guidance on a page (src/gdd-ui.js): faint, never part of the page, gone once something is written. */
 .prose .gdd-prompt { margin: -2px 0 10px; color: #6f6658; font: italic 15px/1.5 var(--sans); user-select: none; pointer-events: none; }
 .prose .gdd-hint { margin-left: 8px; color: #6a6255; font-style: italic; font-weight: 400; user-select: none; pointer-events: none; }

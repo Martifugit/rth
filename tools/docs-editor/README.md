@@ -79,8 +79,9 @@ and offline (sent when you're back), or Saved, not shared yet.
   The frontmatter (`src/frontmatter.js`) never goes into the editor: it is kept aside, edited only
   through the strip (one field's line at a time), and written back in front of the page. The raw view
   (**<>**) shows it for power use.
-- **Links to this page** (the bottom of a page, `GET /api/generated`): links in by what they mean, a
-  group's members, a skill's training; computed, so kept apart from what the author wrote.
+- **What links here** (the Links tab, `src/panels.js`; `GET /api/links`, `GET /api/generated`): a group's
+  members, a skill's training, links in by what they mean; computed, so kept apart from what the author
+  wrote (it used to be repeated in a box at the bottom of the page).
 - **To-dos:** a link to a page not written yet is gold and dashed; a click makes it, as a stub of its
   folder's type. **To-do** (in the page list) gathers them, groups named in frontmatter with no page,
   `p-` placeholders, and the structure checks: no type, an unknown type or component, a component
