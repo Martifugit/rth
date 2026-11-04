@@ -14,6 +14,9 @@ Cart.
 - A page can start as two sentences: what it is, and why it exists. That's a complete page until
   there's a reason to say more.
 - A link to a page that doesn't exist yet is fine. It's a to-do.
+- Its sections come in a fixed order: the type's core headings, then its components in the order
+  of the tables in section 5, then Open questions. Every page of a type reads the same, whenever
+  each section was added.
 
 ## 2. The two rules of the system
 
@@ -56,7 +59,6 @@ types few and broad.
 
 | Type | Folder | What it covers | Core headings |
 | --- | --- | --- | --- |
-| overview | (top) | The game itself | Pitch · Pillars · Core loop |
 | system | systems | Rules that apply everywhere: death, banking, trading, the XP curve | Intent · Rules · Interactions |
 | skill | skills | A trainable skill | Intent · How it feels to train · What it unlocks |
 | entity | entities | Anything that lives or acts on its own: monsters, NPCs, pets | What it is · Intent · Appearance |
@@ -80,25 +82,25 @@ factions are groups that have also grown lore and relations sections.
 ## 5. Components
 
 Each component answers one question, has a fixed set of fields, and looks the same on every page
-that uses it. A page may hold several instances of one component: a cooking range has one action
-per dish.
+that uses it. A component marked under Repeats may appear several times on one page: a cooking
+range has one action per dish, each an H3 under the Action section, named for what it does.
 
 ### Access
 
-| Component | Answers | Fields | Found on |
-| --- | --- | --- | --- |
-| requirements | What do you need to use or reach this? | Levels, quests, items, membership | Almost anything |
-| unlocks | What does this give access to? | Mostly generated from other pages' requirements | skill, quest, achievement, item |
+| Component | Answers | Fields | Found on | Repeats |
+| --- | --- | --- | --- | --- |
+| requirements | What do you need to use or reach this? | Levels, quests, items, membership | Almost anything |  |
+| unlocks | What does this give access to? | Mostly generated from other pages' requirements | skill, quest, achievement, item |  |
 
 ### Doing
 
-| Component | Answers | Fields | Found on |
-| --- | --- | --- | --- |
-| action | What can the player do with this? | Verb, skill (optional), level, tool, inputs, outputs, XP, time, success chance | object, item, entity |
-| trade | What can be bought or sold here? | Stock, prices, currency, restock | entity, object |
-| travel | Where can this take you? | Destinations, cost, requirements | object, item, ability, entity |
-| storage | What can be kept here? | Capacity, what's allowed, who can access it | object, entity, item |
-| dialogue | What does it say? | Personality, voice, key lines, tree link | entity, object, item |
+| Component | Answers | Fields | Found on | Repeats |
+| --- | --- | --- | --- | --- |
+| action | What can the player do with this? | Verb, skill (optional), level, tool, inputs, outputs, XP, time, success chance | object, item, entity | yes |
+| trade | What can be bought or sold here? | Stock, prices, currency, restock | entity, object | yes |
+| travel | Where can this take you? | Destinations, cost, requirements | object, item, ability, entity | yes |
+| storage | What can be kept here? | Capacity, what's allowed, who can access it | object, entity, item |  |
+| dialogue | What does it say? | Personality, voice, key lines, tree link | entity, object, item |  |
 
 An action with a skill is a skill-action: chopping a tree, smelting ore, picking a pocket, crossing
 an obstacle, planting a seed. An action without a skill covers everything else you can do with
@@ -106,61 +108,61 @@ something: opening a chest, decanting potions, climbing a ladder.
 
 ### Fighting
 
-| Component | Answers | Fields | Found on |
-| --- | --- | --- | --- |
-| combat | How does it fight? | Stats, attack styles, weaknesses, effects it applies | entity |
-| behaviour | How does it move and react? | Aggression, movement, triggers, phases | entity |
-| assignable | Can it be given as a task? | Who assigns it, amounts, task requirements | entity, object |
+| Component | Answers | Fields | Found on | Repeats |
+| --- | --- | --- | --- | --- |
+| combat | How does it fight? | Stats, attack styles, weaknesses, effects it applies | entity |  |
+| behaviour | How does it move and react? | Aggression, movement, triggers, phases | entity |  |
+| assignable | Can it be given as a task? | Who assigns it, amounts, task requirements | entity, object |  |
 
 ### Items
 
-| Component | Answers | Fields | Found on |
-| --- | --- | --- | --- |
-| equippable | What happens when you wear or wield it? | Slot, bonuses, effects, requirements | item |
-| consumable | What happens when you use it up? | Effect, amount, doses | item |
-| charges | Does it wear out or run out? | Charges, how it's recharged, what it becomes | item, object |
-| value | What is it worth? | Value, tradeable or not, stackable or not | item |
+| Component | Answers | Fields | Found on | Repeats |
+| --- | --- | --- | --- | --- |
+| equippable | What happens when you wear or wield it? | Slot, bonuses, effects, requirements | item |  |
+| consumable | What happens when you use it up? | Effect, amount, doses | item |  |
+| charges | Does it wear out or run out? | Charges, how it's recharged, what it becomes | item, object |  |
+| value | What is it worth? | Value, tradeable or not, stackable or not | item |  |
 
 ### Outcomes
 
-| Component | Answers | Fields | Found on |
-| --- | --- | --- | --- |
-| rewards | What do you get from this? | Fixed rewards and chance-based rewards, with what triggers them (kill, completion, opening) | entity, object, quest, activity, achievement |
+| Component | Answers | Fields | Found on | Repeats |
+| --- | --- | --- | --- | --- |
+| rewards | What do you get from this? | Fixed rewards and chance-based rewards, with what triggers them (kill, completion, opening) | entity, object, quest, activity, achievement | yes |
 
 A drop table is a rewards component triggered by a kill.
 
 ### World
 
-| Component | Answers | Fields | Found on |
-| --- | --- | --- | --- |
-| spawns | What appears here? | What, how many, where, when, respawn time | location |
-| area-rules | What works differently here? | Combat rules, restrictions, hazards, effects applied | location |
-| states | How does it change? | States, what moves it between them, how long each lasts | object, entity, location |
+| Component | Answers | Fields | Found on | Repeats |
+| --- | --- | --- | --- | --- |
+| spawns | What appears here? | What, how many, where, when, respawn time | location |  |
+| area-rules | What works differently here? | Combat rules, restrictions, hazards, effects applied | location |  |
+| states | How does it change? | States, what moves it between them, how long each lasts | object, entity, location |  |
 
 states covers anything that changes form: a tree that becomes a stump, a crop that grows, a door
 that opens, a town that changes after a quest.
 
 ### Structure
 
-| Component | Answers | Fields | Found on |
-| --- | --- | --- | --- |
-| branching | Can the player choose? | Choices, outcomes | quest, activity |
-| repeatable | Can it be done again? | How often, what resets, what changes | activity, quest, achievement |
-| timed | Is time a factor? | Limits, schedules | quest, activity |
-| players | Who takes part? | Solo, group, versus, sizes | activity, quest |
+| Component | Answers | Fields | Found on | Repeats |
+| --- | --- | --- | --- | --- |
+| branching | Can the player choose? | Choices, outcomes | quest, activity |  |
+| repeatable | Can it be done again? | How often, what resets, what changes | activity, quest, achievement |  |
+| timed | Is time a factor? | Limits, schedules | quest, activity |  |
+| players | Who takes part? | Solo, group, versus, sizes | activity, quest |  |
 
 ### Design
 
-| Component | Answers | Fields | Found on |
-| --- | --- | --- | --- |
-| tunables | Which numbers can be adjusted? | A table of values and their purpose | system, skill, activity |
-| progression | How does it grow over the game? | Stages, curves, milestones | system, skill |
+| Component | Answers | Fields | Found on | Repeats |
+| --- | --- | --- | --- | --- |
+| tunables | Which numbers can be adjusted? | A table of values and their purpose | system, skill, activity |  |
+| progression | How does it grow over the game? | Stages, curves, milestones | system, skill |  |
 
 ### Flavour
 
-| Component | Answers | Fields | Found on |
-| --- | --- | --- | --- |
-| examine | What does examining it say? | One line | entity, object, item |
+| Component | Answers | Fields | Found on | Repeats |
+| --- | --- | --- | --- | --- |
+| examine | What does examining it say? | One line | entity, object, item |  |
 
 ## 6. Who writes what
 
