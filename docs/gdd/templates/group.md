@@ -14,4 +14,4 @@ status: stub
 
 ## Members
 
-<!-- Generated: every page that lists this group shows up under Links to this page. Write here only how the members differ from each other. -->
+<!-- Generated: every page that lists this group shows up in the page's Links tab. Write here only how the members differ from each other. -->
