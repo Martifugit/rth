@@ -121,10 +121,13 @@ async function open() {
     minWidth: 900, minHeight: 600,
     title: "R'th Codex", icon: fs.existsSync(ICON) ? ICON : undefined,
     backgroundColor: "#040404", show: false,
+    // Windows 11 draws a thin light border round a window that isn't maximised: a silver frame on Codex's
+    // near-black. Its own colour makes it vanish (Electron keeps it applied as the window is activated).
+    accentColor: "#040404",
     // The Codex draws its own title bar (search, New page, Sync, help); Windows keeps its buttons in
     // the corner over it, as in VS Code.
     titleBarStyle: "hidden",
-    titleBarOverlay: { color: "#040404", symbolColor: "#d9c9a6", height: 38 },
+    titleBarOverlay: { color: "#040404", symbolColor: "#aeb2b7", height: 38 }, // silver, as the rest of the title bar
     webPreferences: { contextIsolation: true, nodeIntegration: false, spellcheck: false },
   });
   if (b?.maximized) win.maximize();

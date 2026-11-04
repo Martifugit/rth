@@ -4,6 +4,11 @@ A few plain lines per version, for the people using it: `npm run release` puts t
 the GitHub release and announces it in #codex (`scripts/release.mjs`, `scripts/announce.mjs`). Write the
 section before releasing; the release refuses without one.
 
+## 0.3.7
+
+- No more silver frame round the Codex window: Windows 11's border is now the same near-black as Codex.
+- Everything in the title bar has the logo button's quiet silver look: the buttons, the search box, and the minimise, maximise and close buttons.
+
 ## 0.3.6
 
 - The conversation selector in the AI tab has a speech-bubble icon instead of a clock, and its title sits level with the icon.

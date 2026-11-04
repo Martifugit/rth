@@ -808,6 +808,13 @@ body.in-app #topbar button, body.in-app #topbar input { -webkit-app-region: no-d
 /* Who's here: hovered for where they are, clicked to go there, so not part of the window's drag area. */
 body.in-app #topbar .here, body.in-app #topbar .here-av { -webkit-app-region: no-drag; app-region: no-drag; }
 body.in-app .search-trigger { height: 28px; }
+/* Everything in the title bar has the logo button's look: silver, with a faint wash and a hairline on
+   hover (not the warm gold of the panes' buttons). */
+#topbar .top-btn { color: var(--silver-soft); }
+#topbar .top-btn:hover, #topbar .pane-btn.on { background: rgba(255, 255, 255, .04); border-color: var(--hair); color: var(--silver); }
+#topbar .search-trigger { border-color: var(--hair); color: var(--silver-dim); }
+#topbar .search-trigger:hover { border-color: rgba(255, 255, 255, .13); color: var(--silver-soft); }
+#topbar .search-trigger kbd { color: var(--silver-dim); border-color: var(--hair); }
 
 /* ------------------------------------------------------------------ the AI tab (src/ai.js) */
 .ico-ai { --icon: url("/ask.svg"); } /* the sparkle of Ask the AI on a selection (src/notes.js, ICON.ask) */
