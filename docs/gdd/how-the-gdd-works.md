@@ -79,6 +79,35 @@ types few and broad.
 A group's Members section is generated from every page that lists it under groups. Species and
 factions are groups that have also grown lore and relations sections.
 
+### Choosing a type
+
+Some types name themselves: a skill, an ability, an effect, a quest, lore, media, a guide, a
+decision. For everything else, ask these in order and stop at the first yes.
+
+1. **Can you point at it?** Something that acts is an entity, something placed is an object,
+   something held is an item, a place is a location.
+2. **Is it something you do with one of those, or a form one takes?** Then it isn't a page. It's an
+   action, a state or a rewards table on that thing's page.
+3. **Is it a set of things?** Then it's a group. Rules every member follows aren't the set: they're
+   a system page, which the group links to.
+4. **Does the player start it and finish it?** Then it's an activity, or a quest if it's done once.
+   Being repeatable isn't enough: chopping is repeatable, and it's an action.
+5. **Is it rules shared by many pages that none of them owns?** Then it's a system, even if it
+   touches only one kind of thing.
+
+Hard cases:
+
+- **Combat style**: the rules every style follows are a system; the styles are a group; each style
+  is a skill in it.
+- **Tending tree roots**: the rules (when a stand needs it, who sees it, what it gives) are a
+  system; tending is an action on each tree that can need it; needing and having had it are that
+  tree's states. It isn't an activity: nobody starts or finishes it.
+- **Distillation**: an activity. Its rituals have their own rules, and the player starts and ends
+  one. It trains a skill, and the skill's page links to it. A single recipe at a still is an action
+  on the still.
+- **Ability or effect**: what the player activates is an ability; what it leaves on a target is an
+  effect, which the ability links to.
+
 ## 5. Components
 
 Each component answers one question, has a fixed set of fields, and looks the same on every page
