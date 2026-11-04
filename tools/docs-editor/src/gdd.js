@@ -129,7 +129,6 @@ export function componentSection(c) {
  */
 export function newPageText(title, type, make = null) {
   const front = type && make ? make({ type: type.type, components: [], groups: [], "based-on": null, status: "stub" }) : "";
-  // "A group's Members section is generated from every page that lists it under groups."
-  const generated = (hd) => (type?.type === "group" && /^members$/i.test(hd) ? "\n```query\ngroups: this\n```\n" : "");
-  return front + "# " + title + "\n" + (type?.headings || []).map((hd) => "\n## " + hd + "\n" + generated(hd)).join("");
+  // (A group's members aren't written: the page's "Links to this page" box gathers them.)
+  return front + "# " + title + "\n" + (type?.headings || []).map((hd) => "\n## " + hd + "\n").join("");
 }

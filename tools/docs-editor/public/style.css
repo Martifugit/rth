@@ -971,3 +971,48 @@ body.right-ai.sheet-outline #outlineWin { width: min(400px, calc(100vw - 48px));
 .prose .td-list > li > * { margin: 0; flex: none; width: auto; display: inline; }
 .prose .td-list > li > .td-make { display: inline-flex; }
 .t-row.folder.empty .t-name { color: var(--dim); }
+
+/* ---------------------------------------------------------------- a GDD page: label, strip, bottom box (src/gdd-ui.js) */
+
+/* The type, beside the title. */
+.prose .gdd-type { display: inline-block; vertical-align: middle; margin-left: 12px; padding: 1px 8px; border: 1px solid var(--line); border-radius: 4px;
+  font-family: var(--sans); font-size: 12.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); line-height: 1.5; position: relative; top: -4px; user-select: none; }
+.prose .gdd-type.bad { color: var(--bad); border-color: rgba(224, 96, 78, .5); }
+/* A cut page: its title struck through. */
+.prose h1.gdd-cut { text-decoration: line-through; text-decoration-color: rgba(224, 96, 78, .8); text-decoration-thickness: 2px; color: var(--muted); }
+
+/* Under the title: "Variant of …", then the strip. */
+.prose .gdd-variant { margin: -6px 0 6px; text-align: center; font-size: 14.5px; color: var(--muted); font-style: italic; user-select: none; }
+.prose .gdd-variant a { cursor: pointer; color: var(--silver); }
+.prose .gdd-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 22px; padding-bottom: 10px; border-bottom: 1px solid var(--line-soft);
+  font-family: var(--sans); font-size: 13.5px; line-height: 1.4; white-space: normal; user-select: none; }
+.prose .gdd-status { border: 0; border-radius: 4px; padding: 2px 10px; font-weight: 700; font-size: 12.5px; letter-spacing: .04em; text-transform: uppercase; cursor: pointer; }
+.prose .gdd-status:disabled { cursor: default; }
+.gdd-status.st-stub, .gdd-status-item.st-stub::before { background: #5d636b; color: #eef0f2; }
+.gdd-status.st-draft, .gdd-status-item.st-draft::before { background: #d4b04a; color: #1e1a10; }
+.gdd-status.st-agreed, .gdd-status-item.st-agreed::before { background: #5fae4b; color: #0f1a0c; }
+.gdd-status.st-cut, .gdd-status-item.st-cut::before { background: #c4473a; color: #fff2ef; }
+.gdd-status.st-none { background: transparent; color: var(--dim); border: 1px dashed var(--line); }
+.gdd-status-item::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 8px; vertical-align: -1px; }
+.prose .gdd-chip { border: 1px solid var(--line); border-radius: 10px; padding: 0 9px; color: var(--silver-soft); cursor: pointer; text-decoration: none !important; }
+.prose .gdd-chip:hover { color: var(--ink); border-color: var(--hair-2); }
+.prose .gdd-chip.todo, .prose .gdd-variant a.todo { color: var(--accent); border-style: dashed; }
+.prose .gdd-add, .prose .gdd-link { border: 0; background: none; color: var(--dim); padding: 0 4px; font-size: 13px; cursor: pointer; }
+.prose .gdd-add:hover, .prose .gdd-link:hover { color: var(--title); }
+.prose .gdd-sections { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px 12px; margin-left: auto; }
+.prose .gdd-jump { cursor: pointer; color: var(--silver-soft); text-decoration: none !important; }
+.prose .gdd-jump:hover { color: var(--ink); text-decoration: underline !important; }
+.prose .gdd-dim { color: var(--dim); }
+
+/* At the bottom: what other pages say about this one, computed, kept apart from what the author wrote. */
+.prose .gdd-box { margin: 48px 0 0; padding: 12px 16px; border: 1px solid var(--line-soft); border-radius: 6px; background: rgba(0, 0, 0, .22);
+  font-family: var(--sans); font-size: 14px; line-height: 1.5; color: var(--muted); white-space: normal; user-select: none; }
+.prose .gdd-box:empty { display: none; }
+.prose .gdd-box-title { font-family: var(--serif); font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; }
+.prose .gdd-box-row { display: flex; gap: 12px; margin: 3px 0; align-items: baseline; }
+.prose .gdd-box-label { flex: 0 0 110px; color: var(--dim); }
+.prose .gdd-box-pages a { cursor: pointer; color: var(--silver-soft); }
+.prose .gdd-box-pages a:hover { color: var(--ink); }
+.prose .gdd-box-table { border-collapse: collapse; font-size: 13.5px; }
+.prose .gdd-box-table td { padding: 1px 12px 1px 0; border: 0; }
+.prose .gdd-box-table a { cursor: pointer; color: var(--silver-soft); }

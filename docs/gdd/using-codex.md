@@ -14,36 +14,54 @@ in service of that.
 - **To-do** in the page list gathers every page that something links to but nobody has written, and
   every page whose structure needs a look.
 
-## Templates and components
+## The top of a page
+
+The top of every page answers what it is, whether it's settled, and what it belongs to.
+
+- **The label beside the title** is the page's type (Entity, Location): what kind of page this is, and
+  which headings to expect.
+- **The status badge**: grey for stub, yellow for draft, green for agreed, red for cut (and a cut
+  page's title is struck through). Click it to change it.
+- **Variant of…** shows under the title when the page is a variant of another.
+- **Groups** are chips that link to the group pages. **+** adds or removes one, makes a new group, or
+  sets what the page is a variant of.
+- **The page's components** are its section links, on the right: click one to jump to it.
+  **+ component** adds one: its section comes from its template, at the end of the page.
+
+You never have to type the page's header by hand. **<>** (top right) shows the raw text for when you
+want it.
+
+## The bottom of a page
+
+**Links to this page** gathers what other pages say about this one: *Dropped by*, *Found in*,
+*Appears in*, a group's members, a skill's training. It's computed, never written, so it sits apart
+from the page's own words. To change it, change the page that owns the relationship.
+
+## Templates
 
 `templates/` holds one template per type (`entity.md`) and one snippet per component (`action.md`).
-Change a template and every new page of that type follows it.
-
-- **Component** (in the toolbar) adds a component where the cursor is: its snippet goes into the page,
-  and its name into the page's frontmatter. The components that belong on the page's type come first.
-- **<>** (top right) shows the page's raw text, frontmatter included: its type, components, groups,
-  based-on and status.
+Change a template and every new page of that type, or every new section of that component, follows it.
 
 ## Links
 
 - Link to another page with Ctrl+K, or type `[Goblin](../entities/goblin.md)`.
-- **Outline and Links** (right) shows what links here, named by what the link means: a link from a
-  rewards section shows as *Dropped by*, from spawns as *Found in*, from a quest's steps as *Appears
-  in*. Whoever owns the relationship writes the link; the other page shows it by itself.
+- A link is named by what it means on the page it points to: a link from a rewards section shows
+  there as *Dropped by*, from spawns as *Found in*, from a quest's steps as *Appears in*. Whoever owns
+  the relationship writes the link; the other page shows it by itself, in **Links to this page**.
 
-## Lists that write themselves
+## Lists of your own
 
-Lists that gather things from other pages are never typed by hand. Write a code block of the language
-`query`, and Codex shows what it finds under it:
+For any other list gathered from other pages, write a code block of the language `query`, and Codex
+shows what it finds under it:
 
 ```
-groups: this
+type: entity
+groups: goblins
 ```
 
 Each line is a filter: `type`, `status`, `groups`, `components`, `based-on`, `links-to`, or
-`<component>.<field>` for what pages write in their component sections (`action.skill: this` is a
-skill's training table). `this` means the page the list is on; `sort: level` orders it. A new group
-page gets its members list by itself.
+`<component>.<field>` for what pages write in their component sections (`action.level: 15`). `this`
+means the page the list is on; `sort: level` orders it.
 
 ## Comments and Discord
 

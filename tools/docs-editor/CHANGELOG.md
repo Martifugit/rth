@@ -7,10 +7,12 @@ section before releasing; the release refuses without one.
 ## 0.3.0
 
 - The GDD in its own order: the start page, the Charter, How the GDD Works, Using Codex, Workflow, templates, then a folder for every type.
-- New pages are made from their type's template in templates/; Component in the toolbar adds a component's snippet.
+- The top of a page says what it is: its type beside the title, its status as a coloured badge (click to change it), its groups as chips, and Variant of… when it has one. A cut page's title is struck through.
+- The page's components are its section links; + component adds one from its template.
+- New pages are made from their type's template in templates/.
+- Links to this page, at the bottom: Dropped by, Found in, Appears in, a group's members, a skill's training. Computed, never written.
 - A link to a page not written yet is a to-do: click it to make the page as a stub.
-- Links in are named by what they mean: Dropped by, Found in, Appears in, Sold by.
-- Lists that write themselves: a group's members, a skill's training, or any query, in a `query` block.
+- Lists of your own, gathered from the pages, in a `query` block.
 - To-do (in the page list): pages to write, placeholder names, and pages whose type or sections need a look.
 - File names are unique across the GDD.
 - Open questions is gone from the page list: each page keeps its own.

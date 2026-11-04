@@ -61,11 +61,17 @@ uncommitted work in the folder are never staged, committed, set aside or overwri
 - **New page**: a title and a type ("entity | monsters, NPCs, pets"). The type decides the folder (the
   Types table in How the GDD Works, read by `src/gdd.js`), and the page is made from the type's
   template, `templates/<type>.md`, its title line set to the page's title.
-- **Frontmatter** (`src/frontmatter.js`) never goes into the editor: it is kept aside and written back
-  in front of the page, exactly as typed. The raw view (**<>**) shows and edits it.
-- **Component** (in the toolbar, on a typed page): inserts the component's snippet,
-  `templates/<component>.md`, where the cursor is, and adds its name to the frontmatter. The
-  components found on the page's type come first.
+- **The top of a page** (`src/gdd-ui.js`, after the OSRS Wiki's infobox, slimmer): the type as a label
+  beside the title; a strip under it with the status badge (grey stub, yellow draft, green agreed,
+  red cut, which also strikes the title through; click for a menu), the groups as chips to their pages
+  (**+**: a picker, a new group, and Variant of…), and the components as jump links to their sections
+  (**+ component**: its section from `templates/<component>.md`, at the end of the page, before Open
+  questions, and its name in the frontmatter). Variant of… shows under the title when `based-on` is set.
+  The frontmatter (`src/frontmatter.js`) never goes into the editor: it is kept aside, edited only
+  through the strip (one field's line at a time), and written back in front of the page. The raw view
+  (**<>**) shows it for power use.
+- **Links to this page** (the bottom of a page, `GET /api/generated`): links in by what they mean, a
+  group's members, a skill's training; computed, so kept apart from what the author wrote.
 - **To-dos:** a link to a page not written yet is gold and dashed; a click makes it, as a stub of its
   folder's type. **To-do** (in the page list) gathers them, groups named in frontmatter with no page,
   `p-` placeholders, and the structure checks: no type, an unknown type or component, a component
@@ -76,7 +82,7 @@ uncommitted work in the folder are never staged, committed, set aside or overwri
 - **Generated lists:** a code block of language `query` shows, under it, what it finds. Lines are
   filters: `type`, `status`, `groups`, `components`, `based-on`, `links-to`, and `<component>.<field>`
   for component instances (`action.skill: this` is a skill's training table); `this` is the page it's
-  on; `sort: <field>`. The group template holds its Members list this way.
+  on; `sort: <field>`.
 - **The page list** is the GDD, flat (`src/gdd.js`, `TOP`): the start page (README), the Charter, How
   the GDD Works, Using Codex and Workflow, then `templates/`, then a folder per type in the Types
   table's order, shown even while empty. New page refuses a file name already used in the GDD.

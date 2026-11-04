@@ -286,10 +286,11 @@ async function api(url, opts) {
 
 async function loadTree() {
   const [r, g] = await Promise.all([api("/api/tree"), api("/api/gdd")]);
-  if (g.ok) { S.types = g.types || []; S.components = g.components || []; fillComponentMenu(); }
+  if (g.ok) { S.types = g.types || []; S.components = g.components || []; }
   S.files = r.files || [];
   S.fileSet = new Set(S.files.map((f) => f.path));
   renderTree();
+  gddUi.refresh(); // the strip's group chips and type label read the page list and the types
 }
 
 // ----------------------------------------------------------------------------- back and forward
@@ -343,7 +344,7 @@ async function openDoc(path, { hash = "", push = true, find = null, keepScroll =
   drawNav();
   tellPresence();
   together.pageChanged();
-  renderCrumbs(); markTreeCurrent(); buildOutline(); refreshDirty(); fillComponentMenu();
+  renderCrumbs(); markTreeCurrent(); buildOutline(); refreshDirty();
   notes.load(S.path);
   ai.pageChanged();
   aiChanges.pageOpened(S.wantChanges === S.path);
@@ -784,7 +785,6 @@ const I = {
 
 const TOOLS = [
   { type: "select" },
-  { type: "component" },
   { sep: true },
   { id: "bold", icon: I.bold, title: "Bold (Ctrl+B)", run: (c) => c.toggleBold(), active: (e) => e.isActive("bold") },
   { id: "italic", icon: I.italic, title: "Italic (Ctrl+I)", run: (c) => c.toggleItalic(), active: (e) => e.isActive("italic") },
@@ -833,38 +833,12 @@ function buildToolbar() {
       bar.append(sel);
       continue;
     }
-    if (t.type === "component") {
-      // Add a component where the cursor is: its snippet from templates/, its name into the frontmatter.
-      const sel = h("select", { class: "field tb-select hidden", id: "componentSel", title: "Add a component: its section goes where the cursor is" });
-      sel.addEventListener("change", () => {
-        const c = S.components.find((x) => x.name === sel.value);
-        sel.value = "";
-        if (c) gddUi.addComponent(c).then(fillComponentMenu);
-      });
-      bar.append(sel);
-      continue;
-    }
     if (t.type === "tableOps") {
       bar.append(h("span", { class: "tb-group table-ops hidden", id: "tableOps" }, h("span", { class: "tb-label" }, "TABLE"), TABLE_OPS.map(btn)));
       continue;
     }
     bar.append(btn(t));
   }
-}
-
-/** The Component menu: only on a typed page, with the components that belong on its type first. */
-function fillComponentMenu() {
-  const sel = $("#componentSel");
-  if (!sel) return;
-  const fm = S.path && !isMeta(S.path) ? gddUi.front() : null;
-  sel.classList.toggle("hidden", !fm?.type || !S.components.length);
-  if (!fm?.type) return;
-  const fits = (c) => c.foundOn.includes(fm.type) || c.foundOn.some((x) => /almost anything/.test(x));
-  const opt = (c) => h("option", { value: c.name, title: c.answers }, (gddUi.has(c) ? "✓ " : "") + c.name);
-  const usual = S.components.filter(fits), rest = S.components.filter((c) => !fits(c));
-  sel.replaceChildren(h("option", { value: "" }, "Component"),
-    usual.length ? h("optgroup", { label: "For " + (/^[aeiou]/.test(fm.type) ? "an " : "a ") + fm.type }, usual.map(opt)) : null,
-    rest.length ? h("optgroup", { label: "Others" }, rest.map(opt)) : null);
 }
 
 function updateToolbar() {

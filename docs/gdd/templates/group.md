@@ -11,7 +11,3 @@ status: stub
 ## What unites them
 
 ## Members
-
-```query
-groups: this
-```

@@ -544,6 +544,29 @@ const api = {
     return { problems: checks(idx.gdd, idx.system, idx.texts) };
   },
 
+  // What a page's bottom box shows, all computed from other pages: links in, by what they mean
+  // ("Dropped by", from How the GDD Works' "Who writes what"), a group's members, a skill's training.
+  async "GET /api/generated"(url) {
+    const page = url.searchParams.get("page");
+    if (!page) return [400, { error: "which page?" }];
+    const idx = await gdd();
+    const info = idx.gdd.pages.get(page);
+    const groups = new Map();
+    for (const l of linksFor(idx, page).inbound) {
+      const label = labelFor(idx.gdd, idx.system, l.from, l.section) || "Linked from";
+      if (!groups.has(label)) groups.set(label, new Map());
+      groups.get(label).set(l.from, { path: l.from, title: l.title, section: l.section });
+    }
+    const type = info?.front?.type;
+    const members = type === "group" ? runQuery(idx.gdd, idx, page, "groups: this").rows : null;
+    const training = type === "skill" ? runQuery(idx.gdd, idx, page, "action.skill: this\nsort: level") : null;
+    const order = (a, b) => (a === "Linked from") - (b === "Linked from") || a.localeCompare(b);
+    return {
+      links: [...groups].sort(([a], [b]) => order(a, b)).map(([label, m]) => ({ label, pages: [...m.values()] })),
+      members, training: training && training.rows.length ? training : null,
+    };
+  },
+
   async "GET /api/changes"() { return { changes: await recentChanges() }; },
 
   async "GET /api/broken"() {
