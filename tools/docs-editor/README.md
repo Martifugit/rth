@@ -109,8 +109,9 @@ and commits them under your Discord name. Not signed in, it uses this computer's
 The session stays on this computer (encrypted in the desktop app). `src/discord-account.js`,
 `src/account-button.js`.
 
-Every push to `main` that changes a page posts a line in Discord's `#codex` (who edited which pages),
-each page a link that opens it in the Codex: the helper's `/open` page hands over to `rth-codex://`
+Pages changed on `main` are announced in Discord's `#codex` (who edited which pages) in batches per
+person: posted once they've been quiet for half an hour, or every two hours while they keep going
+(`helper/src/notices.js`, the helper's 5-minute timer). Each page is a link that opens it in the Codex: the helper's `/open` page hands over to `rth-codex://`
 links, which the desktop app registers for itself each time it starts.
 
 **With Discord** (`src/discord-extras.js`, `src/discord-presence.js`): **Ctrl+Shift+C** copies the

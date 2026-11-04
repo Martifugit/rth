@@ -23,6 +23,10 @@ GITHUB_APP_ID = "5599564"
 # release it names is published, then deploy. Older ones are refused and asked to update.
 MIN_CODEX = "0.3.0"
 
+# "What changed" is posted in batches (src/notices.js): this timer posts the ones that are ready.
+[triggers]
+crons = ["*/5 * * * *"]
+
 # Who's here (src/live.js): one room every open Codex keeps a WebSocket to.
 [[durable_objects.bindings]]
 name = "LIVE"

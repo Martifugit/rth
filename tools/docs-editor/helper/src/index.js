@@ -2,7 +2,7 @@
 // computer has to. It wakes per request and keeps nothing between them.
 //
 //   GET  /open?p=docs/...&h=heading     a link Discord can show, that opens the page in the Codex
-//   POST /github                         GitHub tells it about pushes; it posts "what changed" to #codex
+//   POST /github                         GitHub tells it about pushes; it queues "what changed" for #codex
 //                                        and tells every open Codex to fetch (the live room, "pages")
 //   GET  /auth/discord/start?redirect=   Sign in with Discord (the Codex opens this in the browser)
 //   GET  /auth/discord/callback          ...Discord sends the person back here, then to the Codex
@@ -19,7 +19,7 @@
 // Secrets (wrangler secret): DISCORD_BOT_TOKEN, DISCORD_CLIENT_SECRET, GITHUB_WEBHOOK_SECRET,
 // GITHUB_APP_KEY (PKCS#8), SESSION_SECRET, AGENT_KEY. Everything else is in wrangler.toml's [vars].
 
-import { onPush } from "./notices.js";
+import { onPush, sendDue } from "./notices.js";
 import { openPage } from "./open.js";
 import { signIn, callback, sessionFrom } from "./auth.js";
 import { member, post } from "./discord.js";
@@ -103,6 +103,11 @@ export default {
       console.error(route, e.stack || e);
       return json({ error: "The helper failed: " + e.message }, 500);
     }
+  },
+
+  // Every 5 minutes (wrangler.toml, triggers): post the "what changed" batches that are ready (notices.js).
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(sendDue(env).catch((e) => console.error("notices", e.stack || e)));
   },
 };
 

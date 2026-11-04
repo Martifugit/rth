@@ -26,3 +26,20 @@ CREATE TABLE IF NOT EXISTS posted (
 );
 
 CREATE TABLE IF NOT EXISTS config (k TEXT PRIMARY KEY, v TEXT NOT NULL);
+
+-- "What changed" in #codex, batched per person (src/notices.js): pages queued by pushes, posted by the
+-- timer once their author has been quiet a while.
+CREATE TABLE IF NOT EXISTS notice_pages (
+  author TEXT NOT NULL,         -- the name the notice shows (the Codex's "(Discord)" dropped)
+  path TEXT NOT NULL,
+  status TEXT NOT NULL,         -- added, modified or removed, across the whole batch
+  first_at INTEGER NOT NULL,    -- ms: first queued, and last changed
+  last_at INTEGER NOT NULL,
+  origin TEXT NOT NULL,         -- the helper's address, for the /open links
+  PRIMARY KEY (author, path)
+);
+CREATE TABLE IF NOT EXISTS notice_why (
+  author TEXT NOT NULL,         -- a commit message a person wrote (not the Codex's "Docs: ..."), with the batch
+  msg TEXT NOT NULL,
+  at INTEGER NOT NULL
+);
