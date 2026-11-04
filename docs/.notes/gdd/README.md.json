@@ -1,0 +1,33 @@
+{
+  "page": "docs/gdd/README.md",
+  "notes": [
+    {
+      "id": "1567476468920098907",
+      "kind": "note",
+      "status": "open",
+      "created": "2026-11-04T09:51:52Z",
+      "updated": "2026-11-04T09:52:01Z",
+      "anchor": {
+        "section": [
+          "Welcome"
+        ],
+        "quote": "grown",
+        "prefix": " should be, one page per thing, ",
+        "suffix": " from the game page outward by f"
+      },
+      "thread": [
+        {
+          "by": "person",
+          "at": "2026-11-04T09:51:52Z",
+          "text": "rewrwe",
+          "who": {
+            "id": "290175317392490497",
+            "name": "Ibux",
+            "avatar": "https://cdn.discordapp.com/avatars/290175317392490497/76727f1381ad15fa007347ba542baedc.png?size=64"
+          }
+        }
+      ],
+      "tags": []
+    }
+  ]
+}
