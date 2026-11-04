@@ -401,7 +401,7 @@ export function makeNotes(ctx) {
     const foot = [];
     if (replies) foot.push(h("span", { class: "cm-count" }, plural(replies, "reply", "replies")), h("span", { class: "cm-last" }, "· last from " + person(last.by, last.who).name));
     if (n.status === "answered") foot.push(h("span", { class: "cm-new" }, "New answer"));
-    if (run) foot.push(h("span", { class: "cm-busy" }, h("span", { class: "dots" }, h("i"), h("i"), h("i")), "Claude is answering"));
+    if (run) foot.push(h("span", { class: "cm-busy" }, h("span", { class: "dots" }, h("i"), h("i"), h("i")), "R'th AI is answering"));
     return h("div", { class: "cm-card compact" + (n.status === "answered" ? " new" : ""), "data-id": n.id, onclick: openOnClick(n),
       onmouseenter: () => hover(n.id), onmouseleave: () => hover(null) },
       whereLine(n),
@@ -446,7 +446,7 @@ export function makeNotes(ctx) {
     const shown = fold ? replies.slice(-2) : replies;
     const edits = (e) => {
       const files = e.run?.edits?.length ? new Set(e.run.edits.map((d) => d.file)).size : 0;
-      return files ? h("button", { class: "cm-link", onclick: (ev) => { ev.stopPropagation(); showChanges(e.run.edits); } }, `See what Claude changed (${plural(files, "page", "pages")})`) : null;
+      return files ? h("button", { class: "cm-link", onclick: (ev) => { ev.stopPropagation(); showChanges(e.run.edits); } }, `See what R'th AI changed (${plural(files, "page", "pages")})`) : null;
     };
     return h("div", { class: "cm-card active", "data-id": n.id, onclick: openOnClick(n) },
       whereLine(n),
@@ -470,7 +470,7 @@ export function makeNotes(ctx) {
     if (n.kind !== "task") return null;
     const ran = n.thread.some((e) => e.by === "agent" && e.run);
     const toClaude = ran || /@claude\b/i.test(n.thread.map((e) => e.text).join(" "));
-    return h("div", { class: "cm-assigned" }, toClaude ? "Assigned to Claude" : "Assigned to an agent, for the next session");
+    return h("div", { class: "cm-assigned" }, toClaude ? "Assigned to R'th AI" : "Assigned to an agent, for the next session");
   }
 
   function iconBtn(svg, title, fn) {
@@ -484,7 +484,7 @@ export function makeNotes(ctx) {
     const ta = h("textarea", { class: "cm-input", rows: "1", placeholder, "data-key": key, spellcheck: "true" });
     ta.value = initial;
     const assign = h("input", { type: "checkbox" });
-    const assignRow = h("label", { class: "cm-assign hidden", title: "Claude may edit pages under docs/ to do what this asks" }, assign, "Assign to Claude");
+    const assignRow = h("label", { class: "cm-assign hidden", title: "R'th AI may edit pages under docs/ to do what this asks" }, assign, "Assign to R'th AI");
     const warn = h("div", { class: "cm-warn hidden" });
     const pop = h("div", { class: "cm-mentions hidden" });
     const submit = h("button", { class: "btn btn-gold btn-small", disabled: true, onclick: (ev) => { ev.stopPropagation(); go(); } }, submitLabel);
@@ -497,9 +497,9 @@ export function makeNotes(ctx) {
       const m = mentions();
       assignRow.classList.toggle("hidden", !(allowAssign && m.claude));
       warn.classList.toggle("hidden", !askedClaude());
-      warn.textContent = "Comments are for people now: ask Claude in the AI tab (Ctrl+J), with this passage selected.";
+      warn.textContent = "Comments are for people now: ask R'th AI in the AI tab (Ctrl+J), with this passage selected.";
       submit.disabled = !ta.value.trim();
-      submit.textContent = m.claude && N.agent?.ok ? (assign.checked ? "Assign" : "Ask Claude") : m.agent ? "Assign" : submitLabel;
+      submit.textContent = m.claude && N.agent?.ok ? (assign.checked ? "Assign" : "Ask R'th AI") : m.agent ? "Assign" : submitLabel;
       layout();
     };
     let picks = [], sel = 0;
@@ -564,7 +564,7 @@ export function makeNotes(ctx) {
   function replyBox(n) {
     const running = N.runs.has(n.id);
     const ed = editor({
-      key: "reply-" + n.id, placeholder: running ? "Claude is answering…" : "Reply", submitLabel: "Reply",
+      key: "reply-" + n.id, placeholder: running ? "R'th AI is answering…" : "Reply", submitLabel: "Reply",
       initial: N.drafts.get(n.id) || "",
       onCancel: () => { N.drafts.delete(n.id); N.active = null; draw(); render(); },
       onSubmit: async ({ text, claude, assign }) => {
@@ -729,7 +729,7 @@ export function makeNotes(ctx) {
   function showChanges(edits) {
     const byFile = new Map();
     for (const e of edits) { if (!byFile.has(e.file)) byFile.set(e.file, []); byFile.get(e.file).push(e); }
-    const close = ctx.modal("What Claude changed", h("div", { class: "changes" }, [...byFile].map(([file, list]) => h("div", { class: "ch-file" },
+    const close = ctx.modal("What R'th AI changed", h("div", { class: "changes" }, [...byFile].map(([file, list]) => h("div", { class: "ch-file" },
       h("div", { class: "ch-name" }, ctx.hasPage(file) ? h("a", { onclick: () => { close(); ctx.openDoc(file); } }, file) : file),
       list.map((e) => h("div", { class: "ch-edit" },
         e.old != null ? h("pre", { class: "ch-old" }, e.old) : h("div", { class: "ch-new-file" }, "A new page:"),
@@ -763,7 +763,7 @@ export function makeNotes(ctx) {
     const f = N.history.filter;
     const list = N.history.all.filter((x) => f === "all" || (f === "open" && x.note.status !== "done") || (f === "resolved" && x.note.status === "done") || (f === "you" && forYou(x)));
     const select = h("select", { class: "field hs-filter", onchange: (ev) => { N.history.filter = ev.target.value; renderHistory(); } },
-      [["open", "Open"], ["you", "New from Claude"], ["resolved", "Resolved"], ["all", "All comments"]].map(([v, l]) => h("option", { value: v, selected: v === f || null }, l)));
+      [["open", "Open"], ["you", "New from R'th AI"], ["resolved", "Resolved"], ["all", "All comments"]].map(([v, l]) => h("option", { value: v, selected: v === f || null }, l)));
     p.replaceChildren(
       h("div", { class: "hs-head" }, h("span", { class: "win-title" }, "Comments"), select, h("button", { class: "close-x", title: "Close", onclick: toggleHistory }, "✕")),
       h("div", { class: "hs-list" }, list.length ? list.map((x) => {
@@ -776,7 +776,7 @@ export function makeNotes(ctx) {
           n.anchor?.quote ? h("div", { class: "hs-quote" }, clip(n.anchor.quote, 90)) : null,
           head(n.thread[0]), h("div", { class: "hs-text" }, clip(n.thread[0].text, 160)),
           n.thread.length > 1 ? h("div", { class: "hs-last" }, `${person(last.by, last.who).name}: ${clip(last.text, 110)}`) : null);
-      }) : h("div", { class: "np-empty" }, f === "you" ? "Nothing new from Claude. Its answers show here until you open them, and so do questions it leaves you." : "No comments.")));
+      }) : h("div", { class: "np-empty" }, f === "you" ? "Nothing new from R'th AI. Its answers show here until you open them, and so do questions it leaves you." : "No comments.")));
   }
 
   // ----------------------------------------------------------------------------- live events
@@ -784,7 +784,7 @@ export function makeNotes(ctx) {
   function onRun(ev) {
     if (ev.state === "done") {
       N.runs.delete(ev.id);
-      if (ev.error && ev.error !== "stopped") toast("Claude stopped: " + ev.error, "bad");
+      if (ev.error && ev.error !== "stopped") toast("R'th AI stopped: " + ev.error, "bad");
       return; // the notes event that follows brings the answer
     }
     const first = !N.runs.has(ev.id);

@@ -11,6 +11,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+// Installed, or run from this folder (electron/launch.js)? Not app.isPackaged alone: Electron decides that by
+// the exe's name, and the dev copy is renamed Codex.exe, so it looked installed (no look, update checks).
+// Run from a folder, Electron's default app loads it and sets process.defaultApp.
+const INSTALLED = app.isPackaged && !process.defaultApp;
+
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "..");
 const REMOTE = process.env.CODEX_REMOTE || "https://github.com/Martifugit/rth.git";
@@ -43,7 +48,7 @@ export function knownRepo() {
   const s = settings();
   if (isRepo(s.repo)) { if (s.fetched) markFetched(s.repo); return { repo: s.repo, fetched: !!s.fetched }; }
   const mine = path.resolve(ROOT, "..", "..");
-  if (!app.isPackaged && isRepo(mine)) return { repo: mine, fetched: false };
+  if (!INSTALLED && isRepo(mine)) return { repo: mine, fetched: false };
   return null;
 }
 

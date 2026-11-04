@@ -8,7 +8,9 @@ const PING_MS = 30 * 1000;
 export function makeTogether({ helper, session, emit, onComments = () => {}, onPages = () => {} }) {
   let ws = null, me = null, people = [], state = {}, wanted = false, retry = 2000, retryTimer = null, pinger = null, refused = null;
 
-  const view = () => ({ connected: !!me, refused, people: people.filter((p) => p.conn !== me) });
+  // CODEX_DEMO_PEOPLE=1 (a look at the header, never in a release): pretend people join the room.
+  const demo = process.env.CODEX_DEMO_PEOPLE ? DEMO_PEOPLE : [];
+  const view = () => ({ connected: !!me || demo.length > 0, refused, people: [...people.filter((p) => p.conn !== me), ...demo] });
   const tell = () => emit("here", view());
 
   function connect() {
@@ -69,3 +71,11 @@ export function makeTogether({ helper, session, emit, onComments = () => {}, onP
     view,
   };
 }
+
+const DEMO_AV = (n) => `https://cdn.discordapp.com/embed/avatars/${n}.png`;
+const DEMO_PEOPLE = [
+  { id: "demo-kari", conn: "demo-1", name: "Kari", avatar: DEMO_AV(1), page: "docs/gdd/rth-overview.md", title: "R'th", section: ["R'th", "Pillars"], editing: true },
+  { id: "demo-tobias", conn: "demo-2", name: "Tobias", avatar: DEMO_AV(2), page: "docs/gdd/rth-overview.md", title: "R'th", section: ["R'th"], editing: false },
+  { id: "demo-ines", conn: "demo-3", name: "Ines", avatar: DEMO_AV(3), page: "docs/gdd/how-the-gdd-works.md", title: "How the GDD Works", section: [], editing: false },
+  { id: "demo-oskar", conn: "demo-4", name: "Oskar", avatar: DEMO_AV(4), page: null, away: true },
+];

@@ -567,23 +567,23 @@ select.field option { background: #16130f; }
 .cm-marker.new::after { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--silver); margin-left: 1px; align-self: flex-start; margin-top: 4px; }
 .cm-marker-n { font: 700 10.5px/1 var(--sans); }
 
-/* A card: a dark warm slip with a thin bronze edge, like the panes. Closed ones are short; the open one
-   has the thread. */
+/* A card: the soft grey of AI setup's chosen option (and of your chat bubbles): a faint white tint and a
+   hairline edge. Closed ones are short; the open one has the thread. */
 .cm-card {
-  position: absolute; left: 0; right: 0; padding: 8px 10px 9px; border-radius: 4px; cursor: pointer;
-  background: rgba(17, 15, 12, .88); border: 1px solid #2a241c;
-  transition: top .15s ease, border-color .12s; font-size: 14px;
+  position: absolute; left: 0; right: 0; padding: 8px 10px 9px; border-radius: 5px; cursor: pointer;
+  background: rgba(255, 255, 255, .04); border: 1px solid var(--hair);
+  transition: top .15s ease, border-color .12s, background-color .12s; font-size: 14px;
 }
-.cm-card:hover { border-color: #3a3125; }
-/* Closed cards are quieter still: no box, a thin bronze rule down the left; lit with their passage. */
-.cm-card.compact { padding: 4px 8px 5px 10px; background: rgba(13, 12, 10, .55); border: 0; border-left: 2px solid #2e271d; border-radius: 0 3px 3px 0; }
-.cm-card.compact.cm-hover { border-left-color: var(--accent); background: rgba(201, 162, 94, .07); }
-.cm-card.compact.new { border-left-color: #8a7148; }
-/* The open card: the closed card's shape, lit as on hover (the gold rule, the warm tint) and opaque, in
-   line with the others rather than floating over them. */
+.cm-card:hover { border-color: var(--hair-2); }
+.cm-card.compact { padding: 4px 8px 5px 10px; }
+/* Lit with their passage; a new answer has a gold edge on its left. */
+.cm-card.compact.cm-hover { border-color: var(--hair-2); background: rgba(255, 255, 255, .06); }
+.cm-card.compact.new { box-shadow: inset 2px 0 #8a7148; }
+/* The open card: the same grey a shade lighter, with the brighter hairline (as on hover). No solid base:
+   one under it warmed it to brown, and the cards are stacked without overlapping anyway. */
 .cm-card.active {
-  cursor: default; z-index: 2; padding: 6px 10px 9px 12px; border: 0; border-left: 2px solid var(--accent); border-radius: 0 3px 3px 0;
-  background: linear-gradient(rgba(201, 162, 94, .07), rgba(201, 162, 94, .07)), #14120e;
+  cursor: default; z-index: 2; padding: 6px 10px 9px 12px; border-color: var(--hair-2);
+  background: rgba(255, 255, 255, .06);
 }
 .cm-head { display: flex; align-items: center; gap: 7px; }
 .cm-avatar {
@@ -659,15 +659,15 @@ select.field option { background: #16130f; }
 .cm-input-wrap { position: relative; }
 .cm-input {
   width: 100%; min-height: 30px; padding: 5px 8px; resize: none; overflow-y: auto; outline: none; line-height: 1.4;
-  border: 1px solid #3a3125; border-radius: 3px; color: var(--text); font-size: 14px;
-  background: #0d0c0a; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .6);
+  border: 1px solid var(--hair-2); border-radius: 4px; color: var(--text); font-size: 14px;
+  background: rgba(0, 0, 0, .28); box-shadow: inset 0 1px 2px rgba(0, 0, 0, .35); /* sunk into the grey card */
 }
-.cm-input:focus { border-color: #6b5838; }
+.cm-input:focus { border-color: rgba(255, 255, 255, .26); }
 .cm-input::placeholder { color: var(--dim); }
-.cm-mentions { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 5; padding: 4px; border-radius: 4px; background: #15130f; border: 1px solid #3a3125; box-shadow: 0 6px 16px rgba(0, 0, 0, .7); }
+.cm-mentions { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 5; padding: 4px; border-radius: 4px; background: #1a1a1b; border: 1px solid var(--hair-2); box-shadow: 0 6px 16px rgba(0, 0, 0, .7); }
 .cm-mention-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 4px; cursor: pointer; font-size: 13px; }
 .cm-mention-item span:last-child { color: var(--silver-dim); font-size: 12px; }
-.cm-mention-item.sel, .cm-mention-item:hover { background: rgba(255, 230, 180, .08); }
+.cm-mention-item.sel, .cm-mention-item:hover { background: rgba(255, 255, 255, .07); }
 .cm-assign { display: flex; align-items: center; gap: 7px; margin: 8px 2px 0; font-size: 13px; color: var(--ink); cursor: pointer; }
 .cm-assign input { accent-color: #9ea3a9; width: 15px; height: 15px; margin: 0; }
 .cm-warn { margin: 6px 2px 0; font-size: 12px; color: #e8b48a; }
@@ -757,6 +757,8 @@ body.in-app #topbar {
   padding-right: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw) + 8px);
 }
 body.in-app #topbar button, body.in-app #topbar input { -webkit-app-region: no-drag; app-region: no-drag; }
+/* Who's here: hovered for where they are, clicked to go there, so not part of the window's drag area. */
+body.in-app #topbar .here, body.in-app #topbar .here-av { -webkit-app-region: no-drag; app-region: no-drag; }
 body.in-app .search-trigger { height: 28px; }
 
 /* ------------------------------------------------------------------ the AI tab (src/ai.js) */
@@ -766,6 +768,11 @@ body.in-app .search-trigger { height: 28px; }
 @media (min-width: 1100px) { body.right-ai.outline-docked:not(.pages-docked) #app { grid-template-columns: 0 minmax(0, 1fr) 360px; } }
 @media (min-width: 1400px) { body.right-ai.pages-docked.outline-docked #app { grid-template-columns: 280px minmax(0, 1fr) 360px; } }
 body.right-ai.sheet-outline #outlineWin { width: min(400px, calc(100vw - 48px)); }
+/* Switching to or from the AI tab: the pane's width eases instead of jumping (only then: resizing the
+   window or docking a pane stays instant). src/app.js, showRightTab, sets cols-moving for the move. */
+body.cols-moving #app { transition: grid-template-columns .26s cubic-bezier(.25, .8, .25, 1); }
+body.cols-moving #outlineWin { transition: width .26s cubic-bezier(.25, .8, .25, 1); }
+@media (prefers-reduced-motion: reduce) { body.cols-moving #app, body.cols-moving #outlineWin { transition: none; } }
 .win-body.ai-body { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
 
 .ai { flex: 1; min-height: 0; display: flex; flex-direction: column; font-size: 14.5px; }
@@ -803,7 +810,10 @@ body.right-ai.sheet-outline #outlineWin { width: min(400px, calc(100vw - 48px));
 .ai-li-x svg { width: 14px; height: 14px; }
 
 .ai-log { flex: 1; min-height: 0; overflow: auto; padding: 12px 12px 4px; display: flex; flex-direction: column; gap: 12px; }
-.ai-msg-you { align-self: flex-end; max-width: 88%; padding: 7px 11px; border-radius: 10px 10px 3px 10px; background: #222224; border: 1px solid var(--hair); color: var(--ink); }
+/* Your message: a bubble on the right in the soft grey of AI setup's chosen option and of comments,
+   with a tight corner at the bottom right, towards you. */
+.ai-msg-you { align-self: flex-end; max-width: 85%; padding: 8px 13px;
+  border-radius: 16px 16px 4px 16px; background: rgba(255, 255, 255, .04); border: 1px solid var(--hair); color: var(--ink); }
 .ai-msg-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.45; }
 .ai-msg-ctx { margin-bottom: 4px; font-size: 12px; color: var(--silver-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ai-msg-ai { color: var(--ink); }
@@ -913,7 +923,7 @@ body.right-ai.sheet-outline #outlineWin { width: min(400px, calc(100vw - 48px));
 .ai-choice > span { display: flex; flex-direction: column; gap: 2px; }
 .ai-choice-note { color: var(--silver-dim); font-size: 12px; font-weight: normal; }
 .ai-setup-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-.ai-setup-row .field { flex: 1; min-width: 0; }
+.ai-setup-row .field { flex: 1; min-width: 0; height: 26px; margin: 0; } /* level with the button beside it */
 .ai-setup-row .ai-note { margin-top: 0; flex: 1; }
 .ai-setup-label { margin-top: 6px; color: var(--silver); }
 .ai-setup a { color: var(--title); }

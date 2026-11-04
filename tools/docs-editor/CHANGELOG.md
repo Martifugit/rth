@@ -4,6 +4,17 @@ A few plain lines per version, for the people using it: `npm run release` puts t
 the GitHub release and announces it in #codex (`scripts/release.mjs`, `scripts/announce.mjs`). Write the
 section before releasing; the release refuses without one.
 
+## 0.3.1
+
+- Share works for every page in the bottom-left box again: a page deleted outside the Codex made the whole Share fail.
+- Share and Undo no longer get lost when you click them while the Codex is sending something; they wait their turn.
+- The box says pages were "changed outside the Codex", and no longer blinks each time a page saves.
+- The AI is called R'th AI everywhere outside AI setup: in comments, the AI tab and the welcome screen.
+- Your messages in the AI tab are chat bubbles, and comments use the same soft grey cards; AI setup's fields line up with their buttons.
+- Hovering someone's avatar in the header says where they are again, and clicking it takes you there.
+- Switching to or from the AI tab eases the pane wider or narrower instead of jumping.
+- Search no longer offers the templates as pages.
+
 ## 0.3.0
 
 - The GDD in its own order: the start page, the Charter, How the GDD Works, Using Codex, Workflow, templates, then a folder for every type.

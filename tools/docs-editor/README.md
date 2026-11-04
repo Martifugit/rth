@@ -27,7 +27,7 @@ and offline (sent when you're back), or Saved, not shared yet.
 - **Others' changes** arrive within seconds: when anyone sends, the helper tells every open Codex
   (the live room) and it fetches at once; a check every minute is the safety net. They come in with a
   merge, and the Codex says what came.
-- **Edits the Codex won't share by itself**, R'th AI's and another program's (an agent, another
+- **Edits the Codex won't share by itself**, R'th AI's and those made outside it (an agent, another
   editor), are asked about in a panel in the bottom-left corner: **Share**, **Review** (the page with
   its changes marked, and Share in its bar) or **Undo** (back to how it was last shared). Unanswered,
   they stay on this computer and are asked about again next time. Comments (`docs/.notes/`) are

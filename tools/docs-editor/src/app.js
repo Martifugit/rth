@@ -905,7 +905,7 @@ async function welcome() {
       const r = await api("/api/account/signin", { method: "POST" });
       if (r.url) window.open(r.url, "_blank");
     }) : null,
-    needAi ? step("Free AI", "Claude isn't on this computer. OpenRouter gives you free models, about 50 messages a day.", "Sign in with OpenRouter", async () => {
+    needAi ? step("Free AI", "R'th AI isn't set up on this computer yet. Sign in with OpenRouter and it runs on free models, about 50 messages a day.", "Sign in with OpenRouter", async () => {
       const r = await api("/api/openrouter/signin", { method: "POST" });
       if (r.url) window.open(r.url, "_blank");
     }) : null,
@@ -1063,7 +1063,8 @@ function quickOpen() {
       if (starts(name)) return 2;
       return -1;
     };
-    const pages = S.files.map((f) => ({ f, s: score(f) }))
+    // Templates aren't pages to find, here as in the page list and the text search (they work behind New page).
+    const pages = S.files.filter((f) => !f.path.startsWith(TEMPLATES + "/")).map((f) => ({ f, s: score(f) }))
       .filter((x) => x.s >= 0).sort((a, b) => b.s - a.s || collator.compare(a.f.path, b.f.path)).slice(0, raw ? 8 : 40);
     items = pages.map((x) => ({ kind: "page", path: x.f.path, el: h("div", { class: "qo-item" },
       h("span", { class: "ico ico-note qo-ico" }), h("span", { class: "qo-title" }, x.f.title || x.f.path.split("/").pop()), h("span", { class: "qo-path" }, x.f.path)) }));
@@ -1459,7 +1460,7 @@ function wire() {
 // ----------------------------------------------------------------------------- syncing
 
 // Sharing (src/sync.js). There's no Sync button: what's typed here is sent by itself, and the status line
-// says how it stands (updateStatus). Edits the Codex won't send by itself (R'th AI's, another program's)
+// says how it stands (updateStatus). Edits the Codex won't send by itself (R'th AI's, those made outside it)
 // are asked about in the panel in the bottom-left corner: Share, Review or Undo. Problems that need
 // someone (two people changing the same lines, sending failing) are asked there too. Unanswered, they
 // stay on this computer and are asked again when the Codex opens next.
@@ -1499,13 +1500,15 @@ function drawSharePanel() {
   const v = syncState || {};
   const cards = [];
   const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
-  const groups = [["ai", "R'th AI"], ["other", "Another program"]];
+  const groups = [["ai", "R'th AI"], ["other", "outside the Codex"]];
   for (const [by, who] of groups) {
     const pages = heldShown.filter((x) => x.by === by);
     if (!pages.length) continue;
     const files = pages.map((x) => x.path);
     cards.push(h("div", { class: "sp-card" },
-      h("div", { class: "sp-title" }, `${who} changed ${plural(pages.length, "page", "pages")}. Share ${pages.length === 1 ? "it" : "them"}?`),
+      h("div", { class: "sp-title" }, by === "ai"
+        ? `${who} changed ${plural(pages.length, "page", "pages")}. Share ${pages.length === 1 ? "it" : "them"}?`
+        : `${plural(pages.length, "page was", "pages were")} changed outside the Codex. Share ${pages.length === 1 ? "it" : "them"}?`),
       // The first few by name; a long list ends "and 39 more" (all of them are in what Share and Undo do).
       h("div", { class: "sp-pages" }, pages.slice(0, 6).map((x, i) => [i ? ", " : "",
         x.gone ? h("span", { class: "sp-gone" }, "deleted " + x.title) : h("a", { onclick: () => reviewPages([x]) }, x.title)]),
@@ -1526,7 +1529,12 @@ function drawSharePanel() {
     h("div", { class: "sp-actions" },
       h("button", { class: "btn btn-small", onclick: async () => showSync(await api("/api/sync?why=retry", { method: "POST" })) }, "Try again"))));
   if (!cards.length) { panel?.remove(); return; }
+  // Every sync (each save) redraws; rebuilding the same cards would replay their fade-in, so it blinked.
+  const said = JSON.stringify([heldShown.map((x) => [x.path, x.by, x.title, x.gone]), v.clash || null,
+    !v.clash && v.problem && !v.offline && v.enabled === true ? v.problem : null]);
+  if (panel && panel.dataset.said === said) return;
   if (!panel) { panel = h("div", { id: "sharePanel" }); document.body.append(panel); }
+  panel.dataset.said = said;
   panel.replaceChildren(...cards);
 }
 
@@ -1534,7 +1542,8 @@ async function sharePages(files) {
   await save(false, { quiet: true });
   const v = await api("/api/sync/share", { method: "POST", body: JSON.stringify({ files }) });
   showSync(v);
-  if (!v.problem) toast(`Shared ${files.length === 1 ? "the page" : files.length + " pages"}`, "good");
+  // Only say so if they really went: still held means they didn't (the problem, if any, is in the panel).
+  if (!v.problem && !(v.held || []).some((x) => files.includes(x.path))) toast(`Shared ${files.length === 1 ? "the page" : files.length + " pages"}`, "good");
   aiChanges.load();
 }
 /** Open the pages one by one with their changes marked; the page's own bar then offers Share. */
@@ -1547,7 +1556,7 @@ async function reviewPages(pages) {
 async function undoPages(pages, who) {
   const n = pages.length;
   const list = pages.map((x) => `<li>${esc(x.title)}</li>`).join("");
-  const k = await ask(`Undo ${who === "Another program" ? "another program" : who}'s changes?`, `${n === 1 ? "This page goes" : "These pages go"} back to how ${n === 1 ? "it was" : "they were"} last shared:<ul>${list}</ul>`,
+  const k = await ask(who === "outside the Codex" ? "Undo the changes made outside the Codex?" : `Undo ${who}'s changes?`, `${n === 1 ? "This page goes" : "These pages go"} back to how ${n === 1 ? "it was" : "they were"} last shared:<ul>${list}</ul>`,
     [{ key: "no", label: "Cancel" }, { key: "yes", label: "Undo the changes", cls: "btn-danger" }]);
   if (k !== "yes") return;
   const v = await api("/api/sync/discard", { method: "POST", body: JSON.stringify({ files: pages.map((x) => x.path) }) });
@@ -1629,11 +1638,19 @@ function showRightTab(tab) {
   $("#outline").classList.toggle("hidden", tab !== "outline");
   $("#linksPane").classList.toggle("hidden", tab !== "links");
   $("#aiPane")?.classList.toggle("hidden", tab !== "ai");
+  // The AI tab widens the pane: ease it (style.css, cols-moving), then put the comments level again.
+  if (rightTabShown && document.body.classList.contains("right-ai") !== (tab === "ai")) { // not on opening the Codex
+    document.body.classList.add("cols-moving");
+    clearTimeout(colsMoving);
+    colsMoving = setTimeout(() => { document.body.classList.remove("cols-moving"); notes.layout(); }, 300);
+  }
   document.body.classList.toggle("right-ai", tab === "ai");
   $("#outlineWin .win-body").classList.toggle("ai-body", tab === "ai");
   if (tab === "links") panels.renderLinks();
   if (tab === "ai") { ai.shown(); requestAnimationFrame(() => notes.layout()); }
+  rightTabShown = true;
 }
+let colsMoving = null, rightTabShown = false;
 function setCommentCount(n) { $("#statusComments").textContent = n ? `${n} comment${n > 1 ? "s" : ""}` : ""; }
 function setLinksCount(n) { $("#linksCount").textContent = n ? String(n) : ""; }
 

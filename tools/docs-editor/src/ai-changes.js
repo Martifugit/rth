@@ -68,7 +68,7 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
     bar.replaceChildren(...[
       h("span", { class: "ai-bar-ico" }, "✦"),
       h("span", { class: "ai-bar-text" }, C.other
-        ? (C.showing ? (n ? `${n} change${n > 1 ? "s" : ""} not shared yet` : "No changes left") : "Another program changed this page")
+        ? (C.showing ? (n ? `${n} change${n > 1 ? "s" : ""} not shared yet` : "No changes left") : "Changed outside the Codex")
         : C.showing ? (n ? `${n} change${n > 1 ? "s" : ""} by the AI` : "No changes left") : "The AI changed this page"),
       C.showing && n ? h("span", { class: "ai-bar-nav" },
         h("button", { class: "ai-bar-btn", title: "Previous change", onclick: () => step(-1) }, "‹"),
@@ -334,7 +334,7 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
     if (page !== S.path) return;
     let all = r.changes || [];
     C.other = false;
-    // Another program's changes, waiting to be shared: compared with how the page was last shared.
+    // Changes made outside the Codex, waiting to be shared: compared with how the page was last shared.
     const hp = held(page);
     if (!all.length && hp?.by === "other") {
       const b = await api("/api/sync/base?page=" + encodeURIComponent(page));

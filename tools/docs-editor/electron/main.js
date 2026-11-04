@@ -8,6 +8,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { knownRepo, firstRun } from "./firstrun.js";
 
+// Installed, or run from this folder (electron/launch.js)? Not app.isPackaged alone: Electron decides that by
+// the exe's name, and the dev copy is renamed Codex.exe, so it looked installed (no look, update checks).
+// Run from a folder, Electron's default app loads it and sets process.defaultApp.
+const INSTALLED = app.isPackaged && !process.defaultApp;
+
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "..");
 const ICON = path.join(ROOT, "assets", "logo.ico"); // the R'th logo: window, taskbar and shortcut
@@ -28,7 +33,7 @@ const PROTOCOL = "rth-codex";
 // Unpackaged, the link starts the branded copy electron/launch.js makes (Codex.exe, "R'th Codex"), so
 // the browser asks to open "R'th Codex", not "Electron", however this copy was started.
 const BRANDED = path.join(ROOT, "node_modules", ".codex-app", "Codex.exe");
-if (app.isPackaged) app.setAsDefaultProtocolClient(PROTOCOL);
+if (INSTALLED) app.setAsDefaultProtocolClient(PROTOCOL);
 else app.setAsDefaultProtocolClient(PROTOCOL, process.platform === "win32" && fs.existsSync(BRANDED) ? BRANDED : process.execPath, [ROOT]);
 const linkIn = (argv) => argv.find((a) => typeof a === "string" && a.startsWith(PROTOCOL + "://")) || null;
 let pendingLink = linkIn(process.argv);
@@ -72,7 +77,7 @@ function saveBounds() {
 
 /** Rebuild the page (public/app.js) if its source is newer, so a shortcut always opens the current Codex. */
 async function buildIfStale() {
-  if (app.isPackaged) return; // the installed app is built already
+  if (INSTALLED) return; // the installed app is built already
   const out = path.join(ROOT, "public", "app.js");
   const built = fs.existsSync(out) ? fs.statSync(out).mtimeMs : 0;
   const src = path.join(ROOT, "src");
@@ -86,7 +91,7 @@ async function open() {
   await buildIfStale();
   // The installed app brings the game's look (fonts, frames, icons) and its own git (MinGit), and keeps
   // the words you add to the dictionary in its own folder.
-  if (app.isPackaged) {
+  if (INSTALLED) {
     const res = process.resourcesPath;
     process.env.CODEX_LOOK ||= path.join(res, "look");
     const git = path.join(res, "git", "cmd", "git.exe");
@@ -153,7 +158,7 @@ async function open() {
   const first = pendingLink ? new URL(pendingLink).searchParams.get("p") : null;
   pendingLink = null;
   await win.loadURL(origin + "/" + (first && /\.md$/.test(first) && !first.includes("..") ? "?p=" + encodeURI(first) : ""));
-  if (app.isPackaged) watchForUpdates();
+  if (INSTALLED) watchForUpdates();
 }
 
 /**

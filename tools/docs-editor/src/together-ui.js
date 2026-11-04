@@ -116,10 +116,11 @@ export function makeTogetherUi(ctx) {
     card.style.left = Math.max(8, Math.min(window.innerWidth - card.offsetWidth - 8, r.left + r.width / 2 - card.offsetWidth / 2)) + "px";
   }
   function hideCard() { card?.remove(); card = null; }
+  let hovered = null; // whose card is up: the avatars are redrawn as the room changes, and it follows them
 
   const avatar = (p, cls) => h("img", {
-    class: "here-av " + cls + (p.editing ? " editing" : "") + (p.away ? " away" : ""), src: p.avatar || "/logo.png", alt: p.name,
-    onmouseenter: (ev) => showCard(ev.currentTarget, p), onmouseleave: hideCard,
+    class: "here-av " + cls + (p.editing ? " editing" : "") + (p.away ? " away" : ""), src: p.avatar || "/logo.png", alt: p.name, "data-who": p.id,
+    onmouseenter: (ev) => { hovered = p.id; showCard(ev.currentTarget, p); }, onmouseleave: () => { hovered = null; hideCard(); },
     onclick: (ev) => { ev.stopPropagation(); hideCard(); go(p); },
   });
 
@@ -142,6 +143,12 @@ export function makeTogetherUi(ctx) {
     }
     drawNote();
     drawTyping();
+    // Still hovering someone: their card moves to their new avatar, or goes with them.
+    if (hovered) {
+      const p = all.find((x) => x.id === hovered);
+      const el = p && [...document.querySelectorAll(".here-av[data-who]")].find((x) => x.dataset.who === hovered && x.matches(":hover"));
+      if (el) showCard(el, p); else { hovered = null; hideCard(); }
+    }
   }
 
   // ----------------------------------------------------------------------------- "editing this section too"

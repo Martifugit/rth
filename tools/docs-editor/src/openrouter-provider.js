@@ -27,7 +27,7 @@ export const EDIT_FORMAT = [
 export function openRouterProvider({ key, models = () => OPENROUTER_MODELS }) {
   const check = async () => (key()
     ? { ok: true, name: "OpenRouter", version: models().join(", ") === "openrouter/free" ? "free models" : models().join(", ") }
-    : { ok: false, needsSignIn: "openrouter", error: "Claude isn't on this computer. Sign in with OpenRouter for free AI (your own daily allowance)." });
+    : { ok: false, needsSignIn: "openrouter", error: "R'th AI isn't set up on this computer yet. Sign in with OpenRouter for free AI (your own daily allowance)." });
 
   /** messages: [{ role, content }]. */
   function run({ messages, onText, onActivity }) {

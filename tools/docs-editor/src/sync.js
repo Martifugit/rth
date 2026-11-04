@@ -39,6 +39,9 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
   const saved = new Set();   // pages saved in the Codex since the last sync (relative paths)
   const byAi = new Set();    // ...of those, pages the AI changed (their commit says "with AI")
   let timer = null;
+  const shareNext = new Set(); // pages said to share while a sync was running: the next run takes them
+  // Share and Undo wait for a running sync rather than being lost to it (a minute's check, a save's send).
+  const idle = async () => { for (let i = 0; S.busy && i < 600; i++) await new Promise((r) => setTimeout(r, 100)); };
 
   function run(args, { ok = [0] } = {}) {
     return new Promise((resolve) => {
@@ -99,7 +102,10 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
   // commit: false (news from others): fetch, merge and send what's committed, but leave pages being
   // typed in for their own send, so a burst of editing stays one commit.
   async function doSync({ share = [], why = "auto", commit = true } = {}) {
-    if (S.busy) { S.again = true; return; } // one at a time: it runs again once this one is done
+    // One at a time. Pages someone said to share are kept for the next run, never dropped.
+    for (const f of share) shareNext.add(f);
+    if (S.busy) { S.again = true; return; }
+    share = [...shareNext]; shareNext.clear();
     S.busy = true; tell();
     try {
       await refresh();
@@ -113,8 +119,14 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
       // 1. Commit: only files under docs/, only those this sync may send.
       const files = !commit ? [] : S.waiting.filter((f) => sendable(f) || share.includes(f));
       if (files.length) {
-        const add = await run(["add", "-A", "--", ...files]);
+        // A page deleted with `git rm` is gone from the folder and the index alike, and `git add` refuses
+        // a path that matches nothing (which failed every Share it was in): unstage deletions by name.
+        const here = files.filter((f) => fs.existsSync(path.join(repo, f)));
+        const gone = files.filter((f) => !here.includes(f));
+        const add = here.length ? await run(["add", "-A", "--", ...here]) : { ok: true };
         if (!add.ok) throw new Error(add.err.trim() || "git couldn't stage the pages");
+        const rm = gone.length ? await run(["rm", "--cached", "--quiet", "--ignore-unmatch", "--", ...gone]) : { ok: true };
+        if (!rm.ok) throw new Error(rm.err.trim() || "git couldn't stage the deleted pages");
         // A deleted page is named by its title as it was ("deleted Combat").
         const named = await Promise.all(files.filter((f) => f.endsWith(".md")).map(async (f) => {
           if (fs.existsSync(path.join(repo, f))) return titleOf(f);
@@ -218,11 +230,13 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
   /** Send held pages: someone said so (the share panel, or the page's Share after reviewing). */
   async function share(files) {
     const ok = (files || []).filter((f) => typeof f === "string" && f.startsWith(scope + "/") && !f.includes(".."));
+    await idle();
     return sync({ why: "share", share: ok });
   }
 
   /** Put held pages back as they were last shared: changed ones restored, new ones removed. */
   async function discard(files) {
+    await idle();
     if (S.busy) return view();
     for (const f of (files || []).filter((x) => typeof x === "string" && x.startsWith(scope + "/") && !x.includes(".."))) {
       const known = await run(["cat-file", "-e", `HEAD:${f}`]);

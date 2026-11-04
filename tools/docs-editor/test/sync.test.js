@@ -187,6 +187,36 @@ await test("a page made or deleted is sent within seconds when automatic sync is
   assert.match(g(remote, "show", "main:docs/quick.md"), /# Quick/);
 });
 
+await test("Share sends a page deleted with git rm (gone from the folder and the index)", async () => {
+  write(a, "docs/doomed.md", "# Doomed\n");
+  write(a, "docs/kept.md", "# Kept\n");
+  sync.saved("docs/doomed.md"); sync.saved("docs/kept.md");
+  await sync.sync({ why: "auto" });
+  g(a, "rm", "--quiet", "docs/doomed.md");
+  write(a, "docs/kept.md", "# Kept\n\nAn agent was here.\n");
+  let v = await sync.refresh();
+  assert.deepEqual(v.held.map((x) => x.path).sort(), ["docs/doomed.md", "docs/kept.md"]);
+  v = await sync.share(v.held.map((x) => x.path));
+  assert.equal(v.problem, null);
+  assert.equal(v.held.length, 0);
+  assert.throws(() => g(remote, "show", "main:docs/doomed.md"));
+  assert.match(g(remote, "show", "main:docs/kept.md"), /agent/);
+});
+
+await test("Share and Undo wait for a sync that is already running instead of being lost", async () => {
+  write(a, "docs/kept.md", "# Kept\n\nA second agent.\n");
+  write(a, "docs/stray2.md", "# Stray\n");
+  const running = sync.sync({ why: "auto" });
+  let v = await sync.share(["docs/kept.md"]);
+  await running;
+  assert.match(g(remote, "show", "main:docs/kept.md"), /second agent/);
+  const again = sync.sync({ why: "auto" });
+  v = await sync.discard(["docs/stray2.md"]);
+  await again;
+  assert.equal(fs.existsSync(path.join(a, "docs/stray2.md")), false);
+  assert.equal(v.held.length, 0);
+});
+
 await test("a branch with no remote says so instead of syncing", async () => {
   const c = path.join(root, "c");
   g(root, "init", "--quiet", "--initial-branch=main", c);

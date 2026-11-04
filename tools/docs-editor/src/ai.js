@@ -234,9 +234,10 @@ export function makeAi(ctx) {
     return h("div", { class: "ai-empty" },
       h("div", { class: "ai-empty-title" }, "Talk it through"),
       h("p", {}, "Ask about the GDD, or talk an idea through. It reads what the chips below say: the page, the passage you selected, the comment you have open. Ask it to change something and it will."),
-      p && !p.ok && p.needsSignIn !== "openrouter" ? h("p", { class: "ai-warn" }, p.error) : null,
+      p && !p.ok && p.needsSignIn !== "openrouter" ? h("p", { class: "ai-warn" }, "R'th AI isn't ready on this computer. ", // what's wrong is told in AI setup
+        h("button", { class: "ai-link", onclick: toggleSetup }, "Open AI setup")) : null,
       p && p.needsSignIn === "openrouter" ? h("div", { class: "ai-signin" },
-        h("p", {}, "Claude isn't on this computer. OpenRouter gives you free AI models, on your own daily allowance (about 50 messages a day)."),
+        h("p", {}, "R'th AI isn't set up on this computer yet. Sign in with OpenRouter and it runs on free models, on your own daily allowance (about 50 messages a day)."),
         h("button", { class: "btn btn-gold", onclick: signInOpenRouter }, "Sign in with OpenRouter"),
         h("p", { class: "ai-note" }, "Not now? Everything else in the Codex works without it.")) : null,
       p?.ok ? h("div", { class: "ai-starts" }, starters().map((t) => h("button", { class: "ai-start", onclick: () => ask(t) }, t))) : null,
