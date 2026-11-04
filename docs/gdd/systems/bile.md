@@ -10,8 +10,10 @@ status: stub
 
 ## Intent
 
-Bile is a balance every player carries between yellow (offensive) and black (defensive). Leaning
-it is a gamble: further is stronger and more exposed at once.
+Bile is a balance every player carries between yellow (offensive) and black (defensive), and is
+represented through one of the key resource bars used in combat. The bile bar is a range from -100
+to 0 to 100, that rests at 0. As your bile increases you move towards yellow, and as it decreases
+you move towards black. Leaning into either side comes with trade-offs and decisions.
 
 ## Rules
 
