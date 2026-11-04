@@ -156,7 +156,7 @@ R'th AI's standing instructions (who it is, what the GDD is for, how to understa
 changing it, then the Charter and Writing a Page) come every turn (`standing()` in
 `src/assistant.js`). Claude Code runs with `--safe-mode`, so the repository's CLAUDE.md (a developer
 guide for the game's code) doesn't steer it; it can still read the code and data when a question is
-about how the game works today. It talks by default; asked for a change ("tighten this"), it edits pages under `docs/` itself,
+about how the game works today. On OpenRouter it has lookups the engine runs (`lookUp` in `src/assistant.js`: search_gdd, read_page, links_to, search_code, read_file; read-only, never secrets), at most four rounds a message since the free allowance counts requests; a model that can't use tools answers without them, and calls written into the text are read or dropped. It talks by default; asked for a change ("tighten this"), it edits pages under `docs/` itself,
 and its reply says which pages it changed, with **Show** and **Undo**. A page it changed says so in a
 bar at its top: **Show changes** marks what it added and removed (arrows go from one change to the
 next; pointing at one offers Undo for just that one), **Done** clears the marks. The engine finds the

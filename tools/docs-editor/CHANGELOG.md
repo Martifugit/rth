@@ -9,6 +9,7 @@ section before releasing; the release refuses without one.
 - R'th AI's suggestions no longer show a made-up heading like "type: system components: [] groups: []" at the top of the page. When it suggests changing the page's header (its status, say), that's a line of its own in the bar: "Also: status stub → draft", to accept or skip.
 - R'th AI keeps a conversation's context: it starts with what's on screen and stays on it while you work elsewhere. Type @ to add a page, or click a faint + chip to add the page, passage or comment you're on.
 - R'th AI knows its job better: what the GDD is for, and to read the whole page, its template and the pages around it before changing a section. On Claude it no longer works from the game code's developer guide, but still checks the code when a question is about how the game works today.
+- On OpenRouter, R'th AI can look things up when it needs to: search the GDD, open pages, see what links where, and search and read the game's code. Each lookup uses one of your free daily requests, so it gets the page up front and looks up at most four times a message; a model that can't look things up answers as before.
 - /model and /effort set a conversation's model and effort, as in Claude Code (/help lists them).
 - When R'th AI answers while you're elsewhere, the AI tab gets a gold dot and a notice says so, with Open.
 - Conversations get a short name from R'th AI's first answer, instead of the question.

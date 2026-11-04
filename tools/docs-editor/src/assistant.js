@@ -174,12 +174,12 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
       r.open = true;
       const history = c.messages.slice(0, -1).filter((m) => m.by !== "codex" && !(m.by === "you" && m.text.startsWith("/"))).slice(-12)
         .map((m) => ({ role: m.by === "you" ? "user" : "assistant", content: m.text || "" })).filter((m) => m.content);
-      const system = standing(brief, false) + "\n\n" + EDIT_FORMAT + "\n\n" + (await reading(c.context));
-      r.handle = ai.run({ model: c.settings?.openrouterModel || null, messages: [{ role: "system", content: system }, ...history, { role: "user", content: (ctx.text ? "This conversation is about:\n\n" + ctx.text + "\n\n" : "") + "They say:\n\n" + text + (suggest ? SUGGEST_NOTE : "") + naming }], ...handlers });
+      const system = standing(brief, "engine") + "\n\n" + EDIT_FORMAT + "\n\n" + (await reading(c.context));
+      r.handle = ai.run({ model: c.settings?.openrouterModel || null, tools: LOOKUPS, useTool: lookUp, describe: describeLookup, messages: [{ role: "system", content: system }, ...history, { role: "user", content: (ctx.text ? "This conversation is about:\n\n" + ctx.text + "\n\n" : "") + "They say:\n\n" + text + (suggest ? SUGGEST_NOTE : "") + naming }], ...handlers });
     } else {
       const said = fresh_.length ? (c.session ? "Added to this conversation since:\n\n" : "This conversation is about:\n\n") + fresh_.map((x) => x.text).join("\n\n") + "\n\n" : (c.session ? "" : "They have no page open.\n\n");
       const prompt = said + "They say:\n\n" + text + (suggest ? SUGGEST_NOTE : "") + naming;
-      r.handle = ai.run({ prompt, session: c.session, system: standing(brief, true), model: set.model, effort: set.effort, ...handlers });
+      r.handle = ai.run({ prompt, session: c.session, system: standing(brief, "repo"), model: set.model, effort: set.effort, ...handlers });
     }
     r.handle.done.then(async (res) => {
       clearTimeout(r.timer);
@@ -320,6 +320,76 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     return { chips, items, text: items.map((x) => x.text).join("\n\n") };
   }
 
+  // ----------------------------------------------------------------------------- lookups (OpenRouter)
+
+  // What a model without the repository can look up, run here, read-only. Each is a request against the
+  // free allowance, so they're offered for what it wasn't given, not instead of it.
+  const fn = (name, description, properties, required) => ({ type: "function", function: { name, description, parameters: { type: "object", properties, required } } });
+  const LOOKUPS = [
+    fn("search_gdd", "Search the GDD's pages (docs/gdd) for words. Returns matching lines with their page.", { query: { type: "string", description: "words to find" } }, ["query"]),
+    fn("read_page", "Read one GDD page in full.", { path: { type: "string", description: "its repository path, e.g. docs/gdd/systems/bile.md" } }, ["path"]),
+    fn("links_to", "List the GDD pages that link to a page.", { path: { type: "string", description: "the page's repository path" } }, ["path"]),
+    fn("search_code", "Search the game's code and data (everything outside docs/) for text, to check how the game works today. Returns matching lines with file and line number.", { query: { type: "string", description: "text to find, e.g. a class, a stat or a content id" } }, ["query"]),
+    fn("read_file", "Read part of a file of the game's code or data (not a GDD page: use read_page).", { path: { type: "string", description: "repository path" }, from: { type: "integer", description: "first line (1 if left out)" }, lines: { type: "integer", description: "how many lines, at most 300" } }, ["path"]),
+  ];
+  const GIT = process.env.CODEX_GIT || "git";
+  const SECRET = /(^|\/)(\.git(\/|$)|\.dev\.vars$|\.env(\.|$)|[^/]*\.pem$|account\.bin$|openrouter\.bin$|node_modules\/)/i;
+  const isGddPage = (p) => typeof p === "string" && /^docs\/gdd\/[^]+\.md$/.test(p) && !p.includes("..");
+  const title = (p) => p.split("/").pop().replace(/\.md$/, "").replace(/-/g, " ");
+  function describeLookup(name, a = {}) {
+    if (name === "search_gdd") return `Searching the GDD for “${String(a.query || "").slice(0, 40)}”`;
+    if (name === "read_page") return `Reading ${title(String(a.path || "a page"))}`;
+    if (name === "links_to") return `Seeing what links to ${title(String(a.path || "a page"))}`;
+    if (name === "search_code") return `Searching the game's code for “${String(a.query || "").slice(0, 40)}”`;
+    if (name === "read_file") return `Reading ${String(a.path || "a file").split("/").pop()}`;
+    return "Looking things up";
+  }
+  async function lookUp(name, a = {}) {
+    if (name === "search_gdd") {
+      const words = String(a.query || "").toLowerCase().split(/\s+/).filter(Boolean);
+      if (!words.length) return "Give some words to search for.";
+      const out = [];
+      for (const p of (await pages()).filter(isGddPage)) {
+        const t = await read(p);
+        if (!t) continue;
+        t.split("\n").forEach((line, i) => { const l = line.toLowerCase(); if (out.length < 30 && words.every((w) => l.includes(w))) out.push(`${p}:${i + 1}: ${line.trim().slice(0, 220)}`); });
+        if (out.length >= 30) break;
+      }
+      return out.length ? out.join("\n") : "Nothing in the GDD matches.";
+    }
+    if (name === "read_page") {
+      if (!isGddPage(a.path)) return "Only GDD pages (docs/gdd/...md) can be read this way.";
+      return (await read(a.path)) ?? "There's no page at " + a.path + " (yet).";
+    }
+    if (name === "links_to") {
+      if (!isGddPage(a.path)) return "Give a GDD page's path.";
+      const ins = await linksTo(a.path).catch(() => []);
+      return ins.length ? ins.map((x) => `- ${x.path}`).join("\n") : "No page links to it.";
+    }
+    if (name === "search_code") {
+      const q = String(a.query || "").trim();
+      if (!q) return "Give some text to search for.";
+      const got = await new Promise((res) => execFile(GIT, ["grep", "-n", "-I", "-i", "-F", "--max-count=4", "-e", q, "--", ".", ":(exclude)docs", ":(exclude)tools/docs-editor", ":(exclude)*.unity", ":(exclude)*.meta", ":(exclude)*.asset", ":(exclude)*.prefab", ":(exclude)*.mat", ":(exclude)*.rthmap"],
+        { cwd: repo, maxBuffer: 8 << 20, windowsHide: true }, (err, out) => res(err && !out ? "" : String(out || ""))));
+      const lines = got.split("\n").filter(Boolean);
+      if (!lines.length) return fs.existsSync(path.join(repo, "server")) ? "Nothing in the code or data matches." : "This copy of the repository holds only the docs, so there's no code to search here.";
+      return lines.slice(0, 40).map((l) => l.slice(0, 240)).join("\n") + (lines.length > 40 ? `\n…and ${lines.length - 40} more lines` : "");
+    }
+    if (name === "read_file") {
+      const rel = path.posix.normalize(String(a.path || "").replace(/\\/g, "/")).replace(/^\.\//, "");
+      if (!rel || rel.startsWith("..") || path.isAbsolute(rel) || SECRET.test(rel)) return "That file can't be read.";
+      if (rel.startsWith("docs/")) return "Use read_page for GDD pages.";
+      const abs = path.join(repo, rel);
+      let st; try { st = fs.statSync(abs); } catch { return "There's no file at " + rel + "."; }
+      if (!st.isFile() || st.size > 2 << 20) return "That isn't a file that can be read here (too big, or a folder).";
+      const text = fs.readFileSync(abs, "utf8");
+      if (text.includes("\u0000")) return "That's not a text file.";
+      const all = text.split(/\r?\n/), from = Math.max(1, Number(a.from) || 1), n = Math.min(300, Math.max(1, Number(a.lines) || 200));
+      return all.slice(from - 1, from - 1 + n).map((l, i) => `${from + i}: ${l}`).join("\n") + (from - 1 + n < all.length ? `\n(${all.length} lines in all)` : "");
+    }
+    return "No such lookup.";
+  }
+
   /** The context a conversation keeps (pinned when it starts): its page, pages added, a passage, a thread. */
   function pinned(x = {}) {
     const isPage = (p) => typeof p === "string" && p.startsWith("docs/") && p.endsWith(".md") && !p.includes("..");
@@ -443,7 +513,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     return { ok: true, undone: done, open };
   }
 
-  return { list, get, send, stop, remove, changesFor, reviewed, undo, setup, configure, setContext, signInClaude: () => claudeP.signIn(), check: provider.check, status: () => ({ running: [...runs.keys()] }) };
+  return { list, get, send, stop, remove, changesFor, reviewed, undo, setup, configure, setContext, lookUp, signInClaude: () => claudeP.signIn(), check: provider.check, status: () => ({ running: [...runs.keys()] }) };
 }
 
 const titleFrom = (text) => {
@@ -460,7 +530,7 @@ const titleFrom = (text) => {
  * Given on every turn (Claude: --append-system-prompt-file; OpenRouter: the system message), so they don't
  * fade over a long conversation. tools: it can read the repository itself (Claude).
  */
-function standing(brief, tools) {
+function standing(brief, tools) { // tools: "repo" (Claude reads it itself), "engine" (OpenRouter's lookups)
   return [
     "You are R'th AI, the design partner built into the Codex: the app a small group of friends use to write the game design document (GDD) of R'th, a private multiplayer RPG of their own (it plays like RuneScape 3 and looks like Old School RuneScape, in its own world built around the four humours).",
     "The GDD is docs/gdd. It is the design: what the game should be, written for the friends who design it and for whoever builds it next, people and coding agents alike. docs/gdd/charter.md holds the rules every page follows; docs/gdd/how-the-gdd-works.md the pages, types and components.",
@@ -469,9 +539,9 @@ function standing(brief, tools) {
     "How to work:",
     "- Before you suggest or make any change, understand where it sits. Read the whole page, not just the section; its type's template in docs/gdd/templates/; the pages that section links to; and the pages that link to this one (listed with the context when known). A section only makes sense in its page, and a page only in the GDD around it.",
     "- Then change only what the request needs, in the page's own voice. If the request is unclear, or would contradict another page, say so and ask rather than guess.",
-    tools
+    tools === "repo"
       ? "- The game's code and data are in the same repository (the rest of it besides docs/). Read them when a question is about how the game works today, and say what the code does and whether the GDD agrees; the GDD is the design, the code only the current build. Don't go to the code for design questions it can't answer. You can edit and create pages under docs/gdd/ only, never anything else."
-      : "- You only have the pages given below; say so when you'd need one you haven't been given. You can edit and create pages under docs/gdd/ only.",
+      : "- You've been given the page, who links to it and the rules below. When you need more, look it up with your tools: search_gdd and read_page for the GDD, links_to for who links to a page, search_code and read_file for the game's code and data when a question is about how the game works today (the GDD is the design, the code only the current build). Each lookup counts against a small daily allowance, so look up what you need and nothing you were given. You change pages only with the edit blocks described below.",
     "- After editing, say in a sentence or two what you changed and where: the Codex shows them each change.",
     "- Your reply shows in a narrow side panel as Markdown: short paragraphs, lists where they help, no big headings. Name pages by their repository paths.",
     "- The conversation keeps its context: the page it's about, pages they add (with @ or + Add page), a passage or a comment thread they point at. What they're looking at elsewhere while you work isn't part of it.",
