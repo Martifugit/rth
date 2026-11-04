@@ -18,4 +18,4 @@ status: stub
 
 ## What it unlocks
 
-<!-- Mostly generated: actions and requirements on other pages that name this skill show up under Links to this page. Write only what has no page of its own. -->
+<!-- Mostly generated: actions and requirements on other pages that name this skill show up in the page's Links tab. Write only what has no page of its own. -->
