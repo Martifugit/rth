@@ -1,7 +1,7 @@
 // Asking Claude Code about a note, from the Codex.
 //
-// An "ask" runs read-only (Read, Glob, Grep). A "task" may also edit pages, but only under docs/
-// (permission rules Edit(docs/**) and Write(docs/**); in print mode anything not allowed is refused).
+// An "ask" runs read-only (Read, Glob, Grep). A "task" may also edit pages, but only under docs/gdd/
+// (permission rules Edit(docs/gdd/**) and Write(docs/gdd/**); in print mode anything not allowed is refused).
 // The run streams as JSON lines; its text and what it is doing go to the page as it arrives, and the
 // finished answer becomes the agent's reply in the note's thread, with the session id (so a reply to
 // it carries on the same conversation) and every edit it made (so the page can show them).
@@ -10,7 +10,7 @@ import { spawn, execFile } from "node:child_process";
 import path from "node:path";
 
 const READ_TOOLS = ["Read", "Glob", "Grep"];
-const EDIT_TOOLS = ["Edit(docs/**)", "Write(docs/**)", "MultiEdit(docs/**)"];
+const EDIT_TOOLS = ["Edit(docs/gdd/**)", "Write(docs/gdd/**)", "MultiEdit(docs/gdd/**)"];
 const NEVER = ["Bash", "WebFetch", "WebSearch", "NotebookEdit", "Agent", "Task"];
 const MAX_RUNNING = 2;
 
@@ -174,14 +174,14 @@ function threadText(note) {
 function firstPrompt(note, page) {
   const task = note.kind === "task";
   return [
-    "You are answering a note the owner of R'th (a private RPG; its design docs are under docs/, and docs/gdd is the truth) left in the Codex, their docs reader. The note is attached to a place in a page.",
+    "You are answering a note the owner of R'th (a private RPG; its game design document is docs/gdd) left in the Codex, the app the GDD is written in. The note is attached to a place in a page.",
     "",
     where(note, page),
     "",
     threadText(note),
     "",
     task
-      ? "This is a task: do it by editing the docs (you may edit and create files under docs/ only). Read docs/gdd/writing.md first and follow it, and the page's own conventions. Change only what the task needs. Then reply in a few sentences: what you changed, where, and anything left open."
+      ? "This is a task: do it by editing the docs (you may edit and create pages under docs/gdd/ only). Read docs/gdd/charter.md and docs/gdd/how-the-gdd-works.md first and follow them, and the page's own conventions. Change only what the task needs. Then reply in a few sentences: what you changed, where, and anything left open."
       : "This is a question: answer it. You can read the repository (docs, code, data) but not change it. Read the page first. Answer briefly and plainly, in the docs' own voice; cite pages as repository paths and say where in them. If the docs don't settle it, say so and what would.",
     "Your reply is shown in a narrow side panel as Markdown: short paragraphs, no big headings.",
   ].join("\n");

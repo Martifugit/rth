@@ -34,7 +34,7 @@ export function makeAccountButton({ $, h, api, toast, onChange = () => {} }) {
         h("img", { class: "account-avatar big", src: V.user.avatar, alt: "" }),
         h("div", {}, h("div", { class: "account-name" }, V.user.name), h("div", { class: "account-sub" }, "Signed in with Discord"))),
       V.member === false ? h("div", { class: "account-warn" }, "You don't have the Codex role in the R'th Discord any more, so changes can't be sent. Ask the owner.") : null,
-      h("div", { class: "account-note" }, "Your changes are sent to the docs under this name."),
+      h("div", { class: "account-note" }, "Your changes to the GDD are sent under this name."),
       h("div", { class: "spell-sep" }),
       h("button", { class: "cm-menu-item", onclick: async () => { close(); V = await api("/api/account/signout", { method: "POST" }); draw(); toast("Signed out"); } }, "Sign out"));
     document.body.append(m);

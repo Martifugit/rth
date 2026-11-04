@@ -4,10 +4,6 @@
 
 import { slug } from "./links.js";
 
-const SECTION_NAMES = {
-  "1-overview": "Overview", "2-gameplay": "Gameplay", "3-story": "Story", "4-content": "Content",
-  "5-interface": "Interface", "6-behaviour": "Behaviour", appendices: "Appendices",
-};
 
 export function makePanels(ctx) {
   const { S, $, h, api } = ctx;
@@ -66,7 +62,7 @@ export function makePanels(ctx) {
     }
     const order = (p) => {
       const rest = p.path.slice("docs/gdd/".length);
-      return (rest.includes("/") ? "1/" + rest : (/^readme/i.test(rest) ? "0/" : "2/") + rest).replace(/(^|\/)(index|readme)\.md$/i, "$1!");
+      return (rest.includes("/") ? "1/" : "0/") + rest;
     };
     const pages = table.data.filter((p) => p.questions.length).sort((a, b) => order(a).localeCompare(order(b), "en", { numeric: true }));
     const total = pages.reduce((n, p) => n + p.questions.length, 0);
@@ -74,7 +70,8 @@ export function makePanels(ctx) {
     for (const p of pages) {
       const rest = p.path.slice("docs/gdd/".length);
       const folder = rest.includes("/") ? rest.split("/")[0] : "";
-      const name = SECTION_NAMES[folder] || "The GDD";
+      // Grouped by type folder ("entities" → "Entities"); the top pages under "The GDD".
+      const name = folder ? folder[0].toUpperCase() + folder.slice(1).replace(/-/g, " ") : "The GDD";
       if (!groups.has(name)) groups.set(name, []);
       groups.get(name).push(p);
     }
@@ -129,7 +126,7 @@ export function makePanels(ctx) {
       h("h1", {}, "Recent changes"),
       h("p", { class: "oq-intro" }, list.length
         ? (fresh ? `${fresh} new since you last looked. ` : "") + "Who changed which page, and where, newest first. Click a page or a section to go to it."
-        : "No changes to the docs yet."),
+        : "No changes to the GDD yet."),
       [...days].map(([day, es]) => [h("h2", {}, dayName(day)), h("ul", { class: "ch-list" }, es.map(row))])));
   }
 

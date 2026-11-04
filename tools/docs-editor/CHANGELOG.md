@@ -4,6 +4,10 @@ A few plain lines per version, for the people using it: `npm run release` puts t
 the GitHub release and announces it in #codex (`scripts/release.mjs`, `scripts/announce.mjs`). Write the
 section before releasing; the release refuses without one.
 
+## 0.2.0
+
+- The Codex is now for the GDD alone: it opens on the Charter, and a new page asks for its type.
+
 ## 0.1.5
 
 - See who else has the Codex open: their avatars by yours (hover to see where they are, click to go

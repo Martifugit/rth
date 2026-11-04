@@ -25,6 +25,7 @@ import { buildIndex, linksFor, pageState, brokenLinks } from "./src/links.js";
 import { LOG_FORMAT, parseLog, entries } from "./src/changelog.js";
 import os from "node:os";
 import { makeSpell } from "./src/spell.js";
+import { GDD, SYSTEM, inGdd, readTypes, newPageText } from "./src/gdd.js";
 import { makeSync } from "./src/sync.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -39,8 +40,9 @@ const UI = path.join(LOOK, "UI");
 const ICONS = path.join(LOOK, "Icons");
 const PORT = Number(process.env.PORT || 5178);
 
-// What the Codex shows: everything under docs/, and the Markdown at the repository's root.
-const ROOTS = ["docs"];
+// What the Codex shows: the GDD (docs/gdd) and nothing else. The rest of docs/ stays in the repository,
+// out of the Codex's way.
+const ROOTS = [GDD];
 const SKIP_DIRS = new Set(["node_modules", ".git", "img-src"]);
 
 const MIME = {
@@ -61,7 +63,7 @@ function safe(rel) {
   return abs;
 }
 const relOf = (abs) => path.relative(REPO, abs).split(path.sep).join("/");
-const isDoc = (rel) => rel.endsWith(".md") && (ROOTS.some((r) => rel.startsWith(r + "/")) || !rel.includes("/"));
+const isDoc = (rel) => rel.endsWith(".md") && inGdd(rel);
 
 async function walk(dir, out) {
   for (const e of await fsp.readdir(dir, { withFileTypes: true })) {
@@ -75,15 +77,13 @@ async function walk(dir, out) {
 
 async function allDocs() {
   const files = [];
-  for (const r of ROOTS) await walk(path.join(REPO, r), files);
-  for (const e of await fsp.readdir(REPO, { withFileTypes: true }))
-    if (e.isFile() && e.name.endsWith(".md")) files.push(e.name);
+  for (const r of ROOTS) { try { await walk(path.join(REPO, r), files); } catch {} }
   return files;
 }
 
 function gitStatus() {
   return new Promise((resolve) => {
-    execFile(process.env.CODEX_GIT || "git", ["status", "--porcelain", "-z", "--untracked-files=all", "--", ...ROOTS, "*.md"],
+    execFile(process.env.CODEX_GIT || "git", ["status", "--porcelain", "-z", "--untracked-files=all", "--", ...ROOTS],
       { cwd: REPO, maxBuffer: 16 << 20 }, (err, stdout) => {
         const status = {};
         if (!err) for (const entry of stdout.split("\0")) {
@@ -177,6 +177,11 @@ async function linkIndex() {
   return index;
 }
 
+// The GDD's types, read from How the GDD Works (src/gdd.js).
+async function gddTypes() {
+  try { return readTypes(await readText(path.join(REPO, SYSTEM))); } catch { return []; }
+}
+
 // Recent changes (src/changelog.js): the docs' git history, read again only when HEAD moves.
 const ATTRS = path.join(os.tmpdir(), "codex-md-attributes");
 let changeLog = { head: null, commits: [] };
@@ -188,7 +193,7 @@ async function recentChanges() {
     if (!fs.existsSync(ATTRS)) fs.writeFileSync(ATTRS, "*.md diff=markdown\n");
     // diff=markdown makes each hunk header name the heading above it.
     const out = await gitOut(["-c", "core.attributesFile=" + ATTRS, "-c", "core.quotePath=false", "log", "-n", "400", "--no-merges", "--no-renames",
-      "-U0", "--no-color", "--no-ext-diff", "--format=" + LOG_FORMAT, "--", ...ROOTS, ":(top,glob)*.md"]);
+      "-U0", "--no-color", "--no-ext-diff", "--format=" + LOG_FORMAT, "--", ...ROOTS]);
     changeLog = { head, commits: out ? parseLog(out) : [] };
   }
   const idx = await linkIndex();
@@ -241,12 +246,13 @@ function changed(rel) {
     for (const res of listeners) res.write(data);
   }, 150);
 }
-for (const r of ROOTS) {
+// docs/ is watched, not just the GDD, for the comment copies in docs/.notes/.
+for (const r of ["docs"]) {
   try {
     fs.watch(path.join(REPO, r), { recursive: true }, (_, name) => {
       if (!name) return;
       const rel = r + "/" + name.toString().split(path.sep).join("/");
-      if (rel.endsWith(".md")) changed(rel);
+      if (rel.endsWith(".md") && isDoc(rel)) changed(rel);
       else if (rel.endsWith(".json") && rel.startsWith("docs/.notes/")) notesChanged(rel);
     });
   } catch (e) { console.warn("Not watching", r, e.message); }
@@ -330,16 +336,12 @@ const api = {
 
   async "POST /api/new"(url, req) {
     if (!account.canEdit()) return [403, { error: "Sign in with Discord (with the Codex role) to make pages." }];
-    const { path: rel, template, title } = await body(req);
+    const { path: rel, title, type } = await body(req);
     const abs = safe(rel);
-    if (!abs || !isDoc(rel)) return [400, { error: "New pages go in a folder under docs/." }];
+    if (!abs || !isDoc(rel)) return [400, { error: "New pages go in the GDD." }];
     if (fs.existsSync(abs)) return [409, { error: "A page with that name already exists in that folder." }];
-    let text = "# " + (String(title || "").trim() || path.basename(rel, ".md").replace(/[-_]/g, " ").replace(/^./, (c) => c.toUpperCase())) + "\n";
-    if (template) {
-      const t = safe(template);
-      if (!t || !template.endsWith(".md")) return [400, { error: "bad template" }];
-      text = await readText(t);
-    }
+    const name = String(title || "").trim() || path.basename(rel, ".md").replace(/[-_]/g, " ").replace(/^./, (c) => c.toUpperCase());
+    const text = newPageText(name, (await gddTypes()).find((t) => t.type === type));
     await fsp.mkdir(path.dirname(abs), { recursive: true });
     await fsp.writeFile(abs, text, "utf8");
     recentWrites.set(relOf(abs), { hash: hash(text), until: Date.now() + 3000 });
@@ -457,7 +459,7 @@ const api = {
   },
 
   // A pasted image (a file, or a Discord image link, which expires within a day): saved under
-  // docs/images/pasted/, and its path relative to the page given back for the editor to insert.
+  // docs/gdd/images/, and its path relative to the page given back for the editor to insert.
   async "POST /api/image"(url, req) {
     if (!account.canEdit()) return [403, { error: "Sign in with Discord (with the Codex role) to add images." }];
     const { page, data, type, name, url: from } = await body(req);
@@ -475,7 +477,7 @@ const api = {
     if (!ext) return [400, { error: "That isn't a PNG, JPEG, GIF or WebP image." }];
     if (!bytes.length || bytes.length > 15 << 20) return [400, { error: "The image is empty or over 15 MB." }];
     const stem = String(name || (from ? new URL(from).pathname.split("/").pop() : "") || "image").replace(/\.[^.]+$/, "").replace(/[^\w-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "image";
-    const rel = `docs/images/pasted/${new Date().toISOString().slice(0, 10)}-${stem}-${crypto.randomBytes(2).toString("hex")}.${ext}`;
+    const rel = `${GDD}/images/${new Date().toISOString().slice(0, 10)}-${stem}-${crypto.randomBytes(2).toString("hex")}.${ext}`;
     const abs = path.join(REPO, rel);
     await fsp.mkdir(path.dirname(abs), { recursive: true });
     await fsp.writeFile(abs, bytes);
@@ -512,11 +514,13 @@ const api = {
     return linksFor(await linkIndex(), page);
   },
 
+  async "GET /api/gdd"() { return { types: await gddTypes() }; },
+
   async "GET /api/changes"() { return { changes: await recentChanges() }; },
 
   async "GET /api/broken"() {
     const idx = await linkIndex();
-    const links = brokenLinks(idx, (rel) => fs.existsSync(path.join(REPO, rel))).filter((l) => !l.from.startsWith("docs/gdd/templates/"));
+    const links = brokenLinks(idx, (rel) => fs.existsSync(path.join(REPO, rel)));
     return { links };
   },
 
@@ -524,7 +528,7 @@ const api = {
     const [idx, status, counts] = await Promise.all([linkIndex(), gitStatus(), noteCounts()]);
     const pages = [];
     for (const [p, text] of idx.texts) {
-      if (!p.startsWith("docs/gdd/") || p.startsWith("docs/gdd/templates/")) continue;
+      if (!inGdd(p)) continue;
       let mtime = null;
       try { mtime = (await fsp.stat(path.join(REPO, p))).mtimeMs; } catch {}
       pages.push({ path: p, title: idx.titles.get(p), ...pageState(text), git: status[p] || null, notes: counts[p] || null, mtime });

@@ -233,7 +233,7 @@ export function makeAi(ctx) {
     const p = A.provider;
     return h("div", { class: "ai-empty" },
       h("div", { class: "ai-empty-title" }, "Talk it through"),
-      h("p", {}, "Ask about the docs, or talk an idea through. It reads what the chips below say: the page, the passage you selected, the comment you have open. Ask it to change something and it will."),
+      h("p", {}, "Ask about the GDD, or talk an idea through. It reads what the chips below say: the page, the passage you selected, the comment you have open. Ask it to change something and it will."),
       p && !p.ok && p.needsSignIn !== "openrouter" ? h("p", { class: "ai-warn" }, p.error) : null,
       p && p.needsSignIn === "openrouter" ? h("div", { class: "ai-signin" },
         h("p", {}, "Claude isn't on this computer. OpenRouter gives you free AI models, on your own daily allowance (about 50 messages a day)."),
@@ -263,11 +263,11 @@ export function makeAi(ctx) {
     if (c.page && S.editor) {
       let words = 0, heads = 0;
       S.editor.state.doc.descendants((n) => { if (n.type.name === "heading") heads++; else if (n.isText) words += n.text.split(/\s+/).filter(Boolean).length; });
-      if (heads >= 3 && words < heads * 12) out.push("Draft this page from what the docs already say");
-      out.push("Review this page against writing.md and the pages it links to");
+      if (heads >= 3 && words < heads * 12) out.push("Draft this page from what the GDD already says");
+      out.push("Review this page against the Charter and the pages it links to");
       if (!c.thread) out.push("What does this page leave open?");
     }
-    if (c.selection) out.unshift("Is the selected passage clear and consistent with the rest of the docs?");
+    if (c.selection) out.unshift("Is the selected passage clear and consistent with the rest of the GDD?");
     if (!out.length) out.push("What's decided so far about combat?");
     return out.slice(0, 3);
   }

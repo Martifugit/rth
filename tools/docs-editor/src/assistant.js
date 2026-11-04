@@ -5,7 +5,7 @@
 // may read: the page, the selected passage, the comment thread that's open. The assistant answers in
 // streamed text through a provider.
 //
-// When asked for a change it edits pages under docs/ itself. Changes are found, not trusted: before a
+// When asked for a change it edits pages under docs/gdd/ itself. Changes are found, not trusted: before a
 // turn the engine keeps a copy of every page, and after it compares, so the message records each page
 // it changed (before and after). The page draws that as Show changes; Undo puts it back.
 //
@@ -171,7 +171,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
         const failed = [];
         for (const x of comments) {
           try {
-            if (!/^docs\/[^]+\.md$/.test(x.page) || x.page.includes("..")) throw new Error("not a page under docs/");
+            if (!/^docs\/gdd\/[^]+\.md$/.test(x.page) || x.page.includes("..")) throw new Error("not a page in the GDD (docs/gdd/)");
             const pageText = await read(x.page);
             if (pageText == null) throw new Error("no such page");
             const { anchor, title } = anchorFor(pageText, x.section, x.quote);
@@ -238,7 +238,8 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     };
     let pageText = null;
     if (page) { pageText = await read(page); add(`The open page: ${page}`, pageText, 50000); }
-    add("docs/gdd/writing.md (how the docs are written)", await read("docs/gdd/writing.md"), 12000);
+    add("docs/gdd/charter.md (the rules every page follows)", await read("docs/gdd/charter.md"), 8000);
+    add("docs/gdd/how-the-gdd-works.md (pages, types and components)", await read("docs/gdd/how-the-gdd-works.md"), 16000);
     if (pageText) {
       const seen = new Set();
       for (const m of pageText.matchAll(/\]\(([^)#\s]+\.md)(?:#[^)]*)?\)/g)) {
@@ -352,15 +353,15 @@ const titleFrom = (text) => {
 // ----------------------------------------------------------------------------- prompts
 
 // For a model that can't read the repository itself (OpenRouter): the same job, the reading given.
-const SYSTEM_OPEN = "You are the assistant in the Codex, the reader and editor for the design docs of R'th (a private RPG made by a group of friends). docs/gdd is the truth; docs/gdd/writing.md says how it's written. You're talking with someone in the Codex's side panel: discuss, explain and argue the design with them, from the pages given below. Say plainly when they don't settle something. Change pages only when they ask you to change something; discussing never changes a page. Change only what the request needs, in the page's own style. Your reply shows in a narrow side panel as Markdown: short paragraphs, lists where they help, no big headings.";
+const SYSTEM_OPEN = "You are the assistant in the Codex, the app for writing the game design document (GDD) of R'th (a private RPG made by a group of friends), in docs/gdd. docs/gdd/charter.md holds the rules every page follows, and docs/gdd/how-the-gdd-works.md the pages, types and components. You're talking with someone in the Codex's side panel: discuss, explain and argue the design with them, from the pages given below. Say plainly when they don't settle something. Change pages only when they ask you to change something; discussing never changes a page. Change only what the request needs, in the page's own style. Your reply shows in a narrow side panel as Markdown: short paragraphs, lists where they help, no big headings.";
 
 const SUGGEST_NOTE ="\n\n(They asked for suggestions: make the edits in the pages as you would; the Codex shows each one as a suggestion for them to accept or skip.)";
 
 function firstPrompt(text, ctx) {
   return [
-    "You are the assistant in the Codex, the reader and editor for the design docs of R'th (a private RPG made by a group of friends). The docs are under docs/; docs/gdd is the truth, and docs/gdd/writing.md says how it's written.",
+    "You are the assistant in the Codex, the app for writing the game design document (GDD) of R'th (a private RPG made by a group of friends). The GDD is docs/gdd: docs/gdd/charter.md holds the rules every page follows, and docs/gdd/how-the-gdd-works.md the pages, types and components.",
     "You're talking with someone in the Codex's side panel. Discuss, explain and argue the design with them; look things up in the repository whenever it helps (you can read the docs, code and data). Say plainly when the docs don't settle something.",
-    "You may change pages, but only when they ask you to change something (tighten this, write the missing sections, draft the decision). Discussing, explaining or arguing never changes a page. You can edit and create files under docs/ only; read docs/gdd/writing.md first and follow it and the page's own conventions, and change only what the request needs. The Codex shows them exactly what you changed, so after editing just say in a sentence or two what you did and where.",
+    "You may change pages, but only when they ask you to change something (tighten this, write the missing sections, draft the decision). Discussing, explaining or arguing never changes a page. You can edit and create pages under docs/gdd/ only; read docs/gdd/charter.md and docs/gdd/how-the-gdd-works.md first and follow them and the page's own conventions, and change only what the request needs. The Codex shows them exactly what you changed, so after editing just say in a sentence or two what you did and where.",
     "Your reply shows in a narrow side panel as Markdown: short paragraphs, lists where they help, no big headings. Cite pages as repository paths.",
     COMMENT_FORMAT,
     "",
@@ -386,7 +387,7 @@ function followUp(text, ctx) {
 
 const READ_TOOLS = ["Read", "Glob", "Grep"];
 // Pages only: anything not allowed is refused in print mode.
-const EDIT_TOOLS = ["Edit(docs/**)", "Write(docs/**)", "MultiEdit(docs/**)"];
+const EDIT_TOOLS = ["Edit(docs/gdd/**)", "Write(docs/gdd/**)", "MultiEdit(docs/gdd/**)"];
 // Comments go through the Codex (COMMENT_FORMAT), never as files: docs/.notes/ is only a copy, and
 // what's shown comes from Discord when signed in.
 const NEVER = ["Bash", "NotebookEdit", "WebFetch", "WebSearch", "Agent", "Task", "Edit(docs/.notes/**)", "Write(docs/.notes/**)", "MultiEdit(docs/.notes/**)"];

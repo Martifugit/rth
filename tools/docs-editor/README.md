@@ -5,7 +5,8 @@ and Alegreya Sans, the icons from `client/Assets/Resources/UI`). A dev tool: not
 of the game, the client or the server, and it serves on `127.0.0.1` only.
 
 **Start it:** double-click `codex.cmd`. The first time on a computer without the game's repository, it
-fetches just `docs/` into its own folder (`%APPDATA%th-docs-editorDocs`), with a progress bar and no
+fetches just `docs/` into its own folder (`%APPDATA%
+th-docs-editorDocs`), with a progress bar and no
 questions (`electron/firstrun.js`; a small link lets someone with the game's repository use that
 instead). That copy is read-only until you sign in with Discord with the Codex role. It opens the Codex as a desktop app (Electron; `npm run app`). On Windows it runs its own copy of Electron, `node_modules/.codex-app/Codex.exe`, stamped "R'th Codex" with the logo so Task Manager names it (`electron/launch.js`, made once and again when Electron or the logo changes).
 Closing it saves anything still being typed. The same Codex also runs in a browser: `npm start`, then
@@ -40,8 +41,9 @@ uncommitted work in the folder are never staged, committed, set aside or overwri
   closes it. Ctrl+, toggles Pages, Ctrl+. the Outline (Ctrl+\ and Ctrl+Shift+\ too, on whichever key types \).
   Alt+← and Alt+→ (or the mouse's back button, or the arrows in the page's title bar) go back to where
   you were and forward again.
-- **Pages** (left): *Design docs* is the GDD (`docs/gdd/`) in its own order, with *Open questions*
-  at the top; *General* is everything else under `docs/`, and the repository's own Markdown. A gold
+- **Pages** (left): the GDD (`docs/gdd/`) and nothing else: the Charter, How the GDD Works and Using
+  Codex, then a folder per type, with *Open questions* and *Recent changes* at the top. The rest of
+  `docs/` stays in the repository, out of the Codex's way. It opens on the Charter. A gold
   dot is a page changed since the last commit, a green one a page not in git yet. Type to filter.
   Right-click a folder for **New page here**, or a page to open it, make a page beside it, copy a link
   for Discord or its path, or delete it.
@@ -58,7 +60,9 @@ uncommitted work in the folder are never staged, committed, set aside or overwri
   what it links to, and where it's mentioned without a link.
 - **Open questions** (top of the page list): every GDD page's "Open questions" gathered on one
   page, by section and page. Click a question to go to it.
-- **New page**: a title and a folder under `docs/`, blank or from a template in `docs/gdd/templates/`.
+- **New page**: a title and a type ("entity | monsters, NPCs, pets"). The type decides the folder and
+  the core headings, both read from the Types table in How the GDD Works (`src/gdd.js`), so changing
+  the system is an edit to that page, never to code.
 - **Delete a page**: the bin in the page's title bar. It asks first (saying how many pages link to it),
   deletes it for everyone, and offers Undo straight after; git keeps its history. Its comments stay in
   the comment history.
@@ -83,7 +87,7 @@ links, which the desktop app registers for itself each time it starts.
 **With Discord** (`src/discord-extras.js`, `src/discord-presence.js`): **Ctrl+Shift+C** copies the
 selection, or the section you're in, as Discord's Markdown with a link back (tables as code blocks,
 under 2,000 characters). A conversation pasted from Discord goes in as a quote with who said what
-(Ctrl+Z takes it out); a pasted image, or a Discord image link, is saved under `docs/images/pasted/`,
+(Ctrl+Z takes it out); a pasted image, or a Discord image link, is saved under `docs/gdd/images/`,
 because Discord's links expire. Your Discord profile shows "Editing <page> in the R'th Codex" while
 the Codex is open (the Discord app on this computer; off in the logo's menu).
 

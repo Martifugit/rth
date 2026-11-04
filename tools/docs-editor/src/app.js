@@ -31,6 +31,7 @@ import { AiMarks, makeAiChanges } from "./ai-changes.js";
 import { altGrChar, isKeyFor } from "./keys.js";
 import { makeTogetherUi } from "./together-ui.js";
 import { Spelling, configureSpelling } from "./spellcheck.js";
+import { GDD, CHARTER, TOP } from "./gdd.js";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -49,7 +50,8 @@ const h = (tag, props = {}, ...kids) => {
 const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const collator = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
 
-const DEFAULT_DOC = "docs/gdd/README.md";
+// The Codex opens on the Charter, the rules every page follows.
+const DEFAULT_DOC = CHARTER;
 
 const S = {
   files: [],          // [{path, title, git}]
@@ -64,6 +66,7 @@ const S = {
   editor: null,
   dirty: false,
   open: new Set(JSON.parse(localStorage.getItem("codex.open") || '["docs","docs/gdd"]')),
+  types: [],          // the GDD's types, read from How the GDD Works: [{ type, folder, covers, examples, headings }]
 };
 
 // ----------------------------------------------------------------------------- paths
@@ -264,7 +267,8 @@ async function api(url, opts) {
 }
 
 async function loadTree() {
-  const r = await api("/api/tree");
+  const [r, g] = await Promise.all([api("/api/tree"), api("/api/gdd")]);
+  if (g.ok) S.types = g.types || [];
   S.files = r.files || [];
   S.fileSet = new Set(S.files.map((f) => f.path));
   renderTree();
@@ -319,7 +323,6 @@ async function openDoc(path, { hash = "", push = true, find = null, keepScroll =
   applyMode();
   if (push) history.pushState({ path: S.path, hash }, "", "?p=" + encodeURI(S.path) + (hash ? "#" + hash : ""));
   drawNav();
-  localStorage.setItem("codex.last", S.path);
   tellPresence();
   together.pageChanged();
   renderCrumbs(); markTreeCurrent(); buildOutline(); refreshDirty();
@@ -459,11 +462,13 @@ function hideBanner() { $("#banner").classList.add("hidden"); }
 
 // ----------------------------------------------------------------------------- the tree
 
-const FOLDER_ICONS = {
-  gdd: "book", areas: "map", "lore-rework": "scripture", lore: "scripture", quests: "quests", regions: "compass",
-  research: "eye", ideas: "spark", workflows: "task", templates: "note", entities: "bestiary", "1-overview": "guide",
-  "2-gameplay": "skills", "3-story": "scripture", "4-content": "quests", "5-interface": "settings", "6-behaviour": "bestiary", appendices: "pack",
+// Each type's folder icon (the folders themselves come from How the GDD Works).
+const TYPE_ICONS = {
+  overview: "book", system: "settings", skill: "skills", entity: "bestiary", object: "compass", item: "pack",
+  ability: "spark", effect: "dreaming", quest: "quests", activity: "fishing", achievement: "task", location: "map",
+  group: "journal", lore: "scripture", media: "eye", guide: "guide", decision: "note",
 };
+const folderIcon = (d) => TYPE_ICONS[S.types.find((t) => GDD + "/" + t.folder === d.path)?.type] || "journal";
 
 function buildTreeData(files) {
   const root = { name: "", path: "", dirs: new Map(), files: [] };
@@ -507,7 +512,7 @@ const copyText = (text, what) => navigator.clipboard.writeText(text).then(() => 
 const signInHint = (what) => (S.readOnly ? { disabled: true, hint: `Sign in with Discord (with the Codex role) to ${what}` } : {});
 
 function pageMenu(ev, f) {
-  const inDocs = f.path.startsWith("docs/");
+  const inDocs = f.path.startsWith(GDD + "/");
   const name = f.title || f.path.split("/").pop().replace(/\.md$/, "");
   rowMenu(ev, ev.currentTarget, [
     ["Open", () => openDoc(f.path)],
@@ -521,7 +526,7 @@ function pageMenu(ev, f) {
 }
 
 function folderMenu(ev, d) {
-  const inDocs = d.path === "docs" || d.path.startsWith("docs/");
+  const inDocs = d.path === GDD || d.path.startsWith(GDD + "/");
   rowMenu(ev, ev.currentTarget, [
     inDocs && ["New page here…", () => newPageDialog(d.path), signInHint("make pages")],
     ["Copy path", () => copyText(d.path, d.path)],
@@ -558,16 +563,13 @@ function renderTree() {
         if (isOpen) S.open.add(d.path); else S.open.delete(d.path);
         localStorage.setItem("codex.open", JSON.stringify([...S.open]));
       },
-    }, h("span", { class: "caret" }), h("span", { class: "ico ico-" + (FOLDER_ICONS[d.name] || "journal") }), h("span", { class: "t-name" }, mark(d.name)),
+    }, h("span", { class: "caret" }), h("span", { class: "ico ico-" + folderIcon(d) }), h("span", { class: "t-name" }, mark(d.name)),
     h("span", { class: "t-count" }, String(countFiles(d))));
     return h("div", {}, row, kids);
   };
-  const docs = data.dirs.get("docs");
   const groups = [];
-  // Design docs: the GDD's own contents, straight away. General: everything else under docs/, then
-  // the repository's own Markdown (README, CLAUDE.md...) in a folder of its own.
-  const byName = (a, b) => collator.compare(a.name, b.name);
-  const gdd = docs?.dirs.get("gdd");
+  // The GDD and nothing else: its top pages, then a folder per type (the server lists only docs/gdd).
+  const gdd = data.dirs.get("docs")?.dirs.get("gdd");
   const specialRow = (kind, icon, help) => h("div", { class: "t-row file t-special" + (S.view === kind ? " current" : ""), "data-view": kind, title: help, onclick: () => showView(kind) },
     h("span", { class: "caret" }), h("span", { class: "ico ico-" + icon }), h("span", { class: "t-name" }, VIEWS[kind].title),
     h("span", { class: "t-count t-special-n" + (VIEWS[kind].hot ? " hot" : "") }, VIEWS[kind].count || ""));
@@ -575,22 +577,18 @@ function renderTree() {
     specialRow("status", "quests", "Every open question in the GDD, in one list"),
     specialRow("changes", "scripture", "Who changed which page, and where, newest first"),
     S.brokenCount ? specialRow("broken", "compass", "Links to pages or headings that don't exist") : null) : null;
-  if (gdd || special) groups.push(h("div", { class: "t-group" }, h("div", { class: "t-group-title" }, "Design docs"), special,
+  if (gdd || special) groups.push(h("div", { class: "t-group" }, h("div", { class: "t-group-title" }, "The GDD"), special,
     gdd ? gddOrder(gdd).map((x) => (x.dirs ? dirNode(x) : fileRow(x))) : null));
-  const otherDirs = docs ? [...docs.dirs.values()].filter((d) => d.name !== "gdd").sort(byName) : [];
-  const otherFiles = docs ? docs.files.sort(fileOrder) : [];
-  const root = data.files.length ? { name: "repository root", path: ":root", dirs: new Map(), files: data.files } : null;
-  if (otherDirs.length || otherFiles.length || root) groups.push(h("div", { class: "t-group" }, h("div", { class: "t-group-title" }, "General"),
-    otherDirs.map(dirNode), otherFiles.map(fileRow), root ? dirNode(root) : null));
   if (!groups.length) groups.push(h("div", { class: "o-empty" }, "No pages match."));
   tree.replaceChildren(...groups);
 }
 
-/** The GDD's pages and folders in its own order: its README, then I to X (1-overview … 10-management,
- *  pages and folders together), then the rest alphabetically. */
+/** The GDD's pages and folders in its own order: the Charter, How the GDD Works and Using Codex, then
+ *  the type folders, then any other page at the top, alphabetically. */
 function gddOrder(gdd) {
   const name = (x) => (x.dirs ? x.name : x.path.split("/").pop());
-  const rank = (x) => (/^(readme|index)\.md$/i.test(name(x)) ? 0 : /^\d/.test(name(x)) ? 1 : 2);
+  const top = (x) => (x.dirs ? -1 : TOP.indexOf(x.path));
+  const rank = (x) => (top(x) >= 0 ? top(x) : x.dirs ? TOP.length : TOP.length + 1);
   return [...gdd.files, ...gdd.dirs.values()].sort((a, b) => rank(a) - rank(b) || collator.compare(name(a), name(b)));
 }
 
@@ -599,7 +597,6 @@ function markTreeCurrent() {
     const parts = S.path.split("/");
     let changed = false;
     for (let i = 1; i < parts.length; i++) { const p = parts.slice(0, i).join("/"); if (!S.open.has(p)) { S.open.add(p); changed = true; } }
-    if (parts.length === 1 && !S.open.has(":root")) { S.open.add(":root"); changed = true; } // the repository's own pages
     if (changed) { localStorage.setItem("codex.open", JSON.stringify([...S.open])); renderTree(); }
   }
   $$(".t-row.file").forEach((r) => r.classList.toggle("current", r.dataset.path === S.path));
@@ -844,8 +841,8 @@ async function welcome() {
     h("div", {}, h("b", {}, title), h("p", {}, text)),
     h("button", { class: "btn btn-gold", onclick: go }, label));
   const close = modal("Welcome to the R'th Codex", [
-    h("p", { class: "welcome-lead" }, "The design docs for R'th: read them, write in them, comment and talk them through." + (needDiscord && needAi ? " Two things make it yours:" : "")),
-    needDiscord ? step("Sign in with Discord", acc.contributor ? "To edit the docs and comment under your name. You need the Codex role in the R'th Discord." : "To comment under your name, and send your changes without a GitHub account.", "Sign in", async () => {
+    h("p", { class: "welcome-lead" }, "The game design document of R'th, grown page by page: read it, write it, comment and talk it through." + (needDiscord && needAi ? " Two things make it yours:" : "")),
+    needDiscord ? step("Sign in with Discord", acc.contributor ? "To edit pages and comment under your name. You need the Codex role in the R'th Discord." : "To comment under your name, and send your changes without a GitHub account.", "Sign in", async () => {
       const r = await api("/api/account/signin", { method: "POST" });
       if (r.url) window.open(r.url, "_blank");
     }) : null,
@@ -1025,22 +1022,29 @@ function quickOpen() {
   setTimeout(() => input.focus(), 0);
 }
 
+/**
+ * A new page: its title and its type. The type decides its folder and its core headings (How the GDD
+ * Works, "Types"). Made from a folder, the folder's type is picked.
+ */
 function newPageDialog(inFolder = null) {
-  const dirs = [...new Set(S.files.map((f) => dirOf(f.path)).filter((d) => d.startsWith("docs")))].sort(collator.compare);
-  const here = inFolder && dirs.includes(inFolder) ? inFolder : S.path && dirOf(S.path).startsWith("docs") ? dirOf(S.path) : "docs/gdd";
-  const folder = h("select", { class: "field" }, dirs.map((d) => h("option", { value: d, selected: d === here }, d)));
+  if (typeof inFolder !== "string") inFolder = null; // a button's click passes its event
+  const typeOf = (dir) => S.types.find((t) => typeof dir === "string" && (dir === GDD + "/" + t.folder || dir.startsWith(GDD + "/" + t.folder + "/")));
+  const start = typeOf(inFolder) || typeOf(S.path && dirOf(S.path)) || null;
+  const folderOf = (t) => (t === start && inFolder && typeOf(inFolder) === t ? inFolder : GDD + "/" + t.folder);
+  if (!S.types.length) { toast("No types found: How the GDD Works needs its Types table", "bad"); return; }
+  const kind = h("select", { class: "field" }, S.types.map((t) => h("option", { value: t.type, selected: t === start }, t.type + "  |  " + t.examples)));
+  const chosen = () => S.types.find((t) => t.type === kind.value);
+  const folder = { get value() { return folderOf(chosen()); } };
   const name = h("input", { class: "field", placeholder: "The page's title", spellcheck: "true" });
   const file = h("div", { class: "muted small new-file" });
   const fileName = () => name.value.trim().replace(/\.md$/i, "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/['’]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   const showFile = () => { file.textContent = fileName() ? `Saved as ${folder.value}/${fileName()}.md` : ""; };
-  name.addEventListener("input", showFile); folder.addEventListener("change", showFile);
-  const templates = S.files.filter((f) => f.path.startsWith("docs/gdd/templates/"));
-  const template = h("select", { class: "field" }, h("option", { value: "" }, "Blank page"), templates.map((t) => h("option", { value: t.path }, (t.title || t.path).replace(/^Template:\s*/i, "") + "  (" + t.path.split("/").pop() + ")")));
+  name.addEventListener("input", showFile); kind.addEventListener("change", showFile);
   const create = async () => {
     const n = fileName();
     if (!n) { name.focus(); return; }
     const path = folder.value + "/" + n + ".md";
-    const r = await api("/api/new", { method: "POST", body: JSON.stringify({ path, title: name.value.trim(), template: template.value || null }) });
+    const r = await api("/api/new", { method: "POST", body: JSON.stringify({ path, title: name.value.trim(), type: kind.value }) });
     if (!r.ok) { toast(r.error || "Couldn't create it", "bad"); return; }
     close();
     await loadTree();
@@ -1049,7 +1053,7 @@ function newPageDialog(inFolder = null) {
     toast("Page created", "good");
   };
   name.addEventListener("keydown", (e) => { if (e.key === "Enter") create(); });
-  const close = modal("New page", [h("label", {}, "Title"), name, h("label", {}, "Folder"), folder, file, h("label", {}, "Start from"), template,
+  const close = modal("New page", [h("label", {}, "Title"), name, h("label", {}, "Type"), kind, file,
     h("div", { class: "modal-actions" }, h("button", { class: "btn", onclick: () => close() }, "Cancel"), h("button", { class: "btn btn-gold", onclick: create }, "Create"))]);
   setTimeout(() => name.focus(), 0);
 }
@@ -1241,7 +1245,7 @@ function showSync(v) {
     if (v.busy) lines.push("Syncing…");
     else if (v.lastSync) lines.push("Synced " + agoText(v.lastSync));
     else lines.push("Not synced yet this session");
-    if (waiting) lines.push(`${waiting} change${waiting > 1 ? "s" : ""} in the docs waiting to be sent` + (v.outside ? ` (${v.outside} made outside the Codex: sent when you press Sync)` : ""));
+    if (waiting) lines.push(`${waiting} change${waiting > 1 ? "s" : ""} to pages waiting to be sent` + (v.outside ? ` (${v.outside} made outside the Codex: sent when you press Sync)` : ""));
     if (v.behind) lines.push(`${v.behind} change${v.behind > 1 ? "s" : ""} from others to fetch`);
     if (v.problem) lines.push(v.problem);
     lines.push("Click to sync now");
@@ -1455,7 +1459,7 @@ async function start() {
   api("/api/sync").then((v) => v.ok !== false && showSync(v));
   await loadTree();
   const params = new URLSearchParams(location.search);
-  const first = params.get("p") || localStorage.getItem("codex.last") || DEFAULT_DOC;
+  const first = params.get("p") || DEFAULT_DOC; // opened on the Charter, unless a link asked for a page
   await openDoc(S.fileSet.has(first) ? first : DEFAULT_DOC, { push: false, hash: location.hash.slice(1) });
   const firstView = viewOfUrl(params.get("view"));
   if (firstView) { history.replaceState({ path: S.path }, "", "?p=" + encodeURI(S.path)); showView(firstView); }

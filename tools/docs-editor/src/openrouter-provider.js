@@ -17,11 +17,11 @@ export const OPENROUTER_MODELS = (process.env.CODEX_OPENROUTER_MODELS || "openro
 
 export const EDIT_FORMAT = [
   "To change a page, write an edit block anywhere in your answer (as many as you need, one per place):",
-  "<edit page=\"docs/path/to/page.md\">",
+  "<edit page=\"docs/gdd/path/to/page.md\">",
   "<find>the exact text in the page now, word for word, enough of it to be found only once</find>",
   "<replace>what replaces it</replace>",
   "</edit>",
-  "For a new page: <edit page=\"docs/...md\"><find></find><replace>the whole page</replace></edit>. Edit blocks are taken out of your answer before it's shown, so say in a sentence what you changed.",
+  "For a new page: <edit page=\"docs/gdd/...md\"><find></find><replace>the whole page</replace></edit>. Edit blocks are taken out of your answer before it's shown, so say in a sentence what you changed.",
 ].join("\n");
 
 export function openRouterProvider({ key, models = () => OPENROUTER_MODELS }) {
@@ -99,7 +99,7 @@ export function applyEdits(edits, read) {
   const texts = new Map(), failed = [];
   return (async () => {
     for (const e of edits) {
-      if (!/^docs\/[^]+\.md$/.test(e.page) || e.page.includes("..")) { failed.push({ ...e, why: "not a page under docs/" }); continue; }
+      if (!/^docs\/gdd\/[^]+\.md$/.test(e.page) || e.page.includes("..")) { failed.push({ ...e, why: "not a page in the GDD (docs/gdd/)" }); continue; }
       let t = texts.has(e.page) ? texts.get(e.page) : await read(e.page);
       if (!e.find) { texts.set(e.page, e.replace.endsWith("\n") ? e.replace : e.replace + "\n"); continue; } // a new or whole page
       if (t == null) { failed.push({ ...e, why: "no such page" }); continue; }
