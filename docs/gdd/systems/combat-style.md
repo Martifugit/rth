@@ -10,12 +10,17 @@ status: stub
 
 ## Intent
 
-A combat style is a way of fighting with its own skill. Every style supplies itself, so nobody
-depends on a player economy to fight.
+A combat style offers a unique kit of [Combat Abilities](combat-abilities.md) with unique strengths
+and weaknesses against different targets and in different environments.
 
 ## Rules
 
-1. Each style's players make their own fuel.
+1. A combat style must have a complete kit and be viable in most combat encounters.
+2. The combat styles should be relatively balanced in damage, given the same tier of equipment. It
+   is fine for one style to be stronger in a tier bracket or in certain encounters, as long as it
+   does not dominate all brackets and/or encounters.
+3. Using multiple combat styles in longer encounters should be incentivized through higher sustained
+   damage per unit time.
 
 ## Interactions
 
