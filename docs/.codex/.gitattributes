@@ -1,0 +1,3 @@
+# The shared word list (tools/docs-editor/src/spell.js): two people adding words at once keep both,
+# line by line, instead of a clash.
+words.txt merge=union

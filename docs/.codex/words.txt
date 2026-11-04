@@ -1,0 +1,8 @@
+# Words the Codex's spelling check accepts, for everyone (one a line). "Add to dictionary" adds here.
+axe
+cutscenes
+frontmatter
+minigames
+smithing
+stackable
+tradeable
