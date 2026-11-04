@@ -6,27 +6,56 @@ in service of that.
 
 ## Making a page
 
-- **New page** (top bar), or right-click a folder in the page list. Give it a title and pick its type:
-  the type decides its folder, and the page is made from the type's template in `templates/`. It
-  starts as a stub.
+- **New page** (top bar): first pick its type. The type decides its folder and its core headings, and
+  the page is made from the type's template in `templates/`. Then give it a title. Right-click a
+  type's folder in the page list to make a page of that type straight away. The components usual for that type are offered as optional
+  sections, none ticked: most pages start as a stub.
 - **From a link.** Link to a page that isn't written yet and the link shows gold and dashed: a to-do,
-  not a mistake. Click it to make the page, already titled and in its folder.
-- **To-do** in the page list gathers every page that something links to but nobody has written, and
-  every page whose structure needs a look.
+  not a mistake. Click it for its three ways forward: **Write it** (pick the type; the link's folder
+  suggests one, and picking another moves the page there with the link following it), **It's another
+  page** (point the link at the page that's meant), or **Unlink** (keep the words).
+- **To-do** in the page list is everything the GDD still needs, as cards you fix where you read them:
+  - **Missing pages**: one card per page that's referred to but not written, however many pages refer
+    to it, most wanted first. Write it; or say it's another page (Codex suggests likely ones, such as a
+    page git saw it renamed to) and every reference moves there; or deal with one reference at a time.
+  - **References**: a link to a heading that isn't there, a link out of the GDD, or a field that names
+    a page in plain text (lists match plain text by title, so a rename would quietly break it): Make
+    it a link.
+  - **Placeholders**: a `p-` name, named for real everywhere at once.
+  - **Structure**: sections and components that disagree, out of order, or a page in the wrong folder,
+    each with its fix.
+
+  A fix that changes more than one page lists them first, and every fix can be undone straight after.
 
 ## The top of a page
 
-The top of every page answers what it is, whether it's settled, and what it belongs to.
+Above the title, one slim row of badges answers what the page is, whether it's settled, and what it
+belongs to:
 
-- **The label beside the title** is the page's type (Entity, Location): what kind of page this is, and
-  which headings to expect.
-- **The status badge**: grey for stub, yellow for draft, green for agreed, red for cut (and a cut
-  page's title is struck through). Click it to change it.
-- **Variant of…** shows under the title when the page is a variant of another.
-- **Groups** are chips that link to the group pages. **+** adds or removes one, makes a new group, or
-  sets what the page is a variant of.
-- **The page's components** are its section links, on the right: click one to jump to it.
-  **+ component** adds one: its section comes from its template, at the end of the page.
+- **The type** (Entity, Location): what kind of page this is, and which headings to expect.
+- **The status**: gray for stub, yellow for draft, green for agreed, red for cut (and a cut page's
+  title is struck through). Click it to change it.
+- **Variant of…** and the **groups** link to those pages.
+- **The components** are the page's sections: click one to jump to it.
+
+The cog at the end of the row opens **Page settings**: the status; the
+components as a checklist (the ones usual for the type first, each with its question, the rest under
+More); the groups and what the page is a variant of; and the type.
+
+- Ticking a component adds its section from its template, in its place. Sections always come in the
+  same order: core headings, then components in the order of How the GDD Works' tables, then Open
+  questions.
+- Unticking one removes its section. If something is written there, Codex asks whether to move it
+  into Open questions or delete it; it never deletes without asking.
+- A component that repeats (actions, trades, travel, rewards) gets **+ Add action** at the end of its
+  section: each one gets its own heading. Settings only say whether the page has actions at all.
+- Changing the type is rare and deliberate: the page moves to the new type's folder, links to it are
+  updated, and its headings stay as they were, so Codex offers to add the new type's missing ones.
+- **Rename…** changes the title and the file name together. A page's file name is its ID, unique
+  across the GDD, and every reference to it (links, groups, Variant of, lists) is rewritten in every
+  page, so nothing is left pointing at the old name.
+- Groups and Variant of are picked from pages that exist, never typed. If the page isn't written yet,
+  **Make …** in the list makes it as a stub.
 
 You never have to type the page's header by hand. **<>** (top right) shows the raw text for when you
 want it.
@@ -42,9 +71,19 @@ from the page's own words. To change it, change the page that owns the relations
 `templates/` holds one template per type (`entity.md`) and one snippet per component (`action.md`).
 Change a template and every new page of that type, or every new section of that component, follows it.
 
+- **Guidance** is written as HTML comments. One straight under a heading is the section's prompt; one
+  after a field (`- Skill: <!-- the skill's page, as a link -->`) is that field's hint. On a page they
+  show faintly while the section or field is empty, and they never go into the page itself, so every
+  page, old or new, gets the latest guidance.
+- **Tables** are for things that come in rows: rewards, spawns, stock, states, tunables, tasks. Each
+  row counts as one instance, so lists can gather them (`rewards.item: this`). **+ Add a row** sits
+  under the table.
+
 ## Links
 
-- Link to another page with Ctrl+K, or type `[Goblin](../entities/goblin.md)`.
+- Link to another page with Ctrl+K: pick the page from the list (or type a web address, or a
+  `#heading`). Links are never typed as paths, so they can't point at nothing by mistake. To link a
+  page that isn't written yet, say so: it becomes a to-do.
 - A link is named by what it means on the page it points to: a link from a rewards section shows
   there as *Dropped by*, from spawns as *Found in*, from a quest's steps as *Appears in*. Whoever owns
   the relationship writes the link; the other page shows it by itself, in **Links to this page**.

@@ -1,11 +1,3 @@
----
-type: overview
-components: []
-groups: []
-based-on:
-status: stub
----
-
 # R'th overview
 
 ## Pitch
