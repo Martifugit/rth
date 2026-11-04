@@ -821,7 +821,8 @@ body.in-app .search-trigger { height: 28px; }
   border: 1px solid transparent; border-radius: 4px; background: none; color: var(--silver-soft); text-align: left;
 }
 .ai-title:hover, .ai-title.on { background: rgba(255, 255, 255, .04); border-color: var(--hair); color: var(--silver); }
-.ai-title-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 13.5px/1 var(--sans); }
+.ai-title-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 13.5px/1 var(--sans);
+  position: relative; top: 1.5px; } /* Alegreya's tall ascent sits the letters high in a 1-line box: level them with the icon */
 .ai-title-ico, .ai-new, .ai-send, .ai-chip-ico, .ai-chip-x, .ai-li-x { display: grid; place-items: center; }
 .ai-new, .ai-send, .ai-chip-x, .ai-li-x { flex: none; padding: 0; line-height: 0; }
 .ai-title-ico svg, .ai-new svg, .ai-send svg, .ai-chip-ico svg, .ai-chip-x svg, .ai-li-x svg, .cm-ask svg {

@@ -22,7 +22,8 @@ const ICON = path.join(ROOT, "assets", "logo.ico"); // the R'th logo: window, ta
 if (process.env.CODEX_USERDATA) app.setPath("userData", path.resolve(process.env.CODEX_USERDATA));
 
 // Its own name in Windows, so the taskbar shows the Codex (and its logo), not "Electron".
-app.setAppUserModelId("rth.codex");
+// CODEX_APPID: a check beside an open Codex gets its own taskbar button instead of joining its group.
+app.setAppUserModelId(process.env.CODEX_APPID || "rth.codex");
 
 // One Codex at a time: opening it again brings the open one forward.
 if (!app.requestSingleInstanceLock()) app.quit();

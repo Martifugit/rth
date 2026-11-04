@@ -15,7 +15,8 @@ const ICON = {
   send: '<svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></svg>',
   stop: '<svg viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1.5"/></svg>',
   new: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
-  list: '<svg viewBox="0 0 24 24"><path d="M12 7v5l3 2"/><circle cx="12" cy="12" r="8"/></svg>',
+  // Two speech bubbles: the conversations (the selector's list of them).
+  list: '<svg viewBox="0 0 24 24"><path d="M16.5 8V5.5a2 2 0 0 0-2-2h-9a2 2 0 0 0-2 2V11a2 2 0 0 0 2 2H6v2.5L8.5 13"/><path d="M10.5 10h8a2 2 0 0 1 2 2v4.5a2 2 0 0 1-2 2H18V21l-2.5-2.5h-5a2 2 0 0 1-2-2V12a2 2 0 0 1 2-2z"/></svg>',
   cog: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v2.6M12 18.9v2.6M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M2.5 12h2.6M18.9 12h2.6M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"/><circle cx="12" cy="12" r="6.5"/></svg>',
   check: '<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
   close: '<svg viewBox="0 0 24 24"><path d="m7 7 10 10M17 7 7 17"/></svg>',

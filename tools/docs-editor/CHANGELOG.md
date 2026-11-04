@@ -4,6 +4,11 @@ A few plain lines per version, for the people using it: `npm run release` puts t
 the GitHub release and announces it in #codex (`scripts/release.mjs`, `scripts/announce.mjs`). Write the
 section before releasing; the release refuses without one.
 
+## 0.3.6
+
+- The conversation selector in the AI tab has a speech-bubble icon instead of a clock, and its title sits level with the icon.
+- The logo in the taskbar, title bar and Start menu is about a quarter larger: zoomed in on its letters, so it no longer looks small beside other apps.
+
 ## 0.3.5
 
 - Updates arrive as soon as they're released: Codex starts downloading a new version within moments instead of within the hour.
