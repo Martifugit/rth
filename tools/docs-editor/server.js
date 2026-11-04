@@ -176,6 +176,13 @@ const assistant = makeAssistant({
   // The AI's changes are sent like the Codex's own saves, and their commit says "with AI".
   changed: (rels) => { for (const r of rels) syncer.saved(r, { ai: true }); },
   openrouterKey: () => openrouter.key(),
+  // Who links to a page (the Links tab's index), so R'th AI sees where it sits before changing it.
+  linksTo: async (page) => {
+    const idx = await gdd();
+    const seen = new Map();
+    for (const l of linksFor(idx, page).inbound) if (!seen.has(l.from)) seen.set(l.from, { path: l.from, title: l.title || null });
+    return [...seen.values()];
+  },
 });
 
 // The link index over every page, rebuilt on demand after any page changes.
@@ -522,6 +529,12 @@ const api = {
   async "POST /api/ai/send"(url, req) {
     const { id, text, context } = await body(req);
     const r = await assistant.send({ id, text, context });
+    return r.error ? [400, r] : r;
+  },
+
+  // What a conversation keeps (src/assistant.js, setContext): a page added with @ or + Add page, one dropped.
+  async "POST /api/ai/context"(url, req) {
+    const r = await assistant.setContext(await body(req));
     return r.error ? [400, r] : r;
   },
 

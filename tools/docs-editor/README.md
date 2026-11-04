@@ -145,9 +145,18 @@ While you're signed in with the Codex role, the Codex shows who else has one ope
 ## The AI tab
 
 **AI**, beside Outline and Links (Ctrl+J from anywhere, or **Ask** under the comment button beside a
-selection): a conversation about the docs. Chips over its box say what it reads (the page, the
-selected passage, the open comment thread); click one away to leave it out. Enter sends, Shift+Enter
-is a new line. It talks by default; asked for a change ("tighten this"), it edits pages under `docs/` itself,
+selection): a conversation about the docs. **Its context belongs to the conversation:** it starts with
+what's on screen (the page, a selected passage, the open comment thread) and keeps it, whatever is
+opened while waiting for an answer. Chips over the box show it (× drops one); **@** in the box adds a
+page by title, and a faint **+** chip offers the page, passage or thread on screen, added only on a
+click (`POST /api/ai/context`). Enter sends, Shift+Enter is a new line. **/model** and **/effort** set
+this conversation's model and effort as in Claude Code (`/help` lists them); defaults are in AI
+setup. Its first answer names the conversation (a hidden `<title>` line the Codex takes off).
+R'th AI's standing instructions (who it is, what the GDD is for, how to understand a page before
+changing it, then the Charter and Writing a Page) come every turn (`standing()` in
+`src/assistant.js`). Claude Code runs with `--safe-mode`, so the repository's CLAUDE.md (a developer
+guide for the game's code) doesn't steer it; it can still read the code and data when a question is
+about how the game works today. It talks by default; asked for a change ("tighten this"), it edits pages under `docs/` itself,
 and its reply says which pages it changed, with **Show** and **Undo**. A page it changed says so in a
 bar at its top: **Show changes** marks what it added and removed (arrows go from one change to the
 next; pointing at one offers Undo for just that one), **Done** clears the marks. The engine finds the

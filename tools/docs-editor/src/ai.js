@@ -31,6 +31,7 @@ export function makeAi(ctx) {
     provider: null,
     selection: null,     // { quote, section } of the last passage selected in the page
     left: new Set(),     // chips clicked away ("page", "selection", "thread"), until the next send
+    extra: [],           // pages added (with @ or + Add page) to a conversation not started yet
     listOpen: false,
   };
 
@@ -40,16 +41,19 @@ export function makeAi(ctx) {
   const head = h("div", { class: "ai-head" });
   const log = h("div", { class: "ai-log" });
   const chips = h("div", { class: "ai-chips" });
-  const input = h("textarea", { class: "ai-input", rows: "1", placeholder: "Ask, or talk an idea through…", spellcheck: "true" });
+  const input = h("textarea", { class: "ai-input", rows: "1", placeholder: "Ask, or talk an idea through… @ adds a page, /model and /effort set the AI", spellcheck: "true" });
   const sendBtn = h("button", { class: "ai-send", title: "Send (Enter)", html: ICON.send, onclick: () => (A.run ? stop() : send()) });
-  const box = h("div", { class: "ai-box" }, chips, h("div", { class: "ai-row" }, input, sendBtn));
+  const mention = h("div", { class: "ai-mention hidden" });
+  const box = h("div", { class: "ai-box" }, mention, chips, h("div", { class: "ai-row" }, input, sendBtn));
   pane.append(head, log, box);
 
   input.addEventListener("keydown", (ev) => {
+    if (mentionKey(ev)) return;
     if (ev.key === "Enter" && !ev.shiftKey && !ev.isComposing) { ev.preventDefault(); send(); }
     else if (ev.key === "Escape" && A.listOpen) { ev.stopPropagation(); A.listOpen = false; drawHead(); }
   });
-  input.addEventListener("input", () => { grow(); pane.classList.toggle("typing", !!input.value.trim()); });
+  input.addEventListener("input", () => { grow(); pane.classList.toggle("typing", !!input.value.trim()); drawMention(); });
+  input.addEventListener("blur", () => setTimeout(() => mention.classList.add("hidden"), 150));
   // A conversation pasted from Discord: who said what, so "turn this into the decision" works on it.
   input.addEventListener("paste", (ev) => {
     const chat = discordConversation(ev.clipboardData?.getData("text/plain") || "");
@@ -64,29 +68,102 @@ export function makeAi(ctx) {
 
   // ----------------------------------------------------------------------------- chips
 
-  /** What the next message may read, from what's on screen, minus what was clicked away. */
+  // Context belongs to the conversation (src/assistant.js, pinned): it starts with what's on screen and is
+  // kept, whatever is opened while waiting for an answer; more is added on purpose (@ or + Add). Before a
+  // conversation starts, the chips are what's on screen now, as they will be pinned.
+  const started = () => !!A.conv?.context && !!A.id;
+
+  /** What's on screen, minus what was clicked away: the context a new conversation starts with. */
   function context() {
     const c = {};
     if (S.path && !S.view && !A.left.has("page")) c.page = S.path;
-    if (A.selection && A.selection.page === S.path && !A.left.has("selection")) c.selection = { quote: A.selection.quote, section: A.selection.section };
+    if (A.selection && A.selection.page === S.path && !A.left.has("selection")) c.selection = { quote: A.selection.quote, section: A.selection.section, page: S.path };
     const thread = ctx.notes.state.active;
     if (thread && thread !== "draft" && !A.left.has("thread")) c.thread = thread;
+    if (A.extra.length) c.pages = A.extra.filter((p) => p !== c.page);
     return c;
   }
 
+  /** Change what the open conversation keeps (or, before it starts, what it will start with). */
+  async function changeContext({ add = null, drop = null }) {
+    if (!started()) {
+      if (add?.page) { if (!A.extra.includes(add.page)) A.extra.push(add.page); A.left.delete("page"); }
+      if (drop) { if (drop.startsWith?.("docs/")) A.extra = A.extra.filter((p) => p !== drop); else A.left.add(drop); }
+      drawChips(); return;
+    }
+    const r = await api("/api/ai/context", { method: "POST", body: JSON.stringify({ id: A.id, add: add || {}, drop: drop ? [drop] : [] }) });
+    if (!r.ok) return toast(failed("Couldn't change what the conversation is about", r), "bad");
+    A.conv.context = r.context;
+    drawChips();
+  }
+
+  const pageTitle = (p) => ctx.titleOf(p) || p.split("/").pop().replace(/\.md$/, "");
   function drawChips() {
-    const c = context(), out = [];
-    const chip = (kind, icon, label, title) => h("span", { class: "ai-chip", title },
+    const out = [];
+    const chip = (icon, label, title, onX) => h("span", { class: "ai-chip", title },
       h("span", { class: "ai-chip-ico", html: icon }), h("span", { class: "ai-chip-label" }, label),
-      h("button", { class: "ai-chip-x", title: "Leave this out", html: ICON.close, onclick: () => { A.left.add(kind); drawChips(); input.focus(); } }));
-    if (c.page) out.push(chip("page", ICON.page, ctx.titleOf(c.page) || c.page.split("/").pop(), c.page));
-    if (c.selection) out.push(chip("selection", ICON.quote, "“" + clip(c.selection.quote, 38) + "”", c.selection.quote));
-    if (c.thread) {
-      const n = ctx.notes.state.notes.find((x) => x.id === c.thread);
-      out.push(chip("thread", ICON.thread, "Comment: " + clip(n?.thread?.[0]?.text || "thread", 28), "The comment thread that's open"));
+      h("button", { class: "ai-chip-x", title: "Leave this out", html: ICON.close, onclick: () => { onX(); input.focus(); } }));
+    // A faint offer: what's on screen that the conversation doesn't have yet. Nothing is added without a click.
+    const offer = (icon, label, title, onAdd) => h("button", { class: "ai-chip ai-chip-offer", title, onclick: () => { onAdd(); input.focus(); } },
+      h("span", { class: "ai-chip-plus" }, "+"), h("span", { class: "ai-chip-ico", html: icon }), h("span", { class: "ai-chip-label" }, label));
+    const threadLabel = (id) => "Comment: " + clip(ctx.notes.state.notes.find((x) => x.id === id)?.thread?.[0]?.text || "thread", 28);
+    if (!started()) {
+      const c = context();
+      if (c.page) out.push(chip(ICON.page, pageTitle(c.page), c.page, () => changeContext({ drop: "page" })));
+      for (const p of c.pages || []) out.push(chip(ICON.page, pageTitle(p), p, () => changeContext({ drop: p })));
+      if (c.selection) out.push(chip(ICON.quote, "“" + clip(c.selection.quote, 38) + "”", c.selection.quote, () => changeContext({ drop: "selection" })));
+      if (c.thread) out.push(chip(ICON.thread, threadLabel(c.thread), "The comment thread that's open", () => changeContext({ drop: "thread" })));
+    } else {
+      const k = A.conv.context;
+      if (k.page) out.push(chip(ICON.page, pageTitle(k.page), k.page + " (what this conversation is about)", () => changeContext({ drop: "page" })));
+      for (const p of k.pages || []) out.push(chip(ICON.page, pageTitle(p), p, () => changeContext({ drop: p })));
+      if (k.selection) out.push(chip(ICON.quote, "“" + clip(k.selection.quote, 38) + "”", k.selection.quote, () => changeContext({ drop: "selection" })));
+      if (k.thread) out.push(chip(ICON.thread, threadLabel(k.thread), "The comment thread it's about", () => changeContext({ drop: "thread" })));
+      const has = new Set([k.page, ...(k.pages || [])]);
+      if (S.path && !S.view && !has.has(S.path)) out.push(offer(ICON.page, pageTitle(S.path), "Add the page you're on to this conversation", () => changeContext({ add: { page: S.path } })));
+      if (A.selection && A.selection.page === S.path && A.selection.quote !== k.selection?.quote)
+        out.push(offer(ICON.quote, "“" + clip(A.selection.quote, 30) + "”", "Point the conversation at the passage you've selected", () => changeContext({ add: { selection: { ...A.selection } } })));
+      const open = ctx.notes.state.active;
+      if (open && open !== "draft" && open !== k.thread) out.push(offer(ICON.thread, threadLabel(open), "Add the open comment thread to this conversation", () => changeContext({ add: { thread: open } })));
     }
     chips.replaceChildren(...out);
     chips.classList.toggle("hidden", !out.length);
+  }
+
+  // ----------------------------------------------------------------------------- @ a page
+
+  // Typing @ offers pages by title (as the link picker does); picking one adds it to the conversation
+  // and leaves "@Its title" in the message, so the request reads naturally.
+  let picks = [], at = 0;
+  const mentionAt = () => { const m = input.value.slice(0, input.selectionStart).match(/(^|\s)@([^@\n]{0,40})$/); return m ? m[2] : null; };
+  function drawMention() {
+    const q = mentionAt();
+    if (q === null) { mention.classList.add("hidden"); picks = []; return; }
+    const norm = (s) => String(s || "").toLowerCase();
+    const all = (S.files || []).filter((f) => f.path.startsWith("docs/gdd/") && !f.path.includes("/templates/"));
+    picks = all.filter((f) => !q || norm(f.title || f.path).includes(norm(q).trim())).slice(0, 8);
+    at = Math.min(at, Math.max(0, picks.length - 1));
+    mention.replaceChildren(...(picks.length ? picks.map((f, i) => h("div", { class: "ai-mention-item" + (i === at ? " on" : ""), onmousedown: (e) => { e.preventDefault(); pickMention(i); } },
+      h("span", {}, f.title || pageTitle(f.path)), h("span", { class: "ai-mention-where" }, f.path.slice("docs/gdd/".length).split("/").slice(0, -1).join("/")))) : [h("div", { class: "ai-mention-none" }, "No page by that name")]));
+    mention.classList.remove("hidden");
+  }
+  function pickMention(i) {
+    const f = picks[i];
+    if (!f) return;
+    const before = input.value.slice(0, input.selectionStart).replace(/@[^@\n]{0,40}$/, "@" + (f.title || pageTitle(f.path)) + " ");
+    input.value = before + input.value.slice(input.selectionStart);
+    input.setSelectionRange(before.length, before.length);
+    mention.classList.add("hidden"); picks = [];
+    changeContext({ add: { page: f.path } });
+    grow();
+  }
+  /** Arrow keys, Enter and Tab work the @ list while it's open. */
+  function mentionKey(ev) {
+    if (mention.classList.contains("hidden") || !picks.length) return false;
+    if (ev.key === "ArrowDown" || ev.key === "ArrowUp") { ev.preventDefault(); at = (at + (ev.key === "ArrowDown" ? 1 : picks.length - 1)) % picks.length; drawMention(); return true; }
+    if (ev.key === "Enter" || ev.key === "Tab") { ev.preventDefault(); pickMention(at); return true; }
+    if (ev.key === "Escape") { ev.preventDefault(); ev.stopPropagation(); mention.classList.add("hidden"); return true; }
+    return false;
   }
 
   // The passage last selected in the page stays a chip while you type in the box.
@@ -134,7 +211,7 @@ export function makeAi(ctx) {
   }
 
   function newConversation() {
-    A.id = null; A.conv = null; A.run = null; A.listOpen = false;
+    A.id = null; A.conv = null; A.run = null; A.listOpen = false; A.extra = []; A.left.clear();
     localStorage.removeItem(KEY);
     drawHead(); drawLog(); syncSend();
   }
@@ -143,6 +220,7 @@ export function makeAi(ctx) {
     const r = await api("/api/ai/conversation?id=" + encodeURIComponent(id));
     if (!r.ok) { if (id === A.id) newConversation(); return; }
     A.id = id; A.conv = r; A.setupOpen = false;
+    queueMicrotask(drawChips); // its own context, not the screen's
     A.run = r.run?.state === "running" ? { text: r.run.text, activity: r.run.activity } : null;
     localStorage.setItem(KEY, id);
     drawHead(); drawLog(); syncSend();
@@ -283,6 +361,7 @@ export function makeAi(ctx) {
   }
 
   function message(m) {
+    if (m.by === "codex") return h("div", { class: "ai-msg ai-msg-codex" }, body(m.text));
     if (m.by === "you") {
       const c = m.context || {};
       const bits = [];
@@ -361,7 +440,7 @@ export function makeAi(ctx) {
     const text = input.value.trim();
     if (!text || A.run || A.sending) return;
     await ctx.saveNow(); // it reads the page as saved
-    const context = ctxSnapshot();
+    const context = started() ? {} : ctxSnapshot(); // a started conversation keeps its own (on the server)
     A.sending = true;
     A.pending = { text, context: { selection: context.selection, thread: context.thread } };
     A.run = { text: "", activity: "Reading" };
@@ -377,10 +456,11 @@ export function makeAi(ctx) {
       drawLog(); syncSend();
       return;
     }
-    A.left.clear();
+    A.left.clear(); A.extra = [];
     if (r.id !== A.id) { A.id = r.id; localStorage.setItem(KEY, r.id); }
     A.pending = null;
     await openConversation(r.id);
+    if (r.command) { A.run = null; drawLog(); syncSend(); drawChips(); return; } // /model, /effort: no answer to wait for
     if (!A.run) A.run = { text: "", activity: "Reading" };
     drawLog(); syncSend(); drawChips();
   }

@@ -7,6 +7,10 @@ section before releasing; the release refuses without one.
 ## 0.3.3
 
 - R'th AI's suggestions no longer show a made-up heading like "type: system components: [] groups: []" at the top of the page. When it suggests changing the page's header (its status, say), that's a line of its own in the bar: "Also: status stub → draft", to accept or skip.
+- R'th AI keeps a conversation's context: it starts with what's on screen and stays on it while you work elsewhere. Type @ to add a page, or click a faint + chip to add the page, passage or comment you're on.
+- R'th AI knows its job better: what the GDD is for, and to read the whole page, its template and the pages around it before changing a section. On Claude it no longer works from the game code's developer guide, but still checks the code when a question is about how the game works today.
+- /model and /effort set a conversation's model and effort, as in Claude Code (/help lists them).
+- Conversations get a short name from R'th AI's first answer, instead of the question.
 - Pages no longer end in a "Links to this page" box that repeated the Links tab. The Links tab now also lists a group's members and how a skill is trained, which only the box had.
 - In a review, the old text looks just like the suggestion, tinted red where the suggestion is green (it had its own colour and no underline).
 - Stepping through R'th AI's changes (or changes made outside the Codex) shows which one you're on: it stands out, ringed in gold, with a gold mark in the margin by its paragraph, and the others fade back.

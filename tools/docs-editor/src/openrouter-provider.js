@@ -30,14 +30,14 @@ export function openRouterProvider({ key, models = () => OPENROUTER_MODELS }) {
     : { ok: false, needsSignIn: "openrouter", error: "R'th AI isn't set up on this computer yet. Sign in with OpenRouter for free AI (your own daily allowance)." });
 
   /** messages: [{ role, content }]. */
-  function run({ messages, onText, onActivity }) {
+  function run({ messages, onText, onActivity, model = null }) { // model: this conversation's /model, if any
     const ctrl = new AbortController();
     let stopped = false;
     const done = (async () => {
       const k = key();
       if (!k) return { error: "Not signed in with OpenRouter." };
       onActivity("Thinking");
-      const list = models();
+      const list = model ? [model] : models();
       let r;
       try {
         r = await fetch(URL, {
