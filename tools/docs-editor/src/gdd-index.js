@@ -159,10 +159,29 @@ export function labelFor(gdd, system, from, section) {
 /**
  * What's wrong with the GDD's structure: [{ path, title, line, kind, text }]. Kinds: "no-frontmatter",
  * "no-type", "unknown-type", "wrong-folder", "unknown-component", "missing-section", "undeclared-section",
- * "unknown-status", "missing-group", "missing-based-on".
+ * "unknown-status", "missing-group", "missing-based-on", "duplicate-name", "placeholder".
+ * `texts`: page → text, for the placeholders (Workflow, "Naming": every p- name is a to-do).
  */
-export function checks(gdd, system) {
+export function checks(gdd, system, texts = new Map()) {
   const out = [];
+  // File names are unique across the whole GDD (Workflow, "Naming").
+  for (const [slug, paths] of gdd.bySlug) if (paths.length > 1) for (const p of paths)
+    out.push({ path: p, title: gdd.pages.get(p).title, line: 1, kind: "duplicate-name", text: `“${slug}.md” is also ${paths.filter((x) => x !== p).map((x) => x.slice(GDD.length + 1)).join(", ")}: file names are unique across the GDD` });
+  for (const p of gdd.pages.values()) {
+    if (isMeta(p.path)) continue;
+    const seen = new Set();
+    let fence = null;
+    String(texts.get(p.path) || "").split("\n").forEach((line, i) => {
+      const f = line.match(FENCE);
+      if (fence) { if (f && f[1][0] === fence[0]) fence = null; return; }
+      if (f) { fence = f[1]; return; }
+      for (const m of line.matchAll(/(?<![\w-])p-[a-z][a-z0-9-]*/g)) {
+        if (seen.has(m[0])) continue;
+        seen.add(m[0]);
+        out.push({ path: p.path, title: p.title, line: i + 1, kind: "placeholder", text: `${m[0]} is a placeholder: it needs a real name` });
+      }
+    });
+  }
   const types = new Map(system.types.map((t) => [t.type, t]));
   const comps = new Map(system.components.map((c) => [c.name, c]));
   for (const p of gdd.pages.values()) {

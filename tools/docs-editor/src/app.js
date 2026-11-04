@@ -602,6 +602,7 @@ function renderTree() {
     h("span", { class: "caret" }), h("span", { class: "ico ico-" + icon }), h("span", { class: "t-name" }, VIEWS[kind].title),
     h("span", { class: "t-count t-special-n" + (VIEWS[kind].hot ? " hot" : "") }, VIEWS[kind].count || ""));
   const special = !filter ? h("div", { class: "t-specials" },
+    specialRow("overview", "book", "What exists: every page by type and status, from their frontmatter"),
     specialRow("status", "quests", "Every open question in the GDD, in one list"),
     specialRow("changes", "scripture", "Who changed which page, and where, newest first"),
     S.brokenCount ? specialRow("broken", "compass", "Pages to write, and pages whose structure needs a look") : null) : null;
@@ -1089,6 +1090,9 @@ function newPageDialog(inFolder = null, prefill = {}) {
   const create = async () => {
     const path = target();
     if (!path) { name.focus(); return; }
+    // File names are unique across the whole GDD (Workflow, "Naming").
+    const same = S.files.find((f) => f.path !== path && f.path.split("/").pop() === path.split("/").pop());
+    if (same) { toast(`${path.split("/").pop()} is already ${same.title || same.path}: file names are unique across the GDD`, "bad"); name.focus(); return; }
     const r = await api("/api/new", { method: "POST", body: JSON.stringify({ path, title: name.value.trim(), type: kind.value }) });
     if (!r.ok) { toast(r.error || "Couldn't create it", "bad"); return; }
     close();
@@ -1343,6 +1347,7 @@ const typing = () => !!document.activeElement?.closest?.(".ProseMirror, input, t
 // underneath): Open questions (every GDD page's, in one list), Recent changes (who changed what, from
 // git) and To-do (pages to write and structure to fix; only listed while there's any).
 const VIEWS = {
+  overview: { title: "Status", url: "status-of-pages", render: () => panels.renderOverview() },
   status: { title: "Open questions", url: "questions", render: () => panels.renderStatus() },
   changes: { title: "Recent changes", url: "changes", render: () => panels.renderChanges() },
   broken: { title: "To-do", url: "to-do", render: () => panels.renderBroken() },
@@ -1423,7 +1428,7 @@ function scrollToPos(pos, onlyIfHidden = false) {
   } catch {}
 }
 
-const panels = makePanels({ S, $, h, api, toast, openDoc: (...a) => openDoc(...a), newPage: (prefill) => newPageDialog(null, prefill), findInPage: (q) => findInPage(q), setLinksCount, countsChanged: () => refreshSpecialCounts() });
+const panels = makePanels({ S, $, h, api, toast, isMeta, openDoc: (...a) => openDoc(...a), newPage: (prefill) => newPageDialog(null, prefill), findInPage: (q) => findInPage(q), setLinksCount, countsChanged: () => refreshSpecialCounts() });
 window.__showStatus = () => showView("status");
 const notes = makeNotes({
   S, $, $$, h, esc, api, toast, modal, ask, renderHtml,

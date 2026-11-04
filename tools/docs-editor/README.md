@@ -78,7 +78,12 @@ uncommitted work in the folder are never staged, committed, set aside or overwri
   for component instances (`action.skill: this` is a skill's training table); `this` is the page it's
   on; `sort: <field>`. A new group page gets its Members list this way; **⋯** inserts others.
 - **Status at a glance:** a dot per page in the page list (stub, draft, agreed, cut) and chips to show
-  only one.
+  only one. **Status** (in the page list) lists every page by type and status, generated from their
+  frontmatter, so no page has to keep "what exists" up to date.
+- **Naming** (the GDD's Workflow page): file names are unique across the GDD (New page refuses a
+  name in use, and To-do lists any two pages that share one), and each `p-` placeholder is a to-do.
+- **The top pages** (`src/gdd.js`, `TOP`): the Charter, How the GDD Works, Using Codex, Workflow and
+  the Decisions log. They need no type.
 - **Delete a page**: the bin in the page's title bar. It asks first (saying how many pages link to it),
   deletes it for everyone, and offers Undo straight after; git keeps its history. Its comments stay in
   the comment history.

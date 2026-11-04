@@ -999,3 +999,4 @@ body.right-ai.sheet-outline #outlineWin { width: min(400px, calc(100vw - 48px));
 .prose .td-list > li { display: flex !important; flex-direction: row !important; flex-wrap: wrap; align-items: baseline; gap: 6px; list-style: none; }
 .prose .td-list > li > * { margin: 0; flex: none; width: auto; display: inline; }
 .prose .td-list > li > .td-make { display: inline-flex; }
+.sv-n { font-family: var(--sans); font-size: 13px; color: var(--dim); text-transform: none; letter-spacing: 0; }

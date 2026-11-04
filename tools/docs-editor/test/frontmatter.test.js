@@ -78,4 +78,16 @@ t("structure checks", () => {
   assert.ok(!ps.some((x) => x.startsWith("charter.md")));  // the top pages need no type
   assert.ok(!ps.some((x) => x.startsWith("oak-tree.md")));
 });
+t("file names unique across the GDD, placeholders are to-dos", () => {
+  const L = (...lines) => lines.join("\n") + "\n";
+  const more = new Map([
+    ["docs/gdd/entities/oak.md", L("---", "type: entity", "status: stub", "---", "", "# Oak", "", "Sworn to p-sworn.", "", "```", "p-in-code", "```")],
+    ["docs/gdd/objects/oak.md", L("---", "type: object", "status: stub", "---", "", "# Oak")],
+    ["docs/gdd/workflow.md", L("# Workflow", "", "Placeholders start with p- (p-sworn).")],
+  ]);
+  const ps = checks(buildGdd(more), system, more);
+  assert.equal(ps.filter((p) => p.kind === "duplicate-name").length, 2);
+  const ph = ps.filter((p) => p.kind === "placeholder");
+  assert.deepEqual(ph.map((p) => p.path.split("/").pop() + ":" + p.line), ["oak.md:8"]); // not in code, not on the Workflow page
+});
 console.log(`frontmatter and gdd index: ${n} passed`);

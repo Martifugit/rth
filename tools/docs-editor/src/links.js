@@ -13,6 +13,8 @@ function normalize(p) {
   }
   return out.join("/");
 }
+// Inline code is an example, not a link: blanked out (same length, so positions hold) before looking for links.
+const noCode = (line) => line.replace(/`[^`]*`/g, (m) => " ".repeat(m.length));
 const isExternal = (href) => /^[a-z][a-z0-9+.-]*:/i.test(href);
 
 /** A link's target page from `from` (null for external links, anchors in the same page, non-pages). */
@@ -56,7 +58,7 @@ export function linksOf(page, text, files) {
   eachLine(text, (line, i, section, code) => {
     if (code) return;
     LINK.lastIndex = 0;
-    for (let m = LINK.exec(line); m; m = LINK.exec(line)) {
+    for (let m = LINK.exec(noCode(line)); m; m = LINK.exec(noCode(line))) {
       if (m.index > 0 && line[m.index - 1] === "!") continue; // an image
       let to = targetOf(page, m[2]);
       if (to && typeof to === "object") {
@@ -177,7 +179,7 @@ export function brokenLinks(index, exists = () => false) {
     eachLine(text, (line, i, section, code) => {
       if (code) return;
       LINK.lastIndex = 0;
-      for (let m = LINK.exec(line); m; m = LINK.exec(line)) {
+      for (let m = LINK.exec(noCode(line)); m; m = LINK.exec(noCode(line))) {
         if (m.index > 0 && line[m.index - 1] === "!") continue; // an image
         const href = m[2];
         if (isExternal(href)) continue;

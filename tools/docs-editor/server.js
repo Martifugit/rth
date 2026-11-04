@@ -538,7 +538,7 @@ const api = {
 
   async "GET /api/checks"() {
     const idx = await gdd();
-    return { problems: checks(idx.gdd, idx.system) };
+    return { problems: checks(idx.gdd, idx.system, idx.texts) };
   },
 
   async "GET /api/changes"() { return { changes: await recentChanges() }; },

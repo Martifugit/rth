@@ -148,6 +148,33 @@ export function makePanels(ctx) {
     return parts;
   }
 
+  // ----------------------------------------------------------------------------- status
+
+  // What exists and what's still a stub: every page by type, with its status, from the page list's
+  // frontmatter. Generated, never written (it changes all the time).
+  function renderOverview() {
+    const view = $("#statusView");
+    const pages = S.files.filter((f) => !ctx.isMeta(f.path));
+    const statuses = ["stub", "draft", "agreed", "cut"];
+    const count = (list, st) => list.filter((f) => (f.status || null) === st).length;
+    const typeOrder = S.types.map((t) => t.type);
+    const byType = new Map();
+    for (const f of pages) { const k = f.type || ""; if (!byType.has(k)) byType.set(k, []); byType.get(k).push(f); }
+    const types = [...byType.keys()].sort((a, b) => (a ? typeOrder.indexOf(a) : 1e9) - (b ? typeOrder.indexOf(b) : 1e9));
+    const dot = (st) => h("span", { class: "st-dot st-" + (st || "none") });
+    view.replaceChildren(h("article", { class: "prose oq sv" },
+      h("h1", {}, "Status"),
+      h("p", { class: "oq-intro" }, pages.length
+        ? `${pages.length} page${pages.length > 1 ? "s" : ""}: ` + statuses.map((st) => `${count(pages, st)} ${st}`).join(", ") + (count(pages, null) ? `, ${count(pages, null)} with no status` : "") + ". Gathered from every page's frontmatter."
+        : "No pages yet. Start at the game page, and follow the links."),
+      types.map((type) => {
+        const list = byType.get(type).sort((a, b) => statuses.indexOf(a.status) - statuses.indexOf(b.status) || String(a.title).localeCompare(String(b.title)));
+        return h("section", { class: "oq-page" },
+          h("h2", {}, type ? type[0].toUpperCase() + type.slice(1) : "No type", h("span", { class: "sv-n" }, " " + statuses.map((st) => count(list, st) ? `${count(list, st)} ${st}` : null).filter(Boolean).join(" · "))),
+          h("ul", { class: "q-list" }, list.map((f) => h("li", {}, dot(f.status), h("a", { class: "q-page", onclick: () => ctx.openDoc(f.path), title: f.path }, f.title || f.path.split("/").pop()), h("span", { class: "q-type" }, f.status || "no status")))));
+      })));
+  }
+
   // ----------------------------------------------------------------------------- to-do
 
   // What the GDD still needs, in one list: pages that links (or groups, or based-on) point to but that
@@ -207,7 +234,7 @@ export function makePanels(ctx) {
           h("span", { class: "bl-why" }, (l.section ? l.section + " · " : "") + (l.kind === "heading" ? `“${l.href.split("#").pop()}” isn't a heading on ${where(l.to)}` : `${l.to} isn't in the GDD`)))))))] : null));
   }
 
-  return { linksFor, renderLinks, renderStatus, renderChanges, renderBroken, changes, broken, unseen, invalidate };
+  return { linksFor, renderLinks, renderStatus, renderOverview, renderChanges, renderBroken, changes, broken, unseen, invalidate };
 }
 
 // The first few words of a question, to find it in the page (a search can't cross bold or links).

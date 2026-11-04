@@ -6,7 +6,7 @@ export const GDD = "docs/gdd";
 export const CHARTER = GDD + "/charter.md";
 export const SYSTEM = GDD + "/how-the-gdd-works.md";
 /** The pages at the top of the page list, in this order, before the type folders. */
-export const TOP = [CHARTER, SYSTEM, GDD + "/using-codex.md"];
+export const TOP = [CHARTER, SYSTEM, GDD + "/using-codex.md", GDD + "/workflow.md", GDD + "/decisions-log.md"];
 
 export const inGdd = (rel) => typeof rel === "string" && rel.startsWith(GDD + "/");
 /** Pages about the GDD rather than in it: the top pages, and anything starting with "_". No type needed. */

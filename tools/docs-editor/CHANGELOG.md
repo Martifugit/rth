@@ -13,6 +13,8 @@ section before releasing; the release refuses without one.
 - Lists that write themselves: a group's members, a skill's training, or any query, in a `query` block.
 - To-do (in the page list): pages to write, and pages whose type or sections need a look.
 - A coloured dot shows each page's status in the page list, with chips to show only stubs, drafts...
+- Status (in the page list): every page by type and status, gathered from the pages themselves.
+- File names are unique across the GDD, and every p- placeholder name shows in To-do.
 
 ## 0.2.0
 
