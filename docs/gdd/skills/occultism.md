@@ -10,6 +10,8 @@ status: stub
 
 ## Intent
 
+Occultism is one of the three combat styles.
+
 ## How it feels to train
 
 ## What it unlocks
