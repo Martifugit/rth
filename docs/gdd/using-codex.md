@@ -60,11 +60,12 @@ More); the groups and what the page is a variant of; and the type.
 You never have to type the page's header by hand. **<>** (top right) shows the raw text for when you
 want it.
 
-## The bottom of a page
+## What links here
 
-**Links to this page** gathers what other pages say about this one: *Dropped by*, *Found in*,
-*Appears in*, a group's members, a skill's training. It's computed, never written, so it sits apart
-from the page's own words. To change it, change the page that owns the relationship.
+The **Links** tab (right pane) gathers what other pages say about this one: a group's members, a
+skill's training, then links in by what they mean (*Dropped by*, *Found in*, *Appears in*), the rest
+of the links in and out, and pages that name this one without linking. It's computed, never written,
+so it stays out of the page's own words. To change it, change the page that owns the relationship.
 
 ## Templates
 
@@ -89,7 +90,7 @@ from them when you make it or tick a component.
   page that isn't written yet, say so: it becomes a to-do.
 - A link is named by what it means on the page it points to: a link from a rewards section shows
   there as *Dropped by*, from spawns as *Found in*, from a quest's steps as *Appears in*. Whoever owns
-  the relationship writes the link; the other page shows it by itself, in **Links to this page**.
+  the relationship writes the link; the other page shows it by itself, in its **Links** tab.
 
 ## Lists of your own
 
