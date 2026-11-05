@@ -1,0 +1,28 @@
+{
+ "page": "docs/gdd/skills/defence.md",
+ "auditedHash": "21464a664bdee2ea",
+ "problems": [
+  {
+   "id": "p-001115bdf2",
+   "kind": "contradiction",
+   "pages": [
+    "docs/gdd/skills/defence.md",
+    "docs/gdd/skills/vitality.md"
+   ],
+   "quotes": [
+    "Each level adds to the [blood](../systems/blood.md) a player can lose",
+    "Each level raises their max"
+   ],
+   "summary": "Defence and Vitality both claim to raise max blood",
+   "detail": "Defence says each level adds to the blood a player can lose. Vitality says each level raises max blood. Two skills owning the same effect is a contradiction, and Vitality is the one named for it.",
+   "plan": "Change the Defence Intent so it no longer says levels add to max blood. Say what Defence does instead, for example how it makes armor worth wearing or how much damage it cuts. Leave max blood to Vitality, and link to it from Defence.",
+   "of": "docs/gdd/skills/defence.md",
+   "found": {
+    "by": "Ibux",
+    "at": "2026-11-05T21:00:35.272Z"
+   }
+  }
+ ],
+ "dismissed": [],
+ "auditedAt": "2026-11-05T21:00:35.272Z"
+}
