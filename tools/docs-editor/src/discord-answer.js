@@ -2,13 +2,16 @@
 // has said in AI setup that it answers. The helper's room hands this Codex a tag; it claims it (only one
 // Codex's claim wins), renews the claim while it works, reads the thread, asks Claude (Sonnet, medium
 // effort, read-only, with the Codex's tools), and replies in the thread as R'th AI, tagging whoever asked.
+// /ask and "Ask R'th AI" (helper/src/interactions.js) come the same way, of kind "channel": no thread to
+// read, but the question and the channel's last messages; the answer goes back through the helper.
 
 import crypto from "node:crypto";
 import { HELPER } from "./discord-account.js";
 import { VERSION_HEADERS } from "./codex-version.js";
 
 /** auth(): the Authorization header (the signed-in session). store: the comments. answer({ note, page,
- *  asker }) → { text } or { error } (src/assistant.js). enabled(): this Codex answers. */
+ *  asker }) or answer({ question, channel, asker }) → { text } or { error } (src/assistant.js).
+ *  enabled(): this Codex answers. */
 export function makeDiscordAnswers({ auth, store, answer, enabled = () => false, helper = HELPER }) {
   const conn = "codex-" + crypto.randomBytes(6).toString("hex"); // this Codex, for its claims
   const busy = new Set();
@@ -30,6 +33,13 @@ export function makeDiscordAnswers({ auth, store, answer, enabled = () => false,
       if (c.error) return { skipped: true, why: c.error }; // another Codex is on it
       const renew = setInterval(() => call("/mentions/renew", { id, conn }).catch(() => {}), 60 * 1000);
       try {
+        if (c.kind === "channel") {
+          const r = await answer({ question: c.question || "", channel: c.channel || {}, asker: c.asker || null });
+          const text = r.error ? "I couldn't answer that just now (" + r.error + "). Ask me again in a while." : r.text;
+          const a = await call("/mentions/answer", { id, conn, text: String(text || "").trim() || "I've nothing useful to say to that." });
+          if (a.error) throw new Error(a.error);
+          return { ok: true };
+        }
         await store.fresh?.();
         const hit = await store.find(thread);
         if (!hit) return { error: "That post isn't there any more." };

@@ -13,7 +13,7 @@ const FIX = { "undeclared-section": "declare", "missing-section": "add-section",
 /**
  * tools: src/ai-tools.js. before: Map(page → text) before the turn; after: the same as the turn left them
  * (for suggestions, as they would be). changes: the turn's [{ page, before, after }].
- * → [{ page, kind, line, text, fix?, word? }], at most `max`.
+ * → [{ page, kind, line, text, quote?, fix?, word? }], at most `max` (quote: text to find the place by).
  */
 export async function checkTurn({ tools, before, after, changes, max = 12 }) {
   const idxBefore = tools.indexOf(before), idxAfter = tools.indexOf(after);
@@ -26,7 +26,7 @@ export async function checkTurn({ tools, before, after, changes, max = 12 }) {
     for (const p of now) {
       if (IGNORE.has(p.kind) || had.has(key(p))) continue;
       const fix = FIX[p.kind] ? { kind: FIX[p.kind], page: x.page, ...(p.component ? { component: p.component } : {}) } : null;
-      out.push({ page: x.page, kind: p.kind, line: p.line || null, text: p.text, ...(fix ? { fix } : {}), ...(p.word ? { word: p.word } : {}) });
+      out.push({ page: x.page, kind: p.kind, line: p.line || null, text: p.text, ...(p.quote ? { quote: p.quote } : {}), ...(fix ? { fix } : {}), ...(p.word ? { word: p.word } : {}) });
       if (out.length >= max) return out;
     }
   }
@@ -38,4 +38,15 @@ export function afterTexts(before, changes) {
   const m = new Map(before);
   for (const x of changes) { if (x.after == null) m.delete(x.page); else m.set(x.page, x.after); }
   return m;
+}
+
+/** A line of the page as it reads in the editor (no Markdown marks), clipped to a few words: what a
+ *  problem's link finds to open the page at its place. Null without a line. */
+export function quoteAt(text, line) {
+  if (!line) return null;
+  const raw = (text.split("\n")[line - 1] || "")
+    .replace(/^\s*(#{1,6}\s+|[-*+]\s+(\[[ xX]\]\s+)?|\d+[.)]\s+|>\s*)/, "")
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/[*_`~]/g, "").replace(/\|/g, " ").replace(/\s+/g, " ").trim();
+  if (!raw) return null;
+  return raw.length > 60 ? raw.slice(0, 60).replace(/\s+\S*$/, "") : raw;
 }

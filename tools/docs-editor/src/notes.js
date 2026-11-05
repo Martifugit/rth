@@ -719,6 +719,40 @@ export function makeNotes(ctx) {
     await reload();
   }
 
+  /**
+   * A comment started in Discord, on no page: its thread, and ways to put it on one (the pages most like
+   * what it says, from R'th AI's section index, or any page by name). It then opens there, focused.
+   */
+  async function placeDialog(n) {
+    const input = h("input", { class: "field", placeholder: "Or any page: docs/gdd/…", list: "placePages", spellcheck: "false" });
+    const picks = h("div", { class: "pl-picks" }, h("span", { class: "muted small" }, "Finding pages like it…"));
+    const put = async (page) => {
+      if (!ctx.hasPage(page)) { toast("No such page: " + page, "bad"); return; }
+      const r = await api(`/api/notes/${n.id}/move`, { method: "POST", body: JSON.stringify({ page }) });
+      if (r && r.ok === false) { toast(failed("Couldn't put it there", r), "bad"); return; }
+      close();
+      toast("Put on " + (ctx.titleOf(page) || page));
+      loadHistory();
+      await focus(n.id, page);
+    };
+    input.addEventListener("keydown", (ev) => { if (ev.key === "Enter") put(input.value.trim()); });
+    const thread = h("div", { class: "pl-thread" }, n.thread.slice(0, 8).map((e) => h("div", { class: "pl-msg" }, head(e), h("div", { class: "pl-text" }, clip(e.text, 600)))),
+      n.thread.length > 8 ? h("div", { class: "muted small" }, `and ${n.thread.length - 8} more`) : null);
+    const close = ctx.modal("Put the comment on a page", [
+      h("p", { class: "muted small" }, "It was started in Discord, so it isn't on any page yet. Put it on the page it's about; it shows there as a comment on the whole page."),
+      thread,
+      h("label", {}, "Pages it may be about"), picks,
+      input, h("datalist", { id: "placePages" }, S.files.filter((f) => f.path.startsWith("docs/gdd/") && !f.path.includes("/templates/")).map((f) => h("option", { value: f.path }, f.title || ""))),
+      h("div", { class: "modal-actions" }, h("button", { class: "btn", onclick: () => close() }, "Not now"), h("button", { class: "btn btn-gold", onclick: () => put(input.value.trim()) }, "Put it there")),
+    ], { width: "min(560px, 94vw)" });
+    const q = [n.anchor?.title, ...n.thread.slice(0, 3).map((e) => e.text)].filter(Boolean).join(" ").slice(0, 600);
+    const r = await api("/api/pages-like?q=" + encodeURIComponent(q)).catch(() => null);
+    const like = (r?.pages || []).slice(0, 3);
+    picks.replaceChildren(...(like.length
+      ? like.map((p) => h("button", { class: "btn btn-small pl-pick", title: p.path, onclick: () => put(p.path) }, p.title || p.path.split("/").pop()))
+      : [h("span", { class: "muted small" }, "No page stands out; pick one by name below.")]));
+  }
+
   function moveDialog(n) {
     const input = h("input", { class: "field", placeholder: "docs/gdd/…", list: "commentPages", spellcheck: "false", value: N.page || "" });
     const go = async () => {
@@ -779,10 +813,11 @@ export function makeNotes(ctx) {
       h("div", { class: "hs-list" }, list.length ? list.map((x) => {
         const n = x.note, last = n.thread[n.thread.length - 1];
         return h("div", { class: "hs-item" + (forYou(x) ? " you" : ""), onclick: async () => {
+          if (!x.page) { toggleHistory(); return placeDialog(n); } // started in Discord: put it on a page first
           if (n.status === "done") { await api("/api/notes/" + n.id, { method: "PATCH", body: JSON.stringify({ status: "open" }) }); toast("Reopened"); }
           toggleHistory(); await focus(n.id, x.page); if (n.status === "done") reload();
         } },
-          h("div", { class: "hs-page" }, ctx.titleOf(x.page) || x.page || "No page", n.status === "done" ? h("span", { class: "hs-resolved" }, "Resolved") : null),
+          h("div", { class: "hs-page" + (x.page ? "" : " none") }, ctx.titleOf(x.page) || x.page || "Not on a page yet", n.status === "done" ? h("span", { class: "hs-resolved" }, "Resolved") : null),
           n.anchor?.quote ? h("div", { class: "hs-quote" }, clip(n.anchor.quote, 90)) : null,
           head(n.thread[0]), h("div", { class: "hs-text" }, clip(n.thread[0].text, 160)),
           n.thread.length > 1 ? h("div", { class: "hs-last" }, `${person(last.by, last.who).name}: ${clip(last.text, 110)}`) : null);
@@ -850,7 +885,7 @@ export function makeNotes(ctx) {
   }
 
   return {
-    init, load, place, saved, compose, onRun, onNotes, docChanged, layout, focus, toggleMargin,
+    init, load, place, saved, compose, onRun, onNotes, docChanged, layout, focus, toggleMargin, placeDialog,
     escape: () => { if (N.draft) { N.draft = null; draw(); render(); return true; } if (N.history.open) { toggleHistory(); return true; } if (N.active) { N.active = null; draw(); render(); return true; } return false; },
     target,
     /** Who's signed in with Discord (src/account-button.js), for drafts; null when nobody is. */

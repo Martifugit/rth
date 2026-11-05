@@ -60,4 +60,23 @@ assert.ok(decl.get("docs/gdd/locations/mossy-hollows.md").includes("components: 
 const added = plan({ kind: "add-section", page: "docs/gdd/locations/mossy-hollows.md", component: "spawns" }).get("docs/gdd/locations/mossy-hollows.md");
 assert.ok(/## Intent and mood[\s\S]*## Spawns/.test(added));
 assert.throws(() => plan({ kind: "explode" }));
+
+// A page not written yet, linked from a field: its likely type is what that field usually links to.
+{
+  const more = {
+    "docs/gdd/skills/woodcutting.md": fm("skill") + "# Woodcutting\n\n## Actions\n\n- Tool: [hatchet](../items/hatchet.md)\n",
+    "docs/gdd/skills/mining.md": fm("skill") + "# Mining\n\n- Tool: [pickaxe](../items/pickaxe.md)\n- Tool: [chisel](../items/chisel.md)\n",
+    "docs/gdd/skills/fishing.md": fm("skill") + "# Fishing\n\n- Tool: [net](net.md)\n- Skill: [cooking](cooking.md)\n",
+    "docs/gdd/items/hatchet.md": fm("item") + "# Hatchet\n",
+    "docs/gdd/items/pickaxe.md": fm("item") + "# Pickaxe\n",
+  };
+  const t2 = Object.entries({ ...pages, ...more });
+  const idx2 = buildIndex(t2.map(([path, text]) => ({ path, text })));
+  const gdd2 = buildGdd(new Map(t2));
+  const todo2 = buildTodo({ idx: idx2, gdd: gdd2, system, problems: [] });
+  const by = (id) => todo2.missing.find((c) => c.id === id);
+  assert.equal(by("net").typeGuess, "item", "Tool links go to items");
+  assert.equal(by("chisel").typeGuess, "item");
+  assert.equal(by("cooking").typeGuess, undefined, "no Skill links to written pages: no guess");
+}
 console.log("todo: cards and fixes");

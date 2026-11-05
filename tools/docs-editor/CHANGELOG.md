@@ -4,6 +4,18 @@ A few plain lines per version, for the people using it: `npm run release` puts t
 the GitHub release and announces it in #codex (`scripts/release.mjs`, `scripts/announce.mjs`). Write the
 section before releasing; the release refuses without one.
 
+## 0.4.1
+
+- Ask R'th AI from any Discord channel: type **/ask** and your question, or pick **Apps > Ask R'th AI** on someone's message. It answers in the channel, from a Codex with Claude that has "Answer @R'th AI in Discord" on. With none open it says it's offline, then answers later and tags you.
+- Comments started in Discord, which aren't on any page, can now be put on one: from the comment history, or from the new "Comments to place" section of the To-do page. Codex suggests the pages they're most likely about.
+- R'th AI works on the To-do and Recent changes pages too, and knows what they list.
+- Writing a page from the To-do skips choosing its type when Codex already knows it (from its folder, or from the field that links to it). "Change" still picks another.
+- A problem card under an answer now links to the place: click its sentence and the page opens with the spot marked. No more "Line 13".
+- In Chat mode, R'th AI's changes no longer reload the page, ask "Save it?", or show a page it suggests as made and then deleted. A suggestion you accept isn't asked about again.
+- The copy button on an answer has its own space beside the text and stays in view as you scroll a long answer.
+- A little more space between your messages and the answers.
+- AI setup's choices have squarer corners, centred labels and a sliding highlight.
+
 ## 0.4.0
 
 - R'th AI has two modes, shown under its box: **Chat** (its changes wait for you to accept or skip) and **Work** (it edits the pages, with Show and Undo after). Shift+Tab cycles them, as in Claude Code. The word "suggest" in a message no longer decides it.

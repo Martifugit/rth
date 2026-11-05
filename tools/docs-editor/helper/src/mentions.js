@@ -10,11 +10,17 @@
 // claims it before answering (one UPDATE that only one can win), for a few minutes it renews while
 // working; a claim that runs out goes back to waiting and is offered again.
 //
-//   POST /mentions/claim  { id, conn }   → { ok, thread, asker: { id, name } } or 409
+// /ask and "Ask R'th AI" (src/interactions.js) are tags too, of kind "channel": thread is the channel, and
+// the Codex sends its answer here (/mentions/answer) instead of replying in a comment post.
+//
+//   POST /mentions/claim  { id, conn }   → { ok, kind, thread, asker: { id, name } } or 409; for a channel
+//                                           tag also { question, channel: { name, recent } }
 //   POST /mentions/renew  { id, conn }
+//   POST /mentions/answer { id, conn, text }   a channel tag's answer, posted in its channel
 //   POST /mentions/done   { id, conn }
 
 import { aiSays } from "./comments.js";
+import { sayOffline, answerInChannel, channelContext } from "./interactions.js";
 
 const LEASE_MS = 3 * 60 * 1000;
 export const OFFLINE = "I'm offline right now: no Codex with Claude is open. I'll answer here as soon as one opens.";
@@ -27,11 +33,11 @@ export function tagsAi(env, text) {
 }
 
 /** A tag seen for the first time: kept, and offered to a Codex (or answered "offline"). */
-export async function noticed(env, ctx, { msgId, thread, asker, at }) {
-  const since = await sinceWhen(env);
-  if (at && at < since) return false; // from before this was switched on: never answered out of the blue
-  const r = await env.DB.prepare("INSERT INTO mentions (msg_id, thread, asker_id, asker_name, status, at) VALUES (?, ?, ?, ?, 'waiting', ?) ON CONFLICT(msg_id) DO NOTHING")
-    .bind(msgId, thread, asker?.id || null, asker?.name || null, at || new Date().toISOString()).run();
+export async function noticed(env, ctx, { msgId, thread, asker, at, kind = "forum", token = null, question = null, refMsg = null }) {
+  // From before this was switched on: never answered out of the blue (/ask is always new, so not checked).
+  if (kind !== "channel") { const since = await sinceWhen(env); if (at && at < since) return false; }
+  const r = await env.DB.prepare("INSERT INTO mentions (msg_id, thread, asker_id, asker_name, status, at, kind, token, question, ref_msg) VALUES (?, ?, ?, ?, 'waiting', ?, ?, ?, ?, ?) ON CONFLICT(msg_id) DO NOTHING")
+    .bind(msgId, thread, asker?.id || null, asker?.name || null, at || new Date().toISOString(), kind, token, question, refMsg).run();
   if (!r.meta?.changes) return false;
   const job = route(env, msgId);
   if (ctx?.waitUntil) ctx.waitUntil(job.catch((e) => console.error("mention", e.message))); else await job;
@@ -55,7 +61,11 @@ export async function route(env, msgId) {
   const sent = (await r.json().catch(() => ({}))).sent;
   if (!sent && !m.told) {
     await env.DB.prepare("UPDATE mentions SET told = 1 WHERE msg_id = ?").bind(msgId).run();
-    await aiSays(env, m.thread, OFFLINE);
+    if (m.kind === "channel") {
+      // "thinking…" becomes the offline line; the answer later replies to it (or to the message asked about).
+      const said = await sayOffline(env, m, OFFLINE).catch((e) => { console.error("offline", e.message); return null; });
+      if (said && !m.ref_msg) await env.DB.prepare("UPDATE mentions SET ref_msg = ? WHERE msg_id = ?").bind(said, msgId).run();
+    } else await aiSays(env, m.thread, OFFLINE);
   }
 }
 
@@ -84,7 +94,19 @@ export async function mentions(req, env, url) {
       .bind(conn, t + LEASE_MS, id, t).run();
     if (!r.meta?.changes) return { status: 409, error: "Someone else is answering it." };
     const m = await env.DB.prepare("SELECT * FROM mentions WHERE msg_id = ?").bind(id).first();
-    return { ok: true, thread: m.thread, asker: { id: m.asker_id, name: m.asker_name } };
+    const base = { ok: true, kind: m.kind || "forum", thread: m.thread, asker: { id: m.asker_id, name: m.asker_name } };
+    if (m.kind !== "channel") return base;
+    return { ...base, question: m.question, channel: await channelContext(env, m.thread) };
+  }
+  if (url.pathname === "/mentions/answer") {
+    const m = await env.DB.prepare("SELECT * FROM mentions WHERE msg_id = ? AND status = 'claimed' AND conn = ?").bind(id, conn).first();
+    if (!m) return { status: 409, error: "Not yours any more." };
+    if (m.kind !== "channel") return { status: 400, error: "A comment post's answer is a reply in its post." };
+    const text = String(b.text || "").trim().slice(0, 8000);
+    if (!text) return { status: 400, error: "No answer." };
+    await answerInChannel(env, m, text);
+    await env.DB.prepare("UPDATE mentions SET status = 'answered', until = NULL WHERE msg_id = ?").bind(id).run();
+    return { ok: true };
   }
   if (url.pathname === "/mentions/renew") {
     const r = await env.DB.prepare("UPDATE mentions SET until = ? WHERE msg_id = ? AND status = 'claimed' AND conn = ?").bind(t + LEASE_MS, id, conn).run();

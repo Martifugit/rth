@@ -223,6 +223,12 @@ Comments work as in Google Docs, and never go into the page.
   AI setup; only one answers (it claims the tag through the helper, `helper/src/mentions.js`,
   `src/discord-answer.js`). With none open, R'th AI says it's offline and answers once one opens. For
   changes, ask in the AI tab (Ctrl+J, or Ask beside a selection).
+- **/ask in any Discord channel** (or **Apps > Ask R'th AI** on a message): the same, outside the
+  comments forum. Discord sends these to the helper directly (`helper/src/interactions.js`; the app's
+  Interactions Endpoint URL is `<helper>/interactions`), the answer replaces "R'th AI is thinking…", and
+  a late one replies tagging whoever asked.
+- **Comments started in Discord** aren't on a page: put them on one from the comment history or the
+  To-do page's "Comments to place", which suggests the pages they're most likely about.
 - **@agent:** assigns the comment to an agent in the next session (see the CLI below).
 - **Comment history** (the speech-bubble button, top right): every comment across the docs; Open,
   New from Claude (answers you haven't opened yet, and questions Claude left you), Resolved, All.

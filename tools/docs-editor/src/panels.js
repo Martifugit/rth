@@ -214,7 +214,7 @@ export function makePanels(ctx) {
           h("button", { class: "td-sugg", title: `Point every reference at ${where(s.path)}`, onclick: () => retarget(s) }, s.title, h("span", { class: "td-why" }, s.why))]),
         h("span", { class: "td-dim" }, "?")) : null,
       h("div", { class: "td-actions" },
-        h("button", { class: "btn btn-gold btn-small", onclick: () => ctx.newPage({ path: c.path || "docs/gdd/" + c.id + ".md", title: c.title }) }, "Write it"),
+        h("button", { class: "btn btn-gold btn-small", onclick: () => ctx.newPage({ path: c.path || "docs/gdd/" + c.id + ".md", title: c.title, type: c.typeGuess || null, everywhere: true }) }, "Write it"),
         pickInPlace("It's another page…", "The page that's meant…", (p) => retarget(p), "td-link"),
         h("button", { class: "td-toggle", onclick: () => { if (open) todoState.open.delete("m:" + c.id); else todoState.open.add("m:" + c.id); renderBroken(); } },
           h("span", { class: "td-caret" }), (open ? "Hide " : "Show ") + plural(c.refs.length, "reference"))),
@@ -282,6 +282,18 @@ export function makePanels(ctx) {
   // What R'th AI's health check found across pages (src/audit.js): the problem, where, and its plan; Fix
   // with R'th AI starts a conversation in Chat mode with the plan, so the fix comes as suggestions.
   const FOUND_KIND = { "contradiction": "Contradiction", "copied-fact": "Copied, not linked", "settled-question": "Settled elsewhere", "missing-link": "Named, not linked", "stale-reference": "Out of date" };
+  /** A comment started in Discord, on no page: what it says, and Put it on a page (src/notes.js). */
+  function unfiledCard(n) {
+    const first = n.thread?.[0] || {};
+    const who = first.who?.name || (first.by === "agent" ? "R'th AI" : "Someone");
+    return h("div", { class: "td-item" },
+      h("div", { class: "td-head" }, h("div", { class: "td-title" }, n.anchor?.title || "A comment"),
+        n.thread?.length > 1 ? h("span", { class: "td-count" }, `${n.thread.length} messages`) : null),
+      h("div", { class: "td-sub" }, `${who}: ${String(first.text || "").replace(/\s+/g, " ").slice(0, 160)}`),
+      h("div", { class: "td-actions" },
+        h("button", { class: "btn btn-gold btn-small", onclick: () => ctx.placeComment(n) }, "Put it on a page…")));
+  }
+
   function foundCard(p) {
     const open = todoState.open.has(p.id);
     const at = (i) => h("a", { class: "td-from", title: p.pages[i], onclick: () => ctx.openDoc(p.pages[i], p.quotes?.[i] ? { find: { q: p.quotes[i], occurrence: 0 } } : {}) }, p.titles?.[i] || where(p.pages[i]));
@@ -311,6 +323,7 @@ export function makePanels(ctx) {
     if (S.view !== "broken" || !todo) return;
     const all = [
       ...(todo.found || []).map((x) => ({ cat: "found", pages: x.pages, el: () => foundCard(x) })),
+      ...(todo.unfiled || []).map((x) => ({ cat: "unfiled", pages: [], el: () => unfiledCard(x) })),
       ...todo.missing.map((x) => ({ cat: "missing", pages: x.refs.map((r) => r.from).concat(x.path || []), el: () => missingCard(x) })),
       ...todo.references.map((x) => ({ cat: "references", pages: [x.from], el: () => referenceCard(x) })),
       ...todo.placeholders.map((x) => ({ cat: "placeholders", pages: x.refs.map((r) => r.from), el: () => placeholderCard(x) })),
@@ -320,6 +333,7 @@ export function makePanels(ctx) {
     // Each kind is a section of the journal, under its own heading and icon; the tabs pick one or all.
     const CATS = [
       { key: "found", tab: "Problems", title: "Problems found", icon: "quests", blurb: "What R'th AI's health check found across pages, each with a plan." },
+      { key: "unfiled", tab: "Comments", title: "Comments to place", icon: "note", blurb: "Started in Discord, so they aren't on a page yet." },
       { key: "missing", tab: "To write", title: "Pages to write", icon: "scripture", blurb: "Linked to, but not written yet." },
       { key: "references", tab: "Links", title: "Links to mend", icon: "links", blurb: "References that lead somewhere wrong." },
       { key: "placeholders", tab: "Names", title: "Names to choose", icon: "note", blurb: "Placeholder names still waiting for real ones." },

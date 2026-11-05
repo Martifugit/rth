@@ -12,6 +12,7 @@ import { answerStream } from "./ai-stream.js";
 import { busy } from "./busy.js";
 import { split as splitFront } from "./frontmatter.js";
 import { typeAt } from "./gdd.js";
+import { quoteAt } from "./turn-check.js";
 
 const ICON = {
   send: '<svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></svg>',
@@ -118,6 +119,7 @@ export function makeAi(ctx) {
   function context() {
     const c = {};
     if (S.path && !S.view && !A.left.has("page")) c.page = S.path;
+    if (S.view && VIEW_NAME[S.view] && !A.left.has("view")) c.view = S.view; // To-do or Recent changes: what it lists
     if (A.selection && A.selection.page === S.path && !A.left.has("selection")) c.selection = { quote: A.selection.quote, section: A.selection.section, page: S.path };
     const thread = ctx.notes.state.active;
     if (thread && thread !== "draft" && !A.left.has("thread")) c.thread = thread;
@@ -139,6 +141,7 @@ export function makeAi(ctx) {
   }
 
   const pageTitle = (p) => ctx.titleOf(p) || p.split("/").pop().replace(/\.md$/, "");
+  const VIEW_NAME = { broken: "To-do", changes: "Recent changes" };
   function drawChips() {
     const out = [];
     const chip = (icon, label, title, onX) => h("span", { class: "ai-chip", title },
@@ -154,12 +157,14 @@ export function makeAi(ctx) {
       for (const p of c.pages || []) out.push(chip(ICON.page, pageTitle(p), p, () => changeContext({ drop: p })));
       if (c.selection) out.push(chip(ICON.quote, "“" + clip(c.selection.quote, 38) + "”", c.selection.quote, () => changeContext({ drop: "selection" })));
       if (c.thread) out.push(chip(ICON.thread, threadLabel(c.thread), "The comment thread that's open", () => changeContext({ drop: "thread" })));
+      if (c.view) out.push(chip(ICON.page, VIEW_NAME[c.view], `What ${VIEW_NAME[c.view]} lists now`, () => changeContext({ drop: "view" })));
     } else {
       const k = A.conv.context;
       if (k.page) out.push(chip(ICON.page, pageTitle(k.page), k.page + " (what this conversation is about)", () => changeContext({ drop: "page" })));
       for (const p of k.pages || []) out.push(chip(ICON.page, pageTitle(p), p, () => changeContext({ drop: p })));
       if (k.selection) out.push(chip(ICON.quote, "“" + clip(k.selection.quote, 38) + "”", k.selection.quote, () => changeContext({ drop: "selection" })));
       if (k.thread) out.push(chip(ICON.thread, threadLabel(k.thread), "The comment thread it's about", () => changeContext({ drop: "thread" })));
+      if (k.view) out.push(chip(ICON.page, VIEW_NAME[k.view] || k.view, `What ${VIEW_NAME[k.view] || k.view} listed when the conversation started`, () => changeContext({ drop: "view" })));
       const has = new Set([k.page, ...(k.pages || [])]);
       if (S.path && !S.view && !has.has(S.path)) out.push(offer(ICON.page, pageTitle(S.path), "Add the page you're on to this conversation", () => changeContext({ add: { page: S.path } })));
       if (A.selection && A.selection.page === S.path && A.selection.quote !== k.selection?.quote)
@@ -440,9 +445,23 @@ export function makeAi(ctx) {
         h("span", {}, "Default: "), h("span", { class: "ais-badge-value" }, shown), h("span", { class: "ais-badge-caret" }, "▾"));
       return badge;
     };
-    // A choice of a few: one joined control, in the badges' colours.
-    const segmented = (value, options, onPick) => h("div", { class: "ais-seg", role: "radiogroup" },
-      options.map(([v, label]) => h("button", { class: "ais-seg-btn" + (value === v ? " on" : ""), role: "radio", "aria-checked": value === v ? "true" : "false", onclick: () => value !== v && onPick(v) }, label)));
+    // A choice of a few: one joined control, in the badges' colours, its parts all one width. The chosen
+    // part's ground (the thumb) slides to a new choice; the setup list redraws once it has got there.
+    const segmented = (value, options, onPick) => {
+      const at = Math.max(0, options.findIndex(([v]) => v === value));
+      const el = h("div", { class: "ais-seg", role: "radiogroup", style: `--n: ${options.length}; --i: ${at}` },
+        h("span", { class: "ais-seg-thumb", "aria-hidden": "true" }),
+        options.map(([v, label], i) => h("button", { class: "ais-seg-btn" + (i === at ? " on" : ""), role: "radio", "aria-checked": i === at ? "true" : "false",
+          onclick: () => {
+            if (el.dataset.picked === v || (!el.dataset.picked && v === value)) return;
+            el.dataset.picked = v;
+            el.style.setProperty("--i", String(i));
+            el.querySelectorAll(".ais-seg-btn").forEach((b, j) => { b.classList.toggle("on", j === i); b.setAttribute("aria-checked", j === i ? "true" : "false"); });
+            clearTimeout(el._pick);
+            el._pick = setTimeout(() => onPick(v), 190);
+          } }, label)));
+      return el;
+    };
     const toggle = (on, onChange, title) => h("button", { class: "ais-switch" + (on ? " on" : ""), role: "switch", "aria-checked": on ? "true" : "false", title, onclick: () => onChange(!on) }, h("span", { class: "ais-knob" }));
     const select = (value, options, onPick) => {
       const el = h("select", { class: "field ais-select", onchange: () => onPick(el.value) }, options.map(([v, label]) => h("option", { value: v, selected: value === v ? "" : null }, label)));
@@ -475,7 +494,7 @@ export function makeAi(ctx) {
         { badge: badgePick(EFFORT_NAME[cd.effort] || cd.effort, cd.effort, [["low", "Low"], ["medium", "Medium"], ["high", "High"], ["xhigh", "Extra high"], ["max", "Max"]], (v) => configure({ claudeEffort: v })) }) : null,
       row("Health check", "While Codex is idle, R'th AI checks changed pages for problems across pages and lists them on the To-do page",
         toggle(!!st.audit, (v) => configure({ audit: v }), "Check the GDD while idle")),
-      row("Answer @R'th AI in Discord", "This Codex may answer when someone tags R'th AI in a comment thread (only one Codex does)",
+      row("Answer @R'th AI in Discord", "This Codex may answer /ask in Discord's channels and @R'th AI in comment posts (only one Codex answers each)",
         toggle(!!st.answerDiscord, (v) => configure({ answerDiscord: v }), "Answer @R'th AI in Discord")));
 
     // OpenRouter: the account, its model, and a key pasted by hand (folded away).
@@ -622,7 +641,8 @@ export function makeAi(ctx) {
         youText(m.text), copyBtn(m));
     }
     return h("div", { class: "ai-msg ai-msg-ai", "data-msg": i == null ? null : String(i) },
-      m.text ? body(m.text) : null, copyBtn(m),
+      // The text with a narrow gutter of its own for Copy, which stays in view down a long answer.
+      m.text ? h("div", { class: "ai-msg-main" }, body(m.text), h("div", { class: "ai-copy-rail" }, copyBtn(m))) : null,
       m.changes?.length ? h("div", { class: "ai-changes" }, m.changes.map((x) => changeLine(x, m))) : null,
       m.comments?.length ? h("div", { class: "ai-changes" }, m.comments.map(commentLine)) : null,
       problemCards(m, i),
@@ -695,11 +715,22 @@ export function makeAi(ctx) {
         h("span", { class: "ai-problem-caret" }, open ? "▾" : "▸"));
       if (!open) return head;
       return h("div", { class: "ai-problem-group" }, head, ...ps.map((p) => h("div", { class: "ai-problem-row" },
-        h("span", { class: "ai-problem-text" }, (p.line ? `Line ${p.line}: ` : "") + p.text),
+        // The sentence opens the page at the place: its quote found and marked, as the To-do's cards do.
+        h("a", { class: "ai-problem-text", title: "Show where", onclick: () => showProblem(m, p) }, p.text),
         h("span", { class: "ai-problem-acts" },
           h("button", { class: "ai-link", title: p.fix ? "Fix it the way the To-do does" : "Ask R'th AI to fix it", onclick: (ev) => busy(ev, "Fixing…", () => fixProblem(i, p)) }, "Fix"),
           h("button", { class: "ai-link", onclick: (ev) => busy(ev, "…", () => problemDone(i, p.j, "dismissed")) }, "Dismiss")))));
     }));
+  }
+  /** The text to find a problem's place by: its own quote, or (answers from before quotes) its line. */
+  function problemQuote(m, p) {
+    if (p.quote) return p.quote;
+    const after = (m.changes || []).find((x) => x.page === p.page)?.after;
+    return after ? quoteAt(after, p.line) : null; // lines count the whole file, as the check did
+  }
+  function showProblem(m, p) {
+    const q = problemQuote(m, p);
+    ctx.openDoc(p.page, q ? { find: { q, occurrence: 0 } } : {});
   }
   async function problemDone(msg, j, how) {
     const r = await api("/api/ai/problem", { method: "POST", body: JSON.stringify({ conv: A.id, msg, i: j, how }) });
@@ -714,7 +745,8 @@ export function makeAi(ctx) {
       // No fix of its own after all (or not allowed): R'th AI is asked instead.
     }
     await problemDone(msg, p.j, "fixed");
-    input.value = `Fix this problem your change brought in on \`${p.page}\`${p.line ? ` (line ${p.line})` : ""}: ${p.text}`;
+    const q = problemQuote(A.conv?.messages?.[msg] || {}, p);
+    input.value = `Fix this problem your change brought in on \`${p.page}\`${q ? ` (at “${q}”)` : p.line ? ` (line ${p.line})` : ""}: ${p.text}`;
     grow();
     send();
   }
