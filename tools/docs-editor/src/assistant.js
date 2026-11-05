@@ -790,7 +790,9 @@ function claudeProvider({ repo, claude, systemFile }) {
       // would be gone; not --bare, which skips the sign-in.) Sign-in, models and the read tools work as
       // usual, so it can still read the game's code when it needs to. Its instructions are R'th AI's own,
       // given every turn as a file (on the command line they'd pass Windows' length limit).
-      const args = ["-p", ...ISOLATED, "--output-format", "stream-json", "--verbose", "--include-partial-messages",
+      // --tools: only the built-in tools it uses, so the rest of Claude Code's never fill its prompt (about
+      // 35,000 tokens a request otherwise, with the Codex's tools offered up front).
+      const args = ["-p", ...ISOLATED, "--tools", (readOnly ? ["Read", "Glob", "Grep"] : ["Read", "Glob", "Grep", "Edit", "Write"]).join(","), "--output-format", "stream-json", "--verbose", "--include-partial-messages",
         "--allowedTools", ...READ_TOOLS, ...(readOnly ? [] : EDIT_TOOLS), ...(mcp ? ["mcp__codex"] : []), "--disallowedTools", ...NEVER, ...(readOnly ? ["Edit", "Write", "MultiEdit"] : [])];
       // Only the Codex's own MCP server, never one configured elsewhere on this computer.
       if (mcp) args.push("--mcp-config", mcp, "--strict-mcp-config");
