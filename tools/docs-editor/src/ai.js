@@ -529,12 +529,12 @@ export function makeAi(ctx) {
   }
   /** "Skill Woodcutting": the type, then the page's title in bold. */
   const named = (x, title) => { const t = typeName(x); return [t ? h("span", { class: "ai-change-type" }, t + " ") : null, h("b", {}, title)]; };
-  const things = (n) => `${n} thing${n === 1 ? "" : "s"}`;
+  const updates = (n) => `${n} update${n === 1 ? "" : "s"}`;
 
   /** A page the AI changed in a reply: what, with Show (the page, its changes marked) and Undo. */
   function changeLine(x, m) {
     const title = ctx.titleOf(x.page) || headingOf(x.after ?? x.before) || x.page.split("/").pop();
-    const n = things(x.places || 1);
+    const n = updates(x.places || 1);
     const idx = A.conv.messages.indexOf(m);
     const dismiss = async (ev, label = "Dismissing…") => busy(ev, label, async () => { await api("/api/ai/reviewed", { method: "POST", body: JSON.stringify({ conv: A.id, msg: idx, page: x.page }) }); await openConversation(A.id); });
     // A new page it suggests: there's no page to review in yet, so it's previewed, then created or skipped.
@@ -559,7 +559,7 @@ export function makeAi(ctx) {
       h("span", { class: "ai-change-text" }, `Suggested ${n} for `, ...named(x, title)),
       x.reviewed ? null : h("button", { class: "ai-link", onclick: () => ctx.showChanges(x.page) }, "Review"),
       x.reviewed ? null : h("button", { class: "ai-link", onclick: dismiss }, "Dismiss"));
-    const what = x.before === null ? "Made" : x.after === null ? "Deleted" : `Updated ${n} in`;
+    const what = x.before === null ? "Made" : x.after === null ? "Deleted" : `${n} in`;
     return h("div", { class: "ai-change" + (x.reviewed ? " reviewed" : "") },
       h("span", { class: "ai-change-text" }, what + " ", ...named(x, title)),
       x.after !== null ? h("button", { class: "ai-link", onclick: () => ctx.showChanges(x.page) }, "Show") : null,

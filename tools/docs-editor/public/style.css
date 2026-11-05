@@ -1374,3 +1374,7 @@ body.in-app .search-trigger { height: 28px; }
 .ai-ask-ico { display: grid; place-items: center; }
 /* A change card's page type ("Skill"), before its title. */
 .ai-change-type { color: var(--silver-dim); }
+/* The AI's reason for the change you're on, in the bar; and the pages an answer suggests changes to. */
+.ai-bar-why { min-width: 0; flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-style: italic; color: var(--muted); font-size: 13px; margin-left: 4px; }
+.ai-bar-why::before { content: "Why: "; font-style: normal; color: var(--dim); }
+.ai-bar-pages { color: var(--muted); font-weight: 400; }

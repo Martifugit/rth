@@ -493,8 +493,36 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
   async function changesFor(page) {
     const out = [];
     for (const c of await conversations())
-      c.messages.forEach((m, i) => { for (const x of m.changes || []) if (x.page === page && !x.reviewed) out.push({ conv: c.id, msg: i, at: m.at, before: x.before, after: x.after, suggest: !!x.suggest }); });
+      c.messages.forEach((m, i) => {
+        for (const x of m.changes || []) if (x.page === page && !x.reviewed) {
+          // The other pages the same turn suggested changes to, still waiting: reviewed one after another.
+          const others = x.suggest ? (m.changes || []).filter((y) => y.suggest && !y.reviewed && y.page !== page && y.before !== null).map((y) => y.page) : [];
+          out.push({ conv: c.id, msg: i, at: m.at, before: x.before, after: x.after, suggest: !!x.suggest, reasons: x.reasons || [], others, problem: m.problem || null });
+        }
+      });
     return out.sort((a, b) => a.at.localeCompare(b.at));
+  }
+
+  /**
+   * Accept a turn's suggestions on other pages at once (the bar's "Accept on every page"): each page still
+   * as it was when suggested takes the AI's version; one changed since is left to review by hand.
+   */
+  async function acceptSuggestions({ conv, msg, pages: which = [] }) {
+    const c = await readConv(conv);
+    const m = c?.messages[msg];
+    if (!m?.changes) return { error: "Nothing to accept." };
+    const done = [], kept = [];
+    for (const x of m.changes) {
+      if (!x.suggest || x.reviewed || x.before === null || (which.length && !which.includes(x.page))) continue;
+      if ((await read(x.page)) !== x.before) { kept.push(x.page); continue; }
+      await write(x.page, x.after);
+      x.reviewed = true;
+      done.push(x.page);
+    }
+    await writeConv(c);
+    if (done.length) changed(done);
+    emit("ai", { id: conv, state: "reviewed" });
+    return { ok: true, accepted: done, kept };
   }
 
   /** Done with a page's changes (or one turn's): Show changes stops marking them. */
@@ -550,7 +578,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     return { ok: true, page };
   }
 
-  return { list, get, send, stop, remove, changesFor, reviewed, undo, createSuggested, setup, configure, setContext, lookUp, tool, toolList, tools, newTurn, endTurn, mcpConfig, signInClaude: () => claudeP.signIn(), check: provider.check, status: () => ({ running: [...runs.keys()], defaultMode: settings.mode || "chat" }) };
+  return { list, get, send, stop, remove, changesFor, acceptSuggestions, reviewed, undo, createSuggested, setup, configure, setContext, lookUp, tool, toolList, tools, newTurn, endTurn, mcpConfig, signInClaude: () => claudeP.signIn(), check: provider.check, status: () => ({ running: [...runs.keys()], defaultMode: settings.mode || "chat" }) };
 }
 
 const titleFrom = (text) => {

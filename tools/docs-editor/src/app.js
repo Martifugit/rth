@@ -1282,7 +1282,8 @@ function helpDialog() {
   modal("Keys", h("div", { class: "keys" },
     k("Ctrl P", "Search: pages by name, then the text of every page"),
     k("Ctrl M", "Comment on the selected text"), k("Ctrl Enter", "Post a comment. Write @agent in it to leave it for the next agent session"),
-    k("Ctrl J", "Ask the AI (with the selected text, if any)"), k("Shift Tab", "In the AI box: switch between Chat (its changes wait for you to accept) and Work (it edits the pages)"), k("Ctrl Shift C", "Copy for Discord: the selection, or the section you're in, with a link back"),
+    k("Ctrl J", "Ask the AI (with the selected text, if any)"), k("Shift Tab", "In the AI box: switch between Chat (its changes wait for you to accept) and Work (it edits the pages)"),
+    k("Alt ↓", "With the AI's changes shown: the next change (Alt ↑ the one before)"), k("Alt Enter", "Accept the suggestion you're on (Alt Backspace skips it)"), k("Ctrl Shift C", "Copy for Discord: the selection, or the section you're in, with a link back"),
     k("Ctrl K", "Add or edit a link"), k("Ctrl B", "Bold"), k("Ctrl I", "Italic"), k("Ctrl Z", "Undo"),
     k("Ctrl S", "Save now (pages also save by themselves)"), k("Alt ←", "Back to where you were (also the mouse's back button)"), k("Alt →", "Forward again"),
     k("Ctrl ,", "Show or hide the pages"), k("Ctrl .", "Show or hide the outline, links and AI"),
@@ -1757,7 +1758,10 @@ const account = makeAccountButton({ $, h, api, toast, onChange: (v) => {
 // Show changes: what the AI changed on the open page (src/ai-changes.js).
 const aiChanges = makeAiChanges({ S, $, h, api, toast, scrollToPos,
   setFront: (front) => { S.front = front; scheduleDirty(); gddUi.refresh?.(); }, // a suggested header change, accepted
-  held: (page) => (syncState?.held || []).find((x) => x.path === page) || null, share: (page) => sharePages([page]) });
+  held: (page) => (syncState?.held || []).find((x) => x.path === page) || null, share: (page) => sharePages([page]),
+  // The next page an answer suggested changes to, opened with them shown; the question before accepting on every page.
+  openChanges: (page) => { S.wantChanges = page; openDoc(page); }, ask: (...a) => ask(...a),
+  titleOf: (p) => S.files.find((f) => f.path === p)?.title || p.split("/").pop().replace(/\.md$/, "") });
 const ai = makeAi({
   S, $, h, api, toast, renderHtml, notes, copyText,
   openDoc: (...a) => openDoc(...a), hasPage: (p) => S.fileSet.has(p), titleOf: (p) => S.files.find((f) => f.path === p)?.title || null,
