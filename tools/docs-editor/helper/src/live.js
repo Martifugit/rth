@@ -15,6 +15,7 @@
 import { DurableObject } from "cloudflare:workers";
 import { unseal } from "./crypto.js";
 import { member } from "./discord.js";
+import { waiting } from "./mentions.js";
 
 const str = (v, n) => (typeof v === "string" ? v.slice(0, n) : null);
 
@@ -24,6 +25,7 @@ function clean(s = {}) {
     page: str(s.page, 300), title: str(s.title, 200),
     section: Array.isArray(s.section) ? s.section.slice(0, 6).map((x) => String(x).slice(0, 120)) : [],
     editing: !!s.editing, typingIn: str(s.typingIn, 40), away: !!s.away, hidden: !!s.hidden,
+    ai: !!s.ai, // this Codex answers @R'th AI (it has Claude, and AI setup says so): mentions.js
   };
 }
 
@@ -38,6 +40,19 @@ export class Live extends DurableObject {
     if (url.pathname === "/live/notify") { // from the Worker: comments changed
       this.send(await req.text());
       return new Response("ok");
+    }
+    // From the Worker (mentions.js): give a tag of R'th AI to one Codex that answers. The one asked least
+    // lately is picked, so two open Codexes take turns; it claims the tag before it answers.
+    if (url.pathname === "/live/ask") {
+      const m = await req.text();
+      const answerers = this.ctx.getWebSockets().filter((w) => { const a = w.deserializeAttachment(); return a?.ok && a.state?.ai; });
+      if (!answerers.length) return Response.json({ sent: false });
+      const pick = answerers.sort((x, y) => (x.deserializeAttachment().asked || 0) - (y.deserializeAttachment().asked || 0))[0];
+      const a = pick.deserializeAttachment();
+      a.asked = Date.now();
+      pick.serializeAttachment(a);
+      try { pick.send(m); } catch { return Response.json({ sent: false }); }
+      return Response.json({ sent: true });
     }
     if (req.headers.get("Upgrade") !== "websocket") return new Response("expected a WebSocket", { status: 426 });
     const [client, server] = Object.values(new WebSocketPair());
@@ -62,9 +77,12 @@ export class Live extends DurableObject {
     }
     if (!a.ok) return;
     if (m.type === "state") {
+      const was = !!a.state?.ai;
       a.state = clean(m.state);
       ws.serializeAttachment(a);
       this.tell();
+      // A Codex that answers has just come: the tags that waited for one are offered to it.
+      if (a.state.ai && !was) for (const t of await waiting(this.env).catch(() => [])) { try { ws.send(JSON.stringify({ type: "ask", id: t.id, thread: t.thread })); } catch {} }
     }
   }
 
@@ -75,7 +93,7 @@ export class Live extends DurableObject {
   tell(gone = null) {
     const open = this.ctx.getWebSockets().filter((w) => w !== gone);
     const people = open.map((w) => w.deserializeAttachment()).filter((a) => a?.ok && !a.state.hidden)
-      .map((a) => ({ conn: a.conn, ...a.user, ...a.state }));
+      .map((a) => { const { ai, ...state } = a.state; return { conn: a.conn, ...a.user, ...state }; });
     this.send(JSON.stringify({ type: "here", people }), gone);
   }
 

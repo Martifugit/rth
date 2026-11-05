@@ -35,6 +35,7 @@ import { make as makeFront, split as splitFront, slugOf } from "./src/frontmatte
 import { buildGdd, runQuery, checks, labelFor } from "./src/gdd-index.js";
 import { makeSync } from "./src/sync.js";
 import { makeAuditor } from "./src/audit.js";
+import { makeDiscordAnswers } from "./src/discord-answer.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 // The repository the Codex works on: the one it sits in, or CODEX_REPO (checks use a throwaway copy).
@@ -146,7 +147,10 @@ const store = makeCommentStore({
 });
 // "Editing <page> in the Codex" on the person's Discord profile, through their Discord app.
 // Who's here: the room of everyone with a Codex open (src/together.js), while signed in.
-const together = makeTogether({ helper: HELPER, session: () => account.session(), emit: (type, data) => broadcast(type, data), onComments: () => store.poke(), onPages: () => syncer.news(), onRelease: lookForRelease });
+const together = makeTogether({ helper: HELPER, session: () => account.session(), emit: (type, data) => broadcast(type, data), onComments: () => store.poke(), onPages: () => syncer.news(), onRelease: lookForRelease,
+  // @R'th AI in Discord: whether this Codex answers (AI setup, and Claude here), and a tag handed to it.
+  extra: () => ({ ai: assistant?.answersDiscord?.() || false }), onAsk: (m) => discordAnswers?.handle(m) });
+let discordAnswers = null; // made once the assistant is (below)
 // A release was just published (the room says so): look for it now, and twice more in case GitHub's
 // "latest" hadn't caught up yet. The hourly check (electron/main.js) stays for anyone not in the room.
 function lookForRelease(version) {
@@ -166,7 +170,8 @@ const presence = makePresence({ clientId: process.env.CODEX_DISCORD_APP || "1567
 const runner = makeRunner({ repo: REPO, store, emit: (type, data) => broadcast(type, data) });
 runner.check().then((a) => console.log(a.ok ? `Agents: ${a.version}` : `Agents: off (${a.error})`));
 let engineBase = null; // http://127.0.0.1:<port>, once listening (startServer)
-const assistant = makeAssistant({
+let assistant = null;
+assistant = makeAssistant({
   repo: REPO, dir: path.join(DATA, "conversations"), store, emit: (type, data) => broadcast(type, data),
   pages: allDocs,
   read: async (rel) => { try { return (await readText(path.join(REPO, rel))).replace(/\r\n/g, "\n"); } catch { return null; } },
@@ -199,6 +204,10 @@ const assistant = makeAssistant({
     return [...seen.values()];
   },
 });
+
+discordAnswers = makeDiscordAnswers({ auth: async () => account.authHeader(), store, answer: (x) => assistant.answerThread(x), enabled: () => assistant.answersDiscord() });
+// Claude is looked for once at startup; then the room hears whether this Codex answers.
+assistant.setup().catch(() => {}).finally(() => together.refresh());
 
 // The GDD's health check (src/audit.js): while idle, with Claude, R'th AI checks pages changed since it
 // last did; what it finds goes on the To-do page, for everyone. lastActivity: the last thing done here.
@@ -655,7 +664,7 @@ const api = {
   async "POST /api/openrouter/key"(url, req) { const r = await openrouter.useKey((await body(req)).key); return r.ok ? r : [400, r]; },
   // AI setup (the AI tab's cog): which AI answers, and the ways in.
   async "GET /api/ai/setup"(url) { return assistant.setup({ recheck: url.searchParams.get("recheck") === "1" }); },
-  async "POST /api/ai/setup"(url, req) { const r = await assistant.configure(await body(req)); return r.error ? [400, r] : r; },
+  async "POST /api/ai/setup"(url, req) { const r = await assistant.configure(await body(req)); together.refresh(); return r.error ? [400, r] : r; },
   async "POST /api/ai/claude-signin"() { return assistant.signInClaude(); },
   async "POST /api/account/signin"(url, req) { return { url: account.signInUrl("http://" + req.headers.host) }; },
   async "POST /api/account/signout"() { return account.signOut(); },

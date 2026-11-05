@@ -13,6 +13,8 @@
 //   POST /comments/update        { id, kind?, status?, anchor?, page?, tags?, text?, touch? }
 //   POST /comments/delete        { id }
 
+import { tagsAi, noticed } from "./mentions.js";
+
 const API = "https://discord.com/api/v10";
 const POLL_EVERY_MS = 5000;
 const RESOLVED_EMOJI = "✅";
@@ -47,13 +49,15 @@ async function webhook(env) {
   return v;
 }
 
-/** Post through the webhook as someone. `thread`: reply in that post; else `name` starts a new post. */
-async function postAs(env, who, content, { thread, name } = {}) {
+/** Post through the webhook as someone. `thread`: reply in that post; else `name` starts a new post.
+ *  `ping`: a Discord user id to tag (R'th AI answering someone's @R'th AI); nothing else ever pings. */
+async function postAs(env, who, content, { thread, name, ping } = {}) {
   const w = await webhook(env);
   const q = new URLSearchParams({ wait: "true" });
   if (thread) q.set("thread_id", thread);
   const body = {
-    content: clip(content, 2000),
+    content: clip((ping ? `<@${ping}> ` : "") + content, 2000),
+    allowed_mentions: ping ? { users: [ping] } : { parse: [] },
     username: clip((who.name || "Someone").replace(/discord|clyde/gi, (m) => m[0] + "​" + m.slice(1)), 80),
     avatar_url: who.avatar || undefined,
     allowed_mentions: { parse: [] },
@@ -70,7 +74,7 @@ const AI = { name: "R'th AI", avatar: "https://raw.githubusercontent.com/Martifu
 // ----------------------------------------------------------------------------- reading from Discord
 
 /** Bring the database up to date with the forum (at most every few seconds, whoever asks). */
-async function poll(env) {
+export async function poll(env, ctx = null) {
   const last = Number(await config(env, "last_poll")) || 0;
   if (Date.now() - last < POLL_EVERY_MS) return;
   await setConfig(env, "last_poll", String(Date.now()));
@@ -90,12 +94,12 @@ async function poll(env) {
       else if (!tagged && row.status === "done" && t.thread_metadata && !t.thread_metadata.archived) await env.DB.prepare("UPDATE comments SET status = 'open', updated = ? WHERE id = ?").bind(now(), t.id).run();
       continue;
     }
-    await reread(env, t, row, tagged);
+    await reread(env, t, row, tagged, ctx);
   }
 }
 
 /** Read a post's messages again and store them in the Codex's shape. */
-async function reread(env, t, row, tagged) {
+async function reread(env, t, row, tagged, ctx = null) {
   const msgs = (await discord(env, `/channels/${t.id}/messages?limit=100`)).reverse();
   const posted = new Map((await env.DB.prepare("SELECT * FROM posted WHERE thread_id = ?").bind(t.id).all()).results.map((p) => [p.msg_id, p]));
   const thread = [];
@@ -112,7 +116,10 @@ async function reread(env, t, row, tagged) {
       let text = m.content || "";
       for (const a of m.attachments || []) text += (text ? "\n\n" : "") + (a.content_type?.startsWith("image/") ? `![${a.filename}](${a.url})` : `[${a.filename}](${a.url})`);
       if (!text.trim()) continue;
-      thread.push({ by: "person", who: { id: u.id, name: m.member?.nick || u.global_name || u.username, avatar: avatar(u) }, at: m.timestamp.replace(/\.\d+/, ""), text });
+      const who = { id: u.id, name: m.member?.nick || u.global_name || u.username, avatar: avatar(u) };
+      thread.push({ by: "person", who, at: m.timestamp.replace(/\.\d+/, ""), text });
+      // @R'th AI, written in Discord (mentions.js): kept once, offered to a Codex that answers.
+      if (!u.bot && tagsAi(env, m.content)) await noticed(env, ctx, { msgId: m.id, thread: t.id, asker: { id: u.id, name: who.name }, at: m.timestamp });
     }
   }
   if (!thread.length) return;
@@ -155,10 +162,10 @@ async function get(env, id) {
 // ----------------------------------------------------------------------------- the routes
 
 /** `as`: { kind: "person", user: { id, name, avatar } } or { kind: "agent" }. */
-export async function comments(req, env, url, as) {
+export async function comments(req, env, url, as, ctx = null) {
   const path = url.pathname;
   if (req.method === "GET" && path === "/comments") {
-    try { await poll(env); } catch (e) { console.error("poll", e.message); }
+    try { await poll(env, ctx); } catch (e) { console.error("poll", e.message); }
     const since = url.searchParams.get("since") || "";
     const rows = (await env.DB.prepare("SELECT * FROM comments WHERE updated > ? ORDER BY updated").bind(since).all()).results;
     const latest = rows.length ? rows[rows.length - 1].updated : since;
@@ -186,6 +193,7 @@ export async function comments(req, env, url, as) {
       env.DB.prepare("INSERT INTO comments (id, page, kind, status, anchor, tags, created, updated, last_msg, thread) VALUES (?, ?, ?, 'open', ?, ?, ?, ?, ?, ?)")
         .bind(msg.channel_id, b.page || null, ["note", "ask", "task"].includes(b.kind) ? b.kind : "note", JSON.stringify(anchor), JSON.stringify(Array.isArray(b.tags) ? b.tags : []), at, at, msg.id, JSON.stringify([entry])),
     ]);
+    if (by === "person" && tagsAi(env, text)) await noticed(env, ctx, { msgId: msg.id, thread: msg.channel_id, asker: { id: who.id, name: who.name } });
     return get(env, msg.channel_id);
   }
 
@@ -196,25 +204,9 @@ export async function comments(req, env, url, as) {
   if (path === "/comments/reply") {
     const text = String(b.text || "").trim();
     if (!text) return { status: 400, error: "An empty reply." };
-    if (cur.note.status === "done") await setResolved(env, id, false);
-    let msg;
-    try { msg = await postAs(env, who, text, { thread: id }); }
-    catch (e) {
-      // Discord archives quiet posts by itself after a while: open it again and post.
-      await discord(env, `/channels/${id}`, { method: "PATCH", body: { archived: false } });
-      msg = await postAs(env, who, text, { thread: id });
-    }
-    const at = now();
-    const entry = { by, at, text, ...(by === "person" ? { who } : {}), ...(b.run ? { run: b.run } : {}) };
-    let status = cur.note.status === "done" ? "open" : cur.note.status;
-    if (["open", "answered", "done"].includes(b.status)) status = b.status;
-    else if (by === "agent" && status === "open") status = "answered";
-    else if (by === "person" && status === "answered") status = "open";
-    if (status === "done") await setResolved(env, id, true);
-    await env.DB.batch([
-      env.DB.prepare("INSERT INTO posted (msg_id, thread_id, by, user_id, name, avatar, text, run) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").bind(msg.id, id, by, who.id || null, who.name, who.avatar || null, text, b.run ? JSON.stringify(b.run) : null),
-      env.DB.prepare("UPDATE comments SET thread = ?, status = ?, updated = ?, last_msg = ? WHERE id = ?").bind(JSON.stringify([...cur.note.thread, entry]), status, at, msg.id, id),
-    ]);
+    const ping = by === "agent" && /^\d{5,25}$/.test(String(b.ping || "")) ? String(b.ping) : null;
+    const msg = await replyIn(env, cur, who, by, text, { status: b.status, run: b.run, ping });
+    if (by === "person" && tagsAi(env, text)) await noticed(env, ctx, { msgId: msg.id, thread: id, asker: { id: who.id, name: who.name } });
     return get(env, id);
   }
 
@@ -255,6 +247,37 @@ export async function comments(req, env, url, as) {
     return { ok: true };
   }
   return null;
+}
+
+/** A reply in a post, as someone, kept in the database as the Codex shows it. → the posted message. */
+async function replyIn(env, cur, who, by, text, { status: want, run, ping } = {}) {
+  const id = cur.note.id;
+  if (cur.note.status === "done") await setResolved(env, id, false);
+  let msg;
+  try { msg = await postAs(env, who, text, { thread: id, ping }); }
+  catch (e) {
+    // Discord archives quiet posts by itself after a while: open it again and post.
+    await discord(env, `/channels/${id}`, { method: "PATCH", body: { archived: false } });
+    msg = await postAs(env, who, text, { thread: id, ping });
+  }
+  const at = now();
+  const entry = { by, at, text, ...(by === "person" ? { who } : {}), ...(run ? { run } : {}) };
+  let status = cur.note.status === "done" ? "open" : cur.note.status;
+  if (["open", "answered", "done"].includes(want)) status = want;
+  else if (by === "agent" && status === "open") status = "answered";
+  else if (by === "person" && status === "answered") status = "open";
+  if (status === "done") await setResolved(env, id, true);
+  await env.DB.batch([
+    env.DB.prepare("INSERT INTO posted (msg_id, thread_id, by, user_id, name, avatar, text, run) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").bind(msg.id, id, by, who.id || null, who.name, who.avatar || null, text, run ? JSON.stringify(run) : null),
+    env.DB.prepare("UPDATE comments SET thread = ?, status = ?, updated = ?, last_msg = ? WHERE id = ?").bind(JSON.stringify([...cur.note.thread, entry]), status, at, msg.id, id),
+  ]);
+  return msg;
+}
+
+/** R'th AI says something in a post itself (mentions.js: "offline right now"). */
+export async function aiSays(env, thread, text) {
+  const cur = await get(env, thread);
+  if (cur) await replyIn(env, cur, AI, "agent", text, { status: cur.note.status });
 }
 
 /** Resolve in Discord: the Resolved tag, and the post closed. Reopening: the reverse. */

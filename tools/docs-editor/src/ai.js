@@ -416,6 +416,11 @@ export function makeAi(ctx) {
         h("input", { type: "checkbox", checked: st.audit ? "" : null, onchange: (e) => configure({ audit: e.target.checked }) }),
         h("span", {}, h("b", {}, "Check the GDD while idle"), h("span", { class: "ai-choice-note" }, "With Claude: after a while with nothing done here, R'th AI reads the pages changed since they were last checked and lists problems across pages on the To-do page, for everyone. Uses this computer's Claude."))),
 
+      h("h4", {}, "Discord"),
+      h("label", { class: "ai-choice" + (st.answerDiscord ? " on" : "") },
+        h("input", { type: "checkbox", checked: st.answerDiscord ? "" : null, onchange: (e) => configure({ answerDiscord: e.target.checked }) }),
+        h("span", {}, h("b", {}, "Answer @R'th AI in Discord"), h("span", { class: "ai-choice-note" }, "With Claude, while this Codex is open and signed in: when someone tags @R'th AI in a comment thread, this Codex may be the one that answers (only one does). Uses this computer's Claude (Sonnet)."))),
+
       h("h4", {}, "Which AI"),
       choice("auto", "Automatic", "Claude if it's set up, otherwise OpenRouter"),
       choice("claude", "Claude", "Claude Code, on your Claude subscription"),

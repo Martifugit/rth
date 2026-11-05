@@ -50,7 +50,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
   // The AI tab's cog (AI setup) can choose one instead, and OpenRouter's model; kept in ai.json beside
   // the conversations.
   const settingsFile = path.join(dir, "..", "ai.json");
-  let settings = { use: "auto", model: "", claudeModel: "", claudeEffort: "", mode: "chat", audit: true }; // claude*: defaults for /model and /effort; mode: a new conversation's
+  let settings = { use: "auto", model: "", claudeModel: "", claudeEffort: "", mode: "chat", audit: true, answerDiscord: false }; // claude*: defaults for /model and /effort; mode: a new conversation's
   try { settings = { ...settings, ...JSON.parse(fs.readFileSync(settingsFile, "utf8")) }; } catch {}
   const models = () => (settings.model ? [settings.model] : OPENROUTER_MODELS);
   const claudeP = claudeProvider({ repo, claude, systemFile: path.join(dir, "..", "ai-instructions.md") });
@@ -97,11 +97,13 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
       claudeDefaults: { model: settings.claudeModel || "", effort: settings.claudeEffort || "" },
       mode: settings.mode || "chat",
       audit: settings.audit !== false,
+      answerDiscord: !!settings.answerDiscord,
       provider: await (using).check(),
     };
   }
-  async function configure({ use, model, claudeModel, claudeEffort, mode, audit }) {
+  async function configure({ use, model, claudeModel, claudeEffort, mode, audit, answerDiscord }) {
     if (audit !== undefined) settings.audit = !!audit;
+    if (answerDiscord !== undefined) settings.answerDiscord = !!answerDiscord;
     if (mode !== undefined && ["chat", "work"].includes(mode)) settings.mode = mode;
     if (use !== undefined) {
       if (!["auto", "claude", "openrouter"].includes(use)) return { error: "Unknown choice." };
@@ -511,6 +513,24 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     endTurn(turn);
     return res.error ? { error: res.error, problems: turn.problems } : { problems: turn.problems };
   }
+  /**
+   * An answer to @R'th AI in a Discord comment thread (src/discord-answer.js): Claude, Sonnet at medium
+   * effort, read-only with the Codex's tools, given the thread and the page it's on. → { text } or { error }.
+   */
+  async function answerThread({ note, page, asker }) {
+    if (!(await claudeP.known()).ok) return { error: "Claude isn't ready on this computer" };
+    const turn = newTurn({ conv: null, mode: "chat", readOnly: true });
+    const mcp = mcpConfig(turn);
+    const lines = (note.thread || []).map((e) => `${e.by === "agent" ? "R'th AI (you)" : e.who?.name || "Someone"}: ${e.text}`).join("\n\n");
+    const where = page ? `The thread is a comment on ${page}${note.anchor?.quote ? `, on the passage "${String(note.anchor.quote).slice(0, 400)}"` : ""}.` : "The thread was started in Discord and isn't on a page.";
+    const prompt = `${where}\n\nThe thread so far:\n\n${lines}\n\n${asker?.name || "Someone"} tagged you in the last message that names you. Answer it in the thread.`;
+    const r = claudeP.run({ prompt, system: DISCORD_STANDING + "\n\n" + (await writingBrief(read)), model: "sonnet", effort: "medium", mcp, describeTool: tools.describe, readOnly: true,
+      onText: () => {}, onBreak: () => {}, onActivity: () => {} });
+    const res = await r.done;
+    endTurn(turn);
+    return res.error ? { error: res.error } : { text: String(res.text || "").slice(0, 1900) };
+  }
+  const answersDiscord = () => !!settings.answerDiscord && !!claudeP.knownNow()?.ok;
   const canAudit = async () => settings.audit !== false && runs.size === 0 && (await claudeP.known()).ok && (await pick()) === claudeP;
 
   /** The turn check (src/turn-check.js), after the answer is shown: msg.problems, and an "ai checked" event. */
@@ -631,7 +651,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     return { ok: true, page };
   }
 
-  return { list, get, send, stop, remove, changesFor, acceptSuggestions, problemDone, audit, canAudit, reviewed, undo, createSuggested, setup, configure, setContext, lookUp, tool, toolList, tools, newTurn, endTurn, mcpConfig, signInClaude: () => claudeP.signIn(), check: provider.check, status: () => ({ running: [...runs.keys()], defaultMode: settings.mode || "chat" }) };
+  return { list, get, send, stop, remove, changesFor, acceptSuggestions, problemDone, audit, canAudit, answerThread, answersDiscord, reviewed, undo, createSuggested, setup, configure, setContext, lookUp, tool, toolList, tools, newTurn, endTurn, mcpConfig, signInClaude: () => claudeP.signIn(), check: provider.check, status: () => ({ running: [...runs.keys()], defaultMode: settings.mode || "chat" }) };
 }
 
 const titleFrom = (text) => {
@@ -690,6 +710,12 @@ const AUDIT_STANDING = [
   "Report only problems you can point at: give the pages (the one to change first, first), a few exact words from each where it is (quotes, in the same order), a one-line summary, a short detail saying what each page says, and the plan: which page changes and how, written as an instruction R'th AI could carry out. Report each problem once. Finding nothing is a fine result.",
   "Don't report spelling, a page's own structure (headings, components, folders, status), links to pages not written yet, or p- placeholder names: the Codex's To-do list covers those. Don't report a matter of taste, or a page being short.",
   "When you have read a page in depth and page_outline shows no summary, or one written before the page last changed, call index_page for it.",
+].join("\n");
+
+// Answering @R'th AI in a Discord comment thread (src/discord-answer.js).
+const DISCORD_STANDING = [
+  "You are R'th AI, the design partner of a small group of friends writing the game design document (GDD) of R'th, their own private multiplayer RPG (docs/gdd). Someone tagged you in a comment thread in their Discord; your reply is posted in the thread as R'th AI.",
+  "Answer what they asked, from the GDD: read the page the thread is on and what it links to with the Codex's tools (search_gdd, read_page, links_in, query_gdd...), and say plainly when the GDD doesn't settle it. Be concrete and brief: a few short paragraphs at most, Discord Markdown (no tables, no headings), well under 1,800 characters. Name pages by their titles. You can't change pages from here: say what you'd change, and that they can ask in the Codex's AI tab to have it done. Write in US English.",
 ].join("\n");
 
 // The conversation's name: its first answer ends with a hidden <title> line (2-6 words, the topic, not
@@ -819,7 +845,7 @@ function claudeProvider({ repo, claude, systemFile }) {
 
   /** What check() last found (asked once): for the frequent questions, like whether the health check can run. */
   const known = async () => available || check();
-  return { check, known, run, signIn };
+  return { check, known, knownNow: () => available, run, signIn };
 }
 
 function describe(c) {

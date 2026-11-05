@@ -43,3 +43,15 @@ CREATE TABLE IF NOT EXISTS notice_why (
   msg TEXT NOT NULL,
   at INTEGER NOT NULL
 );
+
+-- @R'th AI in a comment thread (src/mentions.js): each tag once, waiting for a Codex that answers, then
+-- claimed by one (conn, until: its lease), then answered. told: "offline right now" was said.
+CREATE TABLE IF NOT EXISTS mentions (
+  msg_id TEXT PRIMARY KEY,      -- the message that tagged R'th AI
+  thread TEXT NOT NULL,         -- its post
+  asker_id TEXT, asker_name TEXT,
+  status TEXT NOT NULL DEFAULT 'waiting',
+  conn TEXT, until INTEGER,
+  told INTEGER NOT NULL DEFAULT 0,
+  at TEXT NOT NULL
+);
