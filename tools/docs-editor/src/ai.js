@@ -99,7 +99,7 @@ export function makeAi(ctx) {
     const m = MODES[A.mode] || MODES.chat;
     modeLine.className = "ai-mode ai-mode-" + A.mode;
     modeLine.title = `${m.label}: ${m.note}. Click, or Shift+Tab in the box, to switch.`;
-    modeLine.replaceChildren(h("span", { class: "ai-mode-name" }, m.label), h("span", { class: "ai-mode-note" }, " · Shift+Tab to switch"));
+    modeLine.replaceChildren(h("span", { class: "ai-mode-name" }, m.label), h("span", { class: "ai-mode-note" }, " (Shift+Tab to cycle)"));
   }
   /** Chat and Work. Kept with the conversation when the next message goes (src/assistant.js). */
   function switchMode() {
@@ -398,7 +398,8 @@ export function makeAi(ctx) {
   // AI setup (the cog): a settings list. At the top, what answers now; then the choices everyone has, then
   // Claude's and OpenRouter's own. Each row: a label and a short note on the left, its control on the right
   // (or under it, for the wider ones).
-  const MODEL_NAME = { fable: "Fable", opus: "Opus", sonnet: "Sonnet", haiku: "Haiku" };
+  // The models the choices stand for today (Claude Code picks the latest of each).
+  const MODEL_NAME = { fable: "Fable 5.1", opus: "Opus 5.5", sonnet: "Sonnet 5.5", haiku: "Haiku 5.5" };
   /** "claude-fable-5-1" as people say it: "Fable 5.1". */
   const modelName = (id) => { const m = String(id || "").replace(/^claude-/, "").match(/^([a-z]+)-(\d+)(?:-(\d+))?/i); return m ? m[1][0].toUpperCase() + m[1].slice(1) + " " + m[2] + (m[3] ? "." + m[3] : "") : MODEL_NAME[id] || id; };
   const EFFORT_NAME = { low: "Low", medium: "Medium", high: "High", xhigh: "Extra high", max: "Max" };
@@ -410,9 +411,15 @@ export function makeAi(ctx) {
     const reload = async (q = "") => { A.setup = await api("/api/ai/setup" + q); A.provider = A.setup.provider || A.provider; drawLog(); };
 
     const section = (title, ...rows) => h("section", { class: "ais-section" }, h("h4", { class: "ais-title" }, title), h("div", { class: "ais-card" }, ...rows.flat().filter(Boolean)));
-    const row = (label, note, control, { wide = false } = {}) => h("div", { class: "ais-row" + (wide ? " wide" : "") },
-      h("div", { class: "ais-label" }, h("div", { class: "ais-name" }, label), note ? h("div", { class: "ais-note" }, note) : null),
+    // badge: something small on the title's own line, at its right (Model's "Default: Sonnet 5.5").
+    const row = (label, note, control, { wide = false, badge = null } = {}) => h("div", { class: "ais-row" + (wide ? " wide" : "") },
+      h("div", { class: "ais-label" }, h("div", { class: "ais-name-row" }, h("div", { class: "ais-name" }, label), badge), note ? h("div", { class: "ais-note" }, note) : null),
       control ? h("div", { class: "ais-control" }, control) : null);
+    // A default as a small badge you can change: "Default: Sonnet 5.5 ▾".
+    const badgePick = (shown, value, options, onPick) => {
+      const el = h("select", { class: "ais-badge-select", title: "Change the default", onchange: () => onPick(el.value) }, options.map(([v, label]) => h("option", { value: v, selected: value === v ? "" : null }, label)));
+      return h("label", { class: "ais-badge" }, h("span", {}, "Default: "), h("span", { class: "ais-badge-value" }, shown), h("span", { class: "ais-badge-caret" }, "▾"), el);
+    };
     const segmented = (value, options, onPick) => h("div", { class: "ais-seg", role: "radiogroup" },
       options.map(([v, label]) => h("button", { class: "ais-seg-btn" + (value === v ? " on" : ""), role: "radio", "aria-checked": value === v ? "true" : "false", onclick: () => value !== v && onPick(v) }, label)));
     const toggle = (on, onChange, title) => h("button", { class: "ais-switch" + (on ? " on" : ""), role: "switch", "aria-checked": on ? "true" : "false", title, onclick: () => onChange(!on) }, h("span", { class: "ais-knob" }));
@@ -441,10 +448,10 @@ export function makeAi(ctx) {
     const claudeOn = cl.found && cl.signedIn !== false;
     const claude = section("Claude",
       claudeState,
-      claudeOn ? row("Model", `New conversations use ${modelName(cd.lastModel && cd.lastModel.includes(cd.model) ? cd.lastModel : cd.model)}. /model changes it for one conversation${conv.model ? ` (this one: ${modelName(conv.model)})` : ""}.`,
-        select(cd.model, [["sonnet", "Sonnet"], ["opus", "Opus"], ["fable", "Fable"], ["haiku", "Haiku"]], (v) => configure({ claudeModel: v }))) : null,
-      claudeOn ? row("Effort", `New conversations use ${EFFORT_NAME[cd.effort] || cd.effort}. /effort changes it for one conversation${conv.effort ? ` (this one: ${EFFORT_NAME[conv.effort] || conv.effort})` : ""}.`,
-        select(cd.effort, [["low", "Low"], ["medium", "Medium"], ["high", "High"], ["xhigh", "Extra high"], ["max", "Max"]], (v) => configure({ claudeEffort: v }))) : null,
+      claudeOn ? row("Model", `/model changes it for one conversation${conv.model ? ` (this one: ${modelName(conv.model)})` : ""}.`, null,
+        { badge: badgePick(modelName(cd.lastModel && cd.lastModel.includes(cd.model) ? cd.lastModel : cd.model), cd.model, [["sonnet", MODEL_NAME.sonnet], ["opus", MODEL_NAME.opus], ["fable", MODEL_NAME.fable], ["haiku", MODEL_NAME.haiku]], (v) => configure({ claudeModel: v })) }) : null,
+      claudeOn ? row("Effort", `/effort changes it for one conversation${conv.effort ? ` (this one: ${EFFORT_NAME[conv.effort] || conv.effort})` : ""}.`, null,
+        { badge: badgePick(EFFORT_NAME[cd.effort] || cd.effort, cd.effort, [["low", "Low"], ["medium", "Medium"], ["high", "High"], ["xhigh", "Extra high"], ["max", "Max"]], (v) => configure({ claudeEffort: v })) }) : null,
       row("Health check", "While Codex is idle, R'th AI checks changed pages for problems across pages and lists them on the To-do page",
         toggle(!!st.audit, (v) => configure({ audit: v }), "Check the GDD while idle")),
       row("Answer @R'th AI in Discord", "This Codex may answer when someone tags R'th AI in a comment thread (only one Codex does)",

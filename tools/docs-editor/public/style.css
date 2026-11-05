@@ -1432,3 +1432,11 @@ body.in-app .search-trigger { height: 28px; }
 .td-found-more { margin: 6px 0 2px; font-size: 14px; color: var(--muted); }
 .td-found-more p { margin: 0 0 6px; }
 .td-audit { text-align: center; margin: -6px 0 14px; font-size: 13px; }
+/* A row's title with a small badge at its right (AI setup's defaults). */
+.ais-name-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ais-badge { position: relative; display: inline-flex; align-items: center; gap: 2px; height: 20px; padding: 0 7px; border: 1px solid var(--hair); border-radius: 10px;
+  background: rgba(255, 255, 255, .03); color: var(--silver-dim); font: 12px/1 var(--sans); white-space: nowrap; cursor: pointer; }
+.ais-badge:hover { border-color: var(--hair-2); color: var(--silver-soft); }
+.ais-badge-value { color: var(--silver-soft); }
+.ais-badge-caret { margin-left: 3px; font-size: 9px; opacity: .7; }
+.ais-badge-select { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; } /* the native list, under the badge's look */
