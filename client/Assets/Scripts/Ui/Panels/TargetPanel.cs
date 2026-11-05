@@ -35,7 +35,9 @@ namespace Rth.Client.Ui.Panels
             EntityView target = id != 0 ? World.Find(id) : null;
             _box.style.display = target != null ? DisplayStyle.Flex : DisplayStyle.None;
             if (target == null) return;
-            _name.text = target.DisplayName.ToUpperInvariant();
+            Rth.Shared.Net.NpcInfo info = Session.Npc(target.TypeId);
+            string level = info != null && info.Level > 0 ? UiKit.Colour("  level " + info.Level, GameText.LevelColour(Session, info.Level)) : "";
+            _name.text = target.DisplayName.ToUpperInvariant() + level;
             _health.Set(target.HealthPercent / 100f, target.HealthPercent + "%");
             _health.Color = Color.Lerp(new Color(0.7f, 0.12f, 0.08f), new Color(0.2f, 0.62f, 0.18f), target.HealthPercent / 100f);
         }

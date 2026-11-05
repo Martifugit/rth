@@ -170,7 +170,11 @@ namespace Rth.Server.Game
             ConsumableDef c = use.Def.Consumable!;
             string key = "item:" + c.CooldownGroup;
             uint now = World.CurrentTick;
-            if (player.Cooldowns.TryGetValue(key, out uint ready) && now < ready) return;
+            if (player.Cooldowns.TryGetValue(key, out uint ready) && now < ready)
+            {
+                World.Tell(player, TextKind.Warning, "You can't " + c.Verb.ToLowerInvariant() + " again just yet.");
+                return;
+            }
 
             use.Container.RemoveAt(use.Slot, 1);
             if (c.Leaves != null && use.Container.IsEmpty(use.Slot)) use.Container.Set(use.Slot, c.Leaves, 1);

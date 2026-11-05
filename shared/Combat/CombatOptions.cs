@@ -28,6 +28,8 @@ namespace Rth.Shared.Combat
         public const string QueueingKey = "combat.queue";
         public const string RevolutionKey = "combat.revolution";
         public const string TrainDefenceKey = "combat.trainDefence";
+        /// <summary>Whether being hit makes the player fight back (interrupting skilling); "false" turns it off.</summary>
+        public const string RetaliateKey = "combat.retaliate";
         /// <summary>The action bar layout (a string[][] of "a:id", "h:id" and "i:id" slots); bar 0 is the main bar.</summary>
         public const string BarsKey = "bars";
         public const string AbilityPrefix = "a:";
@@ -42,6 +44,10 @@ namespace Rth.Shared.Combat
         public bool Queueing = true;
         public RevolutionMode Revolution = RevolutionMode.Manual;
         public TrainDefence TrainDefence = TrainDefence.Balanced;
+        /// <summary>Auto-retaliate: a hit from a creature takes the fight up, whatever the player was doing.</summary>
+        public bool Retaliate = true;
+
+        public static bool RetaliateFrom(string? value) => value != "false";
 
         public static TrainDefence TrainDefenceFrom(string? value) => value switch
         {

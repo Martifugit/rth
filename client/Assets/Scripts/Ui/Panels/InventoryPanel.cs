@@ -48,6 +48,8 @@ namespace Rth.Client.Ui.Panels
                 ItemSlot slot = i < items.Count ? items[i] : default;
                 _slots[i].Show(slot, slot.IsEmpty ? null : Session.Item(slot.ItemId));
                 _slots[i].Root.style.display = i < items.Count ? DisplayStyle.Flex : DisplayStyle.None;
+                // The item picked up for "Use" stays marked until it is used or put down.
+                _slots[i].Root.EnableInClassList("slot--on", Session.IsUsingItem && Session.UseSlot == i);
             }
         }
 

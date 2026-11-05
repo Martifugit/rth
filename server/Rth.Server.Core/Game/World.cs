@@ -277,6 +277,9 @@ namespace Rth.Server.Game
         public void ProcessMovement(Entity entity, Func<bool>? stopWhen = null)
         {
             if (entity.RootedUntilTick > CurrentTick) return;
+            // A player's run toggle is theirs to flip at any moment (R mid-walk, mid-chase): the
+            // client keeps it as state, and the server reads it before every step.
+            if (entity is Player player) player.Running = RunSetting(player) ?? player.Running;
             int steps = entity.Running ? 2 : 1;
             for (int i = 0; i < steps && entity.Waypoints.Count > 0; i++)
             {
@@ -329,6 +332,7 @@ namespace Rth.Server.Game
         {
             StopInteraction(player);
             player.WalkGoal = null;
+            player.Waypoints.Clear(); // the old walk is over: the interaction plans its own way there
             player.Interaction = interaction;
         }
 
@@ -404,6 +408,7 @@ namespace Rth.Server.Game
             {
                 if (!player.Connection.IsOpen)
                 {
+                    if (player.DisconnectedAtTick == 0) player.DisconnectedAtTick = CurrentTick;
                     player.LogoutRequested = true;
                     continue;
                 }
@@ -423,7 +428,14 @@ namespace Rth.Server.Game
             var goal = new TileCoord(walk.X, walk.Y);
             SetPath(player, goal);
             player.WalkGoal = goal;
-            player.Running = walk.Run;
+            player.Running = RunSetting(player) ?? walk.Run;
+        }
+
+        /// <summary>The player's run toggle from their client state ("run"), or null if they never set it.</summary>
+        private bool? RunSetting(Player player)
+        {
+            string? value = Find<ClientStateSystem>()?.Get(player, ClientStateSystem.RunKey);
+            return value == null ? (bool?)null : value == "true";
         }
 
         /// <summary>
@@ -474,11 +486,29 @@ namespace Rth.Server.Game
 
         // ------------------------------------------------------------------ 5. logouts and logins
 
+        /// <summary>
+        /// Nobody leaves a fight by logging out: a logout asked for within
+        /// <see cref="CombatRules.LogoutCombatTicks"/> of the last blow is refused, and a dropped
+        /// connection keeps its player in the world (fighting back) for that long before saving them.
+        /// </summary>
         private void ProcessLogouts()
         {
+            int hold = Rules.LogoutCombatTicks;
             foreach (Player player in _players.Values.Where(p => p.LogoutRequested).ToList())
+            {
+                bool fighting = !player.IsDead && player.InCombat(CurrentTick, hold);
+                if (fighting && player.Connection.IsOpen)
+                {
+                    player.LogoutRequested = false;
+                    Tell(player, TextKind.Warning, "You can't log out until " + Seconds(hold) + " seconds after combat.");
+                    continue;
+                }
+                if (fighting && CurrentTick < player.DisconnectedAtTick + (uint)hold) continue;
                 RemovePlayer(player);
+            }
         }
+
+        private string Seconds(int ticks) => ((int)Math.Round(ticks * _config.TickMillis / 1000.0)).ToString();
 
         private void ProcessLogins()
         {

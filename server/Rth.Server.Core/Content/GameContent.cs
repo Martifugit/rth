@@ -34,6 +34,8 @@ namespace Rth.Server.Content
         public double HitPercent;
         /// <summary>The least a hit that lands can do; below 0 means a quarter of <see cref="MaxHit"/>, so blows aren't specks.</summary>
         public int MinHit = -1;
+        /// <summary>Its combat level, shown beside its name; 0 derives one from blood and max hit (<see cref="CombatRules.NpcLevel"/>).</summary>
+        public int Level;
 
         public int LeastHit => MinHit >= 0 ? Math.Min(MinHit, MaxHit) : MaxHit / 4;
         /// <summary>Chance its attacks land.</summary>
@@ -988,6 +990,7 @@ namespace Rth.Server.Content
             {
                 Id = n.Id, Name = n.Name, Examine = n.Examine, Attackable = n.Attackable, Actions = n.Actions,
                 Blood = n.Blood, MaxHit = n.MaxHit, Style = n.Style, Aggressive = n.Aggressive, Model = n.Model,
+                Level = n.Attackable ? (n.Level > 0 ? n.Level : Rules.NpcLevel(n.Blood, n.MaxHit)) : 0,
             }).ToList(),
             Recipes = Recipes.Values.Select(r => new RecipeInfo
             {

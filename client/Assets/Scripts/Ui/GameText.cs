@@ -49,6 +49,22 @@ namespace Rth.Client.Ui
             || stat == StatIds.BuilderPhlegm ? "" : "%";
 
         /// <summary>A style as players say it: "Occultism", "Melee".</summary>
+        /// <summary>"Fen rat (level 4)": a creature's name with its combat level, when it has one.</summary>
+        public static string NpcName(GameSession session, string name, NpcInfo info) =>
+            info == null || info.Level <= 0 ? name : name + " (level " + info.Level + ")";
+
+        /// <summary>
+        /// The colour of a creature's level against the player's own: green when it is weaker,
+        /// yellow about even, red when stronger (RuneScape's convention).
+        /// </summary>
+        public static Color LevelColour(GameSession session, int level)
+        {
+            int diff = level - session.CombatLevel;
+            if (diff <= -4) return UiKit.Good;
+            if (diff >= 4) return UiKit.Bad;
+            return new Color(0.95f, 0.85f, 0.4f);
+        }
+
         public static string StyleName(CombatStyle style) => style switch
         {
             CombatStyle.Occult => "Occultism",

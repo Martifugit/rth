@@ -37,6 +37,26 @@ namespace Rth.Shared.Combat
 
         public int RespawnDelayTicks = 4;
 
+        /// <summary>
+        /// A player can't log out until this long after their last blow given or taken; a dropped
+        /// connection keeps them in the world (fighting back) for as long, then saves them.
+        /// </summary>
+        public int LogoutCombatTicks = 16;
+
+        // A creature's combat level, shown beside its name, when npcs.json gives none:
+        // the average of its blood and its hardest hit measured against these.
+        /// <summary>Blood worth one level.</summary>
+        public int NpcLevelBloodPer = 100;
+        /// <summary>Max hit worth one level.</summary>
+        public int NpcLevelHitPer = 10;
+
+        /// <summary>A creature's combat level from its blood and hardest hit (at least 1).</summary>
+        public int NpcLevel(int blood, int maxHit)
+        {
+            double level = (blood / (double)Math.Max(1, NpcLevelBloodPer) + maxHit / (double)Math.Max(1, NpcLevelHitPer)) / 2;
+            return Math.Max(1, (int)Math.Round(level, MidpointRounding.AwayFromZero));
+        }
+
         // Blood (melee and Cruor's verses).
         /// <summary>Damage held back by deferDamage (Death's Dance) bleeds out over this many ticks.</summary>
         public int DeferredBleedTicks = 10;

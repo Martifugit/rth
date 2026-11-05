@@ -275,6 +275,7 @@ namespace Rth.Client
                     break;
                 case State.InGame:
                     PumpWorld();
+                    if (_state == State.InGame) PumpLogout();
                     if (_state == State.InGame) HandleInput();
                     break;
             }
@@ -438,6 +439,12 @@ namespace Rth.Client
                 }
             }
 
+            if (!_client.IsConnected && _logoutAskedAt >= 0f)
+            {
+                // The server closed the connection: the logout went through.
+                FinishLogout();
+                return;
+            }
             if (!_client.IsConnected)
             {
                 // Dropped mid-game: keep trying to get back in with the same name.
@@ -621,6 +628,7 @@ namespace Rth.Client
             RaycastHit[] hits = Physics.RaycastAll(cam.ScreenPointToRay(pointer), 500f);
             Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
             EntityView npc = null;
+            var npcs = new List<EntityView>(); // every creature under the pointer, nearest first
             EntityView otherPlayer = null;
             GroundItemView item = null;
             Rth.MapTools.MapObject mapObject = null;
@@ -632,7 +640,11 @@ namespace Rth.Client
                 EntityView e = h.collider.GetComponentInParent<EntityView>();
                 if (e != null)
                 {
-                    if (npc == null && e.Kind == EntityKind.Npc && !e.IsDying) npc = e;
+                    if (e.Kind == EntityKind.Npc && !e.IsDying && !npcs.Contains(e))
+                    {
+                        npcs.Add(e);
+                        if (npc == null) npc = e;
+                    }
                     if (otherPlayer == null && e.Kind == EntityKind.Player && e.Id != world.LocalId) otherPlayer = e;
                     continue;
                 }
@@ -655,20 +667,22 @@ namespace Rth.Client
 
             if (IsUsingItem) return UseOptions(npc, mapObject, ground, floor, ref title);
 
-            if (npc != null)
+            if (npc != null) _hoveredEntity = npc.Id;
+            // Every creature under the pointer gets its options, so the rat behind a rat can be picked.
+            foreach (EntityView each in npcs)
             {
-                int id = npc.Id;
-                _hoveredEntity = id;
-                NpcInfo info = Npc(npc.TypeId);
-                if (info == null || info.Attackable) options.Add(("Attack " + npc.DisplayName, () => Attack(id)));
+                int id = each.Id;
+                NpcInfo info = Npc(each.TypeId);
+                string name = Ui.GameText.NpcName(this, each.DisplayName, info);
+                if (info == null || info.Attackable) options.Add(("Attack " + name, () => Attack(id)));
                 if (info != null)
                 {
                     foreach (ActionDef action in info.Actions)
                     {
                         string actionId = action.Id;
-                        options.Add((action.Label + " " + npc.DisplayName, () => NpcAction(id, actionId)));
+                        options.Add((action.Label + " " + name, () => NpcAction(id, actionId)));
                     }
-                    options.Add(("Examine " + npc.DisplayName, () => NpcAction(id, "examine")));
+                    options.Add(("Examine " + name, () => NpcAction(id, "examine")));
                 }
             }
             ObjectDef objectDef = mapObject != null ? ObjectDefFor(mapObject.objectType) : null;
@@ -705,6 +719,12 @@ namespace Rth.Client
                     int id = pile.Id;
                     string name = Item(pile.ItemId)?.Name ?? pile.ItemId;
                     options.Add(("Take " + name + (pile.Count > 1 ? " (" + pile.Count + ")" : ""), () => Pickup(id)));
+                }
+                foreach (GroundItemView pile in piles)
+                {
+                    ItemDef def = Item(pile.ItemId);
+                    string name = def?.Name ?? pile.ItemId;
+                    options.Add(("Examine " + name, () => Notify(string.IsNullOrEmpty(def?.Examine) ? "It's " + name.ToLowerInvariant() + ".": def.Examine)));
                 }
             }
             if (ground.HasValue)
@@ -983,7 +1003,19 @@ namespace Rth.Client
         {
             if (_state != State.InGame) return;
             _client.Send(new UseAbilityMessage { AbilityId = abilityId });
+            _pressedAbility = abilityId;
+            _pressedAt = Time.unscaledTime;
         }
+
+        private string _pressedAbility;
+        private float _pressedAt;
+
+        /// <summary>
+        /// Whether an ability was pressed within the last tick and the server has not yet answered
+        /// (its next state either queues it or starts its cooldown), so the bar can mark it at once.
+        /// </summary>
+        public bool IsAbilityPending(string abilityId) =>
+            _pressedAbility == abilityId && Time.unscaledTime - _pressedAt < _tickSeconds && (PlayerState == null || _stateReceivedTime < _pressedAt);
 
         /// <summary>Starts or stops singing a hymn; the server decides whether it can be sung.</summary>
         public void SetHymn(string hymnId, bool on)
@@ -1000,9 +1032,42 @@ namespace Rth.Client
         /// <summary>Says something in public chat.</summary>
         public void Say(string text) => Send(new ChatMessage { Channel = ChatChannel.Public, Text = text });
 
+        private float _logoutAskedAt = -1f;
+
+        /// <summary>
+        /// Asks the server to log out, then waits for it to close the connection (it refuses for a
+        /// while after combat, and says so). If it hasn't closed within a few seconds, the request
+        /// is taken as refused and play goes on.
+        /// </summary>
         public void Logout()
         {
-            _client?.Send(new LogoutMessage());
+            if (_state != State.InGame || _client == null || !_client.IsConnected)
+            {
+                FinishLogout();
+                return;
+            }
+            if (_logoutAskedAt >= 0f) return; // already asked
+            _client.Send(new LogoutMessage());
+            _logoutAskedAt = Time.unscaledTime;
+        }
+
+        private const float LogoutWaitSeconds = 3f;
+
+        /// <summary>Called each frame in game: a logout the server has answered by closing, or given up on.</summary>
+        private void PumpLogout()
+        {
+            if (_logoutAskedAt < 0f) return;
+            if (_client == null || !_client.IsConnected)
+            {
+                FinishLogout();
+                return;
+            }
+            if (Time.unscaledTime - _logoutAskedAt > LogoutWaitSeconds) _logoutAskedAt = -1f; // refused (still in combat): stay
+        }
+
+        private void FinishLogout()
+        {
+            _logoutAskedAt = -1f;
             DropClient();
             world.Clear();
             PlayerState = null;

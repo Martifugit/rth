@@ -131,7 +131,11 @@ namespace Rth.Server.Game
                 World.Tell(player, TextKind.Warning, problem);
                 return;
             }
-            if (!IsReady(player, ability, World.CurrentTick) && !Options(player).Queueing) return;
+            if (!IsReady(player, ability, World.CurrentTick) && !Options(player).Queueing)
+            {
+                World.Tell(player, TextKind.Warning, ability.Name + " isn't ready yet.");
+                return;
+            }
             if (!ability.OnSelf && !ResumeAttack(player)) return;
             player.QueuedAbility = abilityId;
         }
@@ -175,6 +179,7 @@ namespace Rth.Server.Game
                 Queueing = CombatOptions.QueueingFrom(state?.Get(player, CombatOptions.QueueingKey)),
                 Revolution = CombatOptions.RevolutionFrom(state?.Get(player, CombatOptions.RevolutionKey)),
                 TrainDefence = CombatOptions.TrainDefenceFrom(state?.Get(player, CombatOptions.TrainDefenceKey)),
+                Retaliate = CombatOptions.RetaliateFrom(state?.Get(player, CombatOptions.RetaliateKey)),
             };
         }
 
@@ -275,13 +280,20 @@ namespace Rth.Server.Game
         }
 
         /// <summary>Moves the attacker towards its target until in range. Returns whether it ended in range.</summary>
-        public bool Engage(Entity attacker, Entity target, int range)
+        public bool Engage(Entity attacker, Entity target, int range) => Engage(attacker, target, range, out _);
+
+        /// <summary>
+        /// Moves the attacker towards its target until in range. Returns whether it ended in range;
+        /// <paramref name="unreachable"/> is set when no way to it could be found from here.
+        /// </summary>
+        public bool Engage(Entity attacker, Entity target, int range, out bool unreachable)
         {
+            unreachable = false;
             if (!InRange(attacker, target, range))
             {
                 if (attacker.Waypoints.Count == 0 || attacker.ChaseGoal != target.Position)
                 {
-                    PlanChase(attacker, target, range);
+                    unreachable = !PlanChase(attacker, target, range);
                     attacker.ChaseGoal = target.Position;
                 }
                 World.ProcessMovement(attacker, () => InRange(attacker, target, range));
@@ -294,16 +306,17 @@ namespace Rth.Server.Game
             return false;
         }
 
-        private void PlanChase(Entity attacker, Entity target, int range)
+        /// <summary>Plans the way to the target. False if there is none (or none within the search).</summary>
+        private bool PlanChase(Entity attacker, Entity target, int range)
         {
             if (range > 1)
             {
                 World.SetPath(attacker, target.Position);
-                return;
+                return attacker.Waypoints.Count > 0;
             }
 
             // Melee: head for the closest tile beside the target that can actually reach it.
-            World.PathBeside(attacker, target.Plane, target.Position);
+            return World.PathBeside(attacker, target.Plane, target.Position);
         }
 
         // ------------------------------------------------------------------ player attacks
@@ -330,8 +343,16 @@ namespace Rth.Server.Game
             else if (stalled != null) range = stalled.Range;
             else if (queued != null) range = queued.Range;
 
-            if (!Engage(player, target, range))
+            if (!Engage(player, target, range, out bool unreachable))
             {
+                if (unreachable)
+                {
+                    // No way there from here: stop chasing (the target is kept, so an ability can
+                    // still stall and take the fight up again from somewhere else).
+                    World.Tell(player, TextKind.Warning, "I can't reach that!");
+                    player.QueuedAbility = null;
+                    return false;
+                }
                 // Stalling: an ability used out of range goes on cooldown now and fires on arrival.
                 if (stalled == null && queued != null && IsReady(player, queued, now))
                 {
@@ -600,10 +621,13 @@ namespace Rth.Server.Game
                 npc.TargetId = source.Id;
                 npc.ChaseGoal = null;
             }
-            else if (target is Player player && player.Interaction == null && player.Waypoints.Count == 0
+            else if (target is Player player && !(player.Interaction is AttackInteraction) && player.Waypoints.Count == 0
                      && !(source is Npc { Def: { Attackable: false } }))
             {
+                // Auto-retaliate (a setting): a blow interrupts whatever else the player was doing
+                // (chopping, cooking) and takes the fight up; a walk they chose is left alone.
                 // (Nobody strikes back at something that can't be fought: a shade, a hazard.)
+                if (!Options(player).Retaliate) return;
                 StartAttack(player, source);
             }
         }

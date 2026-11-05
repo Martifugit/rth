@@ -215,7 +215,8 @@ namespace Rth.Client.Ui.Panels
                 {
                     isAbility = true;
                     usable = Session.AbilityProblem(ability) == null;
-                    queued = state.QueuedAbility == ability.Id;
+                    // A press shows at once, before the server's next state confirms it.
+                    queued = state.QueuedAbility == ability.Id || Session.IsAbilityPending(ability.Id);
                     stalled = state.StalledAbility == ability.Id; // used out of range: fires on reaching the target
                     // The slot's cooldown: its ability's own when that runs longer, else the global one.
                     remaining = state.GlobalCooldownReadyTick - now;
