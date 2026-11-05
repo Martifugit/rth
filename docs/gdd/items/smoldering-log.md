@@ -10,7 +10,7 @@ status: stub
 
 ## What it is
 
-A stackable log from a [smouldering tree](../objects/smouldering-tree.md). It's the haul of a
+A stackable log from a [smouldering tree](../objects/smoldering-tree.md). It's the haul of a
 [Wildfires](../activities/wildfires.md) run.
 
 ## Intent

@@ -21,7 +21,7 @@ fire can take back. It's for the player who wants to play hard for a while, alon
   outside the world, with one for each band of Woodcutting levels. The path runs between fire on
   both sides.
 - **Smouldering trees.** Along the path, the player fells
-  [smouldering trees](../objects/smouldering-tree.md) to stop the fire spreading. They give
+  [smouldering trees](../objects/smoldering-tree.md) to stop the fire spreading. They give
   [smouldering logs](../items/smoldering-log.md), which the player stacks up through the run.
 - **Near-crossings.** Where the fire has almost crossed the path, the player holds it back with a
   short movement puzzle.

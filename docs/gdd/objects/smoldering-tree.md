@@ -6,7 +6,7 @@ based-on:
 status: stub
 ---
 
-# Smouldering tree
+# Smoldering tree
 
 ## What it is
 
