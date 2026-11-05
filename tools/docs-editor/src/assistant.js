@@ -23,6 +23,10 @@ import { openRouterProvider, OPENROUTER_MODELS, EDIT_FORMAT, editsIn, applyEdits
 import { COMMENT_FORMAT, commentsIn, withoutComments, anchorFor } from "./ai-comments.js";
 import { writingBrief } from "./writing-brief.js";
 import { TEMPLATES } from "./gdd.js";
+import { makeTools } from "./ai-tools.js";
+import { fileURLToPath } from "node:url";
+
+const MCP_SOURCE = fileURLToPath(new URL("./mcp-server.js", import.meta.url));
 
 const STREAM_EVERY_MS = 120;
 
@@ -34,7 +38,12 @@ const STREAM_EVERY_MS = 120;
  * linksTo(page): the pages that link to it, [{ path, title }] (the Links tab's index), so the AI knows
  * where a page sits in the GDD before it changes it.
  */
-export function makeAssistant({ repo, dir, store, emit, pages, read, write, changed = () => {}, openrouterKey = () => null, linksTo = async () => [], claude = process.env.CODEX_CLAUDE || "claude" }) {
+/**
+ * spell: the spelling check (src/spell.js), for the tools' page checks. ownChanged(rel): a Codex file under
+ * docs/.codex/ was written by a tool (a page's summary), to be sent. engineUrl(): the engine's address, for
+ * Claude's MCP server (null: Claude runs without the Codex's tools).
+ */
+export function makeAssistant({ repo, dir, store, emit, pages, read, write, changed = () => {}, openrouterKey = () => null, linksTo = async () => [], claude = process.env.CODEX_CLAUDE || "claude", spell = null, ownChanged = () => {}, engineUrl = () => null }) {
   // Claude when it's on this computer (it reads the repository itself); otherwise OpenRouter's free
   // models, once signed in (CODEX_AI=openrouter tries OpenRouter even with Claude here).
   // The AI tab's cog (AI setup) can choose one instead, and OpenRouter's model; kept in ai.json beside
@@ -45,6 +54,26 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
   const models = () => (settings.model ? [settings.model] : OPENROUTER_MODELS);
   const claudeP = claudeProvider({ repo, claude, systemFile: path.join(dir, "..", "ai-instructions.md") });
   const openP = openRouterProvider({ key: openrouterKey, models });
+  // The Codex's tools (src/ai-tools.js), and the turns that may use them: a key per turn, handed to
+  // Claude's MCP server, so a call is made for the conversation that asked (its mode, where its reasons go).
+  const tools = makeTools({ repo, pages, read, write, store, spell, ownChanged });
+  const turns = new Map(); // key -> { conv, mode, provider, reasons, problems, audit, readOnly }
+  const newTurn = (x) => { const t = { key: crypto.randomBytes(12).toString("hex"), reasons: [], problems: [], provider: "claude", mode: "work", ...x }; turns.set(t.key, t); return t; };
+  /** Where Claude's MCP server for a turn is described (--mcp-config), or null without an engine address. */
+  function mcpConfig(turn) {
+    const url = engineUrl();
+    if (!url) return null;
+    const folder = path.join(dir, "..", "mcp");
+    fs.mkdirSync(folder, { recursive: true });
+    // Copied out beside the settings, so the desktop app (whose files are in an archive) can run it with its own Electron as Node.
+    const script = path.join(folder, "mcp-server.mjs");
+    try { const src = fs.readFileSync(MCP_SOURCE, "utf8"); if (!fs.existsSync(script) || fs.readFileSync(script, "utf8") !== src) fs.writeFileSync(script, src, "utf8"); } catch { return null; }
+    const file = path.join(folder, turn.key + ".json");
+    const env = { CODEX_URL: url, CODEX_TOKEN: turn.key, ...(process.versions.electron ? { ELECTRON_RUN_AS_NODE: "1" } : {}) };
+    fs.writeFileSync(file, JSON.stringify({ mcpServers: { codex: { type: "stdio", command: process.execPath, args: [script], env } } }, null, 1), "utf8");
+    return file;
+  }
+  const endTurn = (t) => { turns.delete(t.key); try { fs.rmSync(path.join(dir, "..", "mcp", t.key + ".json"), { force: true }); } catch {} };
   let hasClaude = null; // looked for once (Check again in AI setup looks again)
   async function pick() {
     if (settings.use === "openrouter" || process.env.CODEX_AI === "openrouter") return openP;
@@ -119,7 +148,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
   }
 
   /** The person says something. Starts a conversation when there's no id. */
-  async function send({ id, text, context = {} }) {
+  async function send({ id, text, context = {}, mode = null }) {
     text = String(text || "").trim();
     if (!text) return { error: "Nothing to send." };
     let c = id ? await readConv(id) : null;
@@ -144,7 +173,13 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     if (!c.context) c.context = pinned(context); // a conversation from before context was pinned: pinned now
     if (!c.messages.some((m) => m.by === "you" && !m.text.startsWith("/"))) c.title = titleFrom(text);
     const ctx = await gather(c.context);
-    c.messages.push({ by: "you", at: now, text, context: ctx.chips });
+    // Chat (changes wait as suggestions) or Work (it edits): the AI tab's mode line, kept by the conversation.
+    c.settings = c.settings || {};
+    if (mode === "chat" || mode === "work") c.settings.mode = mode;
+    const turnMode = c.settings.mode || settings.mode || "chat";
+    // A part of one of its own answers they pointed at (select, then Ask): this message only, not kept.
+    const quote = context.quote?.text ? { text: String(context.quote.text).slice(0, 4000), msg: Number.isInteger(context.quote.msg) ? context.quote.msg : null } : null;
+    c.messages.push({ by: "you", at: now, text, context: ctx.chips, mode: turnMode, ...(quote ? { quote } : {}) });
     c.updated = now;
     // What this conversation was given before (Claude remembers it across turns): only what's new is said.
     const told = new Set(c.told || []);
@@ -155,10 +190,13 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     const r = { text: "", activity: "Reading", handle: null, timer: null };
     runs.set(c.id, r);
     const before = await snapshot();
-    // "Suggest ...": the AI edits as usual, then the pages go back as they were and its edits wait as
+    // Chat mode: the AI edits as usual, then the pages go back as they were and its edits wait as
     // suggestions, accepted or skipped one by one in the page (Notion's suggested edits, Word's tracked
-    // changes).
-    const suggest = /\bsuggest/i.test(text);
+    // changes). Work mode: its edits stay, with Show changes and Undo.
+    const suggest = turnMode === "chat";
+    const turn = newTurn({ conv: c.id, mode: turnMode, provider: null });
+    const quoted = quote ? `About this part of your earlier answer:\n> ${quote.text.replace(/\n/g, "\n> ")}\n\n` : "";
+    const modeNote = suggest ? CHAT_NOTE : WORK_NOTE;
     const push = () => { if (!r.timer) r.timer = setTimeout(() => { r.timer = null; emit("ai", view(c.id)); }, STREAM_EVERY_MS); };
     emit("ai", view(c.id));
     const handlers = {
@@ -174,14 +212,17 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     if (ai.kind === "openrouter") {
       // One request: the standing instructions, the engine's gathered reading, the conversation so far, then this message.
       r.open = true;
+      turn.provider = "openrouter";
       const history = c.messages.slice(0, -1).filter((m) => m.by !== "codex" && !(m.by === "you" && m.text.startsWith("/"))).slice(-12)
         .map((m) => ({ role: m.by === "you" ? "user" : "assistant", content: m.text || "" })).filter((m) => m.content);
-      const system = standing(brief, "engine") + "\n\n" + EDIT_FORMAT + "\n\n" + (await reading(c.context));
-      r.handle = ai.run({ model: c.settings?.openrouterModel || null, tools: LOOKUPS, useTool: lookUp, describe: describeLookup, messages: [{ role: "system", content: system }, ...history, { role: "user", content: (ctx.text ? "This conversation is about:\n\n" + ctx.text + "\n\n" : "") + "They say:\n\n" + text + (suggest ? SUGGEST_NOTE : "") + naming }], ...handlers });
+      const system = standing(brief, "engine") + "\n\n" + EDIT_FORMAT + "\n\n" + (await reading({ ...c.context, query: text }));
+      r.handle = ai.run({ model: c.settings?.openrouterModel || null, tools: tools.functions("openrouter"), useTool: (name, a) => tools.run(name, a, turn), describe: tools.describe, messages: [{ role: "system", content: system }, ...history, { role: "user", content: (ctx.text ? "This conversation is about:\n\n" + ctx.text + "\n\n" : "") + quoted + "They say:\n\n" + text + modeNote + naming }], ...handlers });
     } else {
+      turn.provider = "claude";
       const said = fresh_.length ? (c.session ? "Added to this conversation since:\n\n" : "This conversation is about:\n\n") + fresh_.map((x) => x.text).join("\n\n") + "\n\n" : (c.session ? "" : "They have no page open.\n\n");
-      const prompt = said + "They say:\n\n" + text + (suggest ? SUGGEST_NOTE : "") + naming;
-      r.handle = ai.run({ prompt, session: c.session, system: standing(brief, "repo"), model: set.model, effort: set.effort, ...handlers });
+      const prompt = said + quoted + "They say:\n\n" + text + modeNote + naming;
+      const mcp = mcpConfig(turn);
+      r.handle = ai.run({ prompt, session: c.session, system: standing(brief, mcp ? "codex" : "repo"), model: set.model, effort: set.effort, mcp, describeTool: tools.describe, ...handlers });
     }
     r.handle.done.then(async (res) => {
       clearTimeout(r.timer);
@@ -191,6 +232,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
         const { edits, text: clean } = editsIn(res.text || r.text || "");
         const { texts, failed } = await applyEdits(edits, read);
         for (const [p, t] of texts) await write(p, t);
+        for (const e of edits) if (e.reason && texts.has(e.page)) turn.reasons.push({ page: e.page, quote: firstWords(e.replace || e.find), reason: e.reason.slice(0, 200) });
         if (failed.length) note = "\n\n*Some edits couldn't be made: " + failed.map((f) => `${f.page} (${f.why})`).join("; ") + ".*";
         res = { ...res, text: clean };
         r.text = clean;
@@ -230,6 +272,9 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
       if (res.model) msg.model = res.model;
       if (posted.length) msg.comments = posted;
       const changes = await compare(before);
+      // Its reasons (explain_change, or an edit block's reason=), each kept with the page it's about.
+      for (const x of changes) { const rs = turn.reasons.filter((y) => y.page === x.page); if (rs.length) x.reasons = rs.map(({ quote, reason }) => ({ quote, reason })); }
+      endTurn(turn);
       if (changes.length && suggest) {
         for (const x of changes) { x.suggest = true; await write(x.page, x.before); }
         msg.changes = changes;
@@ -263,7 +308,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
    * What a model without the repository needs to read (OpenRouter): the open page in full, how the docs
    * are written, and the pages it links to, trimmed to what a free model can take.
    */
-  async function reading({ page, pages: extra = [] } = {}) {
+  async function reading({ page, pages: extra = [], query = "" } = {}) {
     const parts = [];
     let room = 90000;
     const add = (title, body, cap) => {
@@ -275,19 +320,35 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     let pageText = null;
     if (page) { pageText = await read(page); add(`The page this conversation is about: ${page}`, pageText, 50000); }
     for (const p of extra) add(`A page they added to the conversation: ${p}`, await read(p), 14000);
-    if (page) { const ins = await linksTo(page).catch(() => []); if (ins.length) add(`Pages that link to ${page}`, ins.map((x) => `- ${x.title || x.path} (${x.path})`).join("\n"), 4000); }
     add("How to write pages", await writingBrief(read), 24000);
     add("docs/gdd/how-the-gdd-works.md (pages, types and components)", await read("docs/gdd/how-the-gdd-works.md"), 16000);
     const type = pageText?.match(/^---[\s\S]*?^type:\s*([\w-]+)/m)?.[1];
     if (type) add(`The template for its type: ${TEMPLATES}/${type}.md`, await read(`${TEMPLATES}/${type}.md`), 4000);
-    if (pageText) {
-      const seen = new Set();
-      for (const m of pageText.matchAll(/\]\(([^)#\s]+\.md)(?:#[^)]*)?\)/g)) {
+    // The pages round it, by their summaries (written by Claude, shared: src/ai-tools.js index_page): where
+    // it sits, without spending the room on whole pages; read_page gives any of them in full.
+    if (page) {
+      const near = new Map();
+      const ins = await linksTo(page).catch(() => []);
+      for (const x of ins) near.set(x.path, "links to it");
+      if (pageText) for (const m of pageText.matchAll(/\]\(([^)#\s]+\.md)(?:#[^)]*)?\)/g)) {
         const rel = path.posix.normalize(path.posix.join(path.posix.dirname(page), m[1]));
-        if (seen.has(rel) || rel === page || rel.startsWith("..")) continue;
-        seen.add(rel);
-        if (seen.size > 4) break;
-        add(`A page it links to: ${rel}`, await read(rel), 8000);
+        if (rel !== page && !rel.startsWith("..") && !near.has(rel)) near.set(rel, "it links to it");
+      }
+      const lines = [];
+      for (const [p, why] of near) {
+        const sum = tools.summaryOf(p);
+        lines.push(`- ${p} (${why})${sum?.summary ? ": " + sum.summary : ""}`);
+        if (lines.length >= 40) break;
+      }
+      if (lines.length) add(`Pages round ${page}, with their summaries where they have one`, lines.join("\n"), 9000);
+    }
+    // The sections of the GDD that best match what they asked (src/section-index.js), whole.
+    if (query) {
+      const idx = await tools.freshSections().catch(() => null);
+      const hits = idx ? idx.search(query, { limit: 8 }).filter((h) => h.path !== page) : [];
+      for (const h of hits.slice(0, 5)) {
+        const text = await tools.run("read_page", { path: h.path, section: h.heading.length > 1 ? h.heading[h.heading.length - 1] : undefined }, null);
+        add(`A section that may matter: ${h.path} › ${h.heading.slice(1).join(" › ") || "(top)"}`, text, 6000);
       }
     }
     return "What you can read (the docs aren't otherwise available to you):\n\n" + parts.join("\n\n");
@@ -322,74 +383,19 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     return { chips, items, text: items.map((x) => x.text).join("\n\n") };
   }
 
-  // ----------------------------------------------------------------------------- lookups (OpenRouter)
+  // ----------------------------------------------------------------------------- the Codex's tools
 
-  // What a model without the repository can look up, run here, read-only. Each is a request against the
-  // free allowance, so they're offered for what it wasn't given, not instead of it.
-  const fn = (name, description, properties, required) => ({ type: "function", function: { name, description, parameters: { type: "object", properties, required } } });
-  const LOOKUPS = [
-    fn("search_gdd", "Search the GDD's pages (docs/gdd) for words. Returns matching lines with their page.", { query: { type: "string", description: "words to find" } }, ["query"]),
-    fn("read_page", "Read one GDD page in full.", { path: { type: "string", description: "its repository path, e.g. docs/gdd/systems/bile.md" } }, ["path"]),
-    fn("links_to", "List the GDD pages that link to a page.", { path: { type: "string", description: "the page's repository path" } }, ["path"]),
-    fn("search_code", "Search the game's code and data (everything outside docs/) for text, to check how the game works today. Returns matching lines with file and line number.", { query: { type: "string", description: "text to find, e.g. a class, a stat or a content id" } }, ["query"]),
-    fn("read_file", "Read part of a file of the game's code or data (not a GDD page: use read_page).", { path: { type: "string", description: "repository path" }, from: { type: "integer", description: "first line (1 if left out)" }, lines: { type: "integer", description: "how many lines, at most 300" } }, ["path"]),
-  ];
-  const GIT = process.env.CODEX_GIT || "git";
-  const SECRET = /(^|\/)(\.git(\/|$)|\.dev\.vars$|\.env(\.|$)|[^/]*\.pem$|account\.bin$|openrouter\.bin$|node_modules\/)/i;
-  const isGddPage = (p) => typeof p === "string" && /^docs\/gdd\/[^]+\.md$/.test(p) && !p.includes("..");
-  const title = (p) => p.split("/").pop().replace(/\.md$/, "").replace(/-/g, " ");
-  function describeLookup(name, a = {}) {
-    if (name === "search_gdd") return `Searching the GDD for “${String(a.query || "").slice(0, 40)}”`;
-    if (name === "read_page") return `Reading ${title(String(a.path || "a page"))}`;
-    if (name === "links_to") return `Seeing what links to ${title(String(a.path || "a page"))}`;
-    if (name === "search_code") return `Searching the game's code for “${String(a.query || "").slice(0, 40)}”`;
-    if (name === "read_file") return `Reading ${String(a.path || "a file").split("/").pop()}`;
-    return "Looking things up";
+  /** A lookup as OpenRouter's models make it (also the tests' way in): src/ai-tools.js. */
+  const lookUp = (name, a = {}) => tools.run(name, a, { provider: "openrouter", reasons: [], problems: [], mode: "work" });
+  /** Claude's MCP server asks: the tools for its turn, or one of them run. */
+  function toolList({ token }) {
+    const t = turns.get(String(token || ""));
+    return t ? { tools: tools.mcpList(t) } : { error: "That turn is over." };
   }
-  async function lookUp(name, a = {}) {
-    if (name === "search_gdd") {
-      const words = String(a.query || "").toLowerCase().split(/\s+/).filter(Boolean);
-      if (!words.length) return "Give some words to search for.";
-      const out = [];
-      for (const p of (await pages()).filter(isGddPage)) {
-        const t = await read(p);
-        if (!t) continue;
-        t.split("\n").forEach((line, i) => { const l = line.toLowerCase(); if (out.length < 30 && words.every((w) => l.includes(w))) out.push(`${p}:${i + 1}: ${line.trim().slice(0, 220)}`); });
-        if (out.length >= 30) break;
-      }
-      return out.length ? out.join("\n") : "Nothing in the GDD matches.";
-    }
-    if (name === "read_page") {
-      if (!isGddPage(a.path)) return "Only GDD pages (docs/gdd/...md) can be read this way.";
-      return (await read(a.path)) ?? "There's no page at " + a.path + " (yet).";
-    }
-    if (name === "links_to") {
-      if (!isGddPage(a.path)) return "Give a GDD page's path.";
-      const ins = await linksTo(a.path).catch(() => []);
-      return ins.length ? ins.map((x) => `- ${x.path}`).join("\n") : "No page links to it.";
-    }
-    if (name === "search_code") {
-      const q = String(a.query || "").trim();
-      if (!q) return "Give some text to search for.";
-      const got = await new Promise((res) => execFile(GIT, ["grep", "-n", "-I", "-i", "-F", "--max-count=4", "-e", q, "--", ".", ":(exclude)docs", ":(exclude)tools/docs-editor", ":(exclude)*.unity", ":(exclude)*.meta", ":(exclude)*.asset", ":(exclude)*.prefab", ":(exclude)*.mat", ":(exclude)*.rthmap"],
-        { cwd: repo, maxBuffer: 8 << 20, windowsHide: true }, (err, out) => res(err && !out ? "" : String(out || ""))));
-      const lines = got.split("\n").filter(Boolean);
-      if (!lines.length) return fs.existsSync(path.join(repo, "server")) ? "Nothing in the code or data matches." : "This copy of the repository holds only the docs, so there's no code to search here.";
-      return lines.slice(0, 40).map((l) => l.slice(0, 240)).join("\n") + (lines.length > 40 ? `\n…and ${lines.length - 40} more lines` : "");
-    }
-    if (name === "read_file") {
-      const rel = path.posix.normalize(String(a.path || "").replace(/\\/g, "/")).replace(/^\.\//, "");
-      if (!rel || rel.startsWith("..") || path.isAbsolute(rel) || SECRET.test(rel)) return "That file can't be read.";
-      if (rel.startsWith("docs/")) return "Use read_page for GDD pages.";
-      const abs = path.join(repo, rel);
-      let st; try { st = fs.statSync(abs); } catch { return "There's no file at " + rel + "."; }
-      if (!st.isFile() || st.size > 2 << 20) return "That isn't a file that can be read here (too big, or a folder).";
-      const text = fs.readFileSync(abs, "utf8");
-      if (text.includes("\u0000")) return "That's not a text file.";
-      const all = text.split(/\r?\n/), from = Math.max(1, Number(a.from) || 1), n = Math.min(300, Math.max(1, Number(a.lines) || 200));
-      return all.slice(from - 1, from - 1 + n).map((l, i) => `${from + i}: ${l}`).join("\n") + (from - 1 + n < all.length ? `\n(${all.length} lines in all)` : "");
-    }
-    return "No such lookup.";
+  async function tool({ token, name, args }) {
+    const t = turns.get(String(token || ""));
+    if (!t) return { error: "That turn is over." };
+    return { text: await tools.run(String(name || ""), args || {}, t) };
   }
 
   /** The context a conversation keeps (pinned when it starts): its page, pages added, a passage, a thread. */
@@ -542,7 +548,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     return { ok: true, page };
   }
 
-  return { list, get, send, stop, remove, changesFor, reviewed, undo, createSuggested, setup, configure, setContext, lookUp, signInClaude: () => claudeP.signIn(), check: provider.check, status: () => ({ running: [...runs.keys()] }) };
+  return { list, get, send, stop, remove, changesFor, reviewed, undo, createSuggested, setup, configure, setContext, lookUp, tool, toolList, tools, newTurn, endTurn, mcpConfig, signInClaude: () => claudeP.signIn(), check: provider.check, status: () => ({ running: [...runs.keys()] }) };
 }
 
 const titleFrom = (text) => {
@@ -559,7 +565,7 @@ const titleFrom = (text) => {
  * Given on every turn (Claude: --append-system-prompt-file; OpenRouter: the system message), so they don't
  * fade over a long conversation. tools: it can read the repository itself (Claude).
  */
-function standing(brief, tools) { // tools: "repo" (Claude reads it itself), "engine" (OpenRouter's lookups)
+function standing(brief, tools) { // tools: "repo" (Claude reads it itself), "codex" (and the Codex's MCP tools), "engine" (OpenRouter's lookups)
   return [
     "You are R'th AI, the design partner built into Codex: the app a small group of friends use to write the game design document (GDD) of R'th, a private multiplayer RPG of their own (it plays like RuneScape 3 and looks like Old School RuneScape, in its own world built around the four humours).",
     "The GDD is docs/gdd. It is the design: what the game should be, written for the friends who design it and for whoever builds it next, people and coding agents alike. docs/gdd/charter.md holds the rules every page follows; docs/gdd/how-the-gdd-works.md the pages, types and components.",
@@ -568,9 +574,15 @@ function standing(brief, tools) { // tools: "repo" (Claude reads it itself), "en
     "How to work:",
     "- Before you suggest or make any change, understand where it sits. Read the whole page, not just the section; its type's template in docs/gdd/templates/; the pages that section links to; and the pages that link to this one (listed with the context when known). A section only makes sense in its page, and a page only in the GDD around it.",
     "- Then change only what the request needs, in the page's own voice. If the request is unclear, or would contradict another page, say so and ask rather than guess.",
-    tools === "repo"
+    tools !== "engine"
       ? "- The game's code and data are in the same repository (the rest of it besides docs/). Read them when a question is about how the game works today, and say what the code does and whether the GDD agrees; the GDD is the design, the code only the current build. Don't go to the code for design questions it can't answer. You can edit and create pages under docs/gdd/ only, never anything else."
-      : "- You've been given the page, who links to it and the rules below. When you need more, look it up with your tools: search_gdd and read_page for the GDD, links_to for who links to a page, search_code and read_file for the game's code and data when a question is about how the game works today (the GDD is the design, the code only the current build). Each lookup counts against a small daily allowance, so look up what you need and nothing you were given. You change pages only with the edit blocks described below.",
+      : "- You've been given the page, who links to it and the rules below. When you need more, look it up with your tools: search_gdd (ranked sections), read_page (a page or one section), page_outline, links_in (who links to a page, by what the link means), links_out, query_gdd (the GDD's query language), gdd_types, check_page, comments_on; search_code and read_file for the game's code and data when a question is about how the game works today (the GDD is the design, the code only the current build). Each lookup counts against a small daily allowance, so look up what you need and nothing you were given. You change pages only with the edit blocks described below, each with a short reason.",
+    ...(tools === "codex" ? [
+      "- You also have the Codex's own tools (the codex MCP server). It knows the GDD's structure, so prefer it to grepping the files: search_gdd for the sections about something (ranked), page_outline for a page's frontmatter, sections and entries, links_in for who links to a page and what each link means there (\"Dropped by\", \"Found in\"), links_out, query_gdd to list pages or component entries across the GDD (\"action.skill: woodcutting\"), gdd_types, check_page for what the Codex finds wrong on a page (run it on each page you changed, and fix what you caused), comments_on. Make a new page with create_page (its template, its folder, a unique file name), and rename one with rename_page (every reference follows); edit everything else with your own Edit.",
+      "- For every change you make to a page, call explain_change once with a few of the words you wrote and a short reason (at most about 15 words); they see it beside the change when they review it.",
+      "- When you've read a page in depth and page_outline shows it has no summary (or one written before the page last changed), call index_page with a two- or three-sentence summary and search terms. It helps everyone's search, the free models' most of all.",
+    ] : []),
+    "- Each message says its mode. Chat: when they ask for a change you make it as usual and Codex holds it as suggestions for them to accept or skip. Work: your changes go straight in. Either way, change pages only when they ask for a change.",
     "- Write in US English (color, armor, center, -ize), in your replies and in everything you suggest or write into a page, as Codex's spelling check does.",
     "- After editing, say in a sentence or two what you changed and where: Codex shows them each change.",
     "- Your reply shows in a narrow side panel as Markdown: short paragraphs, lists where they help, no big headings. Name pages by their repository paths.",
@@ -603,11 +615,17 @@ export const titleIn = (text) => {
 };
 export const withoutTitle = (text) => String(text || "").replace(/\n*\s*<title>[^<]*(<\/title>|$)\s*/gi, "").trimEnd();
 
-const SUGGEST_NOTE ="\n\n(They asked for suggestions: make the edits in the pages as you would; Codex shows each one as a suggestion for them to accept or skip.)";
+// The two modes (the AI tab's line under the box, Shift+Tab).
+const CHAT_NOTE = "\n\n(Chat mode: talk it through. When they ask for a change, make it in the pages as you would; Codex holds each one as a suggestion for them to accept or skip, so don't ask whether to go ahead.)";
+const WORK_NOTE = "\n\n(Work mode: changes you make go straight into the pages; they can show and undo them.)";
+/** The first words of some text, for a reason's quote: enough to find the change again. */
+const firstWords = (t) => String(t || "").replace(/\s+/g, " ").trim().slice(0, 120);
 
 // ----------------------------------------------------------------------------- Claude Code
 
 const READ_TOOLS = ["Read", "Glob", "Grep"];
+/** Claude Code on its own, as R'th AI: nothing from the computer's or repository's setup (see run()). */
+export const ISOLATED = ["--setting-sources", "", "--disable-slash-commands"];
 // Pages only: anything not allowed is refused in print mode.
 const EDIT_TOOLS = ["Edit(docs/gdd/**)", "Write(docs/gdd/**)", "MultiEdit(docs/gdd/**)"];
 // Comments go through the Codex (COMMENT_FORMAT), never as files: docs/.notes/ is only a copy, and
@@ -634,17 +652,23 @@ function claudeProvider({ repo, claude, systemFile }) {
     });
   }
 
-  function run({ prompt, session, system = "", model = "", effort = "", onText, onBreak, onActivity, onThought = () => {} }) {
+  // mcp: the turn's --mcp-config file (the Codex's tools, src/mcp-server.js) or null; describeTool(name,
+  // args) says one of its calls in the activity line.
+  function run({ prompt, session, system = "", model = "", effort = "", mcp = null, describeTool = null, readOnly = false, onText, onBreak, onActivity, onThought = () => {} }) {
     let proc = null, stopped = false;
     const done = (async () => {
       if (!available) await check();
       if (!available.ok) return { error: available.error };
-      // --safe-mode: no CLAUDE.md (the repository's is a developer guide for the game's code, the wrong frame
-      // for design writing), no hooks, skills or plugins; sign-in, models and the read tools work as usual,
-      // so it can still read the game's code when it needs to. Its instructions are R'th AI's own, given
-      // every turn as a file (on the command line they'd pass Windows' length limit).
-      const args = ["-p", "--safe-mode", "--output-format", "stream-json", "--verbose", "--include-partial-messages",
-        "--allowedTools", ...READ_TOOLS, ...EDIT_TOOLS, "--disallowedTools", ...NEVER];
+      // No CLAUDE.md (the repository's is a developer guide for the game's code, the wrong frame for design
+      // writing), no settings, hooks, skills or plugins from this computer: --setting-sources "" and
+      // --disable-slash-commands. (Not --safe-mode, which also turns off MCP servers, so the Codex's tools
+      // would be gone; not --bare, which skips the sign-in.) Sign-in, models and the read tools work as
+      // usual, so it can still read the game's code when it needs to. Its instructions are R'th AI's own,
+      // given every turn as a file (on the command line they'd pass Windows' length limit).
+      const args = ["-p", ...ISOLATED, "--output-format", "stream-json", "--verbose", "--include-partial-messages",
+        "--allowedTools", ...READ_TOOLS, ...(readOnly ? [] : EDIT_TOOLS), ...(mcp ? ["mcp__codex"] : []), "--disallowedTools", ...NEVER, ...(readOnly ? ["Edit", "Write", "MultiEdit"] : [])];
+      // Only the Codex's own MCP server, never one configured elsewhere on this computer.
+      if (mcp) args.push("--mcp-config", mcp, "--strict-mcp-config");
       if (system && systemFile) { fs.mkdirSync(path.dirname(systemFile), { recursive: true }); fs.writeFileSync(systemFile, system, "utf8"); args.push("--append-system-prompt-file", systemFile); }
       if (model) args.push("--model", model);
       if (effort) args.push("--effort", effort);
@@ -669,7 +693,7 @@ function claudeProvider({ repo, claude, systemFile }) {
               if (d?.type === "text_delta") onText(d.text);
               else if (d?.type === "thinking_delta" && d.thinking) onThought(d.thinking);
             } else if (ev.type === "assistant") {
-              for (const c of ev.message?.content || []) if (c.type === "tool_use") onActivity(describe(c));
+              for (const c of ev.message?.content || []) if (c.type === "tool_use") onActivity(String(c.name).startsWith("mcp__codex__") && describeTool ? describeTool(c.name.slice(12), c.input || {}) : describe(c));
             } else if (ev.type === "result") result = ev;
           }
         });

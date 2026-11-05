@@ -109,3 +109,25 @@ export function makeSpell({ wordsFile, texts, legacy = [], onWrite = () => {} })
     invalidate() { corpus = null; cache.clear(); },
   };
 }
+
+/**
+ * The words of a page as the editor's check sees them (src/spellcheck.js walks the editor's document):
+ * not code, link targets, web addresses, paths, file names or the frontmatter. For checks made without
+ * the editor (R'th AI's check of what it changed). [{ word, line }].
+ */
+export function wordsIn(markdown) {
+  const out = [];
+  let fence = false;
+  const lines = String(markdown || "").split("\n");
+  let i = 0;
+  if (/^---[ \t]*$/.test(lines[0] || "")) { i = 1; while (i < lines.length && !/^---[ \t]*$/.test(lines[i])) i++; i++; }
+  for (; i < lines.length; i++) {
+    const raw = lines[i];
+    if (/^\s*(```|~~~)/.test(raw)) { fence = !fence; continue; }
+    if (fence) continue;
+    const line = raw.replace(/`[^`\n]*`/g, " ").replace(/\]\([^)]*\)/g, "] ").replace(/<[^>]+>/g, " ")
+      .replace(/\b(https?:\/\/|www\.)\S+/g, " ").replace(/\S+\.(md|json|cs|js|png|jpg|webp|fbx|txt|unity)\b/gi, " ").replace(/\S*[\/]\S*/g, " ");
+    for (const m of line.matchAll(WORD)) out.push({ word: m[0], line: i + 1 });
+  }
+  return out;
+}

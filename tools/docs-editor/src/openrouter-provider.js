@@ -19,11 +19,11 @@ export const OPENROUTER_MODELS = (process.env.CODEX_OPENROUTER_MODELS || "openro
 
 export const EDIT_FORMAT = [
   "To change a page, write an edit block anywhere in your answer (as many as you need, one per place):",
-  "<edit page=\"docs/gdd/path/to/page.md\">",
+  "<edit page=\"docs/gdd/path/to/page.md\" reason=\"why, in a few words\">",
   "<find>the exact text in the page now, word for word, enough of it to be found only once</find>",
   "<replace>what replaces it</replace>",
   "</edit>",
-  "For a new page: <edit page=\"docs/gdd/...md\"><find></find><replace>the whole page</replace></edit>. Edit blocks are taken out of your answer before it's shown, so say in a sentence what you changed.",
+  "For a new page: <edit page=\"docs/gdd/...md\" reason=\"...\"><find></find><replace>the whole page</replace></edit>. The reason (at most about 15 words: \"Linked instead of explaining Bile again\") is shown beside the change when they review it. Edit blocks are taken out of your answer before it's shown, so say in a sentence what you changed.",
 ].join("\n");
 
 const TOOL_ROUNDS = 4; // lookups a message may take before it must answer (each round is a request)
@@ -145,11 +145,11 @@ async function readStream(r, onText, onThought = () => {}) {
   return { text, model, calls: calls.filter((c) => c && c.name) };
 }
 
-/** The edit blocks in an answer: [{ page, find, replace }], and the answer without them. */
+/** The edit blocks in an answer: [{ page, find, replace, reason }], and the answer without them. */
 export function editsIn(text) {
   const edits = [];
-  const rest = text.replace(/<edit\s+page="([^"]+)"\s*>\s*<find>([\s\S]*?)<\/find>\s*<replace>([\s\S]*?)<\/replace>\s*<\/edit>/g, (m, page, find, replace) => {
-    edits.push({ page: page.trim(), find: trimOne(find), replace: trimOne(replace) });
+  const rest = text.replace(/<edit\s+page="([^"]+)"(?:\s+reason="([^"]*)")?\s*>\s*<find>([\s\S]*?)<\/find>\s*<replace>([\s\S]*?)<\/replace>\s*<\/edit>/g, (m, page, reason, find, replace) => {
+    edits.push({ page: page.trim(), find: trimOne(find), replace: trimOne(replace), reason: (reason || "").trim() || null });
     return "";
   });
   return { edits, text: rest.replace(/\n{3,}/g, "\n\n").trim() };

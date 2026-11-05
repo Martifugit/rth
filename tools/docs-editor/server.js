@@ -164,6 +164,7 @@ setTimeout(joinRoom); // once the engine is set up (its events go to the page)
 const presence = makePresence({ clientId: process.env.CODEX_DISCORD_APP || "1567232969637109922" });
 const runner = makeRunner({ repo: REPO, store, emit: (type, data) => broadcast(type, data) });
 runner.check().then((a) => console.log(a.ok ? `Agents: ${a.version}` : `Agents: off (${a.error})`));
+let engineBase = null; // http://127.0.0.1:<port>, once listening (startServer)
 const assistant = makeAssistant({
   repo: REPO, dir: path.join(DATA, "conversations"), store, emit: (type, data) => broadcast(type, data),
   pages: allDocs,
@@ -172,7 +173,9 @@ const assistant = makeAssistant({
   write: async (rel, text) => {
     const abs = safe(rel);
     if (!abs || !isDoc(rel)) return;
+    index = null; // the link index is read again, so what's shown follows at once
     if (text === null) { await fsp.rm(abs, { force: true }); return; }
+    await fsp.mkdir(path.dirname(abs), { recursive: true });
     let eol = "\n";
     try { if ((await fsp.readFile(abs, "utf8")).includes("\r\n")) eol = "\r\n"; } catch {}
     const tmp = abs + ".codex-tmp";
@@ -182,6 +185,11 @@ const assistant = makeAssistant({
   // The AI's changes are sent like the Codex's own saves, and their commit says "with AI".
   changed: (rels) => { for (const r of rels) syncer.saved(r, { ai: true }); },
   openrouterKey: () => openrouter.key(),
+  // The tools' spelling check (made further down), the files they write under docs/.codex/ (sent like
+  // the word list), and where Claude's MCP server finds the engine.
+  spell: { check: (words) => speller.check(words) },
+  ownChanged: (rel) => syncer.saved(rel, { soon: true }),
+  engineUrl: () => engineBase,
   // Who links to a page (the Links tab's index), so R'th AI sees where it sits before changing it.
   linksTo: async (page) => {
     const idx = await gdd();
@@ -533,10 +541,15 @@ const api = {
   },
 
   async "POST /api/ai/send"(url, req) {
-    const { id, text, context } = await body(req);
-    const r = await assistant.send({ id, text, context });
+    const { id, text, context, mode } = await body(req);
+    const r = await assistant.send({ id, text, context, mode });
     return r.error ? [400, r] : r;
   },
+
+  // The Codex's tools for Claude (src/ai-tools.js), asked by its MCP server (src/mcp-server.js) with the
+  // turn's key: which tools that turn has, and one of them run.
+  async "POST /api/ai/tools"(url, req) { const r = assistant.toolList(await body(req)); return r.error ? [403, r] : r; },
+  async "POST /api/ai/tool"(url, req) { const r = await assistant.tool(await body(req)); return r.error ? [403, r] : r; },
 
   // What a conversation keeps (src/assistant.js, setContext): a page added with @ or + Add page, one dropped.
   async "POST /api/ai/context"(url, req) {
@@ -892,6 +905,7 @@ export function startServer(port = PORT, { autoSync = process.env.CODEX_AUTOSYNC
     server.once("error", reject);
     server.listen(port, "127.0.0.1", () => {
       const actual = server.address().port;
+      engineBase = `http://127.0.0.1:${actual}`;
       console.log(`R'th Codex: http://127.0.0.1:${actual}/  (docs from ${REPO})`);
       resolve(actual);
     });
