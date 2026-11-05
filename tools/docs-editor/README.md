@@ -87,6 +87,7 @@ here (only on this computer for now: offline, or GitHub trouble; hover for why),
   `p-` placeholders, and the structure checks: no type, an unknown type or component, a component
   without its section, a component section not in the frontmatter, a page outside its type's folder,
   two pages with one file name (`src/gdd-index.js`).
+- **Problems found** (the To-do's first group): what R'th AI's health check found across pages (see "The AI tab").
 - **Links in** are named by the section they come from, as How the GDD Works' "Who writes what" says:
   a link from a rewards section shows as *Dropped by*, from spawns as *Found in*.
 - **Generated lists:** a code block of language `query` shows, under it, what it finds. Lines are
@@ -126,7 +127,7 @@ under 2,000 characters). A conversation pasted from Discord goes in as a quote w
 because Discord's links expire. Your Discord profile shows "Editing <page> in the R'th Codex" while
 the Codex is open (the Discord app on this computer; off in the logo's menu).
 
-**The helper** (`helper/`): `npx wrangler deploy` from that folder. Its settings are in `wrangler.toml`;
+**The helper** (`helper/`): `npx wrangler deploy` from that folder (after a change to `schema.sql`, apply it first: `npx wrangler d1 execute rth-codex --remote --file schema.sql`). Its settings are in `wrangler.toml`;
 its secrets live in `helper/.dev.vars` and `helper/github-app.pem` on the owner's computer (git ignores
 both) and are sent to Cloudflare with `wrangler secret`. See [PLAN.md](PLAN.md), "The helper".
 
@@ -154,21 +155,52 @@ this conversation's model and effort as in Claude Code (`/help` lists them); def
 setup. Its first answer names the conversation (a hidden `<title>` line the Codex takes off).
 R'th AI's standing instructions (who it is, what the GDD is for, how to understand a page before
 changing it, then the Charter and Writing a Page) come every turn (`standing()` in
-`src/assistant.js`). Claude Code runs with `--safe-mode`, so the repository's CLAUDE.md (a developer
-guide for the game's code) doesn't steer it; it can still read the code and data when a question is
-about how the game works today. On OpenRouter it has lookups the engine runs (`lookUp` in `src/assistant.js`: search_gdd, read_page, links_to, search_code, read_file; read-only, never secrets), at most four rounds a message since the free allowance counts requests; a model that can't use tools answers without them, and calls written into the text are read or dropped. It talks by default; asked for a change ("tighten this"), it edits pages under `docs/` itself,
-and its reply says which pages it changed, with **Show** and **Undo**. A page it changed says so in a
-bar at its top: **Show changes** marks what it added and removed (arrows go from one change to the
-next; pointing at one offers Undo for just that one), **Done** clears the marks. The engine finds the
-changes itself by comparing each page before and after the turn (`src/ai-diff.js`, `src/ai-changes.js`);
-the commit that sends them says "with AI". Ask it to *suggest* (a grammar pass, a careful review) and
-the page stays as it is: the bar goes through its suggestions top to bottom, **Accept** or **Skip**
-each (or **Accept all**). An empty AI tab offers a few things to ask where you are; a question typed in
-search (Ctrl+P) has **Ask AI** at the top; a conversation pasted from Discord is read as who said what. Conversations stay on this computer (`.local/`, or the
-app's own folder), listed under the conversation's title. It uses Claude Code when it's on the computer (`claude` on the PATH, or `CODEX_CLAUDE`); otherwise
-**Sign in with OpenRouter** in the AI tab gives free models on the person's own daily allowance (about
-50 messages; `src/openrouter-*.js`). OpenRouter's answers change pages through edit blocks the engine
-applies, so Show changes and Undo work the same. The engine is `src/assistant.js`; the tab is `src/ai.js`.
+`src/assistant.js`). Claude Code runs on its own (`--setting-sources ""`, `--disable-slash-commands`:
+no CLAUDE.md, settings, hooks, skills or plugins from the computer; not `--safe-mode`, which also turns
+MCP servers off), so the repository's developer guide doesn't steer it; it can still read the code and
+data when a question is about how the game works today.
+
+**The Codex's tools** (`src/ai-tools.js`): one list, served to Claude through the Codex's MCP server
+(`src/mcp-server.js`, started by Claude Code for each turn with `--mcp-config`; it hands each call to the
+engine, `POST /api/ai/tool`, with the turn's key) and to OpenRouter as function definitions. Reading:
+search_gdd (ranked sections, `src/section-index.js`), read_page (a page or one section), page_outline,
+links_in (by what each link means), links_out, query_gdd (the query-block language), gdd_types,
+check_page (structure, broken links, spelling), comments_on; for OpenRouter also search_code and
+read_file. For Claude: create_page and rename_page (Work mode only), explain_change (a reason for each
+change), index_page (a page's summary for search, shared in `docs/.codex/index/`), and report_problem
+for the health check. OpenRouter has at most four rounds of lookups a message, and its reading starts
+from the open page, the summaries of the pages round it and the sections that match the question.
+
+**Chat and Work**: the line under the box (Shift+Tab, or a click) says which. In Chat, a change it makes
+is put back and waits as suggestions: the bar at the page's top goes through them, **Accept** or **Skip**
+each (Alt+Enter, Alt+Backspace; Alt+↓/↑ to move), **Accept all**, and for an answer that suggested
+changes on several pages, page by page ("page 1 of 3") or **Accept on all pages**. In Work, it edits pages
+under `docs/gdd/` itself, and its reply says which pages it changed, with **Show** and **Undo**; a page it
+changed says so in the bar (**Show changes** marks what it added and removed; pointing at one offers Undo
+for just that one). Either way each change shows its reason. The engine finds the changes itself by
+comparing each page before and after the turn (`src/ai-diff.js`, `src/ai-changes.js`); the commit that
+sends them says "with AI". After a turn that changed pages, the Codex checks them in the background
+(`src/turn-check.js`) and shows what the turn brought in (structure, headings that aren't there,
+spelling) as cards under the answer, with **Fix** (the To-do's fix, or asking R'th AI) and **Dismiss**.
+
+Select part of an answer and **Ask**: it goes into the box as a quote line (`> ...`), drawn as in the
+sent bubble, with the cursor under it for the question. Each message has a copy button. An empty AI
+tab offers a few things to ask where you are; a question typed in search (Ctrl+P) has **Ask AI** at the
+top; a conversation pasted from Discord is read as who said what. Conversations stay on this computer
+(`.local/`, or the app's own folder), listed under the conversation's title. It uses Claude Code when
+it's on the computer (`claude` on the PATH, or `CODEX_CLAUDE`); otherwise **Sign in with OpenRouter** in
+the AI tab gives free models on the person's own daily allowance (about 50 messages;
+`src/openrouter-*.js`). OpenRouter's answers change pages through edit blocks the engine applies (each
+with a `reason`), so Show changes and Undo work the same. The engine is `src/assistant.js`; the tab is
+`src/ai.js`.
+
+**The health check** (`src/audit.js`): with Claude, while nothing has been done in this Codex for ten
+minutes (`CODEX_AUDIT_IDLE`, seconds), R'th AI reads the pages changed since they were last checked
+(and, the first time, since this Codex started checking), a few a run, read-only, and reports problems
+across pages with a plan for each. They're shared in `docs/.codex/problems/` (one file a page, with the
+version of the page that was checked) and listed on the To-do page under Problems found: **Fix with
+R'th AI** (a Chat-mode conversation with the plan), **More**, **Dismiss** (for everyone). A problem whose
+quoted words are gone drops off. **Check the whole GDD** sweeps every page. Off in AI setup.
 
 ## Comments
 
@@ -186,8 +218,11 @@ Comments work as in Google Docs, and never go into the page.
 - **Reply, resolve, more:** click a comment to reply. The tick resolves it; ⋮ has edit, attach to the
   selected text, add to the page's Open questions (left unsaved for you to check), move, copy its
   id, delete. Ctrl+Enter posts.
-- **Claude isn't in comments any more:** comments are between people; ask Claude in the AI tab
-  (Ctrl+J, or Ask beside a selection). Older threads keep the answers Claude left in them.
+- **@RthAI:** tag R'th AI in a thread (here or in Discord: the bot, "@R'th AI" or "@RthAI") and it
+  answers there, tagging you, from an open Codex with Claude that has **Answer @R'th AI in Discord** on in
+  AI setup; only one answers (it claims the tag through the helper, `helper/src/mentions.js`,
+  `src/discord-answer.js`). With none open, R'th AI says it's offline and answers once one opens. For
+  changes, ask in the AI tab (Ctrl+J, or Ask beside a selection).
 - **@agent:** assigns the comment to an agent in the next session (see the CLI below).
 - **Comment history** (the speech-bubble button, top right): every comment across the docs; Open,
   New from Claude (answers you haven't opened yet, and questions Claude left you), Resolved, All.

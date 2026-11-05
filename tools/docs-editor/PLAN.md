@@ -110,8 +110,8 @@ needs a place to keep who wrote what beside each page.
   ("Combat: “bile settles toward…”"); its first message quotes the passage, then the comment, then a
   link that opens it in the Codex.
 - **Posted as the person.** The Codex posts through a Discord webhook, which sets each message's name
-  and avatar, so a comment from the Codex looks like Alice wrote it in Discord. Claude's answers post
-  as "Claude". People in Discord simply reply in the post.
+  and avatar, so a comment from the Codex looks like Alice wrote it in Discord. R'th AI's answers post
+  as "R'th AI". People in Discord simply reply in the post.
 - **Resolving** gives the post a *Resolved* tag and closes it, from either side (in Discord: the tag;
   a ✅ on the first message counts the next time the post changes). Writing in a resolved post, or
   reopening it, opens it again. Comment history shows closed ones.
@@ -256,5 +256,4 @@ Later, to explore: "Ask Kari about this" (a Discord ping to the exact spot), and
 3. Which free models to start with, chosen when building by measuring real questions.
 4. One Codex role, or a second one that can read and comment but not edit.
 5. The channels' names, and whether *what changed* notices go to their own channel or the comments'.
-6. Whether `@Claude` in a Discord comment thread should get an answer there (the helper, through
-   OpenRouter), once comments are in Discord.
+6. *(Settled in 0.4.0.)* `@RthAI` in a Discord comment thread is answered there by one open Codex with Claude that opts in (AI setup), not by the helper through OpenRouter; with none open, R'th AI says it's offline and answers later (README, "Comments").
