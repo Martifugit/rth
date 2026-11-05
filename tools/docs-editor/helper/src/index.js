@@ -13,6 +13,8 @@
 //                                        every open Codex told to look for the update (the live room, "release")
 //   /comments...                         comments in the Discord forum (src/comments.js)
 //   GET  /live                           a WebSocket to the room of who's here (src/live.js)
+//   POST /interactions                   /ask and "Ask R'th AI" from Discord, signed (src/interactions.js)
+//   POST /admin/commands                 registers those two commands in the server (the agent key only)
 //
 // Comments take a session (a person) or, for agents on the owner's computer, "Authorization: Agent
 // <AGENT_KEY>" (they post as Claude).
@@ -29,6 +31,7 @@ import { comments, poll } from "./comments.js";
 import { mentions, sweep as sweepMentions } from "./mentions.js";
 import { same } from "./crypto.js";
 import { Live, room } from "./live.js";
+import { interaction, registerCommands } from "./interactions.js";
 import { tooOld, outdated, updatePage, HEADER } from "./version.js";
 
 export { Live };
@@ -42,6 +45,12 @@ export default {
         case "GET /": return text("R'th Codex helper");
         case "GET /open": return openPage(url, env);
         case "GET /live": return room(env).fetch(req); // who's here (src/live.js)
+        case "POST /interactions": return interaction(req, env, ctx); // from Discord, signed
+        case "POST /admin/commands": {
+          const h = req.headers.get("authorization") || "";
+          if (!h.startsWith("Agent ") || !env.AGENT_KEY || !same(h.slice(6), env.AGENT_KEY)) return json({ error: "Only the owner's computer registers commands." }, 401);
+          return json({ ok: true, commands: await registerCommands(env) });
+        }
         case "POST /github": {
           const body = await req.text();
           if (!(await verifyWebhook(env, body, req.headers.get("x-hub-signature-256")))) return text("bad signature", 401);

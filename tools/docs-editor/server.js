@@ -30,7 +30,7 @@ import { planFix } from "./src/fixes.js";
 import { LOG_FORMAT, parseLog, entries } from "./src/changelog.js";
 import os from "node:os";
 import { makeSpell } from "./src/spell.js";
-import { GDD, SYSTEM, TEMPLATES, undeletable, inGdd, readSystem, readPrompts, newPageText, fromTemplate, withComponents } from "./src/gdd.js";
+import { GDD, SYSTEM, TEMPLATES, undeletable, inGdd, isMeta, readSystem, readPrompts, newPageText, fromTemplate, withComponents } from "./src/gdd.js";
 import { make as makeFront, split as splitFront, slugOf } from "./src/frontmatter.js";
 import { buildGdd, runQuery, checks, labelFor } from "./src/gdd-index.js";
 import { makeSync } from "./src/sync.js";
@@ -199,6 +199,8 @@ assistant = makeAssistant({
   spell: { check: (words) => speller.check(words) },
   ownChanged: (rel) => syncer.saved(rel, { soon: true }),
   engineUrl: () => engineBase,
+  // A conversation started on To-do or Recent changes is told what that view lists.
+  viewText: (view) => viewText(view),
   // Who links to a page (the Links tab's index), so R'th AI sees where it sits before changing it.
   linksTo: async (page) => {
     const idx = await gdd();
@@ -291,6 +293,42 @@ async function noteCounts() {
     if (note.status === "answered") c.answered++;
   }
   return counts;
+}
+
+// The To-do (src/todo.js): missing pages, wrong references, placeholders and structure, as cards, and what
+// R'th AI's health check found.
+async function todoNow() {
+  const idx = await gdd();
+  const exists = (rel) => fs.existsSync(path.join(REPO, rel));
+  const todo = buildTodo({
+    idx, gdd: idx.gdd, system: idx.system, problems: checks(idx.gdd, idx.system, idx.texts),
+    headings: brokenLinks(idx, exists).filter((l) => l.kind === "heading"), renames: await gitRenames(), exists,
+  });
+  // What R'th AI's health check found (src/audit.js), and whether this Codex can check.
+  const found = (await auditor.list()).map((p) => ({ ...p, titles: p.pages.map((x) => idx.titles.get(x) || null) }));
+  // Comments started in Discord that aren't on any page yet: to put on the page they're about.
+  const unfiled = (await store.all().catch(() => [])).filter((x) => !x.page && x.note.status !== "done").map((x) => x.note);
+  return { ...todo, found, unfiled, count: todo.count + found.length + unfiled.length, audit: { ...auditor.view(), available: await assistant.canAudit().catch(() => false) } };
+}
+
+/** What To-do or Recent changes lists now, as text for R'th AI (a conversation started on that view). */
+async function viewText(view) {
+  const clip = (s, n = 160) => String(s || "").replace(/\s+/g, " ").trim().slice(0, n);
+  if (view === "broken") {
+    const t = await todoNow();
+    const lines = [];
+    for (const c of t.missing.slice(0, 25)) lines.push(`- Not written yet: ${c.title} (${c.path || c.id}), linked from ${c.refs.slice(0, 4).map((r) => r.from).join(", ")}${c.refs.length > 4 ? " and more" : ""}`);
+    for (const r of t.references.slice(0, 15)) lines.push(`- Wrong reference on ${r.from}: ${clip(r.text || r.to)}`);
+    for (const p of t.placeholders.slice(0, 10)) lines.push(`- Placeholder name ${p.token || p.id} on ${p.pages} page(s)`);
+    for (const s of t.structure.slice(0, 25)) lines.push(`- ${s.from}: ${clip(s.text)}`);
+    for (const f of t.found.slice(0, 15)) lines.push(`- Found by the health check (${f.kind}) on ${f.pages.join(", ")}: ${clip(f.summary)}`);
+    return `They're on the To-do page, which lists ${t.count} thing${t.count === 1 ? "" : "s"} to do in the GDD:\n` + (lines.join("\n") || "- Nothing: it's empty.");
+  }
+  if (view === "changes") {
+    const list = (await recentChanges()).slice(0, 30);
+    return "They're on Recent changes, the latest changes to the GDD:\n" + (list.map((e) => `- ${String(e.date).slice(0, 10)} ${e.author} ${e.status} ${e.title} (${e.path})${e.sections?.length ? " in " + e.sections.slice(0, 3).join(", ") : ""}`).join("\n") || "- None yet.");
+  }
+  return null;
 }
 
 // ----------------------------------------------------------------------------- live changes
@@ -757,18 +795,7 @@ const api = {
 
   async "GET /api/changes"() { return { changes: await recentChanges() }; },
 
-  // The To-do (src/todo.js): missing pages, wrong references, placeholders and structure, as cards.
-  async "GET /api/todo"() {
-    const idx = await gdd();
-    const exists = (rel) => fs.existsSync(path.join(REPO, rel));
-    const todo = buildTodo({
-      idx, gdd: idx.gdd, system: idx.system, problems: checks(idx.gdd, idx.system, idx.texts),
-      headings: brokenLinks(idx, exists).filter((l) => l.kind === "heading"), renames: await gitRenames(), exists,
-    });
-    // What R'th AI's health check found (src/audit.js), and whether this Codex can check.
-    const found = (await auditor.list()).map((p) => ({ ...p, titles: p.pages.map((x) => idx.titles.get(x) || null) }));
-    return { ...todo, found, count: todo.count + found.length, audit: { ...auditor.view(), available: await assistant.canAudit().catch(() => false) } };
-  },
+  async "GET /api/todo"() { return todoNow(); },
   async "POST /api/problems/dismiss"(url, req) {
     if (!account.canEdit()) return [403, { error: "Sign in with Discord (with the Codex role) to change the To-do." }];
     const r = auditor.dismiss(await body(req)); return r.error ? [400, r] : r;
@@ -845,6 +872,24 @@ const api = {
     return { pages };
   },
 
+  // Pages most like some text (a comment started in Discord, to put on a page): R'th AI's section index.
+  async "GET /api/pages-like"(url) {
+    const q = (url.searchParams.get("q") || "").trim().slice(0, 1000);
+    if (q.length < 2) return { pages: [] };
+    const idx = await assistant.tools.freshSections();
+    // A page's score: its best section, and a little for every other section that matches too (a page
+    // about the thing matches all over). The GDD's own pages (the Charter, How the GDD Works...) never.
+    const by = new Map();
+    for (const hit of idx.search(q, { limit: 80 })) {
+      if (isMeta(hit.path)) continue;
+      const x = by.get(hit.path) || { path: hit.path, title: hit.title || null, best: 0, rest: 0 };
+      if (hit.score > x.best) { x.rest += x.best; x.best = hit.score; } else x.rest += hit.score;
+      by.set(hit.path, x);
+    }
+    const pages = [...by.values()].map((x) => ({ path: x.path, title: x.title, score: x.best + 0.35 * x.rest }))
+      .sort((a, b) => b.score - a.score).slice(0, 5);
+    return { pages };
+  },
   async "GET /api/search"(url) {
     const q = (url.searchParams.get("q") || "").trim();
     if (q.length < 2) return { results: [] };

@@ -1170,7 +1170,11 @@ function newPageDialog(inFolder = null, prefill = {}) {
   if (!S.types.length) { toast("No types found: How the GDD Works needs its Types table", "bad"); return; }
   const typeOf = (dir) => typeAt(S.types, dir);
   const fixed = prefill.path || null;
-  const suggested = typeOf(fixed && dirOf(fixed)) || typeOf(inFolder) || null;
+  // The type it most likely is: the To-do's guess from the field that links here, else the folder's.
+  const guessed = prefill.type ? S.types.find((t) => t.type === prefill.type) || null : null;
+  const suggested = guessed || typeOf(fixed && dirOf(fixed)) || typeOf(inFolder) || null;
+  // Known well enough to skip asking: a guess, or a link into a type's own folder (not the top of the GDD).
+  const known = guessed || (fixed && typeOf(dirOf(fixed))?.folder ? typeOf(dirOf(fixed)) : null);
   const an = (w) => (/^[aeiou]/.test(w) ? "an " : "a ") + w;
   const cap = (w) => w.replace(/^./, (c) => c.toUpperCase());
   let type = null, title = prefill.title || "";
@@ -1233,7 +1237,7 @@ function newPageDialog(inFolder = null, prefill = {}) {
       usual.length ? [h("label", { class: "np-comps-label" }, "Sections to start with ", h("span", { class: "np-optional" }, "optional")),
         h("div", { class: "np-comps" }, usual.map(chip)),
         h("p", { class: "muted small np-note" }, "Most pages start as a stub with none. Add them later in Page settings.")] : null,
-      fixed && !keepFixed() ? h("p", { class: "muted small np-note" }, `The link points into ${dirOf(fixed).slice(GDD.length + 1) || "the top of the GDD"}; ${an(t.type)} page goes in ${t.folder || "the top"}, and the link on this page will follow it.`) : null,
+      fixed && !keepFixed() ? h("p", { class: "muted small np-note" }, `The link points into ${dirOf(fixed).slice(GDD.length + 1) || "the top of the GDD"}; ${an(t.type)} page goes in ${t.folder || "the top"}, and ${prefill.everywhere ? "the links to it" : "the link on this page"} will follow it.`) : null,
       h("div", { class: "modal-actions" }, h("button", { class: "btn", onclick: () => close() }, "Cancel"), h("button", { class: "btn btn-gold", onclick: create }, "Create")),
     ].flat().filter(Boolean));
     showFile();
@@ -1250,7 +1254,11 @@ function newPageDialog(inFolder = null, prefill = {}) {
     const r = await api("/api/new", { method: "POST", body: JSON.stringify({ path, title: title.trim(), type: type.type, components: [...picked] }) });
     if (!r.ok) { toast(failed("Couldn't make the page", r), "bad"); return; }
     close();
-    if (fixed && r.path !== fixed) relinkOpenPage(fixed, r.path); // the link that asked for it follows it to its folder
+    if (fixed && r.path !== fixed) {
+      // The links that asked for it follow it to its folder: every page's (from the To-do), or this page's.
+      if (prefill.everywhere) await api("/api/fix", { method: "POST", body: JSON.stringify({ fix: { kind: "retarget", from: [fixed], id: fixed.split("/").pop().replace(/\.md$/, ""), to: r.path } }) }).catch(() => null);
+      else relinkOpenPage(fixed, r.path);
+    }
     await loadTree();
     await openDoc(r.path, { mode: "edit" });
     focusEditor(S.editor.state.doc.content.size); // ready to type, as a new document is
@@ -1258,8 +1266,11 @@ function newPageDialog(inFolder = null, prefill = {}) {
   };
 
   const close = modal(fixed ? "Write this page" : "New page", body, { width: "min(620px, 94vw)" });
-  // Made from a folder of a type, the page is that type (Change still picks another); otherwise the type comes first.
-  if (inFolder && typeOf(inFolder) && !fixed) choose(typeOf(inFolder)); else pickType();
+  // Made from a folder of a type, or written from a link whose type is known, the page is that type
+  // (Change still picks another); otherwise the type comes first.
+  if (inFolder && typeOf(inFolder) && !fixed) choose(typeOf(inFolder));
+  else if (known) choose(known);
+  else pickType();
 }
 
 /** Links on the open page to `from` now point to `to` (a page made somewhere else than the link said). */
@@ -1637,6 +1648,7 @@ function showView(kind, push = true) {
   $$(".t-row.current").forEach((r) => r.classList.remove("current"));
   $(`.t-special[data-view="${kind}"]`)?.classList.add("current");
   aiChanges.heldChanged(); // the AI's bar belongs to the page, not over the view
+  ai.pageChanged?.(); // the AI tab's context: the view, not the page under it
   VIEWS[kind].render();
 }
 function hideView() {
@@ -1649,6 +1661,7 @@ function hideView() {
   $("#statusView").classList.add("hidden");
   $$(".t-special").forEach((r) => r.classList.remove("current"));
   aiChanges.heldChanged();
+  ai.pageChanged?.();
 }
 
 // The counts beside Recent changes (others' changes since you last looked) and Broken links.
@@ -1703,7 +1716,8 @@ function scrollToPos(pos, onlyIfHidden = false) {
 
 const panels = makePanels({ S, $, h, api, toast, isMeta, ask: (...a) => ask(...a),
   // Fix with R'th AI (a health-check problem on the To-do): its first page opened, then a conversation about it.
-  fixWithAi: async (p) => { await openDoc(p.pages[0]); ai.fixFound(p); }, save: () => save(false, { quiet: true }), loadTree: () => loadTree(), openDoc: (...a) => openDoc(...a), newPage: (prefill) => newPageDialog(null, prefill), findInPage: (q) => findInPage(q), setLinksCount, countsChanged: () => refreshSpecialCounts() });
+  fixWithAi: async (p) => { await openDoc(p.pages[0]); ai.fixFound(p); },
+  placeComment: (n) => notes.placeDialog(n), save: () => save(false, { quiet: true }), loadTree: () => loadTree(), openDoc: (...a) => openDoc(...a), newPage: (prefill) => newPageDialog(null, prefill), findInPage: (q) => findInPage(q), setLinksCount, countsChanged: () => refreshSpecialCounts() });
 const notes = makeNotes({
   S, $, $$, h, esc, api, toast, modal, ask, renderHtml,
   openDoc: (...a) => openDoc(...a), refreshDirty: () => refreshDirty(), currentHeadingPos, scrollToPos,

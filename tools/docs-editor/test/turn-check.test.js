@@ -5,7 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { makeTools } from "../src/ai-tools.js";
-import { checkTurn, afterTexts } from "../src/turn-check.js";
+import { checkTurn, afterTexts, quoteAt } from "../src/turn-check.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SYSTEM = fs.readFileSync(path.join(HERE, "..", "..", "..", "docs", "gdd", "how-the-gdd-works.md"), "utf8").replace(/\r\n/g, "\n");
@@ -24,6 +24,7 @@ await test("only what the turn brought in: a dropped section and a new typo; not
   const kinds = found.map((p) => p.kind).sort();
   assert.deepEqual(kinds, ["missing-section", "spelling"]);
   assert.equal(found.find((p) => p.kind === "spelling").word, "Wrongg");
+  assert.equal(found.find((p) => p.kind === "spelling").quote, "Wrongg"); // what the card's link finds in the page
   assert.deepEqual(found.find((p) => p.kind === "missing-section").fix, { kind: "add-section", page: "docs/gdd/entities/fen-rat.md", component: "rewards" });
 });
 
@@ -34,6 +35,14 @@ await test("nothing new, nothing found; a new page is checked whole", async () =
   const found = await checkTurn({ tools, before, after: afterTexts(before, made), changes: made });
   assert.ok(found.some((p) => p.kind === "no-frontmatter" || p.kind === "no-type"));
   assert.ok(found.some((p) => p.kind === "spelling" && p.word === "Teh"));
+});
+
+await test("a problem's quote is its line as the editor shows it, without Markdown", async () => {
+  const text = "# T\n\n- **Tool:** a [hatchet](../items/hatchet.md) and `rope`\n## Notes on the rat\n";
+  assert.equal(quoteAt(text, 3), "Tool: a hatchet and rope");
+  assert.equal(quoteAt(text, 4), "Notes on the rat");
+  assert.equal(quoteAt(text, 2), null);
+  assert.equal(quoteAt(text, null), null);
 });
 
 console.log(`turn check: ${passed} passed`);

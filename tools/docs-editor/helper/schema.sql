@@ -53,5 +53,9 @@ CREATE TABLE IF NOT EXISTS mentions (
   status TEXT NOT NULL DEFAULT 'waiting',
   conn TEXT, until INTEGER,
   told INTEGER NOT NULL DEFAULT 0,
-  at TEXT NOT NULL
+  at TEXT NOT NULL,
+  -- forum: a tag in a comment post (thread: the post). channel: /ask or "Ask R'th AI" (src/interactions.js;
+  -- thread: the channel, token: the interaction's, for 15 minutes, question, ref_msg: what to reply to).
+  kind TEXT NOT NULL DEFAULT 'forum',
+  token TEXT, question TEXT, ref_msg TEXT
 );

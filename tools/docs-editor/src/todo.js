@@ -16,6 +16,8 @@ import { slugOf } from "./frontmatter.js";
 import { TEMPLATES, isMeta, inGdd, nameOf, folderPath } from "./gdd.js";
 
 const words = (id) => String(id).replace(/-/g, " ").replace(/^./, (c) => c.toUpperCase());
+/** The field a link sits in ("- Tool: [hatchet](…)" → "tool"), or null. */
+export const fieldOf = (line) => { const m = String(line || "").match(/^\s*[-*+]\s+\**([^:*\[\]]{1,40}?)\**\s*:/); return m ? m[1].trim().toLowerCase() : null; };
 
 /** How alike two names are, 0..1 (1 - edit distance over length). */
 export function likeness(a, b) {
@@ -48,12 +50,17 @@ export function buildTodo({ idx, gdd, system, problems, headings = [], renames =
     return c;
   };
   const references = [];
-
-  // Links: to a page not written, to a heading that isn't there, or out of the GDD.
+  // What kind of page each field links to (Tool → item, Skill → skill), from the links to written pages:
+  // a page not written yet, linked from that field, is most likely the same kind.
+  const fieldTypes = new Map(); // field → Map(type → count)
   for (const [from, text] of idx.texts) {
     if (!inGdd(from) || from.startsWith(TEMPLATES + "/")) continue;
     for (const l of linksOf(from, text, written)) {
-      if (written.has(l.to)) continue;
+      if (written.has(l.to)) {
+        const f = fieldOf(l.context), t = gdd.pages.get(l.to)?.front?.type;
+        if (f && t) { if (!fieldTypes.has(f)) fieldTypes.set(f, new Map()); const m = fieldTypes.get(f); m.set(t, (m.get(t) || 0) + 1); }
+        continue;
+      }
       if (!l.to.endsWith(".md") || exists(l.to)) continue;
       if (inGdd(l.to)) {
         const c = card(slugOf(l.to), l.to);
@@ -136,6 +143,18 @@ export function buildTodo({ idx, gdd, system, problems, headings = [], renames =
   const home = (p) => { const t = system.types.find((x) => x.type === gdd.pages.get(p)?.front?.type); return t ? folderPath(t) + "/" + p.split("/").pop() : null; };
   const structure = problems.filter((x) => !skip.has(x.kind)).map((x) => ({ kind: "structure", problem: x.kind, from: x.path, fromTitle: x.title, line: x.line, text: x.text, component: x.component || null, fix: FIX[x.kind] || null, ...(x.kind === "wrong-folder" ? { to: home(x.path) } : {}) }));
 
+  // A missing page's likely type, from the fields that link to it: only when most such links agree.
+  for (const c of missing.values()) {
+    const votes = new Map();
+    for (const r of c.refs) {
+      const m = r.kind === "link" && fieldTypes.get(fieldOf(r.context));
+      if (!m) continue;
+      const total = [...m.values()].reduce((a, b) => a + b, 0);
+      const [best, n] = [...m].sort((a, b) => b[1] - a[1])[0];
+      if (total >= 2 && n / total >= 0.75) votes.set(best, (votes.get(best) || 0) + 1);
+    }
+    if (votes.size === 1) c.typeGuess = [...votes.keys()][0];
+  }
   const missingCards = [...missing.values()].sort((a, b) => b.pages - a.pages || a.title.localeCompare(b.title));
   return {
     missing: missingCards,

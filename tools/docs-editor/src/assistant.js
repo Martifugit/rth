@@ -46,7 +46,7 @@ export const CLAUDE_MODEL = "sonnet", CLAUDE_EFFORT = "medium";
  * docs/.codex/ was written by a tool (a page's summary), to be sent. engineUrl(): the engine's address, for
  * Claude's MCP server (null: Claude runs without the Codex's tools).
  */
-export function makeAssistant({ repo, dir, store, emit, pages, read, write, changed = () => {}, accepted = changed, hold = { start() {}, end() {} }, openrouterKey = () => null, linksTo = async () => [], claude = process.env.CODEX_CLAUDE || "claude", spell = null, ownChanged = () => {}, engineUrl = () => null }) {
+export function makeAssistant({ repo, dir, store, emit, pages, read, write, changed = () => {}, accepted = changed, hold = { start() {}, end() {} }, openrouterKey = () => null, linksTo = async () => [], viewText = async () => null, claude = process.env.CODEX_CLAUDE || "claude", spell = null, ownChanged = () => {}, engineUrl = () => null }) {
   // Claude when it's on this computer (it reads the repository itself); otherwise OpenRouter's free
   // models, once signed in (CODEX_AI=openrouter tries OpenRouter even with Claude here).
   // The AI tab's cog (AI setup) can choose one instead, and OpenRouter's model; kept in ai.json beside
@@ -383,8 +383,13 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
   }
 
   /** What the chips point at, as text for the prompt, and as a short record kept with the message. */
-  async function gather({ page, pages: extra = [], selection, thread } = {}) {
+  async function gather({ page, pages: extra = [], selection, thread, view } = {}) {
     const chips = {}, items = [];
+    // On To-do or Recent changes (no page open): what that view lists, so "fix these" knows what's meant.
+    if (view) {
+      const t = await viewText(view).catch(() => null);
+      if (t) { chips.view = view; items.push({ key: "view:" + view, text: t }); }
+    }
     if (page) {
       chips.page = page;
       const ins = await linksTo(page).catch(() => []);
@@ -434,6 +439,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
       pages: [...new Set((Array.isArray(x.pages) ? x.pages : []).filter(isPage))].filter((p) => p !== x.page).slice(0, 12),
       selection: x.selection?.quote ? { quote: String(x.selection.quote).slice(0, 4000), section: Array.isArray(x.selection.section) ? x.selection.section.map(String) : [], page: isPage(x.selection.page) ? x.selection.page : isPage(x.page) ? x.page : null } : null,
       thread: typeof x.thread === "string" && x.thread ? x.thread : null,
+      view: ["broken", "changes"].includes(x.view) ? x.view : null,
     };
   }
 
@@ -444,7 +450,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     if (!c) return { error: "No such conversation." };
     const now = pinned(c.context || {});
     for (const d of Array.isArray(drop) ? drop : []) {
-      if (d === "page") now.page = null; else if (d === "selection") now.selection = null; else if (d === "thread") now.thread = null;
+      if (d === "page") now.page = null; else if (d === "selection") now.selection = null; else if (d === "thread") now.thread = null; else if (d === "view") now.view = null;
       else now.pages = now.pages.filter((p) => p !== d);
     }
     const more = pinned({ ...add, page: null });
@@ -530,13 +536,21 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
    * An answer to @R'th AI in a Discord comment thread (src/discord-answer.js): Claude, Sonnet at medium
    * effort, read-only with the Codex's tools, given the thread and the page it's on. → { text } or { error }.
    */
-  async function answerThread({ note, page, asker }) {
+  async function answerThread({ note = null, page = null, asker, question = null, channel = null }) {
     if (!(await claudeP.known()).ok) return { error: "Claude isn't ready on this computer" };
     const turn = newTurn({ conv: null, mode: "chat", readOnly: true });
     const mcp = mcpConfig(turn);
-    const lines = (note.thread || []).map((e) => `${e.by === "agent" ? "R'th AI (you)" : e.who?.name || "Someone"}: ${e.text}`).join("\n\n");
-    const where = page ? `The thread is a comment on ${page}${note.anchor?.quote ? `, on the passage "${String(note.anchor.quote).slice(0, 400)}"` : ""}.` : "The thread was started in Discord and isn't on a page.";
-    const prompt = `${where}\n\nThe thread so far:\n\n${lines}\n\n${asker?.name || "Someone"} tagged you in the last message that names you. Answer it in the thread.`;
+    let prompt;
+    if (note) {
+      const lines = (note.thread || []).map((e) => `${e.by === "agent" ? "R'th AI (you)" : e.who?.name || "Someone"}: ${e.text}`).join("\n\n");
+      const where = page ? `The thread is a comment on ${page}${note.anchor?.quote ? `, on the passage "${String(note.anchor.quote).slice(0, 400)}"` : ""}.` : "The thread was started in Discord and isn't on a page.";
+      prompt = `${where}\n\nThe thread so far:\n\n${lines}\n\n${asker?.name || "Someone"} tagged you in the last message that names you. Answer it in the thread.`;
+    } else {
+      // /ask or "Ask R'th AI" in a Discord channel: the question, with the channel's last messages as context.
+      const recent = (channel?.recent || []).map((m) => `${m.bot ? "R'th AI (you)" : m.by}: ${m.text}`).join("\n");
+      prompt = `${asker?.name || "Someone"} asked you in the Discord channel #${channel?.name || "a channel"}:\n\n${question}` +
+        (recent ? `\n\nThe channel's last messages, for context (older first):\n${recent}` : "") + "\n\nAnswer them in the channel.";
+    }
     const r = claudeP.run({ prompt, system: DISCORD_STANDING + "\n\n" + (await writingBrief(read)), model: "sonnet", effort: "medium", mcp, describeTool: tools.describe, readOnly: true,
       onText: () => {}, onBreak: () => {}, onActivity: () => {} });
     const res = await r.done;
@@ -726,8 +740,8 @@ const AUDIT_STANDING = [
 
 // Answering @R'th AI in a Discord comment thread (src/discord-answer.js).
 const DISCORD_STANDING = [
-  "You are R'th AI, the design partner of a small group of friends writing the game design document (GDD) of R'th, their own private multiplayer RPG (docs/gdd). Someone tagged you in a comment thread in their Discord; your reply is posted in the thread as R'th AI.",
-  "Answer what they asked, from the GDD: read the page the thread is on and what it links to with the Codex's tools (search_gdd, read_page, links_in, query_gdd...), and say plainly when the GDD doesn't settle it. Be concrete and brief: a few short paragraphs at most, Discord Markdown (no tables, no headings), well under 1,800 characters. Name pages by their titles. You can't change pages from here: say what you'd change, and that they can ask in the Codex's AI tab to have it done. Write in US English.",
+  "You are R'th AI, the design partner of a small group of friends writing the game design document (GDD) of R'th, their own private multiplayer RPG (docs/gdd). Someone tagged you in a comment thread in their Discord, or asked you in one of its channels (/ask); your reply is posted there as R'th AI.",
+  "Answer what they asked, from the GDD: read the page the thread is on (if any) and what it links to with the Codex's tools (search_gdd, read_page, links_in, query_gdd...), and say plainly when the GDD doesn't settle it. Be concrete and brief: a few short paragraphs at most, Discord Markdown (no tables, no headings), well under 1,800 characters. Name pages by their titles. You can't change pages from here: say what you'd change, and that they can ask in the Codex's AI tab to have it done. Write in US English.",
 ].join("\n");
 
 // The conversation's name: its first answer ends with a hidden <title> line (2-6 words, the topic, not

@@ -8,13 +8,13 @@ let passed = 0;
 async function test(name, fn) { try { await fn(); passed++; } catch (e) { console.error("FAIL", name, "\n ", e.stack); process.exitCode = 1; } }
 
 const calls = [];
-let claimed = false;
+let claimed = false, channelClaim = false;
 const helper = http.createServer(async (req, res) => {
   let b = ""; for await (const c of req) b += c;
   const body = JSON.parse(b || "{}");
   calls.push([req.url, body, req.headers.authorization]);
   let out = { ok: true }, status = 200;
-  if (req.url === "/mentions/claim") { if (claimed) { status = 409; out = { error: "Someone else is answering it." }; } else { claimed = true; out = { ok: true, thread: "T1", asker: { id: "111111", name: "Kari" } }; } }
+  if (req.url === "/mentions/claim") { if (claimed) { status = 409; out = { error: "Someone else is answering it." }; } else { claimed = true; out = channelClaim ? { ok: true, kind: "channel", thread: "C1", question: "How does bile work?", channel: { name: "design-talk", recent: [] }, asker: { id: "111111", name: "Kari" } } : { ok: true, thread: "T1", asker: { id: "111111", name: "Kari" } }; } }
   res.writeHead(status, { "Content-Type": "application/json" }); res.end(JSON.stringify(out));
 });
 await new Promise((r) => helper.listen(0, "127.0.0.1", r));
@@ -45,6 +45,19 @@ await test("not answering here (AI setup): not even claimed", async () => {
   const n = calls.length;
   assert.equal((await off.handle({ id: "q2", thread: "T1" })).skipped, true);
   assert.equal(calls.length, n);
+});
+
+await test("/ask in a channel: answered from the question and the channel, sent back through the helper", async () => {
+  claimed = false; calls.length = 0; asked.length = 0;
+  const chan = makeDiscordAnswers({ helper: url, auth: async () => "Bearer s", store, enabled: () => true, answer: async (x) => { asked.push(x); return { text: "It leans." }; } });
+  channelClaim = true;
+  assert.deepEqual(await chan.handle({ id: "iA1", thread: "C1" }), { ok: true });
+  channelClaim = false;
+  assert.equal(asked[0].question, "How does bile work?");
+  assert.equal(asked[0].channel.name, "design-talk");
+  assert.deepEqual(calls.map((c) => c[0]), ["/mentions/claim", "/mentions/answer"]);
+  assert.equal(calls[1][1].text, "It leans.");
+  assert.equal(replies.length, 1, "nothing replied in a comment post");
 });
 
 helper.close();

@@ -17,6 +17,8 @@ DISCORD_ROLE_ID = "1567237791060853047"
 DISCORD_NOTICES_CHANNEL = "1567238417161650216"
 DISCORD_COMMENTS_CHANNEL = "1567238197845692498"
 DISCORD_RESOLVED_TAG = "1567238306272641174"
+# The application's public key (Developer Portal > General Information): checks /ask's signatures.
+DISCORD_PUBLIC_KEY = "71476c2f9b90d6fd5c1ceb666834b337ed4ed24875743e644f9223d8b5318e13"
 REPO = "Martifugit/rth"
 GITHUB_APP_ID = "5599564"
 # The oldest Codex that may send pages or write comments (src/version.js). Raise it only after the

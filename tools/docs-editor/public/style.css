@@ -763,7 +763,11 @@ select.field option { background: #16130f; }
 /* The page tree's count of open comments */
 .t-notes { font: 700 10.5px/1 var(--sans); color: var(--silver-dim); border: 1px solid var(--hair-2); border-radius: 8px; padding: 2px 5px; }
 .t-notes.answered { color: var(--silver); border-color: var(--silver-dim); }
-body.view-status #outlineWin .win-body > * { visibility: hidden; }
+/* On To-do and Recent changes there's no page: Outline and Links say so; the AI tab works as ever. */
+body.view-status #outline > *, body.view-status #linksPane > * { display: none; }
+body.view-status #outline::before, body.view-status #linksPane::before { display: block; padding: 14px 12px; color: var(--silver-dim); font-size: 13px; }
+body.view-status #outline::before { content: "Open a page to see its outline."; }
+body.view-status #linksPane::before { content: "Open a page to see its links."; }
 .source-btn { height: 26px; min-width: 32px; }
 .source-btn.on { color: var(--value); border-color: #6b5838; background: rgba(201, 162, 94, .16); }
 .new-file { margin: -2px 0 10px; }
@@ -860,6 +864,8 @@ body.in-app .search-trigger { height: 28px; }
 .ai-msg-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.45; }
 .ai-msg-ctx { margin-bottom: 4px; font-size: 12px; color: var(--silver-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ai-msg-ai { color: var(--ink); }
+/* A little more room between a message and its answer, and before the next message, than within. */
+.ai-msg-you + .ai-msg-ai, .ai-msg-ai + .ai-msg-you { margin-top: 10px; }
 .ai-msg-ai .ai-text { margin: 0; line-height: 1.5; font-size: 14.5px; }
 /* The answer under way (src/ai-stream.js): text revealed and faded in by script; while it thinks or looks
    things up, one quiet line in plain text colour with a glint running along it, letter by letter
@@ -1029,12 +1035,18 @@ body.in-app .search-trigger { height: 28px; }
 .ais-inline .field { flex: 1; min-width: 0; height: 26px; margin: 0; }
 .ais-select { height: 26px; margin: 0; padding: 0 6px; max-width: 150px; }
 /* A choice of a few (Which AI, Chat or Work): one joined control in the badges' colours (faint border and
-   ground, dim text), the chosen part a shade lighter. */
-.ais-seg { display: inline-flex; padding: 2px; gap: 2px; border: 1px solid var(--hair); border-radius: 11px; background: rgba(255, 255, 255, .03); }
-.ais-row.wide .ais-seg { display: flex; }
-.ais-seg-btn { flex: 1; height: 20px; padding: 0 10px; border: 0; border-radius: 9px; background: none; color: var(--silver-dim); font: 12.5px/1 var(--sans); white-space: nowrap; cursor: pointer; }
+   ground, dim text), its parts one width with the label centred; the chosen part's ground is a thumb that
+   slides from choice to choice (src/ai.js, segmented: --n parts, --i the chosen one). */
+.ais-seg { position: relative; display: inline-grid; grid-template-columns: repeat(var(--n), 1fr); gap: 2px; padding: 2px;
+  border: 1px solid var(--hair); border-radius: 4px; background: rgba(255, 255, 255, .03); }
+.ais-row.wide .ais-seg { display: grid; }
+.ais-seg-thumb { position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc((100% - 4px - (var(--n) - 1) * 2px) / var(--n)); border-radius: 3px;
+  background: rgba(255, 255, 255, .08); transform: translateX(calc(var(--i) * (100% + 2px))); transition: transform .18s cubic-bezier(.3, .7, .3, 1); pointer-events: none; }
+.ais-seg-btn { position: relative; display: flex; align-items: center; justify-content: center; height: 22px; padding: 0 12px; border: 0; border-radius: 3px;
+  background: none; color: var(--silver-dim); font: 12.5px/1 var(--sans); text-align: center; white-space: nowrap; cursor: pointer; transition: color .18s; }
 .ais-seg-btn:hover { color: var(--silver-soft); }
-.ais-seg-btn.on { background: rgba(255, 255, 255, .08); color: var(--ink); }
+.ais-seg-btn.on { color: var(--ink); }
+@media (prefers-reduced-motion: reduce) { .ais-seg-thumb { transition: none; } }
 /* On/off switch. */
 .ais-switch { position: relative; width: 34px; height: 20px; padding: 0; border: 1px solid var(--hair); border-radius: 10px; background: rgba(0, 0, 0, .4); cursor: pointer; transition: background .15s; }
 .ais-knob { position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--silver-dim); transition: left .15s, background .15s; }
@@ -1386,8 +1398,12 @@ body.in-app .search-trigger { height: 28px; }
 .ai-msg-you, .ai-msg-ai { position: relative; }
 .ai-copy { position: absolute; width: 22px; height: 22px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 3px; background: none; color: var(--silver-dim); opacity: 0; transition: opacity .12s; line-height: 0; }
 .ai-msg-you .ai-copy { left: -26px; bottom: 2px; }
-.ai-msg-ai .ai-copy { right: -4px; top: -4px; }
-.ai-msg:hover .ai-copy, .ai-copy:focus-visible { opacity: 1; }
+/* An answer's Copy is in a gutter beside the text (nothing runs under it), sticky so it stays in view. */
+.ai-msg-main { display: grid; grid-template-columns: minmax(0, 1fr) 22px; column-gap: 6px; }
+.ai-copy-rail { min-width: 0; }
+.ai-msg-ai .ai-copy { position: sticky; top: 2px; }
+.ai-msg:hover .ai-copy { opacity: .6; }
+.ai-copy:hover, .ai-copy:focus-visible { opacity: 1; }
 .ai-copy:hover { color: var(--ink); background: rgba(255, 255, 255, .06); }
 .ai-copy svg, .ai-ask-ico svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 /* Ask about a part of an answer: a small button over the selection. */
@@ -1427,7 +1443,8 @@ body.in-app .search-trigger { height: 28px; }
 .ai-problem-caret { margin-left: auto; color: var(--silver-dim); font-size: 11px; }
 .ai-problem-group { display: flex; flex-direction: column; gap: 2px; }
 .ai-problem-row { display: flex; align-items: baseline; gap: 8px; padding: 4px 8px 4px 30px; font-size: 13px; color: var(--silver-soft); }
-.ai-problem-text { flex: 1; min-width: 0; }
+.ai-problem-text { flex: 1; min-width: 0; color: inherit; cursor: pointer; text-decoration: underline; text-decoration-color: rgba(255, 255, 255, .18); text-underline-offset: 3px; }
+.ai-problem-text:hover { color: var(--ink); text-decoration-color: var(--value); }
 .ai-problem-acts { flex: none; display: flex; gap: 8px; }
 /* The health check's problems on the To-do page. */
 .td-kind { text-transform: none; }
@@ -1443,3 +1460,8 @@ body.in-app .search-trigger { height: 28px; }
 .ais-badge-caret { margin-left: 3px; font-size: 9px; opacity: .7; }
 .ais-menu { min-width: 140px; width: auto; }
 .ais-menu .lm-item { display: flex; align-items: center; gap: 4px; padding: 0 12px 0 4px; }
+/* A comment started in Discord, put on a page (src/notes.js, placeDialog). */
+.hs-page.none { color: var(--value); }
+.pl-thread { display: flex; flex-direction: column; gap: 8px; max-height: 240px; overflow: auto; margin: 8px 0 12px; padding: 8px 10px; border: 1px solid var(--hair); border-radius: 4px; background: rgba(255, 255, 255, .02); }
+.pl-text { margin-top: 2px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; line-height: 1.45; }
+.pl-picks { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }

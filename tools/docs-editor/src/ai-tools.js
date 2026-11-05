@@ -11,6 +11,7 @@
 // through the same write() as the AI's other edits, so the turn's before-and-after comparison finds
 // them (Show changes, Undo, Chat mode's suggestions).
 
+import { quoteAt } from "./turn-check.js";
 import fs from "node:fs";
 import path from "node:path";
 import { execFile } from "node:child_process";
@@ -330,14 +331,15 @@ export function makeTools({ repo, pages, read, write, store = null, spell = null
     const text = idx.texts.get(page);
     if (text == null) return [];
     const out = [];
-    for (const p of checks(idx.gdd, idx.system, idx.texts)) if (p.path === page) out.push({ kind: p.kind, line: p.line || null, text: p.text, component: p.component || null });
+    // quote: text to find the place by in the page (the editor shows no line numbers).
+    for (const p of checks(idx.gdd, idx.system, idx.texts)) if (p.path === page) out.push({ kind: p.kind, line: p.line || null, text: p.text, component: p.component || null, quote: quoteAt(text, p.line) });
     const exists = (rel) => fs.existsSync(path.join(repo, rel));
-    for (const l of brokenLinks(idx, exists)) if (l.from === page) out.push({ kind: l.kind === "heading" ? "broken-heading" : "missing-page", line: l.line, text: l.kind === "heading" ? `The link "${l.text}" points at a heading that isn't on ${l.to}.` : `The link "${l.text}" goes to ${l.to}, which isn't written yet.`, to: l.to, href: l.href });
+    for (const l of brokenLinks(idx, exists)) if (l.from === page) out.push({ kind: l.kind === "heading" ? "broken-heading" : "missing-page", line: l.line, text: l.kind === "heading" ? `The link "${l.text}" points at a heading that isn't on ${l.to}.` : `The link "${l.text}" goes to ${l.to}, which isn't written yet.`, to: l.to, href: l.href, quote: l.text || quoteAt(text, l.line) });
     if (spell) {
       const words = wordsIn(text);
       const wrong = new Set(await spell.check([...new Set(words.map((w) => w.word))]).catch(() => []));
       const seen = new Set();
-      for (const w of words) if (wrong.has(w.word) && !seen.has(w.word)) { seen.add(w.word); out.push({ kind: "spelling", line: w.line, text: `"${w.word}" isn't a word the spelling check knows.`, word: w.word }); }
+      for (const w of words) if (wrong.has(w.word) && !seen.has(w.word)) { seen.add(w.word); out.push({ kind: "spelling", line: w.line, text: `"${w.word}" isn't a word the spelling check knows.`, word: w.word, quote: w.word }); }
     }
     return out;
   }

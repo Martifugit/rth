@@ -61,7 +61,7 @@ await test("a tag with no Codex to answer: offline, said once; the same tag agai
 await test("one claim wins; it can be renewed and finished; a lapsed one can be taken again", async () => {
   const req = (route, body) => mentions(new Request("https://h" + route, { method: "POST", body: JSON.stringify(body) }), env, new URL("https://h" + route));
   const a = await req("/mentions/claim", { id: "q1", conn: "A" });
-  assert.deepEqual(a, { ok: true, thread: "T1", asker: { id: "111111", name: "Kari" } });
+  assert.deepEqual(a, { ok: true, kind: "forum", thread: "T1", asker: { id: "111111", name: "Kari" } });
   assert.equal((await req("/mentions/claim", { id: "q1", conn: "B" })).status, 409);
   assert.deepEqual(await req("/mentions/renew", { id: "q1", conn: "A" }), { ok: true });
   assert.equal((await req("/mentions/renew", { id: "q1", conn: "B" })).status, 409);
