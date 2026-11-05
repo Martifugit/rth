@@ -190,6 +190,9 @@ assistant = makeAssistant({
   },
   // The AI's changes are sent like the Codex's own saves, and their commit says "with AI".
   changed: (rels) => { for (const r of rels) syncer.saved(r, { ai: true }); },
+  // Suggestions someone accepted (Accept on every page, a suggested page created): their own save.
+  accepted: (rels) => { for (const r of rels) syncer.saved(r, { accepted: true }); },
+  hold: { start: () => aiHoldStart(), end: (pages) => aiHoldEnd(pages) },
   openrouterKey: () => openrouter.key(),
   // The tools' spelling check (made further down), the files they write under docs/.codex/ (sent like
   // the word list), and where Claude's MCP server finds the engine.
@@ -299,8 +302,26 @@ function broadcast(type, data) {
 }
 const recentWrites = new Map(); // rel -> { hash, until }: our own saves, so they don't echo back as changes
 let pending = new Set(), timer = null;
+// While a Chat turn runs, its edits are on disk for a moment before going back as suggestions
+// (src/assistant.js): changes to pages are held, then told once it's done, less the turn's own pages
+// (back as they were, so there's nothing to tell; a page it suggested making was never made).
+let holds = 0, heldBack = new Set(), turnPages = new Set();
+function aiHoldStart() { holds++; syncer.hold(true); }
+function aiHoldEnd(pages = []) {
+  for (const p of pages) turnPages.add(p);
+  // A moment's wait: the file watcher reports putting the pages back a little after it's done.
+  setTimeout(() => {
+    if (--holds > 0) return;
+    holds = 0;
+    const tell = [...heldBack].filter((f) => !turnPages.has(f));
+    heldBack = new Set(); turnPages = new Set();
+    syncer.hold(false);
+    for (const f of tell) changed(f);
+  }, 400);
+}
 function changed(rel) {
   index = null;
+  if (holds) { heldBack.add(rel); speller.invalidate(); return; }
   syncer.touched();
   speller.invalidate();
   pending.add(rel);

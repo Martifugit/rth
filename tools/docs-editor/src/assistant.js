@@ -46,7 +46,7 @@ export const CLAUDE_MODEL = "sonnet", CLAUDE_EFFORT = "medium";
  * docs/.codex/ was written by a tool (a page's summary), to be sent. engineUrl(): the engine's address, for
  * Claude's MCP server (null: Claude runs without the Codex's tools).
  */
-export function makeAssistant({ repo, dir, store, emit, pages, read, write, changed = () => {}, openrouterKey = () => null, linksTo = async () => [], claude = process.env.CODEX_CLAUDE || "claude", spell = null, ownChanged = () => {}, engineUrl = () => null }) {
+export function makeAssistant({ repo, dir, store, emit, pages, read, write, changed = () => {}, accepted = changed, hold = { start() {}, end() {} }, openrouterKey = () => null, linksTo = async () => [], claude = process.env.CODEX_CLAUDE || "claude", spell = null, ownChanged = () => {}, engineUrl = () => null }) {
   // Claude when it's on this computer (it reads the repository itself); otherwise OpenRouter's free
   // models, once signed in (CODEX_AI=openrouter tries OpenRouter even with Claude here).
   // The AI tab's cog (AI setup) can choose one instead, and OpenRouter's model; kept in ai.json beside
@@ -211,6 +211,12 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     // suggestions, accepted or skipped one by one in the page (Notion's suggested edits, Word's tracked
     // changes). Work mode: its edits stay, with Show changes and Undo.
     const suggest = turnMode === "chat";
+    // Its edits reach the files for a moment before going back: the page, the tree and sync hear nothing
+    // of them meanwhile (server.js), so nothing reloads, asks "Save it?" or is sent, and a new page it
+    // suggests never shows as made, then deleted. Released once the pages are back (or the turn failed).
+    let released = !suggest;
+    const release = (pages = []) => { if (!released) { released = true; hold.end(pages); } };
+    if (suggest) hold.start();
     const turn = newTurn({ conv: c.id, mode: turnMode, provider: null });
     const quoted = quote ? `About this part of your earlier answer:\n> ${quote.text.replace(/\n/g, "\n> ")}\n\n` : "";
     const modeNote = suggest ? CHAT_NOTE : WORK_NOTE;
@@ -298,6 +304,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
         for (const x of changes) { x.suggest = true; await write(x.page, x.before); }
         msg.changes = changes;
       } else if (changes.length) { msg.changes = changes; changed(changes.map((x) => x.page)); }
+      release(changes.map((x) => x.page));
       if (res.error) msg.error = res.error;
       if (res.cost) msg.cost = Math.round(res.cost * 10000) / 10000;
       fresh.messages.push(msg);
@@ -307,7 +314,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
       emit("ai", { id: c.id, state: "done", error: res.error || null, pages: changes.map((x) => x.page) });
       // Then, without holding up the answer: what it changed, checked; the problems it brought in become cards.
       if (changes.length) checkLater(c.id, fresh.messages.length - 1, before, changes);
-    });
+    }).catch((e) => { release(); console.warn("R'th AI's turn failed:", e?.message || e); });
     return { ok: true, id: c.id };
   }
 
@@ -599,7 +606,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
       done.push(x.page);
     }
     await writeConv(c);
-    if (done.length) changed(done);
+    if (done.length) accepted(done); // they accepted it: sent as their own save, not asked about again
     emit("ai", { id: conv, state: "reviewed" });
     return { ok: true, accepted: done, kept };
   }
@@ -652,7 +659,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     await write(page, x.after);
     x.reviewed = true;
     await writeConv(c);
-    changed([page]);
+    accepted([page]);
     emit("ai", { id: conv, state: "reviewed", page });
     return { ok: true, page };
   }

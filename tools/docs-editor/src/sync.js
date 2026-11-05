@@ -74,6 +74,8 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
   };
   const saved = new Set();   // pages saved in the Codex since the last sync (relative paths)
   const byAi = new Set();    // ...of those, pages the AI changed (their commit says "with AI")
+  const withAi = new Set();  // pages someone accepted R'th AI's suggestions on: their own save, "with AI"
+  let holding = false;       // a Chat turn's edits are on disk for a moment (hold()): nothing committed or asked
   let timer = null;
   const shareNext = new Set(); // pages said to share while a sync was running: the next run takes them
   // Share and Undo wait for a running sync rather than being lost to it (a minute's check, a save's send).
@@ -108,7 +110,7 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
     const changed = st.out.split("\0").filter((e) => e.length > 3).map((e) => e.slice(3)).filter((f) => !/\.codex-tmp$/.test(f));
     S.waiting = changed;
     // Held: the AI's or another program's changes to pages, which wait to be shared (or put back).
-    S.heldPages = changed.filter((f) => !always(f) && (byAi.has(f) || !saved.has(f)));
+    if (!holding) S.heldPages = changed.filter((f) => !always(f) && (byAi.has(f) || !saved.has(f)));
     const ab = await run(["rev-list", "--left-right", "--count", "HEAD...@{u}"]);
     const [a, b] = ab.out.trim().split(/\s+/).map(Number);
     S.ahead = a || 0; S.behind = b || 0;
@@ -164,7 +166,7 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
       else creds = a;
 
       // 1. Commit: only files under docs/, only those this sync may send.
-      const files = !commit ? [] : S.waiting.filter((f) => sendable(f) || share.includes(f));
+      const files = !commit || holding ? [] : S.waiting.filter((f) => sendable(f) || share.includes(f));
       if (files.length) {
         // A page deleted with `git rm` is gone from the folder and the index alike, and `git add` refuses
         // a path that matches nothing (which failed every Share it was in): unstage deletions by name.
@@ -184,10 +186,10 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
         const subject = pages.length
           ? "Docs: " + (pages.length > 3 ? pages.slice(0, 3).join(", ") + ` and ${pages.length - 3} more` : pages.join(", "))
           : "Docs: comments";
-        const ai = files.some((f) => byAi.has(f)) ? " (with AI)" : "";
+        const ai = files.some((f) => byAi.has(f) || withAi.has(f)) ? " (with AI)" : "";
         const c = await run([...who(), "commit", "--quiet", "-m", subject + ai, "-m", MARK, "--only", "--", ...files]);
         if (!c.ok && !/nothing to commit|no changes added/i.test(c.out + c.err)) throw new Error(c.err.trim() || c.out.trim());
-        for (const f of files) { saved.delete(f); byAi.delete(f); }
+        for (const f of files) { saved.delete(f); byAi.delete(f); withAi.delete(f); }
         if (!saved.size) { clearTimeout(sendTimer); sendTimer = null; firstUnsent = 0; }
       }
 
@@ -346,9 +348,9 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
     discard,
     base,
     /** The Codex saved this page (or comment file): it's sent shortly (see SEND_AFTER_MS). */
-    saved(rel, { ai = false, soon = false } = {}) {
+    saved(rel, { ai = false, soon = false, accepted = false } = {}) {
       if (!rel.startsWith(scope + "/")) return;
-      saved.add(rel); if (ai) byAi.add(rel);
+      saved.add(rel); if (ai) byAi.add(rel); if (accepted) withAi.add(rel);
       if (timer) {
         // A page made or deleted goes within seconds (it isn't being typed in); edits once typing pauses,
         // but never later than SEND_AT_MOST_MS after the first unsent save.
@@ -358,6 +360,12 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
         sendTimer = setTimeout(() => { sendTimer = null; firstUnsent = 0; sync({ why: soon ? "soon" : "saved" }); }, wait);
       }
       refresh().then(tell);
+    },
+    /** A Chat turn is writing its edits and putting them back (src/assistant.js): commit nothing and keep
+     *  the held list as it was until it's done; then send what was saved meanwhile. */
+    hold(on) {
+      holding = !!on;
+      if (!holding) { refresh().then(tell); if (timer && saved.size && !sendTimer) sendTimer = setTimeout(() => { sendTimer = null; firstUnsent = 0; sync({ why: "saved" }); }, SOON_MS); }
     },
     /** Someone sent changes (the helper said so through the live room): take them in now. */
     news() { if (timer) sync({ why: "news", commit: false }); },
