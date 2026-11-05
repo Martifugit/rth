@@ -403,6 +403,24 @@ export function makeAi(ctx) {
   /** "claude-fable-5-1" as people say it: "Fable 5.1". */
   const modelName = (id) => { const m = String(id || "").replace(/^claude-/, "").match(/^([a-z]+)-(\d+)(?:-(\d+))?/i); return m ? m[1][0].toUpperCase() + m[1].slice(1) + " " + m[2] + (m[3] ? "." + m[3] : "") : MODEL_NAME[id] || id; };
   const EFFORT_NAME = { low: "Low", medium: "Medium", high: "High", xhigh: "Extra high", max: "Max" };
+  /** A small menu of choices under `anchor` (a badge), in Codex's menu look; closed by a pick, a click
+   *  elsewhere or Escape. */
+  let menuEl = null;
+  function closeMenu() { menuEl?.remove(); menuEl = null; document.removeEventListener("mousedown", outsideMenu, true); document.removeEventListener("keydown", menuKey, true); }
+  const outsideMenu = (ev) => { if (menuEl && !menuEl.contains(ev.target)) closeMenu(); };
+  const menuKey = (ev) => { if (ev.key === "Escape") { ev.stopPropagation(); closeMenu(); } };
+  function openMenu(anchor, value, options, onPick) {
+    closeMenu();
+    menuEl = h("div", { class: "cm-menu ais-menu" }, options.map(([v, label]) => h("div", { class: "cm-menu-item lm-item" + (v === value ? " current" : ""), onclick: () => { closeMenu(); if (v !== value) onPick(v); } },
+      h("span", { class: "lm-check" }, v === value ? "✓" : ""), h("span", { class: "lm-label" }, label))));
+    document.body.append(menuEl);
+    const r = anchor.getBoundingClientRect();
+    const w = menuEl.offsetWidth, hgt = menuEl.offsetHeight;
+    menuEl.style.left = Math.round(Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8))) + "px";
+    menuEl.style.top = Math.round(r.bottom + hgt + 4 > window.innerHeight ? r.top - hgt - 4 : r.bottom + 4) + "px";
+    setTimeout(() => { document.addEventListener("mousedown", outsideMenu, true); document.addEventListener("keydown", menuKey, true); });
+  }
+
   function setupEl() {
     const st = A.setup;
     if (!st) return h("div", { class: "ai-setup" }, h("div", { class: "ai-note" }, "Looking…"));
@@ -416,10 +434,13 @@ export function makeAi(ctx) {
       h("div", { class: "ais-label" }, h("div", { class: "ais-name-row" }, h("div", { class: "ais-name" }, label), badge), note ? h("div", { class: "ais-note" }, note) : null),
       control ? h("div", { class: "ais-control" }, control) : null);
     // A default as a small badge you can change: "Default: Sonnet 5.5 ▾".
+    // Its list is Codex's own menu (the conversations' look), under the badge.
     const badgePick = (shown, value, options, onPick) => {
-      const el = h("select", { class: "ais-badge-select", title: "Change the default", onchange: () => onPick(el.value) }, options.map(([v, label]) => h("option", { value: v, selected: value === v ? "" : null }, label)));
-      return h("label", { class: "ais-badge" }, h("span", {}, "Default: "), h("span", { class: "ais-badge-value" }, shown), h("span", { class: "ais-badge-caret" }, "▾"), el);
+      const badge = h("button", { class: "ais-badge", title: "Change the default", onclick: (ev) => { ev.stopPropagation(); openMenu(badge, value, options, onPick); } },
+        h("span", {}, "Default: "), h("span", { class: "ais-badge-value" }, shown), h("span", { class: "ais-badge-caret" }, "▾"));
+      return badge;
     };
+    // A choice of a few: one joined control, in the badges' colours.
     const segmented = (value, options, onPick) => h("div", { class: "ais-seg", role: "radiogroup" },
       options.map(([v, label]) => h("button", { class: "ais-seg-btn" + (value === v ? " on" : ""), role: "radio", "aria-checked": value === v ? "true" : "false", onclick: () => value !== v && onPick(v) }, label)));
     const toggle = (on, onChange, title) => h("button", { class: "ais-switch" + (on ? " on" : ""), role: "switch", "aria-checked": on ? "true" : "false", title, onclick: () => onChange(!on) }, h("span", { class: "ais-knob" }));

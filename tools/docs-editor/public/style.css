@@ -1028,11 +1028,13 @@ body.in-app .search-trigger { height: 28px; }
 .ais-inline { display: flex; gap: 6px; }
 .ais-inline .field { flex: 1; min-width: 0; height: 26px; margin: 0; }
 .ais-select { height: 26px; margin: 0; padding: 0 6px; max-width: 150px; }
-/* Segmented choice (Which AI, Chat or Work). */
-.ais-seg { display: flex; padding: 2px; gap: 2px; border-radius: 6px; background: rgba(0, 0, 0, .35); border: 1px solid var(--hair); }
-.ais-seg-btn { flex: 1; height: 24px; padding: 0 8px; border: 0; border-radius: 4px; background: none; color: var(--silver-soft); font: 600 12.5px/1 var(--sans); cursor: pointer; white-space: nowrap; }
-.ais-seg-btn:hover { color: var(--ink); }
-.ais-seg-btn.on { background: rgba(201, 162, 94, .2); color: var(--value); }
+/* A choice of a few (Which AI, Chat or Work): one joined control in the badges' colours (faint border and
+   ground, dim text), the chosen part a shade lighter. */
+.ais-seg { display: inline-flex; padding: 2px; gap: 2px; border: 1px solid var(--hair); border-radius: 11px; background: rgba(255, 255, 255, .03); }
+.ais-row.wide .ais-seg { display: flex; }
+.ais-seg-btn { flex: 1; height: 20px; padding: 0 10px; border: 0; border-radius: 9px; background: none; color: var(--silver-dim); font: 12.5px/1 var(--sans); white-space: nowrap; cursor: pointer; }
+.ais-seg-btn:hover { color: var(--silver-soft); }
+.ais-seg-btn.on { background: rgba(255, 255, 255, .08); color: var(--ink); }
 /* On/off switch. */
 .ais-switch { position: relative; width: 34px; height: 20px; padding: 0; border: 1px solid var(--hair); border-radius: 10px; background: rgba(0, 0, 0, .4); cursor: pointer; transition: background .15s; }
 .ais-knob { position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--silver-dim); transition: left .15s, background .15s; }
@@ -1434,9 +1436,10 @@ body.in-app .search-trigger { height: 28px; }
 .td-audit { text-align: center; margin: -6px 0 14px; font-size: 13px; }
 /* A row's title with a small badge at its right (AI setup's defaults). */
 .ais-name-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.ais-badge { position: relative; display: inline-flex; align-items: center; gap: 2px; height: 20px; padding: 0 7px; border: 1px solid var(--hair); border-radius: 10px;
+.ais-badge { display: inline-flex; align-items: center; gap: 2px; height: 20px; padding: 0 7px; border: 1px solid var(--hair); border-radius: 10px;
   background: rgba(255, 255, 255, .03); color: var(--silver-dim); font: 12px/1 var(--sans); white-space: nowrap; cursor: pointer; }
 .ais-badge:hover { border-color: var(--hair-2); color: var(--silver-soft); }
 .ais-badge-value { color: var(--silver-soft); }
 .ais-badge-caret { margin-left: 3px; font-size: 9px; opacity: .7; }
-.ais-badge-select { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; } /* the native list, under the badge's look */
+.ais-menu { min-width: 140px; width: auto; }
+.ais-menu .lm-item { display: flex; align-items: center; gap: 4px; padding: 0 12px 0 4px; }
