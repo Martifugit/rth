@@ -70,7 +70,7 @@ export function openRouterProvider({ key, models = () => OPENROUTER_MODELS }) {
         const got = await readStream(r, (d) => { all += d; onText(d); }, onThought);
         if (got.error) return { error: stopped ? "Stopped." : got.error, text: all };
         used = got.model || used;
-        if (!got.calls.length && offer && /<tool_call>/i.test(got.text)) {
+        if (!got.calls.length && offer && CALLS_WRITTEN.test(got.text)) {
           const written = callsInText(got.text);
           all = all.slice(0, start) + got.text.replace(TOOL_CALL_TEXT, "").trim(); // (the streaming view hides them too: shown())
           if (written.length) got.calls = written;
@@ -96,18 +96,46 @@ export function openRouterProvider({ key, models = () => OPENROUTER_MODELS }) {
   return { check, run, kind: "openrouter" };
 }
 
-const TOOL_CALL_TEXT = /<tool_call>[\s\S]*?(<\/tool_call>|$)/gi;
+// Tool calls a model wrote into its text, in the shapes free models use: <tool_call> with JSON, or with
+// <function=name><parameter=key>value</parameter></function>, and <invoke name="..."><parameter name="...">
+// (bare, or in a wrapper such as <function_calls> or <dots_function_call>).
+const TOOL_CALL_TEXT = /<tool_call>[\s\S]*?(<\/tool_call>|$)|<(function_calls|[a-z_]*function_calls?|antml:function_calls)>[\s\S]*?(<\/\2>|$)|<invoke\b[\s\S]*?(<\/invoke>|$)/gi;
+const CALLS_WRITTEN = /<tool_call>|<invoke\s+name=|<function=/i;
 
 /** Tool calls a model wrote into its text instead of making them (<tool_call>{"name", "arguments"}</tool_call>). */
 export function callsInText(text) {
   const out = [];
-  for (const m of String(text || "").matchAll(/<tool_call>\s*([\s\S]*?)\s*<\/tool_call>/gi)) {
+  const add = (name, args) => { if (name) out.push({ id: "text_" + out.length, name: String(name).trim(), args: typeof args === "string" ? args : JSON.stringify(args || {}) }); };
+  const value = (v) => { const t = String(v).trim(); try { return JSON.parse(t); } catch { return t; } };
+  const t = String(text || "");
+  for (const m of t.matchAll(/<tool_call>\s*([\s\S]*?)\s*<\/tool_call>/gi)) {
+    const body = m[1];
+    // <function=name><parameter=key>value</parameter>...</function>
+    // name<arg_key>key</arg_key><arg_value>value</arg_value>...
+    const kv = body.match(/^([\w.-]+)\s*(<arg_key>[\s\S]*)$/i);
+    if (kv) {
+      const args = {};
+      for (const p of kv[2].matchAll(/<arg_key>([\s\S]*?)<\/arg_key>\s*<arg_value>([\s\S]*?)<\/arg_value>/gi)) args[p[1].trim()] = value(p[2]);
+      add(kv[1], args);
+      continue;
+    }
+    const fn = body.match(/<function=([\w.-]+)>([\s\S]*?)(<\/function>|$)/i);
+    if (fn) {
+      const args = {};
+      for (const p of fn[2].matchAll(/<parameter=([\w.-]+)>([\s\S]*?)<\/parameter>/gi)) args[p[1]] = value(p[2]);
+      add(fn[1], args);
+      continue;
+    }
     try {
-      const j = JSON.parse(m[1]);
-      const name = j.name || j.function?.name;
-      const args = j.arguments ?? j.parameters ?? j.function?.arguments ?? {};
-      if (name) out.push({ id: "text_" + out.length, name, args: typeof args === "string" ? args : JSON.stringify(args) });
+      const j = JSON.parse(body);
+      add(j.name || j.function?.name, j.arguments ?? j.parameters ?? j.function?.arguments ?? {});
     } catch {}
+  }
+  // <invoke name="name"><parameter name="key">value</parameter></invoke>, wrapped or not.
+  for (const m of t.matchAll(/<invoke\s+name="([\w.-]+)"\s*>([\s\S]*?)<\/invoke>/gi)) {
+    const args = {};
+    for (const p of m[2].matchAll(/<parameter\s+name="([\w.-]+)"\s*>([\s\S]*?)<\/parameter>/gi)) args[p[1]] = value(p[2]);
+    add(m[1], args);
   }
   return out;
 }

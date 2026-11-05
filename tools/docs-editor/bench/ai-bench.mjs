@@ -5,7 +5,7 @@
 //
 //   node bench/ai-bench.mjs --old <folder with an older src/> [--runs 2] [--model claude-sonnet-5-5]
 //        [--effort low] [--only q-pennick,t-rename] [--jobs 3] [--out results.json]
-//   electron bench/ai-bench.mjs --old <folder> --openrouter [--key-dir <the Codex's settings folder>] ...
+//   electron bench/electron-run.cjs --old <folder> --openrouter [--key-dir <the Codex's settings folder>] ...
 //        OpenRouter instead of Claude, with the key a Codex saved (locked with Electron's safeStorage, so
 //        it runs in Electron; the dev Codex's folder by default). Its free allowance is about 50 requests a
 //        day and a message can take 5, so keep it to a few questions (--only).
@@ -33,7 +33,7 @@ let electronApp = null, orKey = null;
 if (OPENROUTER) {
   const { app } = await import("electron");
   electronApp = app;
-  await app.whenReady();
+  if (!app.isReady()) await app.whenReady(); // run through bench/electron-run.cjs, it's ready already
   const { secretFile } = await import(pathToFileURL(path.join(TOOL, "src", "secret-file.js")));
   const dir = arg("key-dir", path.join(process.env.LOCALAPPDATA || path.join(os.homedir(), "AppData", "Local"), "rth-codex-dev"));
   orKey = ((await (await secretFile(path.join(dir, "openrouter.bin"))).read()) || "").trim() || null;
