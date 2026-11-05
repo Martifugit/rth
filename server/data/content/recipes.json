@@ -2229,7 +2229,7 @@
     "inputs": [ { "item": "alder_log", "count": 1 }, { "item": "copper_bar", "count": 1 } ],
     "outputs": [ { "item": "copper_arrow", "count": 15 } ],
     "ticks": 4,
-    "xp": 6
+    "xp": 3
   },
   {
     "id": "fletch_iron_arrows",
@@ -2243,6 +2243,20 @@
     "inputs": [ { "item": "ash_log", "count": 1 }, { "item": "iron_bar", "count": 1 } ],
     "outputs": [ { "item": "iron_arrow", "count": 15 } ],
     "ticks": 4,
-    "xp": 12
+    "xp": 4
+  },
+  {
+    "id": "make_yarrow_salve",
+    "name": "yarrow salve",
+    "verb": "mix",
+    "animation": "work",
+    "skill": "medicine",
+    "level": 3,
+    "station": "apothecary_bench",
+    "group": "Salves",
+    "inputs": [ { "item": "yarrow", "count": 1 }, { "item": "tree_resin", "count": 1 } ],
+    "outputs": [ { "item": "yarrow_salve", "count": 1 } ],
+    "ticks": 3,
+    "xp": 9
   }
 ]

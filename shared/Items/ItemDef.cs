@@ -165,6 +165,8 @@ namespace Rth.Shared.Items
     {
         public const string HealBlood = "healBlood";
         public const string HealBloodPercent = "healBloodPercent";
+        /// <summary>Heals <see cref="Amount"/> blood in all, a share each tick over <see cref="Ticks"/> (Medicine's salves), in combat too.</summary>
+        public const string HealOverTime = "healOverTime";
         public const string RestoreDevotion = "restoreDevotion";
         /// <summary>Restores a percentage of max devotion.</summary>
         public const string RestoreDevotionPercent = "restoreDevotionPercent";

@@ -67,6 +67,17 @@
       "effects": [ { "op": "settleBile", "amount": 40 } ], "leaves": "empty_vial" }
   },
   {
+    "id": "yarrow_salve",
+    "name": "Yarrow salve",
+    "icon": "potion",
+    "examine": "Yarrow worked into resin. Rubbed on a wound, it gives 300 blood back over twelve seconds, even mid-fight.",
+    "value": 24,
+    "color": "#9ab87a",
+    "tags": [ "salve", "medicine" ],
+    "consumable": { "verb": "Apply", "cooldownGroup": "salve", "cooldownTicks": 20, "attackDelayTicks": 1, "animation": "consume",
+      "effects": [ { "op": "healOverTime", "amount": 300, "ticks": 20 } ] }
+  },
+  {
     "id": "empty_vial",
     "name": "Empty vial",
     "icon": "vial",

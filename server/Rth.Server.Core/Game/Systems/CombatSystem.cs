@@ -698,9 +698,38 @@ namespace Rth.Server.Game
             TickResources(player);
             TickBleeds(player);
             if (player.IsDead) return;
+            TickMending(player);
             if (player.Effects.RemoveAll(e => World.CurrentTick >= e.EndTick) > 0) World.RecalculateStats(player);
             if (!InCombat(player)) Of(player).Scars = 0;
             TickAim(player);
+        }
+
+        // ------------------------------------------------------------------ mending (Medicine's heal over time)
+
+        /// <summary>Blood a salve still has to give back, a share each tick; a new salve replaces what was left.</summary>
+        public sealed class PlayerMending
+        {
+            public int Remaining;
+            public int PerTick;
+        }
+
+        /// <summary>Heals <paramref name="amount"/> over <paramref name="ticks"/> (at least 1 a tick), in combat too. Replaces an earlier salve.</summary>
+        public void AddMending(Player player, int amount, int ticks)
+        {
+            PlayerMending mending = player.Component<PlayerMending>();
+            mending.Remaining = Math.Max(0, amount);
+            mending.PerTick = Math.Max(1, (int)Math.Ceiling(amount / (double)Math.Max(1, ticks)));
+        }
+
+        public int Mending(Player player) => player.Component<PlayerMending>().Remaining;
+
+        private void TickMending(Player player)
+        {
+            PlayerMending mending = player.Component<PlayerMending>();
+            if (mending.Remaining <= 0) return;
+            int heal = Math.Min(mending.PerTick, mending.Remaining);
+            mending.Remaining -= heal;
+            Heal(player, heal);
         }
 
         // ------------------------------------------------------------------ ranged: calibration and ammunition
@@ -870,6 +899,8 @@ namespace Rth.Server.Game
             if (scars > 0) statuses.Add(new StatusState { Id = StatusIds.Scar, Magnitude = scars });
             int calibration = Aim(player).Calibration;
             if (calibration > 0) statuses.Add(new StatusState { Id = StatusIds.Sighted, Magnitude = calibration });
+            int mending = Mending(player);
+            if (mending > 0) statuses.Add(new StatusState { Id = StatusIds.Mending, Magnitude = mending });
         }
 
         private static int Clamp(int value, int min, int max) => Math.Max(min, Math.Min(max, value));

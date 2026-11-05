@@ -170,5 +170,12 @@
     "icon": "eye",
     "color": "#d8f0a0",
     "description": "Nothing else exists: {value}% more ranged accuracy and damage."
+  },
+  {
+    "id": "mending",
+    "name": "Mending",
+    "icon": "medicine",
+    "color": "#9ab87a",
+    "description": "A salve at work: {value} blood still to come back, a little each tick."
   }
 ]

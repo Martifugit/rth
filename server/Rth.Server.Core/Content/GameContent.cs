@@ -831,7 +831,7 @@ namespace Rth.Server.Content
 
         private static readonly HashSet<string> KnownEffectOps = new HashSet<string>
         {
-            EffectOp.HealBlood, EffectOp.HealBloodPercent, EffectOp.RestoreDevotion, EffectOp.RestoreDevotionPercent, EffectOp.AddPhlegm,
+            EffectOp.HealBlood, EffectOp.HealBloodPercent, EffectOp.HealOverTime, EffectOp.RestoreDevotion, EffectOp.RestoreDevotionPercent, EffectOp.AddPhlegm,
             EffectOp.ShiftBile, EffectOp.SettleBile, EffectOp.ApplyEffect, EffectOp.BoostSkill,
         };
 
@@ -859,6 +859,7 @@ namespace Rth.Server.Content
                 {
                     if (!KnownEffectOps.Contains(op.Op)) problems.Add(where + "unknown effect op '" + op.Op + "'.");
                     if (op.Op == EffectOp.BoostSkill && (string.IsNullOrEmpty(op.Skill) || op.Ticks < 1)) problems.Add(where + "boostSkill needs a skill and ticks.");
+                    if (op.Op == EffectOp.HealOverTime && (op.Amount < 1 || op.Ticks < 1)) problems.Add(where + "healOverTime needs an amount and ticks.");
                 }
                 if (item.Consumable.Leaves != null && !items.ContainsKey(item.Consumable.Leaves))
                     problems.Add(where + "leaves '" + item.Consumable.Leaves + "', which doesn't exist.");

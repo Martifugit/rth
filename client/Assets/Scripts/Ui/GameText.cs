@@ -123,6 +123,8 @@ namespace Rth.Client.Ui
         private static string EffectLabel(EffectOp op) => op.Op switch
         {
             "healBlood" => "Heals " + op.Amount + " blood",
+            "healBloodPercent" => "Heals " + op.Amount + "% of your blood",
+            "healOverTime" => "Heals " + op.Amount + " blood over " + (op.Ticks * 0.6f).ToString("0.#") + "s, in combat too",
             "restoreDevotion" => "Restores " + op.Amount + " devotion",
             "restoreDevotionPercent" => "Restores " + op.Amount + "% of your devotion",
             "addPhlegm" => "+" + op.Amount + " phlegm",
