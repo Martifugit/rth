@@ -91,7 +91,7 @@ await test("renaming: only in Work mode; references and comments follow", async 
 
 await test("reasons go with the turn; summaries are written for everyone and found by search", async () => {
   const turn = { provider: "claude", mode: "work", reasons: [], problems: [] };
-  await run("explain_change", { page: "docs/gdd/entities/fen-rat.md", quote: "A rat of the fens", reason: "Plainer" }, turn);
+  await run("explain_changes", { changes: [{ page: "docs/gdd/entities/fen-rat.md", quote: "A rat of the fens", reason: "Plainer" }] }, turn);
   assert.deepEqual(turn.reasons, [{ page: "docs/gdd/entities/fen-rat.md", quote: "A rat of the fens", reason: "Plainer" }]);
   assert.match(await run("report_problem", { kind: "contradiction", pages: ["docs/gdd/entities/fen-rat.md"], summary: "x", plan: "y" }, turn), /health check only/);
   assert.match(await run("search_gdd", { query: "vermin" }), /Nothing/);
@@ -108,10 +108,10 @@ await test("OpenRouter is offered reading tools only; Claude the rest, report_pr
   assert.ok(names.includes("search_code") && names.includes("links_in") && !names.includes("create_page") && !names.includes("explain_change"));
   const t = ai.newTurn({ conv: "c-x", mode: "work" });
   const listed = ai.toolList({ token: t.key }).tools.map((x) => x.name);
-  assert.ok(listed.includes("create_page") && listed.includes("explain_change") && !listed.includes("report_problem") && !listed.includes("search_code"));
+  assert.ok(listed.includes("create_page") && listed.includes("explain_changes") && !listed.includes("report_problem") && !listed.includes("index_page") && !listed.includes("search_code"));
   const audit = ai.newTurn({ conv: null, audit: true, readOnly: true });
   const auditing = ai.toolList({ token: audit.key }).tools.map((x) => x.name);
-  assert.ok(auditing.includes("report_problem") && !auditing.includes("create_page"));
+  assert.ok(auditing.includes("report_problem") && auditing.includes("index_page") && !auditing.includes("create_page"));
   assert.deepEqual(ai.toolList({ token: "nope" }), { error: "That turn is over." });
   ai.endTurn(t); ai.endTurn(audit);
 });
@@ -140,7 +140,7 @@ await test("the MCP server: initialize, list and call, through the engine with t
     assert.ok(list.result.tools.some((t) => t.name === "links_in" && t.inputSchema.type === "object"));
     const got = await call("tools/call", { name: "links_in", arguments: { path: "docs/gdd/items/rat-pelt.md" } });
     assert.match(got.result.content[0].text, /Dropped by:/);
-    const why = await call("tools/call", { name: "explain_change", arguments: { page: "docs/gdd/items/rat-pelt.md", quote: "Rat Pelt", reason: "Renamed" } });
+    const why = await call("tools/call", { name: "explain_changes", arguments: { changes: [{ page: "docs/gdd/items/rat-pelt.md", quote: "Rat Pelt", reason: "Renamed" }] } });
     assert.equal(why.result.content[0].text, "Noted.");
     assert.equal(turn.reasons.length, 1, "the reason reached the turn that asked");
     ai.endTurn(turn);

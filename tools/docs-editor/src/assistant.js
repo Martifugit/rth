@@ -683,9 +683,8 @@ function standing(brief, tools) { // tools: "repo" (Claude reads it itself), "co
       ? "- The game's code and data are in the same repository (the rest of it besides docs/). Read them when a question is about how the game works today, and say what the code does and whether the GDD agrees; the GDD is the design, the code only the current build. Don't go to the code for design questions it can't answer. You can edit and create pages under docs/gdd/ only, never anything else."
       : "- You've been given the page, who links to it and the rules below. When you need more, look it up with your tools: search_gdd (ranked sections), read_page (a page or one section), page_outline, links_in (who links to a page, by what the link means), links_out, query_gdd (the GDD's query language), gdd_types, check_page, comments_on; search_code and read_file for the game's code and data when a question is about how the game works today (the GDD is the design, the code only the current build). Each lookup counts against a small daily allowance, so look up what you need and nothing you were given. You change pages only with the edit blocks described below, each with a short reason.",
     ...(tools === "codex" ? [
-      "- You also have the Codex's own tools (the codex MCP server). It knows the GDD's structure, so prefer it to grepping the files: search_gdd for the sections about something (ranked), page_outline for a page's frontmatter, sections and entries, links_in for who links to a page and what each link means there (\"Dropped by\", \"Found in\"), links_out, query_gdd to list pages or component entries across the GDD (\"action.skill: woodcutting\"), gdd_types, check_page for what the Codex finds wrong on a page (run it on each page you changed, and fix what you caused), comments_on. Make a new page with create_page (its template, its folder, a unique file name), and rename one with rename_page (every reference follows); edit everything else with your own Edit.",
-      "- For every change you make to a page, call explain_change once with a few of the words you wrote and a short reason (at most about 15 words); they see it beside the change when they review it.",
-      "- When you've read a page in depth and page_outline shows it has no summary (or one written before the page last changed), call index_page with a two- or three-sentence summary and search terms. It helps everyone's search, the free models' most of all.",
+      "- Prefer the Codex's own tools (the codex MCP server) to grepping: they know the GDD's structure. search_gdd, page_outline, links_in (with what each link means), links_out, query_gdd (lists pages or component entries across the GDD), gdd_types, check_page, comments_on; create_page for a new page, rename_page to rename one (every reference follows). Edit everything else yourself.",
+      "- When you change pages, call explain_changes once at the end, with a few words of each change and why (about 10 words each).",
     ] : []),
     "- Each message says its mode. Chat: when they ask for a change you make it as usual and Codex holds it as suggestions for them to accept or skip. Work: your changes go straight in. Either way, change pages only when they ask for a change.",
     "- Write in US English (color, armor, center, -ize), in your replies and in everything you suggest or write into a page, as Codex's spelling check does.",
@@ -800,7 +799,9 @@ function claudeProvider({ repo, claude, systemFile }) {
       if (effort) args.push("--effort", effort);
       if (session) args.push("--resume", session);
       return await new Promise((resolve) => {
-        proc = spawn(claude, args, { cwd: repo, windowsHide: true, stdio: ["pipe", "pipe", "pipe"] });
+        // The Codex's tools offered at once, not held back for a tool search: they're few, and held back
+        // Claude often greps instead of looking for them (bench/: same answers, fewer rounds).
+        proc = spawn(claude, args, { cwd: repo, windowsHide: true, stdio: ["pipe", "pipe", "pipe"], env: mcp ? { ...process.env, ENABLE_TOOL_SEARCH: "false" } : process.env });
         proc.stdin.end(prompt);
         let buf = "", err = "", result = null, sid = session, used = null;
         proc.stdout.setEncoding("utf8");

@@ -910,9 +910,8 @@ body.in-app .search-trigger { height: 28px; }
 .ai-chip-x { width: 18px; height: 18px; border: 0; border-radius: 50%; background: none; color: var(--silver-dim); }
 .ai-chip-x:hover { color: #fff; background: rgba(255, 255, 255, .08); }
 .ai-chip-x svg { width: 11px; height: 11px; }
-/* The message, one framed piece: quotes, the box (no frame of its own), then the mode and send. */
-.ai-compose { display: flex; flex-direction: column; padding: 7px 6px 5px 11px; border: 1px solid var(--line); border-radius: 6px; background: linear-gradient(#0b0a08, #12100d); box-shadow: inset 0 1px 3px #000; cursor: text; }
-.ai-compose:focus-within { border-color: var(--accent); }
+/* The message, one piece with no frame or background: quotes, the box, then the mode and send. */
+.ai-compose { display: flex; flex-direction: column; padding: 2px 0 0; border: 0; background: transparent; cursor: text; }
 .ai-compose .ai-quotes { margin: 0 5px 6px 0; }
 .ai-input { display: block; width: 100%; min-width: 0; resize: none; border: 0; outline: none; background: none; color: var(--text); font: 14.5px/1.4 var(--sans); padding: 2px 5px 2px 0; max-height: 220px; overflow-y: hidden; }
 .ai-input::placeholder { color: var(--dim); }

@@ -87,6 +87,47 @@ export const CASES = [
     },
   },
 
+  // Harder: what the Codex works out (links not written yet, structure against the type, groups).
+  {
+    id: "q-broken", page: "docs/gdd/activities/wildfires.md",
+    ask: "Which links on this page go to pages that aren't written yet? Just the list.",
+    async check({ answer, tools }) {
+      const idx = await tools.engine();
+      const missing = [...new Set((idx.out.get("docs/gdd/activities/wildfires.md") || []).map((l) => l.to).filter((to) => to.startsWith("docs/") && !idx.files.has(to)))];
+      return names(answer, missing.map((to) => ({ title: titleWord(to.split("/").pop().replace(/\.md$/, "")), path: to })));
+    },
+  },
+  {
+    id: "q-structure", page: "docs/gdd/activities/distillation.md",
+    ask: "Is anything wrong with this page's structure, as How the GDD Works sets it out? Be brief.",
+    // Its declared component's section taken out first.
+    async setup(repo) {
+      const f = path.join(repo, "docs/gdd/activities/distillation.md");
+      const t = fs.readFileSync(f, "utf8").replace(/\r\n/g, "\n");
+      const at = t.indexOf("## Tunables");
+      const next = t.indexOf("\n## ", at + 5);
+      fs.writeFileSync(f, t.slice(0, at) + (next > 0 ? t.slice(next + 1) : ""));
+    },
+    async check({ answer }) {
+      const ok = /tunables/i.test(answer) && /(missing|no |lacks|without|gone|removed|isn't there|doesn't have|has no)/i.test(answer);
+      return { pass: ok, notes: ok ? [] : ["didn't say the Tunables section is missing"] };
+    },
+  },
+  {
+    id: "q-empty-groups",
+    ask: "Which group pages have no members, that is, no page lists that group in its frontmatter groups? Just the list.",
+    async check({ answer, tools }) {
+      const idx = await tools.engine();
+      const pages = [...idx.gdd.pages.values()];
+      const used = new Set(pages.flatMap((p) => p.front?.groups || []));
+      const empty = pages.filter((p) => p.front?.type === "group" && !used.has(p.slug)).map((p) => ({ title: p.title, path: p.path }));
+      const r = names(answer, empty);
+      const wrong = pages.filter((p) => p.front?.type === "group" && used.has(p.slug)).filter((p) => answer.split("\n").some((l) => /^\s*[-*\d]/.test(l) && (l.toLowerCase().includes(p.path.split("/").pop()) || l.toLowerCase().includes(String(p.title).toLowerCase())))).map((p) => p.title);
+      if (wrong.length) { r.pass = false; r.notes.push("has members but listed: " + wrong.join(", ")); }
+      return r;
+    },
+  },
+
   // ----------------------------------------------------------------------------- tasks (Work)
   {
     id: "t-component", page: "docs/gdd/items/rope.md", mode: "work",

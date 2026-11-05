@@ -282,11 +282,12 @@ export function makeTools({ repo, pages, read, write, store = null, spell = null
 
   // ------------------------------------------------------------------- handing things back
 
-  tool("explain_change", "Say why you made one change, in a short sentence (at most about 15 words). Call it once for each change you make to a page; the Codex shows it beside that change when they review it.",
-    { page: PAGE, quote: str("a few words of the text you wrote (or, for a deletion, removed), exactly as in the page"), reason: str("why, briefly: \"Linked instead of explaining Bile again\"") }, ["page", "quote", "reason"],
+  // One call a turn, every change in it (each call is a round of the model, so not one a change).
+  tool("explain_changes", "Say why you made each change this turn, once, at the end: for each, the page, a few words of the text you wrote (or removed), and why in about 10 words. The Codex shows each reason beside its change when they review it.",
+    { changes: { type: "array", items: { type: "object", properties: { page: PAGE, quote: str("a few words of the text you wrote (or, for a deletion, removed), exactly as in the page"), reason: str("why, briefly: \"Linked instead of explaining Bile again\"") }, required: ["page", "quote", "reason"] } } }, ["changes"],
     async (a, turn) => {
-      if (!turn) return "Noted.";
-      turn.reasons.push({ page: String(a.page || ""), quote: String(a.quote || "").slice(0, 300), reason: String(a.reason || "").slice(0, 200) });
+      const list = Array.isArray(a.changes) ? a.changes : a.page ? [a] : [];
+      if (turn) for (const c of list.slice(0, 40)) turn.reasons.push({ page: String(c.page || ""), quote: String(c.quote || "").slice(0, 300), reason: String(c.reason || "").slice(0, 200) });
       return "Noted.";
     }, { mode: "meta", only: "claude" });
 
@@ -351,12 +352,13 @@ export function makeTools({ repo, pages, read, write, store = null, spell = null
   }
   /** The tools for MCP's tools/list (Claude). The health check's report_problem only in audit runs. */
   function mcpList(turn) {
-    return forProvider("claude").filter((t) => t.name !== "report_problem" || turn?.audit).filter((t) => t.mode !== "write" || !turn?.readOnly)
+    // Summaries and problems are the health check's (src/audit.js), not every answer's.
+    return forProvider("claude").filter((t) => !["report_problem", "index_page"].includes(t.name) || turn?.audit).filter((t) => t.mode !== "write" || !turn?.readOnly)
       .map((t) => ({ name: t.name, description: t.description, inputSchema: t.schema }));
   }
   /** Run one. turn: { mode, reasons, problems, audit, readOnly, provider } or null. Always text. */
   async function run(name, args = {}, turn = null) {
-    const t = T.find((x) => x.name === name) || (name === "links_to" ? T.find((x) => x.name === "links_in") : null); // links_to: the old name
+    const t = T.find((x) => x.name === name) || T.find((x) => x.name === { links_to: "links_in", explain_change: "explain_changes" }[name]); // the old names
     if (!t) return "No such tool.";
     if (turn?.provider && t.only && t.only !== turn.provider) return "That tool isn't available here.";
     if (t.mode === "write" && turn?.readOnly) return "This run can't change pages.";
@@ -378,7 +380,7 @@ export function makeTools({ repo, pages, read, write, store = null, spell = null
       case "read_file": return `Reading ${String(a.path || "a file").split("/").pop()}`;
       case "create_page": return `Making ${cap(a.type)} ${a.title || "a page"}`;
       case "rename_page": return `Renaming ${n(a.path)}`;
-      case "explain_change": return "Noting why";
+      case "explain_change": case "explain_changes": return "Noting why";
       case "index_page": return `Summing up ${n(a.page)}`;
       case "report_problem": return "Noting a problem";
       default: return "Looking things up";

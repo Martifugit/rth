@@ -5,6 +5,10 @@
 //
 //   node bench/ai-bench.mjs --old <folder with an older src/> [--runs 2] [--model claude-sonnet-5-5]
 //        [--effort low] [--only q-pennick,t-rename] [--jobs 3] [--out results.json]
+//   electron bench/ai-bench.mjs --old <folder> --openrouter [--key-dir <the Codex's settings folder>] ...
+//        OpenRouter instead of Claude, with the key a Codex saved (locked with Electron's safeStorage, so
+//        it runs in Electron; the dev Codex's folder by default). Its free allowance is about 50 requests a
+//        day and a message can take 5, so keep it to a few questions (--only).
 //
 // An older src/: git archive <commit> tools/docs-editor/src | tar -x -C <folder> (then <folder>/tools/docs-editor).
 // Cases are in bench/cases.mjs. Each run's answer, time, cost and tool calls go to --out.
@@ -24,6 +28,17 @@ const arg = (k, d = null) => { const i = process.argv.indexOf("--" + k); return 
 const OLD = arg("old"), RUNS = Number(arg("runs", 2)), MODEL = arg("model", "claude-sonnet-5-5"), EFFORT = arg("effort", "low"), JOBS = Number(arg("jobs", 3));
 const ONLY = arg("only") ? new Set(arg("only").split(",")) : null;
 const OUT = arg("out", path.join(os.tmpdir(), "codex-bench-" + Date.now() + ".json"));
+const OPENROUTER = process.argv.includes("--openrouter");
+let electronApp = null, orKey = null;
+if (OPENROUTER) {
+  const { app } = await import("electron");
+  electronApp = app;
+  await app.whenReady();
+  const { secretFile } = await import(pathToFileURL(path.join(TOOL, "src", "secret-file.js")));
+  const dir = arg("key-dir", path.join(process.env.LOCALAPPDATA || path.join(os.homedir(), "AppData", "Local"), "rth-codex-dev"));
+  orKey = ((await (await secretFile(path.join(dir, "openrouter.bin"))).read()) || "").trim() || null;
+  if (!orKey) { console.error("No OpenRouter key in " + dir + " (sign in with OpenRouter in that Codex first)."); app.exit(2); }
+}
 if (!OLD) { console.error("Give --old <folder holding an older tools/docs-editor/src>."); process.exit(2); }
 
 const versions = {
@@ -62,14 +77,24 @@ await new Promise((r) => server.listen(0, "127.0.0.1", r));
 const URL_ = `http://127.0.0.1:${server.address().port}`;
 
 const transcriptDirs = () => { const root = path.join(os.homedir(), ".claude", "projects"); try { return fs.readdirSync(root).map((d) => path.join(root, d)); } catch { return []; } };
+/** From Claude Code's transcript of the run: its tool calls (each once) and its tokens. */
 function toolCalls(session) {
   if (!session) return null;
   for (const d of transcriptDirs()) {
     const f = path.join(d, session + ".jsonl");
     if (!fs.existsSync(f)) continue;
-    const names = [...fs.readFileSync(f, "utf8").matchAll(/"type":"tool_use","id":"[^"]*","name":"([^"]+)"/g)].map((m) => m[1]);
-    const by = {}; for (const n of names) by[n] = (by[n] || 0) + 1;
-    return { total: names.length, by };
+    const calls = new Map(), usage = new Map();
+    for (const line of fs.readFileSync(f, "utf8").split("\n")) {
+      let ev; try { ev = JSON.parse(line); } catch { continue; }
+      const m = ev.message;
+      if (ev.type !== "assistant" || !m) continue;
+      for (const c of m.content || []) if (c.type === "tool_use") calls.set(c.id, c.name);
+      if (m.id && m.usage) usage.set(m.id, m.usage);
+    }
+    const by = {}; for (const n of calls.values()) by[n] = (by[n] || 0) + 1;
+    const tok = { input: 0, cacheWrite: 0, cacheRead: 0, output: 0, rounds: usage.size };
+    for (const u of usage.values()) { tok.input += u.input_tokens || 0; tok.cacheWrite += u.cache_creation_input_tokens || 0; tok.cacheRead += u.cache_read_input_tokens || 0; tok.output += u.output_tokens || 0; }
+    return { total: calls.size, by, tokens: tok };
   }
   return null;
 }
@@ -86,8 +111,9 @@ async function runOne(version, c, n) {
     repo, dir: path.join(repo, ".local", "conv"), store: null, pages: async () => walk(repo), read: reader(repo), write: writer(repo), linksTo,
     emit: (type, d) => { if (type === "ai" && d.state === "done") done(d); },
     ...(version === "new" ? { engineUrl: () => URL_ } : {}),
+    ...(OPENROUTER ? { openrouterKey: () => orKey } : {}),
   });
-  await ai.configure({ use: "claude", claudeModel: MODEL, claudeEffort: EFFORT });
+  await ai.configure(OPENROUTER ? { use: "openrouter" } : { use: "claude", claudeModel: MODEL, claudeEffort: EFFORT });
   if (version === "new") live.add(ai);
   const t0 = Date.now();
   const sent = await ai.send({ text: c.ask, context: c.page ? { page: c.page } : {}, mode: c.mode || "chat" });
@@ -108,7 +134,7 @@ async function runOne(version, c, n) {
 
 const jobs = [];
 for (const c of CASES) if (!ONLY || ONLY.has(c.id)) for (let n = 1; n <= RUNS; n++) for (const v of ["old", "new"]) jobs.push([v, c, n]);
-console.log(`${jobs.length} runs, ${JOBS} at a time, ${MODEL} at ${EFFORT} effort. Results: ${OUT}`);
+console.log(`${jobs.length} runs, ${JOBS} at a time, ${OPENROUTER ? "OpenRouter's free models" : MODEL + " at " + EFFORT + " effort"}. Results: ${OUT}`);
 const results = [];
 let next = 0;
 async function worker() {
@@ -130,3 +156,4 @@ for (const v of ["old", "new"]) { const s = sum(results.filter((r) => r.version 
 console.log("\ncase              old     new");
 for (const c of CASES) { if (ONLY && !ONLY.has(c.id)) continue; const f = (v) => { const rs = results.filter((r) => r.version === v && r.case === c.id); return `${rs.filter((r) => r.pass).length}/${rs.length}`; }; console.log(c.id.padEnd(18) + f("old").padEnd(8) + f("new")); }
 fs.rmSync(SNAP, { recursive: true, force: true });
+if (electronApp) electronApp.exit(0);
