@@ -395,78 +395,87 @@ export function makeAi(ctx) {
     drawLog();
   }
 
+  // AI setup (the cog): a settings list. At the top, what answers now; then the choices everyone has, then
+  // Claude's and OpenRouter's own. Each row: a label and a short note on the left, its control on the right
+  // (or under it, for the wider ones).
   function setupEl() {
     const st = A.setup;
     if (!st) return h("div", { class: "ai-setup" }, h("div", { class: "ai-note" }, "Looking…"));
-    const choice = (value, label, note) => h("label", { class: "ai-choice" + (st.use === value ? " on" : "") },
-      h("input", { type: "radio", name: "ai-use", checked: st.use === value ? "" : null, onchange: () => configure({ use: value }) }),
-      h("span", {}, h("b", {}, label), note ? h("span", { class: "ai-choice-note" }, note) : null));
-    const usingName = st.using === "claude" ? "Claude" : "OpenRouter";
+    const or = st.openrouter, cl = st.claude, cd = st.claudeDefaults || {};
     const ready = st.provider?.ok;
-    const or = st.openrouter, cl = st.claude;
-    const recheck = () => h("button", { class: "btn", onclick: async () => { A.setup = await api("/api/ai/setup?recheck=1"); A.provider = A.setup.provider || A.provider; drawLog(); } }, "Check again");
-    const keyInput = h("input", { class: "field ai-key", type: "password", placeholder: "or paste a key (sk-or-…)", autocomplete: "off", spellcheck: "false" });
-    const modelInput = h("input", { class: "field ai-model", value: or.model, placeholder: "Free (automatic)", spellcheck: "false" });
-    return h("div", { class: "ai-setup" },
-      h("div", { class: "ai-setup-now" + (ready ? "" : " warn") }, ready ? "Using " : "Not ready: ", h("b", {}, usingName),
-        !ready && st.provider?.error ? h("div", { class: "ai-note" }, st.provider.error) : null),
+    const reload = async (q = "") => { A.setup = await api("/api/ai/setup" + q); A.provider = A.setup.provider || A.provider; drawLog(); };
 
-      h("h4", {}, "New conversations start in"),
-      h("label", { class: "ai-choice" + (st.mode !== "work" ? " on" : "") },
-        h("input", { type: "radio", name: "ai-mode", checked: st.mode !== "work" ? "" : null, onchange: () => { A.defaultMode = "chat"; configure({ mode: "chat" }); } }),
-        h("span", {}, h("b", {}, "Chat"), h("span", { class: "ai-choice-note" }, "its changes wait for you to accept or skip"))),
-      h("label", { class: "ai-choice" + (st.mode === "work" ? " on" : "") },
-        h("input", { type: "radio", name: "ai-mode", checked: st.mode === "work" ? "" : null, onchange: () => { A.defaultMode = "work"; configure({ mode: "work" }); } }),
-        h("span", {}, h("b", {}, "Work"), h("span", { class: "ai-choice-note" }, "it edits the pages; Show and Undo after"))),
+    const section = (title, ...rows) => h("section", { class: "ais-section" }, h("h4", { class: "ais-title" }, title), h("div", { class: "ais-card" }, ...rows.flat().filter(Boolean)));
+    const row = (label, note, control, { wide = false } = {}) => h("div", { class: "ais-row" + (wide ? " wide" : "") },
+      h("div", { class: "ais-label" }, h("div", { class: "ais-name" }, label), note ? h("div", { class: "ais-note" }, note) : null),
+      control ? h("div", { class: "ais-control" }, control) : null);
+    const segmented = (value, options, onPick) => h("div", { class: "ais-seg", role: "radiogroup" },
+      options.map(([v, label]) => h("button", { class: "ais-seg-btn" + (value === v ? " on" : ""), role: "radio", "aria-checked": value === v ? "true" : "false", onclick: () => value !== v && onPick(v) }, label)));
+    const toggle = (on, onChange, title) => h("button", { class: "ais-switch" + (on ? " on" : ""), role: "switch", "aria-checked": on ? "true" : "false", title, onclick: () => onChange(!on) }, h("span", { class: "ais-knob" }));
+    const select = (value, options, onPick) => {
+      const el = h("select", { class: "field ais-select", onchange: () => onPick(el.value) }, options.map(([v, label]) => h("option", { value: v, selected: value === v ? "" : null }, label)));
+      return el;
+    };
 
-      h("h4", {}, "Health check"),
-      h("label", { class: "ai-choice" + (st.audit ? " on" : "") },
-        h("input", { type: "checkbox", checked: st.audit ? "" : null, onchange: (e) => configure({ audit: e.target.checked }) }),
-        h("span", {}, h("b", {}, "Check the GDD while idle"), h("span", { class: "ai-choice-note" }, "With Claude: after a while with nothing done here, R'th AI reads the pages changed since they were last checked and lists problems across pages on the To-do page, for everyone. Uses this computer's Claude."))),
+    // What answers now, said once at the top.
+    const usingName = st.using === "claude" ? "Claude" : "OpenRouter";
+    const usingModel = st.using === "claude" ? (cd.model || cd.lastModel || "") : (or.model || "free models");
+    const status = h("div", { class: "ais-status" + (ready ? "" : " warn") },
+      h("span", { class: "ais-dot" }),
+      h("div", {}, h("div", {}, ready ? "Answering with " : "Not ready: ", h("b", {}, usingName), ready && usingModel ? h("span", { class: "ais-dim" }, " · " + usingModel) : null),
+        !ready && st.provider?.error ? h("div", { class: "ais-note" }, st.provider.error) : null));
 
-      h("h4", {}, "Discord"),
-      h("label", { class: "ai-choice" + (st.answerDiscord ? " on" : "") },
-        h("input", { type: "checkbox", checked: st.answerDiscord ? "" : null, onchange: (e) => configure({ answerDiscord: e.target.checked }) }),
-        h("span", {}, h("b", {}, "Answer @R'th AI in Discord"), h("span", { class: "ai-choice-note" }, "With Claude, while this Codex is open and signed in: when someone tags @R'th AI in a comment thread, this Codex may be the one that answers (only one does). Uses this computer's Claude (Sonnet)."))),
+    const general = section("General",
+      row("Which AI", st.use === "auto" ? "Claude when it's set up here, otherwise OpenRouter" : null,
+        segmented(st.use, [["auto", "Automatic"], ["claude", "Claude"], ["openrouter", "OpenRouter"]], (v) => configure({ use: v })), { wide: true }),
+      row("New conversations start in", st.mode === "work" ? "Work: it edits the pages; Show and Undo after" : "Chat: its changes wait for you to accept or skip",
+        segmented(st.mode === "work" ? "work" : "chat", [["chat", "Chat"], ["work", "Work"]], (v) => { A.defaultMode = v; configure({ mode: v }); })));
 
-      h("h4", {}, "Which AI"),
-      choice("auto", "Automatic", "Claude if it's set up, otherwise OpenRouter"),
-      choice("claude", "Claude", "Claude Code, on your Claude subscription"),
-      choice("openrouter", "OpenRouter", "Free models, or any model with credit"),
+    // Claude: how it stands, then the model and effort it answers with, and what it does by itself.
+    const claudeState = !cl.found
+      ? row("Claude Code", "Not installed on this computer.", h("div", { class: "ais-buttons" },
+          h("button", { class: "btn btn-small", onclick: () => window.open("https://claude.com/claude-code", "_blank") }, "Get it"),
+          h("button", { class: "btn btn-small", onclick: () => reload("?recheck=1") }, "Check again")))
+      : cl.signedIn === false
+        ? row("Claude Code", "Installed, but not signed in.", h("div", { class: "ais-buttons" },
+            h("button", { class: "btn btn-gold btn-small", title: "Opens a terminal running Claude Code", onclick: async () => { const r = await api("/api/ai/claude-signin", { method: "POST" }); if (r.error) toast(failed("Couldn't open the sign-in", r), "bad"); else toast("Sign in in the terminal, then check again"); } }, "Sign in"),
+            h("button", { class: "btn btn-small", onclick: () => reload("?recheck=1") }, "Check again")))
+        : row("Claude Code", (cl.signedIn ? "Signed in" : "Installed") + (cl.version ? " · " + cl.version.replace(/\s*\(Claude Code\)/, "") : ""), null);
+    const conv = A.conv?.settings || {};
+    const claudeOn = cl.found && cl.signedIn !== false;
+    const claude = section("Claude",
+      claudeState,
+      claudeOn ? row("Model", conv.model ? `This conversation uses ${conv.model} (/model)` : "For new conversations; /model changes one",
+        select(cd.model || "", [["", "Default" + (cd.lastModel ? ` (${cd.lastModel.replace(/^claude-/, "")})` : "")], ["fable", "Fable"], ["opus", "Opus"], ["sonnet", "Sonnet"], ["haiku", "Haiku"]], (v) => configure({ claudeModel: v }))) : null,
+      claudeOn ? row("Effort", conv.effort ? `This conversation uses ${conv.effort} (/effort)` : "How hard it thinks; /effort changes one conversation",
+        select(cd.effort || "", [["", "Default"], ["low", "Low"], ["medium", "Medium"], ["high", "High"], ["xhigh", "Extra high"], ["max", "Max"]], (v) => configure({ claudeEffort: v }))) : null,
+      row("Health check", "While Codex is idle, R'th AI checks changed pages for problems across pages and lists them on the To-do page",
+        toggle(!!st.audit, (v) => configure({ audit: v }), "Check the GDD while idle")),
+      row("Answer @R'th AI in Discord", "This Codex may answer when someone tags R'th AI in a comment thread (only one Codex does)",
+        toggle(!!st.answerDiscord, (v) => configure({ answerDiscord: v }), "Answer @R'th AI in Discord")));
 
-      h("h4", {}, "Claude"),
-      !cl.found
-        ? [h("p", { class: "ai-note" }, "Claude Code isn't installed."),
-           h("div", { class: "ai-setup-row" }, h("button", { class: "btn", onclick: () => window.open("https://claude.com/claude-code", "_blank") }, "Get Claude Code"), recheck())]
-        : cl.signedIn === false
-          ? [h("p", { class: "ai-note" }, "Installed, but not signed in."),
-             h("div", { class: "ai-setup-row" },
-               h("button", { class: "btn btn-gold", title: "Opens a terminal running Claude Code", onclick: async () => { const r = await api("/api/ai/claude-signin", { method: "POST" }); if (r.error) toast(failed("Couldn't open the sign-in", r), "bad"); else toast("Sign in in the terminal, then check again"); } }, "Sign in"),
-               recheck())]
-          : [h("p", { class: "ai-note" }, (cl.signedIn ? "Signed in" : "Installed") + (cl.version ? ", " + cl.version : "")),
-             // Which model and effort it answers with: the defaults (/model and /effort change one conversation).
-             h("p", { class: "ai-setup-using" }, "Model ", h("b", {}, st.claudeDefaults?.model || ("Claude Code's default" + (st.claudeDefaults?.lastModel ? ` (${st.claudeDefaults.lastModel})` : ""))), " · effort ", h("b", {}, st.claudeDefaults?.effort || "Claude Code's default")),
-             (A.conv?.settings?.model || A.conv?.settings?.effort)
-               ? h("p", { class: "ai-note" }, "This conversation: model " + (A.conv.settings.model || st.claudeDefaults?.model || "default") + ", effort " + (A.conv.settings.effort || st.claudeDefaults?.effort || "default") + " (set with /model and /effort).")
-               : h("p", { class: "ai-note" }, "Type /model or /effort in a conversation to change them for it.")],
-
-      h("h4", {}, "OpenRouter"),
+    // OpenRouter: the account, its model, and a key pasted by hand (folded away).
+    const keyInput = h("input", { class: "field", type: "password", placeholder: "sk-or-…", autocomplete: "off", spellcheck: "false" });
+    const modelInput = h("input", { class: "field", value: or.model, placeholder: "Free (automatic)", spellcheck: "false" });
+    const useKey = async () => {
+      const r = await api("/api/openrouter/key", { method: "POST", body: JSON.stringify({ key: keyInput.value }) });
+      keyInput.value = "";
+      if (!r.ok) return toast(failed("Couldn't use that key", r), "bad");
+      toast("Connected to OpenRouter", "good");
+      reload();
+    };
+    const openrouter = section("OpenRouter",
       or.signedIn
-        ? h("div", { class: "ai-setup-row" }, h("span", { class: "ai-note" }, "Connected."),
-            h("button", { class: "btn", onclick: async () => { await api("/api/openrouter/signout", { method: "POST" }); A.setup = await api("/api/ai/setup"); drawLog(); } }, "Disconnect"))
-        : [h("div", { class: "ai-setup-row" }, h("button", { class: "btn btn-gold", onclick: signInOpenRouter }, "Sign in with OpenRouter")),
-           h("div", { class: "ai-setup-row" }, keyInput,
-             h("button", { class: "btn", onclick: async () => {
-               const r = await api("/api/openrouter/key", { method: "POST", body: JSON.stringify({ key: keyInput.value }) });
-               keyInput.value = "";
-               if (!r.ok) return toast(failed("Couldn't use that key", r), "bad");
-               toast("Connected to OpenRouter", "good");
-               A.setup = await api("/api/ai/setup"); drawLog();
-             } }, "Use key"))],
-      h("label", { class: "ai-setup-label" }, "Model ", h("a", { href: "https://openrouter.ai/models", target: "_blank", class: "ai-choice-note" }, "browse")),
-      h("div", { class: "ai-setup-row" }, modelInput,
-        h("button", { class: "btn", onclick: () => configure({ model: modelInput.value }) }, "Save")),
-      h("p", { class: "ai-note" }, "Keys and conversations stay on this computer."));
+        ? row("Account", "Connected", h("button", { class: "btn btn-small", onclick: async () => { await api("/api/openrouter/signout", { method: "POST" }); reload(); } }, "Disconnect"))
+        : row("Account", "Free models, on your own daily allowance", h("button", { class: "btn btn-gold btn-small", onclick: signInOpenRouter }, "Sign in")),
+      !or.signedIn ? (A.keyOpen
+        ? row("Key", null, h("div", { class: "ais-inline" }, keyInput, h("button", { class: "btn btn-small", onclick: useKey }, "Use")), { wide: true })
+        : h("button", { class: "ais-more", onclick: () => { A.keyOpen = true; drawLog(); } }, "Use a key instead")) : null,
+      row("Model", h("span", {}, "Free (automatic) unless you name one · ", h("a", { href: "https://openrouter.ai/models", target: "_blank" }, "browse")),
+        h("div", { class: "ais-inline" }, modelInput, h("button", { class: "btn btn-small", onclick: () => configure({ model: modelInput.value }) }, "Save")), { wide: true }));
+
+    return h("div", { class: "ai-setup" }, status, general, claude, openrouter,
+      h("p", { class: "ais-foot" }, "Keys and conversations stay on this computer."));
   }
 
   function drawLog() {
