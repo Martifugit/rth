@@ -3,7 +3,7 @@ type: skill
 components: []
 groups: []
 based-on:
-status: stub
+status: draft
 ---
 
 # Fishing
