@@ -60,7 +60,6 @@ async function postAs(env, who, content, { thread, name, ping } = {}) {
     allowed_mentions: ping ? { users: [ping] } : { parse: [] },
     username: clip((who.name || "Someone").replace(/discord|clyde/gi, (m) => m[0] + "​" + m.slice(1)), 80),
     avatar_url: who.avatar || undefined,
-    allowed_mentions: { parse: [] },
     flags: 4, // no link previews
   };
   if (name) body.thread_name = clip(name, 100);
