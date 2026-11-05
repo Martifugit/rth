@@ -11,8 +11,8 @@ status: draft
 ## Intent
 
 Blood is how much harm a body takes before it falls, and the combat resource every fighter watches.
-It is also something a player can spend: [melee](../skills/melee.md) pays blood for power, so
-running low is sometimes a choice and not only a danger.
+It is also something a player can spend: [Religion's](../skills/religion.md) verses pay blood for
+power, so running low is sometimes a choice and not only a danger.
 
 ## Rules
 
@@ -28,7 +28,6 @@ running low is sometimes a choice and not only a danger.
 - [Vitality](../skills/vitality.md): the skill that raises max blood.
 - [Cooking](../skills/cooking.md): makes the food that restores blood.
 - [Medicine](../skills/medicine.md): heals blood over time.
-- [Melee](../skills/melee.md): spends blood and rewards fighting low on it.
 - [Religion](../skills/religion.md): its verses cost blood.
 - [Death](death.md): what happens when blood runs out.
 
