@@ -198,10 +198,53 @@ namespace Rth.Server.Game
             int slot = (int)use.Def.Equipment!.Slot;
             ItemContainer equipment = Of(player).Equipment;
             ItemSlot worn = equipment[slot];
+            if (use.Def.Equipment.Slot == EquipSlot.Ammo)
+            {
+                // The quiver holds a stack: the whole stack goes in, joining more of the same.
+                int count = use.Count;
+                if (worn.ItemId == use.Def.Id) count += worn.Count;
+                equipment.Set(slot, use.Def.Id, count);
+                if (worn.IsEmpty || worn.ItemId == use.Def.Id) use.Container.Clear(use.Slot);
+                else use.Container.Set(use.Slot, worn.ItemId, worn.Count);
+                World.RecalculateStats(player);
+                return;
+            }
             equipment.Set(slot, use.Def.Id, 1);
             if (worn.IsEmpty) use.Container.Clear(use.Slot);
             else use.Container.Set(use.Slot, worn.ItemId, worn.Count);
             World.RecalculateStats(player);
+        }
+
+        /// <summary>
+        /// Why the player's weapon can't shoot: a ranged weapon with nothing of its kind in the
+        /// quiver. Null for any other weapon, or when the quiver is stocked.
+        /// </summary>
+        public string? AmmoProblem(Player player)
+        {
+            ItemDef? weapon = Worn(player, EquipSlot.Weapon);
+            string? kind = weapon?.Equipment?.Ammo;
+            if (kind == null) return null;
+            ItemDef? ammo = Worn(player, EquipSlot.Ammo);
+            if (ammo?.Ammo == null) return "You have no " + Plural(kind) + " for your " + weapon!.Name.ToLowerInvariant() + ".";
+            if (ammo.Ammo.Kind != kind) return "Your " + weapon!.Name.ToLowerInvariant() + " fires " + Plural(kind) + ", not " + Plural(ammo.Ammo.Kind) + ".";
+            return null;
+        }
+
+        private static string Plural(string kind) => kind.EndsWith("s", StringComparison.Ordinal) ? kind : kind + "s";
+
+        /// <summary>
+        /// Takes one shot's worth from the quiver. Returns the ammunition's id, or null if the
+        /// quiver was empty (the ammo check comes first, so that means something slipped).
+        /// </summary>
+        public string? TakeAmmo(Player player)
+        {
+            ItemContainer equipment = Of(player).Equipment;
+            int slot = (int)EquipSlot.Ammo;
+            if (!equipment.InRange(slot) || equipment.IsEmpty(slot)) return null;
+            string id = equipment[slot].ItemId;
+            equipment.RemoveAt(slot, 1);
+            if (equipment.IsEmpty(slot)) World.RecalculateStats(player); // the arrows' stats are gone with the last one
+            return id;
         }
 
         private void Unequip(Player player, ItemUse use)

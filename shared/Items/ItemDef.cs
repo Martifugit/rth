@@ -39,6 +39,8 @@ namespace Rth.Shared.Items
         public ConsumableDef? Consumable;
         /// <summary>A gathering tool (pickaxe, hatchet), used from the pack or worn.</summary>
         public ToolDef? Tool;
+        /// <summary>Ammunition for a ranged weapon: worn as a stack in the Ammo slot, one used per shot.</summary>
+        public AmmoDef? Ammo;
         /// <summary>Water carried (a full waterskin, a bucket): what fire-setting douses with.</summary>
         public WaterDef? Water;
         /// <summary>Worked on by itself, with no station (a grimy herb cleaned): see <see cref="ProcessDef"/>.</summary>
@@ -95,6 +97,21 @@ namespace Rth.Shared.Items
         Hands = 7,
         Feet = 8,
         Ring = 9,
+        /// <summary>The quiver: a stack of ammunition for a ranged weapon (the one slot that holds a stack).</summary>
+        Ammo = 10,
+    }
+
+    /// <summary>
+    /// Ammunition (docs/skills.md 3.4): worn in the <see cref="EquipSlot.Ammo"/> slot as a stack and
+    /// used one per shot by a ranged weapon that fires its <see cref="Kind"/>. Its stats
+    /// (<see cref="EquipmentDef.Stats"/>) count while worn, so better arrows hit harder.
+    /// </summary>
+    public sealed class AmmoDef
+    {
+        /// <summary>What it is ("arrow", "stone"); a weapon's <see cref="EquipmentDef.Ammo"/> names the kind it fires.</summary>
+        public string Kind = "";
+        /// <summary>Its rung on the tier ladder (docs/skills.md 2.2).</summary>
+        public int Tier = 1;
     }
 
     public sealed class EquipmentDef
@@ -111,6 +128,8 @@ namespace Rth.Shared.Items
         public CombatStyle Style;
         /// <summary>For a weapon: its own auto-attack (an Auto ability), instead of its style's.</summary>
         public string? AutoAttack;
+        /// <summary>For a ranged weapon: the kind of ammunition it fires ("arrow", "stone"), worn in the Ammo slot.</summary>
+        public string? Ammo;
         /// <summary>
         /// A gear family in the server's gear.json ("plate", "melee-1h"): with <see cref="Tier"/>, it
         /// fills in this item's stats and its requirement by tier (docs/skills.md 2.2). Null: the

@@ -21,6 +21,12 @@
         "Offhand": { "ward": 0.4, "maxBlood": 2 }
       }
     },
+    "ranged-2h": {
+      "requires": "ranged",
+      "slots": {
+        "Weapon": { "abilityDamage": 1.0, "rangedAccuracy": 0.2 }
+      }
+    },
     "tool": {
       "slots": {
         "Weapon": { "abilityDamage": 0.3 }

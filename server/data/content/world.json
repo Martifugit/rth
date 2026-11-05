@@ -15,7 +15,9 @@
     { "item": "waterskin_4", "count": 1 },
     { "item": "tinderbox", "count": 1 },
     { "item": "fishing_rod", "count": 1 },
-    { "item": "smiths_hammer", "count": 1 }
+    { "item": "smiths_hammer", "count": 1 },
+    { "item": "hunting_sling", "count": 1 },
+    { "item": "sling_stone", "count": 60 }
   ],
   "starterEquipment": [ "apprentice_athame", "occultist_robe" ]
 }

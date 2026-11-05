@@ -33,6 +33,8 @@ namespace Rth.Shared.Combat
         public const string Bleeding = "bleeding";
         /// <summary>Martyrdom's stacks; the value is how many.</summary>
         public const string Scar = "scar";
+        /// <summary>Ranged's calibration: the value is the meter, 1-100.</summary>
+        public const string Sighted = "sighted";
 
         /// <summary>The status shown for a timed ability effect (<see cref="EffectType"/>).</summary>
         public static string ForEffect(EffectType type) => type.ToString().ToLowerInvariant();

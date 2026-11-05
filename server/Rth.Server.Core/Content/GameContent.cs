@@ -359,6 +359,8 @@ namespace Rth.Server.Content
                 if (a.BloodCostCurrent < 0 || a.BloodCostCurrent >= 100 || a.BloodCostMax < 0 || a.BloodCostMax >= 100)
                     problems.Add("Ability '" + a.Id + "': blood costs must be 0-99%.");
                 if (a.BleedPercent < 0 || (a.BleedPercent > 0 && a.BleedTicks < 1)) problems.Add("Ability '" + a.Id + "': a bleed needs bleedTicks of at least 1.");
+                if (a.CalibrationGain < 0 || a.CalibrationBonus < 0 || a.CalibrationSpent < 0 || a.PinTicks < 0) problems.Add("Ability '" + a.Id + "': calibration and pin fields can't be negative.");
+                if ((a.CalibrationBonus > 0 || a.CalibrationSpent > 0 || a.PinTicks > 0) && (a.Style != CombatStyle.Ranged || a.DamageMax <= 0)) problems.Add("Ability '" + a.Id + "': calibration bonuses and pins belong to ranged abilities that deal damage.");
                 if (a.Buff != null)
                 {
                     if (a.Buff.Ticks < 1) problems.Add("Ability '" + a.Id + "': its buff needs ticks of at least 1.");
@@ -842,7 +844,14 @@ namespace Rth.Server.Content
             {
                 foreach (string stat in item.Equipment.Stats.Keys)
                     if (!StatIds.IsKnown(stat)) problems.Add(where + "unknown stat '" + stat + "' (known: " + string.Join(", ", StatIds.All) + ").");
-                if (item.Stackable) problems.Add(where + "equipment can't be stackable (yet).");
+                bool quiver = item.Equipment.Slot == EquipSlot.Ammo;
+                if (item.Stackable && !quiver) problems.Add(where + "equipment can't be stackable (only ammunition, in the Ammo slot).");
+                if (quiver && !item.Stackable) problems.Add(where + "ammunition must be stackable.");
+                if (quiver && item.Ammo == null) problems.Add(where + "something worn in the Ammo slot needs an 'ammo' (kind, tier).");
+                if (item.Ammo != null && !quiver) problems.Add(where + "ammunition must be equipment in the Ammo slot.");
+                if (item.Ammo != null && string.IsNullOrWhiteSpace(item.Ammo.Kind)) problems.Add(where + "ammunition needs a kind.");
+                if (item.Equipment.Ammo != null && item.Equipment.Style != CombatStyle.Ranged) problems.Add(where + "only a ranged weapon fires ammunition.");
+                if (item.Equipment.Style == CombatStyle.Ranged && item.Equipment.Ammo == null) problems.Add(where + "a ranged weapon needs 'ammo': the kind it fires.");
             }
             if (item.Consumable != null)
             {

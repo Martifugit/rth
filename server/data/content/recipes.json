@@ -2216,5 +2216,33 @@
     ],
     "ticks": 4,
     "xp": 5
+  },
+  {
+    "id": "fletch_copper_arrows",
+    "name": "copper arrows",
+    "verb": "fletch",
+    "animation": "work",
+    "skill": "artifice",
+    "level": 5,
+    "station": "net_bench",
+    "group": "Ammunition",
+    "inputs": [ { "item": "alder_log", "count": 1 }, { "item": "copper_bar", "count": 1 } ],
+    "outputs": [ { "item": "copper_arrow", "count": 15 } ],
+    "ticks": 4,
+    "xp": 6
+  },
+  {
+    "id": "fletch_iron_arrows",
+    "name": "iron arrows",
+    "verb": "fletch",
+    "animation": "work",
+    "skill": "artifice",
+    "level": 15,
+    "station": "net_bench",
+    "group": "Ammunition",
+    "inputs": [ { "item": "ash_log", "count": 1 }, { "item": "iron_bar", "count": 1 } ],
+    "outputs": [ { "item": "iron_arrow", "count": 15 } ],
+    "ticks": 4,
+    "xp": 12
   }
 ]
