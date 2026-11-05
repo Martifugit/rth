@@ -330,7 +330,7 @@ export function makeAi(ctx) {
       h("button", { class: "ai-title" + (A.listOpen ? " on" : ""), title: "Earlier conversations", onclick: toggleList },
         h("span", { class: "ai-title-ico", html: ICON.list }), h("span", { class: "ai-title-text" }, title)),
       h("button", { class: "ai-new", title: "New conversation", html: ICON.new, onclick: () => { A.setupOpen = false; newConversation(); input.focus(); } }),
-      h("button", { class: "ai-new ai-cog" + (A.setupOpen ? " on" : ""), title: "AI setup: which AI answers, and ways to connect", html: ICON.cog, onclick: toggleSetup }));
+      h("button", { class: "ai-new ai-cog" + (A.setupOpen ? " on" : ""), title: "AI setup: how R'th AI answers", html: ICON.cog, onclick: toggleSetup }));
     if (A.listOpen) head.append(listEl());
   }
 
@@ -441,10 +441,10 @@ export function makeAi(ctx) {
     const claudeOn = cl.found && cl.signedIn !== false;
     const claude = section("Claude",
       claudeState,
-      claudeOn ? row("Model", `Default: ${cd.model ? modelName(cd.model) : cd.lastModel ? modelName(cd.lastModel) : "Claude Code's own"}. /model changes it for one conversation${conv.model ? ` (this one: ${modelName(conv.model)})` : ""}.`,
-        select(cd.model || "", [["", "Default"], ["fable", "Fable"], ["opus", "Opus"], ["sonnet", "Sonnet"], ["haiku", "Haiku"]], (v) => configure({ claudeModel: v }))) : null,
-      claudeOn ? row("Effort", `Default: ${cd.effort ? EFFORT_NAME[cd.effort] || cd.effort : "Claude Code's own"}. /effort changes it for one conversation${conv.effort ? ` (this one: ${EFFORT_NAME[conv.effort] || conv.effort})` : ""}.`,
-        select(cd.effort || "", [["", "Default"], ["low", "Low"], ["medium", "Medium"], ["high", "High"], ["xhigh", "Extra high"], ["max", "Max"]], (v) => configure({ claudeEffort: v }))) : null,
+      claudeOn ? row("Model", `New conversations use ${modelName(cd.lastModel && cd.lastModel.includes(cd.model) ? cd.lastModel : cd.model)}. /model changes it for one conversation${conv.model ? ` (this one: ${modelName(conv.model)})` : ""}.`,
+        select(cd.model, [["sonnet", "Sonnet"], ["opus", "Opus"], ["fable", "Fable"], ["haiku", "Haiku"]], (v) => configure({ claudeModel: v }))) : null,
+      claudeOn ? row("Effort", `New conversations use ${EFFORT_NAME[cd.effort] || cd.effort}. /effort changes it for one conversation${conv.effort ? ` (this one: ${EFFORT_NAME[conv.effort] || conv.effort})` : ""}.`,
+        select(cd.effort, [["low", "Low"], ["medium", "Medium"], ["high", "High"], ["xhigh", "Extra high"], ["max", "Max"]], (v) => configure({ claudeEffort: v }))) : null,
       row("Health check", "While Codex is idle, R'th AI checks changed pages for problems across pages and lists them on the To-do page",
         toggle(!!st.audit, (v) => configure({ audit: v }), "Check the GDD while idle")),
       row("Answer @R'th AI in Discord", "This Codex may answer when someone tags R'th AI in a comment thread (only one Codex does)",

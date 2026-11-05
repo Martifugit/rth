@@ -610,7 +610,7 @@ export function makeNotes(ctx) {
   // The "add comment" button beside a selection, in the margin.
   const addBtn = h("button", { class: "cm-add hidden", title: "Add comment (Ctrl+M)", html: ICON.add, onmousedown: (ev) => ev.preventDefault(), onclick: () => compose() });
   // ...and Ask beside it: the AI tab, with that passage as a chip (src/ai.js).
-  const askBtn = h("button", { class: "cm-add cm-ask hidden", title: "Ask the AI about this (Ctrl+J)", html: ICON.ask, onmousedown: (ev) => ev.preventDefault(), onclick: () => { ctx.askAi?.(); hideAdd(); } });
+  const askBtn = h("button", { class: "cm-add cm-ask hidden", title: "Ask R'th AI about this (Ctrl+J)", html: ICON.ask, onmousedown: (ev) => ev.preventDefault(), onclick: () => { ctx.askAi?.(); hideAdd(); } });
   document.body.append(addBtn, askBtn);
   function hideAdd() { addBtn.classList.add("hidden"); askBtn.classList.add("hidden"); }
   function showAdd() {
@@ -758,7 +758,7 @@ export function makeNotes(ctx) {
   function updateHistoryBadge() {
     const n = N.history.all.filter(forYou).length;
     const b = $("#historyCount");
-    if (b) { b.textContent = n ? String(n) : ""; b.title = n ? `${n} new from the AI: answers you haven't opened yet, or questions it left you` : ""; }
+    if (b) { b.textContent = n ? String(n) : ""; b.title = n ? `${n} new from R'th AI: answers you haven't opened yet, or questions it left you` : ""; }
   }
 
   function toggleHistory() {

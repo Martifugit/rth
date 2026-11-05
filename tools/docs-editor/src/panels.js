@@ -104,7 +104,7 @@ export function makePanels(ctx) {
         h("b", { class: "ch-who" }, e.mine ? "You" : e.author), " " + verb[e.status] + " ",
         e.exists ? h("a", { onclick: () => open(e), title: e.path }, e.title) : h("span", { class: "ch-gone", title: e.path }, e.title),
         e.sections.length ? [h("span", { class: "ch-in" }, " in "), sectionLinks(e, open)] : null,
-        e.ai ? h("span", { class: "ch-ai", title: "Made with the AI" }, "with AI") : null));
+        e.ai ? h("span", { class: "ch-ai", title: "Made with R'th AI" }, "with AI") : null));
     view.replaceChildren(h("article", { class: "prose oq ch" },
       h("h1", {}, "Recent changes"),
       h("p", { class: "oq-intro" }, list.length

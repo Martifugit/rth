@@ -30,6 +30,8 @@ import { fileURLToPath } from "node:url";
 const MCP_SOURCE = fileURLToPath(new URL("./mcp-server.js", import.meta.url));
 
 const STREAM_EVERY_MS = 120;
+// Claude's defaults, when AI setup names none: Sonnet at medium effort (quick and cheap enough for a GDD).
+export const CLAUDE_MODEL = "sonnet", CLAUDE_EFFORT = "medium";
 
 /**
  * pages: () => every page's repository path; read(rel): its text or null; write(rel, text): write it
@@ -96,7 +98,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
       use: settings.use, using: using === claudeP ? "claude" : "openrouter",
       claude: { found: !!c.installed, signedIn: c.signedIn ?? null, version: c.version || null, error: c.ok ? null : c.error },
       openrouter: { signedIn: !!openrouterKey(), model: settings.model || "", defaultModel: OPENROUTER_MODELS.join(", ") },
-      claudeDefaults: { model: settings.claudeModel || "", effort: settings.claudeEffort || "", lastModel: settings.lastClaudeModel || "" },
+      claudeDefaults: { model: settings.claudeModel || CLAUDE_MODEL, effort: settings.claudeEffort || CLAUDE_EFFORT, lastModel: settings.lastClaudeModel || "" },
       mode: settings.mode || "chat",
       audit: settings.audit !== false,
       answerDiscord: !!settings.answerDiscord,
@@ -223,7 +225,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     };
     const brief = await writingBrief(read);
     const naming = !c.messages.some((m) => m.by === "ai") ? TITLE_NOTE : ""; // its first answer names the conversation
-    const set = { ...{ model: settings.claudeModel || "", effort: settings.claudeEffort || "" }, ...(c.settings || {}) };
+    const set = { model: c.settings?.model || settings.claudeModel || CLAUDE_MODEL, effort: c.settings?.effort || settings.claudeEffort || CLAUDE_EFFORT };
     if (ai.kind === "openrouter") {
       // One request: the standing instructions, the engine's gathered reading, the conversation so far, then this message.
       r.open = true;
@@ -286,7 +288,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
       const msg = { by: "ai", at: new Date().toISOString(), text: answer + note, ...(fixing ? { problem: fixing } : {}) };
       if (res.model) msg.model = res.model;
       // The model Claude Code answered with, for AI setup to name (its default isn't otherwise known).
-      if (res.model && ai.kind !== "openrouter" && !set.model && settings.lastClaudeModel !== res.model) { settings.lastClaudeModel = res.model; try { fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 1)); } catch {} }
+      if (res.model && ai.kind !== "openrouter" && settings.lastClaudeModel !== res.model) { settings.lastClaudeModel = res.model; try { fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 1)); } catch {} }
       if (posted.length) msg.comments = posted;
       const changes = await compare(before);
       // Its reasons (explain_change, or an edit block's reason=), each kept with the page it's about.
@@ -455,7 +457,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     const arg = rest.join(" ").trim();
     const ai = await pick();
     c.settings = c.settings || {};
-    const claudeNow = () => `model ${c.settings.model || settings.claudeModel || "Claude Code's default"}, effort ${c.settings.effort || settings.claudeEffort || "Claude Code's default"}`;
+    const claudeNow = () => `model ${c.settings.model || settings.claudeModel || CLAUDE_MODEL}, effort ${c.settings.effort || settings.claudeEffort || CLAUDE_EFFORT}`;
     if (cmd === "help" || !cmd) return { text: [
       "**Commands** (this conversation only)",
       "",
@@ -511,7 +513,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     if (!mcp) { endTurn(turn); return { error: "The Codex's tools aren't available." }; }
     const brief = await writingBrief(read);
     const prompt = "Check these GDD pages:\n" + list.map((p) => "- " + p).join("\n") + "\n\nReport what you find with report_problem, then answer with one line: how many you reported.";
-    const r = claudeP.run({ prompt, system: AUDIT_STANDING + "\n\n" + brief, model: settings.claudeModel || "", effort: "medium", mcp, describeTool: tools.describe, readOnly: true,
+    const r = claudeP.run({ prompt, system: AUDIT_STANDING + "\n\n" + brief, model: settings.claudeModel || CLAUDE_MODEL, effort: "medium", mcp, describeTool: tools.describe, readOnly: true,
       onText: () => {}, onBreak: () => {}, onActivity: () => {} });
     const res = await r.done;
     endTurn(turn);

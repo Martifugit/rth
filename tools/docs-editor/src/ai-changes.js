@@ -72,7 +72,7 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
       const others = otherPages();
       bar.replaceChildren(...[
         h("span", { class: "ico ico-ai ai-bar-ico" }),
-        h("span", { class: "ai-bar-text" }, n ? `The AI suggests ${n} change${n > 1 ? "s" : ""}` : fs_ ? "One more suggestion" : "No suggestions left",
+        h("span", { class: "ai-bar-text" }, n ? `R'th AI suggests ${n} change${n > 1 ? "s" : ""}` : fs_ ? "One more suggestion" : "No suggestions left",
           others.length ? h("span", { class: "ai-bar-pages", title: "Pages this answer suggests changes to: " + [S.path, ...others].map(titleOf).join(", ") }, ` · page 1 of ${others.length + 1}`) : null),
         // The page's header (status, type, groups...) changed too: said plainly, answered on its own.
         fs_ ? h("span", { class: "ai-bar-front" }, "Also: ", h("b", {}, fs_.says),
@@ -95,7 +95,7 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
       h("span", { class: "ico ico-ai ai-bar-ico" }),
       h("span", { class: "ai-bar-text" }, C.other
         ? (C.showing ? (n ? `${n} change${n > 1 ? "s" : ""} not saved yet` : "No changes left") : "Changed outside Codex")
-        : C.showing ? (n ? `${n} change${n > 1 ? "s" : ""} by the AI` : "No changes left") : "The AI changed this page"),
+        : C.showing ? (n ? `${n} change${n > 1 ? "s" : ""} by R'th AI` : "No changes left") : "R'th AI changed this page"),
       C.showing && n ? h("span", { class: "ai-bar-nav" },
         h("button", { class: "ai-bar-btn", title: "Previous change", onclick: () => step(-1) }, "‹"),
         h("span", { class: "ai-bar-pos" }, C.at >= 0 ? `${C.at + 1} of ${n}` : ""),
@@ -305,7 +305,7 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
   async function acceptEverywhere() {
     const others = otherPages();
     if (ask) {
-      const ok = await ask("Accept on every page", `This makes every change the AI suggested on ${others.length + 1} pages: this one and ${others.map(titleOf).join(", ")}. Pages changed since keep their own text and are left to review.`, [{ key: "no", label: "Cancel" }, { key: "yes", label: "Accept them", cls: "btn-gold" }]);
+      const ok = await ask("Accept on every page", `This makes every change R'th AI suggested on ${others.length + 1} pages: this one and ${others.map(titleOf).join(", ")}. Pages changed since keep their own text and are left to review.`, [{ key: "no", label: "Cancel" }, { key: "yes", label: "Accept them", cls: "btn-gold" }]);
       if (ok !== "yes") return;
     }
     const last = C.changes[C.changes.length - 1];
