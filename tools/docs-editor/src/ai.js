@@ -26,7 +26,7 @@ const ICON = {
   quote: '<svg viewBox="0 0 24 24"><path d="M5 7h14M5 12h10M5 17h12"/></svg>',
   thread: '<svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>',
   copy: '<svg viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7.5a2 2 0 0 0 2 2h2.5"/></svg>',
-  ask: '<svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M10 9.5a2 2 0 1 1 2.6 1.9c-.4.2-.6.5-.6.9v.4M12 14.5h.01"/></svg>',
+  reply: '<svg viewBox="0 0 24 24"><path d="M9.5 7 4.5 12l5 5"/><path d="M5 12h9a5.5 5.5 0 0 1 5.5 5.5V19"/></svg>',
 };
 const KEY = "codex.ai.conversation";
 
@@ -56,23 +56,10 @@ export function makeAi(ctx) {
   const mention = h("div", { class: "ai-mention hidden" });
   // The mode, under the box on the left (as Claude Code's): click it, or Shift+Tab in the box, to switch.
   const modeLine = h("button", { class: "ai-mode", onclick: () => { switchMode(); input.focus(); } });
-  // Quotes from its answers are lines of the message ("> ..."), each with what you ask about it under it.
-  // A textarea can't style a line, so a copy of the text behind it draws them (the text itself is
-  // transparent, its caret and selection are not), letter for letter in the same place.
-  const mirror = h("div", { class: "ai-input-mirror", "aria-hidden": "true" });
-  const field = h("div", { class: "ai-input-wrap" }, mirror, input);
-  const box = h("div", { class: "ai-box" }, mention, chips, h("div", { class: "ai-row" }, field, sendBtn), h("div", { class: "ai-foot" }, modeLine));
-  const isQuote = (line) => /^>\s?/.test(line);
-  function drawMirror() {
-    const lines = input.value.split("\n");
-    mirror.replaceChildren(...lines.flatMap((line, i) => [
-      isQuote(line) ? h("span", { class: "ai-q-line" }, h("span", { class: "ai-q-mark" }, line.match(/^>\s?/)[0]), line.replace(/^>\s?/, "")) : document.createTextNode(line),
-      i < lines.length - 1 ? document.createTextNode("\n") : null,
-    ].filter(Boolean)), document.createTextNode("\u200b"));
-    mirror.scrollTop = input.scrollTop;
-    field.classList.toggle("has-quotes", lines.some(isQuote));
-  }
-  input.addEventListener("scroll", () => { mirror.scrollTop = input.scrollTop; });
+  // Quotes from its answers (select, then the reply button): cards above the box, each quoting the part in
+  // the look of a sent quote, with its own line for what to ask about it (src/ai.js, quoteCard).
+  const quotes = h("div", { class: "ai-quotes hidden" });
+  const box = h("div", { class: "ai-box" }, mention, chips, quotes, h("div", { class: "ai-row" }, input, sendBtn), h("div", { class: "ai-foot" }, modeLine));
   pane.append(head, log, box);
 
   input.addEventListener("keydown", (ev) => {
@@ -94,7 +81,6 @@ export function makeAi(ctx) {
     pane.classList.add("typing");
   });
   function grow() {
-    drawMirror();
     input.style.height = "auto";
     input.style.height = Math.min(input.scrollHeight, 220) + "px";
     input.style.overflowY = input.scrollHeight > 220 ? "auto" : "hidden"; // a scrollbar only once it's full
@@ -256,12 +242,11 @@ export function makeAi(ctx) {
     drawChips();
   });
 
-  // Select part of one of its answers, then Ask: it goes into the box as a quote line ("> ..."), with the
-  // cursor on the line under it for the question. Several quotes, each with its own question, can go in
-  // one message; the AI reads them as Markdown quotes.
-  const askBtn = h("button", { class: "ai-ask-float hidden", title: "Ask about this part of the answer",
-    onmousedown: (ev) => ev.preventDefault(), onclick: () => askAboutSelection() },
-  h("span", { class: "ai-ask-ico", html: ICON.ask }), h("span", {}, "Ask"));
+  // Select part of one of its answers, then the reply button over it: the part is quoted in a card above
+  // the box, with its own line for the question about it. Several quotes, each with its own question, go
+  // in one message; the AI reads them as Markdown quotes, each followed by what was asked about it.
+  const askBtn = h("button", { class: "ai-ask-float hidden", title: "Reply to this part",
+    onmousedown: (ev) => ev.preventDefault(), onclick: () => askAboutSelection(), html: ICON.reply });
   function replySelection() {
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed || !sel.rangeCount) return null;
@@ -295,20 +280,40 @@ export function makeAi(ctx) {
     window.getSelection()?.removeAllRanges();
     quoteInBox(s.text);
   }
-  /** A quote line where the cursor is (on a line of its own), and the cursor on a new line under it. */
+  // The quotes waiting to go with the next message: [{ text, ask }], drawn as cards above the box.
+  let quoted = [];
   function quoteInBox(text) {
     const one = text.replace(/\s+/g, " ").trim();
-    const q = "> " + (one.length > 280 ? one.slice(0, 279).replace(/\s+\S*$/, "") + "…" : one);
-    const at = input.selectionStart ?? input.value.length, end = input.selectionEnd ?? at;
-    const before = input.value.slice(0, at), afterText = input.value.slice(end);
-    const lead = before && !before.endsWith("\n") ? "\n" : "";
-    const tail = afterText.startsWith("\n") ? "" : "\n";
-    input.value = before + lead + q + tail + afterText;
-    const caret = (before + lead + q + tail).length;
-    input.focus();
-    input.setSelectionRange(caret, caret);
-    grow();
+    quoted.push({ text: one.length > 600 ? one.slice(0, 599).replace(/\s+\S*$/, "") + "…" : one, ask: "" });
+    drawQuotes(quoted.length - 1);
     pane.classList.add("typing");
+  }
+  function drawQuotes(focusAt = null) {
+    quotes.replaceChildren(...quoted.map((q, i) => {
+      const ask = h("textarea", { class: "ai-quote-ask", rows: "1", placeholder: "Ask about this…", spellcheck: "true" });
+      ask.value = q.ask;
+      const fit = () => { ask.style.height = "auto"; ask.style.height = Math.min(ask.scrollHeight, 120) + "px"; };
+      ask.addEventListener("input", () => { q.ask = ask.value; fit(); });
+      ask.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter" && !ev.shiftKey && !ev.isComposing) { ev.preventDefault(); send(); }
+        else if (ev.key === "Tab" && ev.shiftKey) { ev.preventDefault(); switchMode(); }
+        else if (ev.key === "Backspace" && !ask.value) { ev.preventDefault(); quoted.splice(i, 1); drawQuotes(Math.min(i, quoted.length - 1)); if (!quoted.length) input.focus(); }
+      });
+      queueMicrotask(fit);
+      return h("div", { class: "ai-quote" },
+        h("div", { class: "ai-quote-head" },
+          h("div", { class: "ai-quote-text", title: q.text }, q.text),
+          h("button", { class: "ai-quote-x", title: "Leave this quote out", html: ICON.close, onclick: () => { quoted.splice(i, 1); drawQuotes(); input.focus(); } })),
+        ask);
+    }));
+    quotes.classList.toggle("hidden", !quoted.length);
+    if (focusAt != null && focusAt >= 0) requestAnimationFrame(() => quotes.querySelectorAll(".ai-quote-ask")[focusAt]?.focus());
+  }
+  /** The message as sent: each quote ("> ...") with its question under it, then what's in the box. */
+  function composed() {
+    const parts = quoted.map((q) => "> " + q.text + (q.ask.trim() ? "\n" + q.ask.trim() : ""));
+    if (input.value.trim()) parts.push(input.value.trim());
+    return parts.join("\n\n");
   }
   log.addEventListener("mouseup", () => setTimeout(placeAsk));
   log.addEventListener("scroll", () => askBtn.classList.add("hidden"));
@@ -352,7 +357,7 @@ export function makeAi(ctx) {
   }
 
   function newConversation() {
-    A.id = null; A.conv = null; A.run = null; A.listOpen = false; A.extra = []; A.left.clear(); mentions = [];
+    A.id = null; A.conv = null; A.run = null; A.listOpen = false; A.extra = []; A.left.clear(); mentions = []; quoted = []; drawQuotes();
     A.mode = A.defaultMode; drawMode();
     localStorage.removeItem(KEY);
     drawHead(); drawLog(); syncSend();
@@ -435,7 +440,12 @@ export function makeAi(ctx) {
              h("div", { class: "ai-setup-row" },
                h("button", { class: "btn btn-gold", title: "Opens a terminal running Claude Code", onclick: async () => { const r = await api("/api/ai/claude-signin", { method: "POST" }); if (r.error) toast(failed("Couldn't open the sign-in", r), "bad"); else toast("Sign in in the terminal, then check again"); } }, "Sign in"),
                recheck())]
-          : h("p", { class: "ai-note" }, (cl.signedIn ? "Signed in" : "Installed") + (cl.version ? ", " + cl.version : "")),
+          : [h("p", { class: "ai-note" }, (cl.signedIn ? "Signed in" : "Installed") + (cl.version ? ", " + cl.version : "")),
+             // Which model and effort it answers with: the defaults (/model and /effort change one conversation).
+             h("p", { class: "ai-setup-using" }, "Model ", h("b", {}, st.claudeDefaults?.model || ("Claude Code's default" + (st.claudeDefaults?.lastModel ? ` (${st.claudeDefaults.lastModel})` : ""))), " · effort ", h("b", {}, st.claudeDefaults?.effort || "Claude Code's default")),
+             (A.conv?.settings?.model || A.conv?.settings?.effort)
+               ? h("p", { class: "ai-note" }, "This conversation: model " + (A.conv.settings.model || st.claudeDefaults?.model || "default") + ", effort " + (A.conv.settings.effort || st.claudeDefaults?.effort || "default") + " (set with /model and /effort).")
+               : h("p", { class: "ai-note" }, "Type /model or /effort in a conversation to change them for it.")],
 
       h("h4", {}, "OpenRouter"),
       or.signedIn
@@ -721,21 +731,22 @@ export function makeAi(ctx) {
   // ----------------------------------------------------------------------------- sending
 
   async function send() {
-    const text = input.value.trim();
+    const text = composed();
     if (!text || A.run || A.sending) return;
+    const kept = { input: input.value, quoted: quoted.map((q) => ({ ...q })) };
     await ctx.saveNow(); // it reads the page as saved
     const context = started() ? {} : ctxSnapshot(); // a started conversation keeps its own (on the server)
     A.sending = true;
     A.pending = { text, context: { selection: context.selection, thread: context.thread } };
     A.run = { text: "", activity: "Reading" };
-    input.value = ""; grow(); pane.classList.remove("typing");
+    input.value = ""; quoted = []; drawQuotes(); grow(); pane.classList.remove("typing");
     drawLog(); syncSend();
     const problem = A.problem; A.problem = null;
     const r = await api("/api/ai/send", { method: "POST", body: JSON.stringify({ id: A.id, text, context, mode: A.mode, problem }) });
     A.sending = false;
     if (!r.ok) {
       A.pending = null; A.run = null;
-      input.value = text; grow();
+      input.value = kept.input; quoted = kept.quoted; drawQuotes(); grow();
       toast(failed("Couldn't send your message", r), "bad");
       if (r.needsSignIn) refreshProvider();
       drawLog(); syncSend();

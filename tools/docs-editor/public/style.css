@@ -1367,8 +1367,9 @@ body.in-app .search-trigger { height: 28px; }
 .ai-copy:hover { color: var(--ink); background: rgba(255, 255, 255, .06); }
 .ai-copy svg, .ai-ask-ico svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 /* Ask about a part of an answer: a small button over the selection. */
-.ai-ask-float { position: fixed; z-index: 60; display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px 0 7px;
-  border: 1px solid #5a4a32; border-radius: 13px; background: #1f1a13; color: var(--value); font: 600 12.5px/1 var(--sans); box-shadow: 0 4px 14px rgba(0, 0, 0, .5); }
+.ai-ask-float { position: fixed; z-index: 60; display: grid; place-items: center; width: 28px; height: 28px; padding: 0;
+  border: 1px solid #5a4a32; border-radius: 50%; background: #1f1a13; color: var(--value); box-shadow: 0 4px 14px rgba(0, 0, 0, .5); line-height: 0; }
+.ai-ask-float svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 .ai-ask-float.hidden { display: none; }
 .ai-ask-float:hover { border-color: #8a7148; }
 .ai-ask-ico { display: grid; place-items: center; }
@@ -1378,19 +1379,22 @@ body.in-app .search-trigger { height: 28px; }
 .ai-bar-why { min-width: 0; flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-style: italic; color: var(--muted); font-size: 13px; margin-left: 4px; }
 .ai-bar-why::before { content: "Why: "; font-style: normal; color: var(--dim); }
 .ai-bar-pages { color: var(--muted); font-weight: 400; }
-/* The box, with its quote lines ("> ..." from an answer) drawn by a copy of its text behind it: the same
-   font, size and wrapping, so every letter sits where the textarea's own would. */
-.ai-input-wrap { position: relative; flex: 1; min-width: 0; display: flex; }
-.ai-input-wrap .ai-input { position: relative; z-index: 1; color: transparent; caret-color: var(--text); background: transparent; }
-.ai-input-wrap .ai-input::placeholder { color: var(--dim); }
-.ai-input-wrap .ai-input::selection { color: transparent; background: var(--sel); }
-.ai-input-mirror { position: absolute; inset: 0; overflow: hidden; pointer-events: none; white-space: pre-wrap; overflow-wrap: break-word; word-break: normal;
-  font: 14.5px/1.4 var(--sans); padding: 4px 0; color: var(--text); }
-.ai-q-line { color: var(--silver-dim); background: rgba(255, 255, 255, .045); box-shadow: inset 2px 0 0 #8a7148; border-radius: 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+/* Quotes waiting to go (select part of an answer, then the reply button): a card each above the box, the
+   quote as it shows in a sent message, and a line for what to ask about it. */
+.ai-quotes { display: flex; flex-direction: column; gap: 6px; margin-bottom: 7px; }
+.ai-quotes.hidden { display: none; }
+.ai-quote { border-left: 2px solid #8a7148; padding: 2px 0 2px 9px; }
+.ai-quote-head { display: flex; align-items: flex-start; gap: 6px; }
+.ai-quote-text { flex: 1; min-width: 0; font-size: 13px; line-height: 1.4; color: var(--silver-dim);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ai-quote-x { flex: none; width: 20px; height: 20px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 3px; background: none; color: var(--silver-dim); line-height: 0; opacity: .7; }
+.ai-quote-x:hover { opacity: 1; color: var(--ink); background: rgba(255, 255, 255, .06); }
+.ai-quote-x svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.ai-quote-ask { display: block; width: 100%; margin-top: 3px; resize: none; border: 0; outline: none; background: none; padding: 2px 0; color: var(--text); font: 14px/1.4 var(--sans); overflow-y: hidden; }
+.ai-quote-ask::placeholder { color: var(--dim); }
 /* Quotes in your sent message: a line each, as in the box. */
 .ai-msg-quote { margin: 2px 0 4px; padding: 1px 0 1px 8px; border-left: 2px solid #8a7148; color: var(--silver-dim); font-size: 13px; }
 .ai-msg-quote:first-child { margin-top: 0; }
-.ai-q-mark { color: transparent; } /* the "> " that makes the line a quote: kept for its width, not shown */
 /* Problems the Codex found in what the answer changed: a card per page, opened for each problem. */
 .ai-problem { cursor: pointer; }
 .ai-problem-ico { flex: none; width: 16px; height: 16px; border-radius: 50%; display: grid; place-items: center; font: 700 11px/1 var(--sans); color: #1a120c; background: #d9a35b; }
@@ -1404,3 +1408,5 @@ body.in-app .search-trigger { height: 28px; }
 .td-found-more { margin: 6px 0 2px; font-size: 14px; color: var(--muted); }
 .td-found-more p { margin: 0 0 6px; }
 .td-audit { text-align: center; margin: -6px 0 14px; font-size: 13px; }
+.ai-setup-using { margin: 4px 0 0; font-size: 13px; color: var(--silver-soft); }
+.ai-setup-using b { color: var(--ink); }

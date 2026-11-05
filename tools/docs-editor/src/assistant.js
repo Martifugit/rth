@@ -94,7 +94,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
       use: settings.use, using: using === claudeP ? "claude" : "openrouter",
       claude: { found: !!c.installed, signedIn: c.signedIn ?? null, version: c.version || null, error: c.ok ? null : c.error },
       openrouter: { signedIn: !!openrouterKey(), model: settings.model || "", defaultModel: OPENROUTER_MODELS.join(", ") },
-      claudeDefaults: { model: settings.claudeModel || "", effort: settings.claudeEffort || "" },
+      claudeDefaults: { model: settings.claudeModel || "", effort: settings.claudeEffort || "", lastModel: settings.lastClaudeModel || "" },
       mode: settings.mode || "chat",
       audit: settings.audit !== false,
       answerDiscord: !!settings.answerDiscord,
@@ -283,6 +283,8 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
       if (named) { fresh.title = named; answer = withoutTitle(answer); }
       const msg = { by: "ai", at: new Date().toISOString(), text: answer + note, ...(fixing ? { problem: fixing } : {}) };
       if (res.model) msg.model = res.model;
+      // The model Claude Code answered with, for AI setup to name (its default isn't otherwise known).
+      if (res.model && ai.kind !== "openrouter" && !set.model && settings.lastClaudeModel !== res.model) { settings.lastClaudeModel = res.model; try { fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 1)); } catch {} }
       if (posted.length) msg.comments = posted;
       const changes = await compare(before);
       // Its reasons (explain_change, or an edit block's reason=), each kept with the page it's about.
@@ -800,7 +802,7 @@ function claudeProvider({ repo, claude, systemFile }) {
       return await new Promise((resolve) => {
         proc = spawn(claude, args, { cwd: repo, windowsHide: true, stdio: ["pipe", "pipe", "pipe"] });
         proc.stdin.end(prompt);
-        let buf = "", err = "", result = null, sid = session;
+        let buf = "", err = "", result = null, sid = session, used = null;
         proc.stdout.setEncoding("utf8");
         proc.stdout.on("data", (chunk) => {
           buf += chunk;
@@ -810,6 +812,7 @@ function claudeProvider({ repo, claude, systemFile }) {
             if (!line) continue;
             let ev; try { ev = JSON.parse(line); } catch { continue; }
             if (ev.session_id) sid = ev.session_id;
+            if (ev.type === "system" && ev.subtype === "init" && ev.model) used = ev.model; // the model it answers with
             if (ev.type === "stream_event") {
               if (ev.event?.type === "content_block_start" && ev.event.content_block?.type === "text") onBreak();
               if (ev.event?.type === "content_block_start" && ev.event.content_block?.type === "thinking") onThought(null);
@@ -826,7 +829,7 @@ function claudeProvider({ repo, claude, systemFile }) {
         proc.on("error", (e) => resolve({ error: e.message }));
         proc.on("close", (code) => {
           if (stopped) return resolve({ error: "Stopped.", session: sid });
-          if (result && !result.is_error) resolve({ text: result.result, session: result.session_id || sid, cost: result.total_cost_usd });
+          if (result && !result.is_error) resolve({ text: result.result, session: result.session_id || sid, cost: result.total_cost_usd, model: used });
           else resolve({ error: (result && result.result) || err.trim().split("\n").slice(-3).join(" ") || `claude exited with ${code}`, session: sid });
         });
       });
