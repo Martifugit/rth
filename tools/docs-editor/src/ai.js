@@ -10,6 +10,8 @@ import { discordConversation } from "./discord-extras.js";
 import { failed } from "./plain-errors.js";
 import { answerStream } from "./ai-stream.js";
 import { busy } from "./busy.js";
+import { split as splitFront } from "./frontmatter.js";
+import { typeAt } from "./gdd.js";
 
 const ICON = {
   send: '<svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></svg>',
@@ -23,6 +25,8 @@ const ICON = {
   page: '<svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>',
   quote: '<svg viewBox="0 0 24 24"><path d="M5 7h14M5 12h10M5 17h12"/></svg>',
   thread: '<svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>',
+  copy: '<svg viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7.5a2 2 0 0 0 2 2h2.5"/></svg>',
+  ask: '<svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M10 9.5a2 2 0 1 1 2.6 1.9c-.4.2-.6.5-.6.9v.4M12 14.5h.01"/></svg>',
 };
 const KEY = "codex.ai.conversation";
 
@@ -36,6 +40,9 @@ export function makeAi(ctx) {
     selection: null,     // { quote, section } of the last passage selected in the page
     left: new Set(),     // chips clicked away ("page", "selection", "thread"), until the next send
     extra: [],           // pages added (with @ or + Add page) to a conversation not started yet
+    quote: null,         // { text, msg }: a part of one of its answers, to ask about in the next message
+    mode: "chat",        // Chat (its changes wait as suggestions) or Work (it edits): the line under the box
+    defaultMode: "chat",
     listOpen: false,
   };
 
@@ -48,11 +55,14 @@ export function makeAi(ctx) {
   const input = h("textarea", { class: "ai-input", rows: "1", placeholder: "Ask anything…",spellcheck: "true" });
   const sendBtn = h("button", { class: "ai-send", title: "Send (Enter)", html: ICON.send, onclick: () => (A.run ? stop() : send()) });
   const mention = h("div", { class: "ai-mention hidden" });
-  const box = h("div", { class: "ai-box" }, mention, chips, h("div", { class: "ai-row" }, input, sendBtn));
+  // The mode, under the box on the left (as Claude Code's): click it, or Shift+Tab in the box, to switch.
+  const modeLine = h("button", { class: "ai-mode", onclick: () => { switchMode(); input.focus(); } });
+  const box = h("div", { class: "ai-box" }, mention, chips, h("div", { class: "ai-row" }, input, sendBtn), h("div", { class: "ai-foot" }, modeLine));
   pane.append(head, log, box);
 
   input.addEventListener("keydown", (ev) => {
     if (mentionKey(ev)) return;
+    if (ev.key === "Tab" && ev.shiftKey && !ev.ctrlKey && !ev.altKey) { ev.preventDefault(); switchMode(); return; }
     if (ev.key === "Enter" && !ev.shiftKey && !ev.isComposing) { ev.preventDefault(); send(); }
     else if (ev.key === "Escape" && A.listOpen) { ev.stopPropagation(); A.listOpen = false; drawHead(); }
   });
@@ -72,6 +82,24 @@ export function makeAi(ctx) {
     input.style.height = "auto";
     input.style.height = Math.min(input.scrollHeight, 220) + "px";
     input.style.overflowY = input.scrollHeight > 220 ? "auto" : "hidden"; // a scrollbar only once it's full
+  }
+
+  // ----------------------------------------------------------------------------- Chat and Work
+
+  const MODES = {
+    chat: { label: "Chat", note: "its changes wait for you" },
+    work: { label: "Work", note: "it edits the pages" },
+  };
+  function drawMode() {
+    const m = MODES[A.mode] || MODES.chat;
+    modeLine.className = "ai-mode ai-mode-" + A.mode;
+    modeLine.title = `${m.label}: ${m.note}. Click, or Shift+Tab in the box, to switch.`;
+    modeLine.replaceChildren(h("span", { class: "ai-mode-name" }, m.label), h("span", { class: "ai-mode-note" }, " · Shift+Tab to switch"));
+  }
+  /** Chat and Work. Kept with the conversation when the next message goes (src/assistant.js). */
+  function switchMode() {
+    A.mode = A.mode === "work" ? "chat" : "work";
+    drawMode();
   }
 
   // ----------------------------------------------------------------------------- chips
@@ -134,6 +162,8 @@ export function makeAi(ctx) {
       const open = ctx.notes.state.active;
       if (open && open !== "draft" && open !== k.thread) out.push(offer(ICON.thread, threadLabel(open), "Add the open comment thread to this conversation", () => changeContext({ add: { thread: open } })));
     }
+    // A part of an answer, to ask about (select it in the answer, then Ask): this message only.
+    if (A.quote) out.unshift(chip(ICON.quote, "Its answer: “" + clip(A.quote.text, 30) + "”", A.quote.text, () => { A.quote = null; drawChips(); }));
     chips.replaceChildren(...out);
     chips.classList.toggle("hidden", !out.length);
   }
@@ -212,6 +242,50 @@ export function makeAi(ctx) {
     drawChips();
   });
 
+  // Select part of one of its answers, then Ask: that part goes with the next message as a quote (once;
+  // it isn't kept like the page's passage), so a follow-up can be about exactly that.
+  const askBtn = h("button", { class: "ai-ask-float hidden", title: "Ask about this part of the answer",
+    onmousedown: (ev) => ev.preventDefault(), onclick: () => askAboutSelection() },
+  h("span", { class: "ai-ask-ico", html: ICON.ask }), h("span", {}, "Ask"));
+  function replySelection() {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.rangeCount) return null;
+    const r = sel.getRangeAt(0).cloneRange();
+    const at = (n) => (n?.nodeType === 1 ? n : n?.parentElement)?.closest?.(".ai-text");
+    // One answer's text, even when the selection runs on past it (a triple click reaches into what follows).
+    const a = at(r.startContainer) || at(r.endContainer);
+    if (!a || !log.contains(a)) return null;
+    if (!a.contains(r.startContainer)) r.setStart(a, 0);
+    if (!a.contains(r.endContainer)) r.setEnd(a, a.childNodes.length);
+    const msg = a.closest(".ai-msg-ai");
+    if (!msg || msg.classList.contains("ai-streaming")) return null;
+    const text = r.toString().trim();
+    if (!text) return null;
+    const i = Number(msg.dataset.msg);
+    return { text: text.slice(0, 4000), msg: Number.isInteger(i) ? i : null, rect: r.getBoundingClientRect() };
+  }
+  function placeAsk() {
+    const s = replySelection();
+    if (!s) { askBtn.classList.add("hidden"); return; }
+    askBtn.classList.remove("hidden");
+    const w = askBtn.offsetWidth || 64, hgt = askBtn.offsetHeight || 26;
+    const top = s.rect.top - hgt - 6 < 8 ? s.rect.bottom + 6 : s.rect.top - hgt - 6;
+    askBtn.style.top = Math.round(top) + "px";
+    askBtn.style.left = Math.round(Math.min(window.innerWidth - w - 8, Math.max(8, s.rect.left + s.rect.width / 2 - w / 2))) + "px";
+  }
+  function askAboutSelection() {
+    const s = replySelection();
+    askBtn.classList.add("hidden");
+    if (!s) return;
+    A.quote = { text: s.text, msg: s.msg };
+    window.getSelection()?.removeAllRanges();
+    drawChips();
+    input.focus();
+  }
+  log.addEventListener("mouseup", () => setTimeout(placeAsk));
+  log.addEventListener("scroll", () => askBtn.classList.add("hidden"));
+  document.addEventListener("selectionchange", () => { if (!askBtn.classList.contains("hidden") && !replySelection()) askBtn.classList.add("hidden"); });
+
   // ----------------------------------------------------------------------------- the conversation
 
   function drawHead() {
@@ -250,7 +324,8 @@ export function makeAi(ctx) {
   }
 
   function newConversation() {
-    A.id = null; A.conv = null; A.run = null; A.listOpen = false; A.extra = []; A.left.clear(); mentions = [];
+    A.id = null; A.conv = null; A.run = null; A.listOpen = false; A.extra = []; A.left.clear(); mentions = []; A.quote = null;
+    A.mode = A.defaultMode; drawMode();
     localStorage.removeItem(KEY);
     drawHead(); drawLog(); syncSend();
   }
@@ -258,7 +333,9 @@ export function makeAi(ctx) {
   async function openConversation(id) {
     const r = await api("/api/ai/conversation?id=" + encodeURIComponent(id));
     if (!r.ok) { if (id === A.id) newConversation(); return; }
-    if (id !== A.id) mentions = []; // another conversation: the message's mentions were about this one
+    // Another conversation: the message's mentions were about this one, and it has its own mode.
+    if (id !== A.id) { mentions = []; A.quote = null; }
+    if (A.conv?.id !== id) { A.mode = r.settings?.mode || A.defaultMode; drawMode(); } // opened (or first loaded): its own mode
     A.id = id; A.conv = r; A.setupOpen = false;
     queueMicrotask(drawChips); // its own context, not the screen's
     A.run = r.run?.state === "running" ? { text: r.run.text, activity: r.run.activity } : null;
@@ -297,6 +374,14 @@ export function makeAi(ctx) {
     return h("div", { class: "ai-setup" },
       h("div", { class: "ai-setup-now" + (ready ? "" : " warn") }, ready ? "Using " : "Not ready: ", h("b", {}, usingName),
         !ready && st.provider?.error ? h("div", { class: "ai-note" }, st.provider.error) : null),
+
+      h("h4", {}, "New conversations start in"),
+      h("label", { class: "ai-choice" + (st.mode !== "work" ? " on" : "") },
+        h("input", { type: "radio", name: "ai-mode", checked: st.mode !== "work" ? "" : null, onchange: () => { A.defaultMode = "chat"; configure({ mode: "chat" }); } }),
+        h("span", {}, h("b", {}, "Chat"), h("span", { class: "ai-choice-note" }, "its changes wait for you to accept or skip"))),
+      h("label", { class: "ai-choice" + (st.mode === "work" ? " on" : "") },
+        h("input", { type: "radio", name: "ai-mode", checked: st.mode === "work" ? "" : null, onchange: () => { A.defaultMode = "work"; configure({ mode: "work" }); } }),
+        h("span", {}, h("b", {}, "Work"), h("span", { class: "ai-choice-note" }, "it edits the pages; Show and Undo after"))),
 
       h("h4", {}, "Which AI"),
       choice("auto", "Automatic", "Claude if it's set up, otherwise OpenRouter"),
@@ -338,8 +423,8 @@ export function makeAi(ctx) {
     const msgs = A.conv?.messages || [];
     const out = [];
     if (!msgs.length && !A.run) out.push(emptyState());
-    for (const m of msgs) out.push(message(m));
-    if (A.pending) out.push(message({ by: "you", text: A.pending.text, context: A.pending.context }));
+    msgs.forEach((m, i) => out.push(message(m, i)));
+    if (A.pending) out.push(message({ by: "you", text: A.pending.text, context: A.pending.context, quote: A.pending.quote, pending: true }));
     if (A.run) out.push(streamFor().el);
     else dropStream();
     const atEnd = log.scrollHeight - log.scrollTop - log.clientHeight < 40;
@@ -412,29 +497,44 @@ export function makeAi(ctx) {
     send();
   }
 
-  function message(m) {
+  /** Copy a message as written (its Markdown): a small button that shows when pointing at it. */
+  const copyBtn = (m) => (m.text && !m.pending ? h("button", { class: "ai-copy", title: "Copy", html: ICON.copy, onclick: (ev) => { ev.stopPropagation(); ctx.copyText(m.text, m.by === "you" ? "your message" : "the answer"); } }) : null);
+
+  function message(m, i = null) {
     if (m.by === "codex") return h("div", { class: "ai-msg ai-msg-codex" }, body(m.text));
     if (m.by === "you") {
       const c = m.context || {};
       const bits = [];
+      if (m.quote?.text) bits.push("“" + clip(m.quote.text, 60) + "” in its answer");
       if (c.selection?.quote) bits.push("“" + clip(c.selection.quote, 60) + "”");
       if (c.thread) bits.push("a comment");
       return h("div", { class: "ai-msg ai-msg-you" },
         bits.length ? h("div", { class: "ai-msg-ctx" }, "On " + bits.join(" and ")) : null,
-        h("div", { class: "ai-msg-text" }, m.text));
+        h("div", { class: "ai-msg-text" }, m.text), copyBtn(m));
     }
-    return h("div", { class: "ai-msg ai-msg-ai" },
-      m.text ? body(m.text) : null,
+    return h("div", { class: "ai-msg ai-msg-ai", "data-msg": i == null ? null : String(i) },
+      m.text ? body(m.text) : null, copyBtn(m),
       m.changes?.length ? h("div", { class: "ai-changes" }, m.changes.map((x) => changeLine(x, m))) : null,
       m.comments?.length ? h("div", { class: "ai-changes" }, m.comments.map(commentLine)) : null,
       m.error && m.error !== "Stopped." ? h("div", { class: "ai-warn" }, "It stopped: " + m.error) : null,
       m.error === "Stopped." ? h("div", { class: "ai-note" }, "Stopped.") : null);
   }
 
+  /** A page's type, as its type badge says it ("Skill"): from its frontmatter, else its folder's type. */
+  function typeName(x) {
+    let t = null;
+    try { t = splitFront(x.after ?? x.before ?? "").data?.type || null; } catch {}
+    if (!t) t = typeAt(S.types || [], x.page)?.type || null;
+    return t ? t.replace(/^./, (c) => c.toUpperCase()) : null;
+  }
+  /** "Skill Woodcutting": the type, then the page's title in bold. */
+  const named = (x, title) => { const t = typeName(x); return [t ? h("span", { class: "ai-change-type" }, t + " ") : null, h("b", {}, title)]; };
+  const things = (n) => `${n} thing${n === 1 ? "" : "s"}`;
+
   /** A page the AI changed in a reply: what, with Show (the page, its changes marked) and Undo. */
   function changeLine(x, m) {
-    const title = ctx.titleOf(x.page) || x.page.split("/").pop();
-    const n = `${x.places || 1} change${x.places === 1 ? "" : "s"}`;
+    const title = ctx.titleOf(x.page) || headingOf(x.after ?? x.before) || x.page.split("/").pop();
+    const n = things(x.places || 1);
     const idx = A.conv.messages.indexOf(m);
     const dismiss = async (ev, label = "Dismissing…") => busy(ev, label, async () => { await api("/api/ai/reviewed", { method: "POST", body: JSON.stringify({ conv: A.id, msg: idx, page: x.page }) }); await openConversation(A.id); });
     // A new page it suggests: there's no page to review in yet, so it's previewed, then created or skipped.
@@ -442,7 +542,7 @@ export function makeAi(ctx) {
       const name = ctx.titleOf(x.page) || headingOf(x.after) || x.page.split("/").pop();
       return h("div", { class: "ai-change" + (x.reviewed ? " reviewed" : ""), title: x.reviewed ? "Handled" : x.page },
         x.reviewed ? h("span", { class: "ai-change-check", html: ICON.check }) : null,
-        h("span", { class: "ai-change-text" }, "Suggests a new page, ", h("b", {}, name)),
+        h("span", { class: "ai-change-text" }, "Suggests a new page, ", ...named(x, name)),
         x.reviewed ? null : h("button", { class: "ai-link", onclick: () => ctx.previewNewPage({ page: x.page, name, text: x.after,
           create: async () => {
             const r = await api("/api/ai/create-page", { method: "POST", body: JSON.stringify({ conv: A.id, msg: idx, page: x.page }) });
@@ -456,12 +556,12 @@ export function makeAi(ctx) {
     // Suggestions reviewed (accepted, skipped or dismissed): done, with a check and no actions.
     if (x.suggest) return h("div", { class: "ai-change" + (x.reviewed ? " reviewed" : ""), title: x.reviewed ? "Reviewed" : null },
       x.reviewed ? h("span", { class: "ai-change-check", html: ICON.check }) : null,
-      h("span", { class: "ai-change-text" }, `Suggested ${n} to `, h("b", {}, title)),
+      h("span", { class: "ai-change-text" }, `Suggested ${n} for `, ...named(x, title)),
       x.reviewed ? null : h("button", { class: "ai-link", onclick: () => ctx.showChanges(x.page) }, "Review"),
       x.reviewed ? null : h("button", { class: "ai-link", onclick: dismiss }, "Dismiss"));
-    const what = x.before === null ? "Made" : x.after === null ? "Deleted" : `Changed ${x.places || 1} place${x.places === 1 ? "" : "s"} in`;
+    const what = x.before === null ? "Made" : x.after === null ? "Deleted" : `Updated ${n} in`;
     return h("div", { class: "ai-change" + (x.reviewed ? " reviewed" : "") },
-      h("span", { class: "ai-change-text" }, what + " ", h("b", {}, title)),
+      h("span", { class: "ai-change-text" }, what + " ", ...named(x, title)),
       x.after !== null ? h("button", { class: "ai-link", onclick: () => ctx.showChanges(x.page) }, "Show") : null,
       h("button", { class: "ai-link", onclick: (ev) => busy(ev, "Undoing…", () => undoTurn(idx, x.page)) }, "Undo"));
   }
@@ -518,15 +618,18 @@ export function makeAi(ctx) {
     if (!text || A.run || A.sending) return;
     await ctx.saveNow(); // it reads the page as saved
     const context = started() ? {} : ctxSnapshot(); // a started conversation keeps its own (on the server)
+    const quote = A.quote; // for this message only
+    if (quote) context.quote = quote;
     A.sending = true;
-    A.pending = { text, context: { selection: context.selection, thread: context.thread } };
+    A.pending = { text, context: { selection: context.selection, thread: context.thread }, quote };
+    A.quote = null; drawChips();
     A.run = { text: "", activity: "Reading" };
     input.value = ""; grow(); pane.classList.remove("typing");
     drawLog(); syncSend();
-    const r = await api("/api/ai/send", { method: "POST", body: JSON.stringify({ id: A.id, text, context }) });
+    const r = await api("/api/ai/send", { method: "POST", body: JSON.stringify({ id: A.id, text, context, mode: A.mode }) });
     A.sending = false;
     if (!r.ok) {
-      A.pending = null; A.run = null;
+      A.pending = null; A.run = null; A.quote = quote; drawChips();
       input.value = text; grow();
       toast(failed("Couldn't send your message", r), "bad");
       if (r.needsSignIn) refreshProvider();
@@ -595,11 +698,13 @@ export function makeAi(ctx) {
 
   async function init(host) {
     host.append(pane);
+    document.body.append(askBtn);
     // Opening or closing a comment changes the thread chip.
     document.addEventListener("click", () => { if (!pane.classList.contains("hidden")) requestAnimationFrame(drawChips); });
-    drawHead(); drawLog(); drawChips();
+    drawHead(); drawLog(); drawChips(); drawMode();
     const r = await api("/api/ai");
     A.provider = r.provider || null;
+    if (r.defaultMode) { A.defaultMode = r.defaultMode; if (!A.id) { A.mode = r.defaultMode; drawMode(); } }
     if (A.id) await openConversation(A.id); else drawLog();
   }
 

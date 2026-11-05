@@ -1282,7 +1282,7 @@ function helpDialog() {
   modal("Keys", h("div", { class: "keys" },
     k("Ctrl P", "Search: pages by name, then the text of every page"),
     k("Ctrl M", "Comment on the selected text"), k("Ctrl Enter", "Post a comment. Write @agent in it to leave it for the next agent session"),
-    k("Ctrl J", "Ask the AI (with the selected text, if any)"), k("Ctrl Shift C", "Copy for Discord: the selection, or the section you're in, with a link back"),
+    k("Ctrl J", "Ask the AI (with the selected text, if any)"), k("Shift Tab", "In the AI box: switch between Chat (its changes wait for you to accept) and Work (it edits the pages)"), k("Ctrl Shift C", "Copy for Discord: the selection, or the section you're in, with a link back"),
     k("Ctrl K", "Add or edit a link"), k("Ctrl B", "Bold"), k("Ctrl I", "Italic"), k("Ctrl Z", "Undo"),
     k("Ctrl S", "Save now (pages also save by themselves)"), k("Alt ←", "Back to where you were (also the mouse's back button)"), k("Alt →", "Forward again"),
     k("Ctrl ,", "Show or hide the pages"), k("Ctrl .", "Show or hide the outline, links and AI"),
@@ -1759,7 +1759,7 @@ const aiChanges = makeAiChanges({ S, $, h, api, toast, scrollToPos,
   setFront: (front) => { S.front = front; scheduleDirty(); gddUi.refresh?.(); }, // a suggested header change, accepted
   held: (page) => (syncState?.held || []).find((x) => x.path === page) || null, share: (page) => sharePages([page]) });
 const ai = makeAi({
-  S, $, h, api, toast, renderHtml, notes,
+  S, $, h, api, toast, renderHtml, notes, copyText,
   openDoc: (...a) => openDoc(...a), hasPage: (p) => S.fileSet.has(p), titleOf: (p) => S.files.find((f) => f.path === p)?.title || null,
   saveNow: () => { refreshDirty(); return S.dirty ? save(false, { quiet: true }) : Promise.resolve(true); },
   show: () => { layout.show("outline"); showRightTab("ai"); },

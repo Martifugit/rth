@@ -1351,3 +1351,26 @@ body.in-app .search-trigger { height: 28px; }
    which shows through. */
 .titlebar, .toolbar, .ai-head, .ai-box { background: rgba(70, 70, 76, .12); }
 .toolbar, .ai-head { position: relative; z-index: 3; } /* their menus open over what comes after them */
+
+/* Chat or Work, under the box on the left (Shift+Tab switches): a quiet line, gold in Work. */
+.ai-foot { display: flex; align-items: center; margin-top: 6px; min-height: 16px; }
+.ai-mode { border: 0; background: none; padding: 0; font: 12px/1.2 var(--sans); color: var(--silver-dim); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ai-mode-name { font-weight: 700; color: var(--silver-soft); }
+.ai-mode-work .ai-mode-name { color: var(--value); }
+.ai-mode:hover .ai-mode-note { color: var(--silver-soft); }
+/* Copy a message: a small button that shows when pointing at the message. */
+.ai-msg-you, .ai-msg-ai { position: relative; }
+.ai-copy { position: absolute; width: 22px; height: 22px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 3px; background: none; color: var(--silver-dim); opacity: 0; transition: opacity .12s; line-height: 0; }
+.ai-msg-you .ai-copy { left: -26px; bottom: 2px; }
+.ai-msg-ai .ai-copy { right: -4px; top: -4px; }
+.ai-msg:hover .ai-copy, .ai-copy:focus-visible { opacity: 1; }
+.ai-copy:hover { color: var(--ink); background: rgba(255, 255, 255, .06); }
+.ai-copy svg, .ai-ask-ico svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+/* Ask about a part of an answer: a small button over the selection. */
+.ai-ask-float { position: fixed; z-index: 60; display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px 0 7px;
+  border: 1px solid #5a4a32; border-radius: 13px; background: #1f1a13; color: var(--value); font: 600 12.5px/1 var(--sans); box-shadow: 0 4px 14px rgba(0, 0, 0, .5); }
+.ai-ask-float.hidden { display: none; }
+.ai-ask-float:hover { border-color: #8a7148; }
+.ai-ask-ico { display: grid; place-items: center; }
+/* A change card's page type ("Skill"), before its title. */
+.ai-change-type { color: var(--silver-dim); }

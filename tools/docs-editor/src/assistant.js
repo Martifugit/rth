@@ -49,7 +49,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
   // The AI tab's cog (AI setup) can choose one instead, and OpenRouter's model; kept in ai.json beside
   // the conversations.
   const settingsFile = path.join(dir, "..", "ai.json");
-  let settings = { use: "auto", model: "", claudeModel: "", claudeEffort: "" }; // claude*: defaults for /model and /effort
+  let settings = { use: "auto", model: "", claudeModel: "", claudeEffort: "", mode: "chat" }; // claude*: defaults for /model and /effort; mode: a new conversation's
   try { settings = { ...settings, ...JSON.parse(fs.readFileSync(settingsFile, "utf8")) }; } catch {}
   const models = () => (settings.model ? [settings.model] : OPENROUTER_MODELS);
   const claudeP = claudeProvider({ repo, claude, systemFile: path.join(dir, "..", "ai-instructions.md") });
@@ -94,10 +94,12 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
       claude: { found: !!c.installed, signedIn: c.signedIn ?? null, version: c.version || null, error: c.ok ? null : c.error },
       openrouter: { signedIn: !!openrouterKey(), model: settings.model || "", defaultModel: OPENROUTER_MODELS.join(", ") },
       claudeDefaults: { model: settings.claudeModel || "", effort: settings.claudeEffort || "" },
+      mode: settings.mode || "chat",
       provider: await (using).check(),
     };
   }
-  async function configure({ use, model, claudeModel, claudeEffort }) {
+  async function configure({ use, model, claudeModel, claudeEffort, mode }) {
+    if (mode !== undefined && ["chat", "work"].includes(mode)) settings.mode = mode;
     if (use !== undefined) {
       if (!["auto", "claude", "openrouter"].includes(use)) return { error: "Unknown choice." };
       settings.use = use;
@@ -548,7 +550,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     return { ok: true, page };
   }
 
-  return { list, get, send, stop, remove, changesFor, reviewed, undo, createSuggested, setup, configure, setContext, lookUp, tool, toolList, tools, newTurn, endTurn, mcpConfig, signInClaude: () => claudeP.signIn(), check: provider.check, status: () => ({ running: [...runs.keys()] }) };
+  return { list, get, send, stop, remove, changesFor, reviewed, undo, createSuggested, setup, configure, setContext, lookUp, tool, toolList, tools, newTurn, endTurn, mcpConfig, signInClaude: () => claudeP.signIn(), check: provider.check, status: () => ({ running: [...runs.keys()], defaultMode: settings.mode || "chat" }) };
 }
 
 const titleFrom = (text) => {
