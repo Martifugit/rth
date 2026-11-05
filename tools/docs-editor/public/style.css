@@ -938,7 +938,7 @@ body.in-app .search-trigger { height: 28px; }
 /* ------------------------------------------------------------------ Show changes (src/ai-changes.js) */
 .ai-bar { display: flex; align-items: center; gap: 10px; padding: 6px 14px; border-bottom: 1px solid var(--hair); background: rgba(201, 162, 94, .06); font-size: 14px; color: var(--silver-soft); }
 .ai-bar.hidden { display: none; }
-.ai-bar-ico { color: var(--value); }
+.ai-bar-ico { flex: none; width: 16px; height: 16px; background-color: var(--value); }
 .ai-bar-gap { flex: 1; }
 .ai-bar-nav { display: inline-flex; align-items: center; gap: 4px; }
 .ai-bar-btn { width: 24px; height: 24px; border: 1px solid var(--hair); border-radius: 4px; background: none; color: var(--silver); font-size: 16px; line-height: 1; }
@@ -1397,9 +1397,11 @@ body.in-app .search-trigger { height: 28px; }
 .ai-ask-ico { display: grid; place-items: center; }
 /* A change card's page type ("Skill"), before its title. */
 .ai-change-type { color: var(--silver-dim); }
-/* The AI's reason for the change you're on, in the bar; and the pages an answer suggests changes to. */
-.ai-bar-why { min-width: 0; flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-style: italic; color: var(--muted); font-size: 13px; margin-left: 4px; }
-.ai-bar-why::before { content: "Why: "; font-style: normal; color: var(--dim); }
+/* The AI's reason for the change you're on, floating beside it (src/ai-changes.js, placeWhy). */
+.ai-why { position: fixed; z-index: 40; display: flex; gap: 7px; align-items: flex-start; max-width: 240px; padding: 7px 10px; border: 1px solid #5a4a32; border-radius: 6px;
+  background: #17130e; color: var(--ink); font-size: 12.5px; line-height: 1.4; box-shadow: 0 6px 18px rgba(0, 0, 0, .55); pointer-events: none; }
+.ai-why.hidden { display: none; }
+.ai-why-ico { flex: none; width: 13px; height: 13px; margin-top: 2px; background-color: var(--value); }
 .ai-bar-pages { color: var(--muted); font-weight: 400; }
 /* Quotes waiting to go (select part of an answer, then the reply button): a card each above the box, the
    quote as it shows in a sent message, and a line for what to ask about it. */

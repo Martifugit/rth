@@ -398,6 +398,10 @@ export function makeAi(ctx) {
   // AI setup (the cog): a settings list. At the top, what answers now; then the choices everyone has, then
   // Claude's and OpenRouter's own. Each row: a label and a short note on the left, its control on the right
   // (or under it, for the wider ones).
+  const MODEL_NAME = { fable: "Fable", opus: "Opus", sonnet: "Sonnet", haiku: "Haiku" };
+  /** "claude-fable-5-1" as people say it: "Fable 5.1". */
+  const modelName = (id) => { const m = String(id || "").replace(/^claude-/, "").match(/^([a-z]+)-(\d+)(?:-(\d+))?/i); return m ? m[1][0].toUpperCase() + m[1].slice(1) + " " + m[2] + (m[3] ? "." + m[3] : "") : MODEL_NAME[id] || id; };
+  const EFFORT_NAME = { low: "Low", medium: "Medium", high: "High", xhigh: "Extra high", max: "Max" };
   function setupEl() {
     const st = A.setup;
     if (!st) return h("div", { class: "ai-setup" }, h("div", { class: "ai-note" }, "Looking…"));
@@ -416,14 +420,6 @@ export function makeAi(ctx) {
       const el = h("select", { class: "field ais-select", onchange: () => onPick(el.value) }, options.map(([v, label]) => h("option", { value: v, selected: value === v ? "" : null }, label)));
       return el;
     };
-
-    // What answers now, said once at the top.
-    const usingName = st.using === "claude" ? "Claude" : "OpenRouter";
-    const usingModel = st.using === "claude" ? (cd.model || cd.lastModel || "") : (or.model || "free models");
-    const status = h("div", { class: "ais-status" + (ready ? "" : " warn") },
-      h("span", { class: "ais-dot" }),
-      h("div", {}, h("div", {}, ready ? "Answering with " : "Not ready: ", h("b", {}, usingName), ready && usingModel ? h("span", { class: "ais-dim" }, " · " + usingModel) : null),
-        !ready && st.provider?.error ? h("div", { class: "ais-note" }, st.provider.error) : null));
 
     const general = section("General",
       row("Which AI", st.use === "auto" ? "Claude when it's set up here, otherwise OpenRouter" : null,
@@ -445,9 +441,9 @@ export function makeAi(ctx) {
     const claudeOn = cl.found && cl.signedIn !== false;
     const claude = section("Claude",
       claudeState,
-      claudeOn ? row("Model", conv.model ? `This conversation uses ${conv.model} (/model)` : "For new conversations; /model changes one",
-        select(cd.model || "", [["", "Default" + (cd.lastModel ? ` (${cd.lastModel.replace(/^claude-/, "")})` : "")], ["fable", "Fable"], ["opus", "Opus"], ["sonnet", "Sonnet"], ["haiku", "Haiku"]], (v) => configure({ claudeModel: v }))) : null,
-      claudeOn ? row("Effort", conv.effort ? `This conversation uses ${conv.effort} (/effort)` : "How hard it thinks; /effort changes one conversation",
+      claudeOn ? row("Model", `Default: ${cd.model ? modelName(cd.model) : cd.lastModel ? modelName(cd.lastModel) : "Claude Code's own"}. /model changes it for one conversation${conv.model ? ` (this one: ${modelName(conv.model)})` : ""}.`,
+        select(cd.model || "", [["", "Default"], ["fable", "Fable"], ["opus", "Opus"], ["sonnet", "Sonnet"], ["haiku", "Haiku"]], (v) => configure({ claudeModel: v }))) : null,
+      claudeOn ? row("Effort", `Default: ${cd.effort ? EFFORT_NAME[cd.effort] || cd.effort : "Claude Code's own"}. /effort changes it for one conversation${conv.effort ? ` (this one: ${EFFORT_NAME[conv.effort] || conv.effort})` : ""}.`,
         select(cd.effort || "", [["", "Default"], ["low", "Low"], ["medium", "Medium"], ["high", "High"], ["xhigh", "Extra high"], ["max", "Max"]], (v) => configure({ claudeEffort: v }))) : null,
       row("Health check", "While Codex is idle, R'th AI checks changed pages for problems across pages and lists them on the To-do page",
         toggle(!!st.audit, (v) => configure({ audit: v }), "Check the GDD while idle")),
@@ -474,7 +470,7 @@ export function makeAi(ctx) {
       row("Model", h("span", {}, "Free (automatic) unless you name one · ", h("a", { href: "https://openrouter.ai/models", target: "_blank" }, "browse")),
         h("div", { class: "ais-inline" }, modelInput, h("button", { class: "btn btn-small", onclick: () => configure({ model: modelInput.value }) }, "Save")), { wide: true }));
 
-    return h("div", { class: "ai-setup" }, status, general, claude, openrouter,
+    return h("div", { class: "ai-setup" }, general, claude, openrouter,
       h("p", { class: "ais-foot" }, "Keys and conversations stay on this computer."));
   }
 

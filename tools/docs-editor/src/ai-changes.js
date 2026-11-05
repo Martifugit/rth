@@ -38,6 +38,9 @@ export const AiMarks = Extension.create({
 export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => null, share = () => {}, setFront = null, openChanges = null, ask = null, titleOf = (p) => p }) {
   const C = { changes: [], showing: false, hunks: [], at: -1, base: null, page: null, suggest: false, target: null, skipped: new Set() };
   const bar = h("div", { id: "aiBar", class: "ai-bar hidden" });
+  // The AI's reason for the change you're on, floating beside it (placeWhy).
+  const whyBox = h("div", { class: "ai-why hidden" });
+  document.body.append(whyBox);
   const undoBtn = h("button", { class: "ai-undo-one hidden", title: "Undo this change", onmousedown: (e) => e.preventDefault(), onclick: () => undoHunk(Number(undoBtn.dataset.hunk)) }, "Undo");
   document.body.append(undoBtn);
 
@@ -66,10 +69,9 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
       // Suggestions, gone through top to bottom: Accept or Skip each.
       const cur = C.at >= 0 ? C.at : 0;
       const fs_ = frontSuggestion();
-      const why = n ? C.hunks[Math.min(cur, n - 1)]?.reason : null;
       const others = otherPages();
       bar.replaceChildren(...[
-        h("span", { class: "ai-bar-ico" }, "✦"),
+        h("span", { class: "ico ico-ai ai-bar-ico" }),
         h("span", { class: "ai-bar-text" }, n ? `The AI suggests ${n} change${n > 1 ? "s" : ""}` : fs_ ? "One more suggestion" : "No suggestions left",
           others.length ? h("span", { class: "ai-bar-pages", title: "Pages this answer suggests changes to: " + [S.path, ...others].map(titleOf).join(", ") }, ` · page 1 of ${others.length + 1}`) : null),
         // The page's header (status, type, groups...) changed too: said plainly, answered on its own.
@@ -80,7 +82,6 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
           h("button", { class: "ai-bar-btn", title: "Previous suggestion", onclick: () => step(-1) }, "‹"),
           h("span", { class: "ai-bar-pos" }, `${cur + 1} of ${n}`),
           h("button", { class: "ai-bar-btn", title: "Next suggestion (Alt+↓)", onclick: () => step(1) }, "›")) : null,
-        why ? h("span", { class: "ai-bar-why", title: why }, why) : null,
         h("span", { class: "ai-bar-gap" }),
         n ? h("button", { class: "btn", title: "Leave this one as it is (Alt+Backspace)", onclick: () => skip(cur) }, "Skip") : null,
         n ? h("button", { class: "btn btn-gold", title: "Make this change (Alt+Enter)", onclick: () => accept(cur) }, "Accept") : null,
@@ -91,7 +92,7 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
       return;
     }
     bar.replaceChildren(...[
-      h("span", { class: "ai-bar-ico" }, "✦"),
+      h("span", { class: "ico ico-ai ai-bar-ico" }),
       h("span", { class: "ai-bar-text" }, C.other
         ? (C.showing ? (n ? `${n} change${n > 1 ? "s" : ""} not saved yet` : "No changes left") : "Changed outside Codex")
         : C.showing ? (n ? `${n} change${n > 1 ? "s" : ""} by the AI` : "No changes left") : "The AI changed this page"),
@@ -99,7 +100,6 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
         h("button", { class: "ai-bar-btn", title: "Previous change", onclick: () => step(-1) }, "‹"),
         h("span", { class: "ai-bar-pos" }, C.at >= 0 ? `${C.at + 1} of ${n}` : ""),
         h("button", { class: "ai-bar-btn", title: "Next change (Alt+↓)", onclick: () => step(1) }, "›")) : null,
-      C.showing && n && C.at >= 0 && C.hunks[C.at]?.reason ? h("span", { class: "ai-bar-why", title: C.hunks[C.at].reason }, C.hunks[C.at].reason) : null,
       h("span", { class: "ai-bar-gap" }),
       h("button", { class: "btn" + (C.showing ? " on" : ""), onclick: () => toggle() }, C.showing ? "Hide changes" : "Show changes"),
       held(S.path)
@@ -371,6 +371,33 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
     const set = on ? (C.suggest ? computeSuggest() : compute()) : DecorationSet.empty;
     S.editor.view.dispatch(S.editor.state.tr.setMeta(KEY, set).setMeta("addToHistory", false));
     drawBar();
+    requestAnimationFrame(placeWhy);
+  }
+
+  /** The reason for the change you're on, in a small note beside it: to the right of the text when
+   *  there's room, else just above it. Hidden without a reason, or with the change out of view. */
+  function placeWhy() {
+    const hk = C.showing && C.changes.length && C.page === S.path && !S.view ? C.hunks[C.at < 0 ? 0 : C.at] : null;
+    const el = hk?.reason ? $("#page .ai-current") || $(`#page [data-hunk="${C.at < 0 ? 0 : C.at}"]`) : null;
+    const scroller = $("#scroller");
+    if (!el || !scroller) { whyBox.classList.add("hidden"); return; }
+    const r = el.getBoundingClientRect(), box = scroller.getBoundingClientRect();
+    if (r.bottom < box.top + 4 || r.top > box.bottom - 4) { whyBox.classList.add("hidden"); return; }
+    whyBox.replaceChildren(h("span", { class: "ico ico-ai ai-why-ico" }), h("span", {}, hk.reason));
+    whyBox.classList.remove("hidden");
+    const w = Math.min(240, whyBox.offsetWidth || 240);
+    const room = box.right - r.right - 24;
+    if (room >= 160) {
+      whyBox.style.maxWidth = Math.min(240, room) + "px";
+      whyBox.style.left = Math.round(r.right + 14) + "px";
+      whyBox.style.top = Math.round(Math.max(box.top + 6, r.top)) + "px";
+      whyBox.classList.remove("above");
+    } else {
+      whyBox.style.maxWidth = "320px";
+      whyBox.style.left = Math.round(Math.max(box.left + 8, Math.min(r.left, box.right - w - 8))) + "px";
+      whyBox.style.top = Math.round(Math.max(box.top + 6, r.top - whyBox.offsetHeight - 8)) + "px";
+      whyBox.classList.add("above");
+    }
   }
 
   function step(d) {
@@ -418,7 +445,8 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
     undoBtn.style.top = r.top - 2 + "px";
     undoBtn.classList.remove("hidden");
   });
-  $("#scroller").addEventListener("scroll", () => undoBtn.classList.add("hidden"));
+  $("#scroller").addEventListener("scroll", () => { undoBtn.classList.add("hidden"); placeWhy(); });
+  window.addEventListener("resize", () => placeWhy());
 
   // Keys while changes are shown: Alt+↓/↑ from one to the next, Alt+Enter accept, Alt+Backspace skip.
   document.addEventListener("keydown", (ev) => {

@@ -82,12 +82,14 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     if (settings.use === "claude") return claudeP;
     return hasClaude ? claudeP : openP;
   }
-  const provider = { check: async () => (await pick()).check() };
+  // Claude as found at startup (AI setup's Check again looks again): asking Claude Code takes seconds.
+  const provider = { check: async () => { const p = await pick(); return p === claudeP ? claudeP.known() : p.check(); } };
 
   /** What AI setup shows: which AI answers, and how each way in stands. */
   async function setup({ recheck = false } = {}) {
     if (recheck) hasClaude = null;
-    const c = await claudeP.check();
+    // What was found when the Codex started (or last checked): asking Claude Code again takes seconds.
+    const c = recheck ? await claudeP.check() : await claudeP.known();
     hasClaude = c.ok;
     const using = await pick();
     return {
@@ -98,7 +100,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
       mode: settings.mode || "chat",
       audit: settings.audit !== false,
       answerDiscord: !!settings.answerDiscord,
-      provider: await (using).check(),
+      provider: using === claudeP ? c : await using.check(),
     };
   }
   async function configure({ use, model, claudeModel, claudeEffort, mode, audit, answerDiscord }) {
