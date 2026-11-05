@@ -20,9 +20,9 @@ fire can take back. It's for the player who wants to play hard for a while, alon
 - **The forest.** Each run is a [burning forest](../groups/burning-forests.md), an authored place
   outside the world, with one for each band of Woodcutting levels. The path runs between fire on
   both sides.
-- **Smouldering trees.** Along the path, the player fells
-  [smouldering trees](../objects/smoldering-tree.md) to stop the fire spreading. They give
-  [smouldering logs](../items/smoldering-log.md), which the player stacks up through the run.
+- **Smoldering trees.** Along the path, the player fells
+  [smoldering trees](../objects/smoldering-tree.md) to stop the fire spreading. They give
+  [smoldering logs](../items/smoldering-log.md), which the player stacks up through the run.
 - **Near-crossings.** Where the fire has almost crossed the path, the player holds it back with a
   short movement puzzle.
 - **Hazards.** A hazard that catches the player costs [blood](../systems/blood.md) and turns part of
@@ -53,7 +53,7 @@ brigade's chief and is taken to the burning forest for their level.
 
 ## Players
 
-- Solo: Yes. Each player's smouldering trees, near-crossings and personal hazards are their own.
+- Solo: Yes. Each player's [smoldering trees](../objects/smoldering-tree.md), near-crossings and personal hazards are their own.
 - Group: Everyone of a level band runs the same forest and sees each other there. Some environmental
   hazards cycle on their own and are shared.
 - Versus: Only through best times.
