@@ -556,6 +556,7 @@ export function makeAi(ctx) {
       m.text ? body(m.text) : null, copyBtn(m),
       m.changes?.length ? h("div", { class: "ai-changes" }, m.changes.map((x) => changeLine(x, m))) : null,
       m.comments?.length ? h("div", { class: "ai-changes" }, m.comments.map(commentLine)) : null,
+      problemCards(m, i),
       m.error && m.error !== "Stopped." ? h("div", { class: "ai-warn" }, "It stopped: " + m.error) : null,
       m.error === "Stopped." ? h("div", { class: "ai-note" }, "Stopped.") : null);
   }
@@ -604,6 +605,49 @@ export function makeAi(ctx) {
       h("span", { class: "ai-change-text" }, what + " ", ...named(x, title)),
       x.after !== null ? h("button", { class: "ai-link", onclick: () => ctx.showChanges(x.page) }, "Show") : null,
       h("button", { class: "ai-link", onclick: (ev) => busy(ev, "Undoing…", () => undoTurn(idx, x.page)) }, "Undo"));
+  }
+
+  // ----------------------------------------------------------------------------- problems it brought in
+
+  // The Codex checked what the answer changed (src/turn-check.js): a card per page with problems, its
+  // count; a click opens what each one is, with Fix (the To-do's fix, or asking R'th AI) and Dismiss.
+  const openProblems = new Set(); // "msg:page" cards opened
+  function problemCards(m, i) {
+    const live = (m.problems || []).map((p, j) => ({ ...p, j })).filter((p) => !p.done);
+    if (!live.length || i == null) return null;
+    const byPage = new Map();
+    for (const p of live) { if (!byPage.has(p.page)) byPage.set(p.page, []); byPage.get(p.page).push(p); }
+    return h("div", { class: "ai-changes" }, [...byPage].map(([page, ps]) => {
+      const k = i + ":" + page, open = openProblems.has(k);
+      const title = ctx.titleOf(page) || page.split("/").pop();
+      const head = h("div", { class: "ai-change ai-problem" + (open ? " open" : ""), title: open ? "Hide" : "What's wrong", onclick: () => { open ? openProblems.delete(k) : openProblems.add(k); drawLog(); } },
+        h("span", { class: "ai-problem-ico" }, "!"),
+        h("span", { class: "ai-change-text" }, `${ps.length} problem${ps.length === 1 ? "" : "s"} in `, ...named({ page, after: null, before: null }, title)),
+        h("span", { class: "ai-problem-caret" }, open ? "▾" : "▸"));
+      if (!open) return head;
+      return h("div", { class: "ai-problem-group" }, head, ...ps.map((p) => h("div", { class: "ai-problem-row" },
+        h("span", { class: "ai-problem-text" }, (p.line ? `Line ${p.line}: ` : "") + p.text),
+        h("span", { class: "ai-problem-acts" },
+          h("button", { class: "ai-link", title: p.fix ? "Fix it the way the To-do does" : "Ask R'th AI to fix it", onclick: (ev) => busy(ev, "Fixing…", () => fixProblem(i, p)) }, "Fix"),
+          h("button", { class: "ai-link", onclick: (ev) => busy(ev, "…", () => problemDone(i, p.j, "dismissed")) }, "Dismiss")))));
+    }));
+  }
+  async function problemDone(msg, j, how) {
+    const r = await api("/api/ai/problem", { method: "POST", body: JSON.stringify({ conv: A.id, msg, i: j, how }) });
+    if (!r.ok) return toast(failed("Couldn't do that", r), "bad");
+    await openConversation(A.id);
+  }
+  async function fixProblem(msg, p) {
+    if (p.fix) {
+      if (S.path === p.page && !(await ctx.saveNow())) return toast("Couldn't save the page first", "bad");
+      const r = await api("/api/fix", { method: "POST", body: JSON.stringify({ fix: p.fix }) });
+      if (r.ok) { toast("Fixed", "good"); if (S.path === p.page) S.reloadOpen = true; return problemDone(msg, p.j, "fixed"); }
+      // No fix of its own after all (or not allowed): R'th AI is asked instead.
+    }
+    await problemDone(msg, p.j, "fixed");
+    input.value = `Fix this problem your change brought in on \`${p.page}\`${p.line ? ` (line ${p.line})` : ""}: ${p.text}`;
+    grow();
+    send();
   }
 
   /** A page's title from its text: its first heading. */
@@ -708,6 +752,7 @@ export function makeAi(ctx) {
     if (ev.state === "reviewed" && A.id && !A.run && (ev.id === A.id || !ev.id) &&
       A.conv?.messages?.some((m) => (m.changes || []).some((x) => !x.reviewed && (!ev.page || x.page === ev.page)))) return openConversation(A.id);
     if (ev.id !== A.id) return;
+    if (ev.state === "checked") { if (!A.run) openConversation(A.id); return; } // the check found problems: their cards
     if (ev.state === "running") {
       A.run = { text: ev.text, activity: ev.activity };
       if (stream?.el.isConnected && stream.id === A.id) stream.set(A.run); else drawLog();

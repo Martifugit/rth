@@ -1391,3 +1391,11 @@ body.in-app .search-trigger { height: 28px; }
 .ai-msg-quote { margin: 2px 0 4px; padding: 1px 0 1px 8px; border-left: 2px solid #8a7148; color: var(--silver-dim); font-size: 13px; }
 .ai-msg-quote:first-child { margin-top: 0; }
 .ai-q-mark { color: transparent; } /* the "> " that makes the line a quote: kept for its width, not shown */
+/* Problems the Codex found in what the answer changed: a card per page, opened for each problem. */
+.ai-problem { cursor: pointer; }
+.ai-problem-ico { flex: none; width: 16px; height: 16px; border-radius: 50%; display: grid; place-items: center; font: 700 11px/1 var(--sans); color: #1a120c; background: #d9a35b; }
+.ai-problem-caret { margin-left: auto; color: var(--silver-dim); font-size: 11px; }
+.ai-problem-group { display: flex; flex-direction: column; gap: 2px; }
+.ai-problem-row { display: flex; align-items: baseline; gap: 8px; padding: 4px 8px 4px 30px; font-size: 13px; color: var(--silver-soft); }
+.ai-problem-text { flex: 1; min-width: 0; }
+.ai-problem-acts { flex: none; display: flex; gap: 8px; }

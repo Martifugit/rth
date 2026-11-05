@@ -44,11 +44,15 @@ export function makeTools({ repo, pages, read, write, store = null, spell = null
   let built = null;
   async function engine() {
     const files = await pages();
-    const list = await Promise.all(files.map(async (p) => ({ path: p, text: (await read(p)) ?? "" })));
-    const idx = buildIndex(list);
+    const texts = new Map(await Promise.all(files.map(async (p) => [p, (await read(p)) ?? ""])));
+    built = indexOf(texts);
+    return built;
+  }
+  /** The Codex's view of a given set of page texts (Map page → text): the turn check's before and after. */
+  function indexOf(texts) {
+    const idx = buildIndex([...texts].map(([path, text]) => ({ path, text: text ?? "" })));
     idx.system = readSystem(idx.texts.get(SYSTEM) || "");
     idx.gdd = buildGdd(idx.texts);
-    built = idx;
     return idx;
   }
   const forget = () => { built = null; };
@@ -381,5 +385,5 @@ export function makeTools({ repo, pages, read, write, store = null, spell = null
     }
   }
 
-  return { functions, mcpList, run, describe, problemsOn, engine, forget, summaryOf, freshSections, names: () => T.map((t) => t.name) };
+  return { functions, mcpList, run, describe, problemsOn, engine, indexOf, forget, summaryOf, freshSections, names: () => T.map((t) => t.name) };
 }

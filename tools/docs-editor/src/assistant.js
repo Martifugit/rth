@@ -24,6 +24,7 @@ import { COMMENT_FORMAT, commentsIn, withoutComments, anchorFor } from "./ai-com
 import { writingBrief } from "./writing-brief.js";
 import { TEMPLATES } from "./gdd.js";
 import { makeTools } from "./ai-tools.js";
+import { checkTurn, afterTexts } from "./turn-check.js";
 import { fileURLToPath } from "node:url";
 
 const MCP_SOURCE = fileURLToPath(new URL("./mcp-server.js", import.meta.url));
@@ -125,7 +126,11 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
   async function writeConv(c) {
     const tmp = file(c.id) + ".tmp";
     await fsp.writeFile(tmp, JSON.stringify(c, null, 1), "utf8");
-    await fsp.rename(tmp, file(c.id));
+    // Windows refuses the rename while the file is being read (the AI tab opening it): try again shortly.
+    for (let i = 0; ; i++) {
+      try { await fsp.rename(tmp, file(c.id)); return; }
+      catch (e) { if (i >= 8 || !["EPERM", "EBUSY", "EACCES"].includes(e.code)) throw e; await new Promise((r) => setTimeout(r, 25 * (i + 1))); }
+    }
   }
 
   /** Every conversation, newest first, without their messages. */
@@ -288,6 +293,8 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
       fresh.updated = msg.at;
       await writeConv(fresh);
       emit("ai", { id: c.id, state: "done", error: res.error || null, pages: changes.map((x) => x.page) });
+      // Then, without holding up the answer: what it changed, checked; the problems it brought in become cards.
+      if (changes.length) checkLater(c.id, fresh.messages.length - 1, before, changes);
     });
     return { ok: true, id: c.id };
   }
@@ -483,6 +490,29 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     return out;
   }
 
+  /** The turn check (src/turn-check.js), after the answer is shown: msg.problems, and an "ai checked" event. */
+  async function checkLater(conv, msg, before, changes) {
+    try {
+      const problems = await checkTurn({ tools, before, after: afterTexts(before, changes), changes });
+      if (!problems.length) return;
+      const c = await readConv(conv);
+      if (!c?.messages[msg]) return;
+      c.messages[msg].problems = problems;
+      await writeConv(c);
+      emit("ai", { id: conv, state: "checked", msg });
+    } catch (e) { console.error("Checking R'th AI's changes:", e.message); }
+  }
+
+  /** A problem card: dismissed, or fixed (by the To-do's fix, or by asking the AI). */
+  async function problemDone({ conv, msg, i, how = "dismissed" }) {
+    const c = await readConv(conv);
+    const p = c?.messages[msg]?.problems?.[i];
+    if (!p) return { error: "That problem isn't there any more." };
+    p.done = how === "fixed" ? "fixed" : "dismissed";
+    await writeConv(c);
+    return { ok: true };
+  }
+
   async function conversations() {
     const out = [];
     for (const name of await fsp.readdir(dir).catch(() => [])) if (name.endsWith(".json")) { const c = await readConv(name.slice(0, -5)); if (c) out.push(c); }
@@ -578,7 +608,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     return { ok: true, page };
   }
 
-  return { list, get, send, stop, remove, changesFor, acceptSuggestions, reviewed, undo, createSuggested, setup, configure, setContext, lookUp, tool, toolList, tools, newTurn, endTurn, mcpConfig, signInClaude: () => claudeP.signIn(), check: provider.check, status: () => ({ running: [...runs.keys()], defaultMode: settings.mode || "chat" }) };
+  return { list, get, send, stop, remove, changesFor, acceptSuggestions, problemDone, reviewed, undo, createSuggested, setup, configure, setContext, lookUp, tool, toolList, tools, newTurn, endTurn, mcpConfig, signInClaude: () => claudeP.signIn(), check: provider.check, status: () => ({ running: [...runs.keys()], defaultMode: settings.mode || "chat" }) };
 }
 
 const titleFrom = (text) => {
