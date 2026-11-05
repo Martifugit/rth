@@ -11,7 +11,7 @@ status: stub
 ## What it is
 
 A tree catching fire beside the path in a [Wildfires](../activities/wildfires.md) forest. Chopping
-it gives [smouldering logs](../items/smouldering-log.md).
+it gives [smouldering logs](../items/smoldering-log.md).
 
 ## Intent
 

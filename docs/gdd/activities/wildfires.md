@@ -22,7 +22,7 @@ fire can take back. It's for the player who wants to play hard for a while, alon
   both sides.
 - **Smouldering trees.** Along the path, the player fells
   [smouldering trees](../objects/smouldering-tree.md) to stop the fire spreading. They give
-  [smouldering logs](../items/smouldering-log.md), which the player stacks up through the run.
+  [smouldering logs](../items/smoldering-log.md), which the player stacks up through the run.
 - **Near-crossings.** Where the fire has almost crossed the path, the player holds it back with a
   short movement puzzle.
 - **Hazards.** A hazard that catches the player costs [blood](../systems/blood.md) and turns part of

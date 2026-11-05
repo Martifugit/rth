@@ -6,7 +6,7 @@ based-on:
 status: stub
 ---
 
-# Smouldering log
+# Smoldering log
 
 ## What it is
 
