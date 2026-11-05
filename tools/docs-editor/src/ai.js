@@ -59,7 +59,10 @@ export function makeAi(ctx) {
   // Quotes from its answers (select, then the reply button): cards above the box, each quoting the part in
   // the look of a sent quote, with its own line for what to ask about it (src/ai.js, quoteCard).
   const quotes = h("div", { class: "ai-quotes hidden" });
-  const box = h("div", { class: "ai-box" }, mention, chips, quotes, h("div", { class: "ai-row" }, input, sendBtn), h("div", { class: "ai-foot" }, modeLine));
+  // One frame for the message: its quotes, the box, then the mode and a small send button on one line.
+  const compose = h("div", { class: "ai-compose", onmousedown: (ev) => { if (ev.target === compose) { ev.preventDefault(); input.focus(); } } },
+    quotes, input, h("div", { class: "ai-foot" }, modeLine, sendBtn));
+  const box = h("div", { class: "ai-box" }, mention, chips, compose);
   pane.append(head, log, box);
 
   input.addEventListener("keydown", (ev) => {

@@ -910,14 +910,16 @@ body.in-app .search-trigger { height: 28px; }
 .ai-chip-x { width: 18px; height: 18px; border: 0; border-radius: 50%; background: none; color: var(--silver-dim); }
 .ai-chip-x:hover { color: #fff; background: rgba(255, 255, 255, .08); }
 .ai-chip-x svg { width: 11px; height: 11px; }
-.ai-row { display: flex; align-items: flex-end; gap: 6px; padding: 5px 5px 5px 10px; border: 1px solid var(--line); border-radius: 6px; background: linear-gradient(#0b0a08, #12100d); box-shadow: inset 0 1px 3px #000; }
-.ai-row:focus-within { border-color: var(--accent); }
-.ai-input { flex: 1; min-width: 0; resize: none; border: 0; outline: none; background: none; color: var(--text); font: 14.5px/1.4 var(--sans); padding: 4px 0; max-height: 220px; overflow-y: hidden; }
+/* The message, one framed piece: quotes, the box (no frame of its own), then the mode and send. */
+.ai-compose { display: flex; flex-direction: column; padding: 7px 6px 5px 11px; border: 1px solid var(--line); border-radius: 6px; background: linear-gradient(#0b0a08, #12100d); box-shadow: inset 0 1px 3px #000; cursor: text; }
+.ai-compose:focus-within { border-color: var(--accent); }
+.ai-compose .ai-quotes { margin: 0 5px 6px 0; }
+.ai-input { display: block; width: 100%; min-width: 0; resize: none; border: 0; outline: none; background: none; color: var(--text); font: 14.5px/1.4 var(--sans); padding: 2px 5px 2px 0; max-height: 220px; overflow-y: hidden; }
 .ai-input::placeholder { color: var(--dim); }
-.ai-send { flex: none; width: 28px; height: 28px; border: 0; border-radius: 5px; background: rgba(201, 162, 94, .18); color: var(--value); }
+.ai-send { flex: none; width: 24px; height: 24px; border: 0; border-radius: 5px; background: rgba(201, 162, 94, .18); color: var(--value); cursor: pointer; }
 .ai-send:hover { background: rgba(201, 162, 94, .3); }
 .ai-send.stop { background: rgba(255, 255, 255, .08); color: var(--silver); }
-.ai-send svg { width: 16px; height: 16px; }
+.ai-send svg { width: 14px; height: 14px; }
 .cm-ask svg { width: 17px; height: 17px; }
 
 /* ------------------------------------------------------------------ the account (src/account-button.js) */
@@ -1353,7 +1355,8 @@ body.in-app .search-trigger { height: 28px; }
 .toolbar, .ai-head { position: relative; z-index: 3; } /* their menus open over what comes after them */
 
 /* Chat or Work, under the box on the left (Shift+Tab switches): a quiet line, gold in Work. */
-.ai-foot { display: flex; align-items: center; margin-top: 6px; min-height: 16px; }
+.ai-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; margin-top: 4px; min-height: 24px; cursor: default; }
+.ai-foot .ai-mode { align-self: center; }
 .ai-mode { border: 0; background: none; padding: 0; font: 12px/1.2 var(--sans); color: var(--silver-dim); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ai-mode-name { font-weight: 700; color: var(--silver-soft); }
 .ai-mode-work .ai-mode-name { color: var(--value); }
