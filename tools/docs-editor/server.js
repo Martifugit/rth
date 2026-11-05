@@ -34,6 +34,7 @@ import { GDD, SYSTEM, TEMPLATES, undeletable, inGdd, readSystem, readPrompts, ne
 import { make as makeFront, split as splitFront, slugOf } from "./src/frontmatter.js";
 import { buildGdd, runQuery, checks, labelFor } from "./src/gdd-index.js";
 import { makeSync } from "./src/sync.js";
+import { makeAuditor } from "./src/audit.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 // The repository the Codex works on: the one it sits in, or CODEX_REPO (checks use a throwaway copy).
@@ -198,6 +199,18 @@ const assistant = makeAssistant({
     return [...seen.values()];
   },
 });
+
+// The GDD's health check (src/audit.js): while idle, with Claude, R'th AI checks pages changed since it
+// last did; what it finds goes on the To-do page, for everyone. lastActivity: the last thing done here.
+let lastActivity = Date.now();
+const auditor = makeAuditor({
+  repo: REPO, dataDir: DATA, pages: allDocs,
+  read: async (rel) => { try { return (await readText(path.join(REPO, rel))).replace(/\r\n/g, "\n"); } catch { return null; } },
+  audit: (x) => assistant.audit(x), canRun: () => assistant.canAudit(), idleFor: () => Date.now() - lastActivity,
+  who: () => account.view()?.user?.name || owner || "R'th AI", ownChanged: (rel) => syncer.saved(rel, { soon: true }),
+  emit: (type, data) => broadcast(type, data),
+});
+auditor.start();
 
 // The link index over every page, rebuilt on demand after any page changes.
 let index = null;
@@ -541,8 +554,8 @@ const api = {
   },
 
   async "POST /api/ai/send"(url, req) {
-    const { id, text, context, mode } = await body(req);
-    const r = await assistant.send({ id, text, context, mode });
+    const { id, text, context, mode, problem } = await body(req);
+    const r = await assistant.send({ id, text, context, mode, problem });
     return r.error ? [400, r] : r;
   },
 
@@ -718,11 +731,21 @@ const api = {
   async "GET /api/todo"() {
     const idx = await gdd();
     const exists = (rel) => fs.existsSync(path.join(REPO, rel));
-    return buildTodo({
+    const todo = buildTodo({
       idx, gdd: idx.gdd, system: idx.system, problems: checks(idx.gdd, idx.system, idx.texts),
       headings: brokenLinks(idx, exists).filter((l) => l.kind === "heading"), renames: await gitRenames(), exists,
     });
+    // What R'th AI's health check found (src/audit.js), and whether this Codex can check.
+    const found = (await auditor.list()).map((p) => ({ ...p, titles: p.pages.map((x) => idx.titles.get(x) || null) }));
+    return { ...todo, found, count: todo.count + found.length, audit: { ...auditor.view(), available: await assistant.canAudit().catch(() => false) } };
   },
+  async "POST /api/problems/dismiss"(url, req) {
+    if (!account.canEdit()) return [403, { error: "Sign in with Discord (with the Codex role) to change the To-do." }];
+    const r = auditor.dismiss(await body(req)); return r.error ? [400, r] : r;
+  },
+  async "POST /api/audit/sweep"() { return auditor.sweep(); },
+  // Check now, whatever the idle time (for trying it out).
+  async "POST /api/audit/run"() { const r = await auditor.runOnce(); return r.error ? [400, r] : r; },
 
   // A To-do fix (src/fixes.js). With `dry`, only which pages it would change; otherwise it changes them
   // (each keeping its line endings) and answers with a token for Undo.
@@ -869,6 +892,8 @@ const server = http.createServer(async (req, res) => {
       const result = await noteApi(req, noteRoute[1], noteRoute[2] || null);
       return Array.isArray(result) ? send(res, result[0], result[1]) : send(res, 200, result);
     }
+    // Something done here (not just looked at): the health check waits until things have been quiet a while.
+    if (req.method !== "GET" && !/^\/api\/(here|presence|spell|ai\/tools?|audit)\b/.test(url.pathname)) lastActivity = Date.now();
     const handler = api[`${req.method} ${url.pathname}`];
     if (handler) {
       const result = await handler(url, req);

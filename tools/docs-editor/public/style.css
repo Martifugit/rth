@@ -1399,3 +1399,8 @@ body.in-app .search-trigger { height: 28px; }
 .ai-problem-row { display: flex; align-items: baseline; gap: 8px; padding: 4px 8px 4px 30px; font-size: 13px; color: var(--silver-soft); }
 .ai-problem-text { flex: 1; min-width: 0; }
 .ai-problem-acts { flex: none; display: flex; gap: 8px; }
+/* The health check's problems on the To-do page. */
+.td-kind { text-transform: none; }
+.td-found-more { margin: 6px 0 2px; font-size: 14px; color: var(--muted); }
+.td-found-more p { margin: 0 0 6px; }
+.td-audit { text-align: center; margin: -6px 0 14px; font-size: 13px; }

@@ -1636,6 +1636,7 @@ function showView(kind, push = true) {
   if (push) history.pushState({ view: kind }, "", "?view=" + VIEWS[kind].url);
   $$(".t-row.current").forEach((r) => r.classList.remove("current"));
   $(`.t-special[data-view="${kind}"]`)?.classList.add("current");
+  aiChanges.heldChanged(); // the AI's bar belongs to the page, not over the view
   VIEWS[kind].render();
 }
 function hideView() {
@@ -1647,6 +1648,7 @@ function hideView() {
   $("#main").classList.remove("view-status");
   $("#statusView").classList.add("hidden");
   $$(".t-special").forEach((r) => r.classList.remove("current"));
+  aiChanges.heldChanged();
 }
 
 // The counts beside Recent changes (others' changes since you last looked) and Broken links.
@@ -1699,7 +1701,9 @@ function scrollToPos(pos, onlyIfHidden = false) {
   } catch {}
 }
 
-const panels = makePanels({ S, $, h, api, toast, isMeta, ask: (...a) => ask(...a), save: () => save(false, { quiet: true }), loadTree: () => loadTree(), openDoc: (...a) => openDoc(...a), newPage: (prefill) => newPageDialog(null, prefill), findInPage: (q) => findInPage(q), setLinksCount, countsChanged: () => refreshSpecialCounts() });
+const panels = makePanels({ S, $, h, api, toast, isMeta, ask: (...a) => ask(...a),
+  // Fix with R'th AI (a health-check problem on the To-do): its first page opened, then a conversation about it.
+  fixWithAi: async (p) => { await openDoc(p.pages[0]); ai.fixFound(p); }, save: () => save(false, { quiet: true }), loadTree: () => loadTree(), openDoc: (...a) => openDoc(...a), newPage: (prefill) => newPageDialog(null, prefill), findInPage: (q) => findInPage(q), setLinksCount, countsChanged: () => refreshSpecialCounts() });
 const notes = makeNotes({
   S, $, $$, h, esc, api, toast, modal, ask, renderHtml,
   openDoc: (...a) => openDoc(...a), refreshDirty: () => refreshDirty(), currentHeadingPos, scrollToPos,

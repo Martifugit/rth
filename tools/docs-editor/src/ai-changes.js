@@ -58,7 +58,7 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
   function skipFront() { C.frontDone = true; after(); }
 
   function drawBar() {
-    const has = C.changes.length > 0 && C.page === S.path && S.mode !== "source";
+    const has = C.changes.length > 0 && C.page === S.path && S.mode !== "source" && !S.view; // not over the To-do or Recent changes
     bar.classList.toggle("hidden", !has);
     if (!has) return;
     const n = C.hunks.length;

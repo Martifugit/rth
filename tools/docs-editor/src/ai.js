@@ -411,6 +411,11 @@ export function makeAi(ctx) {
         h("input", { type: "radio", name: "ai-mode", checked: st.mode === "work" ? "" : null, onchange: () => { A.defaultMode = "work"; configure({ mode: "work" }); } }),
         h("span", {}, h("b", {}, "Work"), h("span", { class: "ai-choice-note" }, "it edits the pages; Show and Undo after"))),
 
+      h("h4", {}, "Health check"),
+      h("label", { class: "ai-choice" + (st.audit ? " on" : "") },
+        h("input", { type: "checkbox", checked: st.audit ? "" : null, onchange: (e) => configure({ audit: e.target.checked }) }),
+        h("span", {}, h("b", {}, "Check the GDD while idle"), h("span", { class: "ai-choice-note" }, "With Claude: after a while with nothing done here, R'th AI reads the pages changed since they were last checked and lists problems across pages on the To-do page, for everyone. Uses this computer's Claude."))),
+
       h("h4", {}, "Which AI"),
       choice("auto", "Automatic", "Claude if it's set up, otherwise OpenRouter"),
       choice("claude", "Claude", "Claude Code, on your Claude subscription"),
@@ -515,6 +520,19 @@ export function makeAi(ctx) {
     if (c.selection) out.unshift("Is the selected passage clear and consistent with the rest of the GDD?");
     if (!out.length) out.push("What's decided so far about combat?");
     return out.slice(0, 3);
+  }
+
+  /** Fix with R'th AI (a health-check problem on the To-do): a new conversation in Chat mode, about the
+   *  problem's pages, its plan as the message; the suggestions are reviewed in the pages. */
+  function fixFound(p) {
+    newConversation();
+    A.mode = "chat"; drawMode();
+    A.extra = p.pages.filter((x) => x !== S.path);
+    A.problem = p.id;
+    focus();
+    input.value = `Fix this problem the health check found: ${p.summary}\n\n${p.detail ? p.detail + "\n\n" : ""}The plan: ${p.plan}`;
+    grow();
+    send();
   }
 
   /** Ask something straight away (a starting prompt, or Ask AI from the search box). */
@@ -707,7 +725,8 @@ export function makeAi(ctx) {
     A.run = { text: "", activity: "Reading" };
     input.value = ""; grow(); pane.classList.remove("typing");
     drawLog(); syncSend();
-    const r = await api("/api/ai/send", { method: "POST", body: JSON.stringify({ id: A.id, text, context, mode: A.mode }) });
+    const problem = A.problem; A.problem = null;
+    const r = await api("/api/ai/send", { method: "POST", body: JSON.stringify({ id: A.id, text, context, mode: A.mode, problem }) });
     A.sending = false;
     if (!r.ok) {
       A.pending = null; A.run = null;
@@ -791,7 +810,7 @@ export function makeAi(ctx) {
   }
 
   return {
-    init, focus, onEvent, ask,
+    init, focus, onEvent, ask, fixFound,
     shown: () => { ctx.markTab(false); drawChips(); if (!A.conv && !A.run) drawLog(); },
     pageChanged: () => { if (A.selection && A.selection.page !== S.path) A.selection = null; A.left.delete("page"); drawChips(); if (!A.conv?.messages?.length && !A.run) drawLog(); },
     notesChanged: () => drawChips(),

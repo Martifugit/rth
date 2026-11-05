@@ -50,7 +50,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
   // The AI tab's cog (AI setup) can choose one instead, and OpenRouter's model; kept in ai.json beside
   // the conversations.
   const settingsFile = path.join(dir, "..", "ai.json");
-  let settings = { use: "auto", model: "", claudeModel: "", claudeEffort: "", mode: "chat" }; // claude*: defaults for /model and /effort; mode: a new conversation's
+  let settings = { use: "auto", model: "", claudeModel: "", claudeEffort: "", mode: "chat", audit: true }; // claude*: defaults for /model and /effort; mode: a new conversation's
   try { settings = { ...settings, ...JSON.parse(fs.readFileSync(settingsFile, "utf8")) }; } catch {}
   const models = () => (settings.model ? [settings.model] : OPENROUTER_MODELS);
   const claudeP = claudeProvider({ repo, claude, systemFile: path.join(dir, "..", "ai-instructions.md") });
@@ -96,10 +96,12 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
       openrouter: { signedIn: !!openrouterKey(), model: settings.model || "", defaultModel: OPENROUTER_MODELS.join(", ") },
       claudeDefaults: { model: settings.claudeModel || "", effort: settings.claudeEffort || "" },
       mode: settings.mode || "chat",
+      audit: settings.audit !== false,
       provider: await (using).check(),
     };
   }
-  async function configure({ use, model, claudeModel, claudeEffort, mode }) {
+  async function configure({ use, model, claudeModel, claudeEffort, mode, audit }) {
+    if (audit !== undefined) settings.audit = !!audit;
     if (mode !== undefined && ["chat", "work"].includes(mode)) settings.mode = mode;
     if (use !== undefined) {
       if (!["auto", "claude", "openrouter"].includes(use)) return { error: "Unknown choice." };
@@ -155,7 +157,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
   }
 
   /** The person says something. Starts a conversation when there's no id. */
-  async function send({ id, text, context = {}, mode = null }) {
+  async function send({ id, text, context = {}, mode = null, problem = null }) {
     text = String(text || "").trim();
     if (!text) return { error: "Nothing to send." };
     let c = id ? await readConv(id) : null;
@@ -186,7 +188,9 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     const turnMode = c.settings.mode || settings.mode || "chat";
     // A part of one of its own answers they pointed at (select, then Ask): this message only, not kept.
     const quote = context.quote?.text ? { text: String(context.quote.text).slice(0, 4000), msg: Number.isInteger(context.quote.msg) ? context.quote.msg : null } : null;
-    c.messages.push({ by: "you", at: now, text, context: ctx.chips, mode: turnMode, ...(quote ? { quote } : {}) });
+    // A health-check problem being fixed (Fix with R'th AI on the To-do): kept with the answer's changes.
+    const fixing = typeof problem === "string" && /^p-[0-9a-f]+$/.test(problem) ? problem : null;
+    c.messages.push({ by: "you", at: now, text, context: ctx.chips, mode: turnMode, ...(quote ? { quote } : {}), ...(fixing ? { problem: fixing } : {}) });
     c.updated = now;
     // What this conversation was given before (Claude remembers it across turns): only what's new is said.
     const told = new Set(c.told || []);
@@ -275,7 +279,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
       let answer = res.error ? r.text : (res.text || r.text || "");
       const named = titleIn(answer);
       if (named) { fresh.title = named; answer = withoutTitle(answer); }
-      const msg = { by: "ai", at: new Date().toISOString(), text: answer + note };
+      const msg = { by: "ai", at: new Date().toISOString(), text: answer + note, ...(fixing ? { problem: fixing } : {}) };
       if (res.model) msg.model = res.model;
       if (posted.length) msg.comments = posted;
       const changes = await compare(before);
@@ -490,6 +494,25 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     return out;
   }
 
+  /**
+   * The health check's run (src/audit.js): Claude reads these pages and the pages round them, and reports
+   * problems with report_problem; read-only, through the Codex's tools. → { problems, error }.
+   */
+  async function audit({ pages: list }) {
+    if (!(await claudeP.check()).ok) return { error: "Claude isn't ready on this computer." };
+    const turn = newTurn({ conv: null, mode: "chat", audit: true, readOnly: true });
+    const mcp = mcpConfig(turn);
+    if (!mcp) { endTurn(turn); return { error: "The Codex's tools aren't available." }; }
+    const brief = await writingBrief(read);
+    const prompt = "Check these GDD pages:\n" + list.map((p) => "- " + p).join("\n") + "\n\nReport what you find with report_problem, then answer with one line: how many you reported.";
+    const r = claudeP.run({ prompt, system: AUDIT_STANDING + "\n\n" + brief, model: settings.claudeModel || "", effort: "medium", mcp, describeTool: tools.describe, readOnly: true,
+      onText: () => {}, onBreak: () => {}, onActivity: () => {} });
+    const res = await r.done;
+    endTurn(turn);
+    return res.error ? { error: res.error, problems: turn.problems } : { problems: turn.problems };
+  }
+  const canAudit = async () => settings.audit !== false && runs.size === 0 && (await claudeP.known()).ok && (await pick()) === claudeP;
+
   /** The turn check (src/turn-check.js), after the answer is shown: msg.problems, and an "ai checked" event. */
   async function checkLater(conv, msg, before, changes) {
     try {
@@ -608,7 +631,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     return { ok: true, page };
   }
 
-  return { list, get, send, stop, remove, changesFor, acceptSuggestions, problemDone, reviewed, undo, createSuggested, setup, configure, setContext, lookUp, tool, toolList, tools, newTurn, endTurn, mcpConfig, signInClaude: () => claudeP.signIn(), check: provider.check, status: () => ({ running: [...runs.keys()], defaultMode: settings.mode || "chat" }) };
+  return { list, get, send, stop, remove, changesFor, acceptSuggestions, problemDone, audit, canAudit, reviewed, undo, createSuggested, setup, configure, setContext, lookUp, tool, toolList, tools, newTurn, endTurn, mcpConfig, signInClaude: () => claudeP.signIn(), check: provider.check, status: () => ({ running: [...runs.keys()], defaultMode: settings.mode || "chat" }) };
 }
 
 const titleFrom = (text) => {
@@ -653,6 +676,21 @@ function standing(brief, tools) { // tools: "repo" (Claude reads it itself), "co
     COMMENT_FORMAT,
   ].join("\n");
 }
+
+// The health check's instructions (src/audit.js): what to look for, what to leave alone, how to report.
+const AUDIT_STANDING = [
+  "You are R'th AI's health check for the GDD of R'th (docs/gdd), the design document a small group of friends write for their game. You change nothing: you read, and report problems with the Codex's report_problem tool, each with a concrete plan to fix it.",
+  "",
+  "For each page you are given: read it whole (read_page), see where it sits (page_outline, links_in, links_out), and read the parts of the pages round it that bear on what it says (read_page with a section, search_gdd for the same things named elsewhere). Then report what is really wrong across pages:",
+  "- contradiction: two pages say different things about the same fact (a number, a level, who sells or drops what, how something works).",
+  "- copied-fact: a page explains or repeats a fact, number or list that belongs to another page, instead of linking to it (the GDD is a wiki: each fact on its own page, linked from the rest).",
+  "- settled-question: an Open question on one page that another page now answers.",
+  "- missing-link: a page names something that has its own page without linking to it.",
+  "- stale-reference: a page refers to something another page has since renamed, cut or changed.",
+  "Report only problems you can point at: give the pages (the one to change first, first), a few exact words from each where it is (quotes, in the same order), a one-line summary, a short detail saying what each page says, and the plan: which page changes and how, written as an instruction R'th AI could carry out. Report each problem once. Finding nothing is a fine result.",
+  "Don't report spelling, a page's own structure (headings, components, folders, status), links to pages not written yet, or p- placeholder names: the Codex's To-do list covers those. Don't report a matter of taste, or a page being short.",
+  "When you have read a page in depth and page_outline shows no summary, or one written before the page last changed, call index_page for it.",
+].join("\n");
 
 // The conversation's name: its first answer ends with a hidden <title> line (2-6 words, the topic, not
 // the question), taken off the answer by the Codex. Without one, the question names it, as before.
@@ -779,7 +817,9 @@ function claudeProvider({ repo, claude, systemFile }) {
     return { ok: true };
   }
 
-  return { check, run, signIn };
+  /** What check() last found (asked once): for the frequent questions, like whether the health check can run. */
+  const known = async () => available || check();
+  return { check, known, run, signIn };
 }
 
 function describe(c) {
