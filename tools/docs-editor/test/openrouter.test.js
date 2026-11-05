@@ -50,3 +50,14 @@ await t("while streaming, a half-written block isn't shown", () => {
   assert.equal(shown("Done.\n<edit page=\"docs/gdd/x.md\">\n<find>Bile dr"), "Done.");
 });
 console.log(`openrouter: ${n} passed`);
+
+// Tool calls written as text in the shapes free models use (src/openrouter-provider.js, callsInText).
+{
+  const { callsInText, shown } = await import("../src/openrouter-provider.js");
+  const assert = (await import("node:assert/strict")).default;
+  assert.deepEqual(callsInText("<tool_call>\n<function=query_gdd>\n<parameter=query>\ngroups: dwarves\n</parameter>\n</function>\n</tool_call>"), [{ id: "text_0", name: "query_gdd", args: "{\"query\":\"groups: dwarves\"}" }]);
+  assert.deepEqual(callsInText("<dots_function_call>\n<invoke name=\"search_gdd\">\n<parameter name=\"query\">bile</parameter>\n</invoke>\n</dots_function_call>"), [{ id: "text_0", name: "search_gdd", args: "{\"query\":\"bile\"}" }]);
+  assert.deepEqual(callsInText("<tool_call>read_page<arg_key>path</arg_key><arg_value>docs/gdd/x.md</arg_value></tool_call>"), [{ id: "text_0", name: "read_page", args: "{\"path\":\"docs/gdd/x.md\"}" }]);
+  assert.equal(shown("Hi <dots_function_call><invoke name=\"a\"></invoke></dots_function_call>there"), "Hi there");
+  console.log("openrouter: calls written as text, 4 shapes");
+}

@@ -104,7 +104,7 @@ export function makePanels(ctx) {
         h("b", { class: "ch-who" }, e.mine ? "You" : e.author), " " + verb[e.status] + " ",
         e.exists ? h("a", { onclick: () => open(e), title: e.path }, e.title) : h("span", { class: "ch-gone", title: e.path }, e.title),
         e.sections.length ? [h("span", { class: "ch-in" }, " in "), sectionLinks(e, open)] : null,
-        e.ai ? h("span", { class: "ch-ai", title: "Made with the AI" }, "with AI") : null));
+        e.ai ? h("span", { class: "ch-ai", title: "Made with R'th AI" }, "with AI") : null));
     view.replaceChildren(h("article", { class: "prose oq ch" },
       h("h1", {}, "Recent changes"),
       h("p", { class: "oq-intro" }, list.length
@@ -279,12 +279,38 @@ export function makePanels(ctx) {
       h("div", { class: "td-actions" }, fixes || null, h("button", { class: fixes ? "td-link" : "btn btn-small", onclick: () => ctx.openDoc(s.from) }, fixes ? "Open" : "Open the page to fix it")));
   }
 
+  // What R'th AI's health check found across pages (src/audit.js): the problem, where, and its plan; Fix
+  // with R'th AI starts a conversation in Chat mode with the plan, so the fix comes as suggestions.
+  const FOUND_KIND = { "contradiction": "Contradiction", "copied-fact": "Copied, not linked", "settled-question": "Settled elsewhere", "missing-link": "Named, not linked", "stale-reference": "Out of date" };
+  function foundCard(p) {
+    const open = todoState.open.has(p.id);
+    const at = (i) => h("a", { class: "td-from", title: p.pages[i], onclick: () => ctx.openDoc(p.pages[i], p.quotes?.[i] ? { find: { q: p.quotes[i], occurrence: 0 } } : {}) }, p.titles?.[i] || where(p.pages[i]));
+    return h("div", { class: "td-item td-found" },
+      h("div", { class: "td-head" },
+        h("div", { class: "td-title" }, p.summary),
+        h("span", { class: "td-count td-kind" }, FOUND_KIND[p.kind] || p.kind)),
+      h("div", { class: "td-sub" }, ...p.pages.flatMap((_, i) => (i ? [", ", at(i)] : [at(i)]))),
+      open ? h("div", { class: "td-found-more" },
+        p.detail ? h("p", {}, p.detail) : null,
+        h("p", {}, h("b", {}, "The plan: "), p.plan),
+        h("p", { class: "td-dim" }, `Found by ${p.found?.by || "R'th AI"}${p.found?.at ? ", " + new Date(p.found.at).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : ""}.`)) : null,
+      h("div", { class: "td-actions" },
+        h("button", { class: "btn btn-gold btn-small", title: "A conversation with R'th AI about it, in Chat mode: its fix comes as suggestions to accept or skip", onclick: () => ctx.fixWithAi(p) }, "Fix with R'th AI"),
+        h("button", { class: "td-link", onclick: () => { open ? todoState.open.delete(p.id) : todoState.open.add(p.id); renderBroken(); } }, open ? "Less" : "More"),
+        h("button", { class: "td-link", title: "Take it off the To-do, for everyone", onclick: async () => {
+          const r = await api("/api/problems/dismiss", { method: "POST", body: JSON.stringify({ file: p.file, id: p.id }) });
+          if (!r.ok) return ctx.toast(failed("Couldn't dismiss it", r), "bad");
+          refresh();
+        } }, "Dismiss")));
+  }
+
   async function renderBroken() {
     const view = $("#statusView");
     if (!lists.broken) view.replaceChildren(h("p", { class: "st-loading" }, "Loading…"));
     const todo = await broken(true);
     if (S.view !== "broken" || !todo) return;
     const all = [
+      ...(todo.found || []).map((x) => ({ cat: "found", pages: x.pages, el: () => foundCard(x) })),
       ...todo.missing.map((x) => ({ cat: "missing", pages: x.refs.map((r) => r.from).concat(x.path || []), el: () => missingCard(x) })),
       ...todo.references.map((x) => ({ cat: "references", pages: [x.from], el: () => referenceCard(x) })),
       ...todo.placeholders.map((x) => ({ cat: "placeholders", pages: x.refs.map((r) => r.from), el: () => placeholderCard(x) })),
@@ -293,6 +319,7 @@ export function makePanels(ctx) {
     const inFolder = (x) => !todoState.folder || x.pages.some((p) => folderOf(p) === todoState.folder);
     // Each kind is a section of the journal, under its own heading and icon; the tabs pick one or all.
     const CATS = [
+      { key: "found", tab: "Problems", title: "Problems found", icon: "quests", blurb: "What R'th AI's health check found across pages, each with a plan." },
       { key: "missing", tab: "To write", title: "Pages to write", icon: "scripture", blurb: "Linked to, but not written yet." },
       { key: "references", tab: "Links", title: "Links to mend", icon: "links", blurb: "References that lead somewhere wrong." },
       { key: "placeholders", tab: "Names", title: "Names to choose", icon: "note", blurb: "Placeholder names still waiting for real ones." },
@@ -315,6 +342,15 @@ export function makePanels(ctx) {
     };
     view.replaceChildren(h("article", { class: "prose td" },
       h("h1", {}, "To-do"),
+      todo.audit?.available ? h("div", { class: "td-audit" },
+        todo.audit.running ? h("span", { class: "td-dim" }, `R'th AI is checking ${todo.audit.running.length} page${todo.audit.running.length === 1 ? "" : "s"}…`)
+          : todo.audit.sweep ? h("span", { class: "td-dim" }, "Checking the whole GDD, a few pages at a time while this Codex is idle.")
+          : h("button", { class: "td-link", title: "R'th AI reads every page not checked in its current version, a few at a time while this Codex is idle", onclick: async () => {
+            const r = await api("/api/audit/sweep", { method: "POST" });
+            ctx.toast(r.pages ? `R'th AI will check ${r.pages} page${r.pages === 1 ? "" : "s"}, a few at a time while you're away` : "Every page has been checked", "good");
+            renderBroken();
+          } }, "Check the whole GDD"),
+        todo.audit.error ? h("span", { class: "td-dim", title: todo.audit.error }, " · The last check didn't finish") : null) : null,
       h("p", { class: "oq-intro td-intro" }, all.length
         ? "What the GDD still needs. Every fix can be undone, and one that changes several pages names them first."
         : "Nothing to do: every reference goes to a written page, every name is real, and every page's structure is in order."),

@@ -19,11 +19,11 @@ export const OPENROUTER_MODELS = (process.env.CODEX_OPENROUTER_MODELS || "openro
 
 export const EDIT_FORMAT = [
   "To change a page, write an edit block anywhere in your answer (as many as you need, one per place):",
-  "<edit page=\"docs/gdd/path/to/page.md\">",
+  "<edit page=\"docs/gdd/path/to/page.md\" reason=\"why, in a few words\">",
   "<find>the exact text in the page now, word for word, enough of it to be found only once</find>",
   "<replace>what replaces it</replace>",
   "</edit>",
-  "For a new page: <edit page=\"docs/gdd/...md\"><find></find><replace>the whole page</replace></edit>. Edit blocks are taken out of your answer before it's shown, so say in a sentence what you changed.",
+  "For a new page: <edit page=\"docs/gdd/...md\" reason=\"...\"><find></find><replace>the whole page</replace></edit>. The reason (at most about 15 words: \"Linked instead of explaining Bile again\") is shown beside the change when they review it. Edit blocks are taken out of your answer before it's shown, so say in a sentence what you changed.",
 ].join("\n");
 
 const TOOL_ROUNDS = 4; // lookups a message may take before it must answer (each round is a request)
@@ -70,7 +70,7 @@ export function openRouterProvider({ key, models = () => OPENROUTER_MODELS }) {
         const got = await readStream(r, (d) => { all += d; onText(d); }, onThought);
         if (got.error) return { error: stopped ? "Stopped." : got.error, text: all };
         used = got.model || used;
-        if (!got.calls.length && offer && /<tool_call>/i.test(got.text)) {
+        if (!got.calls.length && offer && CALLS_WRITTEN.test(got.text)) {
           const written = callsInText(got.text);
           all = all.slice(0, start) + got.text.replace(TOOL_CALL_TEXT, "").trim(); // (the streaming view hides them too: shown())
           if (written.length) got.calls = written;
@@ -96,18 +96,46 @@ export function openRouterProvider({ key, models = () => OPENROUTER_MODELS }) {
   return { check, run, kind: "openrouter" };
 }
 
-const TOOL_CALL_TEXT = /<tool_call>[\s\S]*?(<\/tool_call>|$)/gi;
+// Tool calls a model wrote into its text, in the shapes free models use: <tool_call> with JSON, or with
+// <function=name><parameter=key>value</parameter></function>, and <invoke name="..."><parameter name="...">
+// (bare, or in a wrapper such as <function_calls> or <dots_function_call>).
+const TOOL_CALL_TEXT = /<tool_call>[\s\S]*?(<\/tool_call>|$)|<(function_calls|[a-z_]*function_calls?|antml:function_calls)>[\s\S]*?(<\/\2>|$)|<invoke\b[\s\S]*?(<\/invoke>|$)/gi;
+const CALLS_WRITTEN = /<tool_call>|<invoke\s+name=|<function=/i;
 
 /** Tool calls a model wrote into its text instead of making them (<tool_call>{"name", "arguments"}</tool_call>). */
 export function callsInText(text) {
   const out = [];
-  for (const m of String(text || "").matchAll(/<tool_call>\s*([\s\S]*?)\s*<\/tool_call>/gi)) {
+  const add = (name, args) => { if (name) out.push({ id: "text_" + out.length, name: String(name).trim(), args: typeof args === "string" ? args : JSON.stringify(args || {}) }); };
+  const value = (v) => { const t = String(v).trim(); try { return JSON.parse(t); } catch { return t; } };
+  const t = String(text || "");
+  for (const m of t.matchAll(/<tool_call>\s*([\s\S]*?)\s*<\/tool_call>/gi)) {
+    const body = m[1];
+    // <function=name><parameter=key>value</parameter>...</function>
+    // name<arg_key>key</arg_key><arg_value>value</arg_value>...
+    const kv = body.match(/^([\w.-]+)\s*(<arg_key>[\s\S]*)$/i);
+    if (kv) {
+      const args = {};
+      for (const p of kv[2].matchAll(/<arg_key>([\s\S]*?)<\/arg_key>\s*<arg_value>([\s\S]*?)<\/arg_value>/gi)) args[p[1].trim()] = value(p[2]);
+      add(kv[1], args);
+      continue;
+    }
+    const fn = body.match(/<function=([\w.-]+)>([\s\S]*?)(<\/function>|$)/i);
+    if (fn) {
+      const args = {};
+      for (const p of fn[2].matchAll(/<parameter=([\w.-]+)>([\s\S]*?)<\/parameter>/gi)) args[p[1]] = value(p[2]);
+      add(fn[1], args);
+      continue;
+    }
     try {
-      const j = JSON.parse(m[1]);
-      const name = j.name || j.function?.name;
-      const args = j.arguments ?? j.parameters ?? j.function?.arguments ?? {};
-      if (name) out.push({ id: "text_" + out.length, name, args: typeof args === "string" ? args : JSON.stringify(args) });
+      const j = JSON.parse(body);
+      add(j.name || j.function?.name, j.arguments ?? j.parameters ?? j.function?.arguments ?? {});
     } catch {}
+  }
+  // <invoke name="name"><parameter name="key">value</parameter></invoke>, wrapped or not.
+  for (const m of t.matchAll(/<invoke\s+name="([\w.-]+)"\s*>([\s\S]*?)<\/invoke>/gi)) {
+    const args = {};
+    for (const p of m[2].matchAll(/<parameter\s+name="([\w.-]+)"\s*>([\s\S]*?)<\/parameter>/gi)) args[p[1]] = value(p[2]);
+    add(m[1], args);
   }
   return out;
 }
@@ -145,11 +173,11 @@ async function readStream(r, onText, onThought = () => {}) {
   return { text, model, calls: calls.filter((c) => c && c.name) };
 }
 
-/** The edit blocks in an answer: [{ page, find, replace }], and the answer without them. */
+/** The edit blocks in an answer: [{ page, find, replace, reason }], and the answer without them. */
 export function editsIn(text) {
   const edits = [];
-  const rest = text.replace(/<edit\s+page="([^"]+)"\s*>\s*<find>([\s\S]*?)<\/find>\s*<replace>([\s\S]*?)<\/replace>\s*<\/edit>/g, (m, page, find, replace) => {
-    edits.push({ page: page.trim(), find: trimOne(find), replace: trimOne(replace) });
+  const rest = text.replace(/<edit\s+page="([^"]+)"(?:\s+reason="([^"]*)")?\s*>\s*<find>([\s\S]*?)<\/find>\s*<replace>([\s\S]*?)<\/replace>\s*<\/edit>/g, (m, page, reason, find, replace) => {
+    edits.push({ page: page.trim(), find: trimOne(find), replace: trimOne(replace), reason: (reason || "").trim() || null });
     return "";
   });
   return { edits, text: rest.replace(/\n{3,}/g, "\n\n").trim() };

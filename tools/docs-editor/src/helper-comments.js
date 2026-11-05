@@ -34,7 +34,7 @@ export function makeHelperComments({ auth }) {
     changes, all, find,
     create: (page, fields) => call("/comments", { page, title: fields.title, kind: fields.kind, text: fields.text, anchor: fields.anchor, tags: fields.tags, by: fields.by }),
     update: (id, patch) => call("/comments/update", { id, ...patch }),
-    reply: (id, entry) => call("/comments/reply", { id, text: entry.text, status: entry.status, run: entry.run, by: entry.by }),
+    reply: (id, entry) => call("/comments/reply", { id, text: entry.text, status: entry.status, run: entry.run, by: entry.by, ping: entry.ping || undefined }),
     remove: async (id) => !!(await call("/comments/delete", { id }))?.ok,
     move: (id, page) => call("/comments/update", { id, page }),
   };

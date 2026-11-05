@@ -35,9 +35,12 @@ export const AiMarks = Extension.create({
 
 // A page waiting to be shared (src/sync.js, held) has Share in place of Done; one changed by another
 // program is compared with how it was last shared (GET /api/sync/base), the same way.
-export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => null, share = () => {}, setFront = null }) {
+export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => null, share = () => {}, setFront = null, openChanges = null, ask = null, titleOf = (p) => p }) {
   const C = { changes: [], showing: false, hunks: [], at: -1, base: null, page: null, suggest: false, target: null, skipped: new Set() };
   const bar = h("div", { id: "aiBar", class: "ai-bar hidden" });
+  // The AI's reason for the change you're on, floating beside it (placeWhy).
+  const whyBox = h("div", { class: "ai-why hidden" });
+  document.body.append(whyBox);
   const undoBtn = h("button", { class: "ai-undo-one hidden", title: "Undo this change", onmousedown: (e) => e.preventDefault(), onclick: () => undoHunk(Number(undoBtn.dataset.hunk)) }, "Undo");
   document.body.append(undoBtn);
 
@@ -58,7 +61,7 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
   function skipFront() { C.frontDone = true; after(); }
 
   function drawBar() {
-    const has = C.changes.length > 0 && C.page === S.path && S.mode !== "source";
+    const has = C.changes.length > 0 && C.page === S.path && S.mode !== "source" && !S.view; // not over the To-do or Recent changes
     bar.classList.toggle("hidden", !has);
     if (!has) return;
     const n = C.hunks.length;
@@ -66,9 +69,11 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
       // Suggestions, gone through top to bottom: Accept or Skip each.
       const cur = C.at >= 0 ? C.at : 0;
       const fs_ = frontSuggestion();
+      const others = otherPages();
       bar.replaceChildren(...[
-        h("span", { class: "ai-bar-ico" }, "✦"),
-        h("span", { class: "ai-bar-text" }, n ? `The AI suggests ${n} change${n > 1 ? "s" : ""}` : fs_ ? "One more suggestion" : "No suggestions left"),
+        h("span", { class: "ico ico-ai ai-bar-ico" }),
+        h("span", { class: "ai-bar-text" }, n ? `R'th AI suggests ${n} change${n > 1 ? "s" : ""}` : fs_ ? "One more suggestion" : "No suggestions left",
+          others.length ? h("span", { class: "ai-bar-pages", title: "Pages this answer suggests changes to: " + [S.path, ...others].map(titleOf).join(", ") }, ` · page 1 of ${others.length + 1}`) : null),
         // The page's header (status, type, groups...) changed too: said plainly, answered on its own.
         fs_ ? h("span", { class: "ai-bar-front" }, "Also: ", h("b", {}, fs_.says),
           h("button", { class: "ai-link", title: "Leave the page's header as it is", onclick: skipFront }, "Skip"),
@@ -76,24 +81,25 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
         n ? h("span", { class: "ai-bar-nav" },
           h("button", { class: "ai-bar-btn", title: "Previous suggestion", onclick: () => step(-1) }, "‹"),
           h("span", { class: "ai-bar-pos" }, `${cur + 1} of ${n}`),
-          h("button", { class: "ai-bar-btn", title: "Next suggestion", onclick: () => step(1) }, "›")) : null,
+          h("button", { class: "ai-bar-btn", title: "Next suggestion (Alt+↓)", onclick: () => step(1) }, "›")) : null,
         h("span", { class: "ai-bar-gap" }),
-        n ? h("button", { class: "btn", title: "Leave this one as it is", onclick: () => skip(cur) }, "Skip") : null,
-        n ? h("button", { class: "btn btn-gold", title: "Make this change", onclick: () => accept(cur) }, "Accept") : null,
-        n > 1 ? h("button", { class: "btn", title: "Make every suggested change", onclick: acceptAll }, "Accept all") : null,
+        n ? h("button", { class: "btn", title: "Leave this one as it is (Alt+Backspace)", onclick: () => skip(cur) }, "Skip") : null,
+        n ? h("button", { class: "btn btn-gold", title: "Make this change (Alt+Enter)", onclick: () => accept(cur) }, "Accept") : null,
+        n > 1 ? h("button", { class: "btn", title: "Make every suggested change on this page", onclick: acceptAll }, "Accept all") : null,
+        others.length ? h("button", { class: "btn", title: "Make every change this answer suggests, on all its pages", onclick: (ev) => busy(ev, "Accepting…", acceptEverywhere) }, `Accept on all ${others.length + 1} pages`) : null,
         h("button", { class: "btn", title: "Drop the suggestions that are left", onclick: done }, "Done"),
       ].filter(Boolean));
       return;
     }
     bar.replaceChildren(...[
-      h("span", { class: "ai-bar-ico" }, "✦"),
+      h("span", { class: "ico ico-ai ai-bar-ico" }),
       h("span", { class: "ai-bar-text" }, C.other
         ? (C.showing ? (n ? `${n} change${n > 1 ? "s" : ""} not saved yet` : "No changes left") : "Changed outside Codex")
-        : C.showing ? (n ? `${n} change${n > 1 ? "s" : ""} by the AI` : "No changes left") : "The AI changed this page"),
+        : C.showing ? (n ? `${n} change${n > 1 ? "s" : ""} by R'th AI` : "No changes left") : "R'th AI changed this page"),
       C.showing && n ? h("span", { class: "ai-bar-nav" },
         h("button", { class: "ai-bar-btn", title: "Previous change", onclick: () => step(-1) }, "‹"),
         h("span", { class: "ai-bar-pos" }, C.at >= 0 ? `${C.at + 1} of ${n}` : ""),
-        h("button", { class: "ai-bar-btn", title: "Next change", onclick: () => step(1) }, "›")) : null,
+        h("button", { class: "ai-bar-btn", title: "Next change (Alt+↓)", onclick: () => step(1) }, "›")) : null,
       h("span", { class: "ai-bar-gap" }),
       h("button", { class: "btn" + (C.showing ? " on" : ""), onclick: () => toggle() }, C.showing ? "Hide changes" : "Show changes"),
       held(S.path)
@@ -155,8 +161,8 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
       const id = hunks.length;
       const from = hk.b[0] < B.length ? at[hk.b[0]] : end;
       const to = hk.b[1] < B.length ? at[hk.b[1]] : end;
-      hunks.push({ from, to, old: A.slice(hk.a[0], hk.a[1]) });
       const removed = A.slice(hk.a[0], hk.a[1]), added = B.slice(hk.b[0], hk.b[1]);
+      hunks.push({ from, to, old: removed, add: added.map((n) => n.textContent).join("\n"), del: removed.map((n) => n.textContent).join("\n") });
       // One block for one of the same kind: mark the words inside it.
       // (Unless it was mostly rewritten: then the old block, struck through, above the new one reads better.)
       const words = removed.length === 1 && added.length === 1 && removed[0].type === added[0].type && removed[0].textContent !== added[0].textContent
@@ -196,9 +202,38 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
       for (const n of added) { decos.push(Decoration.node(p, p + n.nodeSize, { class: "ai-add-block" + tag(id), "data-hunk": String(id) })); p += n.nodeSize; }
     }
     if (hunks.length) decos.push(...currentMark(hunks[Math.min(curIndex(), hunks.length - 1)], doc));
-    C.hunks = hunks;
+    C.hunks = withReasons(hunks);
     if (C.at >= hunks.length) C.at = hunks.length - 1;
     return DecorationSet.create(doc, decos);
+  }
+
+  // ----------------------------------------------------------------------------- reasons
+
+  /**
+   * The AI's reason for each change (explain_change, or an edit block's reason=): matched to a change by
+   * the words it quoted, found in what the change added (or, for a deletion, removed); else the change
+   * holding most of its words.
+   */
+  function withReasons(hunks) {
+    const reasons = C.changes.flatMap((x) => x.reasons || []);
+    if (!reasons.length) return hunks;
+    const norm = (t) => String(t || "").replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/[*_`#>|]/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+    const words = (t) => new Set(norm(t).split(/[^\p{L}\p{N}]+/u).filter((w) => w.length > 2));
+    const texts = hunks.map((hk) => ({ add: norm(hk.add), del: norm(hk.del) }));
+    for (const r of reasons) {
+      const q = norm(r.quote);
+      if (!q) continue;
+      let i = texts.findIndex((t) => t.add.includes(q));
+      if (i < 0) i = texts.findIndex((t) => t.del.includes(q));
+      if (i < 0) {
+        const qw = words(r.quote);
+        let best = 0;
+        texts.forEach((t, j) => { const have = words(t.add + " " + t.del); let n = 0; for (const w of qw) if (have.has(w)) n++; if (n > best) { best = n; i = j; } });
+        if (best < Math.min(2, qw.size)) i = -1;
+      }
+      if (i >= 0 && !hunks[i].reason) hunks[i].reason = r.reason;
+    }
+    return hunks;
   }
 
   // ----------------------------------------------------------------------------- suggestions
@@ -229,7 +264,7 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
       const id = hunks.length;
       const from = hk.a[0] < A.length ? at[hk.a[0]] : end;
       const to = hk.a[1] < A.length ? at[hk.a[1]] : end;
-      hunks.push({ from, to, now: added, key });
+      hunks.push({ from, to, now: added, key, add: added.map((n) => n.textContent).join("\n"), del: removed.map((n) => n.textContent).join("\n") });
       const words = removed.length === 1 && added.length === 1 && removed[0].type === added[0].type && removed[0].textContent !== added[0].textContent
         ? diffWords(removed[0].textContent, added[0].textContent) : null;
       if (words && sameShare(words) >= 0.25) {
@@ -258,9 +293,27 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
       }, { side: -1, key: `sugb-${id}${tag(id)}` }));
     }
     if (hunks.length) decos.push(...currentMark(hunks[Math.min(curIndex(), hunks.length - 1)], doc));
-    C.hunks = hunks;
+    C.hunks = withReasons(hunks);
     if (C.at >= hunks.length) C.at = hunks.length - 1;
     return DecorationSet.create(doc, decos);
+  }
+
+  /** The other pages the same answer suggests changes to, still waiting (the bar's "page 1 of 3"). */
+  const otherPages = () => [...new Set(C.changes.flatMap((x) => x.others || []))].filter((p) => p !== S.path);
+
+  /** Every page's suggestions from this answer at once: this page in the editor, the others by the engine. */
+  async function acceptEverywhere() {
+    const others = otherPages();
+    if (ask) {
+      const ok = await ask("Accept on every page", `This makes every change R'th AI suggested on ${others.length + 1} pages: this one and ${others.map(titleOf).join(", ")}. Pages changed since keep their own text and are left to review.`, [{ key: "no", label: "Cancel" }, { key: "yes", label: "Accept them", cls: "btn-gold" }]);
+      if (ok !== "yes") return;
+    }
+    const last = C.changes[C.changes.length - 1];
+    acceptAll({ quiet: true });
+    const r = await api("/api/ai/accept", { method: "POST", body: JSON.stringify({ conv: last.conv, msg: last.msg, pages: others }) });
+    if (!r.ok) return toast(r.error || "Couldn't accept the other pages", "bad");
+    toast(`Accepted on ${r.accepted.length + 1} page${r.accepted.length ? "s" : ""}` + (r.kept.length ? `; ${r.kept.length} changed since, left to review` : ""), "good");
+    if (r.kept.length && openChanges) openChanges(r.kept[0]);
   }
 
   /** The change being looked at: a mark in the margin by every block it touches. */
@@ -289,18 +342,25 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
     redraw();
     after();
   }
-  function acceptAll() {
+  function acceptAll({ quiet = false } = {}) {
     // From the bottom up, so earlier positions stay true.
     let tr = S.editor.state.tr;
     for (const x of [...C.hunks].reverse()) tr = tr.replaceWith(x.from, x.to, Fragment.from(x.now));
     S.editor.view.dispatch(tr);
     const f = frontSuggestion(); if (f) setFront(f.front); C.frontDone = true; // the header too
-    after();
+    after({ quiet });
   }
   /** After Accept or Skip: on to the next one; with none left, the suggestions are done. */
-  function after() {
+  function after({ quiet = false } = {}) {
     redraw();
-    if (!C.hunks.length && !frontSuggestion()) { toast("All suggestions handled"); done(); return; }
+    if (!C.hunks.length && !frontSuggestion()) {
+      // Done here: on to the next page this answer suggested changes to, if any.
+      const next = quiet ? null : otherPages()[0];
+      done();
+      if (next && openChanges) { toast(`On to ${titleOf(next)}`); openChanges(next); }
+      else if (!quiet) toast("All suggestions handled");
+      return;
+    }
     if (!C.hunks.length) return; // only the header's suggestion left: it's in the bar
     scrollToPos(C.hunks[Math.min(C.at < 0 ? 0 : C.at, C.hunks.length - 1)].from + 1);
   }
@@ -311,6 +371,33 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
     const set = on ? (C.suggest ? computeSuggest() : compute()) : DecorationSet.empty;
     S.editor.view.dispatch(S.editor.state.tr.setMeta(KEY, set).setMeta("addToHistory", false));
     drawBar();
+    requestAnimationFrame(placeWhy);
+  }
+
+  /** The reason for the change you're on, in a small note beside it: to the right of the text when
+   *  there's room, else just above it. Hidden without a reason, or with the change out of view. */
+  function placeWhy() {
+    const hk = C.showing && C.changes.length && C.page === S.path && !S.view ? C.hunks[C.at < 0 ? 0 : C.at] : null;
+    const el = hk?.reason ? $("#page .ai-current") || $(`#page [data-hunk="${C.at < 0 ? 0 : C.at}"]`) : null;
+    const scroller = $("#scroller");
+    if (!el || !scroller) { whyBox.classList.add("hidden"); return; }
+    const r = el.getBoundingClientRect(), box = scroller.getBoundingClientRect();
+    if (r.bottom < box.top + 4 || r.top > box.bottom - 4) { whyBox.classList.add("hidden"); return; }
+    whyBox.replaceChildren(h("span", { class: "ico ico-ai ai-why-ico" }), h("span", {}, hk.reason));
+    whyBox.classList.remove("hidden");
+    const w = Math.min(240, whyBox.offsetWidth || 240);
+    const room = box.right - r.right - 24;
+    if (room >= 160) {
+      whyBox.style.maxWidth = Math.min(240, room) + "px";
+      whyBox.style.left = Math.round(r.right + 14) + "px";
+      whyBox.style.top = Math.round(Math.max(box.top + 6, r.top)) + "px";
+      whyBox.classList.remove("above");
+    } else {
+      whyBox.style.maxWidth = "320px";
+      whyBox.style.left = Math.round(Math.max(box.left + 8, Math.min(r.left, box.right - w - 8))) + "px";
+      whyBox.style.top = Math.round(Math.max(box.top + 6, r.top - whyBox.offsetHeight - 8)) + "px";
+      whyBox.classList.add("above");
+    }
   }
 
   function step(d) {
@@ -352,11 +439,25 @@ export function makeAiChanges({ S, $, h, api, toast, scrollToPos, held = () => n
     if (!el) return;
     const r = el.getBoundingClientRect();
     undoBtn.dataset.hunk = el.dataset.hunk;
+    const why = C.hunks[Number(el.dataset.hunk)]?.reason;
+    undoBtn.title = why ? `Undo this change. Why it was made: ${why}` : "Undo this change";
     undoBtn.style.left = Math.min(window.innerWidth - 70, r.right + 6) + "px";
     undoBtn.style.top = r.top - 2 + "px";
     undoBtn.classList.remove("hidden");
   });
-  $("#scroller").addEventListener("scroll", () => undoBtn.classList.add("hidden"));
+  $("#scroller").addEventListener("scroll", () => { undoBtn.classList.add("hidden"); placeWhy(); });
+  window.addEventListener("resize", () => placeWhy());
+
+  // Keys while changes are shown: Alt+↓/↑ from one to the next, Alt+Enter accept, Alt+Backspace skip.
+  document.addEventListener("keydown", (ev) => {
+    if (!ev.altKey || ev.ctrlKey || ev.metaKey || !C.showing || !C.changes.length || C.page !== S.path) return;
+    const cur = C.at < 0 ? 0 : C.at;
+    if (ev.key === "ArrowDown" || ev.key === "ArrowUp") step(ev.key === "ArrowDown" ? 1 : -1);
+    else if (C.suggest && ev.key === "Enter") accept(cur);
+    else if (C.suggest && ev.key === "Backspace") skip(cur);
+    else return;
+    ev.preventDefault(); ev.stopPropagation();
+  }, true);
   $("#page").addEventListener("mouseleave", (ev) => { if (ev.relatedTarget !== undoBtn) undoBtn.classList.add("hidden"); });
 
   // ----------------------------------------------------------------------------- loading

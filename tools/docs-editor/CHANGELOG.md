@@ -4,6 +4,22 @@ A few plain lines per version, for the people using it: `npm run release` puts t
 the GitHub release and announces it in #codex (`scripts/release.mjs`, `scripts/announce.mjs`). Write the
 section before releasing; the release refuses without one.
 
+## 0.4.0
+
+- R'th AI has two modes, shown under its box: **Chat** (its changes wait for you to accept or skip) and **Work** (it edits the pages, with Show and Undo after). Shift+Tab cycles them, as in Claude Code. The word "suggest" in a message no longer decides it.
+- R'th AI knows the GDD the way Codex does: who links to a page and what each link means, the generated lists, the To-do's checks and spelling. It can make a page from its template and rename one with every link following. In tests it got every question and task right, against 25 of 28 before, a little quicker and reading far less.
+- Every change R'th AI makes says why, in a few words, in a small note beside the change as you go through them.
+- Going through suggestions: Alt+↓ and Alt+↑ move between them, Alt+Enter accepts and Alt+Backspace skips. An answer that suggests changes on several pages takes you from one page to the next, and can accept them on every page at once. The bar has R'th AI's icon, and its buttons no longer wrap.
+- After R'th AI changes pages, Codex checks what it changed (structure, links, spelling) and shows anything new it caused as a card under the answer, with Fix and Dismiss.
+- The cards say what changed in plain words: "1 update in Skill Woodcutting", "Made Activity Wildfires".
+- Select part of an answer and press the reply button: it's quoted above the box with a line for your question about it. Quote as many parts as you like in one message.
+- The message box is lighter: no frame, with the mode and a smaller send button on the line under it. Every message has a small copy button.
+- AI setup is a tidy settings list, and opens at once. Claude answers with **Sonnet 5.5 at medium effort** unless you pick another default there; /model and /effort change it for one conversation.
+- The health check: with Claude, while you're away from Codex for a while, R'th AI reads the pages changed since they were last checked and lists problems across pages (contradictions, facts copied instead of linked, questions answered elsewhere) on the To-do page, for everyone, each with a plan. **Fix with R'th AI** starts a conversation that suggests the fix. "Check the whole GDD" on the To-do page goes through every page. It can be turned off in AI setup.
+- @RthAI in a comment thread, in Discord or in Codex: R'th AI answers in the thread, from a Codex with Claude that has "Answer @R'th AI in Discord" on in AI setup (only one answers). With none open it says it's offline, and answers once one opens.
+- The free models (OpenRouter) start from the parts of the GDD that match the question, and their lookups work more often: many wrote them as text, which now counts.
+- It says R'th AI everywhere, never "the AI".
+
 ## 0.3.7
 
 - No more silver frame round the Codex window: Windows 11's border is now the same near-black as Codex.

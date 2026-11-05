@@ -1095,7 +1095,7 @@ function quickOpen() {
     } else if (raw.length >= 2) rows.push(h("div", { class: "qo-head" }, "Searching the text…"));
     // Ask the AI instead: last, or first when it reads as a question (so Enter asks).
     if (raw.length >= 3) {
-      const ask = { kind: "ask", q: raw, el: h("div", { class: "qo-item qo-ask" }, h("span", { class: "qo-ask-ico" }, "✦"), h("span", { class: "qo-title" }, "Ask AI: "), h("span", { class: "qo-snippet" }, raw)) };
+      const ask = { kind: "ask", q: raw, el: h("div", { class: "qo-item qo-ask" }, h("span", { class: "qo-ask-ico" }, "✦"), h("span", { class: "qo-title" }, "Ask R'th AI: "), h("span", { class: "qo-snippet" }, raw)) };
       const question = /\?\s*$/.test(raw) || /^(how|what|why|when|where|who|which|does|do|is|are|can|should|could|would)\b/i.test(raw);
       if (question) { items.unshift(ask); rows.unshift(ask.el); } else { items.push(ask); rows.push(ask.el); }
     }
@@ -1282,7 +1282,8 @@ function helpDialog() {
   modal("Keys", h("div", { class: "keys" },
     k("Ctrl P", "Search: pages by name, then the text of every page"),
     k("Ctrl M", "Comment on the selected text"), k("Ctrl Enter", "Post a comment. Write @agent in it to leave it for the next agent session"),
-    k("Ctrl J", "Ask the AI (with the selected text, if any)"), k("Ctrl Shift C", "Copy for Discord: the selection, or the section you're in, with a link back"),
+    k("Ctrl J", "Ask R'th AI (with the selected text, if any)"), k("Shift Tab", "In the AI tab's box: switch between Chat (its changes wait for you to accept) and Work (it edits the pages)"),
+    k("Alt ↓", "With R'th AI's changes shown: the next change (Alt ↑ the one before)"), k("Alt Enter", "Accept the suggestion you're on (Alt Backspace skips it)"), k("Ctrl Shift C", "Copy for Discord: the selection, or the section you're in, with a link back"),
     k("Ctrl K", "Add or edit a link"), k("Ctrl B", "Bold"), k("Ctrl I", "Italic"), k("Ctrl Z", "Undo"),
     k("Ctrl S", "Save now (pages also save by themselves)"), k("Alt ←", "Back to where you were (also the mouse's back button)"), k("Alt →", "Forward again"),
     k("Ctrl ,", "Show or hide the pages"), k("Ctrl .", "Show or hide the outline, links and AI"),
@@ -1635,6 +1636,7 @@ function showView(kind, push = true) {
   if (push) history.pushState({ view: kind }, "", "?view=" + VIEWS[kind].url);
   $$(".t-row.current").forEach((r) => r.classList.remove("current"));
   $(`.t-special[data-view="${kind}"]`)?.classList.add("current");
+  aiChanges.heldChanged(); // the AI's bar belongs to the page, not over the view
   VIEWS[kind].render();
 }
 function hideView() {
@@ -1646,6 +1648,7 @@ function hideView() {
   $("#main").classList.remove("view-status");
   $("#statusView").classList.add("hidden");
   $$(".t-special").forEach((r) => r.classList.remove("current"));
+  aiChanges.heldChanged();
 }
 
 // The counts beside Recent changes (others' changes since you last looked) and Broken links.
@@ -1698,7 +1701,9 @@ function scrollToPos(pos, onlyIfHidden = false) {
   } catch {}
 }
 
-const panels = makePanels({ S, $, h, api, toast, isMeta, ask: (...a) => ask(...a), save: () => save(false, { quiet: true }), loadTree: () => loadTree(), openDoc: (...a) => openDoc(...a), newPage: (prefill) => newPageDialog(null, prefill), findInPage: (q) => findInPage(q), setLinksCount, countsChanged: () => refreshSpecialCounts() });
+const panels = makePanels({ S, $, h, api, toast, isMeta, ask: (...a) => ask(...a),
+  // Fix with R'th AI (a health-check problem on the To-do): its first page opened, then a conversation about it.
+  fixWithAi: async (p) => { await openDoc(p.pages[0]); ai.fixFound(p); }, save: () => save(false, { quiet: true }), loadTree: () => loadTree(), openDoc: (...a) => openDoc(...a), newPage: (prefill) => newPageDialog(null, prefill), findInPage: (q) => findInPage(q), setLinksCount, countsChanged: () => refreshSpecialCounts() });
 const notes = makeNotes({
   S, $, $$, h, esc, api, toast, modal, ask, renderHtml,
   openDoc: (...a) => openDoc(...a), refreshDirty: () => refreshDirty(), currentHeadingPos, scrollToPos,
@@ -1757,9 +1762,12 @@ const account = makeAccountButton({ $, h, api, toast, onChange: (v) => {
 // Show changes: what the AI changed on the open page (src/ai-changes.js).
 const aiChanges = makeAiChanges({ S, $, h, api, toast, scrollToPos,
   setFront: (front) => { S.front = front; scheduleDirty(); gddUi.refresh?.(); }, // a suggested header change, accepted
-  held: (page) => (syncState?.held || []).find((x) => x.path === page) || null, share: (page) => sharePages([page]) });
+  held: (page) => (syncState?.held || []).find((x) => x.path === page) || null, share: (page) => sharePages([page]),
+  // The next page an answer suggested changes to, opened with them shown; the question before accepting on every page.
+  openChanges: (page) => { S.wantChanges = page; openDoc(page); }, ask: (...a) => ask(...a),
+  titleOf: (p) => S.files.find((f) => f.path === p)?.title || p.split("/").pop().replace(/\.md$/, "") });
 const ai = makeAi({
-  S, $, h, api, toast, renderHtml, notes,
+  S, $, h, api, toast, renderHtml, notes, copyText,
   openDoc: (...a) => openDoc(...a), hasPage: (p) => S.fileSet.has(p), titleOf: (p) => S.files.find((f) => f.path === p)?.title || null,
   saveNow: () => { refreshDirty(); return S.dirty ? save(false, { quiet: true }) : Promise.resolve(true); },
   show: () => { layout.show("outline"); showRightTab("ai"); },

@@ -29,7 +29,7 @@ const ai = makeAssistant({
 });
 
 await test("searching and reading the GDD", async () => {
-  assert.match(await ai.lookUp("search_gdd", { query: "drifts zero" }), /docs\/gdd\/systems\/bile\.md:3: Bile drifts back to zero/);
+  assert.match(await ai.lookUp("search_gdd", { query: "drifts zero" }), /docs\/gdd\/systems\/bile\.md:1 \(Bile\)\n  Bile drifts back to zero/);
   assert.match(await ai.lookUp("read_page", { path: "docs/gdd/skills/occultism.md" }), /^# Occultism/);
   assert.match(await ai.lookUp("read_page", { path: "server/Combat/Bile.cs" }), /Only GDD pages/);
   assert.match(await ai.lookUp("links_to", { path: "docs/gdd/systems/bile.md" }), /occultism\.md/);

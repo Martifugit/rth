@@ -181,6 +181,8 @@ export function makeCommentStore({ repo, local, account, emit, titleOf, watching
     reset,
     /** Someone changed a comment (the room said so): ask the helper now, not at the next look. */
     poke() { if (online()) refresh().catch(() => {}); },
+    /** The latest from the helper, waited for (answering @R'th AI reads the thread as it is now). */
+    async fresh() { if (online()) await refresh().catch(() => {}); },
     get where() { return online() ? "discord" : "local"; },
     /** How many changes wait to be sent (the outbox); flush() sends them now if it can. */
     get waiting() { return outbox.length; },

@@ -34,6 +34,8 @@ import { GDD, SYSTEM, TEMPLATES, undeletable, inGdd, readSystem, readPrompts, ne
 import { make as makeFront, split as splitFront, slugOf } from "./src/frontmatter.js";
 import { buildGdd, runQuery, checks, labelFor } from "./src/gdd-index.js";
 import { makeSync } from "./src/sync.js";
+import { makeAuditor } from "./src/audit.js";
+import { makeDiscordAnswers } from "./src/discord-answer.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 // The repository the Codex works on: the one it sits in, or CODEX_REPO (checks use a throwaway copy).
@@ -145,7 +147,10 @@ const store = makeCommentStore({
 });
 // "Editing <page> in the Codex" on the person's Discord profile, through their Discord app.
 // Who's here: the room of everyone with a Codex open (src/together.js), while signed in.
-const together = makeTogether({ helper: HELPER, session: () => account.session(), emit: (type, data) => broadcast(type, data), onComments: () => store.poke(), onPages: () => syncer.news(), onRelease: lookForRelease });
+const together = makeTogether({ helper: HELPER, session: () => account.session(), emit: (type, data) => broadcast(type, data), onComments: () => store.poke(), onPages: () => syncer.news(), onRelease: lookForRelease,
+  // @R'th AI in Discord: whether this Codex answers (AI setup, and Claude here), and a tag handed to it.
+  extra: () => ({ ai: assistant?.answersDiscord?.() || false }), onAsk: (m) => discordAnswers?.handle(m) });
+let discordAnswers = null; // made once the assistant is (below)
 // A release was just published (the room says so): look for it now, and twice more in case GitHub's
 // "latest" hadn't caught up yet. The hourly check (electron/main.js) stays for anyone not in the room.
 function lookForRelease(version) {
@@ -164,7 +169,9 @@ setTimeout(joinRoom); // once the engine is set up (its events go to the page)
 const presence = makePresence({ clientId: process.env.CODEX_DISCORD_APP || "1567232969637109922" });
 const runner = makeRunner({ repo: REPO, store, emit: (type, data) => broadcast(type, data) });
 runner.check().then((a) => console.log(a.ok ? `Agents: ${a.version}` : `Agents: off (${a.error})`));
-const assistant = makeAssistant({
+let engineBase = null; // http://127.0.0.1:<port>, once listening (startServer)
+let assistant = null;
+assistant = makeAssistant({
   repo: REPO, dir: path.join(DATA, "conversations"), store, emit: (type, data) => broadcast(type, data),
   pages: allDocs,
   read: async (rel) => { try { return (await readText(path.join(REPO, rel))).replace(/\r\n/g, "\n"); } catch { return null; } },
@@ -172,7 +179,9 @@ const assistant = makeAssistant({
   write: async (rel, text) => {
     const abs = safe(rel);
     if (!abs || !isDoc(rel)) return;
+    index = null; // the link index is read again, so what's shown follows at once
     if (text === null) { await fsp.rm(abs, { force: true }); return; }
+    await fsp.mkdir(path.dirname(abs), { recursive: true });
     let eol = "\n";
     try { if ((await fsp.readFile(abs, "utf8")).includes("\r\n")) eol = "\r\n"; } catch {}
     const tmp = abs + ".codex-tmp";
@@ -182,6 +191,11 @@ const assistant = makeAssistant({
   // The AI's changes are sent like the Codex's own saves, and their commit says "with AI".
   changed: (rels) => { for (const r of rels) syncer.saved(r, { ai: true }); },
   openrouterKey: () => openrouter.key(),
+  // The tools' spelling check (made further down), the files they write under docs/.codex/ (sent like
+  // the word list), and where Claude's MCP server finds the engine.
+  spell: { check: (words) => speller.check(words) },
+  ownChanged: (rel) => syncer.saved(rel, { soon: true }),
+  engineUrl: () => engineBase,
   // Who links to a page (the Links tab's index), so R'th AI sees where it sits before changing it.
   linksTo: async (page) => {
     const idx = await gdd();
@@ -190,6 +204,22 @@ const assistant = makeAssistant({
     return [...seen.values()];
   },
 });
+
+discordAnswers = makeDiscordAnswers({ auth: async () => account.authHeader(), store, answer: (x) => assistant.answerThread(x), enabled: () => assistant.answersDiscord() });
+// Claude is looked for once at startup; then the room hears whether this Codex answers.
+assistant.setup().catch(() => {}).finally(() => together.refresh());
+
+// The GDD's health check (src/audit.js): while idle, with Claude, R'th AI checks pages changed since it
+// last did; what it finds goes on the To-do page, for everyone. lastActivity: the last thing done here.
+let lastActivity = Date.now();
+const auditor = makeAuditor({
+  repo: REPO, dataDir: DATA, pages: allDocs,
+  read: async (rel) => { try { return (await readText(path.join(REPO, rel))).replace(/\r\n/g, "\n"); } catch { return null; } },
+  audit: (x) => assistant.audit(x), canRun: () => assistant.canAudit(), idleFor: () => Date.now() - lastActivity,
+  who: () => account.view()?.user?.name || owner || "R'th AI", ownChanged: (rel) => syncer.saved(rel, { soon: true }),
+  emit: (type, data) => broadcast(type, data),
+});
+auditor.start();
 
 // The link index over every page, rebuilt on demand after any page changes.
 let index = null;
@@ -533,10 +563,15 @@ const api = {
   },
 
   async "POST /api/ai/send"(url, req) {
-    const { id, text, context } = await body(req);
-    const r = await assistant.send({ id, text, context });
+    const { id, text, context, mode, problem } = await body(req);
+    const r = await assistant.send({ id, text, context, mode, problem });
     return r.error ? [400, r] : r;
   },
+
+  // The Codex's tools for Claude (src/ai-tools.js), asked by its MCP server (src/mcp-server.js) with the
+  // turn's key: which tools that turn has, and one of them run.
+  async "POST /api/ai/tools"(url, req) { const r = assistant.toolList(await body(req)); return r.error ? [403, r] : r; },
+  async "POST /api/ai/tool"(url, req) { const r = await assistant.tool(await body(req)); return r.error ? [403, r] : r; },
 
   // What a conversation keeps (src/assistant.js, setContext): a page added with @ or + Add page, one dropped.
   async "POST /api/ai/context"(url, req) {
@@ -554,6 +589,11 @@ const api = {
     return { changes: page ? await assistant.changesFor(page) : [] };
   },
   async "POST /api/ai/reviewed"(url, req) { return assistant.reviewed(await body(req)); },
+  async "POST /api/ai/problem"(url, req) { const r = await assistant.problemDone(await body(req)); return r.error ? [400, r] : r; },
+  async "POST /api/ai/accept"(url, req) {
+    if (!account.canEdit()) return [403, { error: "Sign in with Discord (with the Codex role) to change pages." }];
+    const r = await assistant.acceptSuggestions(await body(req)); return r.error ? [400, r] : r;
+  },
   async "POST /api/ai/create-page"(url, req) {
     if (!account.canEdit()) return [403, { error: "Sign in with Discord (with the Codex role) to make pages." }];
     const r = await assistant.createSuggested(await body(req));
@@ -624,7 +664,7 @@ const api = {
   async "POST /api/openrouter/key"(url, req) { const r = await openrouter.useKey((await body(req)).key); return r.ok ? r : [400, r]; },
   // AI setup (the AI tab's cog): which AI answers, and the ways in.
   async "GET /api/ai/setup"(url) { return assistant.setup({ recheck: url.searchParams.get("recheck") === "1" }); },
-  async "POST /api/ai/setup"(url, req) { const r = await assistant.configure(await body(req)); return r.error ? [400, r] : r; },
+  async "POST /api/ai/setup"(url, req) { const r = await assistant.configure(await body(req)); together.refresh(); return r.error ? [400, r] : r; },
   async "POST /api/ai/claude-signin"() { return assistant.signInClaude(); },
   async "POST /api/account/signin"(url, req) { return { url: account.signInUrl("http://" + req.headers.host) }; },
   async "POST /api/account/signout"() { return account.signOut(); },
@@ -700,11 +740,21 @@ const api = {
   async "GET /api/todo"() {
     const idx = await gdd();
     const exists = (rel) => fs.existsSync(path.join(REPO, rel));
-    return buildTodo({
+    const todo = buildTodo({
       idx, gdd: idx.gdd, system: idx.system, problems: checks(idx.gdd, idx.system, idx.texts),
       headings: brokenLinks(idx, exists).filter((l) => l.kind === "heading"), renames: await gitRenames(), exists,
     });
+    // What R'th AI's health check found (src/audit.js), and whether this Codex can check.
+    const found = (await auditor.list()).map((p) => ({ ...p, titles: p.pages.map((x) => idx.titles.get(x) || null) }));
+    return { ...todo, found, count: todo.count + found.length, audit: { ...auditor.view(), available: await assistant.canAudit().catch(() => false) } };
   },
+  async "POST /api/problems/dismiss"(url, req) {
+    if (!account.canEdit()) return [403, { error: "Sign in with Discord (with the Codex role) to change the To-do." }];
+    const r = auditor.dismiss(await body(req)); return r.error ? [400, r] : r;
+  },
+  async "POST /api/audit/sweep"() { return auditor.sweep(); },
+  // Check now, whatever the idle time (for trying it out).
+  async "POST /api/audit/run"() { const r = await auditor.runOnce(); return r.error ? [400, r] : r; },
 
   // A To-do fix (src/fixes.js). With `dry`, only which pages it would change; otherwise it changes them
   // (each keeping its line endings) and answers with a token for Undo.
@@ -851,6 +901,8 @@ const server = http.createServer(async (req, res) => {
       const result = await noteApi(req, noteRoute[1], noteRoute[2] || null);
       return Array.isArray(result) ? send(res, result[0], result[1]) : send(res, 200, result);
     }
+    // Something done here (not just looked at): the health check waits until things have been quiet a while.
+    if (req.method !== "GET" && !/^\/api\/(here|presence|spell|ai\/tools?|audit)\b/.test(url.pathname)) lastActivity = Date.now();
     const handler = api[`${req.method} ${url.pathname}`];
     if (handler) {
       const result = await handler(url, req);
@@ -892,6 +944,7 @@ export function startServer(port = PORT, { autoSync = process.env.CODEX_AUTOSYNC
     server.once("error", reject);
     server.listen(port, "127.0.0.1", () => {
       const actual = server.address().port;
+      engineBase = `http://127.0.0.1:${actual}`;
       console.log(`R'th Codex: http://127.0.0.1:${actual}/  (docs from ${REPO})`);
       resolve(actual);
     });

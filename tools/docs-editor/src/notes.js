@@ -368,8 +368,8 @@ export function makeNotes(ctx) {
       const href = a.getAttribute("href") || "";
       if (/^[a-z]+:/i.test(href)) window.open(href, "_blank", "noopener"); else ctx.openDoc(href.replace(/^\.\//, "").split("#")[0]);
     });
-    // "@Claude" and "@agent" stand out, as mentions do.
-    el.innerHTML = el.innerHTML.replace(/(^|[\s(>])@(Claude|agent)\b/gi, (m, pre, who) => `${pre}<span class="cm-mention">@${who}</span>`);
+    // "@RthAI", "@Claude" and "@agent" stand out, as mentions do.
+    el.innerHTML = el.innerHTML.replace(/(^|[\s(>])@(RthAI|R['’]th AI|Claude|agent)\b/gi, (m, pre, who) => `${pre}<span class="cm-mention">@${who}</span>`);
     return el;
   }
 
@@ -505,7 +505,7 @@ export function makeNotes(ctx) {
       const m = mentions();
       assignRow.classList.toggle("hidden", !(allowAssign && m.claude));
       warn.classList.toggle("hidden", !askedClaude());
-      warn.textContent = "Comments are for people now: ask R'th AI in the AI tab (Ctrl+J), with this passage selected.";
+      warn.textContent = "Tag @RthAI to have R'th AI answer in this thread, or ask it in the AI tab (Ctrl+J).";
       submit.disabled = !ta.value.trim();
       submit.textContent = m.claude && N.agent?.ok ? (assign.checked ? "Assign" : "Ask R'th AI") : m.agent ? "Assign" : submitLabel;
       layout();
@@ -514,12 +514,12 @@ export function makeNotes(ctx) {
     const word = () => { const m = ta.value.slice(0, ta.selectionStart).match(/(^|\s)@(\w*)$/); return m ? m[2] : null; };
     const showPop = () => {
       const w = word();
-      const all = [["agent", "picks it up in the next agent session"]];
+      const all = [["RthAI", "answers in the thread (an open Codex with Claude)"], ["agent", "picks it up in the next agent session"]];
       picks = w === null ? [] : all.filter(([n]) => n.toLowerCase().startsWith(w.toLowerCase()));
       pop.classList.toggle("hidden", !picks.length);
       sel = Math.min(sel, Math.max(0, picks.length - 1));
       pop.replaceChildren(...picks.map(([n, d], i) => h("div", { class: "cm-mention-item" + (i === sel ? " sel" : ""), onmousedown: (ev) => { ev.preventDefault(); pick(i); } },
-        h("span", { class: "cm-avatar small " + (n === "Claude" ? "claude" : "agent") }, n[0].toUpperCase()), h("b", {}, n), h("span", {}, d))));
+        h("span", { class: "cm-avatar small " + (n === "RthAI" ? "claude" : "agent") }, n === "RthAI" ? "R" : n[0].toUpperCase()), h("b", {}, n), h("span", {}, d))));
     };
     const pick = (i) => {
       const [n] = picks[i];
@@ -610,7 +610,7 @@ export function makeNotes(ctx) {
   // The "add comment" button beside a selection, in the margin.
   const addBtn = h("button", { class: "cm-add hidden", title: "Add comment (Ctrl+M)", html: ICON.add, onmousedown: (ev) => ev.preventDefault(), onclick: () => compose() });
   // ...and Ask beside it: the AI tab, with that passage as a chip (src/ai.js).
-  const askBtn = h("button", { class: "cm-add cm-ask hidden", title: "Ask the AI about this (Ctrl+J)", html: ICON.ask, onmousedown: (ev) => ev.preventDefault(), onclick: () => { ctx.askAi?.(); hideAdd(); } });
+  const askBtn = h("button", { class: "cm-add cm-ask hidden", title: "Ask R'th AI about this (Ctrl+J)", html: ICON.ask, onmousedown: (ev) => ev.preventDefault(), onclick: () => { ctx.askAi?.(); hideAdd(); } });
   document.body.append(addBtn, askBtn);
   function hideAdd() { addBtn.classList.add("hidden"); askBtn.classList.add("hidden"); }
   function showAdd() {
@@ -758,7 +758,7 @@ export function makeNotes(ctx) {
   function updateHistoryBadge() {
     const n = N.history.all.filter(forYou).length;
     const b = $("#historyCount");
-    if (b) { b.textContent = n ? String(n) : ""; b.title = n ? `${n} new from the AI: answers you haven't opened yet, or questions it left you` : ""; }
+    if (b) { b.textContent = n ? String(n) : ""; b.title = n ? `${n} new from R'th AI: answers you haven't opened yet, or questions it left you` : ""; }
   }
 
   function toggleHistory() {

@@ -25,7 +25,8 @@ import { openPage } from "./open.js";
 import { signIn, callback, sessionFrom } from "./auth.js";
 import { member, post, pinOnly, findOwn } from "./discord.js";
 import { installationToken, verifyWebhook } from "./github.js";
-import { comments } from "./comments.js";
+import { comments, poll } from "./comments.js";
+import { mentions, sweep as sweepMentions } from "./mentions.js";
 import { same } from "./crypto.js";
 import { Live, room } from "./live.js";
 import { tooOld, outdated, updatePage, HEADER } from "./version.js";
@@ -104,12 +105,21 @@ export default {
           return json({ token: t.token, expires: t.expires_at, name: m.name, email: `${s.sub}+discord@users.rth-codex` });
         }
         default: {
+          if (url.pathname.startsWith("/mentions/")) {
+            // A Codex answering @R'th AI claims the tag first (mentions.js): signed in with the Codex role.
+            const as = await whoAsks(req, env);
+            if (!as) return json({ error: "Not signed in." }, 401);
+            if (as.kind === "person") { const m = await member(env, as.user.id); if (!m?.codex) return json({ error: "You need the Codex role." }, 403); }
+            const r = await mentions(req, env, url);
+            if (!r) return text("not found", 404);
+            return r.status ? json({ error: r.error }, r.status) : json(r);
+          }
           if (!url.pathname.startsWith("/comments")) return text("not found", 404);
           const as = await whoAsks(req, env);
           if (!as) return json({ error: "Not signed in." }, 401);
           // An out-of-date Codex may read comments but not write them (agents on the owner's computer may).
           if (req.method !== "GET" && as.kind === "person") { const old = tooOld(req, env); if (old) return old; }
-          const r = await comments(req, env, url, as);
+          const r = await comments(req, env, url, as, ctx);
           if (!r) return text("not found", 404);
           // A comment changed: every open Codex fetches comments now, not at its next look.
           if (req.method === "POST" && !r.status) ctx.waitUntil(room(env).fetch("https://room/live/notify", { method: "POST", body: JSON.stringify({ type: "comments" }) }).catch(() => {}));
@@ -125,6 +135,8 @@ export default {
   // Every 5 minutes (wrangler.toml, triggers): post the "what changed" batches that are ready (notices.js).
   async scheduled(event, env, ctx) {
     ctx.waitUntil(sendDue(env).catch((e) => console.error("notices", e.stack || e)));
+    // @R'th AI: read the forum even with no Codex open (so "offline" is said), and offer again what waits.
+    ctx.waitUntil(poll(env, ctx).then(() => sweepMentions(env)).catch((e) => console.error("mentions", e.stack || e)));
   },
 };
 

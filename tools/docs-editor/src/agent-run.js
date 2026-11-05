@@ -171,7 +171,7 @@ function where(note, page) {
 }
 
 function threadText(note) {
-  return note.thread.map((e) => `${e.by === "agent" ? "You (earlier)" : "The owner"}: ${e.text}`).join("\n\n");
+  return note.thread.map((e) => `${e.by === "agent" ? "You (earlier)" : e.who?.name || "The owner"}: ${e.text}`).join("\n\n");
 }
 
 function firstPrompt(note, page, brief) {
@@ -196,7 +196,7 @@ function firstPrompt(note, page, brief) {
 function followUp(note, page) {
   const last = note.thread[note.thread.length - 1];
   return [
-    `The owner replied on the same note (${page || "scratch"}${note.anchor?.section?.length ? ", " + note.anchor.section.join(" › ") : ""}):`,
+    `${note.thread.at(-1)?.who?.name || "The owner"} replied on the same note (${page || "scratch"}${note.anchor?.section?.length ? ", " + note.anchor.section.join(" › ") : ""}):`,
     "",
     last.text,
     "",
