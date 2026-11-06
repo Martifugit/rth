@@ -13,6 +13,7 @@ import { busy } from "./busy.js";
 import { split as splitFront } from "./frontmatter.js";
 import { typeAt } from "./gdd.js";
 import { quoteAt } from "./turn-check.js";
+import { mentionQuery } from "./mention-query.js";
 
 const ICON = {
   send: '<svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></svg>',
@@ -73,7 +74,10 @@ export function makeAi(ctx) {
     else if (ev.key === "Escape" && A.listOpen) { ev.stopPropagation(); A.listOpen = false; drawHead(); }
   });
   input.addEventListener("input", () => { grow(); pane.classList.toggle("typing", !!input.value.trim()); drawMention(); mentionsEdited(); });
-  input.addEventListener("blur", () => setTimeout(() => mention.classList.add("hidden"), 150));
+  input.addEventListener("blur", () => setTimeout(closeMention, 150));
+  // The cursor leaving the @ word (a click, the arrows, Home/End) closes the picker; coming back opens it.
+  input.addEventListener("click", () => drawMention());
+  input.addEventListener("keyup", (ev) => { if (/^(ArrowLeft|ArrowRight|Home|End)$/.test(ev.key)) drawMention(); });
   // A conversation pasted from Discord: who said what, so "turn this into the decision" works on it.
   input.addEventListener("paste", (ev) => {
     const chat = discordConversation(ev.clipboardData?.getData("text/plain") || "");
@@ -179,15 +183,23 @@ export function makeAi(ctx) {
   // ----------------------------------------------------------------------------- @ a page
 
   // Typing @ offers pages by title (as the link picker does); picking one adds it to the conversation
-  // and leaves "@Its title" in the message, so the request reads naturally.
-  let picks = [], at = 0;
-  const mentionAt = () => { const m = input.value.slice(0, input.selectionStart).match(/(^|\s)@([^@\n]{0,40})$/); return m ? m[2] : null; };
+  // and leaves "@Its title" in the message, so the request reads naturally. When it's open is
+  // src/mention-query.js.
+  let picks = [], at = 0, picked = [], dismissed = -1;
+  const norm = (s) => String(s || "").toLowerCase();
+  const pages = () => (S.files || []).filter((f) => f.path.startsWith("docs/gdd/") && !f.path.includes("/templates/"));
+  const find = (q) => pages().filter((f) => !q.trim() || norm(f.title || f.path).includes(norm(q).trim()));
+  const mentionAt = () => {
+    const before = input.value.slice(0, input.selectionStart);
+    // Escape's @ is forgotten once it's gone or the cursor is before it.
+    if (dismissed >= 0 && (dismissed >= before.length || before[dismissed] !== "@")) dismissed = -1;
+    return mentionQuery(before, { picked, dismissed, matches: (q) => find(q).length > 0 });
+  };
+  function closeMention() { mention.classList.add("hidden"); picks = []; at = 0; }
   function drawMention() {
-    const q = mentionAt();
-    if (q === null) { mention.classList.add("hidden"); picks = []; return; }
-    const norm = (s) => String(s || "").toLowerCase();
-    const all = (S.files || []).filter((f) => f.path.startsWith("docs/gdd/") && !f.path.includes("/templates/"));
-    picks = all.filter((f) => !q || norm(f.title || f.path).includes(norm(q).trim())).slice(0, 8);
+    const m = input.selectionStart === input.selectionEnd ? mentionAt() : null;
+    if (!m) { closeMention(); return; }
+    picks = m.none ? [] : find(m.q).slice(0, 8);
     at = Math.min(at, Math.max(0, picks.length - 1));
     mention.replaceChildren(...(picks.length ? picks.map((f, i) => h("div", { class: "ai-mention-item" + (i === at ? " on" : ""), onmousedown: (e) => { e.preventDefault(); pickMention(i); } },
       h("span", {}, f.title || pageTitle(f.path)), h("span", { class: "ai-mention-where" }, f.path.slice("docs/gdd/".length).split("/").slice(0, -1).join("/")))) : [h("div", { class: "ai-mention-none" }, "No page by that name")]));
@@ -199,8 +211,9 @@ export function makeAi(ctx) {
     const before = input.value.slice(0, input.selectionStart).replace(/@[^@\n]{0,40}$/, "@" + (f.title || pageTitle(f.path)) + " ");
     input.value = before + input.value.slice(input.selectionStart);
     input.setSelectionRange(before.length, before.length);
-    mention.classList.add("hidden"); picks = [];
+    closeMention();
     const token = "@" + (f.title || pageTitle(f.path));
+    if (!picked.includes(token)) picked.push(token);
     // Remember what this mention brought in, so deleting it takes back that and nothing more: a page
     // that was in the context already stays.
     if (!inContext(f.path)) mentions.push({ token, page: f.path, drop: started() && !A.conv.context.page ? "page" : f.path, wasLeft: A.left.has("page") });
@@ -230,10 +243,11 @@ export function makeAi(ctx) {
   }
   /** Arrow keys, Enter and Tab work the @ list while it's open. */
   function mentionKey(ev) {
-    if (mention.classList.contains("hidden") || !picks.length) return false;
+    if (mention.classList.contains("hidden")) return false;
+    if (ev.key === "Escape") { ev.preventDefault(); ev.stopPropagation(); dismissed = mentionAt()?.start ?? -1; closeMention(); return true; }
+    if (!picks.length) return false;
     if (ev.key === "ArrowDown" || ev.key === "ArrowUp") { ev.preventDefault(); at = (at + (ev.key === "ArrowDown" ? 1 : picks.length - 1)) % picks.length; drawMention(); return true; }
     if (ev.key === "Enter" || ev.key === "Tab") { ev.preventDefault(); pickMention(at); return true; }
-    if (ev.key === "Escape") { ev.preventDefault(); ev.stopPropagation(); mention.classList.add("hidden"); return true; }
     return false;
   }
 
@@ -365,7 +379,7 @@ export function makeAi(ctx) {
   }
 
   function newConversation() {
-    A.id = null; A.conv = null; A.run = null; A.listOpen = false; A.extra = []; A.left.clear(); mentions = []; quoted = []; drawQuotes();
+    A.id = null; A.conv = null; A.run = null; A.listOpen = false; A.extra = []; A.left.clear(); mentions = []; picked = []; dismissed = -1; quoted = []; drawQuotes();
     A.mode = A.defaultMode; drawMode();
     localStorage.removeItem(KEY);
     drawHead(); drawLog(); syncSend();
@@ -375,7 +389,7 @@ export function makeAi(ctx) {
     const r = await api("/api/ai/conversation?id=" + encodeURIComponent(id));
     if (!r.ok) { if (id === A.id) newConversation(); return; }
     // Another conversation: the message's mentions were about this one, and it has its own mode.
-    if (id !== A.id) mentions = [];
+    if (id !== A.id) { mentions = []; picked = []; dismissed = -1; }
     if (A.conv?.id !== id) { A.mode = r.settings?.mode || A.defaultMode; drawMode(); } // opened (or first loaded): its own mode
     A.id = id; A.conv = r; A.setupOpen = false;
     queueMicrotask(drawChips); // its own context, not the screen's
@@ -820,7 +834,7 @@ export function makeAi(ctx) {
       drawLog(); syncSend();
       return;
     }
-    A.left.clear(); A.extra = []; mentions = []; // sent: what the mentions added is the conversation's now
+    A.left.clear(); A.extra = []; mentions = []; picked = []; dismissed = -1; // sent: what the mentions added is the conversation's now
     if (r.id !== A.id) { A.id = r.id; localStorage.setItem(KEY, r.id); }
     A.pending = null;
     await openConversation(r.id);
