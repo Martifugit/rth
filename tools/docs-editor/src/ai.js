@@ -494,8 +494,8 @@ export function makeAi(ctx) {
         { badge: badgePick(EFFORT_NAME[cd.effort] || cd.effort, cd.effort, [["low", "Low"], ["medium", "Medium"], ["high", "High"], ["xhigh", "Extra high"], ["max", "Max"]], (v) => configure({ claudeEffort: v })) }) : null,
       row("Health check", "While Codex is idle, R'th AI checks changed pages for problems across pages and lists them on the To-do page",
         toggle(!!st.audit, (v) => configure({ audit: v }), "Check the GDD while idle")),
-      row("Answer @R'th AI in Discord", "This Codex may answer /ask in Discord's channels and @R'th AI in comment posts (only one Codex answers each)",
-        toggle(!!st.answerDiscord, (v) => configure({ answerDiscord: v }), "Answer @R'th AI in Discord")));
+      row("AI on Discord", "This instance of Codex may answer AI prompts on Discord.",
+        toggle(!!st.answerDiscord, (v) => configure({ answerDiscord: v }), "AI on Discord")));
 
     // OpenRouter: the account, its model, and a key pasted by hand (folded away).
     const keyInput = h("input", { class: "field", type: "password", placeholder: "sk-or-…", autocomplete: "off", spellcheck: "false" });
