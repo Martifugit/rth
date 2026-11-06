@@ -4,6 +4,11 @@ A few plain lines per version, for the people using it: `npm run release` puts t
 the GitHub release and announces it in #codex (`scripts/release.mjs`, `scripts/announce.mjs`). Write the
 section before releasing; the release refuses without one.
 
+## 0.4.2
+
+- The @ page list in R'th AI's box closes once you've picked a page, so you can keep typing. It also closes when nothing matches and you've typed a space, on Escape (for that @ only), on a new line, and when you click or arrow away from the @. Delete back into a picked page to pick another.
+- AI setup's Discord setting is now called "AI on Discord".
+
 ## 0.4.1
 
 - Ask R'th AI from any Discord channel: type **/ask** and your question, or pick **Apps > Ask R'th AI** on someone's message. It answers in the channel, from a Codex with Claude that has "Answer @R'th AI in Discord" on. With none open it says it's offline, then answers later and tags you.
