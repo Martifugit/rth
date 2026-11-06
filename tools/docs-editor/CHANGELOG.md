@@ -4,6 +4,10 @@ A few plain lines per version, for the people using it: `npm run release` puts t
 the GitHub release and announces it in #codex (`scripts/release.mjs`, `scripts/announce.mjs`). Write the
 section before releasing; the release refuses without one.
 
+## 0.4.4
+
+- **Links from Discord open again.** The browser tab no longer closes before you can answer "Open R'th Codex?"; it closes once Codex has the page open.
+
 ## 0.4.3
 
 - **Keys and Markdown** (press ?): every shortcut on its own line, grouped by what it's for, with where it works shown above it. A new Markdown tab shows what to type, what it looks like, and how to get it in a page.
