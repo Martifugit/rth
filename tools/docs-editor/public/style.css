@@ -1400,8 +1400,8 @@ body.in-app .search-trigger { height: 28px; }
    Over everything while this Codex is older than the helper's minimum (helper/src/version.js). */
 .rq { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; background: rgba(5, 4, 3, .82); animation: fade .15s ease-out; }
 /* As the "Updating" window (electron/update-splash.ps1): centred, the logo, a gold heading, little else. */
-.rq-box { position: relative; width: min(360px, calc(100vw - 40px)); padding: 30px 28px 32px; text-align: center; border: 1px solid #2c251c; border-radius: 5px;
-  background: #0d0c0a; box-shadow: 0 16px 40px rgba(0, 0, 0, .8); }
+.rq-box { position: relative; width: min(360px, calc(100vw - 40px)); padding: 30px 28px 32px; text-align: center; border: 1px solid #2c251c; border-radius: 5px; /* the stone, as the window has it */
+  background: #0d0c0a url("/stone.jpg") 0 0 repeat; box-shadow: 0 16px 40px rgba(0, 0, 0, .8); }
 .rq-logo { display: block; width: 64px; height: 64px; margin: 0 auto 16px; }
 .rq-title { margin: 0 0 20px; font: 700 20px/1.3 var(--serif); letter-spacing: .5px; color: #e0c387; }
 .rq-text { margin: -8px 0 20px; color: var(--muted); font-size: 14px; line-height: 1.5; }
