@@ -18,6 +18,7 @@ import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { capture, sectionsOf, locate } from "./anchor.js";
 import { failed } from "./plain-errors.js";
 import { textPicker } from "./text-picker.js";
+import { plural, clip } from "./text.js";
 
 const KEY = new PluginKey("codexComments");
 
@@ -381,7 +382,6 @@ export function makeNotes(ctx) {
   }
 
   const plain = (text) => { const d = document.createElement("div"); d.innerHTML = ctx.renderHtml(text || ""); return d.textContent.replace(/\s+/g, " ").trim(); };
-  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
   /** Where the comment is, when it isn't simply on a passage that's highlighted. */
   function whereLine(n) {
@@ -857,7 +857,6 @@ export function makeNotes(ctx) {
 
 // ----------------------------------------------------------------------------- helpers
 
-function clip(s, n) { s = String(s).replace(/\s+/g, " ").trim(); return s.length > n ? s.slice(0, n - 1) + "…" : s; }
 
 function when(iso) {
   const d = new Date(iso), now = new Date();

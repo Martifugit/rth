@@ -14,6 +14,7 @@ import { split as splitFront } from "./frontmatter.js";
 import { typeAt } from "./gdd.js";
 import { quoteAt } from "./turn-check.js";
 import { textPicker } from "./text-picker.js";
+import { clip } from "./text.js";
 
 const ICON = {
   send: '<svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></svg>',
@@ -880,7 +881,6 @@ export function makeAi(ctx) {
   };
 }
 
-const clip = (s, n) => { s = String(s || "").replace(/\s+/g, " ").trim(); return s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s; };
 
 function ago(iso) {
   const s = (Date.now() - Date.parse(iso)) / 1000;

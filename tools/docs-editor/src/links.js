@@ -1,21 +1,12 @@
 // What links where, and the GDD's state: read from the pages' Markdown, for the Links tab, the notes'
 // Related scope and the Board. Plain functions on text; server.js keeps the index fresh.
 
+import { dirOf, normalize, isExternal, relativePath } from "./paths.js";
+
 const LINK = /\[((?:[^\[\]]|\[[^\]]*\])*)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g;
 const FENCE = /^\s*(`{3,}|~{3,})/;
 
-const dirOf = (p) => (p.includes("/") ? p.slice(0, p.lastIndexOf("/")) : "");
-function normalize(p) {
-  const out = [];
-  for (const part of p.split("/")) {
-    if (part === "" || part === ".") continue;
-    if (part === "..") out.pop(); else out.push(part);
-  }
-  return out.join("/");
-}
-// Inline code is an example, not a link: blanked out (same length, so positions hold) before looking for links.
 const noCode = (line) => line.replace(/`[^`]*`/g, (m) => " ".repeat(m.length));
-const isExternal = (href) => /^[a-z][a-z0-9+.-]*:/i.test(href);
 
 /** A link's target page from `from` (null for external links, anchors in the same page, non-pages). */
 export function targetOf(from, href) {
@@ -205,12 +196,7 @@ export function brokenLinks(index, exists = () => false) {
 }
 
 /** The href from page `from` to `to` ("../items/axe.md"). */
-export function hrefBetween(from, to) {
-  const a = dirOf(from).split("/").filter(Boolean), b = to.split("/");
-  let i = 0;
-  while (i < a.length && i < b.length - 1 && a[i] === b[i]) i++;
-  return "../".repeat(a.length - i) + b.slice(i).join("/");
-}
+export const hrefBetween = relativePath;
 
 /**
  * A page moved from `from` to `to` (its type changed): the text of `page` with its links put right.

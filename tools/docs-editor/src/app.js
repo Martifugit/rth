@@ -28,10 +28,13 @@ import { makeAi } from "./ai.js";
 import { makeAccountButton } from "./account-button.js";
 import { makePasteHandler, forDiscord } from "./discord-extras.js";
 import { AiMarks, makeAiChanges } from "./ai-changes.js";
-import { altGrChar, isKeyFor, is, label } from "./keys.js";
+import { altGrChar, is } from "./keys.js";
 import { makeFindBar } from "./find-bar.js";
 import { makeFindAll } from "./find-all.js";
 import { zoomBadge } from "./zoom-badge.js";
+import { makeToasts } from "./toasts.js";
+import { makeQuickOpen } from "./quick-open.js";
+import { keysWindow } from "./keys-window.js";
 import { makeTogetherUi } from "./together-ui.js";
 import { Spelling, configureSpelling } from "./spellcheck.js";
 import { GDD, README, TOP, TEMPLATES, isMeta, undeletable, folderPath, typeAt } from "./gdd.js";
@@ -40,6 +43,8 @@ import { busy } from "./busy.js";
 import { makeGddUi } from "./gdd-ui.js";
 import { pagePicker } from "./page-picker.js";
 import { failed } from "./plain-errors.js";
+import { dirOf, normalize, isExternal, resolveHref, relativePath } from "./paths.js";
+import { esc, plural } from "./text.js";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -58,8 +63,8 @@ const h = (tag, props = {}, ...kids) => {
   for (const kid of kids.flat(Infinity)) if (kid != null && kid !== false) el.append(kid.nodeType ? kid : document.createTextNode(kid));
   return el;
 };
-const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const collator = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
+const toast = makeToasts({ h, host: () => $("#toasts") });
 
 // The Codex opens on the GDD's start page: a welcome, the reading order, the way to the Charter.
 const DEFAULT_DOC = README;
@@ -84,29 +89,6 @@ const S = {
 
 // ----------------------------------------------------------------------------- paths
 
-const dirOf = (p) => (p.includes("/") ? p.slice(0, p.lastIndexOf("/")) : "");
-function normalize(p) {
-  const out = [];
-  for (const part of p.split("/")) {
-    if (part === "" || part === ".") continue;
-    if (part === "..") out.pop(); else out.push(part);
-  }
-  return out.join("/");
-}
-function resolveHref(from, href) {
-  let [path, hash] = href.split("#");
-  path = decodeURIComponent(path.split("?")[0]);
-  if (!path) return { path: from, hash: hash || "" };
-  const abs = path.startsWith("/") ? normalize(path) : normalize(dirOf(from) + "/" + path);
-  return { path: abs, hash: hash || "", dir: path.endsWith("/") };
-}
-function relativePath(from, to) {
-  const a = dirOf(from).split("/").filter(Boolean), b = to.split("/");
-  let i = 0;
-  while (i < a.length && i < b.length - 1 && a[i] === b[i]) i++;
-  return "../".repeat(a.length - i) + b.slice(i).join("/");
-}
-const isExternal = (href) => /^[a-z][a-z0-9+.-]*:/i.test(href);
 const assetUrl = (src) => (!src || isExternal(src) ? src : "/repo/" + resolveHref(S.path || "", src).path);
 function folderPage(dir) {
   for (const n of ["README.md", "index.md"]) if (S.fileSet.has(dir + "/" + n)) return dir + "/" + n;
@@ -1053,103 +1035,6 @@ function imageDialog() {
 
 // One search box for everything (Ctrl+P, Ctrl+Shift+F or the box at the top), as in VS Code or
 // Notion: pages whose name or title match come first, then the lines in pages that contain the words.
-function quickOpen() {
-  const input = h("input", { class: "field qo-input", placeholder: "Search pages and text", spellcheck: "false" });
-  const list = h("div", { class: "qo-list" });
-  let items = [], sel = 0, seq = 0, timer = null, text = { q: "", results: [], total: 0, loading: false };
-
-  // Lines as they read on the page: no Markdown marks, table cells joined.
-  const tidy = (t) => t.replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/[*_`]/g, "")
-    .replace(/^\s*(?:#{1,6}|[-+*]|\d+[.)]|>)\s+/, "").replace(/^\s*\|\s*|\s*\|\s*$/g, "").replace(/\s*\|\s*/g, ", ").trim();
-  const titleOf = (p) => S.files.find((f) => f.path === p)?.title || p.split("/").pop().replace(/\.md$/, "");
-  const mark = (t, q) => {
-    if (!q) return t;
-    const out = [], lower = t.toLowerCase(), n = q.toLowerCase();
-    let i = 0;
-    for (let j = lower.indexOf(n); j >= 0; j = lower.indexOf(n, i)) { out.push(t.slice(i, j), h("b", {}, t.slice(j, j + n.length))); i = j + n.length; }
-    out.push(t.slice(i));
-    return out;
-  };
-  const clip = (t, q) => { const at = t.toLowerCase().indexOf(q.toLowerCase()); return at > 60 ? "…" + t.slice(at - 40) : t; };
-
-  const render = () => {
-    const raw = input.value.trim();
-    // A page matches when every word typed starts a word of its title or file name (no scattered letters).
-    const words = raw.toLowerCase().split(/\s+/).filter(Boolean);
-    const score = (f) => {
-      if (!words.length) return 0;
-      const title = (f.title || "").toLowerCase(), name = f.path.toLowerCase();
-      const starts = (t) => words.every((w) => new RegExp("(^|[^\\p{L}\\p{N}])" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "u").test(t));
-      if (title.startsWith(raw.toLowerCase())) return 4;
-      if (starts(title)) return 3;
-      if (starts(name)) return 2;
-      return -1;
-    };
-    // Templates aren't pages to find, here as in the page list and the text search (they work behind New page).
-    const pages = S.files.filter((f) => !f.path.startsWith(TEMPLATES + "/")).map((f) => ({ f, s: score(f) }))
-      .filter((x) => x.s >= 0).sort((a, b) => b.s - a.s || collator.compare(a.f.path, b.f.path)).slice(0, raw ? 8 : 40);
-    items = pages.map((x) => ({ kind: "page", path: x.f.path, el: h("div", { class: "qo-item" },
-      h("span", { class: "ico ico-note qo-ico" }), h("span", { class: "qo-title" }, x.f.title || x.f.path.split("/").pop()), h("span", { class: "qo-path" }, x.f.path)) }));
-    const rows = [];
-    if (items.length) rows.push(h("div", { class: "qo-head" }, raw ? "Pages" : "All pages"));
-    rows.push(...items.map((x) => x.el));
-    if (raw.length >= 2 && text.q === raw) {
-      const hits = [];
-      for (const res of text.results) {
-        const seen = new Set();
-        for (const hit of res.hits) {
-          if (seen.has(hit.line)) continue;
-          seen.add(hit.line);
-          hits.push({ kind: "text", path: res.path, find: { q: raw, occurrence: hit.occurrence }, el: h("div", { class: "qo-item qo-text" },
-            h("span", { class: "qo-title" }, titleOf(res.path)), h("span", { class: "qo-snippet" }, mark(clip(tidy(hit.text), raw), raw))) });
-        }
-      }
-      rows.push(h("div", { class: "qo-head" }, hits.length ? `In the text (${text.total} matches in ${text.results.length} pages)` : "In the text: nothing found"));
-      items.push(...hits.slice(0, 80));
-      rows.push(...hits.slice(0, 80).map((x) => x.el));
-    } else if (raw.length >= 2) rows.push(h("div", { class: "qo-head" }, "Searching the text…"));
-    // Ask the AI instead: last, or first when it reads as a question (so Enter asks).
-    if (raw.length >= 3) {
-      const ask = { kind: "ask", q: raw, el: h("div", { class: "qo-item qo-ask" }, h("span", { class: "qo-ask-ico" }, "✦"), h("span", { class: "qo-title" }, "Ask R'th AI: "), h("span", { class: "qo-snippet" }, raw)) };
-      const question = /\?\s*$/.test(raw) || /^(how|what|why|when|where|who|which|does|do|is|are|can|should|could|would)\b/i.test(raw);
-      if (question) { items.unshift(ask); rows.unshift(ask.el); } else { items.push(ask); rows.push(ask.el); }
-    }
-    items.forEach((x, i) => {
-      x.el.classList.toggle("sel", i === sel);
-      x.el.onmousemove = () => { if (sel !== i) { sel = i; select(); } };
-      x.el.onclick = () => go(i);
-    });
-    sel = Math.min(sel, Math.max(0, items.length - 1));
-    list.replaceChildren(...rows);
-    select();
-  };
-  const select = () => items.forEach((x, i) => { x.el.classList.toggle("sel", i === sel); if (i === sel) x.el.scrollIntoView({ block: "nearest" }); });
-  const go = (i) => {
-    const x = items[i];
-    if (!x) return;
-    close();
-    if (x.kind === "ask") return ai.ask(x.q);
-    openDoc(x.path, x.kind === "text" ? { find: x.find } : {});
-  };
-  const searchText = async () => {
-    const raw = input.value.trim(), mine = ++seq;
-    if (raw.length < 2) return;
-    const r = await api("/api/search?q=" + encodeURIComponent(raw));
-    if (mine !== seq) return;
-    text = { q: raw, results: r.results || [], total: r.total || 0 };
-    render();
-  };
-  input.addEventListener("input", () => { sel = 0; render(); clearTimeout(timer); timer = setTimeout(searchText, 200); });
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowDown") { sel = Math.min(sel + 1, items.length - 1); select(); e.preventDefault(); }
-    else if (e.key === "ArrowUp") { sel = Math.max(sel - 1, 0); select(); e.preventDefault(); }
-    else if (e.key === "Enter") { go(sel); e.preventDefault(); }
-  });
-  const close = modal("Search", [input, list], { width: "min(720px, 94vw)" });
-  render();
-  setTimeout(() => input.focus(), 0);
-}
-
 /**
  * A new page the AI suggested (src/ai.js): the page as it would be, read-only, with where it would go,
  * then Create page (made as written, and opened) or Skip. create/skip are the AI tab's; create says
@@ -1303,99 +1188,6 @@ function relinkOpenPage(from, to) {
   if (tr.docChanged) { ed.view.dispatch(tr); scheduleDirty(); }
 }
 
-// The Keys window (? or the logo's menu): every shortcut, the app's from SHORTCUTS and the editor's own,
-// named as this keyboard has them (src/keys.js, label).
-const EDITOR_KEYS = [
-  ["Writing", [
-    ["mod+b", "Bold"], ["mod+i", "Italic"], ["mod+shift+s", "Strikethrough"], ["mod+k", "Add or edit a link"],
-    ["mod+shift+Digit1", "Title (Ctrl+Shift+2-6: headings; the same keys again: back to a paragraph)"],
-    ["mod+shift+Digit7", "Numbered list"], ["mod+shift+Digit8", "Bulleted list"], ["mod+shift+Digit9", "Checklist"],
-    ["mod+shift+b", "Quote"], ["mod+alt+c", "Code block"], ["shift+Enter", "A new line in the same paragraph"],
-    ["Tab", "In a list: indent the item (Shift+Tab: back out)"], ["mod+z", "Undo"], ["mod+y", "Redo (also Ctrl+Shift+Z)"],
-  ]],
-  ["The AI tab's box", [
-    ["Enter", "Send (Shift+Enter: a new line)"], ["shift+Tab", "Switch between Chat (its changes wait for you to accept) and Work (it edits the pages)"],
-    ["@", "Add a page to the conversation"],
-    ["alt+ArrowDown", "With R'th AI's changes shown: the next change (Alt+↑ the one before)"],
-    ["alt+Enter", "Accept the suggestion you're on (Alt+Backspace skips it)"],
-  ]],
-  ["Comments", [
-    ["mod+Enter", "Post a comment. Start it with /ask for R'th AI to answer in the thread; @agent leaves it for the next agent session"],
-    ["Escape", "Close the comment box (with words written: twice)"],
-  ]],
-  ["The window", [["mod++", "Zoom in (Ctrl+- out, Ctrl+0 back to 100%)"]]],
-];
-
-function helpDialog() {
-  const k = (spec, what) => [h("span", { class: "keys-k" }, label(spec).map((x) => h("kbd", {}, x))), h("span", {}, what)];
-  const group = (title, rows) => [h("div", { class: "keys-group" }, title), ...rows.flatMap(([spec, what]) => k(spec, what))];
-  const app = {};
-  for (const x of SHORTCUTS) if (x.what) (app[x.group] ||= []).push([x.keys[0], x.what]);
-  modal("Keys", h("div", { class: "keys" },
-    Object.entries(app).flatMap(([g, rows]) => group(g, rows)),
-    EDITOR_KEYS.flatMap(([g, rows]) => group(g, rows)),
-    h("span", { class: "muted small", style: "grid-column:1/-1;margin-top:8px" },
-      "Markdown shortcuts work as you type: ## for a heading, - or 1. for a list, > for a quote, ``` for code. Saving only rewrites the paragraphs you changed; the rest of the file stays exactly as written.")),
-  { width: "min(760px, 94vw)" });
-}
-
-// ----------------------------------------------------------------------------- toasts
-
-/**
- * A short message at the bottom. With actions ([{ label, run }]) it stays longer (ms), has buttons, and
- * an ✕; running an action closes it.
- */
-// Toasts: a deck at the bottom centre, newest in front, older ones tucked behind (at most three show).
-// Pointing at the deck spreads it out and holds every timer; the same message again only counts (×2).
-const TOASTS = [];
-let toastsHeld = false;
-function toast(text, kind = "", { actions = null, ms = null } = {}) {
-  const same = !actions && TOASTS.find((x) => !x.actions && x.text === text && x.kind === kind);
-  if (same) { same.n++; same.count.textContent = "×" + same.n; startToast(same); return same.el; }
-  const x = { text, kind, actions, n: 1, ms: ms || (actions ? 12000 : 2600) };
-  x.count = h("span", { class: "toast-n" });
-  x.el = h("div", { class: "toast " + kind, onmouseenter: () => holdToasts(true), onmouseleave: () => setTimeout(() => holdToasts(!!document.querySelector(".toast:hover")), 80) },
-    h("span", { class: "toast-ico" }, kind === "good" ? "✓" : kind === "bad" ? "!" : "✦"),
-    h("span", { class: "toast-text" }, text), x.count,
-    actions ? actions.map((a) => h("button", { class: "toast-btn", onclick: () => { closeToast(x); a.run(); } }, a.label)) : null,
-    actions ? h("button", { class: "toast-x", title: "Close", onclick: () => closeToast(x) }, "✕") : null);
-  TOASTS.unshift(x);
-  $("#toasts").append(x.el);
-  startToast(x);
-  return x.el;
-}
-function startToast(x) { clearTimeout(x.timer); if (!toastsHeld) x.timer = setTimeout(() => closeToast(x), x.ms); stackToasts(); }
-function closeToast(x) {
-  clearTimeout(x.timer);
-  const i = TOASTS.indexOf(x);
-  if (i < 0) return;
-  TOASTS.splice(i, 1);
-  x.el.classList.add("out");
-  setTimeout(() => x.el.remove(), 220);
-  stackToasts();
-}
-function holdToasts(on) {
-  if (on === toastsHeld) return;
-  toastsHeld = on;
-  for (const x of TOASTS) { clearTimeout(x.timer); if (!on) x.timer = setTimeout(() => closeToast(x), Math.min(x.ms, 2600)); }
-  stackToasts();
-}
-function stackToasts() {
-  let y = 0;
-  const front = TOASTS[0]?.el.offsetHeight || 0;
-  TOASTS.forEach((x, i) => {
-    const el = x.el;
-    el.style.zIndex = String(100 - i);
-    // Collapsed, each one behind shows its top edge a clear step above the one in front (whatever their
-    // heights) and is a little smaller and dimmer, so the deck shows there are more.
-    const scale = 1 - i * 0.04, lift = front + i * 10 - el.offsetHeight * scale;
-    el.style.transform = toastsHeld ? `translate(-50%, ${-y}px)` : `translate(-50%, ${-lift}px) scale(${scale})`;
-    el.style.opacity = toastsHeld || i < 3 ? "" : "0";
-    el.style.filter = toastsHeld || i === 0 ? "" : `brightness(${1 - i * 0.22})`; // darker, but solid: see-through would show the next one's words
-    el.style.pointerEvents = toastsHeld || i === 0 ? "auto" : "none";
-    y += el.offsetHeight + 8;
-  });
-}
 
 // ----------------------------------------------------------------------------- others' changes
 
@@ -1459,6 +1251,8 @@ async function deletePage(page = S.path) {
 }
 
 // ----------------------------------------------------------------------------- wiring
+
+function helpDialog() { keysWindow({ h, modal, shortcuts: SHORTCUTS }); }
 
 function wire() {
   buildToolbar();
@@ -1617,7 +1411,6 @@ function drawSharePanel() {
   let panel = $("#sharePanel");
   const v = syncState || {};
   const cards = [];
-  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
   const groups = [["ai", "R'th AI"], ["other", "outside Codex"]];
   for (const [by, who] of groups) {
     const pages = heldShown.filter((x) => x.by === by);
@@ -1806,6 +1599,8 @@ const together = makeTogetherUi({
   S, $, h, api, currentHeadingPos: () => currentHeadingPos(), pageTitle: () => pageTitle(),
   goTo: (page, leaf) => { if (page === S.path) { if (leaf) scrollToHeading(slug(leaf), true); } else openDoc(page, { hash: leaf ? slug(leaf) : "" }); },
 });
+
+const quickOpen = makeQuickOpen({ S, h, api, modal, openDoc: (...a) => openDoc(...a), askAi: (q) => ai.ask(q), templates: TEMPLATES });
 
 // Find and replace: in the page (src/find-bar.js) and in all pages (src/find-all.js).
 const findBar = makeFindBar({ S, $, h, onAll: (q) => findAll.open(q) });
