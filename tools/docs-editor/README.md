@@ -67,8 +67,11 @@ here (only on this computer for now: offline, or GitHub trouble; hover for why),
   all as one Ctrl+Z), in the Markdown view too. **Ctrl+Shift+F** finds in all pages, by page, and
   replaces in the pages ticked (two clicks, Undo in the message after). Across pages only the text
   changes: never frontmatter, where links point, or code (`/api/find`, `/api/replace`).
-- **Keys:** `?` lists every shortcut, named as your keyboard has them. Shortcuts live in one table
-  (`SHORTCUTS` in `src/app.js`), matched by `src/keys.js`, which knows Norwegian and other layouts
+- **Keys and Markdown** (`?` or the help button): every shortcut, one action a row, in cards with where
+  each works as a label, named as your keyboard has them; and a Markdown sheet (what to type, what it
+  becomes, how to get it in the page). The list shown is `KEYS` in `src/keys-window.js`; the app's own
+  shortcuts are handled in one table (`SHORTCUTS` in `src/app.js`, every key of which
+  `test/keys-window.test.js` checks is listed), matched by `src/keys.js`, which knows Norwegian and other layouts
   (AltGr is Ctrl+Alt there, so headings are Ctrl+Shift+1-6). Ctrl+N makes a page, Ctrl+Shift+D opens
   the To-do page, Ctrl+Shift+E Recent changes, Ctrl+Shift+M all comments, Alt+Page Down/Up the next or
   previous comment.

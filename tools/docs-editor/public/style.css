@@ -550,10 +550,57 @@ select.field option { background: #16130f; }
 .qo-item.sel { background: linear-gradient(90deg, rgba(201, 162, 94, .3), rgba(201, 162, 94, .08)); }
 .qo-item.sel .qo-title { color: var(--value); }
 .qo-item b { color: var(--value); }
-.keys { display: grid; grid-template-columns: auto 1fr; gap: 7px 16px; align-items: center; font-size: 14.5px; }
-.keys .keys-k { display: inline-flex; gap: 3px; white-space: nowrap; }
-.keys-group { grid-column: 1 / -1; margin-top: 10px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--silver-dim); }
-.keys-group:first-child { margin-top: 0; }
+/* Keys and Markdown (src/keys-window.js): two tabs; Keys is cards in two columns, one action a row, with
+   where a key works as a label over its rows. */
+.modal:has(.kw) { max-height: 86vh; }
+.kw { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.kw-tabs { display: flex; gap: 6px; border-bottom: 1px solid #2b241a; }
+.kw-tab { padding: 6px 10px 7px; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none;
+  font: 700 11.5px/1 var(--serif); letter-spacing: 1.5px; text-transform: uppercase; color: #7d725f; }
+.kw-tab:hover { color: #c9b48a; }
+.kw-tab.on { color: var(--value); border-bottom-color: #c9a25e; }
+.kw-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+.kw-col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+@media (max-width: 760px) { .kw-cards { grid-template-columns: 1fr; } }
+.kw-card { margin: 0; padding: 10px 12px 8px; border: 1px solid #2c251c; border-radius: 4px; background: rgba(70, 70, 76, .08); }
+.kw-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.kw-title { font: 700 12.5px/1 var(--serif); letter-spacing: 1.5px; text-transform: uppercase; color: #c9b48a; }
+.kw-when, .kw-label { font: 600 11px/1 var(--sans); letter-spacing: .4px; color: var(--silver-dim); }
+.kw-when { padding: 3px 7px; border: 1px solid #3a3125; border-radius: 10px; }
+.kw-part + .kw-part { margin-top: 8px; }
+.kw-label { display: flex; align-items: center; gap: 8px; margin: 0 0 3px; padding-top: 6px; border-top: 1px solid #241f17; }
+.kw-label::before { content: ""; width: 3px; height: 11px; border-radius: 2px; background: #5a4b34; }
+.kw-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 27px; padding: 1px 4px; border-radius: 3px; font-size: 14px; color: var(--text); }
+.kw-row:hover { background: rgba(255, 230, 180, .05); }
+.kw-keys { display: inline-flex; align-items: center; gap: 6px; flex: none; }
+.kw-combo { display: inline-flex; align-items: center; gap: 3px; }
+.kw-combo kbd { min-width: 20px; text-align: center; font-size: 11.5px; color: #d6cdbb; }
+.kw-or { font-size: 11.5px; color: var(--dim); }
+.kw-note { margin: 4px 4px 2px; font-size: 12.5px; color: var(--silver-dim); }
+/* Markdown: what you type, what it becomes (drawn as the page draws it), how to get it in the page. */
+.kw-md { display: flex; flex-direction: column; }
+.kw-md-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, .8fr); gap: 18px; align-items: center; padding: 8px 6px; border-top: 1px solid #241f17; }
+.kw-md-headrow { border-top: 0; padding-top: 0; font: 700 11px/1 var(--serif); letter-spacing: 1.4px; text-transform: uppercase; color: #7d725f; }
+.kw-md-src { justify-self: start; padding: 4px 7px; border: 1px solid #2a2a2d; border-radius: 3px; background: #121214; color: #d3d6da; font: 13px/1.45 var(--mono); white-space: pre; }
+.prose.kw-md-out { max-width: none; margin: 0; padding: 0; font-size: 15px; line-height: 1.45; }
+.prose.kw-md-out > * { margin: 0 !important; }
+.prose.kw-md-out h1 { display: inline-block; min-width: 170px; font-size: 22px; padding-bottom: 10px; text-align: left; background-size: calc(50% - 12px) 1px, calc(50% - 12px) 1px; }
+.prose.kw-md-out h1::after { width: 22px; height: 22px; bottom: -11px; }
+.prose.kw-md-out h2 { font-size: 19px; }
+.prose.kw-md-out h3 { font-size: 16.5px; }
+.prose.kw-md-out h4 { font-size: 15px; }
+.prose.kw-md-out pre { padding: 6px 10px; }
+.prose.kw-md-out hr { margin: 8px 0 !important; }
+.prose.kw-md-out table { font-size: 13.5px; }
+.prose.kw-md-out ul, .prose.kw-md-out ol { padding-left: 1.4em; }
+.kw-task { list-style: none; padding-left: 0 !important; }
+.prose.kw-md-out .kw-task > li::marker { content: none; }
+.kw-task input { margin: 0 6px 0 0; vertical-align: -1px; accent-color: #9ea3a9; }
+.kw-img { width: 28px; height: 28px; vertical-align: middle; }
+.kw-md-how { font-size: 13px; color: #c9b48a; }
+.kw-md-how code { padding: 1px 5px; border: 1px solid #2a2a2d; border-radius: 3px; background: #121214; color: #d3d6da; font: 12.5px/1.4 var(--mono); }
+.kw-md-how.plain { color: var(--silver-dim); }
+.kw-md-foot { margin: 10px 6px 0; font-size: 13px; color: var(--silver-dim); }
 
 /* ------------------------------------------------------------------ toasts */
 /* Toasts (src/app.js, toast): a deck at the bottom centre, newest in front and older ones tucked behind,

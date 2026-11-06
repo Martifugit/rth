@@ -1252,7 +1252,7 @@ async function deletePage(page = S.path) {
 
 // ----------------------------------------------------------------------------- wiring
 
-function helpDialog() { keysWindow({ h, modal, shortcuts: SHORTCUTS }); }
+function helpDialog(tab) { keysWindow({ h, modal, tab: tab === "markdown" ? "markdown" : "keys" }); } // (a click passes its event)
 
 function wire() {
   buildToolbar();
@@ -1323,36 +1323,36 @@ function escape(e) {
   else if (S.mode === "source") setMode("edit");
 }
 
-// Every shortcut of the app's own (the editor's are its extensions'; both listed in the Keys window).
-// keys: specs (src/keys.js), the first shown; when: only then; notTyping: not while typing in a box.
+// Every shortcut of the app's own (the editor's are its extensions'). What the Keys window shows is src/keys-window.js
+// (KEYS), checked against this list by test/keys-window.test.js. keys: specs (src/keys.js); when: only
+// then; notTyping: not while typing in a box.
 const editing = () => !!S.editor && S.mode === "edit" && !S.view;
 const onPage = () => !!S.path && !S.view;
 const SHORTCUTS = [
-  { group: "Finding", keys: ["mod+p"], what: "Search: pages by name, then the text of every page (also / when not typing)", run: () => quickOpen() },
-  { group: "Finding", keys: ["/"], what: null, run: () => quickOpen(), notTyping: true },
-  { group: "Finding", keys: ["mod+f"], what: "Find in this page", run: () => findBar.open(), when: onPage },
-  { group: "Finding", keys: ["mod+h"], what: "Find and replace in this page", run: () => findBar.open({ replace: true }), when: onPage },
-  { group: "Finding", keys: ["mod+shift+f"], what: "Find and replace in all pages", run: () => findAll.open(findBar.isOpen() ? "" : selectedWords()) },
-  { group: "Pages", keys: ["mod+n"], what: "New page", run: () => newPageDialog() },
-  { group: "Pages", keys: ["mod+s"], what: "Save now (pages also save by themselves)", run: () => save() },
-  { group: "Pages", keys: ["alt+ArrowLeft"], what: "Back to where you were (also the mouse's back button)", run: () => go(-1) },
-  { group: "Pages", keys: ["alt+ArrowRight"], what: "Forward again", run: () => go(1) },
-  { group: "Pages", keys: ["mod+shift+d"], what: "The To-do page", run: () => showView("broken") },
-  { group: "Pages", keys: ["mod+shift+e"], what: "Recent changes", run: () => showView("changes") },
-  { group: "Pages", keys: ["mod+k"], what: null, run: () => linkDialog(), when: editing }, // listed under Writing
-  { group: "Pages", keys: ["mod+shift+c"], what: "Copy for Discord: the selection, or the section you're in, with a link back", run: () => copyForDiscord(), when: editing },
-  { group: "Comments and R'th AI", keys: ["mod+m"], what: "Comment on the selected text (or the page)", run: () => notes.compose() },
-  { group: "Comments and R'th AI", keys: ["alt+PageDown"], what: "The next comment on the page (Alt+Page Up: the one before)", run: () => notes.step(1), when: onPage },
-  { group: "Comments and R'th AI", keys: ["alt+PageUp"], what: null, run: () => notes.step(-1), when: onPage },
-  { group: "Comments and R'th AI", keys: ["mod+shift+m"], what: "All comments, across every page", run: () => notes.toggleHistory() },
-  { group: "Comments and R'th AI", keys: ["mod+j"], what: "Ask R'th AI (with the selected text, if any)", run: () => ai.focus() },
-  { group: "The panes", keys: ["mod+Comma", "mod+Backslash"], what: "Show or hide the pages", run: () => layout.toggle("pages") },
-  { group: "The panes", keys: ["mod+Period", "mod+shift+Backslash"], what: "Show or hide the outline, links and AI", run: () => layout.toggle("outline") },
-  { group: "The panes", keys: ["alt+Digit1"], what: "Outline (Alt+2: Links, Alt+3: AI)", run: () => rightPane("outline") },
-  { group: "The panes", keys: ["alt+Digit2"], what: null, run: () => rightPane("links") },
-  { group: "The panes", keys: ["alt+Digit3"], what: null, run: () => rightPane("ai") },
-  { group: "The panes", keys: ["?"], what: "These keys", run: () => helpDialog(), notTyping: true },
-  { group: "The panes", keys: ["Escape"], what: "Close what's open; in the Markdown view, back to the page", run: () => {} },
+  { keys: ["mod+p"], run: () => quickOpen() },
+  { keys: ["/"], run: () => quickOpen(), notTyping: true },
+  { keys: ["mod+f"], run: () => findBar.open(), when: onPage },
+  { keys: ["mod+h"], run: () => findBar.open({ replace: true }), when: onPage },
+  { keys: ["mod+shift+f"], run: () => findAll.open(findBar.isOpen() ? "" : selectedWords()) },
+  { keys: ["mod+n"], run: () => newPageDialog() },
+  { keys: ["mod+s"], run: () => save() },
+  { keys: ["alt+ArrowLeft"], run: () => go(-1) },
+  { keys: ["alt+ArrowRight"], run: () => go(1) },
+  { keys: ["mod+shift+d"], run: () => showView("broken") },
+  { keys: ["mod+shift+e"], run: () => showView("changes") },
+  { keys: ["mod+k"], run: () => linkDialog(), when: editing },
+  { keys: ["mod+shift+c"], run: () => copyForDiscord(), when: editing },
+  { keys: ["mod+m"], run: () => notes.compose() },
+  { keys: ["alt+PageDown"], run: () => notes.step(1), when: onPage },
+  { keys: ["alt+PageUp"], run: () => notes.step(-1), when: onPage },
+  { keys: ["mod+shift+m"], run: () => notes.toggleHistory() },
+  { keys: ["mod+j"], run: () => ai.focus() },
+  { keys: ["mod+Comma", "mod+Backslash"], run: () => layout.toggle("pages") },
+  { keys: ["mod+Period", "mod+shift+Backslash"], run: () => layout.toggle("outline") },
+  { keys: ["alt+Digit1"], run: () => rightPane("outline") },
+  { keys: ["alt+Digit2"], run: () => rightPane("links") },
+  { keys: ["alt+Digit3"], run: () => rightPane("ai") },
+  { keys: ["?"], run: () => helpDialog(), notTyping: true },
 ].map((x) => ({ notTyping: false, ...x }));
 
 /** The right pane on a tab, shown if it was hidden. */
