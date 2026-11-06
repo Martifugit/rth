@@ -1785,7 +1785,7 @@ function scrollToPos(pos, onlyIfHidden = false) {
     const sc = $("#scroller"), r = sc.getBoundingClientRect();
     if (onlyIfHidden && c.top > r.top + 20 && c.bottom < r.bottom - 20) return;
     sc.scrollTop += c.top - r.top - sc.clientHeight / 3;
-  } catch {}
+  } catch { /* a position the page no longer has: leave the scroll */ }
 }
 
 const panels = makePanels({ S, $, h, api, toast, isMeta, ask: (...a) => ask(...a),

@@ -29,8 +29,6 @@ export function capture(text, start, end, sections) {
   };
 }
 
-/** An anchor for a whole section (no passage). */
-export const sectionAnchor = (sec) => ({ section: sec ? sec.path : [], quote: "", prefix: "", suffix: "" });
 
 /**
  * Sections of a text from its headings: [{ path: [h1, h2...], level, start, end, headingEnd }].

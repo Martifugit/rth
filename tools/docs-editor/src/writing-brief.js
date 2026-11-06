@@ -23,7 +23,7 @@ export async function writingBrief(read) {
   const parts = [WIKI_RULE];
   for (const [rel, title] of [[CHARTER, "The Charter"], [WRITING, "Writing a Page"]]) {
     let text = null;
-    try { text = await read(rel); } catch {}
+    try { text = await read(rel); } catch { /* a page that isn't there: left out of the brief */ }
     if (text) parts.push(`=== ${rel} (${title}) ===\n${String(text).replace(/\r\n/g, "\n").trim()}`);
   }
   return parts.join("\n\n");

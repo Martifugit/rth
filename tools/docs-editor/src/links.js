@@ -21,7 +21,7 @@ const isExternal = (href) => /^[a-z][a-z0-9+.-]*:/i.test(href);
 export function targetOf(from, href) {
   if (!href || isExternal(href) || href.startsWith("#")) return null;
   let [p] = href.split("#");
-  try { p = decodeURIComponent(p.split("?")[0]); } catch {}
+  try { p = decodeURIComponent(p.split("?")[0]); } catch { /* not %-encoded after all: as written */ }
   if (!p) return null;
   const abs = p.startsWith("/") ? normalize(p) : normalize(dirOf(from) + "/" + p);
   if (abs.endsWith(".md")) return abs;
@@ -195,7 +195,7 @@ export function brokenLinks(index, exists = () => false) {
         if (!index.files.has(to)) { if (!exists(to)) report("page"); continue; }
         if (!hash) continue;
         let id = hash;
-        try { id = decodeURIComponent(hash); } catch {}
+        try { id = decodeURIComponent(hash); } catch { /* not %-encoded after all: as written */ }
         const have = idsOf(to);
         if (!have.has(id) && !have.has(slug(id))) report("heading");
       }

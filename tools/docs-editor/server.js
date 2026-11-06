@@ -86,7 +86,7 @@ async function walk(dir, out) {
 
 async function allDocs() {
   const files = [];
-  for (const r of ROOTS) { try { await walk(path.join(REPO, r), files); } catch {} }
+  for (const r of ROOTS) { try { await walk(path.join(REPO, r), files); } catch { /* a root that doesn't exist in this copy */ } }
   return files;
 }
 
@@ -135,7 +135,7 @@ const ownerName = () => owner ?? new Promise((resolve) => execFile(process.env.C
 const DATA = process.env.CODEX_DATA ? path.resolve(process.env.CODEX_DATA) : path.join(HERE, ".local");
 // Who's using this Codex (Sign in with Discord, through the helper): src/discord-account.js. Signing in
 // or out moves the comments between the Discord forum and docs/.notes/.
-const account = await makeAccount({ dir: DATA, contributor: process.env.CODEX_CONTRIBUTOR === "1", emit: (type, data) => { broadcast(type, data); if (type === "account") { try { store.reset(); } catch {} try { joinRoom(); } catch {} } } });
+const account = await makeAccount({ dir: DATA, contributor: process.env.CODEX_CONTRIBUTOR === "1", emit: (type, data) => { broadcast(type, data); if (type === "account") { try { store.reset(); } catch { /* nothing to reset */ } try { joinRoom(); } catch (e) { console.warn("Codex: joining the room failed:", e.message); } } } });
 // Sign in with OpenRouter: free AI for anyone without Claude on their computer (src/openrouter-account.js).
 const openrouter = await makeOpenRouterAccount({ dir: DATA, emit: (type, data) => broadcast(type, data) });
 // Comments: in the Discord forum when signed in, in docs/.notes/ when not (src/comment-store.js). On
@@ -181,7 +181,7 @@ assistant = makeAssistant({
     if (text === null) { await fsp.rm(abs, { force: true }); return; }
     await fsp.mkdir(path.dirname(abs), { recursive: true });
     let eol = "\n";
-    try { if ((await fsp.readFile(abs, "utf8")).includes("\r\n")) eol = "\r\n"; } catch {}
+    try { if ((await fsp.readFile(abs, "utf8")).includes("\r\n")) eol = "\r\n"; } catch { /* a new file: LF */ }
     const tmp = abs + ".codex-tmp";
     await fsp.writeFile(tmp, eol === "\r\n" ? text.replace(/\n/g, "\r\n") : text, "utf8");
     await fsp.rename(tmp, abs);
@@ -367,7 +367,7 @@ function changed(rel) {
     const events = [];
     for (const f of files) {
       let h = null;
-      try { h = hash(await readText(path.join(REPO, f))); } catch {}
+      try { h = hash(await readText(path.join(REPO, f))); } catch { /* gone: no hash */ }
       const own = recentWrites.get(f);
       if (h && own && own.hash === h && Date.now() < own.until) continue;
       events.push({ path: f, hash: h });
@@ -398,7 +398,7 @@ function notesChanged(file) {
     const page = store.pageFor(file);
     if (page === undefined) return;
     let text = null;
-    try { text = await fsp.readFile(path.join(REPO, file), "utf8"); } catch {}
+    try { text = await fsp.readFile(path.join(REPO, file), "utf8"); } catch { /* gone: nothing to read */ }
     const own = store.lastWrites();
     if (own.has(file) && own.get(file) === text) { own.delete(file); return; }
     broadcast("notes", { page });
@@ -453,7 +453,7 @@ const api = {
     if (!abs || !isDoc(rel)) return [400, { error: "can only write documents under docs/" }];
     if (typeof content !== "string") return [400, { error: "no content" }];
     let current = null;
-    try { current = await readText(abs); } catch {}
+    try { current = await readText(abs); } catch { /* a new page */ }
     if (current !== null && baseHash && hash(current) !== baseHash && !force)
       return [409, { error: "changed on disk", content: current.replace(/\r\n/g, "\n"), hash: hash(current) }];
     return { ok: true, hash: await writeDoc(abs, content, eol) };
@@ -470,7 +470,7 @@ const api = {
     const t = system.types.find((x) => x.type === type) || null;
     // Made from its type's template (templates/<type>.md); a type with no template yet gets its core headings.
     let text = null;
-    if (type && /^[a-z-]+$/.test(type)) { try { text = fromTemplate(await readText(path.join(REPO, TEMPLATES, type + ".md")), name); } catch {} }
+    if (type && /^[a-z-]+$/.test(type)) { try { text = fromTemplate(await readText(path.join(REPO, TEMPLATES, type + ".md")), name); } catch { /* no such template: the plain new page */ } }
     if (text == null) text = newPageText(name, t, makeFront);
     // The components picked at creation (usually none): their sections from templates/<component>.md, in the canonical order.
     const names = (Array.isArray(picked) ? picked : []).filter((c) => typeof c === "string" && system.components.some((x) => x.name === c));
@@ -513,7 +513,7 @@ const api = {
     await write(b, moved);
     if (from !== to) {
       await fsp.rm(a);
-      try { const dir = path.dirname(a); if (dir.startsWith(path.join(REPO, "docs") + path.sep) && !(await fsp.readdir(dir)).length) await fsp.rmdir(dir); } catch {}
+      try { const dir = path.dirname(a); if (dir.startsWith(path.join(REPO, "docs") + path.sep) && !(await fsp.readdir(dir)).length) await fsp.rmdir(dir); } catch { /* not empty, or gone: left */ }
     }
     const rewritten = [];
     if (from !== to) {
@@ -555,7 +555,7 @@ const api = {
     try { text = await fsp.readFile(abs, "utf8"); } catch { return [404, { error: "No such page." }]; }
     await fsp.rm(abs);
     // A folder left empty goes too (git doesn't keep empty folders anyway).
-    try { const dir = path.dirname(abs); if (dir.startsWith(path.join(REPO, "docs") + path.sep) && !(await fsp.readdir(dir)).length) await fsp.rmdir(dir); } catch {}
+    try { const dir = path.dirname(abs); if (dir.startsWith(path.join(REPO, "docs") + path.sep) && !(await fsp.readdir(dir)).length) await fsp.rmdir(dir); } catch { /* not empty, or gone: left */ }
     index = null;
     syncer.saved(relOf(abs), { soon: true });
     return { ok: true, path: relOf(abs), content: text };
@@ -829,7 +829,7 @@ const api = {
     for (const { path: rel, before, after } of done) {
       const abs = safe(rel);
       let now = null;
-      try { now = await readText(abs); } catch {}
+      try { now = await readText(abs); } catch { /* gone since */ }
       if (now !== after) { skipped.push(rel); continue; }
       await fsp.writeFile(abs, before, "utf8");
       recentWrites.set(rel, { hash: hash(before), until: Date.now() + 3000 });
@@ -852,7 +852,7 @@ const api = {
     for (const [p, text] of idx.texts) {
       if (!inGdd(p)) continue;
       let mtime = null;
-      try { mtime = (await fsp.stat(path.join(REPO, p))).mtimeMs; } catch {}
+      try { mtime = (await fsp.stat(path.join(REPO, p))).mtimeMs; } catch { /* gone: no time */ }
       pages.push({ path: p, title: idx.titles.get(p), ...pageState(text), git: status[p] || null, notes: counts[p] || null, mtime });
     }
     pages.sort((a, b) => a.path.localeCompare(b.path, "en", { numeric: true }));

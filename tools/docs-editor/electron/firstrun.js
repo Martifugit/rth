@@ -38,7 +38,7 @@ export function markFetched(repo) {
   try {
     fs.writeFileSync(path.join(repo, ".git", "codex-fetched"), "Fetched by the R'th Codex; removed when it's uninstalled.\n");
     fs.writeFileSync(path.join(app.getPath("userData"), "fetched-folder.txt"), repo);
-  } catch {}
+  } catch (e) { console.warn("Codex: marking the fetched folder failed:", e.message); }
 }
 
 /** Where the docs are, without asking: CODEX_REPO, the saved choice, or the repository this tool is in. */

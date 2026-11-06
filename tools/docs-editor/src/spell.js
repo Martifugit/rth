@@ -42,7 +42,7 @@ export function makeSpell({ wordsFile, texts, legacy = [], onWrite = () => {} })
       const old = file && (await readList(file));
       if (!old) continue;
       for (const w of old) if (!project.has(w)) { project.add(w); moved = true; }
-      try { await fsp.rename(file, file.replace(/\.txt$/, "") + "-moved-to-docs.txt"); } catch {}
+      try { await fsp.rename(file, file.replace(/\.txt$/, "") + "-moved-to-docs.txt"); } catch { /* already moved */ }
     }
     if (moved) await save();
     cache.clear();

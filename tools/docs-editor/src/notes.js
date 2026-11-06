@@ -252,7 +252,7 @@ export function makeNotes(ctx) {
       const how = id === "draft" ? "exact" : places.get(id)?.how;
       let want = 0;
       if (pos != null && how !== "lost" && how !== "page") {
-        try { want = S.editor.view.coordsAtPos(Math.min(Math.max(pos, 1), S.editor.state.doc.content.size)).top - base - 4; } catch {}
+        try { want = S.editor.view.coordsAtPos(Math.min(Math.max(pos, 1), S.editor.state.doc.content.size)).top - base - 4; } catch { /* a position the page no longer has: keep the old height */ }
       }
       return { el, id, want, h: el.offsetHeight };
     }).sort((a, b) => a.want - b.want);

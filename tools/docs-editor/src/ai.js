@@ -631,7 +631,7 @@ export function makeAi(ctx) {
   /** A page's type, as its type badge says it ("Skill"): from its frontmatter, else its folder's type. */
   function typeName(x) {
     let t = null;
-    try { t = splitFront(x.after ?? x.before ?? "").data?.type || null; } catch {}
+    try { t = splitFront(x.after ?? x.before ?? "").data?.type || null; } catch { /* a header that doesn't parse: no type */ }
     if (!t) t = typeAt(S.types || [], x.page)?.type || null;
     return t ? t.replace(/^./, (c) => c.toUpperCase()) : null;
   }

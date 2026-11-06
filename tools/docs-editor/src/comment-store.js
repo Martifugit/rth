@@ -33,8 +33,8 @@ export function makeCommentStore({ repo, local, account, emit, titleOf, watching
 
   // ------------------------------------------------------------------- the outbox
   let outbox = [];
-  try { outbox = JSON.parse(fs.readFileSync(outboxFile, "utf8")); if (!Array.isArray(outbox)) outbox = []; } catch {}
-  const saveOutbox = () => { if (!outboxFile) return; try { fs.mkdirSync(path.dirname(outboxFile), { recursive: true }); fs.writeFileSync(outboxFile, JSON.stringify(outbox, null, 1)); } catch {} };
+  try { outbox = JSON.parse(fs.readFileSync(outboxFile, "utf8")); if (!Array.isArray(outbox)) outbox = []; } catch { /* nothing waiting */ }
+  const saveOutbox = () => { if (!outboxFile) return; try { fs.mkdirSync(path.dirname(outboxFile), { recursive: true }); fs.writeFileSync(outboxFile, JSON.stringify(outbox, null, 1)); } catch (e) { console.warn("Codex: keeping unsent comments failed:", e.message); } };
   const me = () => account.view().user || null;
   const stamp = () => new Date().toISOString();
   const tempId = () => "pending-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -151,7 +151,7 @@ export function makeCommentStore({ repo, local, account, emit, titleOf, watching
     clearTimeout(timer);
     if (!online()) return;
     timer = setTimeout(async () => {
-      try { await flush(); } catch {}
+      try { await flush(); } catch (e) { console.warn("Codex: sending waiting comments failed:", e.message); }
       try { await refresh(); } catch (e) { if (process.env.CODEX_DEBUG) console.log("comments:", e.message); }
       schedule();
     }, watching() ? FAST_MS : SLOW_MS);

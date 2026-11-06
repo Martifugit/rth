@@ -77,7 +77,7 @@ function savedBounds() {
 }
 function saveBounds() {
   if (!win || win.isDestroyed()) return;
-  try { fs.writeFileSync(boundsFile(), JSON.stringify({ ...win.getNormalBounds(), maximized: win.isMaximized() })); } catch {}
+  try { fs.writeFileSync(boundsFile(), JSON.stringify({ ...win.getNormalBounds(), maximized: win.isMaximized() })); } catch { /* the window's place is only a convenience */ }
 }
 
 /** Rebuild the page (public/app.js) if its source is newer, so a shortcut always opens the current Codex. */
