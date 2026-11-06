@@ -4,6 +4,12 @@ A few plain lines per version, for the people using it: `npm run release` puts t
 the GitHub release and announces it in #codex (`scripts/release.mjs`, `scripts/announce.mjs`). Write the
 section before releasing; the release refuses without one.
 
+## 0.4.3
+
+- **Keys and Markdown** (press ?): every shortcut on its own line, grouped by what it's for, with where it works shown above it. A new Markdown tab shows what to type, what it looks like, and how to get it in a page.
+- The find bar has the same background as the title bars.
+- The update screen is simpler: an update is ready, Restart and update, and the version it brings.
+
 ## 0.4.2
 
 - **Find and replace.** Ctrl+F finds in the page you're on, Ctrl+H replaces (one at a time, or all at once, undone with Ctrl+Z). Ctrl+Shift+F finds in every page and replaces in the ones you tick; only the pages' text changes, never where links point, and Undo is in the message after.

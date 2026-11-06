@@ -1,7 +1,7 @@
 {
   "name": "rth-docs-editor",
   "private": true,
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "The R'th Codex: the design docs of R'th, with Discord and AI built in. A tool for the team, never shipped with the game.",
   "type": "module",
   "scripts": {
