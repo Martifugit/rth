@@ -100,8 +100,6 @@ How it's built:
 - Your unsaved typing is saved before a turn starts, as `@Claude` does today.
 - When the daily allowance runs out, the AI says so plainly; everything else keeps working.
 
-Later, if wanted: marking text the AI wrote until a person rewrites it (iA Writer's authorship), which
-needs a place to keep who wrote what beside each page.
 
 ## Comments in Discord
 

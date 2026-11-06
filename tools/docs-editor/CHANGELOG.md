@@ -6,6 +6,11 @@ section before releasing; the release refuses without one.
 
 ## 0.4.2
 
+- **Find and replace.** Ctrl+F finds in the page you're on, Ctrl+H replaces (one at a time, or all at once, undone with Ctrl+Z). Ctrl+Shift+F finds in every page and replaces in the ones you tick; only the pages' text changes, never where links point, and Undo is in the message after.
+- **Ask R'th AI in a comment with /ask**, as in Discord: start the comment with /ask and R'th AI answers in the thread.
+- **Every shortcut in the Keys window** (press ?), named as your keyboard has them, and they work on Norwegian keyboards. New ones: Ctrl+N for a new page, Ctrl+Shift+D for the To-do page, Ctrl+Shift+E for Recent changes, Ctrl+Shift+M for all comments, Alt+Page Down and Page Up for the next and previous comment, Alt+1, 2, 3 for Outline, Links and AI, and Ctrl+Shift+1 to 6 for headings.
+- **The zoom shows** at the top right for a moment when you change it (Ctrl and + or -, Ctrl+0, or Ctrl and the mouse wheel). Zooming goes in the usual steps, 90%, 110%, 125% and so on.
+- Escape in a comment you've written something in asks you to press it again before throwing it away.
 - The @ page list in R'th AI's box closes once you've picked a page, so you can keep typing. It also closes when nothing matches and you've typed a space, on Escape (for that @ only), on a new line, and when you click or arrow away from the @. Delete back into a picked page to pick another.
 - AI setup's Discord setting is now called "AI on Discord".
 
