@@ -49,6 +49,22 @@ namespace Rth.Client.Ui
             || stat == StatIds.BuilderPhlegm ? "" : "%";
 
         /// <summary>A style as players say it: "Occultism", "Melee".</summary>
+        /// <summary>"Fen rat (level 4)": a creature's name with its combat level, when it has one.</summary>
+        public static string NpcName(GameSession session, string name, NpcInfo info) =>
+            info == null || info.Level <= 0 ? name : name + " (level " + info.Level + ")";
+
+        /// <summary>
+        /// The colour of a creature's level against the player's own: green when it is weaker,
+        /// yellow about even, red when stronger (RuneScape's convention).
+        /// </summary>
+        public static Color LevelColour(GameSession session, int level)
+        {
+            int diff = level - session.CombatLevel;
+            if (diff <= -4) return UiKit.Good;
+            if (diff >= 4) return UiKit.Bad;
+            return new Color(0.95f, 0.85f, 0.4f);
+        }
+
         public static string StyleName(CombatStyle style) => style switch
         {
             CombatStyle.Occult => "Occultism",
@@ -86,6 +102,8 @@ namespace Rth.Client.Ui
                     + (def.Tool.Success > 0 ? ", +" + (def.Tool.Success * 100).ToString("0.#") + "% success" : "")
                     + (def.Tool.Conservation > 0 ? ", " + (def.Tool.Conservation * 100).ToString("0.#") + "% conservation" : ""), UiKit.Value));
             if (def.Tackle != null) lines.Add(UiKit.Colour(TackleLine(def.Tackle), UiKit.Value));
+            if (def.Ammo != null) lines.Add(UiKit.Colour("Tier " + def.Ammo.Tier + " " + def.Ammo.Kind + ", worn in the quiver; one a shot, some land to be picked up again", UiKit.Value));
+            if (def.Equipment?.Ammo != null) lines.Add(UiKit.Colour("Fires " + def.Equipment.Ammo + "s from the quiver", UiKit.Value));
             if (!string.IsNullOrEmpty(def.Examine)) lines.Add(def.Examine);
             if (def.Equipment != null && def.Equipment.Stats.Count > 0)
             {
@@ -105,6 +123,8 @@ namespace Rth.Client.Ui
         private static string EffectLabel(EffectOp op) => op.Op switch
         {
             "healBlood" => "Heals " + op.Amount + " blood",
+            "healBloodPercent" => "Heals " + op.Amount + "% of your blood",
+            "healOverTime" => "Heals " + op.Amount + " blood over " + (op.Ticks * 0.6f).ToString("0.#") + "s, in combat too",
             "restoreDevotion" => "Restores " + op.Amount + " devotion",
             "restoreDevotionPercent" => "Restores " + op.Amount + "% of your devotion",
             "addPhlegm" => "+" + op.Amount + " phlegm",
@@ -132,6 +152,10 @@ namespace Rth.Client.Ui
             foreach (ItemCost r in a.Reagents) lines.Add((verse ? "Reads " : "Uses ") + UiKit.Colour(r.Count + " " + (itemName?.Invoke(r.Item) ?? r.Item).ToLowerInvariant(), UiKit.Value));
             if (a.BleedPercent > 0) lines.Add("Bleeds " + UiKit.Colour(a.BleedPercent + "% of the hit", UiKit.Value) + " over " + (a.BleedTicks * tickSeconds).ToString("0.#") + "s");
             if (a.LowBloodBonus > 0) lines.Add("Up to " + UiKit.Colour(a.LowBloodBonus + "% more damage", UiKit.Value) + " the lower your blood");
+            if (a.CalibrationBonus > 0) lines.Add("Up to " + UiKit.Colour(a.CalibrationBonus + "% more damage", UiKit.Value) + " at full calibration");
+            if (a.CalibrationSpent > 0) lines.Add("Spends all your calibration: up to " + UiKit.Colour(a.CalibrationSpent + "% more damage", UiKit.Value) + " at a hundred");
+            if (a.CalibrationGain > 0) lines.Add("Adds " + UiKit.Colour(a.CalibrationGain + " calibration", UiKit.Good));
+            if (a.PinTicks > 0) lines.Add("Holds the target for " + UiKit.Colour((a.PinTicks * tickSeconds).ToString("0.#") + "s", UiKit.Value));
             if (a.PhlegmGain > 0) lines.Add("Builds " + UiKit.Colour(a.PhlegmGain + " phlegm", UiKit.Good));
             if (a.PhlegmRequired > 0) lines.Add("Needs " + UiKit.Colour(a.PhlegmRequired + "% phlegm", UiKit.Value) + ", spends " + a.PhlegmCost);
             if (a.BileShift != 0) lines.Add("Bile " + UiKit.Colour((a.BileShift > 0 ? "+" : "") + a.BileShift, a.BileShift > 0 ? new Color(0.95f, 0.8f, 0.2f) : new Color(0.72f, 0.55f, 0.95f)));

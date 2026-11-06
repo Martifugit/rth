@@ -67,6 +67,17 @@
       "effects": [ { "op": "settleBile", "amount": 40 } ], "leaves": "empty_vial" }
   },
   {
+    "id": "yarrow_salve",
+    "name": "Yarrow salve",
+    "icon": "potion",
+    "examine": "Yarrow worked into resin. Rubbed on a wound, it gives 300 blood back over twelve seconds, even mid-fight.",
+    "value": 24,
+    "color": "#9ab87a",
+    "tags": [ "salve", "medicine" ],
+    "consumable": { "verb": "Apply", "cooldownGroup": "salve", "cooldownTicks": 20, "attackDelayTicks": 1, "animation": "consume",
+      "effects": [ { "op": "healOverTime", "amount": 300, "ticks": 20 } ] }
+  },
+  {
     "id": "empty_vial",
     "name": "Empty vial",
     "icon": "vial",
@@ -110,6 +121,72 @@
     "color": "#8a4a4a",
     "tags": [ "melee" ],
     "equipment": { "slot": "Weapon", "style": "Melee", "stats": { "abilityDamage": 18, "meleeDamage": 3 }, "requirements": [ { "skill": "melee", "level": 8 } ] }
+  },
+  {
+    "id": "hunting_sling",
+    "name": "Hunting sling",
+    "icon": "ranged",
+    "examine": "A leather pocket on two cords. Stones go in; whatever you were looking at goes down.",
+    "value": 15,
+    "color": "#8a6a40",
+    "tags": [ "ranged", "sling" ],
+    "equipment": { "slot": "Weapon", "style": "Ranged", "ammo": "stone", "stats": { "abilityDamage": 8, "rangedAccuracy": 2 } }
+  },
+  {
+    "id": "alder_shortbow",
+    "name": "Alder shortbow",
+    "icon": "ranged",
+    "examine": "Alder, short and quick, strung with flax. A hedge bow for a hedge country.",
+    "value": 60,
+    "color": "#a87a4a",
+    "tags": [ "ranged", "bow" ],
+    "equipment": { "slot": "Weapon", "family": "ranged-2h", "tier": 2, "style": "Ranged", "ammo": "arrow" }
+  },
+  {
+    "id": "ash_longbow",
+    "name": "Ash longbow",
+    "icon": "ranged",
+    "examine": "As tall as the archer. Ash takes a long draw and gives it all back.",
+    "value": 180,
+    "color": "#c0a070",
+    "tags": [ "ranged", "bow" ],
+    "equipment": { "slot": "Weapon", "family": "ranged-2h", "tier": 3, "style": "Ranged", "ammo": "arrow" }
+  },
+  {
+    "id": "sling_stone",
+    "name": "Sling stone",
+    "icon": "bead",
+    "examine": "A smooth stone the size of an egg. Miners toss them aside; slingers pick them up.",
+    "stackable": true,
+    "value": 1,
+    "color": "#8a8a84",
+    "tags": [ "ammo", "stone" ],
+    "equipment": { "slot": "Ammo", "stats": { "rangedPower": 2 } },
+    "ammo": { "kind": "stone", "tier": 1 }
+  },
+  {
+    "id": "copper_arrow",
+    "name": "Copper arrow",
+    "icon": "dagger",
+    "examine": "An alder shaft with a copper head. Bends on bone, but there are more where it came from.",
+    "stackable": true,
+    "value": 3,
+    "color": "#b87333",
+    "tags": [ "ammo", "arrow", "tier2" ],
+    "equipment": { "slot": "Ammo", "stats": { "rangedPower": 6 } },
+    "ammo": { "kind": "arrow", "tier": 2 }
+  },
+  {
+    "id": "iron_arrow",
+    "name": "Iron arrow",
+    "icon": "dagger",
+    "examine": "An ash shaft with an iron head, fletched with whatever bird was nearest.",
+    "stackable": true,
+    "value": 6,
+    "color": "#8a8d91",
+    "tags": [ "ammo", "arrow", "tier3" ],
+    "equipment": { "slot": "Ammo", "stats": { "rangedPower": 12 }, "requirements": [ { "skill": "ranged", "level": 20 } ] },
+    "ammo": { "kind": "arrow", "tier": 3 }
   },
   {
     "id": "occultist_robe",

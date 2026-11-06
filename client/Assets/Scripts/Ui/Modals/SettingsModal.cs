@@ -30,6 +30,7 @@ namespace Rth.Client.Ui.Modals
         private UiKit.Check _barsLock;
         private UiKit.Check _steerFish;
         private UiKit.Check _queueing;
+        private UiKit.Check _retaliate;
         private readonly Dictionary<RevolutionMode, UiKit.Check> _revolution = new Dictionary<RevolutionMode, UiKit.Check>();
         private readonly Dictionary<TrainDefence, UiKit.Check> _trainDefence = new Dictionary<TrainDefence, UiKit.Check>();
         private Label _scale;
@@ -117,6 +118,9 @@ namespace Rth.Client.Ui.Modals
             _queueing = new UiKit.Check(combat, "Ability queueing", () =>
                 Session.SetClientState(CombatOptions.QueueingKey, CombatOptions.QueueingValue(!Options().Queueing)));
             UiKit.Text(combat, "An ability pressed during the global cooldown waits and fires when it ends. Off: it is ignored.", "muted", "small");
+            _retaliate = new UiKit.Check(combat, "Auto-retaliate", () =>
+                Session.SetClientState(CombatOptions.RetaliateKey, Options().Retaliate ? "false" : "true"));
+            UiKit.Text(combat, "A creature that hits you is fought back, even if you were chopping or cooking. Off: only what you attack yourself.", "muted", "small");
             UiKit.Text(combat, "Revolution: abilities that fire on their own", "value").style.marginTop = 6f;
             foreach ((RevolutionMode mode, string label) in new[]
             {
@@ -157,6 +161,7 @@ namespace Rth.Client.Ui.Modals
             _steerFish.Set(AnglingFightView.SteerWithMouse);
             CombatOptions options = Options();
             _queueing.Set(options.Queueing);
+            _retaliate.Set(options.Retaliate);
             foreach (KeyValuePair<RevolutionMode, UiKit.Check> r in _revolution) r.Value.Set(options.Revolution == r.Key);
             foreach (KeyValuePair<TrainDefence, UiKit.Check> t in _trainDefence) t.Value.Set(options.TrainDefence == t.Key);
             _scale.text = Mathf.RoundToInt(Ui.Scale * 100f) + "%" + (Ui.AutoScaled ? " (fit)" : "");
@@ -171,6 +176,7 @@ namespace Rth.Client.Ui.Modals
             Queueing = CombatOptions.QueueingFrom(Session.ClientState.TryGetValue(CombatOptions.QueueingKey, out string q) ? q : null),
             Revolution = CombatOptions.RevolutionFrom(Session.ClientState.TryGetValue(CombatOptions.RevolutionKey, out string r) ? r : null),
             TrainDefence = CombatOptions.TrainDefenceFrom(Session.ClientState.TryGetValue(CombatOptions.TrainDefenceKey, out string t) ? t : null),
+            Retaliate = CombatOptions.RetaliateFrom(Session.ClientState.TryGetValue(CombatOptions.RetaliateKey, out string a) ? a : null),
         };
     }
 

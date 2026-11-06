@@ -141,7 +141,11 @@ namespace Rth.Server.Game
                 if (player.Waypoints.Count == 0)
                 {
                     World.SetPath(player, item.Position);
-                    if (player.Waypoints.Count == 0) return false; // can't get there
+                    if (player.Waypoints.Count == 0)
+                    {
+                        World.Tell(player, TextKind.Warning, "I can't reach that!");
+                        return false;
+                    }
                 }
                 World.ProcessMovement(player);
                 if (player.Position != item.Position) return true;

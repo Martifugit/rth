@@ -131,7 +131,11 @@ namespace Rth.Server.Game
                 World.Tell(player, TextKind.Warning, problem);
                 return;
             }
-            if (!IsReady(player, ability, World.CurrentTick) && !Options(player).Queueing) return;
+            if (!IsReady(player, ability, World.CurrentTick) && !Options(player).Queueing)
+            {
+                World.Tell(player, TextKind.Warning, ability.Name + " isn't ready yet.");
+                return;
+            }
             if (!ability.OnSelf && !ResumeAttack(player)) return;
             player.QueuedAbility = abilityId;
         }
@@ -175,6 +179,7 @@ namespace Rth.Server.Game
                 Queueing = CombatOptions.QueueingFrom(state?.Get(player, CombatOptions.QueueingKey)),
                 Revolution = CombatOptions.RevolutionFrom(state?.Get(player, CombatOptions.RevolutionKey)),
                 TrainDefence = CombatOptions.TrainDefenceFrom(state?.Get(player, CombatOptions.TrainDefenceKey)),
+                Retaliate = CombatOptions.RetaliateFrom(state?.Get(player, CombatOptions.RetaliateKey)),
             };
         }
 
@@ -244,6 +249,7 @@ namespace Rth.Server.Game
                 SkillName = skills == null ? null : (Func<string, string>)skills.Name,
                 CountOf = items == null ? (Func<string, int>?)null : i => items.CountOf(player, i),
                 ItemName = i => World.Content.Item(i)?.Name ?? i,
+                AmmoProblem = items?.AmmoProblem(player),
             });
         }
 
@@ -275,13 +281,20 @@ namespace Rth.Server.Game
         }
 
         /// <summary>Moves the attacker towards its target until in range. Returns whether it ended in range.</summary>
-        public bool Engage(Entity attacker, Entity target, int range)
+        public bool Engage(Entity attacker, Entity target, int range) => Engage(attacker, target, range, out _);
+
+        /// <summary>
+        /// Moves the attacker towards its target until in range. Returns whether it ended in range;
+        /// <paramref name="unreachable"/> is set when no way to it could be found from here.
+        /// </summary>
+        public bool Engage(Entity attacker, Entity target, int range, out bool unreachable)
         {
+            unreachable = false;
             if (!InRange(attacker, target, range))
             {
                 if (attacker.Waypoints.Count == 0 || attacker.ChaseGoal != target.Position)
                 {
-                    PlanChase(attacker, target, range);
+                    unreachable = !PlanChase(attacker, target, range);
                     attacker.ChaseGoal = target.Position;
                 }
                 World.ProcessMovement(attacker, () => InRange(attacker, target, range));
@@ -294,16 +307,17 @@ namespace Rth.Server.Game
             return false;
         }
 
-        private void PlanChase(Entity attacker, Entity target, int range)
+        /// <summary>Plans the way to the target. False if there is none (or none within the search).</summary>
+        private bool PlanChase(Entity attacker, Entity target, int range)
         {
             if (range > 1)
             {
                 World.SetPath(attacker, target.Position);
-                return;
+                return attacker.Waypoints.Count > 0;
             }
 
             // Melee: head for the closest tile beside the target that can actually reach it.
-            World.PathBeside(attacker, target.Plane, target.Position);
+            return World.PathBeside(attacker, target.Plane, target.Position);
         }
 
         // ------------------------------------------------------------------ player attacks
@@ -330,8 +344,16 @@ namespace Rth.Server.Game
             else if (stalled != null) range = stalled.Range;
             else if (queued != null) range = queued.Range;
 
-            if (!Engage(player, target, range))
+            if (!Engage(player, target, range, out bool unreachable))
             {
+                if (unreachable)
+                {
+                    // No way there from here: stop chasing (the target is kept, so an ability can
+                    // still stall and take the fight up again from somewhere else).
+                    World.Tell(player, TextKind.Warning, "I can't reach that!");
+                    player.QueuedAbility = null;
+                    return false;
+                }
                 // Stalling: an ability used out of range goes on cooldown now and fires on arrival.
                 if (stalled == null && queued != null && IsReady(player, queued, now))
                 {
@@ -381,6 +403,13 @@ namespace Rth.Server.Game
 
             if (now >= player.NextAttackTick)
             {
+                // A bow with an empty quiver can't even auto-attack: the fight stops (target kept).
+                string? ammo = auto.Style == CombatStyle.Ranged ? World.Find<ItemSystem>()?.AmmoProblem(player) : null;
+                if (ammo != null)
+                {
+                    World.Tell(player, TextKind.Warning, ammo);
+                    return false;
+                }
                 UseAbility(player, target, auto);
                 player.NextAttackTick = now + (uint)Math.Max(1, auto.CooldownTicks);
             }
@@ -453,10 +482,13 @@ namespace Rth.Server.Game
             PayBlood(player, bloodCost);
 
             int dealt = 0;
+            bool shot = ability.Style == CombatStyle.Ranged && ability.DamageMax > 0;
             if (ability.DamageMax > 0)
             {
                 double evasion = target is Npc npc ? npc.Def.Evasion : 0;
                 double accuracy = Rules.PlayerAccuracy + (Stat(player, target, StatIds.Accuracy) + StyleStat(player, target, StatIds.AccuracyFor(ability.Style))) / 100.0;
+                int calibration = shot ? AimAt(player, target) : 0; // a new target clears it; moving halved it already
+                if (shot) accuracy += CombatRules.Calibrated(calibration, Rules.CalibrationAccuracyMax) / 100.0;
                 double hitChance = Math.Max(0.05, Math.Min(1.0, accuracy - evasion));
                 if (World.Random.NextDouble() < hitChance)
                 {
@@ -464,15 +496,31 @@ namespace Rth.Server.Game
                     double damage = (player.Stats.Get(StatIds.AbilityDamage) + StyleStat(player, target, StatIds.PowerFor(ability.Style))) * percent / 100.0;
                     double bonus = Stat(player, target, StatIds.DamageBonus) + StyleStat(player, target, StatIds.DamageFor(ability.Style));
                     if (ability.LowBloodBonus > 0) bonus += ability.LowBloodBonus * (1 - player.Blood / (double)Math.Max(1, player.MaxBlood));
+                    if (shot)
+                    {
+                        bonus += CombatRules.Calibrated(calibration, Rules.CalibrationDamageMax);
+                        bonus += CombatRules.Calibrated(calibration, ability.CalibrationBonus);
+                        bonus += CombatRules.Calibrated(calibration, ability.CalibrationSpent);
+                    }
                     damage *= Math.Max(0, 1 + (Rules.BileDamageDealtPercent(player.Bile) + bonus) / 100.0);
                     dealt = Damage(target, (int)Math.Round(damage), player, HitKind.Normal, ability.Style);
                     if (ability.BleedPercent > 0 && dealt > 0) AddBleed(target, dealt * ability.BleedPercent / 100, ability.BleedTicks, player, ability.Style);
+                    if (ability.PinTicks > 0 && dealt > 0 && !target.IsDead)
+                    {
+                        target.RootedUntilTick = Math.Max(target.RootedUntilTick, World.CurrentTick + (uint)ability.PinTicks);
+                        target.Waypoints.Clear();
+                    }
+                    if (shot) Aim(player).Calibration = Math.Min(100, Aim(player).Calibration + Rules.CalibrationPerHit);
                 }
                 else
                 {
                     Damage(target, 0, player, HitKind.Miss, ability.Style);
+                    if (shot) Aim(player).Calibration = Math.Max(0, Aim(player).Calibration - Rules.CalibrationMissLoss);
                 }
+                if (shot && ability.CalibrationSpent > 0) Aim(player).Calibration = 0;
+                if (shot) Loose(player, target);
             }
+            if (ability.CalibrationGain > 0) Aim(player).Calibration = Math.Min(100, Aim(player).Calibration + ability.CalibrationGain);
 
             // Resources move whether or not it landed: the humours were spent either way.
             switch (ability.Type)
@@ -600,10 +648,13 @@ namespace Rth.Server.Game
                 npc.TargetId = source.Id;
                 npc.ChaseGoal = null;
             }
-            else if (target is Player player && player.Interaction == null && player.Waypoints.Count == 0
+            else if (target is Player player && !(player.Interaction is AttackInteraction) && player.Waypoints.Count == 0
                      && !(source is Npc { Def: { Attackable: false } }))
             {
+                // Auto-retaliate (a setting): a blow interrupts whatever else the player was doing
+                // (chopping, cooking) and takes the fight up; a walk they chose is left alone.
                 // (Nobody strikes back at something that can't be fought: a shade, a hazard.)
+                if (!Options(player).Retaliate) return;
                 StartAttack(player, source);
             }
         }
@@ -647,8 +698,106 @@ namespace Rth.Server.Game
             TickResources(player);
             TickBleeds(player);
             if (player.IsDead) return;
+            TickMending(player);
             if (player.Effects.RemoveAll(e => World.CurrentTick >= e.EndTick) > 0) World.RecalculateStats(player);
             if (!InCombat(player)) Of(player).Scars = 0;
+            TickAim(player);
+        }
+
+        // ------------------------------------------------------------------ mending (Medicine's heal over time)
+
+        /// <summary>Blood a salve still has to give back, a share each tick; a new salve replaces what was left.</summary>
+        public sealed class PlayerMending
+        {
+            public int Remaining;
+            public int PerTick;
+        }
+
+        /// <summary>Heals <paramref name="amount"/> over <paramref name="ticks"/> (at least 1 a tick), in combat too. Replaces an earlier salve.</summary>
+        public void AddMending(Player player, int amount, int ticks)
+        {
+            PlayerMending mending = player.Component<PlayerMending>();
+            mending.Remaining = Math.Max(0, amount);
+            mending.PerTick = Math.Max(1, (int)Math.Ceiling(amount / (double)Math.Max(1, ticks)));
+        }
+
+        public int Mending(Player player) => player.Component<PlayerMending>().Remaining;
+
+        private void TickMending(Player player)
+        {
+            PlayerMending mending = player.Component<PlayerMending>();
+            if (mending.Remaining <= 0) return;
+            int heal = Math.Min(mending.PerTick, mending.Remaining);
+            mending.Remaining -= heal;
+            Heal(player, heal);
+        }
+
+        // ------------------------------------------------------------------ ranged: calibration and ammunition
+
+        /// <summary>
+        /// Ranged's meter (docs/systems.md): built by shooting one target from one tile, halved by a
+        /// step, cleared by a new target or by dropping out of combat.
+        /// </summary>
+        public sealed class PlayerAim
+        {
+            public int Calibration;
+            public int TargetId;
+            public TileCoord Tile;
+            public int Plane;
+        }
+
+        private static PlayerAim Aim(Player player) => player.Component<PlayerAim>();
+
+        public int Calibration(Player player) => Aim(player).Calibration;
+
+        /// <summary>The calibration a shot at this target is made with: a new target starts from nothing.</summary>
+        private int AimAt(Player player, Entity target)
+        {
+            PlayerAim aim = Aim(player);
+            if (aim.TargetId != target.Id)
+            {
+                aim.TargetId = target.Id;
+                aim.Calibration = 0;
+                aim.Tile = player.Position;
+                aim.Plane = player.Plane;
+            }
+            else if (aim.Tile != player.Position || aim.Plane != player.Plane)
+            {
+                // Shot on the move (the step came earlier this tick): the aim is already half gone.
+                aim.Calibration /= 2;
+                aim.Tile = player.Position;
+                aim.Plane = player.Plane;
+            }
+            return aim.Calibration;
+        }
+
+        /// <summary>Each tick: a step halves the aim; out of combat it is gone.</summary>
+        private void TickAim(Player player)
+        {
+            PlayerAim aim = Aim(player);
+            if (aim.Calibration == 0 && aim.TargetId == 0) return;
+            if (!InCombat(player))
+            {
+                aim.Calibration = 0;
+                aim.TargetId = 0;
+                return;
+            }
+            if (aim.Tile != player.Position || aim.Plane != player.Plane)
+            {
+                aim.Calibration /= 2;
+                aim.Tile = player.Position;
+                aim.Plane = player.Plane;
+            }
+        }
+
+        /// <summary>A shot uses one of the quiver's ammunition; some of it lands by the target to be picked up again.</summary>
+        private void Loose(Player player, Entity target)
+        {
+            ItemSystem? items = World.Find<ItemSystem>();
+            string? ammo = items?.TakeAmmo(player);
+            if (ammo == null) return;
+            if (World.Random.Next(100) < Rules.AmmoRecoverPercent)
+                World.Find<GroundItemSystem>()?.Spawn(ammo, 1, target.Plane, target.Position, player);
         }
 
         /// <summary>
@@ -748,6 +897,10 @@ namespace Rth.Server.Game
             if (bleeding > 0) statuses.Add(new StatusState { Id = StatusIds.Bleeding, Magnitude = bleeding });
             int scars = Of(player).Scars;
             if (scars > 0) statuses.Add(new StatusState { Id = StatusIds.Scar, Magnitude = scars });
+            int calibration = Aim(player).Calibration;
+            if (calibration > 0) statuses.Add(new StatusState { Id = StatusIds.Sighted, Magnitude = calibration });
+            int mending = Mending(player);
+            if (mending > 0) statuses.Add(new StatusState { Id = StatusIds.Mending, Magnitude = mending });
         }
 
         private static int Clamp(int value, int min, int max) => Math.Max(min, Math.Min(max, value));

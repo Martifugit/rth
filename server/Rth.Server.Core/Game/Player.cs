@@ -60,6 +60,9 @@ namespace Rth.Server.Game
 
         public bool LogoutRequested { get; set; }
 
+        /// <summary>The tick the connection was found closed, or 0 while it is open (a dropped player stays a while in combat).</summary>
+        public uint DisconnectedAtTick { get; set; }
+
         public override EntityAdded Describe() => new EntityAdded
         {
             Id = Id,

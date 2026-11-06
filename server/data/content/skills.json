@@ -12,7 +12,8 @@
       "id": "ranged",
       "name": "Ranged",
       "icon": "ranged",
-      "description": "The Rationalists' patient art of fighting from a distance. Trained by dealing ranged damage."
+      "description": "The Rationalists' patient art of fighting from a distance. Trained by dealing ranged damage.",
+      "statsPerLevel": { "rangedPower": 2 }
     },
     {
       "id": "occultism",

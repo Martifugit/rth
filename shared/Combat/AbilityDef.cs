@@ -105,6 +105,16 @@ namespace Rth.Shared.Combat
         /// <summary>A timed buff on the user (stats, maybe conditional), shown as its status.</summary>
         public BuffDef? Buff;
 
+        // Ranged's calibration (docs/systems.md): a 0-100 meter built by shooting one target from one tile.
+        /// <summary>Calibration added by using it (an ability that steadies the aim), on top of the hit's own.</summary>
+        public int CalibrationGain;
+        /// <summary>Up to this percent more damage at full calibration (in proportion below it), keeping it.</summary>
+        public int CalibrationBonus;
+        /// <summary>Up to this percent more damage at full calibration (in proportion below it), spending all of it.</summary>
+        public int CalibrationSpent;
+        /// <summary>A hit holds the target where it stands for this many ticks.</summary>
+        public int PinTicks;
+
         /// <summary>XP awarded each time it's used (verses train Religion), on top of any damage XP.</summary>
         public List<Rth.Shared.Progress.XpReward> Xp = new List<Rth.Shared.Progress.XpReward>();
 
@@ -130,6 +140,7 @@ namespace Rth.Shared.Combat
         {
             if (user.WeaponStyle != null && Type != AbilityType.Auto && Style != CombatStyle.None && Style != user.WeaponStyle)
                 return Name + " needs " + CombatStyles.WeaponPhrase(Style) + ".";
+            if (user.AmmoProblem != null && Style == CombatStyle.Ranged && DamageMax > 0) return user.AmmoProblem;
             if (user.LevelOf != null)
             {
                 string? level = SkillRequirement.Check(Requirements, user.LevelOf, user.SkillName ?? (s => s), "use " + Name);
@@ -177,6 +188,8 @@ namespace Rth.Shared.Combat
         public Func<string, string>? SkillName;
         public Func<string, int>? CountOf;
         public Func<string, string>? ItemName;
+        /// <summary>Why the weapon in hand can't shoot ("You have no arrows for that bow."), or null; checked for ranged abilities.</summary>
+        public string? AmmoProblem;
     }
 
     /// <summary>

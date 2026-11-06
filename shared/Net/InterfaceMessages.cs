@@ -16,6 +16,8 @@ namespace Rth.Shared.Net
         public int MaxHit;
         public Rth.Shared.Combat.CombatStyle Style;
         public bool Aggressive;
+        /// <summary>Its combat level, shown beside its name ("Fen rat (level 4)"); 0 for townsfolk.</summary>
+        public int Level;
         /// <summary>Whether "Attack" appears in its menu.</summary>
         public bool Attackable = true;
         /// <summary>Other menu options ("Talk-to", "Bank", "Trade"), dispatched by id on the server.</summary>

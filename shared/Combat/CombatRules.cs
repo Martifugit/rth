@@ -37,6 +37,41 @@ namespace Rth.Shared.Combat
 
         public int RespawnDelayTicks = 4;
 
+        /// <summary>
+        /// A player can't log out until this long after their last blow given or taken; a dropped
+        /// connection keeps them in the world (fighting back) for as long, then saves them.
+        /// </summary>
+        public int LogoutCombatTicks = 16;
+
+        // Ranged (docs/skills.md 3.4, docs/systems.md "Calibration").
+        /// <summary>Chance, in percent, that a shot's ammunition lands on the target's tile to be picked up again.</summary>
+        public int AmmoRecoverPercent = 33;
+        /// <summary>Calibration gained by a ranged hit on the same target from the same tile.</summary>
+        public int CalibrationPerHit = 10;
+        /// <summary>Calibration lost by a miss.</summary>
+        public int CalibrationMissLoss = 20;
+        /// <summary>Accuracy, in percentage points, at full calibration (in proportion below it).</summary>
+        public int CalibrationAccuracyMax = 15;
+        /// <summary>Percent more ranged damage at full calibration (in proportion below it).</summary>
+        public int CalibrationDamageMax = 10;
+
+        /// <summary>A share of a full-calibration amount, in proportion to the calibration held.</summary>
+        public static int Calibrated(int calibration, int atFull) => (int)Math.Round(atFull * Math.Max(0, Math.Min(100, calibration)) / 100.0);
+
+        // A creature's combat level, shown beside its name, when npcs.json gives none:
+        // the average of its blood and its hardest hit measured against these.
+        /// <summary>Blood worth one level.</summary>
+        public int NpcLevelBloodPer = 100;
+        /// <summary>Max hit worth one level.</summary>
+        public int NpcLevelHitPer = 10;
+
+        /// <summary>A creature's combat level from its blood and hardest hit (at least 1).</summary>
+        public int NpcLevel(int blood, int maxHit)
+        {
+            double level = (blood / (double)Math.Max(1, NpcLevelBloodPer) + maxHit / (double)Math.Max(1, NpcLevelHitPer)) / 2;
+            return Math.Max(1, (int)Math.Round(level, MidpointRounding.AwayFromZero));
+        }
+
         // Blood (melee and Cruor's verses).
         /// <summary>Damage held back by deferDamage (Death's Dance) bleeds out over this many ticks.</summary>
         public int DeferredBleedTicks = 10;

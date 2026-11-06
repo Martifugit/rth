@@ -18,12 +18,21 @@
     "phlegmDecayPerTick": 1,
     "bloodRegenPercentPerTick": 0.5,
 
-    "respawnDelayTicks": 4
+    "respawnDelayTicks": 4,
+
+    "logoutCombatTicks": 16,
+
+    "ammoRecoverPercent": 33,
+    "calibrationPerHit": 10,
+    "calibrationMissLoss": 20,
+    "calibrationAccuracyMax": 15,
+    "calibrationDamageMax": 10
   },
   "autoAttack": "bile_lash",
-  "autoAttacks": { "Melee": "strike", "Occult": "bile_lash" },
+  "autoAttacks": { "Melee": "strike", "Ranged": "loose", "Occult": "bile_lash" },
   "actionBars": {
-    "Melee": [ "hew", "let_blood", "scourge", "flagellate", "sundering_blow", "exsanguinate", "red_harvest", "crimson_vow" ]
+    "Melee": [ "hew", "let_blood", "scourge", "flagellate", "sundering_blow", "exsanguinate", "red_harvest", "crimson_vow" ],
+    "Ranged": [ "snap_shot", "barbed_shot", "piercing_shot", "steady_aim", "called_shot", "pinning_shot", "rain_of_barbs", "deadeye" ]
   },
   "actionBar": [
     "gall_spark",

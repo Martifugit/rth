@@ -63,6 +63,7 @@ namespace Rth.Client.Ui
             EquipSlot.Hands => "gloves",
             EquipSlot.Feet => "boots",
             EquipSlot.Ring => "ring",
+            EquipSlot.Ammo => "pouch",
             _ => Fallback,
         };
 

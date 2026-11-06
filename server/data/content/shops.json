@@ -103,6 +103,9 @@
         "quantity": 5,
         "restockTicks": 200
       },
+      { "item": "hunting_sling", "price": 15, "quantity": 5, "restockTicks": 200 },
+      { "item": "sling_stone", "price": 1, "quantity": 500, "restockTicks": 5 },
+      { "item": "copper_arrow", "price": 3, "quantity": 200, "restockTicks": 10 },
       {
         "item": "copper_pickaxe",
         "price": 25,

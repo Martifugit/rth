@@ -17,6 +17,8 @@ namespace Rth.Server.Game
     public sealed class ClientStateSystem : GameSystem
     {
         public const string StateKey = "client";
+        /// <summary>The run toggle ("true"/"false"), set by the client and read by the world before every step.</summary>
+        public const string RunKey = "run";
         private const string SaveSection = "client";
         private const int MaxKeys = 32;
         private const int MaxKeyLength = 64;

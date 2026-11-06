@@ -391,6 +391,43 @@ The second combat style, and the Religion half that powers it (`docs/skills.md` 
 Not yet: weapon models in the hand, one- and two-handed kinds, shields and dual wield,
 raising monuments and reliquaries, final ability names.
 
+## Milestone 11: ranged, and a feel pass (done, on `claude/ranged-and-feel`)
+
+The third combat style (`docs/skills.md` 3.4, `docs/systems.md` "Calibration"), built the way melee
+was, plus the rough edges of moving and fighting that showed up in a code audit.
+
+- [x] **The quiver** (`EquipSlot.Ammo`): ammunition is equipment worn as a stack (`ammo` on the item:
+      kind, tier; its stats count while worn). A ranged weapon names what it fires (`equipment.ammo`)
+      and shoots only with that in the quiver; each shot takes one and a third land on the target's
+      tile for the shooter (combat.json `ammoRecoverPercent`). The last one stops the fight.
+- [x] **Calibration**: a 0-100 meter built by hits on one target from one tile, halved by a step, lost
+      by misses, a new target or leaving combat; up to +15 accuracy and +10% damage at 100 (combat.json),
+      shown as the `sighted` status. Ability fields `calibrationGain`, `calibrationBonus`,
+      `calibrationSpent` (a called shot spends it all) and `pinTicks` (a hit roots the target).
+- [x] **The kit** (provisional names): Loose (auto), Snap Shot, Barbed Shot, Piercing Shot, Steady Aim
+      (on yourself, keeps a stall), Called Shot, Pinning Shot, Rain of Barbs, Deadeye; all range 7.
+      Ranged levels add `rangedPower`; gear family `ranged-2h`. Content: a hunting sling and sling
+      stones (starter kit; stones also roll from the low rocks), alder shortbow and ash longbow, copper
+      and iron arrows (fletched at the net bench, Artifice 5 and 15; the tinker sells slings, stones
+      and copper arrows).
+- [x] **Feel**: the run toggle is read from client state before every step (R mid-walk works);
+      starting an interaction drops the old walk; "I can't reach that!" ends a chase or pickup with no
+      way there (target kept); logging out is refused for `logoutCombatTicks` (16) after a blow, and a
+      dropped connection stays in the world that long; auto-retaliate is a setting (`combat.retaliate`,
+      on) that interrupts skilling; the server says why it ignored an ability press or a cooldown eat;
+      creatures have a combat level (`level` in npcs.json or derived by `CombatRules.NpcLevel`) in
+      menus, hover text and the target panel; right-click menus list every creature under the pointer;
+      ground items have Examine; the Use item is marked in the pack; a pressed ability shows at once.
+- [x] **Medicine heals over time**: effect op `healOverTime` (amount, ticks), the `mending` status, a
+      yarrow salve mixed at the apothecary bench (Medicine 3).
+- [x] Tests: `RangedTests` (the quiver, calibration, every new field, the shipped kit for a thousand
+      ticks), `FeelTests`, `MedicineTests`. Client compile-checked outside Unity, not yet seen in the Editor.
+
+Not yet: icons of their own for the ranged abilities (they borrow existing ones), a bow draw
+animation (they use the cast clips), weapon models, tipped ammunition (`docs/skills.md` 3.4), a ranged
+creature placed in the world, run energy (the docs disagree on whether running is free), Vitality
+(`docs/gdd` has it and Defence both giving max blood: the owner's call).
+
 **World building (in progress):** the capitals blocked out as regions, one builder each, with an
 asset list for the art pass. All four capitals are done: Cruor, Tithe, Cistern and Meridian (`docs/regions/`), on the old
 map (Tithe is retired in the canon; the areas are rebuilt to the new lore later, see `docs/plan.md`). Meridian is being
@@ -605,8 +642,9 @@ items) and `AnglingLogSystem` (the fishing log). angling.json holds species, siz
 rules; trophies and fish boxes are generated per species. Perch, eel and pike with tier 1-3 tackle
 are at the `kittest` pond. Compile-checked outside Unity, not yet seen in the Editor.
 
-**Next: not chosen yet.** Candidates: ranged, building out Tolling (landmarks first), more
-quests and achievements, Tailoring and Artifice content.
+**Next: not chosen yet.** Candidates: building out Tolling (landmarks first), more quests and
+achievements, Tailoring and Artifice content, tipped ammunition and spellbooks (the power layers
+ranged and occultism still lack).
 
 ---
 
@@ -634,6 +672,11 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | A verse (Cruor) | An ability of `"type": "Verse"` in abilities.json: blood costs (`bloodCostCurrent`/`bloodCostMax`), a scripture in `reagents`, a `buff` (status, ticks, stats; `targetTag`/`otherwise`, `whileBloodBelow`, `endsOnHitTaken`), `xp`. A new effect is a new stat read in `CombatSystem.Blood.cs`. |
 | A timed buff on any ability | `buff` on the ability, and its status in statuses.json. Conditional stats are read at the moment of the hit (`CombatSystem.Stat`), the rest go into the stat block. |
 | A weapon of a style | `equipment.style` (and optionally `autoAttack`) on a Weapon item; the style's auto-attack is in combat.json `autoAttacks`. |
+| A ranged weapon, or its ammunition | `equipment.style: "Ranged"` and `equipment.ammo` (the kind it fires) on the weapon; ammunition is a stackable item with `equipment.slot: "Ammo"` (its stats count while worn) and `ammo` (kind, tier). `ItemSystem.AmmoProblem` / `TakeAmmo`; recovery and calibration numbers in combat.json. |
+| A ranged ability's own trick | `calibrationGain` (steadies the aim), `calibrationBonus` (more damage at full calibration, kept), `calibrationSpent` (the same, spent) or `pinTicks` (a hit roots the target) on the ability; read in `CombatSystem.UseAbility`. A new one is a field there. |
+| A combat option (queueing, retaliate) | A key and parser in `shared/Combat/CombatOptions.cs`, read in `CombatSystem.Options`; a checkbox in `SettingsModal`'s Combat card. |
+| A creature's level in menus | `level` on the NPC in npcs.json, or leave it 0 for `CombatRules.NpcLevel` (blood and max hit against `npcLevelBloodPer` / `npcLevelHitPer`); sent in `NpcInfo.Level`. |
+| Something that heals over time | The `healOverTime` effect op (`amount`, `ticks`) on a consumable; `CombatSystem.AddMending` from code. |
 | A bleed | `bleedPercent`/`bleedTicks` on an ability, or `CombatSystem.AddBleed`. |
 | A character animation for skilling or an action | `World.Animate(entity, name, face)` sends "anim:<name>" (a clip or role in animations.json), optionally turning to face a tile; `World.Face` only turns. Recipes and nodes have an `animation` field. |
 | A weapon's default bar | combat.json `actionBars` per style. Each style's main bar is client state `bars.main.<Style>`, swapped in with the weapon (client and Revolution both read it). |

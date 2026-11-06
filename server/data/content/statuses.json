@@ -156,5 +156,26 @@
     "color": "#9fc4c0",
     "debuff": true,
     "description": "The long way takes your blood as you go, and it won't come back by itself. Soul lanterns warm you, once each."
+  },
+  {
+    "id": "sighted",
+    "name": "Sighted",
+    "icon": "eye",
+    "color": "#9fd86a",
+    "description": "Calibration {value}: shots at this target from this tile land truer and harder. A step halves it; a new target clears it."
+  },
+  {
+    "id": "deadeye",
+    "name": "Deadeye",
+    "icon": "eye",
+    "color": "#d8f0a0",
+    "description": "Nothing else exists: {value}% more ranged accuracy and damage."
+  },
+  {
+    "id": "mending",
+    "name": "Mending",
+    "icon": "medicine",
+    "color": "#9ab87a",
+    "description": "A salve at work: {value} blood still to come back, a little each tick."
   }
 ]

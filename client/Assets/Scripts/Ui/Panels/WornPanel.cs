@@ -99,11 +99,15 @@ namespace Rth.Client.Ui.Panels
                 [EquipSlot.Hands] = new Vector2Int(0, 4),
                 [EquipSlot.Feet] = new Vector2Int(1, 4),
                 [EquipSlot.Ring] = new Vector2Int(2, 4),
+                [EquipSlot.Ammo] = new Vector2Int(2, 0), // the quiver, by the head: a stack with its count
             };
 
             public readonly VisualElement Root;
             private readonly Dictionary<EquipSlot, (VisualElement Slot, VisualElement Icon)> _slots = new Dictionary<EquipSlot, (VisualElement, VisualElement)>();
             private readonly Dictionary<EquipSlot, string> _shown = new Dictionary<EquipSlot, string>();
+            private readonly Dictionary<EquipSlot, Label> _counts = new Dictionary<EquipSlot, Label>();
+            private readonly Func<EquipSlot, int> _ownCount;
+            private Func<EquipSlot, int> _count;
             private readonly VisualElement _spine;
             private readonly VisualElement _shoulders;
             private readonly Func<EquipSlot, ItemDef> _own;
@@ -113,6 +117,8 @@ namespace Rth.Client.Ui.Panels
             {
                 _own = slot => Def(session, slot);
                 _source = _own;
+                _ownCount = slot => CountOf(session, slot);
+                _count = _ownCount;
                 Root = UiKit.El(parent);
                 Root.style.alignSelf = Align.Center;
 
@@ -126,6 +132,12 @@ namespace Rth.Client.Ui.Panels
                     VisualElement box = UiKit.Slots.Make(Root, out VisualElement icon);
                     box.style.position = Position.Absolute;
                     box.style.marginLeft = box.style.marginRight = box.style.marginTop = box.style.marginBottom = 0f;
+                    if (slot == EquipSlot.Ammo)
+                    {
+                        Label count = UiKit.Text(box, "", "slot__count");
+                        count.pickingMode = PickingMode.Ignore;
+                        _counts[slot] = count;
+                    }
                     box.RegisterCallback<PointerDownEvent>(e =>
                     {
                         ItemDef def = _source(slot);
@@ -185,6 +197,12 @@ namespace Rth.Client.Ui.Panels
                 e.style.height = height;
             }
 
+            private static int CountOf(GameSession session, EquipSlot slot)
+            {
+                int index = (int)slot;
+                return index < session.Equipment.Count ? session.Equipment[index].Count : 0;
+            }
+
             private static ItemDef Def(GameSession session, EquipSlot slot)
             {
                 int index = (int)slot;
@@ -194,15 +212,22 @@ namespace Rth.Client.Ui.Panels
             }
 
             /// <summary>Shows your own gear.</summary>
-            public void Refresh(GameSession session) => Show(_own);
+            public void Refresh(GameSession session) => Show(_own, _ownCount);
 
             /// <summary>Shows the gear <paramref name="source"/> gives for each slot (null: nothing worn).</summary>
-            public void Show(Func<EquipSlot, ItemDef> source)
+            public void Show(Func<EquipSlot, ItemDef> source, Func<EquipSlot, int> count = null)
             {
                 _source = source;
+                _count = count;
                 foreach (KeyValuePair<EquipSlot, (VisualElement Slot, VisualElement Icon)> s in _slots)
                 {
                     ItemDef def = source(s.Key);
+                    if (_counts.TryGetValue(s.Key, out Label label))
+                    {
+                        int n = def != null && count != null ? count(s.Key) : 0;
+                        label.text = n > 0 ? UiKit.FormatCount(n) : "";
+                        if (n > 0) label.style.color = UiKit.CountColour(n);
+                    }
                     string id = def?.Id ?? "";
                     if (_shown.TryGetValue(s.Key, out string was) && was == id) continue;
                     _shown[s.Key] = id;

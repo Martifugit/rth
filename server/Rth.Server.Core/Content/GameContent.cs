@@ -34,6 +34,8 @@ namespace Rth.Server.Content
         public double HitPercent;
         /// <summary>The least a hit that lands can do; below 0 means a quarter of <see cref="MaxHit"/>, so blows aren't specks.</summary>
         public int MinHit = -1;
+        /// <summary>Its combat level, shown beside its name; 0 derives one from blood and max hit (<see cref="CombatRules.NpcLevel"/>).</summary>
+        public int Level;
 
         public int LeastHit => MinHit >= 0 ? Math.Min(MinHit, MaxHit) : MaxHit / 4;
         /// <summary>Chance its attacks land.</summary>
@@ -357,6 +359,8 @@ namespace Rth.Server.Content
                 if (a.BloodCostCurrent < 0 || a.BloodCostCurrent >= 100 || a.BloodCostMax < 0 || a.BloodCostMax >= 100)
                     problems.Add("Ability '" + a.Id + "': blood costs must be 0-99%.");
                 if (a.BleedPercent < 0 || (a.BleedPercent > 0 && a.BleedTicks < 1)) problems.Add("Ability '" + a.Id + "': a bleed needs bleedTicks of at least 1.");
+                if (a.CalibrationGain < 0 || a.CalibrationBonus < 0 || a.CalibrationSpent < 0 || a.PinTicks < 0) problems.Add("Ability '" + a.Id + "': calibration and pin fields can't be negative.");
+                if ((a.CalibrationBonus > 0 || a.CalibrationSpent > 0 || a.PinTicks > 0) && (a.Style != CombatStyle.Ranged || a.DamageMax <= 0)) problems.Add("Ability '" + a.Id + "': calibration bonuses and pins belong to ranged abilities that deal damage.");
                 if (a.Buff != null)
                 {
                     if (a.Buff.Ticks < 1) problems.Add("Ability '" + a.Id + "': its buff needs ticks of at least 1.");
@@ -827,7 +831,7 @@ namespace Rth.Server.Content
 
         private static readonly HashSet<string> KnownEffectOps = new HashSet<string>
         {
-            EffectOp.HealBlood, EffectOp.HealBloodPercent, EffectOp.RestoreDevotion, EffectOp.RestoreDevotionPercent, EffectOp.AddPhlegm,
+            EffectOp.HealBlood, EffectOp.HealBloodPercent, EffectOp.HealOverTime, EffectOp.RestoreDevotion, EffectOp.RestoreDevotionPercent, EffectOp.AddPhlegm,
             EffectOp.ShiftBile, EffectOp.SettleBile, EffectOp.ApplyEffect, EffectOp.BoostSkill,
         };
 
@@ -840,7 +844,14 @@ namespace Rth.Server.Content
             {
                 foreach (string stat in item.Equipment.Stats.Keys)
                     if (!StatIds.IsKnown(stat)) problems.Add(where + "unknown stat '" + stat + "' (known: " + string.Join(", ", StatIds.All) + ").");
-                if (item.Stackable) problems.Add(where + "equipment can't be stackable (yet).");
+                bool quiver = item.Equipment.Slot == EquipSlot.Ammo;
+                if (item.Stackable && !quiver) problems.Add(where + "equipment can't be stackable (only ammunition, in the Ammo slot).");
+                if (quiver && !item.Stackable) problems.Add(where + "ammunition must be stackable.");
+                if (quiver && item.Ammo == null) problems.Add(where + "something worn in the Ammo slot needs an 'ammo' (kind, tier).");
+                if (item.Ammo != null && !quiver) problems.Add(where + "ammunition must be equipment in the Ammo slot.");
+                if (item.Ammo != null && string.IsNullOrWhiteSpace(item.Ammo.Kind)) problems.Add(where + "ammunition needs a kind.");
+                if (item.Equipment.Ammo != null && item.Equipment.Style != CombatStyle.Ranged) problems.Add(where + "only a ranged weapon fires ammunition.");
+                if (item.Equipment.Style == CombatStyle.Ranged && item.Equipment.Ammo == null) problems.Add(where + "a ranged weapon needs 'ammo': the kind it fires.");
             }
             if (item.Consumable != null)
             {
@@ -848,6 +859,7 @@ namespace Rth.Server.Content
                 {
                     if (!KnownEffectOps.Contains(op.Op)) problems.Add(where + "unknown effect op '" + op.Op + "'.");
                     if (op.Op == EffectOp.BoostSkill && (string.IsNullOrEmpty(op.Skill) || op.Ticks < 1)) problems.Add(where + "boostSkill needs a skill and ticks.");
+                    if (op.Op == EffectOp.HealOverTime && (op.Amount < 1 || op.Ticks < 1)) problems.Add(where + "healOverTime needs an amount and ticks.");
                 }
                 if (item.Consumable.Leaves != null && !items.ContainsKey(item.Consumable.Leaves))
                     problems.Add(where + "leaves '" + item.Consumable.Leaves + "', which doesn't exist.");
@@ -988,6 +1000,7 @@ namespace Rth.Server.Content
             {
                 Id = n.Id, Name = n.Name, Examine = n.Examine, Attackable = n.Attackable, Actions = n.Actions,
                 Blood = n.Blood, MaxHit = n.MaxHit, Style = n.Style, Aggressive = n.Aggressive, Model = n.Model,
+                Level = n.Attackable ? (n.Level > 0 ? n.Level : Rules.NpcLevel(n.Blood, n.MaxHit)) : 0,
             }).ToList(),
             Recipes = Recipes.Values.Select(r => new RecipeInfo
             {
