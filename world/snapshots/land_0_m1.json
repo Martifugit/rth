@@ -2,7 +2,7 @@
   "note": "Written by Sync World from Assets/Scenes/Tolling/Land_0_m1.unity. Read-only: change world/regions/land_0_m1.json, or the scene's Handmade root in Unity.",
   "region": "land_0_m1",
   "origin": [0, -96], "size": [96, 96],
-  "dataPieces": { "tiles": 1 },
+  "dataPieces": { "building": 1, "fence": 7, "prop": 4, "tiles": 1 },
   "handmade": [
 
   ]
