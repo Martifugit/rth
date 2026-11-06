@@ -53,34 +53,49 @@ export function makeFindBar({ S, $, h, onAll }) {
 
   // ----------------------------------------------------------------------------- the bar
 
-  const find = h("input", { class: "field find-input", placeholder: "Find", spellcheck: "false", "aria-label": "Find" });
+  // One grid, every control 28px tall: the replace chevron down the left; the find and replace boxes
+  // (Aa and W inside the find box, as in most editors); then the count, arrows, All pages and close,
+  // and under them Replace and Replace all.
+  const svg = (d) => `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const ICON = {
+    chevron: svg('<path d="M6 4l4 4-4 4"/>'),
+    up: svg('<path d="M8 13V3M4 7l4-4 4 4"/>'),
+    down: svg('<path d="M8 3v10M4 9l4 4 4-4"/>'),
+    close: svg('<path d="M4 4l8 8M12 4l-8 8"/>'),
+  };
+  const find = h("input", { class: "find-input", placeholder: "Find", spellcheck: "false", "aria-label": "Find" });
   const count = h("span", { class: "find-count" });
   const toggle = (label, title, prop) => {
-    const b = h("button", { class: "find-opt", title, onclick: () => { F[prop] = !F[prop]; b.classList.toggle("on", F[prop]); search(); find.focus(); } }, label);
+    const b = h("button", { class: "find-opt", title, onmousedown: (e) => e.preventDefault(), onclick: () => { F[prop] = !F[prop]; b.classList.toggle("on", F[prop]); search(); find.focus(); } }, label);
     return b;
   };
   const caseBtn = toggle("Aa", "Match case", "matchCase");
   const wordBtn = toggle("W", "Whole words only", "wholeWord");
-  const btn = (text, title, fn) => h("button", { class: "find-btn", title, onclick: fn }, text);
-  const prev = btn("↑", "Previous (Shift+Enter)", () => step(-1));
-  const next = btn("↓", "Next (Enter)", () => step(1));
-  const showReplace = btn("⇅", "Replace (Ctrl+H)", () => setReplace(!F.replace));
-  const all = btn("All pages", "Find in all pages (Ctrl+Shift+F)", () => { const q = find.value; close(); onAll(q); });
-  const closeBtn = btn("✕", "Close (Esc)", () => close());
-  const rep = h("input", { class: "field find-input", placeholder: "Replace with", spellcheck: "false", "aria-label": "Replace with" });
-  const repOne = h("button", { class: "btn btn-small", onclick: () => replaceOne() }, "Replace");
-  const repAll = h("button", { class: "btn btn-small", title: "Ctrl+Enter", onclick: () => replaceAll() }, "Replace all");
-  const repRow = h("div", { class: "find-row find-replace hidden" }, rep, repOne, repAll);
+  const icon = (name, title, fn) => h("button", { class: "find-btn find-icon", title, "aria-label": title, html: ICON[name], onclick: fn });
+  const textBtn = (label, title, fn) => h("button", { class: "find-btn find-text", title, onclick: fn }, label);
+  const prev = icon("up", "Previous (Shift+Enter)", () => step(-1));
+  const next = icon("down", "Next (Enter)", () => step(1));
+  const showReplace = h("button", { class: "find-btn find-chevron", title: "Replace (Ctrl+H)", "aria-label": "Replace", html: ICON.chevron, onclick: () => setReplace(!F.replace) });
+  const all = textBtn("All pages", "Find in all pages (Ctrl+Shift+F)", () => { const q = find.value; close(); onAll(q); });
+  const closeBtn = icon("close", "Close (Esc)", () => close());
+  const rep = h("input", { class: "find-input", placeholder: "Replace with", spellcheck: "false", "aria-label": "Replace with" });
+  const repOne = textBtn("Replace", "Replace this one (Enter in this box)", () => replaceOne());
+  const repAll = textBtn("Replace all", "Replace every one (Ctrl+Enter)", () => replaceAll());
   const bar = h("div", { class: "find-bar hidden", role: "search" },
-    h("div", { class: "find-row" }, showReplace, find, count, caseBtn, wordBtn, prev, next, all, closeBtn), repRow);
+    showReplace,
+    h("div", { class: "find-box" }, find, h("div", { class: "find-opts" }, caseBtn, wordBtn)),
+    h("div", { class: "find-tools" }, count, prev, next, all, closeBtn),
+    h("div", { class: "find-box find-r" }, rep),
+    h("div", { class: "find-tools find-r" }, repOne, repAll));
 
   const source = () => S.mode === "source";
   const editable = () => (source() ? !S.readOnly : !!S.editor?.isEditable);
 
   function setReplace(on) {
     F.replace = on && editable();
-    repRow.classList.toggle("hidden", !F.replace);
+    bar.classList.toggle("replacing", F.replace);
     showReplace.classList.toggle("on", F.replace);
+    showReplace.disabled = !editable();
   }
 
   /** Open the bar. q, matchCase, wholeWord and at: from Find in all pages, at its at-th match. */

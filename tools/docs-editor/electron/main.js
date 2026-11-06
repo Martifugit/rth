@@ -136,6 +136,7 @@ async function open() {
   win.on("resize", saveBounds);
   // Ctrl and the mouse wheel (or a touchpad's pinch) zoom too, in the same steps.
   win.webContents.on("zoom-changed", (e, way) => zoom(way === "in" ? 1 : -1));
+  win.webContents.on("did-finish-load", () => tellZoom(win.webContents.getZoomFactor(), false));
   win.on("move", saveBounds);
 
   // Links out of the Codex open in the computer's browser; the window never leaves the Codex.
@@ -235,7 +236,15 @@ function zoom(dir) {
   if (dir > 0) next = ZOOMS.find((z) => z > now + 0.001) ?? ZOOMS[ZOOMS.length - 1];
   else if (dir < 0) next = [...ZOOMS].reverse().find((z) => z < now - 0.001) ?? ZOOMS[0];
   wc.setZoomFactor(next);
-  wc.executeJavaScript(`window.dispatchEvent(new CustomEvent("codex-zoom", { detail: ${next} }))`).catch(() => {}); // a page still loading misses one
+  tellZoom(next, true);
+}
+// The page is told the zoom: --zoom keeps the title bar as tall as Windows' own buttons, which don't
+// zoom (style.css, body.in-app #app), and show puts up the badge. After every load too, as a reload
+// keeps the zoom.
+function tellZoom(z, show) {
+  if (!win || win.isDestroyed()) return;
+  win.webContents.executeJavaScript(`document.documentElement.style.setProperty("--zoom", "${z}");` +
+    (show ? `window.dispatchEvent(new CustomEvent("codex-zoom", { detail: ${z} }));` : "")).catch(() => {}); // a page still loading misses one
 }
 
 // No visible menu bar, but the usual keys still work (reload, zoom, developer tools). Zoom on Ctrl and
