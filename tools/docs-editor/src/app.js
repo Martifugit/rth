@@ -1730,19 +1730,20 @@ function showUpdateScreen() {
   const status = !installed
     ? h("p", { class: "rq-status" }, download("Download the new version of Codex"), ", run it, then open Codex again.")
     : st === "ready" ? h("div", {}, h("button", { class: "btn btn-gold rq-go", onclick: installUpdate }, "Restart and update"),
-        h("p", { class: "rq-alt" }, "Your work is saved before Codex restarts."))
-    : st === "installing" ? h("p", { class: "rq-status" }, "Saving your work and updating: Codex opens again in a moment…")
-    : st === "downloading" ? h("div", { class: "rq-progress" }, h("div", { class: "rq-bar" }, h("span", { style: `width:${updateView.percent || 0}%` })), h("p", { class: "rq-status" }, `Downloading ${updateView.version || "the update"}… ${updateView.percent || 0}%`))
+        h("p", { class: "rq-alt" }, "Your work is saved."))
+    : st === "installing" ? h("p", { class: "rq-status" }, "Codex opens again in a moment.")
+    : st === "downloading" ? h("div", { class: "rq-progress" }, h("div", { class: "rq-bar" }, h("span", { style: `width:${updateView.percent || 0}%` })), h("p", { class: "rq-status" }, `Downloading… ${updateView.percent || 0}%`))
     : h("div", {}, h("p", { class: "rq-status" }, "Looking for the update…"),
         h("p", { class: "rq-alt" }, "If it doesn't come, ", download("download the new version of Codex"), " and run it."));
-  const [title, text] = required
-    ? ["An update is needed", `A new release of R'th Codex has changes this version (${requiredView.current}) can't work with. `
-      + `Update to version ${requiredView.min} or newer to keep using Codex.`]
-    : ["An update is ready", `Version ${updateView.version || "a new version"} of R'th Codex is here. Restart to start using it.`];
-  // The same pane as the Codex's other pages (src/codex-page.js): a title bar, then the message.
+  // As plain as the "Updating" window (electron/update-splash.ps1): the logo, what's happening, the one
+  // thing to do, and the version it brings in the corner. Only "needed" says why.
+  const title = required ? "An update is needed" : st === "installing" ? "Updating" : "An update is ready";
+  const why = required ? h("p", { class: "rq-text" }, `This version can't work with the latest Codex. Update to keep using it.`) : null;
+  const version = required ? requiredView.min : updateView.version;
   const box = h("div", { class: "rq-box" },
-    h("div", { class: "rq-bar-top" }, h("img", { src: "/logo.png", alt: "" }), h("span", {}, "R'th Codex")),
-    h("div", { class: "rq-body" }, h("h2", { class: "rq-title" }, title), h("p", { class: "rq-text" }, text), status));
+    h("img", { class: "rq-logo", src: "/logo.png", alt: "" }),
+    h("h2", { class: "rq-title" }, title), why, status,
+    version ? h("div", { class: "rq-version" }, "v " + version) : null);
   if (!el) { el = h("div", { id: "requiredScreen", class: "rq" }); document.body.append(el); }
   el.replaceChildren(box);
 }
