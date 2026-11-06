@@ -1,5 +1,5 @@
-// The list that opens while you type in a text box: @ pages in the AI box, /ask and @agent in a
-// comment. One component, so every box behaves the same; when it opens and closes is
+// The list that opens while you type in a text box: @ pages in the AI box. One component, so any
+// box that gets one behaves the same; when it opens and closes is
 // src/mention-query.js. Arrows move, Enter or Tab picks, Escape closes it for that character.
 //
 //   textPicker({ h, input, pop, triggers, onPick }) → { key(ev), draw(), close(), reset() }

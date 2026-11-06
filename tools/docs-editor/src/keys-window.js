@@ -18,7 +18,7 @@ export const EDITOR_KEYS = [
     ["alt+Enter", "Accept the suggestion you're on (Alt+Backspace skips it)"],
   ]],
   ["Comments", [
-    ["mod+Enter", "Post a comment. Start it with /ask for R'th AI to answer in the thread; @agent leaves it for the next agent session"],
+    ["mod+Enter", "Post a comment"],
     ["Escape", "Close the comment box (with words written: twice)"],
   ]],
   ["The window", [["mod++", "Zoom in (Ctrl+- out, Ctrl+0 back to 100%)"]]],

@@ -1,7 +1,6 @@
 // Comments on the docs, the way Google Docs does them: select text, add a comment, and it sits in
 // the margin beside the passage, which is highlighted. Reply, resolve with the tick, more in the ⋮
-// menu. Comments are between people; start one with /ask and R'th AI answers in its thread (as /ask does in
-// Discord), or ask it in the AI tab (Ctrl+J). Mention @agent and it waits for the next agent session. The
+// menu. Comments are between people; to ask R'th AI about one, open the AI tab on it (Ctrl+J). The
 // comment history (top right) lists every comment across the docs. Closed comments sit in the margin as
 // short cards (two lines and a reply count), or as small markers when the margin is folded ("Hide").
 //
@@ -9,15 +8,14 @@
 // is a ProseMirror decoration, which is drawn but never written back. anchor.js finds each comment's
 // passage again when the page changes.
 //
-// Stored kinds: "note" (a plain comment), "task" (@agent: left for the next agent session), and "ask"
-// (a question for R'th AI: /ask, or @Claude from before the AI tab). The CLI (notes.js) shows them to agents by those names.
+// New comments are all kind "note". Older ones may say "task" (left for an agent) or "ask" (for R'th AI),
+// from before the AI tab; they read as plain comments now. The CLI (notes.js) still shows the kind.
 
 import { Extension } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { capture, sectionsOf, locate } from "./anchor.js";
 import { failed } from "./plain-errors.js";
-import { textPicker } from "./text-picker.js";
 import { plural, clip } from "./text.js";
 
 const KEY = new PluginKey("codexComments");
@@ -368,8 +366,6 @@ export function makeNotes(ctx) {
       const href = a.getAttribute("href") || "";
       if (/^[a-z]+:/i.test(href)) window.open(href, "_blank", "noopener"); else ctx.openDoc(href.replace(/^\.\//, "").split("#")[0]);
     });
-    // "/ask" at the start, and "@RthAI", "@Claude" and "@agent", stand out as mentions do.
-    el.innerHTML = el.innerHTML.replace(/^(<p>)?\/ask\b/i, (m, p) => `${p || ""}<span class="cm-mention">/ask</span>`).replace(/(^|[\s(>])@(RthAI|R['’]th AI|Claude|agent)\b/gi, (m, pre, who) => `${pre}<span class="cm-mention">@${who}</span>`);
     return el;
   }
 
@@ -413,7 +409,6 @@ export function makeNotes(ctx) {
       whereLine(n),
       head(first, tools(n), true),
       h("div", { class: "cm-snippet" }, plain(first.text)),
-      n.kind === "task" ? assignedLine(n) : null,
       foot.length ? h("div", { class: "cm-foot" }, foot) : null);
   }
 
@@ -457,19 +452,11 @@ export function makeNotes(ctx) {
       head(first, tools(n)),
       body(first.text, n.id + ":0"),
       edits(first),
-      assignedLine(n),
       h("div", { class: "cm-replies" + (replies.length ? "" : " empty") },
         fold ? h("button", { class: "cm-link cm-earlier", onclick: (ev) => { ev.stopPropagation(); N.allReplies.add(n.id); render(); } }, `Show ${plural(replies.length - 2, "earlier reply", "earlier replies")}`) : null,
         shown.map(({ e, i }) => h("div", { class: "cm-reply" }, head(e, null, true), body(e.text, n.id + ":" + i), edits(e))),
         h("div", { class: "cm-others-typing" + (ctx.othersTyping?.(n.id) ? "" : " hidden"), "data-for": n.id }, ctx.othersTyping?.(n.id) || ""),
         replyBox(n)));
-  }
-
-  function assignedLine(n) {
-    if (n.kind !== "task") return null;
-    const ran = n.thread.some((e) => e.by === "agent" && e.run);
-    const toClaude = ran || /@claude\b/i.test(n.thread.map((e) => e.text).join(" "));
-    return h("div", { class: "cm-assigned" }, toClaude ? "Assigned to R'th AI" : "Assigned to an agent, for the next session");
   }
 
   function iconBtn(svg, title, fn) {
@@ -479,38 +466,24 @@ export function makeNotes(ctx) {
   // ----------------------------------------------------------------------------- writing
 
   /**
-   * A comment box and its two buttons. Start it with /ask and R'th AI answers in the thread; @agent leaves
-   * it for the next agent session. Both are offered as you type (src/text-picker.js). Escape with words
-   * written asks once ("Esc again to discard") rather than throwing them away.
+   * A comment box and its two buttons. Escape with words written asks once ("Esc again to discard")
+   * rather than throwing them away.
    */
   function editor({ key, placeholder, submitLabel, onSubmit, onCancel, initial = "" }) {
     const ta = h("textarea", { class: "cm-input", rows: "1", placeholder, "data-key": key, spellcheck: "true" });
     ta.value = initial;
     const hint = h("div", { class: "cm-hint hidden" });
-    const pop = h("div", { class: "cm-mentions picker hidden" });
     const submit = h("button", { class: "btn btn-gold btn-small", disabled: true, onclick: (ev) => { ev.stopPropagation(); go(); } }, submitLabel);
     const cancel = h("button", { class: "cm-cancel", onclick: (ev) => { ev.stopPropagation(); onCancel(); } }, "Cancel");
-    const asksAi = () => /^\s*\/ask\b/i.test(ta.value);
-    const forAgent = () => /(^|\s)@agent\b/i.test(ta.value);
     let discarding = null; // the timer while "Esc again to discard" shows
     const say = (text) => { hint.textContent = text || ""; hint.classList.toggle("hidden", !text); };
     const refresh = () => {
       ta.style.height = "auto"; ta.style.height = Math.min(220, ta.scrollHeight + 2) + "px";
       submit.disabled = !ta.value.trim();
-      submit.textContent = asksAi() ? "Ask R'th AI" : forAgent() ? "Assign" : submitLabel;
-      if (!discarding) say(asksAi() ? "R'th AI answers in this thread, from a Codex with Claude that has AI on Discord on." : "");
+      if (!discarding) say("");
       layout();
     };
-    const item = (avatar, cls, name, what) => [h("span", { class: "cm-avatar small " + cls }, avatar), h("b", {}, name), h("span", {}, what)];
-    const picker = textPicker({ h, input: ta, pop, triggers: [
-      { char: "/", startOnly: true, none: "Only /ask: R'th AI answers in the thread",
-        find: (q) => ("ask".startsWith(q.toLowerCase()) ? ["ask"] : []), token: () => "/ask",
-        label: () => item("R", "claude", "/ask", "R'th AI answers in the thread") },
-      { char: "@", none: "Only @agent here",
-        find: (q) => ("agent".startsWith(q.toLowerCase()) ? ["agent"] : []), token: () => "@agent",
-        label: () => item("A", "agent", "@agent", "picks it up in the next agent session") },
-    ] });
-    const go = () => { if (ta.value.trim()) onSubmit({ text: ta.value.trim(), ask: asksAi(), agent: forAgent() }); };
+    const go = () => { if (ta.value.trim()) onSubmit({ text: ta.value.trim() }); };
     function escape() {
       if (!ta.value.trim() || ta.value === initial || discarding) { clearTimeout(discarding); onCancel(); return; }
       say("Press Esc again to discard what you wrote.");
@@ -519,12 +492,11 @@ export function makeNotes(ctx) {
     ta.addEventListener("input", () => { if (discarding) { clearTimeout(discarding); discarding = null; } refresh(); });
     ta.addEventListener("keydown", (ev) => {
       ev.stopPropagation();
-      if (picker.key(ev)) return;
       if (ev.key === "Escape") { ev.preventDefault(); escape(); return; }
       if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) { ev.preventDefault(); go(); }
     });
     setTimeout(refresh, 0);
-    return { el: h("div", { class: "cm-editor", onclick: (ev) => ev.stopPropagation() }, h("div", { class: "cm-input-wrap" }, ta, pop), hint, h("div", { class: "cm-actions" }, cancel, submit)), focus: () => ta.focus() };
+    return { el: h("div", { class: "cm-editor", onclick: (ev) => ev.stopPropagation() }, h("div", { class: "cm-input-wrap" }, ta), hint, h("div", { class: "cm-actions" }, cancel, submit)), focus: () => ta.focus() };
   }
 
   function draftCard() {
@@ -532,8 +504,8 @@ export function makeNotes(ctx) {
       key: "draft", placeholder: N.draft?.wholePage ? "Comment on this page" : "Comment", submitLabel: "Comment",
       initial: N.draft?.text || "", // a comment that couldn't be posted comes back with its words
       onCancel: () => { N.draft = null; draw(); render(); },
-      onSubmit: async ({ text, ask, agent }) => {
-        const kind = ask ? "ask" : agent ? "task" : "note";
+      onSubmit: async ({ text }) => {
+        const kind = "note";
         const d = N.draft;
         N.draft = null;
         const r = await api("/api/notes", { method: "POST", body: JSON.stringify({ page: d.page, kind, text, anchor: d.anchor }) });
@@ -553,9 +525,7 @@ export function makeNotes(ctx) {
       key: "reply-" + n.id, placeholder: "Reply", submitLabel: "Reply",
       initial: N.drafts.get(n.id) || "",
       onCancel: () => { N.drafts.delete(n.id); N.active = null; draw(); render(); },
-      onSubmit: async ({ text, ask, agent }) => {
-        if (ask && n.kind === "note") await api("/api/notes/" + n.id, { method: "PATCH", body: JSON.stringify({ kind: "ask" }) });
-        else if (agent && n.kind === "note") await api("/api/notes/" + n.id, { method: "PATCH", body: JSON.stringify({ kind: "task" }) });
+      onSubmit: async ({ text }) => {
         const r = await api(`/api/notes/${n.id}/reply`, { method: "POST", body: JSON.stringify({ text }) });
         if (!r.ok) { toast(failed("Couldn't send the reply", r), "bad"); return; }
         N.drafts.delete(n.id);

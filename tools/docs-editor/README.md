@@ -231,8 +231,8 @@ Comments work as in Google Docs, and never go into the page.
 - **Reply, resolve, more:** click a comment to reply. The tick resolves it; ⋮ has edit, attach to the
   selected text, add to the page's Open questions (left unsaved for you to check), move, copy its
   id, delete. Ctrl+Enter posts. Escape closes the box; with words written it asks you to press it again.
-- **/ask:** start a comment with /ask (offered as you type /) and R'th AI answers in the thread, as /ask
-  does in Discord (in Discord, tagging the bot or writing "@R'th AI" works too). It answers there,
+- **Comments are between people.** To ask R'th AI about one, open the AI tab on it (Ctrl+J). In the
+  comments forum on Discord, tagging the bot or writing "@R'th AI" in a thread gets an answer there,
   tagging you, from an open Codex with Claude that has **AI on Discord** on in AI setup; only one answers (it claims the tag through the helper, `helper/src/mentions.js`,
   `src/discord-answer.js`). With none open, R'th AI says it's offline and answers once one opens. For
   changes, ask in the AI tab (Ctrl+J, or Ask beside a selection).
@@ -242,7 +242,6 @@ Comments work as in Google Docs, and never go into the page.
   a late one replies tagging whoever asked.
 - **Comments started in Discord** aren't on a page: put them on one from the comment history or the
   To-do page's "Comments to place", which suggests the pages they're most likely about.
-- **@agent:** assigns the comment to an agent in the next session (see the CLI below).
 - **Comment history** (the speech-bubble button, top right): every comment across the docs; Open,
   New from Claude (answers you haven't opened yet, and questions Claude left you), Resolved, All.
   The badge counts what's new from Claude.
@@ -259,7 +258,7 @@ Comments work as in Google Docs, and never go into the page.
   keeps their history. Not signed in, comments are only those files, as before. Claude needs `claude`
   on the PATH, or `CODEX_CLAUDE` set to it; its answers post in Discord as "Claude".
 
-**For agents**, `node tools/docs-editor/notes.js` (kinds: `note` a plain comment, `ask` an @Claude question, `task` assigned): `list [--open] [--kind task|ask|note] [--page p]`,
+**For agents**, `node tools/docs-editor/notes.js` (kinds: `note` a plain comment; `ask` and `task` only on older comments, from before the AI tab): `list [--open] [--kind task|ask|note] [--page p]`,
 `show <id>` (the note, its section, passage and line), `reply <id> "text" [--done]`, `done <id>`,
 and `add --page p [--section "A > B"] [--quote "..."] [--kind ask] "text"` to ask the owner something.
 On the owner's computer it works on the Discord comments through the helper (with the agent key in
@@ -316,9 +315,8 @@ key; `node scripts/announce.mjs <version>` announces one that's out already).
 - `src/app.js`: the page (TipTap with `tiptap-markdown`, plus fixes noted in the code for where its
   Markdown didn't match the docs); `src/merge.js`: the block-preserving save.
 - Comments: `src/anchor.js` (where a comment belongs, and finding it again), `src/notes-store.js` (the
-  files in `docs/.notes`), `src/notes.js` (the highlights, margin, cards and history; /ask in a comment is answered by
-  R'th AI through the helper), `notes.js` (the CLI). `src/text-picker.js` and `src/mention-query.js`:
-  the list a text box opens as you type (the AI box's @ pages, a comment's /ask and @agent). `src/links.js` and `src/panels.js`:
+  files in `docs/.notes`), `src/notes.js` (the highlights, margin, cards and history), `notes.js` (the CLI). `src/text-picker.js` and `src/mention-query.js`:
+  the list a text box opens as you type (the AI box's @ pages). `src/links.js` and `src/panels.js`:
   the link index, the Links tab, Recent changes and To-do. `src/layout.js`: the logo's layout menu,
   docked panes and sheets.
 - `public/`: the page shell and its stylesheet; `npm run build` bundles `src/` into `public/app.js`

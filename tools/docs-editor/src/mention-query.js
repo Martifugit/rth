@@ -1,4 +1,4 @@
-// When a text box's picker is open (an @ page in the AI box, /ask or @agent in a comment), and what it
+// When a text box's picker is open (an @ page in the AI box), and what it
 // searches for. Plain rules, tested in test/mention-query.test.js; src/text-picker.js draws the list.
 //
 // 1. It opens at its character (@, /) that starts the text or follows a space, with the cursor in the

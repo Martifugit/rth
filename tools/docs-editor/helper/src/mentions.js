@@ -1,6 +1,5 @@
 // @R'th AI in a comment thread (PLAN.md, R'th AI's tools, step 7). Someone tags R'th AI in a post in
-// #codex-comments (a real mention of the bot, "@R'th AI" written out, or a comment from the Codex that
-// starts with /ask), in Discord or from the Codex:
+// #codex-comments (a real mention of the bot, or "@R'th AI" written out), in Discord:
 // exactly one open Codex that has Claude and has said it will answer (AI setup) gets the question and
 // replies in the thread as R'th AI. With none open, R'th AI says once that it's offline, and the first
 // such Codex to open answers it then, tagging whoever asked.
@@ -26,11 +25,9 @@ import { sayOffline, answerInChannel, channelContext } from "./interactions.js";
 const LEASE_MS = 3 * 60 * 1000;
 export const OFFLINE = "I'm offline right now: no Codex with Claude is open. I'll answer here as soon as one opens.";
 
-/** Does a message tag R'th AI? A mention of the bot, the name written with an @, or a comment that
- *  starts with /ask (as written in the Codex: in Discord, /ask is the slash command, src/interactions.js). */
+/** Does a message tag R'th AI? A mention of the bot, or the name written with an @. */
 export function tagsAi(env, text) {
   const s = String(text || "");
-  if (/^\s*\/ask\b/i.test(s)) return true;
   if (env.DISCORD_APP_ID && new RegExp(`<@!?${env.DISCORD_APP_ID}>`).test(s)) return true;
   return /(^|[^\w])@\s?(R['’]?th\s?AI|RthAI)\b/i.test(s);
 }
