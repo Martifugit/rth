@@ -58,6 +58,7 @@ Design docs:
             message types, map/tile data structures. Used by both server and client.
 /client     Unity project (Unity 6.6, URP). Rendering, input, UI, animation. Sends intents, draws state.
 /tools      Small utilities. unity-map-tools: a local UPM package (map markers + exporter).
+            docs-editor: the Codex, a local reader and editor for the docs (dev only, never shipped).
 /docs       Design documents.
 ```
 
@@ -828,6 +829,11 @@ from its spawn and fails on any object nobody can stand beside.
   check` / `export` / `render` and `dotnet test`; they never write `.unity`, `.prefab`, `.asset`,
   `.mat` or `.meta` files. The agent with Unity runs **R'th > World > Sync World**, compiles
   client code, and commits what Unity wrote. One region per branch at a time.
+- **Comments in the Codex** (`tools/docs-editor`) are between people; the owner asks agents directly.
+  Before working on a docs page, read its open comments for context:
+  `node tools/docs-editor/notes.js list --open --page <path>`; `show <id>` gives the passage. Reply
+  (`reply <id> "text"`) only when a comment asks something you can answer. Comments live in
+  `docs/.notes/`; never put them in the pages.
 - Commit early and often with clear messages; keep changes reviewable.
 - Write tests for game rules in `/shared` and `/server`. Prefer fast simulation tests
   ("run 1000 ticks, assert XP") over manual Editor checks.

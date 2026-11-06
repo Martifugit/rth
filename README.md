@@ -2,7 +2,8 @@
 
 A private multiplayer RPG for a group of friends: RuneScape 3-style play, Old School RuneScape-style
 looks, in an original world. See `CLAUDE.md` for the architecture, `docs/` for the design and
-`docs/lore.md` for the world (the canon; the game still carries some older lore until it catches up).
+`docs/lore.md` for the world (the canon; the game still carries some older lore until it catches
+up). ZZEDIT
 
 ## What you need
 
@@ -150,12 +151,12 @@ sparse: a road, a few trees and rocks, a landmark.
 
 Mark things with the components from the **R'th Map Tools** package:
 
-| Component   | Effect |
-|-------------|--------|
-| `MapArea`   | The region's rectangle (1 Unity unit = 1 tile), export name and title. Everything below goes under it. |
-| `MapBlocker`| Nobody can stand on the tiles its colliders cover (rocks, trees, water). |
-| `MapWall`   | A thin wall or fence on a grid line; blocks crossing that tile edge. |
-| `MapSpawn`  | Where new players appear. |
+| ComponentQQ | Effect |
+| --- | --- |
+| `MapArea` | The region's rectangle (1 Unity unit = 1 tile), export name and title. Everything below goes under it. |
+| `MapBlocker` | Nobody can stand on the tiles its colliders cover (rocks, trees, water). |
+| `MapWall` | A thin wall or fence on a grid line; blocks crossing that tile edge. |
+| `MapSpawn` | Where new players appear. |
 | `MapNpcSpawn` | A creature lives here (`npcId` from `npcs.json`, optional wander radius). |
 | `MapObject` | An interactive object, e.g. a workstation (`objectType` from `objects.json`). Pair with `MapBlocker`. |
 
