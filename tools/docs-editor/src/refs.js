@@ -69,7 +69,7 @@ const lineAt = (text, line, fn) => { const ls = text.split("\n"); const i = line
 const pathOf = (page, href) => {
   if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith("#")) return null;
   let p = href.split("#")[0];
-  try { p = decodeURIComponent(p); } catch {}
+  try { p = decodeURIComponent(p); } catch { /* not %-encoded after all: as written */ }
   const out = [];
   for (const part of (page.slice(0, page.lastIndexOf("/")) + "/" + p).split("/")) { if (!part || part === ".") continue; if (part === "..") out.pop(); else out.push(part); }
   return out.join("/");

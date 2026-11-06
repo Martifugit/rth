@@ -28,7 +28,13 @@ import { makeAi } from "./ai.js";
 import { makeAccountButton } from "./account-button.js";
 import { makePasteHandler, forDiscord } from "./discord-extras.js";
 import { AiMarks, makeAiChanges } from "./ai-changes.js";
-import { altGrChar, isKeyFor } from "./keys.js";
+import { altGrChar, is } from "./keys.js";
+import { makeFindBar } from "./find-bar.js";
+import { makeFindAll } from "./find-all.js";
+import { zoomBadge } from "./zoom-badge.js";
+import { makeToasts } from "./toasts.js";
+import { makeQuickOpen } from "./quick-open.js";
+import { keysWindow } from "./keys-window.js";
 import { makeTogetherUi } from "./together-ui.js";
 import { Spelling, configureSpelling } from "./spellcheck.js";
 import { GDD, README, TOP, TEMPLATES, isMeta, undeletable, folderPath, typeAt } from "./gdd.js";
@@ -37,6 +43,8 @@ import { busy } from "./busy.js";
 import { makeGddUi } from "./gdd-ui.js";
 import { pagePicker } from "./page-picker.js";
 import { failed } from "./plain-errors.js";
+import { dirOf, normalize, isExternal, resolveHref, relativePath } from "./paths.js";
+import { esc, plural } from "./text.js";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -55,8 +63,8 @@ const h = (tag, props = {}, ...kids) => {
   for (const kid of kids.flat(Infinity)) if (kid != null && kid !== false) el.append(kid.nodeType ? kid : document.createTextNode(kid));
   return el;
 };
-const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const collator = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
+const toast = makeToasts({ h, host: () => $("#toasts") });
 
 // The Codex opens on the GDD's start page: a welcome, the reading order, the way to the Charter.
 const DEFAULT_DOC = README;
@@ -81,29 +89,6 @@ const S = {
 
 // ----------------------------------------------------------------------------- paths
 
-const dirOf = (p) => (p.includes("/") ? p.slice(0, p.lastIndexOf("/")) : "");
-function normalize(p) {
-  const out = [];
-  for (const part of p.split("/")) {
-    if (part === "" || part === ".") continue;
-    if (part === "..") out.pop(); else out.push(part);
-  }
-  return out.join("/");
-}
-function resolveHref(from, href) {
-  let [path, hash] = href.split("#");
-  path = decodeURIComponent(path.split("?")[0]);
-  if (!path) return { path: from, hash: hash || "" };
-  const abs = path.startsWith("/") ? normalize(path) : normalize(dirOf(from) + "/" + path);
-  return { path: abs, hash: hash || "", dir: path.endsWith("/") };
-}
-function relativePath(from, to) {
-  const a = dirOf(from).split("/").filter(Boolean), b = to.split("/");
-  let i = 0;
-  while (i < a.length && i < b.length - 1 && a[i] === b[i]) i++;
-  return "../".repeat(a.length - i) + b.slice(i).join("/");
-}
-const isExternal = (href) => /^[a-z][a-z0-9+.-]*:/i.test(href);
 const assetUrl = (src) => (!src || isExternal(src) ? src : "/repo/" + resolveHref(S.path || "", src).path);
 function folderPage(dir) {
   for (const n of ["README.md", "index.md"]) if (S.fileSet.has(dir + "/" + n)) return dir + "/" + n;
@@ -235,9 +220,11 @@ function makeEditor(text) {
       AiMarks,
       Spelling,
       gddUi.Extension,
+      findBar.Extension,
+      HeadingKeys,
     ],
     content: text,
-    onUpdate: () => { clearHits(); scheduleDirty(); scheduleOutline(); notes?.docChanged(); aiChanges?.docChanged(); together?.typed(); },
+    onUpdate: () => { clearHits(); scheduleDirty(); scheduleOutline(); notes?.docChanged(); aiChanges?.docChanged(); together?.typed(); findBar.refresh(); },
     editorProps: {
       attributes: { spellcheck: "false" }, handlePaste: (view, event) => discordPaste(view, event),
       // AltGr is Ctrl+Alt: a character typed with it (@, {, [, $ on Norwegian) is typed, never taken as
@@ -256,6 +243,17 @@ function makeEditor(text) {
   S.unsafe = false; // the page is whole: saving may go on
   if (notes && notes.state.page === S.path) notes.place(true);
 }
+
+// Ctrl+Shift+1-6: a heading of that level (again: a paragraph), by the digit keys' place, so it works on
+// every layout. TipTap's own Ctrl+Alt+1-6 stay, but on Norwegian Ctrl+Alt is AltGr, which types @ £ $ €.
+const HeadingKeys = Extension.create({
+  name: "codexHeadingKeys",
+  addKeyboardShortcuts() {
+    const keys = {};
+    for (let level = 1; level <= 6; level++) keys[`Mod-Shift-${level}`] = () => this.editor.commands.toggleHeading({ level });
+    return keys;
+  },
+});
 
 // Focus now, not on the next animation frame as TipTap's focus() does: keys pressed straight after
 // switching to Edit must land in the page.
@@ -480,7 +478,6 @@ function listen() {
   es.addEventListener("notes", (e) => notes.onNotes(JSON.parse(e.data)));
   // A waiting comment change that Discord then refused outright (src/comment-store.js, flush): said once.
   es.addEventListener("notes-failed", (e) => { const v = JSON.parse(e.data); toast("A comment change that was waiting to be posted was refused by Discord, so it was dropped: " + v.error, "bad"); });
-  es.addEventListener("run", (e) => notes.onRun(JSON.parse(e.data)));
   es.addEventListener("sync", (e) => showSync(JSON.parse(e.data)));
   es.addEventListener("news", (e) => showNews(JSON.parse(e.data)));
   es.addEventListener("here", (e) => together.onEvent(JSON.parse(e.data)));
@@ -1038,103 +1035,6 @@ function imageDialog() {
 
 // One search box for everything (Ctrl+P, Ctrl+Shift+F or the box at the top), as in VS Code or
 // Notion: pages whose name or title match come first, then the lines in pages that contain the words.
-function quickOpen() {
-  const input = h("input", { class: "field qo-input", placeholder: "Search pages and text", spellcheck: "false" });
-  const list = h("div", { class: "qo-list" });
-  let items = [], sel = 0, seq = 0, timer = null, text = { q: "", results: [], total: 0, loading: false };
-
-  // Lines as they read on the page: no Markdown marks, table cells joined.
-  const tidy = (t) => t.replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/[*_`]/g, "")
-    .replace(/^\s*(?:#{1,6}|[-+*]|\d+[.)]|>)\s+/, "").replace(/^\s*\|\s*|\s*\|\s*$/g, "").replace(/\s*\|\s*/g, ", ").trim();
-  const titleOf = (p) => S.files.find((f) => f.path === p)?.title || p.split("/").pop().replace(/\.md$/, "");
-  const mark = (t, q) => {
-    if (!q) return t;
-    const out = [], lower = t.toLowerCase(), n = q.toLowerCase();
-    let i = 0;
-    for (let j = lower.indexOf(n); j >= 0; j = lower.indexOf(n, i)) { out.push(t.slice(i, j), h("b", {}, t.slice(j, j + n.length))); i = j + n.length; }
-    out.push(t.slice(i));
-    return out;
-  };
-  const clip = (t, q) => { const at = t.toLowerCase().indexOf(q.toLowerCase()); return at > 60 ? "…" + t.slice(at - 40) : t; };
-
-  const render = () => {
-    const raw = input.value.trim();
-    // A page matches when every word typed starts a word of its title or file name (no scattered letters).
-    const words = raw.toLowerCase().split(/\s+/).filter(Boolean);
-    const score = (f) => {
-      if (!words.length) return 0;
-      const title = (f.title || "").toLowerCase(), name = f.path.toLowerCase();
-      const starts = (t) => words.every((w) => new RegExp("(^|[^\\p{L}\\p{N}])" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "u").test(t));
-      if (title.startsWith(raw.toLowerCase())) return 4;
-      if (starts(title)) return 3;
-      if (starts(name)) return 2;
-      return -1;
-    };
-    // Templates aren't pages to find, here as in the page list and the text search (they work behind New page).
-    const pages = S.files.filter((f) => !f.path.startsWith(TEMPLATES + "/")).map((f) => ({ f, s: score(f) }))
-      .filter((x) => x.s >= 0).sort((a, b) => b.s - a.s || collator.compare(a.f.path, b.f.path)).slice(0, raw ? 8 : 40);
-    items = pages.map((x) => ({ kind: "page", path: x.f.path, el: h("div", { class: "qo-item" },
-      h("span", { class: "ico ico-note qo-ico" }), h("span", { class: "qo-title" }, x.f.title || x.f.path.split("/").pop()), h("span", { class: "qo-path" }, x.f.path)) }));
-    const rows = [];
-    if (items.length) rows.push(h("div", { class: "qo-head" }, raw ? "Pages" : "All pages"));
-    rows.push(...items.map((x) => x.el));
-    if (raw.length >= 2 && text.q === raw) {
-      const hits = [];
-      for (const res of text.results) {
-        const seen = new Set();
-        for (const hit of res.hits) {
-          if (seen.has(hit.line)) continue;
-          seen.add(hit.line);
-          hits.push({ kind: "text", path: res.path, find: { q: raw, occurrence: hit.occurrence }, el: h("div", { class: "qo-item qo-text" },
-            h("span", { class: "qo-title" }, titleOf(res.path)), h("span", { class: "qo-snippet" }, mark(clip(tidy(hit.text), raw), raw))) });
-        }
-      }
-      rows.push(h("div", { class: "qo-head" }, hits.length ? `In the text (${text.total} matches in ${text.results.length} pages)` : "In the text: nothing found"));
-      items.push(...hits.slice(0, 80));
-      rows.push(...hits.slice(0, 80).map((x) => x.el));
-    } else if (raw.length >= 2) rows.push(h("div", { class: "qo-head" }, "Searching the text…"));
-    // Ask the AI instead: last, or first when it reads as a question (so Enter asks).
-    if (raw.length >= 3) {
-      const ask = { kind: "ask", q: raw, el: h("div", { class: "qo-item qo-ask" }, h("span", { class: "qo-ask-ico" }, "✦"), h("span", { class: "qo-title" }, "Ask R'th AI: "), h("span", { class: "qo-snippet" }, raw)) };
-      const question = /\?\s*$/.test(raw) || /^(how|what|why|when|where|who|which|does|do|is|are|can|should|could|would)\b/i.test(raw);
-      if (question) { items.unshift(ask); rows.unshift(ask.el); } else { items.push(ask); rows.push(ask.el); }
-    }
-    items.forEach((x, i) => {
-      x.el.classList.toggle("sel", i === sel);
-      x.el.onmousemove = () => { if (sel !== i) { sel = i; select(); } };
-      x.el.onclick = () => go(i);
-    });
-    sel = Math.min(sel, Math.max(0, items.length - 1));
-    list.replaceChildren(...rows);
-    select();
-  };
-  const select = () => items.forEach((x, i) => { x.el.classList.toggle("sel", i === sel); if (i === sel) x.el.scrollIntoView({ block: "nearest" }); });
-  const go = (i) => {
-    const x = items[i];
-    if (!x) return;
-    close();
-    if (x.kind === "ask") return ai.ask(x.q);
-    openDoc(x.path, x.kind === "text" ? { find: x.find } : {});
-  };
-  const searchText = async () => {
-    const raw = input.value.trim(), mine = ++seq;
-    if (raw.length < 2) return;
-    const r = await api("/api/search?q=" + encodeURIComponent(raw));
-    if (mine !== seq) return;
-    text = { q: raw, results: r.results || [], total: r.total || 0 };
-    render();
-  };
-  input.addEventListener("input", () => { sel = 0; render(); clearTimeout(timer); timer = setTimeout(searchText, 200); });
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowDown") { sel = Math.min(sel + 1, items.length - 1); select(); e.preventDefault(); }
-    else if (e.key === "ArrowUp") { sel = Math.max(sel - 1, 0); select(); e.preventDefault(); }
-    else if (e.key === "Enter") { go(sel); e.preventDefault(); }
-  });
-  const close = modal("Search", [input, list], { width: "min(720px, 94vw)" });
-  render();
-  setTimeout(() => input.focus(), 0);
-}
-
 /**
  * A new page the AI suggested (src/ai.js): the page as it would be, read-only, with where it would go,
  * then Create page (made as written, and opened) or Skip. create/skip are the AI tab's; create says
@@ -1288,77 +1188,6 @@ function relinkOpenPage(from, to) {
   if (tr.docChanged) { ed.view.dispatch(tr); scheduleDirty(); }
 }
 
-function helpDialog() {
-  const k = (keys, what) => [h("span", {}, keys.split(" ").map((x) => h("kbd", { style: "margin-right:3px" }, x))), h("span", {}, what)];
-  modal("Keys", h("div", { class: "keys" },
-    k("Ctrl P", "Search: pages by name, then the text of every page"),
-    k("Ctrl M", "Comment on the selected text"), k("Ctrl Enter", "Post a comment. Write @agent in it to leave it for the next agent session"),
-    k("Ctrl J", "Ask R'th AI (with the selected text, if any)"), k("Shift Tab", "In the AI tab's box: switch between Chat (its changes wait for you to accept) and Work (it edits the pages)"),
-    k("Alt ↓", "With R'th AI's changes shown: the next change (Alt ↑ the one before)"), k("Alt Enter", "Accept the suggestion you're on (Alt Backspace skips it)"), k("Ctrl Shift C", "Copy for Discord: the selection, or the section you're in, with a link back"),
-    k("Ctrl K", "Add or edit a link"), k("Ctrl B", "Bold"), k("Ctrl I", "Italic"), k("Ctrl Z", "Undo"),
-    k("Ctrl S", "Save now (pages also save by themselves)"), k("Alt ←", "Back to where you were (also the mouse's back button)"), k("Alt →", "Forward again"),
-    k("Ctrl ,", "Show or hide the pages"), k("Ctrl .", "Show or hide the outline, links and AI"),
-    h("span", { class: "muted small", style: "grid-column:1/-1;margin-top:8px" },
-      "Markdown shortcuts work as you type: ## for a heading, - or 1. for a list, > for a quote, ``` for code. Saving only rewrites the paragraphs you changed; the rest of the file stays exactly as written.")));
-}
-
-// ----------------------------------------------------------------------------- toasts
-
-/**
- * A short message at the bottom. With actions ([{ label, run }]) it stays longer (ms), has buttons, and
- * an ✕; running an action closes it.
- */
-// Toasts: a deck at the bottom centre, newest in front, older ones tucked behind (at most three show).
-// Pointing at the deck spreads it out and holds every timer; the same message again only counts (×2).
-const TOASTS = [];
-let toastsHeld = false;
-function toast(text, kind = "", { actions = null, ms = null } = {}) {
-  const same = !actions && TOASTS.find((x) => !x.actions && x.text === text && x.kind === kind);
-  if (same) { same.n++; same.count.textContent = "×" + same.n; startToast(same); return same.el; }
-  const x = { text, kind, actions, n: 1, ms: ms || (actions ? 12000 : 2600) };
-  x.count = h("span", { class: "toast-n" });
-  x.el = h("div", { class: "toast " + kind, onmouseenter: () => holdToasts(true), onmouseleave: () => setTimeout(() => holdToasts(!!document.querySelector(".toast:hover")), 80) },
-    h("span", { class: "toast-ico" }, kind === "good" ? "✓" : kind === "bad" ? "!" : "✦"),
-    h("span", { class: "toast-text" }, text), x.count,
-    actions ? actions.map((a) => h("button", { class: "toast-btn", onclick: () => { closeToast(x); a.run(); } }, a.label)) : null,
-    actions ? h("button", { class: "toast-x", title: "Close", onclick: () => closeToast(x) }, "✕") : null);
-  TOASTS.unshift(x);
-  $("#toasts").append(x.el);
-  startToast(x);
-  return x.el;
-}
-function startToast(x) { clearTimeout(x.timer); if (!toastsHeld) x.timer = setTimeout(() => closeToast(x), x.ms); stackToasts(); }
-function closeToast(x) {
-  clearTimeout(x.timer);
-  const i = TOASTS.indexOf(x);
-  if (i < 0) return;
-  TOASTS.splice(i, 1);
-  x.el.classList.add("out");
-  setTimeout(() => x.el.remove(), 220);
-  stackToasts();
-}
-function holdToasts(on) {
-  if (on === toastsHeld) return;
-  toastsHeld = on;
-  for (const x of TOASTS) { clearTimeout(x.timer); if (!on) x.timer = setTimeout(() => closeToast(x), Math.min(x.ms, 2600)); }
-  stackToasts();
-}
-function stackToasts() {
-  let y = 0;
-  const front = TOASTS[0]?.el.offsetHeight || 0;
-  TOASTS.forEach((x, i) => {
-    const el = x.el;
-    el.style.zIndex = String(100 - i);
-    // Collapsed, each one behind shows its top edge a clear step above the one in front (whatever their
-    // heights) and is a little smaller and dimmer, so the deck shows there are more.
-    const scale = 1 - i * 0.04, lift = front + i * 10 - el.offsetHeight * scale;
-    el.style.transform = toastsHeld ? `translate(-50%, ${-y}px)` : `translate(-50%, ${-lift}px) scale(${scale})`;
-    el.style.opacity = toastsHeld || i < 3 ? "" : "0";
-    el.style.filter = toastsHeld || i === 0 ? "" : `brightness(${1 - i * 0.22})`; // darker, but solid: see-through would show the next one's words
-    el.style.pointerEvents = toastsHeld || i === 0 ? "auto" : "none";
-    y += el.offsetHeight + 8;
-  });
-}
 
 // ----------------------------------------------------------------------------- others' changes
 
@@ -1423,6 +1252,8 @@ async function deletePage(page = S.path) {
 
 // ----------------------------------------------------------------------------- wiring
 
+function helpDialog() { keysWindow({ h, modal, shortcuts: SHORTCUTS }); }
+
 function wire() {
   buildToolbar();
   $("#sourceBtn").addEventListener("click", () => setMode(S.mode === "source" ? "edit" : "source"));
@@ -1474,29 +1305,66 @@ function wire() {
   window.addEventListener("beforeunload", (e) => { if (S.dirty) { e.preventDefault(); e.returnValue = ""; } });
 
   document.addEventListener("keydown", (e) => {
-    const mod = e.ctrlKey || e.metaKey;
-    const key = e.key.toLowerCase();
     if ($("#modalHost").childElementCount) return;
     if (altGrChar(e)) return; // a character typed with AltGr, not a shortcut
-    if (e.altKey && !mod && !e.shiftKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")) { e.preventDefault(); go(e.key === "ArrowLeft" ? -1 : 1); return; }
-    if (mod && key === "s") { e.preventDefault(); save(); }
-    else if (mod && key === "p") { e.preventDefault(); quickOpen(); }
-    else if (mod && e.shiftKey && key === "f") { e.preventDefault(); quickOpen(); }
-    else if (mod && key === "k" && S.mode === "edit") { e.preventDefault(); linkDialog(); }
-    else if (mod && key === "m") { e.preventDefault(); notes.compose(); } // Ctrl+M (Ctrl+Alt+M as in Google Docs, where Ctrl+Alt isn't AltGr)
-    else if (mod && key === "j") { e.preventDefault(); ai.focus(); }
-    else if (mod && e.shiftKey && key === "c" && S.editor && S.mode === "edit") { e.preventDefault(); copyForDiscord(); }
-    // The panes: Ctrl+, (left) and Ctrl+. (right), on the same keys on every layout; Ctrl+ as in Notion,
-    // on whichever key types  here.
-    else if (mod && !e.altKey && (e.code === "Comma" || e.code === "Period")) { e.preventDefault(); layout.toggle(e.code === "Comma" ? "pages" : "outline"); }
-    else if (mod && isKeyFor(e, "\\", "Backslash")) { e.preventDefault(); layout.toggle(e.shiftKey ? "outline" : "pages"); }
-    else if (key === "escape") {
-      if (account.escape() || aiChanges.escape() || layout.escape() || notes.escape()) e.preventDefault();
-      else if (CSS.highlights?.has("codex-hit")) clearHits();
-      else if (S.mode === "source") setMode("edit");
-    } else if (!mod && e.key === "?" && !typing()) helpDialog();
-    else if (!mod && e.key === "/" && !typing()) { e.preventDefault(); quickOpen(); }
+    if (e.key === "Escape") { escape(e); return; }
+    const x = SHORTCUTS.find((c) => c.keys.some((spec) => is(e, spec)) && (!c.when || c.when()));
+    if (!x || (x.notTyping && typing())) return;
+    e.preventDefault();
+    x.run(e);
   });
+}
+
+/** Escape: the innermost thing open closes, then highlights go, then the Markdown view. */
+function escape(e) {
+  if (account.escape() || aiChanges.escape() || layout.escape() || notes.escape()) e.preventDefault();
+  else if (findBar.isOpen()) { e.preventDefault(); findBar.close(); }
+  else if (CSS.highlights?.has("codex-hit")) clearHits();
+  else if (S.mode === "source") setMode("edit");
+}
+
+// Every shortcut of the app's own (the editor's are its extensions'; both listed in the Keys window).
+// keys: specs (src/keys.js), the first shown; when: only then; notTyping: not while typing in a box.
+const editing = () => !!S.editor && S.mode === "edit" && !S.view;
+const onPage = () => !!S.path && !S.view;
+const SHORTCUTS = [
+  { group: "Finding", keys: ["mod+p"], what: "Search: pages by name, then the text of every page (also / when not typing)", run: () => quickOpen() },
+  { group: "Finding", keys: ["/"], what: null, run: () => quickOpen(), notTyping: true },
+  { group: "Finding", keys: ["mod+f"], what: "Find in this page", run: () => findBar.open(), when: onPage },
+  { group: "Finding", keys: ["mod+h"], what: "Find and replace in this page", run: () => findBar.open({ replace: true }), when: onPage },
+  { group: "Finding", keys: ["mod+shift+f"], what: "Find and replace in all pages", run: () => findAll.open(findBar.isOpen() ? "" : selectedWords()) },
+  { group: "Pages", keys: ["mod+n"], what: "New page", run: () => newPageDialog() },
+  { group: "Pages", keys: ["mod+s"], what: "Save now (pages also save by themselves)", run: () => save() },
+  { group: "Pages", keys: ["alt+ArrowLeft"], what: "Back to where you were (also the mouse's back button)", run: () => go(-1) },
+  { group: "Pages", keys: ["alt+ArrowRight"], what: "Forward again", run: () => go(1) },
+  { group: "Pages", keys: ["mod+shift+d"], what: "The To-do page", run: () => showView("broken") },
+  { group: "Pages", keys: ["mod+shift+e"], what: "Recent changes", run: () => showView("changes") },
+  { group: "Pages", keys: ["mod+k"], what: null, run: () => linkDialog(), when: editing }, // listed under Writing
+  { group: "Pages", keys: ["mod+shift+c"], what: "Copy for Discord: the selection, or the section you're in, with a link back", run: () => copyForDiscord(), when: editing },
+  { group: "Comments and R'th AI", keys: ["mod+m"], what: "Comment on the selected text (or the page)", run: () => notes.compose() },
+  { group: "Comments and R'th AI", keys: ["alt+PageDown"], what: "The next comment on the page (Alt+Page Up: the one before)", run: () => notes.step(1), when: onPage },
+  { group: "Comments and R'th AI", keys: ["alt+PageUp"], what: null, run: () => notes.step(-1), when: onPage },
+  { group: "Comments and R'th AI", keys: ["mod+shift+m"], what: "All comments, across every page", run: () => notes.toggleHistory() },
+  { group: "Comments and R'th AI", keys: ["mod+j"], what: "Ask R'th AI (with the selected text, if any)", run: () => ai.focus() },
+  { group: "The panes", keys: ["mod+Comma", "mod+Backslash"], what: "Show or hide the pages", run: () => layout.toggle("pages") },
+  { group: "The panes", keys: ["mod+Period", "mod+shift+Backslash"], what: "Show or hide the outline, links and AI", run: () => layout.toggle("outline") },
+  { group: "The panes", keys: ["alt+Digit1"], what: "Outline (Alt+2: Links, Alt+3: AI)", run: () => rightPane("outline") },
+  { group: "The panes", keys: ["alt+Digit2"], what: null, run: () => rightPane("links") },
+  { group: "The panes", keys: ["alt+Digit3"], what: null, run: () => rightPane("ai") },
+  { group: "The panes", keys: ["?"], what: "These keys", run: () => helpDialog(), notTyping: true },
+  { group: "The panes", keys: ["Escape"], what: "Close what's open; in the Markdown view, back to the page", run: () => {} },
+].map((x) => ({ notTyping: false, ...x }));
+
+/** The right pane on a tab, shown if it was hidden. */
+function rightPane(tab) { layout.show("outline"); showRightTab(tab); if (tab === "ai") ai.focus(); }
+
+/** What's selected in the page, to start a search with (one line, not too long). */
+function selectedWords() {
+  const ed = S.editor;
+  if (!ed || S.mode !== "edit") return "";
+  const { from, to } = ed.state.selection;
+  const t = from === to ? "" : ed.state.doc.textBetween(from, to, "\n");
+  return t && !t.includes("\n") && t.length <= 200 ? t : "";
 }
 
 // ----------------------------------------------------------------------------- syncing
@@ -1543,7 +1411,6 @@ function drawSharePanel() {
   let panel = $("#sharePanel");
   const v = syncState || {};
   const cards = [];
-  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
   const groups = [["ai", "R'th AI"], ["other", "outside Codex"]];
   for (const [by, who] of groups) {
     const pages = heldShown.filter((x) => x.by === by);
@@ -1711,7 +1578,7 @@ function scrollToPos(pos, onlyIfHidden = false) {
     const sc = $("#scroller"), r = sc.getBoundingClientRect();
     if (onlyIfHidden && c.top > r.top + 20 && c.bottom < r.bottom - 20) return;
     sc.scrollTop += c.top - r.top - sc.clientHeight / 3;
-  } catch {}
+  } catch { /* a position the page no longer has: leave the scroll */ }
 }
 
 const panels = makePanels({ S, $, h, api, toast, isMeta, ask: (...a) => ask(...a),
@@ -1732,6 +1599,13 @@ const together = makeTogetherUi({
   S, $, h, api, currentHeadingPos: () => currentHeadingPos(), pageTitle: () => pageTitle(),
   goTo: (page, leaf) => { if (page === S.path) { if (leaf) scrollToHeading(slug(leaf), true); } else openDoc(page, { hash: leaf ? slug(leaf) : "" }); },
 });
+
+const quickOpen = makeQuickOpen({ S, h, api, modal, openDoc: (...a) => openDoc(...a), askAi: (q) => ai.ask(q), templates: TEMPLATES });
+
+// Find and replace: in the page (src/find-bar.js) and in all pages (src/find-all.js).
+const findBar = makeFindBar({ S, $, h, onAll: (q) => findAll.open(q) });
+const findAll = makeFindAll({ S, h, api, modal, toast, openDoc: (...a) => openDoc(...a), save: (...a) => save(...a),
+  titleOf: (p) => S.files.find((f) => f.path === p)?.title || p.split("/").pop().replace(/\.md$/, ""), findBar });
 
 const layout = makeLayout({ $, h, notes, help: () => helpDialog(), online: together.online, presence: { on: () => presenceOn(), toggle: () => { localStorage.setItem("codex.presence", presenceOn() ? "off" : "on"); tellPresence(); } } });
 
@@ -1798,6 +1672,7 @@ async function start() {
   // In the desktop app the top row is the window's own title bar (style.css, body.in-app).
   if (/Electron/i.test(navigator.userAgent)) document.body.classList.add("in-app");
   configureSpelling({ api, toast });
+  zoomBadge({ h });
   wire();
   ai.init($("#outlineWin .win-body"));
   account.init();

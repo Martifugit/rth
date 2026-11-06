@@ -50,7 +50,7 @@ export function makeStore(repo, { onWrite = () => {} } = {}) {
   async function save(page, notes, opts = {}) {
     const file = fileFor(page), target = abs(file);
     if (!notes.length) {
-      try { await fsp.unlink(target); } catch {}
+      try { await fsp.unlink(target); } catch { /* already gone */ }
       recent.set(file, null);
       onWrite(file, opts);
       return;

@@ -82,11 +82,11 @@ export class Live extends DurableObject {
       ws.serializeAttachment(a);
       this.tell();
       // A Codex that answers has just come: the tags that waited for one are offered to it.
-      if (a.state.ai && !was) for (const t of await waiting(this.env).catch(() => [])) { try { ws.send(JSON.stringify({ type: "ask", id: t.id, thread: t.thread })); } catch {} }
+      if (a.state.ai && !was) for (const t of await waiting(this.env).catch(() => [])) { try { ws.send(JSON.stringify({ type: "ask", id: t.id, thread: t.thread })); } catch { /* the socket closed meanwhile */ } }
     }
   }
 
-  async webSocketClose(ws) { try { ws.close(); } catch {} this.tell(ws); }
+  async webSocketClose(ws) { try { ws.close(); } catch { /* already closed */ } this.tell(ws); }
   async webSocketError(ws) { this.tell(ws); }
 
   /** Everyone here (not those who chose to be hidden), to everyone. */
@@ -100,7 +100,7 @@ export class Live extends DurableObject {
   send(msg, skip = null) {
     for (const w of this.ctx.getWebSockets()) {
       if (w === skip || !w.deserializeAttachment()?.ok) continue;
-      try { w.send(msg); } catch {}
+      try { w.send(msg); } catch { /* the socket closed meanwhile */ }
     }
   }
 }

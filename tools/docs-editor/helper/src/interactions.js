@@ -29,7 +29,7 @@ export async function verified(env, body, signature, timestamp) {
     try {
       const key = await crypto.subtle.importKey("raw", hex(env.DISCORD_PUBLIC_KEY), alg, false, ["verify"]);
       return await crypto.subtle.verify(alg, key, hex(signature), new TextEncoder().encode(timestamp + body));
-    } catch {}
+    } catch { /* this runtime doesn't know that name: try the next */ }
   }
   return false;
 }

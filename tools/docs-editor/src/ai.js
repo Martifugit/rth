@@ -13,7 +13,8 @@ import { busy } from "./busy.js";
 import { split as splitFront } from "./frontmatter.js";
 import { typeAt } from "./gdd.js";
 import { quoteAt } from "./turn-check.js";
-import { mentionQuery } from "./mention-query.js";
+import { textPicker } from "./text-picker.js";
+import { clip } from "./text.js";
 
 const ICON = {
   send: '<svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></svg>',
@@ -55,7 +56,7 @@ export function makeAi(ctx) {
   const chips = h("div", { class: "ai-chips" });
   const input = h("textarea", { class: "ai-input", rows: "1", placeholder: "Ask anything…",spellcheck: "true" });
   const sendBtn = h("button", { class: "ai-send", title: "Send (Enter)", html: ICON.send, onclick: () => (A.run ? stop() : send()) });
-  const mention = h("div", { class: "ai-mention hidden" });
+  const mention = h("div", { class: "ai-mention picker hidden" });
   // The mode, under the box on the left (as Claude Code's): click it, or Shift+Tab in the box, to switch.
   const modeLine = h("button", { class: "ai-mode", onclick: () => { switchMode(); input.focus(); } });
   // Quotes from its answers (select, then the reply button): cards above the box, each quoting the part in
@@ -68,16 +69,12 @@ export function makeAi(ctx) {
   pane.append(head, log, box);
 
   input.addEventListener("keydown", (ev) => {
-    if (mentionKey(ev)) return;
+    if (picker.key(ev)) return;
     if (ev.key === "Tab" && ev.shiftKey && !ev.ctrlKey && !ev.altKey) { ev.preventDefault(); switchMode(); return; }
     if (ev.key === "Enter" && !ev.shiftKey && !ev.isComposing) { ev.preventDefault(); send(); }
     else if (ev.key === "Escape" && A.listOpen) { ev.stopPropagation(); A.listOpen = false; drawHead(); }
   });
-  input.addEventListener("input", () => { grow(); pane.classList.toggle("typing", !!input.value.trim()); drawMention(); mentionsEdited(); });
-  input.addEventListener("blur", () => setTimeout(closeMention, 150));
-  // The cursor leaving the @ word (a click, the arrows, Home/End) closes the picker; coming back opens it.
-  input.addEventListener("click", () => drawMention());
-  input.addEventListener("keyup", (ev) => { if (/^(ArrowLeft|ArrowRight|Home|End)$/.test(ev.key)) drawMention(); });
+  input.addEventListener("input", () => { grow(); pane.classList.toggle("typing", !!input.value.trim()); mentionsEdited(); });
   // A conversation pasted from Discord: who said what, so "turn this into the decision" works on it.
   input.addEventListener("paste", (ev) => {
     const chat = discordConversation(ev.clipboardData?.getData("text/plain") || "");
@@ -183,43 +180,21 @@ export function makeAi(ctx) {
   // ----------------------------------------------------------------------------- @ a page
 
   // Typing @ offers pages by title (as the link picker does); picking one adds it to the conversation
-  // and leaves "@Its title" in the message, so the request reads naturally. When it's open is
-  // src/mention-query.js.
-  let picks = [], at = 0, picked = [], dismissed = -1;
+  // and leaves "@Its title" in the message, so the request reads naturally. The list is
+  // src/text-picker.js, shared with the comment box.
   const norm = (s) => String(s || "").toLowerCase();
   const pages = () => (S.files || []).filter((f) => f.path.startsWith("docs/gdd/") && !f.path.includes("/templates/"));
-  const find = (q) => pages().filter((f) => !q.trim() || norm(f.title || f.path).includes(norm(q).trim()));
-  const mentionAt = () => {
-    const before = input.value.slice(0, input.selectionStart);
-    // Escape's @ is forgotten once it's gone or the cursor is before it.
-    if (dismissed >= 0 && (dismissed >= before.length || before[dismissed] !== "@")) dismissed = -1;
-    return mentionQuery(before, { picked, dismissed, matches: (q) => find(q).length > 0 });
-  };
-  function closeMention() { mention.classList.add("hidden"); picks = []; at = 0; }
-  function drawMention() {
-    const m = input.selectionStart === input.selectionEnd ? mentionAt() : null;
-    if (!m) { closeMention(); return; }
-    picks = m.none ? [] : find(m.q).slice(0, 8);
-    at = Math.min(at, Math.max(0, picks.length - 1));
-    mention.replaceChildren(...(picks.length ? picks.map((f, i) => h("div", { class: "ai-mention-item" + (i === at ? " on" : ""), onmousedown: (e) => { e.preventDefault(); pickMention(i); } },
-      h("span", {}, f.title || pageTitle(f.path)), h("span", { class: "ai-mention-where" }, f.path.slice("docs/gdd/".length).split("/").slice(0, -1).join("/")))) : [h("div", { class: "ai-mention-none" }, "No page by that name")]));
-    mention.classList.remove("hidden");
-  }
-  function pickMention(i) {
-    const f = picks[i];
-    if (!f) return;
-    const before = input.value.slice(0, input.selectionStart).replace(/@[^@\n]{0,40}$/, "@" + (f.title || pageTitle(f.path)) + " ");
-    input.value = before + input.value.slice(input.selectionStart);
-    input.setSelectionRange(before.length, before.length);
-    closeMention();
-    const token = "@" + (f.title || pageTitle(f.path));
-    if (!picked.includes(token)) picked.push(token);
+  const picker = textPicker({ h, input, pop: mention, triggers: [{
+    char: "@", none: "No page by that name",
+    find: (q) => pages().filter((f) => !q.trim() || norm(f.title || f.path).includes(norm(q).trim())),
+    token: (f) => "@" + (f.title || pageTitle(f.path)),
+    label: (f) => [h("span", {}, f.title || pageTitle(f.path)), h("span", { class: "picker-where" }, f.path.slice("docs/gdd/".length).split("/").slice(0, -1).join("/"))],
+  }], onPick: (f, _t, token) => {
     // Remember what this mention brought in, so deleting it takes back that and nothing more: a page
     // that was in the context already stays.
     if (!inContext(f.path)) mentions.push({ token, page: f.path, drop: started() && !A.conv.context.page ? "page" : f.path, wasLeft: A.left.has("page") });
     changeContext({ add: { page: f.path } });
-    grow();
-  }
+  } });
 
   // The pages @mentions added while writing this message: { token, page, drop, wasLeft }.
   let mentions = [];
@@ -241,16 +216,6 @@ export function makeAi(ctx) {
       else changeContext({ drop: m.drop });
     }
   }
-  /** Arrow keys, Enter and Tab work the @ list while it's open. */
-  function mentionKey(ev) {
-    if (mention.classList.contains("hidden")) return false;
-    if (ev.key === "Escape") { ev.preventDefault(); ev.stopPropagation(); dismissed = mentionAt()?.start ?? -1; closeMention(); return true; }
-    if (!picks.length) return false;
-    if (ev.key === "ArrowDown" || ev.key === "ArrowUp") { ev.preventDefault(); at = (at + (ev.key === "ArrowDown" ? 1 : picks.length - 1)) % picks.length; drawMention(); return true; }
-    if (ev.key === "Enter" || ev.key === "Tab") { ev.preventDefault(); pickMention(at); return true; }
-    return false;
-  }
-
   // The passage last selected in the page stays a chip while you type in the box.
   document.addEventListener("selectionchange", () => {
     const sel = window.getSelection();
@@ -379,7 +344,7 @@ export function makeAi(ctx) {
   }
 
   function newConversation() {
-    A.id = null; A.conv = null; A.run = null; A.listOpen = false; A.extra = []; A.left.clear(); mentions = []; picked = []; dismissed = -1; quoted = []; drawQuotes();
+    A.id = null; A.conv = null; A.run = null; A.listOpen = false; A.extra = []; A.left.clear(); mentions = []; picker.reset(); quoted = []; drawQuotes();
     A.mode = A.defaultMode; drawMode();
     localStorage.removeItem(KEY);
     drawHead(); drawLog(); syncSend();
@@ -389,7 +354,7 @@ export function makeAi(ctx) {
     const r = await api("/api/ai/conversation?id=" + encodeURIComponent(id));
     if (!r.ok) { if (id === A.id) newConversation(); return; }
     // Another conversation: the message's mentions were about this one, and it has its own mode.
-    if (id !== A.id) { mentions = []; picked = []; dismissed = -1; }
+    if (id !== A.id) { mentions = []; picker.reset(); }
     if (A.conv?.id !== id) { A.mode = r.settings?.mode || A.defaultMode; drawMode(); } // opened (or first loaded): its own mode
     A.id = id; A.conv = r; A.setupOpen = false;
     queueMicrotask(drawChips); // its own context, not the screen's
@@ -667,7 +632,7 @@ export function makeAi(ctx) {
   /** A page's type, as its type badge says it ("Skill"): from its frontmatter, else its folder's type. */
   function typeName(x) {
     let t = null;
-    try { t = splitFront(x.after ?? x.before ?? "").data?.type || null; } catch {}
+    try { t = splitFront(x.after ?? x.before ?? "").data?.type || null; } catch { /* a header that doesn't parse: no type */ }
     if (!t) t = typeAt(S.types || [], x.page)?.type || null;
     return t ? t.replace(/^./, (c) => c.toUpperCase()) : null;
   }
@@ -834,7 +799,7 @@ export function makeAi(ctx) {
       drawLog(); syncSend();
       return;
     }
-    A.left.clear(); A.extra = []; mentions = []; picked = []; dismissed = -1; // sent: what the mentions added is the conversation's now
+    A.left.clear(); A.extra = []; mentions = []; picker.reset(); // sent: what the mentions added is the conversation's now
     if (r.id !== A.id) { A.id = r.id; localStorage.setItem(KEY, r.id); }
     A.pending = null;
     await openConversation(r.id);
@@ -916,7 +881,6 @@ export function makeAi(ctx) {
   };
 }
 
-const clip = (s, n) => { s = String(s || "").replace(/\s+/g, " ").trim(); return s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s; };
 
 function ago(iso) {
   const s = (Date.now() - Date.parse(iso)) / 1000;

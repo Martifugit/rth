@@ -42,6 +42,10 @@ await test("what counts as tagging R'th AI", () => {
   assert.ok(tagsAi(env, "@rthai check this"));
   assert.ok(!tagsAi(env, "R'th AI said so"));
   assert.ok(!tagsAi(env, "mail me at x@rthai.com"));
+  assert.ok(tagsAi(env, "/ask is this settled?"));
+  assert.ok(tagsAi(env, "  /ASK what about fen rats"));
+  assert.ok(!tagsAi(env, "see /asking for it"));
+  assert.ok(!tagsAi(env, "type /ask in Discord"));
 });
 
 await test("a tag with no Codex to answer: offline, said once; the same tag again is nothing new", async () => {

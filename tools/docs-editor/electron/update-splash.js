@@ -19,7 +19,7 @@ export function showUpdateSplash(version) {
     fs.rmSync(DIR, { recursive: true, force: true });
     fs.mkdirSync(DIR, { recursive: true });
     // Read through Electron's fs (works inside app.asar), written out where PowerShell can reach them.
-    const copy = (from, name) => { try { fs.writeFileSync(path.join(DIR, name), fs.readFileSync(from)); } catch {} };
+    const copy = (from, name) => { try { fs.writeFileSync(path.join(DIR, name), fs.readFileSync(from)); } catch { /* the splash does without it */ } };
     copy(path.join(HERE, "update-splash.ps1"), "splash.ps1");
     copy(path.join(ROOT, "assets", "logo.png"), "logo.png");
     copy(path.join(ROOT, "assets", "logo.ico"), "logo.ico");
@@ -48,5 +48,5 @@ export function showUpdateSplash(version) {
 
 /** The new Codex is on screen: a splash still showing fades out. */
 export function updateSplashDone() {
-  try { if (fs.existsSync(path.join(DIR, "shown"))) fs.writeFileSync(path.join(DIR, "done"), "done"); } catch {}
+  try { if (fs.existsSync(path.join(DIR, "shown"))) fs.writeFileSync(path.join(DIR, "done"), "done"); } catch { /* the splash closes by itself */ }
 }

@@ -53,7 +53,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
   // the conversations.
   const settingsFile = path.join(dir, "..", "ai.json");
   let settings = { use: "auto", model: "", claudeModel: "", claudeEffort: "", mode: "chat", audit: true, answerDiscord: false }; // claude*: defaults for /model and /effort; mode: a new conversation's
-  try { settings = { ...settings, ...JSON.parse(fs.readFileSync(settingsFile, "utf8")) }; } catch {}
+  try { settings = { ...settings, ...JSON.parse(fs.readFileSync(settingsFile, "utf8")) }; } catch { /* no settings yet: the defaults */ }
   const models = () => (settings.model ? [settings.model] : OPENROUTER_MODELS);
   const claudeP = claudeProvider({ repo, claude, systemFile: path.join(dir, "..", "ai-instructions.md") });
   const openP = openRouterProvider({ key: openrouterKey, models });
@@ -76,7 +76,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
     fs.writeFileSync(file, JSON.stringify({ mcpServers: { codex: { type: "stdio", command: process.execPath, args: [script], env } } }, null, 1), "utf8");
     return file;
   }
-  const endTurn = (t) => { turns.delete(t.key); try { fs.rmSync(path.join(dir, "..", "mcp", t.key + ".json"), { force: true }); } catch {} };
+  const endTurn = (t) => { turns.delete(t.key); try { fs.rmSync(path.join(dir, "..", "mcp", t.key + ".json"), { force: true }); } catch { /* already gone */ } };
   let hasClaude = null; // looked for once (Check again in AI setup looks again)
   async function pick() {
     if (settings.use === "openrouter" || process.env.CODEX_AI === "openrouter") return openP;
@@ -294,7 +294,7 @@ export function makeAssistant({ repo, dir, store, emit, pages, read, write, chan
       const msg = { by: "ai", at: new Date().toISOString(), text: answer + note, ...(fixing ? { problem: fixing } : {}) };
       if (res.model) msg.model = res.model;
       // The model Claude Code answered with, for AI setup to name (its default isn't otherwise known).
-      if (res.model && ai.kind !== "openrouter" && settings.lastClaudeModel !== res.model) { settings.lastClaudeModel = res.model; try { fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 1)); } catch {} }
+      if (res.model && ai.kind !== "openrouter" && settings.lastClaudeModel !== res.model) { settings.lastClaudeModel = res.model; try { fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 1)); } catch (e) { console.warn("Codex: saving the AI settings failed:", e.message); } }
       if (posted.length) msg.comments = posted;
       const changes = await compare(before);
       // Its reasons (explain_change, or an edit block's reason=), each kept with the page it's about.
@@ -862,7 +862,7 @@ function claudeProvider({ repo, claude, systemFile }) {
         });
       });
     })();
-    return { done, stop: () => { stopped = true; try { proc?.kill(); } catch {} } };
+    return { done, stop: () => { stopped = true; try { proc?.kill(); } catch { /* already ended */ } } };
   }
 
   /** Claude signs in in its own terminal (its first run asks); the Codex can open one for it. */

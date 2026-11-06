@@ -28,7 +28,7 @@ async function brandedExe() {
   const stamp = JSON.stringify({ version, icon: fs.existsSync(ICON) ? fs.statSync(ICON).mtimeMs : 0 });
 
   let current = null;
-  try { current = fs.readFileSync(stampFile, "utf8"); } catch {}
+  try { current = fs.readFileSync(stampFile, "utf8"); } catch { /* never built: build now */ }
   if (current === stamp && fs.existsSync(exe)) return exe;
 
   console.log(`Making ${NAME}.exe from Electron ${version} (once)...`);

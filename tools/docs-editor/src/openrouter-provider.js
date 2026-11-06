@@ -81,7 +81,7 @@ export function openRouterProvider({ key, models = () => OPENROUTER_MODELS }) {
         convo.push({ role: "assistant", content: got.text || null, tool_calls: got.calls.map((c) => ({ id: c.id, type: "function", function: { name: c.name, arguments: c.args } })) });
         for (const c of got.calls) {
           let args = {};
-          try { args = JSON.parse(c.args || "{}"); } catch {}
+          try { args = JSON.parse(c.args || "{}"); } catch { /* arguments that don't parse: none */ }
           onActivity(describe ? describe(c.name, args) : "Looking things up");
           let out;
           try { out = String(await useTool(c.name, args)); } catch (e) { out = "That didn't work: " + e.message; }
@@ -129,7 +129,7 @@ export function callsInText(text) {
     try {
       const j = JSON.parse(body);
       add(j.name || j.function?.name, j.arguments ?? j.parameters ?? j.function?.arguments ?? {});
-    } catch {}
+    } catch { /* not a tool call written as JSON */ }
   }
   // <invoke name="name"><parameter name="key">value</parameter></invoke>, wrapped or not.
   for (const m of t.matchAll(/<invoke\s+name="([\w.-]+)"\s*>([\s\S]*?)<\/invoke>/gi)) {

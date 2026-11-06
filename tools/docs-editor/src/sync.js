@@ -38,7 +38,7 @@ async function githubSaysDown() {
     const r = await fetch(process.env.CODEX_GITHUB_STATUS || STATUS_URL, { signal: AbortSignal.timeout(4000) });
     const git = (await r.json()).components?.find((c) => c.name === "Git Operations");
     down = !!git && git.status !== "operational";
-  } catch {}
+  } catch { /* GitHub's status page unreachable: assume it's up */ }
   statusSeen = { at: Date.now(), down };
   return down;
 }
@@ -132,7 +132,7 @@ export function makeSync({ repo, git = process.env.CODEX_GIT || "git", emit = ()
 
   const titleOf = (f) => {
     if (f.includes("/templates/")) return path.basename(f, ".md"); // a template's heading is a placeholder ("Title")
-    try { const m = fs.readFileSync(path.join(repo, f), "utf8").match(/^#\s+(.+)$/m); if (m) return m[1].replace(/[*_`]/g, "").trim(); } catch {}
+    try { const m = fs.readFileSync(path.join(repo, f), "utf8").match(/^#\s+(.+)$/m); if (m) return m[1].replace(/[*_`]/g, "").trim(); } catch { /* unreadable: the file name instead */ }
     return path.basename(f).replace(/\.(md|json)$/, "");
   };
 

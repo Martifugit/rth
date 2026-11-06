@@ -2,6 +2,7 @@
 // shown in the main window: Recent changes (who changed which page and where, from git) and To-do
 // (pages to write, and structure to fix).
 
+import { esc, plural } from "./text.js";
 import { slug } from "./links.js";
 import { pagePicker } from "./page-picker.js";
 import { failed } from "./plain-errors.js";
@@ -146,7 +147,6 @@ export function makePanels(ctx) {
   const todoState = { filter: "all", folder: "", open: new Set() };
   const where = (p) => String(p || "").replace(/^docs\/gdd\//, "");
   const folderOf = (p) => where(p).split("/").slice(0, -1).join("/");
-  const plural = (n, one, many = one + "s") => `${n} ${n === 1 ? one : many}`;
   const gddPages = () => S.files.filter((f) => f.path.startsWith("docs/gdd/") && !ctx.isMeta(f.path)).map((f) => ({ path: f.path, title: f.title, note: folderOf(f.path) }));
 
   /** Do a fix: say which pages it changes when it's more than one, do it, offer Undo, and draw the To-do again. */
@@ -172,7 +172,6 @@ export function makePanels(ctx) {
     refresh();
   }
   const refresh = async () => { lists.broken = null; await ctx.loadTree?.(); ctx.countsChanged(); if (S.view === "broken") renderBroken(); };
-  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
   /** A picker that opens in place of a button: pick a page, then `done(page)`. */
   function pickInPlace(label, placeholder, done, cls = "btn") {

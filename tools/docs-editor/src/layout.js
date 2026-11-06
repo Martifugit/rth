@@ -24,7 +24,7 @@ const ICON = {
 export function makeLayout(ctx) {
   const { $, h, notes, help, presence, online } = ctx;
   let saved = {};
-  try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch {}
+  try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch { /* nothing saved, or damaged: the default layout */ }
   const clampW = (pane, v) => Math.round(Math.min(WIDTH[pane].max, Math.max(WIDTH[pane].min, Number(v) || WIDTH[pane].def)));
   const L = { pages: saved.pages !== false, outline: saved.outline !== false, sheet: null, docked: { pages: false, outline: false },
     width: { pages: clampW("pages", saved.widths?.pages), outline: clampW("outline", saved.widths?.outline) } };

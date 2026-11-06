@@ -40,7 +40,7 @@ export async function pinOnly(env, channel, id, previous) {
     const recent = await (await fetch(`${API}/channels/${channel}/messages?limit=10`, { headers: bot(env) })).json();
     for (const m of Array.isArray(recent) ? recent : [])
       if (m.type === 6 && m.message_reference?.message_id === id) await fetch(`${API}/channels/${channel}/messages/${m.id}`, { method: "DELETE", headers: bot(env) });
-  } catch {}
+  } catch { /* tidying Discord's pin notice is optional */ }
 }
 
 /** The bot's latest message in a channel whose text starts with `start` (among the last 100), or null. */

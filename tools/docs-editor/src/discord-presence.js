@@ -39,7 +39,7 @@ export function makePresence({ clientId }) {
         const op = buf.readUInt32LE(0), len = buf.readUInt32LE(4);
         if (buf.length < 8 + len) break;
         let msg = null;
-        try { msg = JSON.parse(buf.subarray(8, 8 + len).toString("utf8")); } catch {}
+        try { msg = JSON.parse(buf.subarray(8, 8 + len).toString("utf8")); } catch { /* not a message Discord sends us: skipped */ }
         buf = buf.subarray(8 + len);
         if (op === 3) s.write(frame(4, msg));
         else if (op === 2) drop();
@@ -50,7 +50,7 @@ export function makePresence({ clientId }) {
   }
 
   function drop() {
-    if (sock) { try { sock.destroy(); } catch {} }
+    if (sock) { try { sock.destroy(); } catch { /* already closed */ } }
     sock = null; ready = false; connecting = false; buf = Buffer.alloc(0);
     if (want) later();
   }

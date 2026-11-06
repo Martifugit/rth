@@ -46,7 +46,8 @@ here (only on this computer for now: offline, or GitHub trouble; hover for why),
   Outline and links pane, and the comments. The choice is kept and holds at any window size. When the
   window is too narrow for a pane, or you have hidden it, its button in the title bar (beside the logo
   for Pages, beside help for the Outline) opens it over the page as a sheet; picking a page or a heading
-  closes it. Ctrl+, toggles Pages, Ctrl+. the Outline (Ctrl+\ and Ctrl+Shift+\ too, on whichever key types \).
+  closes it. Ctrl+, toggles Pages, Ctrl+. the Outline (Ctrl+\ and Ctrl+Shift+\ too, by that key's place);
+  Alt+1, 2 and 3 pick Outline, Links or AI.
   Alt+← and Alt+→ (or the mouse's back button, or the arrows in the page's title bar) go back to where
   you were and forward again.
 - **Pages** (left): the GDD (`docs/gdd/`) and nothing else, with *Recent changes* and *To-do* at the
@@ -61,6 +62,18 @@ here (only on this computer for now: offline, or GitHub trouble; hover for why),
   sent like comments, so a word anyone adds is accepted for everyone.
 - **Search** (the box at the top, Ctrl+P or `/`): pages whose title or name match, then every line
   in every page with those words. Click one to go there, highlighted.
+- **Find and replace** (`src/find-bar.js`, `src/find-all.js`, the rules in `src/find.js`): **Ctrl+F**
+  finds in the page (match case, whole words; Enter and Shift+Enter step), **Ctrl+H** replaces (one, or
+  all as one Ctrl+Z), in the Markdown view too. **Ctrl+Shift+F** finds in all pages, by page, and
+  replaces in the pages ticked (two clicks, Undo in the message after). Across pages only the text
+  changes: never frontmatter, where links point, or code (`/api/find`, `/api/replace`).
+- **Keys:** `?` lists every shortcut, named as your keyboard has them. Shortcuts live in one table
+  (`SHORTCUTS` in `src/app.js`), matched by `src/keys.js`, which knows Norwegian and other layouts
+  (AltGr is Ctrl+Alt there, so headings are Ctrl+Shift+1-6). Ctrl+N makes a page, Ctrl+Shift+D opens
+  the To-do page, Ctrl+Shift+E Recent changes, Ctrl+Shift+M all comments, Alt+Page Down/Up the next or
+  previous comment.
+- **Zoom:** Ctrl and + or - (or the number pad's, or the wheel), Ctrl+0 back; the desktop app shows the
+  zoom at the top right for a moment (`src/zoom-badge.js`).
 - **Editing:** the page is always editable, like a Google Doc, and saves itself a moment after
   you stop typing (Ctrl+S saves at once). The bottom right says when it's saved. Links open on a
   click (Ctrl+K edits one); a link to a page that doesn't exist is red. The **<>** button (top right)
@@ -217,10 +230,10 @@ Comments work as in Google Docs, and never go into the page.
   Page comments sit at the top of the margin, marked "On this page".
 - **Reply, resolve, more:** click a comment to reply. The tick resolves it; ⋮ has edit, attach to the
   selected text, add to the page's Open questions (left unsaved for you to check), move, copy its
-  id, delete. Ctrl+Enter posts.
-- **@RthAI:** tag R'th AI in a thread (here or in Discord: the bot, "@R'th AI" or "@RthAI") and it
-  answers there, tagging you, from an open Codex with Claude that has **Answer @R'th AI in Discord** on in
-  AI setup; only one answers (it claims the tag through the helper, `helper/src/mentions.js`,
+  id, delete. Ctrl+Enter posts. Escape closes the box; with words written it asks you to press it again.
+- **/ask:** start a comment with /ask (offered as you type /) and R'th AI answers in the thread, as /ask
+  does in Discord (in Discord, tagging the bot or writing "@R'th AI" works too). It answers there,
+  tagging you, from an open Codex with Claude that has **AI on Discord** on in AI setup; only one answers (it claims the tag through the helper, `helper/src/mentions.js`,
   `src/discord-answer.js`). With none open, R'th AI says it's offline and answers once one opens. For
   changes, ask in the AI tab (Ctrl+J, or Ask beside a selection).
 - **/ask in any Discord channel** (or **Apps > Ask R'th AI** on a message): the same, outside the
@@ -303,8 +316,9 @@ key; `node scripts/announce.mjs <version>` announces one that's out already).
 - `src/app.js`: the page (TipTap with `tiptap-markdown`, plus fixes noted in the code for where its
   Markdown didn't match the docs); `src/merge.js`: the block-preserving save.
 - Comments: `src/anchor.js` (where a comment belongs, and finding it again), `src/notes-store.js` (the
-  files in `docs/.notes`), `src/notes.js` (the highlights, margin, cards and history), `src/agent-run.js`
-  (running `claude -p` for asks and tasks), `notes.js` (the CLI). `src/links.js` and `src/panels.js`:
+  files in `docs/.notes`), `src/notes.js` (the highlights, margin, cards and history; /ask in a comment is answered by
+  R'th AI through the helper), `notes.js` (the CLI). `src/text-picker.js` and `src/mention-query.js`:
+  the list a text box opens as you type (the AI box's @ pages, a comment's /ask and @agent). `src/links.js` and `src/panels.js`:
   the link index, the Links tab, Recent changes and To-do. `src/layout.js`: the logo's layout menu,
   docked panes and sheets.
 - `public/`: the page shell and its stylesheet; `npm run build` bundles `src/` into `public/app.js`

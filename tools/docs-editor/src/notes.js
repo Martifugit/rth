@@ -1,7 +1,7 @@
 // Comments on the docs, the way Google Docs does them: select text, add a comment, and it sits in
 // the margin beside the passage, which is highlighted. Reply, resolve with the tick, more in the ⋮
-// menu. Comments are between people; Claude is asked in the AI tab (Ctrl+J), not here (older threads
-// with Claude's answers still show them). Mention @agent and it waits for the next agent session. The
+// menu. Comments are between people; start one with /ask and R'th AI answers in its thread (as /ask does in
+// Discord), or ask it in the AI tab (Ctrl+J). Mention @agent and it waits for the next agent session. The
 // comment history (top right) lists every comment across the docs. Closed comments sit in the margin as
 // short cards (two lines and a reply count), or as small markers when the margin is folded ("Hide").
 //
@@ -10,13 +10,15 @@
 // passage again when the page changes.
 //
 // Stored kinds: "note" (a plain comment), "task" (@agent: left for the next agent session), and "ask"
-// (an @Claude question, from before the AI tab). The CLI (notes.js) shows them to agents by those names.
+// (a question for R'th AI: /ask, or @Claude from before the AI tab). The CLI (notes.js) shows them to agents by those names.
 
 import { Extension } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { capture, sectionsOf, locate } from "./anchor.js";
 import { failed } from "./plain-errors.js";
+import { textPicker } from "./text-picker.js";
+import { plural, clip } from "./text.js";
 
 const KEY = new PluginKey("codexComments");
 
@@ -51,8 +53,6 @@ export function makeNotes(ctx) {
     notes: [],
     placed: new Map(),   // id -> { how, from, to }
     active: null,        // the comment whose card is open
-    runs: new Map(),     // id -> { state, text, activity }
-    agent: null,         // { ok, version | error }
     owner: "You",
     drafts: new Map(),   // id -> unsent reply
     draft: null,         // a new comment being written: { anchor, page, from, label }
@@ -253,7 +253,7 @@ export function makeNotes(ctx) {
       const how = id === "draft" ? "exact" : places.get(id)?.how;
       let want = 0;
       if (pos != null && how !== "lost" && how !== "page") {
-        try { want = S.editor.view.coordsAtPos(Math.min(Math.max(pos, 1), S.editor.state.doc.content.size)).top - base - 4; } catch {}
+        try { want = S.editor.view.coordsAtPos(Math.min(Math.max(pos, 1), S.editor.state.doc.content.size)).top - base - 4; } catch { /* a position the page no longer has: keep the old height */ }
       }
       return { el, id, want, h: el.offsetHeight };
     }).sort((a, b) => a.want - b.want);
@@ -368,8 +368,8 @@ export function makeNotes(ctx) {
       const href = a.getAttribute("href") || "";
       if (/^[a-z]+:/i.test(href)) window.open(href, "_blank", "noopener"); else ctx.openDoc(href.replace(/^\.\//, "").split("#")[0]);
     });
-    // "@RthAI", "@Claude" and "@agent" stand out, as mentions do.
-    el.innerHTML = el.innerHTML.replace(/(^|[\s(>])@(RthAI|R['’]th AI|Claude|agent)\b/gi, (m, pre, who) => `${pre}<span class="cm-mention">@${who}</span>`);
+    // "/ask" at the start, and "@RthAI", "@Claude" and "@agent", stand out as mentions do.
+    el.innerHTML = el.innerHTML.replace(/^(<p>)?\/ask\b/i, (m, p) => `${p || ""}<span class="cm-mention">/ask</span>`).replace(/(^|[\s(>])@(RthAI|R['’]th AI|Claude|agent)\b/gi, (m, pre, who) => `${pre}<span class="cm-mention">@${who}</span>`);
     return el;
   }
 
@@ -382,7 +382,6 @@ export function makeNotes(ctx) {
   }
 
   const plain = (text) => { const d = document.createElement("div"); d.innerHTML = ctx.renderHtml(text || ""); return d.textContent.replace(/\s+/g, " ").trim(); };
-  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
   /** Where the comment is, when it isn't simply on a passage that's highlighted. */
   function whereLine(n) {
@@ -404,12 +403,11 @@ export function makeNotes(ctx) {
 
   /** A closed comment: who, two lines of it, and how its thread stands. */
   function compact(n) {
-    const first = n.thread[0], replies = n.thread.length - 1, run = N.runs.get(n.id);
+    const first = n.thread[0], replies = n.thread.length - 1;
     const last = n.thread[n.thread.length - 1];
     const foot = [];
     if (replies) foot.push(h("span", { class: "cm-count" }, plural(replies, "reply", "replies")), h("span", { class: "cm-last" }, "· last from " + person(last.by, last.who).name));
     if (n.status === "answered") foot.push(h("span", { class: "cm-new" }, "New answer"));
-    if (run) foot.push(h("span", { class: "cm-busy" }, h("span", { class: "dots" }, h("i"), h("i"), h("i")), "R'th AI is answering"));
     return h("div", { class: "cm-card compact" + (n.status === "answered" ? " new" : ""), "data-id": n.id, onclick: openOnClick(n),
       onmouseenter: () => hover(n.id), onmouseleave: () => hover(null) },
       whereLine(n),
@@ -423,7 +421,7 @@ export function makeNotes(ctx) {
   function marker(n) {
     const replies = n.thread.length - 1;
     return h("button", {
-      class: "cm-marker" + (n.status === "answered" ? " new" : "") + (N.runs.has(n.id) ? " busy" : ""), "data-id": n.id,
+      class: "cm-marker" + (n.status === "answered" ? " new" : ""), "data-id": n.id,
       title: clip(plain(n.thread[0].text), 120) + (replies ? `  (${plural(replies, "reply", "replies")})` : ""),
       onclick: (ev) => { ev.stopPropagation(); open(n.id); },
     }, h("span", { class: "cm-marker-ico", html: ICON.bubble }), replies ? h("span", { class: "cm-marker-n" }, String(replies + 1)) : null);
@@ -446,8 +444,6 @@ export function makeNotes(ctx) {
   /** The open comment: the comment, then its replies as one indented thread. Its passage is lit in the
    *  page and joined to it by a line (link()), so it isn't quoted here. */
   function card(n) {
-    const p = N.placed.get(n.id);
-    const run = N.runs.get(n.id);
     const first = n.thread[0];
     const replies = n.thread.slice(1).map((e, i) => ({ e, i: i + 1 }));
     const fold = replies.length > 3 && !N.allReplies.has(n.id);
@@ -462,14 +458,9 @@ export function makeNotes(ctx) {
       body(first.text, n.id + ":0"),
       edits(first),
       assignedLine(n),
-      h("div", { class: "cm-replies" + (replies.length || run ? "" : " empty") },
+      h("div", { class: "cm-replies" + (replies.length ? "" : " empty") },
         fold ? h("button", { class: "cm-link cm-earlier", onclick: (ev) => { ev.stopPropagation(); N.allReplies.add(n.id); render(); } }, `Show ${plural(replies.length - 2, "earlier reply", "earlier replies")}`) : null,
         shown.map(({ e, i }) => h("div", { class: "cm-reply" }, head(e, null, true), body(e.text, n.id + ":" + i), edits(e))),
-        run ? h("div", { class: "cm-reply" }, head({ by: "agent", at: new Date().toISOString() }, null, true),
-          run.text ? h("div", { class: "cm-text streaming", html: ctx.renderHtml(run.text) }) : null,
-          h("div", { class: "cm-typing" }, h("span", { class: "dots" }, h("i"), h("i"), h("i")),
-            run.state === "queued" ? "Waiting for another answer to finish" : run.activity || "Thinking",
-            h("button", { class: "cm-link", onclick: (ev) => { ev.stopPropagation(); api(`/api/notes/${n.id}/stop`, { method: "POST" }); } }, "Stop"))) : null,
         h("div", { class: "cm-others-typing" + (ctx.othersTyping?.(n.id) ? "" : " hidden"), "data-for": n.id }, ctx.othersTyping?.(n.id) || ""),
         replyBox(n)));
   }
@@ -487,64 +478,53 @@ export function makeNotes(ctx) {
 
   // ----------------------------------------------------------------------------- writing
 
-  /** A comment box: text with @-mentions, "Assign to Claude" once Claude is mentioned, two buttons. */
-  function editor({ key, placeholder, submitLabel, onSubmit, onCancel, initial = "", allowAssign = true }) {
+  /**
+   * A comment box and its two buttons. Start it with /ask and R'th AI answers in the thread; @agent leaves
+   * it for the next agent session. Both are offered as you type (src/text-picker.js). Escape with words
+   * written asks once ("Esc again to discard") rather than throwing them away.
+   */
+  function editor({ key, placeholder, submitLabel, onSubmit, onCancel, initial = "" }) {
     const ta = h("textarea", { class: "cm-input", rows: "1", placeholder, "data-key": key, spellcheck: "true" });
     ta.value = initial;
-    const assign = h("input", { type: "checkbox" });
-    const assignRow = h("label", { class: "cm-assign hidden", title: "R'th AI may edit pages under docs/ to do what this asks" }, assign, "Assign to R'th AI");
-    const warn = h("div", { class: "cm-warn hidden" });
-    const pop = h("div", { class: "cm-mentions hidden" });
+    const hint = h("div", { class: "cm-hint hidden" });
+    const pop = h("div", { class: "cm-mentions picker hidden" });
     const submit = h("button", { class: "btn btn-gold btn-small", disabled: true, onclick: (ev) => { ev.stopPropagation(); go(); } }, submitLabel);
     const cancel = h("button", { class: "cm-cancel", onclick: (ev) => { ev.stopPropagation(); onCancel(); } }, "Cancel");
-    // @agent only: Claude is asked in the AI tab (PLAN.md, "AI, built in"), so @Claude points there.
-    const mentions = () => ({ claude: false, agent: /(^|\s)@agent\b/i.test(ta.value) });
-    const askedClaude = () => /(^|\s)@claude\b/i.test(ta.value);
+    const asksAi = () => /^\s*\/ask\b/i.test(ta.value);
+    const forAgent = () => /(^|\s)@agent\b/i.test(ta.value);
+    let discarding = null; // the timer while "Esc again to discard" shows
+    const say = (text) => { hint.textContent = text || ""; hint.classList.toggle("hidden", !text); };
     const refresh = () => {
       ta.style.height = "auto"; ta.style.height = Math.min(220, ta.scrollHeight + 2) + "px";
-      const m = mentions();
-      assignRow.classList.toggle("hidden", !(allowAssign && m.claude));
-      warn.classList.toggle("hidden", !askedClaude());
-      warn.textContent = "Tag @RthAI to have R'th AI answer in this thread, or ask it in the AI tab (Ctrl+J).";
       submit.disabled = !ta.value.trim();
-      submit.textContent = m.claude && N.agent?.ok ? (assign.checked ? "Assign" : "Ask R'th AI") : m.agent ? "Assign" : submitLabel;
+      submit.textContent = asksAi() ? "Ask R'th AI" : forAgent() ? "Assign" : submitLabel;
+      if (!discarding) say(asksAi() ? "R'th AI answers in this thread, from a Codex with Claude that has AI on Discord on." : "");
       layout();
     };
-    let picks = [], sel = 0;
-    const word = () => { const m = ta.value.slice(0, ta.selectionStart).match(/(^|\s)@(\w*)$/); return m ? m[2] : null; };
-    const showPop = () => {
-      const w = word();
-      const all = [["RthAI", "answers in the thread (an open Codex with Claude)"], ["agent", "picks it up in the next agent session"]];
-      picks = w === null ? [] : all.filter(([n]) => n.toLowerCase().startsWith(w.toLowerCase()));
-      pop.classList.toggle("hidden", !picks.length);
-      sel = Math.min(sel, Math.max(0, picks.length - 1));
-      pop.replaceChildren(...picks.map(([n, d], i) => h("div", { class: "cm-mention-item" + (i === sel ? " sel" : ""), onmousedown: (ev) => { ev.preventDefault(); pick(i); } },
-        h("span", { class: "cm-avatar small " + (n === "RthAI" ? "claude" : "agent") }, n === "RthAI" ? "R" : n[0].toUpperCase()), h("b", {}, n), h("span", {}, d))));
-    };
-    const pick = (i) => {
-      const [n] = picks[i];
-      const before = ta.value.slice(0, ta.selectionStart).replace(/@\w*$/, "@" + n + " ");
-      ta.value = before + ta.value.slice(ta.selectionStart);
-      ta.setSelectionRange(before.length, before.length);
-      picks = []; pop.classList.add("hidden");
-      refresh();
-    };
-    const go = () => {
-      if (!ta.value.trim()) return;
-      const m = mentions();
-      onSubmit({ text: ta.value.trim(), claude: m.claude, agent: m.agent, assign: assign.checked && m.claude });
-    };
-    ta.addEventListener("input", () => { refresh(); showPop(); });
+    const item = (avatar, cls, name, what) => [h("span", { class: "cm-avatar small " + cls }, avatar), h("b", {}, name), h("span", {}, what)];
+    const picker = textPicker({ h, input: ta, pop, triggers: [
+      { char: "/", startOnly: true, none: "Only /ask: R'th AI answers in the thread",
+        find: (q) => ("ask".startsWith(q.toLowerCase()) ? ["ask"] : []), token: () => "/ask",
+        label: () => item("R", "claude", "/ask", "R'th AI answers in the thread") },
+      { char: "@", none: "Only @agent here",
+        find: (q) => ("agent".startsWith(q.toLowerCase()) ? ["agent"] : []), token: () => "@agent",
+        label: () => item("A", "agent", "@agent", "picks it up in the next agent session") },
+    ] });
+    const go = () => { if (ta.value.trim()) onSubmit({ text: ta.value.trim(), ask: asksAi(), agent: forAgent() }); };
+    function escape() {
+      if (!ta.value.trim() || ta.value === initial || discarding) { clearTimeout(discarding); onCancel(); return; }
+      say("Press Esc again to discard what you wrote.");
+      discarding = setTimeout(() => { discarding = null; refresh(); }, 3000);
+    }
+    ta.addEventListener("input", () => { if (discarding) { clearTimeout(discarding); discarding = null; } refresh(); });
     ta.addEventListener("keydown", (ev) => {
       ev.stopPropagation();
-      if (picks.length && (ev.key === "ArrowDown" || ev.key === "ArrowUp")) { ev.preventDefault(); sel = (sel + (ev.key === "ArrowDown" ? 1 : picks.length - 1)) % picks.length; showPop(); return; }
-      if (picks.length && (ev.key === "Enter" || ev.key === "Tab")) { ev.preventDefault(); pick(sel); return; }
-      if (ev.key === "Escape") { ev.preventDefault(); if (picks.length) { picks = []; pop.classList.add("hidden"); } else onCancel(); return; }
+      if (picker.key(ev)) return;
+      if (ev.key === "Escape") { ev.preventDefault(); escape(); return; }
       if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) { ev.preventDefault(); go(); }
     });
-    assign.addEventListener("change", refresh);
     setTimeout(refresh, 0);
-    return { el: h("div", { class: "cm-editor", onclick: (ev) => ev.stopPropagation() }, h("div", { class: "cm-input-wrap" }, ta, pop), assignRow, warn, h("div", { class: "cm-actions" }, cancel, submit)), focus: () => ta.focus() };
+    return { el: h("div", { class: "cm-editor", onclick: (ev) => ev.stopPropagation() }, h("div", { class: "cm-input-wrap" }, ta, pop), hint, h("div", { class: "cm-actions" }, cancel, submit)), focus: () => ta.focus() };
   }
 
   function draftCard() {
@@ -552,16 +532,13 @@ export function makeNotes(ctx) {
       key: "draft", placeholder: N.draft?.wholePage ? "Comment on this page" : "Comment", submitLabel: "Comment",
       initial: N.draft?.text || "", // a comment that couldn't be posted comes back with its words
       onCancel: () => { N.draft = null; draw(); render(); },
-      onSubmit: async ({ text, claude, agent, assign }) => {
-        const kind = assign || (agent && !claude) ? "task" : claude ? "ask" : "note";
-        const run = claude && N.agent?.ok;
+      onSubmit: async ({ text, ask, agent }) => {
+        const kind = ask ? "ask" : agent ? "task" : "note";
         const d = N.draft;
-        if (run && assign && d.page === S.path && !(await ctx.saveNow())) return;
         N.draft = null;
-        const r = await api("/api/notes", { method: "POST", body: JSON.stringify({ page: d.page, kind, text, anchor: d.anchor, run }) });
+        const r = await api("/api/notes", { method: "POST", body: JSON.stringify({ page: d.page, kind, text, anchor: d.anchor }) });
         // Not posted (the helper or Discord down, say): the draft and its words come back, to try again.
         if (!r.ok) { N.draft = { ...d, text }; toast(failed("Couldn't post the comment, so it's kept here to try again", r), "bad"); draw(); render(); return; }
-        if (r.runError) toast(r.runError, "bad");
         N.active = r.note.id;
         if (d.page === S.path) { N.notes.push(r.note); place(true); }
         ctx.notesChanged();
@@ -572,21 +549,15 @@ export function makeNotes(ctx) {
   }
 
   function replyBox(n) {
-    const running = N.runs.has(n.id);
     const ed = editor({
-      key: "reply-" + n.id, placeholder: running ? "R'th AI is answering…" : "Reply", submitLabel: "Reply",
+      key: "reply-" + n.id, placeholder: "Reply", submitLabel: "Reply",
       initial: N.drafts.get(n.id) || "",
       onCancel: () => { N.drafts.delete(n.id); N.active = null; draw(); render(); },
-      onSubmit: async ({ text, claude, assign }) => {
-        // A reply to Claude carries on the conversation without naming it again.
-        const talkingToClaude = false; // Claude is asked in the AI tab now
-        const run = talkingToClaude && N.agent?.ok && !running;
-        if (run && (assign || n.kind === "task") && N.page === S.path && !(await ctx.saveNow())) return; // Claude edits the saved page
-        if (assign && n.kind !== "task") await api("/api/notes/" + n.id, { method: "PATCH", body: JSON.stringify({ kind: "task" }) });
-        else if (claude && n.kind === "note") await api("/api/notes/" + n.id, { method: "PATCH", body: JSON.stringify({ kind: "ask" }) });
-        const r = await api(`/api/notes/${n.id}/reply`, { method: "POST", body: JSON.stringify({ text, run }) });
+      onSubmit: async ({ text, ask, agent }) => {
+        if (ask && n.kind === "note") await api("/api/notes/" + n.id, { method: "PATCH", body: JSON.stringify({ kind: "ask" }) });
+        else if (agent && n.kind === "note") await api("/api/notes/" + n.id, { method: "PATCH", body: JSON.stringify({ kind: "task" }) });
+        const r = await api(`/api/notes/${n.id}/reply`, { method: "POST", body: JSON.stringify({ text }) });
         if (!r.ok) { toast(failed("Couldn't send the reply", r), "bad"); return; }
-        if (r.runError) toast(r.runError, "bad");
         N.drafts.delete(n.id);
         await reload();
       },
@@ -644,6 +615,17 @@ export function makeNotes(ctx) {
     if (p && p.from != null && p.how !== "lost") ctx.scrollToPos(p.from, true);
   }
 
+  /** The next (d = 1) or previous comment on the page, opened (Alt+Page Down / Page Up). */
+  function step(d) {
+    const at = (n) => N.placed.get(n.id)?.from;
+    const list = visible().filter((n) => at(n) != null).sort((a, b) => at(a) - at(b));
+    if (!list.length) return toast("No comments on this page");
+    const i = list.findIndex((n) => n.id === N.active);
+    const next = list[i < 0 ? (d > 0 ? 0 : list.length - 1) : (i + d + list.length) % list.length];
+    focus(next.id);
+    ctx.scrollToPos?.(at(next), true);
+  }
+
   async function focus(id, page) {
     if (page && page !== S.path) { await ctx.openDoc(page); await N.loading; }
     N.active = null;
@@ -693,7 +675,7 @@ export function makeNotes(ctx) {
     const el = rail().querySelector(`[data-id="${n.id}"] .cm-text`);
     if (!el) return;
     const ed = editor({
-      key: "edit-" + n.id, placeholder: "", submitLabel: "Save", initial: n.thread[0].text, allowAssign: false,
+      key: "edit-" + n.id, placeholder: "", submitLabel: "Save", initial: n.thread[0].text,
       onCancel: () => render(),
       onSubmit: async ({ text }) => { await api("/api/notes/" + n.id, { method: "PATCH", body: JSON.stringify({ text }) }); await reload(); },
     });
@@ -826,24 +808,6 @@ export function makeNotes(ctx) {
 
   // ----------------------------------------------------------------------------- live events
 
-  function onRun(ev) {
-    if (ev.state === "done") {
-      N.runs.delete(ev.id);
-      if (ev.error && ev.error !== "stopped") toast("R'th AI stopped: " + ev.error, "bad");
-      return; // the notes event that follows brings the answer
-    }
-    const first = !N.runs.has(ev.id);
-    N.runs.set(ev.id, ev);
-    const el = rail()?.querySelector(`[data-id="${ev.id}"]`);
-    if (!el || first) { render(); return; }
-    // Update just the streaming text, so typing elsewhere isn't disturbed.
-    const n = N.notes.find((x) => x.id === ev.id);
-    if (n && n.id === N.active) {
-      const old = el.querySelector(".cm-typing")?.parentElement, now = card(n).querySelector(".cm-typing")?.parentElement;
-      if (old && now) { old.replaceWith(now); layout(); } else render();
-    }
-  }
-
   let notesTimer = null;
   function onNotes(ev) {
     clearTimeout(notesTimer);
@@ -856,11 +820,8 @@ export function makeNotes(ctx) {
   async function init() {
     const r = await api("/api/agent");
     // A server started before comments existed serves this page but not the comments.
-    if (!r.ok || !("agent" in r)) { N.outdated = true; outdated(); }
-    N.agent = r.agent || null;
+    if (!r.ok || !("owner" in r)) { N.outdated = true; outdated(); }
     N.owner = r.owner || "You";
-    for (const run of r.runs || []) N.runs.set(run.id, run);
-    if (!N.agent) setTimeout(async () => { const again = await api("/api/agent"); N.agent = again.agent; }, 4000);
     let t = null;
     document.addEventListener("selectionchange", () => { clearTimeout(t); t = setTimeout(showAdd, 150); });
     $("#scroller").addEventListener("scroll", () => { if (!addBtn.classList.contains("hidden")) showAdd(); }, { passive: true });
@@ -885,7 +846,7 @@ export function makeNotes(ctx) {
   }
 
   return {
-    init, load, place, saved, compose, onRun, onNotes, docChanged, layout, focus, toggleMargin, placeDialog,
+    init, load, place, saved, compose, onNotes, docChanged, layout, focus, step, toggleHistory, toggleMargin, placeDialog,
     escape: () => { if (N.draft) { N.draft = null; draw(); render(); return true; } if (N.history.open) { toggleHistory(); return true; } if (N.active) { N.active = null; draw(); render(); return true; } return false; },
     target,
     /** Who's signed in with Discord (src/account-button.js), for drafts; null when nobody is. */
@@ -896,7 +857,6 @@ export function makeNotes(ctx) {
 
 // ----------------------------------------------------------------------------- helpers
 
-function clip(s, n) { s = String(s).replace(/\s+/g, " ").trim(); return s.length > n ? s.slice(0, n - 1) + "…" : s; }
 
 function when(iso) {
   const d = new Date(iso), now = new Date();

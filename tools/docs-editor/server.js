@@ -12,7 +12,6 @@ import crypto from "node:crypto";
 import { execFile } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { makeStore } from "./src/notes-store.js";
-import { makeRunner } from "./src/agent-run.js";
 import { makeAssistant } from "./src/assistant.js";
 import { makeAccount } from "./src/discord-account.js";
 import { makeOpenRouterAccount } from "./src/openrouter-account.js";
@@ -36,6 +35,7 @@ import { buildGdd, runQuery, checks, labelFor } from "./src/gdd-index.js";
 import { makeSync } from "./src/sync.js";
 import { makeAuditor } from "./src/audit.js";
 import { makeDiscordAnswers } from "./src/discord-answer.js";
+import { findInMarkdown, replaceInMarkdown, lineOf } from "./src/find.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 // The repository the Codex works on: the one it sits in, or CODEX_REPO (checks use a throwaway copy).
@@ -86,7 +86,7 @@ async function walk(dir, out) {
 
 async function allDocs() {
   const files = [];
-  for (const r of ROOTS) { try { await walk(path.join(REPO, r), files); } catch {} }
+  for (const r of ROOTS) { try { await walk(path.join(REPO, r), files); } catch { /* a root that doesn't exist in this copy */ } }
   return files;
 }
 
@@ -135,7 +135,7 @@ const ownerName = () => owner ?? new Promise((resolve) => execFile(process.env.C
 const DATA = process.env.CODEX_DATA ? path.resolve(process.env.CODEX_DATA) : path.join(HERE, ".local");
 // Who's using this Codex (Sign in with Discord, through the helper): src/discord-account.js. Signing in
 // or out moves the comments between the Discord forum and docs/.notes/.
-const account = await makeAccount({ dir: DATA, contributor: process.env.CODEX_CONTRIBUTOR === "1", emit: (type, data) => { broadcast(type, data); if (type === "account") { try { store.reset(); } catch {} try { joinRoom(); } catch {} } } });
+const account = await makeAccount({ dir: DATA, contributor: process.env.CODEX_CONTRIBUTOR === "1", emit: (type, data) => { broadcast(type, data); if (type === "account") { try { store.reset(); } catch { /* nothing to reset */ } try { joinRoom(); } catch (e) { console.warn("Codex: joining the room failed:", e.message); } } } });
 // Sign in with OpenRouter: free AI for anyone without Claude on their computer (src/openrouter-account.js).
 const openrouter = await makeOpenRouterAccount({ dir: DATA, emit: (type, data) => broadcast(type, data) });
 // Comments: in the Discord forum when signed in, in docs/.notes/ when not (src/comment-store.js). On
@@ -167,8 +167,6 @@ function joinRoom() {
 }
 setTimeout(joinRoom); // once the engine is set up (its events go to the page)
 const presence = makePresence({ clientId: process.env.CODEX_DISCORD_APP || "1567232969637109922" });
-const runner = makeRunner({ repo: REPO, store, emit: (type, data) => broadcast(type, data) });
-runner.check().then((a) => console.log(a.ok ? `Agents: ${a.version}` : `Agents: off (${a.error})`));
 let engineBase = null; // http://127.0.0.1:<port>, once listening (startServer)
 let assistant = null;
 assistant = makeAssistant({
@@ -183,7 +181,7 @@ assistant = makeAssistant({
     if (text === null) { await fsp.rm(abs, { force: true }); return; }
     await fsp.mkdir(path.dirname(abs), { recursive: true });
     let eol = "\n";
-    try { if ((await fsp.readFile(abs, "utf8")).includes("\r\n")) eol = "\r\n"; } catch {}
+    try { if ((await fsp.readFile(abs, "utf8")).includes("\r\n")) eol = "\r\n"; } catch { /* a new file: LF */ }
     const tmp = abs + ".codex-tmp";
     await fsp.writeFile(tmp, eol === "\r\n" ? text.replace(/\n/g, "\r\n") : text, "utf8");
     await fsp.rename(tmp, abs);
@@ -369,7 +367,7 @@ function changed(rel) {
     const events = [];
     for (const f of files) {
       let h = null;
-      try { h = hash(await readText(path.join(REPO, f))); } catch {}
+      try { h = hash(await readText(path.join(REPO, f))); } catch { /* gone: no hash */ }
       const own = recentWrites.get(f);
       if (h && own && own.hash === h && Date.now() < own.until) continue;
       events.push({ path: f, hash: h });
@@ -400,7 +398,7 @@ function notesChanged(file) {
     const page = store.pageFor(file);
     if (page === undefined) return;
     let text = null;
-    try { text = await fsp.readFile(path.join(REPO, file), "utf8"); } catch {}
+    try { text = await fsp.readFile(path.join(REPO, file), "utf8"); } catch { /* gone: nothing to read */ }
     const own = store.lastWrites();
     if (own.has(file) && own.get(file) === text) { own.delete(file); return; }
     broadcast("notes", { page });
@@ -455,17 +453,10 @@ const api = {
     if (!abs || !isDoc(rel)) return [400, { error: "can only write documents under docs/" }];
     if (typeof content !== "string") return [400, { error: "no content" }];
     let current = null;
-    try { current = await readText(abs); } catch {}
+    try { current = await readText(abs); } catch { /* a new page */ }
     if (current !== null && baseHash && hash(current) !== baseHash && !force)
       return [409, { error: "changed on disk", content: current.replace(/\r\n/g, "\n"), hash: hash(current) }];
-    const text = eol === "\r\n" ? content.replace(/\n/g, "\r\n") : content;
-    const tmp = abs + ".codex-tmp";
-    await fsp.writeFile(tmp, text, "utf8");
-    await fsp.rename(tmp, abs);
-    const h = hash(text);
-    recentWrites.set(relOf(abs), { hash: h, until: Date.now() + 3000 });
-    syncer.saved(relOf(abs));
-    return { ok: true, hash: h };
+    return { ok: true, hash: await writeDoc(abs, content, eol) };
   },
 
   async "POST /api/new"(url, req) {
@@ -479,7 +470,7 @@ const api = {
     const t = system.types.find((x) => x.type === type) || null;
     // Made from its type's template (templates/<type>.md); a type with no template yet gets its core headings.
     let text = null;
-    if (type && /^[a-z-]+$/.test(type)) { try { text = fromTemplate(await readText(path.join(REPO, TEMPLATES, type + ".md")), name); } catch {} }
+    if (type && /^[a-z-]+$/.test(type)) { try { text = fromTemplate(await readText(path.join(REPO, TEMPLATES, type + ".md")), name); } catch { /* no such template: the plain new page */ } }
     if (text == null) text = newPageText(name, t, makeFront);
     // The components picked at creation (usually none): their sections from templates/<component>.md, in the canonical order.
     const names = (Array.isArray(picked) ? picked : []).filter((c) => typeof c === "string" && system.components.some((x) => x.name === c));
@@ -522,7 +513,7 @@ const api = {
     await write(b, moved);
     if (from !== to) {
       await fsp.rm(a);
-      try { const dir = path.dirname(a); if (dir.startsWith(path.join(REPO, "docs") + path.sep) && !(await fsp.readdir(dir)).length) await fsp.rmdir(dir); } catch {}
+      try { const dir = path.dirname(a); if (dir.startsWith(path.join(REPO, "docs") + path.sep) && !(await fsp.readdir(dir)).length) await fsp.rmdir(dir); } catch { /* not empty, or gone: left */ }
     }
     const rewritten = [];
     if (from !== to) {
@@ -564,7 +555,7 @@ const api = {
     try { text = await fsp.readFile(abs, "utf8"); } catch { return [404, { error: "No such page." }]; }
     await fsp.rm(abs);
     // A folder left empty goes too (git doesn't keep empty folders anyway).
-    try { const dir = path.dirname(abs); if (dir.startsWith(path.join(REPO, "docs") + path.sep) && !(await fsp.readdir(dir)).length) await fsp.rmdir(dir); } catch {}
+    try { const dir = path.dirname(abs); if (dir.startsWith(path.join(REPO, "docs") + path.sep) && !(await fsp.readdir(dir)).length) await fsp.rmdir(dir); } catch { /* not empty, or gone: left */ }
     index = null;
     syncer.saved(relOf(abs), { soon: true });
     return { ok: true, path: relOf(abs), content: text };
@@ -599,14 +590,10 @@ const api = {
   },
 
   async "POST /api/notes"(url, req) {
-    const { page = null, kind, text, anchor, run } = await body(req);
+    const { page = null, kind, text, anchor } = await body(req);
     if (page && !(safe(page) && page.endsWith(".md"))) return [400, { error: "notes go on pages" }];
     if (!text || !String(text).trim()) return [400, { error: "an empty note" }];
     const made = await store.create(page, { kind, text, anchor });
-    if (run && !made.note.pending && (made.note.kind === "ask" || made.note.kind === "task")) { // a waiting comment isn't in Discord yet
-      const r = await runner.start(made.note.id);
-      if (r.error) made.runError = r.error;
-    }
     return made;
   },
 
@@ -744,7 +731,7 @@ const api = {
   },
   async "GET /api/sync/base"(url) { return { text: await syncer.base(url.searchParams.get("page") || "") }; },
 
-  async "GET /api/agent"() { return { ...runner.status(), owner: await ownerName() }; },
+  async "GET /api/agent"() { return { owner: await ownerName() }; }, // who "You" is in comments
 
   async "GET /api/links"(url) {
     const page = url.searchParams.get("page");
@@ -842,7 +829,7 @@ const api = {
     for (const { path: rel, before, after } of done) {
       const abs = safe(rel);
       let now = null;
-      try { now = await readText(abs); } catch {}
+      try { now = await readText(abs); } catch { /* gone since */ }
       if (now !== after) { skipped.push(rel); continue; }
       await fsp.writeFile(abs, before, "utf8");
       recentWrites.set(rel, { hash: hash(before), until: Date.now() + 3000 });
@@ -865,7 +852,7 @@ const api = {
     for (const [p, text] of idx.texts) {
       if (!inGdd(p)) continue;
       let mtime = null;
-      try { mtime = (await fsp.stat(path.join(REPO, p))).mtimeMs; } catch {}
+      try { mtime = (await fsp.stat(path.join(REPO, p))).mtimeMs; } catch { /* gone: no time */ }
       pages.push({ path: p, title: idx.titles.get(p), ...pageState(text), git: status[p] || null, notes: counts[p] || null, mtime });
     }
     pages.sort((a, b) => a.path.localeCompare(b.path, "en", { numeric: true }));
@@ -916,20 +903,86 @@ const api = {
     results.sort((a, b) => (b.nameHit - a.nameHit) || (b.count - a.count));
     return { results: results.slice(0, 60), total };
   },
+
+  // Find in all pages (src/find-all.js): the pages' text only (src/find.js), and Replace in them.
+  async "GET /api/find"(url) {
+    const q = url.searchParams.get("q") || "";
+    const opts = { matchCase: url.searchParams.get("case") === "1", wholeWord: url.searchParams.get("word") === "1" };
+    if (!q.trim()) return { results: [], total: 0 };
+    const results = [];
+    let total = 0;
+    for (const file of await findablePages()) {
+      const md = (await readText(path.join(REPO, file))).replace(/\r\n/g, "\n");
+      const hits = findInMarkdown(md, q, opts);
+      if (!hits.length) continue;
+      total += hits.length;
+      results.push({ path: file, count: hits.length, hits: hits.slice(0, 20).map((m) => ({ ...lineOf(md, m.start), len: m.end - m.start })) });
+    }
+    results.sort((a, b) => b.count - a.count || a.path.localeCompare(b.path));
+    return { results, total };
+  },
+  async "POST /api/replace"(url, req) {
+    if (!account.canEdit()) return [403, { error: "Sign in with Discord (with the Codex role) to edit." }];
+    const { q, with: replacement = "", matchCase = false, wholeWord = false, pages = [] } = await body(req);
+    if (!q) return [400, { error: "nothing to find" }];
+    const findable = new Set(await findablePages());
+    const done = [], before = new Map();
+    for (const file of pages) {
+      if (!findable.has(file)) continue;
+      const abs = path.join(REPO, file);
+      const raw = await readText(abs);
+      const r = replaceInMarkdown(raw.replace(/\r\n/g, "\n"), q, replacement, { matchCase, wholeWord });
+      if (!r.count) continue;
+      before.set(file, raw);
+      done.push({ path: file, count: r.count, hash: await writeDoc(abs, r.text, raw.includes("\r\n") ? "\r\n" : "\n") });
+    }
+    // Undo puts back what each page was, if nobody has changed it since.
+    lastReplace = { id: crypto.randomUUID(), before, after: new Map(done.map((d) => [d.path, d.hash])) };
+    return { ok: true, pages: done, count: done.reduce((n, d) => n + d.count, 0), undo: lastReplace.id };
+  },
+  async "POST /api/replace/undo"(url, req) {
+    const { id } = await body(req);
+    if (!lastReplace || lastReplace.id !== id) return [409, { error: "That replace can't be undone any more." }];
+    const kept = [];
+    for (const [file, raw] of lastReplace.before) {
+      const abs = path.join(REPO, file);
+      if (hash(await readText(abs)) !== lastReplace.after.get(file)) { kept.push(file); continue; } // changed since: left as it is
+      await writeDoc(abs, raw.replace(/\r\n/g, "\n"), raw.includes("\r\n") ? "\r\n" : "\n");
+    }
+    lastReplace = null;
+    return { ok: true, kept };
+  },
 };
+
+/** The pages Find in all pages looks through: the docs, not the templates (New page uses those). */
+async function findablePages() {
+  return (await allDocs()).filter((f) => isDoc(f) && !f.startsWith(TEMPLATES + "/"));
+}
+let lastReplace = null; // { id, before: Map(page → text), after: Map(page → hash) }
+
+/** Write a page as every save does: whole or not at all, in its own line endings, then shared. */
+async function writeDoc(abs, content, eol) {
+  const text = eol === "\r\n" ? content.replace(/\n/g, "\r\n") : content;
+  const tmp = abs + ".codex-tmp";
+  await fsp.writeFile(tmp, text, "utf8");
+  await fsp.rename(tmp, abs);
+  const h = hash(text);
+  recentWrites.set(relOf(abs), { hash: h, until: Date.now() + 3000 });
+  syncer.saved(relOf(abs));
+  return h;
+}
 
 async function noteApi(req, id, action) {
   const m = req.method;
   const missing = [404, { error: "no such note" }];
   if (!action && m === "GET") return (await store.find(id)) || missing;
   if (!action && m === "PATCH") return (await store.update(id, await body(req))) || missing;
-  if (!action && m === "DELETE") { runner.stop(id); return (await store.remove(id)) ? { ok: true } : missing; }
+  if (!action && m === "DELETE") { return (await store.remove(id)) ? { ok: true } : missing; }
   if (action === "reply" && m === "POST") {
-    const { text, run, status } = await body(req);
+    const { text, status } = await body(req);
     if (!text || !String(text).trim()) return [400, { error: "an empty reply" }];
     const done = await store.reply(id, { by: "owner", text, status });
     if (!done) return missing;
-    if (run && !done.note?.pending) { const r = await runner.start(id); if (r.error) done.runError = r.error; }
     return done;
   }
   if (action === "move" && m === "POST") {
@@ -937,8 +990,6 @@ async function noteApi(req, id, action) {
     if (page && !(safe(page) && page.endsWith(".md"))) return [400, { error: "not a page" }];
     return (await store.move(id, page)) || missing;
   }
-  if (action === "run" && m === "POST") { const r = await runner.start(id); return r.error ? [409, r] : r; }
-  if (action === "stop" && m === "POST") return { ok: runner.stop(id) };
   return [405, { error: "method not allowed" }];
 }
 

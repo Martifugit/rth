@@ -13,7 +13,7 @@ export async function secretFile(file) {
   try {
     const { safeStorage } = await import("electron");
     if (safeStorage?.isAsyncEncryptionAvailable && (await safeStorage.isAsyncEncryptionAvailable())) safe = safeStorage;
-  } catch {}
+  } catch { /* not in the desktop app: kept as a plain file */ }
 
   let queue = Promise.resolve();
   /** Save the text (null: delete the file). Callers needn't wait; the returned promise is for those who do. */

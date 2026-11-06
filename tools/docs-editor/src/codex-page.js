@@ -10,7 +10,8 @@ export const LOCAL = { fonts: "/ui/Fonts", stone: "/stone.jpg", logo: "/logo.png
 const RAW = "https://raw.githubusercontent.com/Martifugit/rth/main";
 export const REPO = { fonts: RAW + "/client/Assets/Resources/UI/Fonts", stone: RAW + "/tools/docs-editor/public/stone.jpg", logo: RAW + "/tools/docs-editor/public/logo.png" };
 
-export const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+export { esc } from "./text.js";
+import { esc } from "./text.js";
 
 /**
  * A whole page: `title` (the tab), `heading` (escaped), `body` (HTML, the caller escapes what it puts in),

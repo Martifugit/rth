@@ -38,8 +38,8 @@ export const KINDS = {
 export function makeAuditor({ repo, dataDir, pages, read, audit, canRun = async () => false, idleFor = () => 0, who = () => "R'th AI", ownChanged = () => {}, emit = () => {}, idleMs = Number(process.env.CODEX_AUDIT_IDLE || 600) * 1000 }) {
   const stateFile = path.join(dataDir, "audit.json");
   let state = { baseline: null, sweep: false };
-  try { state = { ...state, ...JSON.parse(fs.readFileSync(stateFile, "utf8")) }; } catch {}
-  const saveState = () => { try { fs.mkdirSync(dataDir, { recursive: true }); fs.writeFileSync(stateFile, JSON.stringify(state)); } catch {} };
+  try { state = { ...state, ...JSON.parse(fs.readFileSync(stateFile, "utf8")) }; } catch { /* never checked yet: start fresh */ }
+  const saveState = () => { try { fs.mkdirSync(dataDir, { recursive: true }); fs.writeFileSync(stateFile, JSON.stringify(state)); } catch (e) { console.warn("Codex: saving the health check's state failed:", e.message); } };
   let running = null, timer = null, lastError = null;
 
   const rel = (page) => PROBLEMS + "/" + page.slice(GDD.length + 1).replace(/\.md$/, ".json");
@@ -105,7 +105,7 @@ export function makeAuditor({ repo, dataDir, pages, read, audit, canRun = async 
   async function list() {
     const out = [];
     const dir = path.join(repo, PROBLEMS);
-    const walk = (d) => { let es = []; try { es = fs.readdirSync(d, { withFileTypes: true }); } catch {} for (const e of es) { const a = path.join(d, e.name); if (e.isDirectory()) walk(a); else if (e.name.endsWith(".json")) { try { out.push(JSON.parse(fs.readFileSync(a, "utf8"))); } catch {} } } };
+    const walk = (d) => { let es = []; try { es = fs.readdirSync(d, { withFileTypes: true }); } catch { /* no such folder: nothing in it */ } for (const e of es) { const a = path.join(d, e.name); if (e.isDirectory()) walk(a); else if (e.name.endsWith(".json")) { try { out.push(JSON.parse(fs.readFileSync(a, "utf8"))); } catch { /* a damaged problem file: skipped */ } } } };
     walk(dir);
     const live = [];
     for (const f of out) {

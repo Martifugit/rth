@@ -65,7 +65,7 @@ export function makeTogether({ helper, session, emit, onComments = () => {}, onP
     stop() {
       wanted = false;
       clearTimeout(retryTimer); clearInterval(pinger);
-      try { ws?.close(); } catch {}
+      try { ws?.close(); } catch { /* already closed */ }
       ws = null; me = null; people = [];
       tell();
     },
