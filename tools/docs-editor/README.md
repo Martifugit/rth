@@ -303,8 +303,9 @@ key; `node scripts/announce.mjs <version>` announces one that's out already).
 - `src/app.js`: the page (TipTap with `tiptap-markdown`, plus fixes noted in the code for where its
   Markdown didn't match the docs); `src/merge.js`: the block-preserving save.
 - Comments: `src/anchor.js` (where a comment belongs, and finding it again), `src/notes-store.js` (the
-  files in `docs/.notes`), `src/notes.js` (the highlights, margin, cards and history), `src/agent-run.js`
-  (running `claude -p` for asks and tasks), `notes.js` (the CLI). `src/links.js` and `src/panels.js`:
+  files in `docs/.notes`), `src/notes.js` (the highlights, margin, cards and history; /ask in a comment is answered by
+  R'th AI through the helper), `notes.js` (the CLI). `src/text-picker.js` and `src/mention-query.js`:
+  the list a text box opens as you type (the AI box's @ pages, a comment's /ask and @agent). `src/links.js` and `src/panels.js`:
   the link index, the Links tab, Recent changes and To-do. `src/layout.js`: the logo's layout menu,
   docked panes and sheets.
 - `public/`: the page shell and its stylesheet; `npm run build` bundles `src/` into `public/app.js`

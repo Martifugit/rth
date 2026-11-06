@@ -480,7 +480,6 @@ function listen() {
   es.addEventListener("notes", (e) => notes.onNotes(JSON.parse(e.data)));
   // A waiting comment change that Discord then refused outright (src/comment-store.js, flush): said once.
   es.addEventListener("notes-failed", (e) => { const v = JSON.parse(e.data); toast("A comment change that was waiting to be posted was refused by Discord, so it was dropped: " + v.error, "bad"); });
-  es.addEventListener("run", (e) => notes.onRun(JSON.parse(e.data)));
   es.addEventListener("sync", (e) => showSync(JSON.parse(e.data)));
   es.addEventListener("news", (e) => showNews(JSON.parse(e.data)));
   es.addEventListener("here", (e) => together.onEvent(JSON.parse(e.data)));

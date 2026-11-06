@@ -12,7 +12,6 @@ import crypto from "node:crypto";
 import { execFile } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { makeStore } from "./src/notes-store.js";
-import { makeRunner } from "./src/agent-run.js";
 import { makeAssistant } from "./src/assistant.js";
 import { makeAccount } from "./src/discord-account.js";
 import { makeOpenRouterAccount } from "./src/openrouter-account.js";
@@ -167,8 +166,6 @@ function joinRoom() {
 }
 setTimeout(joinRoom); // once the engine is set up (its events go to the page)
 const presence = makePresence({ clientId: process.env.CODEX_DISCORD_APP || "1567232969637109922" });
-const runner = makeRunner({ repo: REPO, store, emit: (type, data) => broadcast(type, data) });
-runner.check().then((a) => console.log(a.ok ? `Agents: ${a.version}` : `Agents: off (${a.error})`));
 let engineBase = null; // http://127.0.0.1:<port>, once listening (startServer)
 let assistant = null;
 assistant = makeAssistant({
@@ -599,14 +596,10 @@ const api = {
   },
 
   async "POST /api/notes"(url, req) {
-    const { page = null, kind, text, anchor, run } = await body(req);
+    const { page = null, kind, text, anchor } = await body(req);
     if (page && !(safe(page) && page.endsWith(".md"))) return [400, { error: "notes go on pages" }];
     if (!text || !String(text).trim()) return [400, { error: "an empty note" }];
     const made = await store.create(page, { kind, text, anchor });
-    if (run && !made.note.pending && (made.note.kind === "ask" || made.note.kind === "task")) { // a waiting comment isn't in Discord yet
-      const r = await runner.start(made.note.id);
-      if (r.error) made.runError = r.error;
-    }
     return made;
   },
 
@@ -744,7 +737,7 @@ const api = {
   },
   async "GET /api/sync/base"(url) { return { text: await syncer.base(url.searchParams.get("page") || "") }; },
 
-  async "GET /api/agent"() { return { ...runner.status(), owner: await ownerName() }; },
+  async "GET /api/agent"() { return { owner: await ownerName() }; }, // who "You" is in comments
 
   async "GET /api/links"(url) {
     const page = url.searchParams.get("page");
@@ -923,13 +916,12 @@ async function noteApi(req, id, action) {
   const missing = [404, { error: "no such note" }];
   if (!action && m === "GET") return (await store.find(id)) || missing;
   if (!action && m === "PATCH") return (await store.update(id, await body(req))) || missing;
-  if (!action && m === "DELETE") { runner.stop(id); return (await store.remove(id)) ? { ok: true } : missing; }
+  if (!action && m === "DELETE") { return (await store.remove(id)) ? { ok: true } : missing; }
   if (action === "reply" && m === "POST") {
-    const { text, run, status } = await body(req);
+    const { text, status } = await body(req);
     if (!text || !String(text).trim()) return [400, { error: "an empty reply" }];
     const done = await store.reply(id, { by: "owner", text, status });
     if (!done) return missing;
-    if (run && !done.note?.pending) { const r = await runner.start(id); if (r.error) done.runError = r.error; }
     return done;
   }
   if (action === "move" && m === "POST") {
@@ -937,8 +929,6 @@ async function noteApi(req, id, action) {
     if (page && !(safe(page) && page.endsWith(".md"))) return [400, { error: "not a page" }];
     return (await store.move(id, page)) || missing;
   }
-  if (action === "run" && m === "POST") { const r = await runner.start(id); return r.error ? [409, r] : r; }
-  if (action === "stop" && m === "POST") return { ok: runner.stop(id) };
   return [405, { error: "method not allowed" }];
 }
 
