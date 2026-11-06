@@ -134,6 +134,8 @@ async function open() {
   win.setMenuBarVisibility(false);
   win.once("ready-to-show", () => { win.show(); updateSplashDone(); }); // an "Updating" window fades out
   win.on("resize", saveBounds);
+  // Ctrl and the mouse wheel (or a touchpad's pinch) zoom too, in the same steps.
+  win.webContents.on("zoom-changed", (e, way) => zoom(way === "in" ? 1 : -1));
   win.on("move", saveBounds);
 
   // Links out of the Codex open in the computer's browser; the window never leaves the Codex.
@@ -224,11 +226,28 @@ async function watchForUpdates() {
   } catch (e) { if (process.env.CODEX_DEBUG) console.log("updates off:", e.message); }
 }
 
-// No visible menu bar, but the usual keys still work (reload, zoom, developer tools).
+// Zoom in the steps a browser uses, and the page says the new zoom for a moment (src/zoom-badge.js).
+const ZOOMS = [0.5, 0.67, 0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3];
+function zoom(dir) {
+  if (!win || win.isDestroyed()) return;
+  const wc = win.webContents, now = wc.getZoomFactor();
+  let next = 1;
+  if (dir > 0) next = ZOOMS.find((z) => z > now + 0.001) ?? ZOOMS[ZOOMS.length - 1];
+  else if (dir < 0) next = [...ZOOMS].reverse().find((z) => z < now - 0.001) ?? ZOOMS[0];
+  wc.setZoomFactor(next);
+  wc.executeJavaScript(`window.dispatchEvent(new CustomEvent("codex-zoom", { detail: ${next} }))`).catch(() => {}); // a page still loading misses one
+}
+
+// No visible menu bar, but the usual keys still work (reload, zoom, developer tools). Zoom on Ctrl and
+// the + and - keys (on Norwegian keyboards too: Electron names the keys, not the characters), the
+// number pad's, and Ctrl+0.
+const zoomItem = (label, accelerator, dir, visible = true) => ({ label, accelerator, visible, click: () => zoom(dir) });
 Menu.setApplicationMenu(Menu.buildFromTemplate([
   { label: "View", submenu: [
     { role: "reload" }, { role: "forceReload" }, { role: "toggleDevTools" }, { type: "separator" },
-    { role: "resetZoom" }, { role: "zoomIn" }, { role: "zoomIn", accelerator: "CommandOrControl+=", visible: false }, { role: "zoomOut" },
+    zoomItem("Actual size", "CommandOrControl+0", 0), zoomItem("Actual size", "CommandOrControl+num0", 0, false),
+    zoomItem("Zoom in", "CommandOrControl+Plus", 1), zoomItem("Zoom in", "CommandOrControl+=", 1, false), zoomItem("Zoom in", "CommandOrControl+numadd", 1, false),
+    zoomItem("Zoom out", "CommandOrControl+-", -1), zoomItem("Zoom out", "CommandOrControl+numsub", -1, false),
     { type: "separator" }, { role: "togglefullscreen" },
   ] },
   // No Edit menu: its Ctrl+Z would take undo away from the editor's own. (A Mac build needs one, for

@@ -28,7 +28,10 @@ import { makeAi } from "./ai.js";
 import { makeAccountButton } from "./account-button.js";
 import { makePasteHandler, forDiscord } from "./discord-extras.js";
 import { AiMarks, makeAiChanges } from "./ai-changes.js";
-import { altGrChar, isKeyFor } from "./keys.js";
+import { altGrChar, isKeyFor, is, label } from "./keys.js";
+import { makeFindBar } from "./find-bar.js";
+import { makeFindAll } from "./find-all.js";
+import { zoomBadge } from "./zoom-badge.js";
 import { makeTogetherUi } from "./together-ui.js";
 import { Spelling, configureSpelling } from "./spellcheck.js";
 import { GDD, README, TOP, TEMPLATES, isMeta, undeletable, folderPath, typeAt } from "./gdd.js";
@@ -235,9 +238,11 @@ function makeEditor(text) {
       AiMarks,
       Spelling,
       gddUi.Extension,
+      findBar.Extension,
+      HeadingKeys,
     ],
     content: text,
-    onUpdate: () => { clearHits(); scheduleDirty(); scheduleOutline(); notes?.docChanged(); aiChanges?.docChanged(); together?.typed(); },
+    onUpdate: () => { clearHits(); scheduleDirty(); scheduleOutline(); notes?.docChanged(); aiChanges?.docChanged(); together?.typed(); findBar.refresh(); },
     editorProps: {
       attributes: { spellcheck: "false" }, handlePaste: (view, event) => discordPaste(view, event),
       // AltGr is Ctrl+Alt: a character typed with it (@, {, [, $ on Norwegian) is typed, never taken as
@@ -256,6 +261,17 @@ function makeEditor(text) {
   S.unsafe = false; // the page is whole: saving may go on
   if (notes && notes.state.page === S.path) notes.place(true);
 }
+
+// Ctrl+Shift+1-6: a heading of that level (again: a paragraph), by the digit keys' place, so it works on
+// every layout. TipTap's own Ctrl+Alt+1-6 stay, but on Norwegian Ctrl+Alt is AltGr, which types @ £ $ €.
+const HeadingKeys = Extension.create({
+  name: "codexHeadingKeys",
+  addKeyboardShortcuts() {
+    const keys = {};
+    for (let level = 1; level <= 6; level++) keys[`Mod-Shift-${level}`] = () => this.editor.commands.toggleHeading({ level });
+    return keys;
+  },
+});
 
 // Focus now, not on the next animation frame as TipTap's focus() does: keys pressed straight after
 // switching to Edit must land in the page.
@@ -1287,18 +1303,40 @@ function relinkOpenPage(from, to) {
   if (tr.docChanged) { ed.view.dispatch(tr); scheduleDirty(); }
 }
 
+// The Keys window (? or the logo's menu): every shortcut, the app's from SHORTCUTS and the editor's own,
+// named as this keyboard has them (src/keys.js, label).
+const EDITOR_KEYS = [
+  ["Writing", [
+    ["mod+b", "Bold"], ["mod+i", "Italic"], ["mod+shift+s", "Strikethrough"], ["mod+k", "Add or edit a link"],
+    ["mod+shift+Digit1", "Title (Ctrl+Shift+2-6: headings; the same keys again: back to a paragraph)"],
+    ["mod+shift+Digit7", "Numbered list"], ["mod+shift+Digit8", "Bulleted list"], ["mod+shift+Digit9", "Checklist"],
+    ["mod+shift+b", "Quote"], ["mod+alt+c", "Code block"], ["shift+Enter", "A new line in the same paragraph"],
+    ["Tab", "In a list: indent the item (Shift+Tab: back out)"], ["mod+z", "Undo"], ["mod+y", "Redo (also Ctrl+Shift+Z)"],
+  ]],
+  ["The AI tab's box", [
+    ["Enter", "Send (Shift+Enter: a new line)"], ["shift+Tab", "Switch between Chat (its changes wait for you to accept) and Work (it edits the pages)"],
+    ["@", "Add a page to the conversation"],
+    ["alt+ArrowDown", "With R'th AI's changes shown: the next change (Alt+↑ the one before)"],
+    ["alt+Enter", "Accept the suggestion you're on (Alt+Backspace skips it)"],
+  ]],
+  ["Comments", [
+    ["mod+Enter", "Post a comment. Start it with /ask for R'th AI to answer in the thread; @agent leaves it for the next agent session"],
+    ["Escape", "Close the comment box (with words written: twice)"],
+  ]],
+  ["The window", [["mod++", "Zoom in (Ctrl+- out, Ctrl+0 back to 100%)"]]],
+];
+
 function helpDialog() {
-  const k = (keys, what) => [h("span", {}, keys.split(" ").map((x) => h("kbd", { style: "margin-right:3px" }, x))), h("span", {}, what)];
+  const k = (spec, what) => [h("span", { class: "keys-k" }, label(spec).map((x) => h("kbd", {}, x))), h("span", {}, what)];
+  const group = (title, rows) => [h("div", { class: "keys-group" }, title), ...rows.flatMap(([spec, what]) => k(spec, what))];
+  const app = {};
+  for (const x of SHORTCUTS) if (x.what) (app[x.group] ||= []).push([x.keys[0], x.what]);
   modal("Keys", h("div", { class: "keys" },
-    k("Ctrl P", "Search: pages by name, then the text of every page"),
-    k("Ctrl M", "Comment on the selected text"), k("Ctrl Enter", "Post a comment. Write @agent in it to leave it for the next agent session"),
-    k("Ctrl J", "Ask R'th AI (with the selected text, if any)"), k("Shift Tab", "In the AI tab's box: switch between Chat (its changes wait for you to accept) and Work (it edits the pages)"),
-    k("Alt ↓", "With R'th AI's changes shown: the next change (Alt ↑ the one before)"), k("Alt Enter", "Accept the suggestion you're on (Alt Backspace skips it)"), k("Ctrl Shift C", "Copy for Discord: the selection, or the section you're in, with a link back"),
-    k("Ctrl K", "Add or edit a link"), k("Ctrl B", "Bold"), k("Ctrl I", "Italic"), k("Ctrl Z", "Undo"),
-    k("Ctrl S", "Save now (pages also save by themselves)"), k("Alt ←", "Back to where you were (also the mouse's back button)"), k("Alt →", "Forward again"),
-    k("Ctrl ,", "Show or hide the pages"), k("Ctrl .", "Show or hide the outline, links and AI"),
+    Object.entries(app).flatMap(([g, rows]) => group(g, rows)),
+    EDITOR_KEYS.flatMap(([g, rows]) => group(g, rows)),
     h("span", { class: "muted small", style: "grid-column:1/-1;margin-top:8px" },
-      "Markdown shortcuts work as you type: ## for a heading, - or 1. for a list, > for a quote, ``` for code. Saving only rewrites the paragraphs you changed; the rest of the file stays exactly as written.")));
+      "Markdown shortcuts work as you type: ## for a heading, - or 1. for a list, > for a quote, ``` for code. Saving only rewrites the paragraphs you changed; the rest of the file stays exactly as written.")),
+  { width: "min(760px, 94vw)" });
 }
 
 // ----------------------------------------------------------------------------- toasts
@@ -1473,29 +1511,66 @@ function wire() {
   window.addEventListener("beforeunload", (e) => { if (S.dirty) { e.preventDefault(); e.returnValue = ""; } });
 
   document.addEventListener("keydown", (e) => {
-    const mod = e.ctrlKey || e.metaKey;
-    const key = e.key.toLowerCase();
     if ($("#modalHost").childElementCount) return;
     if (altGrChar(e)) return; // a character typed with AltGr, not a shortcut
-    if (e.altKey && !mod && !e.shiftKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")) { e.preventDefault(); go(e.key === "ArrowLeft" ? -1 : 1); return; }
-    if (mod && key === "s") { e.preventDefault(); save(); }
-    else if (mod && key === "p") { e.preventDefault(); quickOpen(); }
-    else if (mod && e.shiftKey && key === "f") { e.preventDefault(); quickOpen(); }
-    else if (mod && key === "k" && S.mode === "edit") { e.preventDefault(); linkDialog(); }
-    else if (mod && key === "m") { e.preventDefault(); notes.compose(); } // Ctrl+M (Ctrl+Alt+M as in Google Docs, where Ctrl+Alt isn't AltGr)
-    else if (mod && key === "j") { e.preventDefault(); ai.focus(); }
-    else if (mod && e.shiftKey && key === "c" && S.editor && S.mode === "edit") { e.preventDefault(); copyForDiscord(); }
-    // The panes: Ctrl+, (left) and Ctrl+. (right), on the same keys on every layout; Ctrl+ as in Notion,
-    // on whichever key types  here.
-    else if (mod && !e.altKey && (e.code === "Comma" || e.code === "Period")) { e.preventDefault(); layout.toggle(e.code === "Comma" ? "pages" : "outline"); }
-    else if (mod && isKeyFor(e, "\\", "Backslash")) { e.preventDefault(); layout.toggle(e.shiftKey ? "outline" : "pages"); }
-    else if (key === "escape") {
-      if (account.escape() || aiChanges.escape() || layout.escape() || notes.escape()) e.preventDefault();
-      else if (CSS.highlights?.has("codex-hit")) clearHits();
-      else if (S.mode === "source") setMode("edit");
-    } else if (!mod && e.key === "?" && !typing()) helpDialog();
-    else if (!mod && e.key === "/" && !typing()) { e.preventDefault(); quickOpen(); }
+    if (e.key === "Escape") { escape(e); return; }
+    const x = SHORTCUTS.find((c) => c.keys.some((spec) => is(e, spec)) && (!c.when || c.when()));
+    if (!x || (x.notTyping && typing())) return;
+    e.preventDefault();
+    x.run(e);
   });
+}
+
+/** Escape: the innermost thing open closes, then highlights go, then the Markdown view. */
+function escape(e) {
+  if (account.escape() || aiChanges.escape() || layout.escape() || notes.escape()) e.preventDefault();
+  else if (findBar.isOpen()) { e.preventDefault(); findBar.close(); }
+  else if (CSS.highlights?.has("codex-hit")) clearHits();
+  else if (S.mode === "source") setMode("edit");
+}
+
+// Every shortcut of the app's own (the editor's are its extensions'; both listed in the Keys window).
+// keys: specs (src/keys.js), the first shown; when: only then; notTyping: not while typing in a box.
+const editing = () => !!S.editor && S.mode === "edit" && !S.view;
+const onPage = () => !!S.path && !S.view;
+const SHORTCUTS = [
+  { group: "Finding", keys: ["mod+p"], what: "Search: pages by name, then the text of every page (also / when not typing)", run: () => quickOpen() },
+  { group: "Finding", keys: ["/"], what: null, run: () => quickOpen(), notTyping: true },
+  { group: "Finding", keys: ["mod+f"], what: "Find in this page", run: () => findBar.open(), when: onPage },
+  { group: "Finding", keys: ["mod+h"], what: "Find and replace in this page", run: () => findBar.open({ replace: true }), when: onPage },
+  { group: "Finding", keys: ["mod+shift+f"], what: "Find and replace in all pages", run: () => findAll.open(findBar.isOpen() ? "" : selectedWords()) },
+  { group: "Pages", keys: ["mod+n"], what: "New page", run: () => newPageDialog() },
+  { group: "Pages", keys: ["mod+s"], what: "Save now (pages also save by themselves)", run: () => save() },
+  { group: "Pages", keys: ["alt+ArrowLeft"], what: "Back to where you were (also the mouse's back button)", run: () => go(-1) },
+  { group: "Pages", keys: ["alt+ArrowRight"], what: "Forward again", run: () => go(1) },
+  { group: "Pages", keys: ["mod+shift+d"], what: "The To-do page", run: () => showView("broken") },
+  { group: "Pages", keys: ["mod+shift+e"], what: "Recent changes", run: () => showView("changes") },
+  { group: "Pages", keys: ["mod+k"], what: null, run: () => linkDialog(), when: editing }, // listed under Writing
+  { group: "Pages", keys: ["mod+shift+c"], what: "Copy for Discord: the selection, or the section you're in, with a link back", run: () => copyForDiscord(), when: editing },
+  { group: "Comments and R'th AI", keys: ["mod+m"], what: "Comment on the selected text (or the page)", run: () => notes.compose() },
+  { group: "Comments and R'th AI", keys: ["alt+PageDown"], what: "The next comment on the page (Alt+Page Up: the one before)", run: () => notes.step(1), when: onPage },
+  { group: "Comments and R'th AI", keys: ["alt+PageUp"], what: null, run: () => notes.step(-1), when: onPage },
+  { group: "Comments and R'th AI", keys: ["mod+shift+m"], what: "All comments, across every page", run: () => notes.toggleHistory() },
+  { group: "Comments and R'th AI", keys: ["mod+j"], what: "Ask R'th AI (with the selected text, if any)", run: () => ai.focus() },
+  { group: "The panes", keys: ["mod+Comma", "mod+Backslash"], what: "Show or hide the pages", run: () => layout.toggle("pages") },
+  { group: "The panes", keys: ["mod+Period", "mod+shift+Backslash"], what: "Show or hide the outline, links and AI", run: () => layout.toggle("outline") },
+  { group: "The panes", keys: ["alt+Digit1"], what: "Outline (Alt+2: Links, Alt+3: AI)", run: () => rightPane("outline") },
+  { group: "The panes", keys: ["alt+Digit2"], what: null, run: () => rightPane("links") },
+  { group: "The panes", keys: ["alt+Digit3"], what: null, run: () => rightPane("ai") },
+  { group: "The panes", keys: ["?"], what: "These keys", run: () => helpDialog(), notTyping: true },
+  { group: "The panes", keys: ["Escape"], what: "Close what's open; in the Markdown view, back to the page", run: () => {} },
+].map((x) => ({ notTyping: false, ...x }));
+
+/** The right pane on a tab, shown if it was hidden. */
+function rightPane(tab) { layout.show("outline"); showRightTab(tab); if (tab === "ai") ai.focus(); }
+
+/** What's selected in the page, to start a search with (one line, not too long). */
+function selectedWords() {
+  const ed = S.editor;
+  if (!ed || S.mode !== "edit") return "";
+  const { from, to } = ed.state.selection;
+  const t = from === to ? "" : ed.state.doc.textBetween(from, to, "\n");
+  return t && !t.includes("\n") && t.length <= 200 ? t : "";
 }
 
 // ----------------------------------------------------------------------------- syncing
@@ -1732,6 +1807,11 @@ const together = makeTogetherUi({
   goTo: (page, leaf) => { if (page === S.path) { if (leaf) scrollToHeading(slug(leaf), true); } else openDoc(page, { hash: leaf ? slug(leaf) : "" }); },
 });
 
+// Find and replace: in the page (src/find-bar.js) and in all pages (src/find-all.js).
+const findBar = makeFindBar({ S, $, h, onAll: (q) => findAll.open(q) });
+const findAll = makeFindAll({ S, h, api, modal, toast, openDoc: (...a) => openDoc(...a), save: (...a) => save(...a),
+  titleOf: (p) => S.files.find((f) => f.path === p)?.title || p.split("/").pop().replace(/\.md$/, ""), findBar });
+
 const layout = makeLayout({ $, h, notes, help: () => helpDialog(), online: together.online, presence: { on: () => presenceOn(), toggle: () => { localStorage.setItem("codex.presence", presenceOn() ? "off" : "on"); tellPresence(); } } });
 
 // ----------------------------------------------------------------------------- Discord (src/discord-extras.js)
@@ -1797,6 +1877,7 @@ async function start() {
   // In the desktop app the top row is the window's own title bar (style.css, body.in-app).
   if (/Electron/i.test(navigator.userAgent)) document.body.classList.add("in-app");
   configureSpelling({ api, toast });
+  zoomBadge({ h });
   wire();
   ai.init($("#outlineWin .win-body"));
   account.init();

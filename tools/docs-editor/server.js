@@ -35,6 +35,7 @@ import { buildGdd, runQuery, checks, labelFor } from "./src/gdd-index.js";
 import { makeSync } from "./src/sync.js";
 import { makeAuditor } from "./src/audit.js";
 import { makeDiscordAnswers } from "./src/discord-answer.js";
+import { findInMarkdown, replaceInMarkdown, lineOf } from "./src/find.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 // The repository the Codex works on: the one it sits in, or CODEX_REPO (checks use a throwaway copy).
@@ -455,14 +456,7 @@ const api = {
     try { current = await readText(abs); } catch {}
     if (current !== null && baseHash && hash(current) !== baseHash && !force)
       return [409, { error: "changed on disk", content: current.replace(/\r\n/g, "\n"), hash: hash(current) }];
-    const text = eol === "\r\n" ? content.replace(/\n/g, "\r\n") : content;
-    const tmp = abs + ".codex-tmp";
-    await fsp.writeFile(tmp, text, "utf8");
-    await fsp.rename(tmp, abs);
-    const h = hash(text);
-    recentWrites.set(relOf(abs), { hash: h, until: Date.now() + 3000 });
-    syncer.saved(relOf(abs));
-    return { ok: true, hash: h };
+    return { ok: true, hash: await writeDoc(abs, content, eol) };
   },
 
   async "POST /api/new"(url, req) {
@@ -909,7 +903,74 @@ const api = {
     results.sort((a, b) => (b.nameHit - a.nameHit) || (b.count - a.count));
     return { results: results.slice(0, 60), total };
   },
+
+  // Find in all pages (src/find-all.js): the pages' text only (src/find.js), and Replace in them.
+  async "GET /api/find"(url) {
+    const q = url.searchParams.get("q") || "";
+    const opts = { matchCase: url.searchParams.get("case") === "1", wholeWord: url.searchParams.get("word") === "1" };
+    if (!q.trim()) return { results: [], total: 0 };
+    const results = [];
+    let total = 0;
+    for (const file of await findablePages()) {
+      const md = (await readText(path.join(REPO, file))).replace(/\r\n/g, "\n");
+      const hits = findInMarkdown(md, q, opts);
+      if (!hits.length) continue;
+      total += hits.length;
+      results.push({ path: file, count: hits.length, hits: hits.slice(0, 20).map((m) => ({ ...lineOf(md, m.start), len: m.end - m.start })) });
+    }
+    results.sort((a, b) => b.count - a.count || a.path.localeCompare(b.path));
+    return { results, total };
+  },
+  async "POST /api/replace"(url, req) {
+    if (!account.canEdit()) return [403, { error: "Sign in with Discord (with the Codex role) to edit." }];
+    const { q, with: replacement = "", matchCase = false, wholeWord = false, pages = [] } = await body(req);
+    if (!q) return [400, { error: "nothing to find" }];
+    const findable = new Set(await findablePages());
+    const done = [], before = new Map();
+    for (const file of pages) {
+      if (!findable.has(file)) continue;
+      const abs = path.join(REPO, file);
+      const raw = await readText(abs);
+      const r = replaceInMarkdown(raw.replace(/\r\n/g, "\n"), q, replacement, { matchCase, wholeWord });
+      if (!r.count) continue;
+      before.set(file, raw);
+      done.push({ path: file, count: r.count, hash: await writeDoc(abs, r.text, raw.includes("\r\n") ? "\r\n" : "\n") });
+    }
+    // Undo puts back what each page was, if nobody has changed it since.
+    lastReplace = { id: crypto.randomUUID(), before, after: new Map(done.map((d) => [d.path, d.hash])) };
+    return { ok: true, pages: done, count: done.reduce((n, d) => n + d.count, 0), undo: lastReplace.id };
+  },
+  async "POST /api/replace/undo"(url, req) {
+    const { id } = await body(req);
+    if (!lastReplace || lastReplace.id !== id) return [409, { error: "That replace can't be undone any more." }];
+    const kept = [];
+    for (const [file, raw] of lastReplace.before) {
+      const abs = path.join(REPO, file);
+      if (hash(await readText(abs)) !== lastReplace.after.get(file)) { kept.push(file); continue; } // changed since: left as it is
+      await writeDoc(abs, raw.replace(/\r\n/g, "\n"), raw.includes("\r\n") ? "\r\n" : "\n");
+    }
+    lastReplace = null;
+    return { ok: true, kept };
+  },
 };
+
+/** The pages Find in all pages looks through: the docs, not the templates (New page uses those). */
+async function findablePages() {
+  return (await allDocs()).filter((f) => isDoc(f) && !f.startsWith(TEMPLATES + "/"));
+}
+let lastReplace = null; // { id, before: Map(page → text), after: Map(page → hash) }
+
+/** Write a page as every save does: whole or not at all, in its own line endings, then shared. */
+async function writeDoc(abs, content, eol) {
+  const text = eol === "\r\n" ? content.replace(/\n/g, "\r\n") : content;
+  const tmp = abs + ".codex-tmp";
+  await fsp.writeFile(tmp, text, "utf8");
+  await fsp.rename(tmp, abs);
+  const h = hash(text);
+  recentWrites.set(relOf(abs), { hash: h, until: Date.now() + 3000 });
+  syncer.saved(relOf(abs));
+  return h;
+}
 
 async function noteApi(req, id, action) {
   const m = req.method;

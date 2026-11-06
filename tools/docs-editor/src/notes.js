@@ -615,6 +615,17 @@ export function makeNotes(ctx) {
     if (p && p.from != null && p.how !== "lost") ctx.scrollToPos(p.from, true);
   }
 
+  /** The next (d = 1) or previous comment on the page, opened (Alt+Page Down / Page Up). */
+  function step(d) {
+    const at = (n) => N.placed.get(n.id)?.from;
+    const list = visible().filter((n) => at(n) != null).sort((a, b) => at(a) - at(b));
+    if (!list.length) return toast("No comments on this page");
+    const i = list.findIndex((n) => n.id === N.active);
+    const next = list[i < 0 ? (d > 0 ? 0 : list.length - 1) : (i + d + list.length) % list.length];
+    focus(next.id);
+    ctx.scrollToPos?.(at(next), true);
+  }
+
   async function focus(id, page) {
     if (page && page !== S.path) { await ctx.openDoc(page); await N.loading; }
     N.active = null;
@@ -835,7 +846,7 @@ export function makeNotes(ctx) {
   }
 
   return {
-    init, load, place, saved, compose, onNotes, docChanged, layout, focus, toggleMargin, placeDialog,
+    init, load, place, saved, compose, onNotes, docChanged, layout, focus, step, toggleHistory, toggleMargin, placeDialog,
     escape: () => { if (N.draft) { N.draft = null; draw(); render(); return true; } if (N.history.open) { toggleHistory(); return true; } if (N.active) { N.active = null; draw(); render(); return true; } return false; },
     target,
     /** Who's signed in with Discord (src/account-button.js), for drafts; null when nobody is. */
