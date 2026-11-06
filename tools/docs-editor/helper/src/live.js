@@ -54,6 +54,26 @@ export class Live extends DurableObject {
       try { pick.send(m); } catch { return Response.json({ sent: false }); }
       return Response.json({ sent: true });
     }
+    // A Codex has a link's page open (POST { t }), or the link's page asks whether it has (GET ?t=).
+    // Tokens are random and kept ten minutes; asking takes one away.
+    if (url.pathname === "/live/open-ack") {
+      const ok = (t) => typeof t === "string" && /^[\w-]{8,64}$/.test(t);
+      if (req.method === "POST") {
+        let t = null;
+        try { t = (JSON.parse(await req.text()) || {}).t; } catch { /* not JSON: refused below */ }
+        if (!ok(t)) return Response.json({ ok: false }, { status: 400 });
+        const now = Date.now();
+        const old = [...(await this.ctx.storage.list({ prefix: "open:" })).entries()].filter(([, at]) => now - at > 600000).map(([k]) => k);
+        if (old.length) await this.ctx.storage.delete(old);
+        await this.ctx.storage.put("open:" + t, now);
+        return Response.json({ ok: true });
+      }
+      const t = url.searchParams.get("t");
+      if (!ok(t)) return Response.json({ ok: false }, { status: 400 });
+      const at = await this.ctx.storage.get("open:" + t);
+      if (at) await this.ctx.storage.delete("open:" + t);
+      return Response.json({ ok: !!at });
+    }
     if (req.headers.get("Upgrade") !== "websocket") return new Response("expected a WebSocket", { status: 426 });
     const [client, server] = Object.values(new WebSocketPair());
     this.ctx.acceptWebSocket(server);

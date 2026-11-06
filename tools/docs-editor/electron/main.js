@@ -53,7 +53,14 @@ function openLink(link) {
   if (win.isMinimized()) win.restore();
   win.focus();
   win.webContents.executeJavaScript(`window.__codex && window.__codex.openDoc(${JSON.stringify(p)}, { hash: ${JSON.stringify(hd)} })`).catch(() => {});
+  // The link's page in the browser waits for this to close its tab (helper/src/open.js).
+  const t = u.searchParams.get("t");
+  if (t && /^[\w-]{8,64}$/.test(t)) {
+    fetch(HELPER + "/open/ack", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ t }) })
+      .catch((e) => console.warn("Couldn't tell the link's page the Codex has it:", e.message)); // the tab just stays open
+  }
 }
+const HELPER = (process.env.CODEX_HELPER || "https://rth-codex.rthapp.workers.dev").replace(/\/+$/, "");
 
 let win = null, origin = null;
 let flushed = false; // what was being typed is saved and sent: the window may close

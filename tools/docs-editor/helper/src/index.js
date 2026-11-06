@@ -44,6 +44,8 @@ export default {
       switch (route) {
         case "GET /": return text("R'th Codex helper");
         case "GET /open": return openPage(url, env);
+        // The Codex has a link's page open (electron/main.js): the link's page may close its tab (open.js).
+        case "POST /open/ack": case "GET /open/ack": return room(env).fetch(new Request(new URL("/live/open-ack" + url.search, url), { method: req.method, body: req.method === "POST" ? await req.text() : null }));
         case "GET /live": return room(env).fetch(req); // who's here (src/live.js)
         case "POST /interactions": return interaction(req, env, ctx); // from Discord, signed
         case "POST /admin/commands": {
