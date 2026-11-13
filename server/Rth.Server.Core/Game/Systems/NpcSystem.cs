@@ -111,9 +111,16 @@ namespace Rth.Server.Game
                     }
                     continue;
                 }
+                // Far from every player the creature sleeps; a fight or a walk home still finishes.
+                // (A creature on a patrol is a timed hazard: it keeps walking its beat unwatched.)
+                if (npc.TargetId == 0 && !npc.Returning && !npc.Spawn.Patrols && !World.Zones.IsActive(npc.Plane, npc.Position)) continue;
                 Think(npc);
             }
         }
+
+        /// <summary>How many creatures are awake now (near a player, fighting or walking home), for <c>::perf</c>.</summary>
+        public int AwakeCount() =>
+            World.Npcs.Count(n => !n.Despawned && (n.TargetId != 0 || n.Returning || n.Spawn.Patrols || World.Zones.IsActive(n.Plane, n.Position)));
 
         private void Think(Npc npc)
         {
@@ -181,9 +188,9 @@ namespace Rth.Server.Game
         {
             Player? best = null;
             int bestDistance = int.MaxValue;
-            foreach (Player player in World.Players)
+            foreach (Entity near in World.EntitiesNear(npc.Plane, npc.Position, npc.Def.AggroRadius))
             {
-                if (player.IsDead || player.Plane != npc.Plane) continue;
+                if (!(near is Player player) || player.IsDead) continue;
                 int distance = player.Position.ChebyshevDistance(npc.Position);
                 if (distance > npc.Def.AggroRadius || distance >= bestDistance) continue;
                 if (!LineOfSight.Has(World.Map, npc.Plane, npc.Position, player.Position)) continue;

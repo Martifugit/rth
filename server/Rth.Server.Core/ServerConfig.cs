@@ -25,6 +25,19 @@ namespace Rth.Server
         public int ViewRadius = 15;
 
         public int PathSearchRadius = 64;
+
+        /// <summary>
+        /// Creatures only think (wander, patrol, look for someone to attack) within this many tiles
+        /// of a player; the rest of the world sleeps until someone comes near. Fights and walks
+        /// home always finish. 0 keeps every creature awake.
+        /// </summary>
+        public int NpcActiveRadius = 32;
+
+        /// <summary>A tick longer than this (milliseconds) is logged with what cost the most. 0: never.</summary>
+        public int SlowTickMillis = 300;
+
+        /// <summary>Write saves on a background thread, so an autosave of everyone never stalls a tick.</summary>
+        public bool WriteSavesInBackground = true;
         public int MaxPlayers = 250;
 
         /// <summary>Per-player cap on messages handled per tick. A sanity limit, not anti-cheat.</summary>

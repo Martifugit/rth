@@ -84,6 +84,12 @@ namespace Rth.Server.Game
                 case "devotion":
                     World.Get<ReligionSystem>().Restore(player, player.MaxDevotion);
                     break;
+                case "perf":
+                    foreach (string line in World.Profiler.Report()) Say(player, line);
+                    NpcSystem? npcs = World.Find<NpcSystem>();
+                    Say(player, World.PlayerCount + " players, " + World.Npcs.Count() + " NPCs (" + (npcs?.AwakeCount() ?? 0) + " awake), " +
+                                World.Zones.ActiveZoneCount + " active zones.");
+                    break;
                 case "die":
                     // Dies where you stand, with whatever you carry: for trying the ferryman and the long way back.
                     World.Get<CombatSystem>().Damage(player, int.MaxValue / 2, null, Rth.Shared.Net.HitKind.Bleed);

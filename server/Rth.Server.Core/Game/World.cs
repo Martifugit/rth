@@ -7,6 +7,7 @@ using Newtonsoft.Json.Linq;
 using Rth.Server.Content;
 using Rth.Server.Net;
 using Rth.Server.Persistence;
+using Rth.Server.Timing;
 using Rth.Shared.Combat;
 using Rth.Shared.Net;
 using Rth.Shared.World;
@@ -58,6 +59,9 @@ namespace Rth.Server.Game
             OnMessage<WalkToMessage>(HandleWalk);
             OnMessage<LogoutMessage>((player, _) => player.LogoutRequested = true);
             foreach (GameSystem system in systems) AddSystem(system);
+            // One more row after the systems: interactions and walking, which the world runs itself.
+            Profiler = new TickProfiler(_systems.Select(s => s.GetType().Name).Concat(new[] { "Interactions" }).ToList());
+            Zones.MarkActive(Array.Empty<Entity>(), _config.NpcActiveRadius); // nobody here yet: everything sleeps
         }
 
         /// <summary>
@@ -134,20 +138,54 @@ namespace Rth.Server.Game
 
         // ------------------------------------------------------------------ systems
 
+        // Lookups by type are asked for many times a tick (every hit asks for the item system), so
+        // each answer is kept. A lookup made while systems are still attaching (a system asking
+        // for one added later) isn't kept, since the answer may still change.
+        private readonly Dictionary<Type, GameSystem?> _byType = new Dictionary<Type, GameSystem?>();
+        private readonly Dictionary<Type, object> _implementing = new Dictionary<Type, object>();
+        private bool _attaching;
+
         private void AddSystem(GameSystem system)
         {
             _systems.Add(system);
-            system.Attach(this);
+            _byType.Clear();
+            _implementing.Clear();
+            _attaching = true;
+            try
+            {
+                system.Attach(this);
+            }
+            finally
+            {
+                _attaching = false;
+                _byType.Clear();
+                _implementing.Clear();
+            }
         }
 
         /// <summary>The system of a given type. Throws if it isn't installed.</summary>
         public T Get<T>() where T : GameSystem =>
-            _systems.OfType<T>().FirstOrDefault() ?? throw new InvalidOperationException(typeof(T).Name + " is not installed.");
+            Find<T>() ?? throw new InvalidOperationException(typeof(T).Name + " is not installed.");
 
-        public T? Find<T>() where T : GameSystem => _systems.OfType<T>().FirstOrDefault();
+        public T? Find<T>() where T : GameSystem
+        {
+            if (_byType.TryGetValue(typeof(T), out GameSystem? found)) return (T?)found;
+            T? system = _systems.OfType<T>().FirstOrDefault();
+            if (!_attaching) _byType[typeof(T)] = system;
+            return system;
+        }
 
         /// <summary>Every installed system implementing an interface (a hook other systems ask: IObjectUseHandler, IStatusSource).</summary>
-        public IEnumerable<T> Implementing<T>() => _systems.OfType<T>();
+        public IReadOnlyList<T> Implementing<T>()
+        {
+            if (_implementing.TryGetValue(typeof(T), out object? found)) return (IReadOnlyList<T>)found;
+            List<T> systems = _systems.OfType<T>().ToList();
+            if (!_attaching) _implementing[typeof(T)] = systems;
+            return systems;
+        }
+
+        /// <summary>Where the recent ticks' time went, by phase and by system (<c>::perf</c>).</summary>
+        public TickProfiler Profiler { get; }
 
         /// <summary>Handles a client message type. One handler per type; later registrations replace earlier ones.</summary>
         public void OnMessage<T>(Action<Player, T> handler) where T : Message =>
@@ -309,8 +347,7 @@ namespace Rth.Server.Game
         public void RecalculateStats(Player player)
         {
             player.Stats.Clear();
-            foreach (GameSystem system in _systems)
-                if (system is IStatContributor contributor) contributor.Contribute(player, player.Stats);
+            foreach (IStatContributor contributor in Implementing<IStatContributor>()) contributor.Contribute(player, player.Stats);
             player.MaxBlood = Math.Max(1, player.Stats.Get(StatIds.MaxBlood));
             player.MaxDevotion = Math.Max(0, player.Stats.Get(StatIds.MaxDevotion));
             if (player.Blood > player.MaxBlood) player.Blood = player.MaxBlood;
@@ -322,8 +359,7 @@ namespace Rth.Server.Game
         public List<StatusState> StatusesOf(Player player)
         {
             var statuses = new List<StatusState>();
-            foreach (GameSystem system in _systems)
-                if (system is IStatusSource source) source.AddStatuses(player, statuses);
+            foreach (IStatusSource source in Implementing<IStatusSource>()) source.AddStatuses(player, statuses);
             return statuses;
         }
 
@@ -355,15 +391,61 @@ namespace Rth.Server.Game
         public void Tick()
         {
             CurrentTick++;
+            Profiler.BeginTick();
+            long t = TickProfiler.Now;
             ProcessTimers();      // 1. world/global timers
+            t = EndPhase(0, t);
             ProcessInput();       // 2. client input queued since last tick
+            t = EndPhase(1, t);
             ProcessNpcs();        // 3. NPCs
+            t = EndPhase(2, t);
             ProcessPlayers();     // 4. player queues, actions, combat, movement
+            t = EndPhase(3, t);
             ProcessLogouts();     // 5a. logouts...
+            t = EndPhase(4, t);
             ProcessLogins();      // 5b. ...then logins
+            t = EndPhase(5, t);
             ProcessZones();       // 6. zone and ground-item updates
+            t = EndPhase(6, t);
             SendUpdates();        // 7. tell each client what changed near them
+            t = EndPhase(7, t);
             Cleanup();            // 8. per-tick cleanup
+            EndPhase(8, t);
+            ReportSlowTick(Profiler.EndTick());
+        }
+
+        private static readonly Action<GameSystem> OnTimersHook = s => s.OnTimers();
+        private static readonly Action<GameSystem> OnNpcsHook = s => s.OnNpcs();
+        private static readonly Action<GameSystem> OnZonesHook = s => s.OnZones();
+        private static readonly Action<GameSystem> OnCleanupHook = s => s.OnCleanup();
+
+        private long EndPhase(int phase, long since)
+        {
+            Profiler.Phase(phase, since);
+            return TickProfiler.Now;
+        }
+
+        private uint _lastSlowTickLog;
+
+        /// <summary>A tick that ate most of its period is logged with what cost the most (at most once every 100 ticks).</summary>
+        private void ReportSlowTick(double ms)
+        {
+            if (_config.SlowTickMillis <= 0 || ms < _config.SlowTickMillis) return;
+            if (_lastSlowTickLog != 0 && CurrentTick - _lastSlowTickLog < 100) return;
+            _lastSlowTickLog = CurrentTick;
+            _log("Slow tick " + CurrentTick + ": " + ms.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) +
+                 " ms (" + _players.Count + " players, " + _npcs.Count + " NPCs). Costliest: " + Profiler.SlowestInLastTick(4) + ".");
+        }
+
+        /// <summary>Runs one hook of every system, timing each.</summary>
+        private void EachSystem(Action<GameSystem> hook)
+        {
+            for (int i = 0; i < _systems.Count; i++)
+            {
+                long start = TickProfiler.Now;
+                hook(_systems[i]);
+                Profiler.System(i, start);
+            }
         }
 
         private void ProcessTimers()
@@ -377,7 +459,7 @@ namespace Rth.Server.Game
                 foreach (Player player in _players.Values) player.Connection.Send(info);
             }
 
-            foreach (GameSystem system in _systems) system.OnTimers();
+            EachSystem(OnTimersHook);
 
             if (_config.AutosaveIntervalTicks > 0 && CurrentTick % (uint)_config.AutosaveIntervalTicks == 0)
                 SaveAll();
@@ -457,15 +539,21 @@ namespace Rth.Server.Game
 
         private void ProcessNpcs()
         {
-            foreach (GameSystem system in _systems) system.OnNpcs();
+            EachSystem(OnNpcsHook);
         }
 
         private void ProcessPlayers()
         {
             foreach (Player player in _players.Values)
             {
-                foreach (GameSystem system in _systems) system.BeforePlayer(player);
+                for (int i = 0; i < _systems.Count; i++)
+                {
+                    long start = TickProfiler.Now;
+                    _systems[i].BeforePlayer(player);
+                    Profiler.System(i, start);
+                }
 
+                long acting = TickProfiler.Now;
                 if (!player.IsDead)
                 {
                     Interaction? interaction = player.Interaction;
@@ -479,8 +567,14 @@ namespace Rth.Server.Game
                         ProcessMovement(player);
                     }
                 }
+                Profiler.System(_systems.Count, acting);
 
-                foreach (GameSystem system in _systems) system.AfterPlayer(player);
+                for (int i = 0; i < _systems.Count; i++)
+                {
+                    long start = TickProfiler.Now;
+                    _systems[i].AfterPlayer(player);
+                    Profiler.System(i, start);
+                }
             }
         }
 
@@ -581,8 +675,9 @@ namespace Rth.Server.Game
 
         private void ProcessZones()
         {
-            foreach (GameSystem system in _systems) system.OnZones();
+            EachSystem(OnZonesHook);
             Zones.Rebuild(VisibleEntities());
+            Zones.MarkActive(_players.Values, _config.NpcActiveRadius);
         }
 
         // ------------------------------------------------------------------ 7. updates
@@ -627,10 +722,20 @@ namespace Rth.Server.Game
                 foreach (int id in _deaths)
                     if (seen.Contains(id)) update.Deaths.Add(id);
 
-                foreach (GameSystem system in _systems) system.WriteUpdate(viewer, update, seen);
+                for (int i = 0; i < _systems.Count; i++)
+                {
+                    long start = TickProfiler.Now;
+                    _systems[i].WriteUpdate(viewer, update, seen);
+                    Profiler.System(i, start);
+                }
 
                 viewer.Connection.Send(update);
-                foreach (GameSystem system in _systems) system.SendState(viewer);
+                for (int i = 0; i < _systems.Count; i++)
+                {
+                    long start = TickProfiler.Now;
+                    _systems[i].SendState(viewer);
+                    Profiler.System(i, start);
+                }
                 if (viewer.StatsChanged)
                 {
                     viewer.StatsChanged = false;
@@ -652,7 +757,7 @@ namespace Rth.Server.Game
             _actions.Clear();
             _deaths.Clear();
             _objectEffects.Clear();
-            foreach (GameSystem system in _systems) system.OnCleanup();
+            EachSystem(OnCleanupHook);
         }
 
         // ------------------------------------------------------------------ persistence

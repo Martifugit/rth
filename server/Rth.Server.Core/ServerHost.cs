@@ -19,6 +19,7 @@ namespace Rth.Server
         private NetworkServer? _network;
         private TickLoop? _loop;
         private ContentWatcher? _watcher;
+        private JsonPlayerStore? _store;
 
         public ServerHost(ServerConfig config)
         {
@@ -36,7 +37,8 @@ namespace Rth.Server
             if (IsRunning) throw new InvalidOperationException("Server already running.");
             WorldLoader.Result loaded = WorldLoader.Load(_config.MapDirectory, _config.SpawnRegion);
             GameContent content = GameContent.Load(_config.ContentDirectory);
-            var store = new JsonPlayerStore(_config.SaveDirectory);
+            var store = new JsonPlayerStore(_config.SaveDirectory, _config.WriteSavesInBackground, _config.Log);
+            _store = store;
             var world = new World(_config, loaded.Map, store, content, loaded.Placements)
             {
                 Chart = ChartLoader.Load(_config.LayoutDirectory, _config.Log),
@@ -66,6 +68,8 @@ namespace Rth.Server
             _watcher = null;
             _loop?.Stop();
             World?.Shutdown();
+            _store?.Dispose(); // every save written before the server says it has stopped
+            _store = null;
             _config.Log("Server stopped.");
         }
 

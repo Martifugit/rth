@@ -37,6 +37,37 @@ namespace Rth.Server.Game
             }
         }
 
+        private readonly HashSet<long> _active = new HashSet<long>();
+
+        /// <summary>
+        /// Marks the zones within <paramref name="radius"/> tiles of each player (on their plane)
+        /// as active: where creatures think. A radius of 0 or less marks nothing (see <see cref="IsActive"/>).
+        /// </summary>
+        public void MarkActive(IEnumerable<Entity> players, int radius)
+        {
+            _active.Clear();
+            ActiveRadius = radius;
+            if (radius <= 0) return;
+            foreach (Entity player in players)
+            {
+                int minX = Zones.ZoneOf(player.Position.X - radius), maxX = Zones.ZoneOf(player.Position.X + radius);
+                int minY = Zones.ZoneOf(player.Position.Y - radius), maxY = Zones.ZoneOf(player.Position.Y + radius);
+                for (int zy = minY; zy <= maxY; zy++)
+                    for (int zx = minX; zx <= maxX; zx++)
+                        _active.Add(Key(player.Plane, zx, zy));
+            }
+        }
+
+        /// <summary>The radius the active zones were last marked with (0: everywhere is active).</summary>
+        public int ActiveRadius { get; private set; }
+
+        /// <summary>How many zones are active now.</summary>
+        public int ActiveZoneCount => _active.Count;
+
+        /// <summary>Whether a tile is near enough a player for creatures there to think. Always true when activity is off.</summary>
+        public bool IsActive(int plane, TileCoord tile) =>
+            ActiveRadius <= 0 || _active.Contains(Key(plane, Zones.ZoneOf(tile.X), Zones.ZoneOf(tile.Y)));
+
         /// <summary>
         /// Entities whose zone overlaps the square of the given radius around a tile. A superset:
         /// callers still check the exact distance (and that the entity is still in the world).
