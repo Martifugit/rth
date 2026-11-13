@@ -499,6 +499,7 @@ namespace Rth.Server.Game
 
             int dealt = 0;
             bool shot = ability.Style == CombatStyle.Ranged && ability.DamageMax > 0;
+            NoteStyle(player, ability.Style);
             if (ability.DamageMax > 0)
             {
                 double evasion = target is Npc npc ? npc.Def.Evasion : 0;
@@ -512,6 +513,7 @@ namespace Rth.Server.Game
                     double damage = (player.Stats.Get(StatIds.AbilityDamage) + StyleStat(player, target, StatIds.PowerFor(ability.Style))) * percent / 100.0;
                     double bonus = Stat(player, target, StatIds.DamageBonus) + StyleStat(player, target, StatIds.DamageFor(ability.Style));
                     if (ability.LowBloodBonus > 0) bonus += ability.LowBloodBonus * (1 - player.Blood / (double)Math.Max(1, player.MaxBlood));
+                    bonus += Versatility(player);
                     if (shot)
                     {
                         bonus += CombatRules.Calibrated(calibration, Rules.CalibrationDamageMax);
@@ -733,6 +735,40 @@ namespace Rth.Server.Game
             TickAim(player);
         }
 
+        // ------------------------------------------------------------------ versatility (mixing styles)
+
+        /// <summary>When the player last used each combat style.</summary>
+        private sealed class PlayerStyles
+        {
+            public readonly Dictionary<CombatStyle, uint> LastUsed = new Dictionary<CombatStyle, uint>();
+        }
+
+        private void NoteStyle(Player player, CombatStyle style)
+        {
+            if (style == CombatStyle.Melee || style == CombatStyle.Ranged || style == CombatStyle.Occult)
+                player.Component<PlayerStyles>().LastUsed[style] = World.CurrentTick;
+        }
+
+        /// <summary>Percent more damage for the other styles used within the window (none for one style, or with versatility off).</summary>
+        public int Versatility(Player player)
+        {
+            int window = Rules.VersatilityWindowTicks;
+            if (window <= 0) return 0;
+            int styles = 0;
+            foreach (uint last in player.Component<PlayerStyles>().LastUsed.Values)
+                if (World.CurrentTick - last < (uint)window) styles++;
+            return Math.Max(0, styles - 1) * Rules.VersatilityPercentPerStyle;
+        }
+
+        /// <summary>The tick the versatility bonus next drops a step (the oldest style in the window expires).</summary>
+        private uint VersatilityEnds(Player player)
+        {
+            uint oldest = uint.MaxValue;
+            foreach (uint last in player.Component<PlayerStyles>().LastUsed.Values)
+                if (World.CurrentTick - last < (uint)Rules.VersatilityWindowTicks) oldest = Math.Min(oldest, last);
+            return oldest == uint.MaxValue ? 0 : oldest + (uint)Rules.VersatilityWindowTicks;
+        }
+
         // ------------------------------------------------------------------ mending (Medicine's heal over time)
 
         /// <summary>Blood a salve still has to give back, a share each tick; a new salve replaces what was left.</summary>
@@ -930,6 +966,8 @@ namespace Rth.Server.Game
             if (calibration > 0) statuses.Add(new StatusState { Id = StatusIds.Sighted, Magnitude = calibration });
             int mending = Mending(player);
             if (mending > 0) statuses.Add(new StatusState { Id = StatusIds.Mending, Magnitude = mending });
+            int versatile = Versatility(player);
+            if (versatile > 0) statuses.Add(new StatusState { Id = StatusIds.Versatile, Magnitude = versatile, EndTick = VersatilityEnds(player) });
         }
 
         private static int Clamp(int value, int min, int max) => Math.Max(min, Math.Min(max, value));

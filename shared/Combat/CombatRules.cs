@@ -55,6 +55,14 @@ namespace Rth.Shared.Combat
         /// <summary>Percent more ranged damage at full calibration (in proportion below it).</summary>
         public int CalibrationDamageMax = 10;
 
+        /// <summary>
+        /// Versatility (docs/gdd/systems/combat-style.md, rule 3: mixing styles in a long fight pays):
+        /// each other style used within this many ticks adds <see cref="VersatilityPercentPerStyle"/>
+        /// to every hit. 0 turns it off.
+        /// </summary>
+        public int VersatilityWindowTicks;
+        public int VersatilityPercentPerStyle = 5;
+
         /// <summary>A share of a full-calibration amount, in proportion to the calibration held.</summary>
         public static int Calibrated(int calibration, int atFull) => (int)Math.Round(atFull * Math.Max(0, Math.Min(100, calibration)) / 100.0);
 

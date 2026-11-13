@@ -158,6 +158,13 @@
     "description": "The long way takes your blood as you go, and it won't come back by itself. Soul lanterns warm you, once each."
   },
   {
+    "id": "versatile",
+    "name": "Versatile",
+    "icon": "strike",
+    "color": "#d8b46a",
+    "description": "{value}% more damage for fighting in more than one style lately. Keep switching to keep it."
+  },
+  {
     "id": "sighted",
     "name": "Sighted",
     "icon": "eye",

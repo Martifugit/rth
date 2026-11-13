@@ -26,7 +26,10 @@
     "calibrationPerHit": 10,
     "calibrationMissLoss": 20,
     "calibrationAccuracyMax": 15,
-    "calibrationDamageMax": 10
+    "calibrationDamageMax": 10,
+
+    "versatilityWindowTicks": 25,
+    "versatilityPercentPerStyle": 6
   },
   "autoAttack": "bile_lash",
   "autoAttacks": { "Melee": "strike", "Ranged": "loose", "Occult": "bile_lash" },

@@ -37,6 +37,8 @@ namespace Rth.Shared.Combat
         public const string Sighted = "sighted";
         /// <summary>Blood still to come back from a salve (healOverTime); the value is how much.</summary>
         public const string Mending = "mending";
+        /// <summary>Several combat styles used lately: the value is the percent more damage.</summary>
+        public const string Versatile = "versatile";
 
         /// <summary>The status shown for a timed ability effect (<see cref="EffectType"/>).</summary>
         public static string ForEffect(EffectType type) => type.ToString().ToLowerInvariant();
