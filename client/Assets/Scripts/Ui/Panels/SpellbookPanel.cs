@@ -25,9 +25,10 @@ namespace Rth.Client.Ui.Panels
 
         protected override void Build(VisualElement root)
         {
-            UiKit.Text(root, "Your occult attacks cast the marked spell. Click a known spell to cast it instead.", "muted", "small");
+            // The spells first; the hint under them, where a small window can scroll it away.
             _list = UiKit.El(root, "well");
-            _list.style.marginTop = 6f;
+            Label hint = UiKit.Text(root, "Your occult attacks cast the marked spell. Click a known spell to cast it instead.", "muted", "small");
+            hint.style.marginTop = 6f;
         }
 
         public override void Refresh()
