@@ -11,7 +11,7 @@ namespace Rth.Client.Ui.Panels
 {
     /// <summary>
     /// The minimap: a round top-down view that turns with the camera (dots: gold creatures, white
-    /// players; click to walk), set in a bronze bezel (the skin's minimap-bezel, drawn by
+    /// players, green for your group; click to walk), set in a bronze bezel (the skin's minimap-bezel, drawn by
     /// tools/ui-skin/make_skin.py), with a flag where a click sent you and, for the marker set on the
     /// world map, a pin; while either is further off than the map shows, a small, softly blinking
     /// arrow at the edge points its way. The compass sits in a medallion at the top left (click to face
@@ -255,6 +255,10 @@ namespace Rth.Client.Ui.Panels
         {
             int used = 0;
             float inside = MapRadius - 6f;
+            // Group members are green, friends' faces among strangers easy to find.
+            SocialState social = Session.ServerState<SocialState>(SocialState.Key);
+            var group = new HashSet<int>();
+            foreach (SocialMember m in social.Group) group.Add(m.EntityId);
             foreach (EntityView e in World.Entities)
             {
                 if (e == null || e == local || e.IsDying) continue;
@@ -270,7 +274,8 @@ namespace Rth.Client.Ui.Panels
                 dot.style.display = DisplayStyle.Flex;
                 dot.style.left = MapRadius + offset.x - 3f;
                 dot.style.top = MapRadius - offset.y - 3f;
-                dot.style.backgroundColor = e.Kind == EntityKind.Player ? Color.white : new Color(1f, 0.85f, 0.2f);
+                dot.style.backgroundColor = e.Kind != EntityKind.Player ? new Color(1f, 0.85f, 0.2f)
+                    : group.Contains(e.Id) ? new Color(0.45f, 0.95f, 0.45f) : Color.white;
             }
             for (int i = used; i < _dotPool.Count; i++) _dotPool[i].style.display = DisplayStyle.None;
         }

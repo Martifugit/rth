@@ -60,6 +60,13 @@ namespace Rth.Server.Game
 
         protected override void OnAttach()
         {
+            // A group hears when one of its own falls.
+            World.Events.Subscribe<EntityDied>(e =>
+            {
+                if (e.Victim is Player fallen && Of(fallen).Group is Group group)
+                    foreach (Player member in group.Members)
+                        if (member != fallen) Notice(member, fallen.Name + " has fallen.");
+            });
             Register(Tell, "w", "tell", "msg", "pm");
             Register(Reply, "r", "reply");
             Register((p, a) => AddFriend(p, a), "friend", "addfriend");
