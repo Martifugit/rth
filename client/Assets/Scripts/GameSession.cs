@@ -227,6 +227,9 @@ namespace Rth.Client
             TrialViews trialViews = GetComponent<TrialViews>();
             if (trialViews == null) trialViews = gameObject.AddComponent<TrialViews>();
             trialViews.session = this;
+            TelegraphViews telegraphs = GetComponent<TelegraphViews>();
+            if (telegraphs == null) telegraphs = gameObject.AddComponent<TelegraphViews>();
+            telegraphs.session = this;
             MiningView mining = GetComponent<MiningView>();
             if (mining == null) mining = gameObject.AddComponent<MiningView>();
             mining.session = this;

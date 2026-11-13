@@ -114,6 +114,11 @@ namespace Rth.Shared.Combat
         public int CalibrationSpent;
         /// <summary>A hit holds the target where it stands for this many ticks.</summary>
         public int PinTicks;
+        /// <summary>
+        /// Above 0, using it on a creature makes it fight only you for this many ticks, and leaves
+        /// your threat on it the highest (holding a creature off a friend).
+        /// </summary>
+        public int TauntTicks;
 
         /// <summary>XP awarded each time it's used (verses train Religion), on top of any damage XP.</summary>
         public List<Rth.Shared.Progress.XpReward> Xp = new List<Rth.Shared.Progress.XpReward>();

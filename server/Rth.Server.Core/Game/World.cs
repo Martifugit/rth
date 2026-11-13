@@ -76,6 +76,7 @@ namespace Rth.Server.Game
             new FlagSystem(),
             new ItemSystem(),
             new CombatSystem(),
+            new ThreatSystem(),
             new DeathSystem(),
             new NpcSystem(placements.Npcs),
             new GroundItemSystem(),

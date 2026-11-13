@@ -8,7 +8,7 @@ using Rth.Shared.World;
 namespace Rth.Server.Game
 {
     /// <summary>NPC spawning and behaviour: wandering, aggression, chasing, attacking, leashing, respawning.</summary>
-    public sealed class NpcSystem : GameSystem
+    public sealed partial class NpcSystem : GameSystem
     {
         /// <summary>Dead NPCs linger this long before vanishing, so clients can show the death.</summary>
         private const int CorpseTicks = 2;
@@ -28,6 +28,7 @@ namespace Rth.Server.Game
         private readonly Dictionary<string, Action<Player, Npc>> _actions = new Dictionary<string, Action<Player, Npc>>();
 
         private CombatSystem Combat => World.Get<CombatSystem>();
+        private ThreatSystem? Threat => World.Find<ThreatSystem>();
 
         /// <summary>
         /// What an NPC menu action does once the player is standing beside the NPC (the dialogue
@@ -134,9 +135,12 @@ namespace Rth.Server.Game
                     npc.Returning = false;
                     npc.EngagedAt = null;
                     ResetHealth(npc);
+                    Threat?.Forget(npc);
                 }
                 return;
             }
+
+            if (TickPendingMove(npc)) return; // winding up a special attack: it stands and waits
 
             Entity? target = npc.TargetId != 0 ? World.FindEntity(npc.TargetId) : null;
             if (target != null && (target.IsDead || target.Plane != npc.Plane))
@@ -152,10 +156,14 @@ namespace Rth.Server.Game
             {
                 npc.ClearCombat();
                 npc.Returning = true;
+                Threat?.Forget(npc);
+                ResetMoves(npc);
                 World.SetPath(npc, from);
                 return;
             }
 
+            // Fighting several players, it turns on whoever holds clearly the most threat.
+            if (def.Attacks && Threat != null) target = Threat.Choose(npc, target);
             if (target == null && def.Aggressive && def.Attacks) target = FindAggroTarget(npc);
             if (target == null && npc.Spawn.Patrols && npc.EngagedAt != null)
             {
@@ -168,6 +176,11 @@ namespace Rth.Server.Game
             if (target != null && def.Attacks)
             {
                 npc.TargetId = target.Id;
+                if (World.CurrentTick >= npc.NextAttackTick && ChooseMove(npc, target) is NpcMoveDef move)
+                {
+                    BeginMove(npc, move, target);
+                    return;
+                }
                 if (Combat.Engage(npc, target, def.AttackRange) && World.CurrentTick >= npc.NextAttackTick)
                 {
                     Attack(npc, target);
@@ -176,8 +189,10 @@ namespace Rth.Server.Game
                 return;
             }
 
-            if (def.Regenerates && !npc.InCombat(World.CurrentTick, World.Rules.CombatTimeoutTicks) && npc.Blood < npc.MaxBlood)
+            bool fighting = npc.InCombat(World.CurrentTick, World.Rules.CombatTimeoutTicks);
+            if (def.Regenerates && !fighting && npc.Blood < npc.MaxBlood)
                 ResetHealth(npc);
+            if (!fighting && MovesOf(npc).UsedThisFight.Count > 0) MovesOf(npc).UsedThisFight.Clear(); // the fight is over
 
             if (World.CurrentTick < npc.BusyUntilTick) return; // someone is talking to it
             if (npc.Spawn.Patrols) Patrol(npc);
@@ -203,10 +218,17 @@ namespace Rth.Server.Game
         private void Attack(Npc npc, Entity target)
         {
             World.AddAction(new ActionEvent { SourceId = npc.Id, TargetId = target.Id, AbilityId = "npc:" + npc.Def.Id, Pole = 0 });
-            if (World.Random.NextDouble() < npc.Def.Accuracy)
+            if (World.Random.NextDouble() < HitChance(npc, target))
                 Combat.Damage(target, HitAmount(npc.Def, target), npc, HitKind.Normal, npc.Def.Style);
             else
                 Combat.Damage(target, 0, npc, HitKind.Miss, npc.Def.Style);
+        }
+
+        /// <summary>A creature's chance to land a blow: its accuracy, less the target's evasion (armour), never below 5%.</summary>
+        public static double HitChance(Npc npc, Entity target)
+        {
+            double evasion = target is Player player ? player.Stats.Get(Rth.Shared.Combat.StatIds.Evasion) / 100.0 : 0;
+            return Math.Max(0.05, npc.Def.Accuracy - evasion);
         }
 
         /// <summary>What a landed hit does: a share of the target's max blood, or a roll in the creature's range.</summary>
@@ -268,8 +290,10 @@ namespace Rth.Server.Game
             npc.HealthChanged = true;
         }
 
-        private static void Respawn(Npc npc)
+        private void Respawn(Npc npc)
         {
+            Threat?.Forget(npc);
+            ResetMoves(npc);
             npc.Despawned = false;
             npc.IsDead = false;
             npc.Returning = false;

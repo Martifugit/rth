@@ -66,13 +66,19 @@ namespace Rth.Shared.Combat
         /// <summary>Percent chance that a success uses nothing up (the node's depletion roll is skipped).</summary>
         public const string GatherConservation = "gatherConservation";
 
+        // Creatures and groups.
+        /// <summary>Percent more threat from your damage (a creature fighting several turns on whoever holds the most).</summary>
+        public const string Threat = "threat";
+        /// <summary>Percentage points taken off a creature's chance to land a blow on you (Defence levels, armour).</summary>
+        public const string Evasion = "evasion";
+
         public static readonly IReadOnlyList<string> All = new[]
         {
             AbilityDamage, Accuracy, DamageBonus, Ward, MaxBlood, MaxDevotion, DevotionBonus, Lifesteal,
             MeleeAccuracy, RangedAccuracy, OccultAccuracy, MeleeDamage, RangedDamage, OccultDamage,
             DeflectMelee, DeflectRanged, DeflectOccult, MeleePower, RangedPower, OccultPower,
             DeferDamage, BlockHit, BlockedPhlegm, ScarOnHit, BuilderPhlegm, BloodPerAbility,
-            ReflectMelee, SurviveLethal,
+            ReflectMelee, SurviveLethal, Threat, Evasion,
             GatherSuccess, GatherConservation,
         };
 

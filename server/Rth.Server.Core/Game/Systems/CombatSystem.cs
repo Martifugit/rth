@@ -521,6 +521,8 @@ namespace Rth.Server.Game
                 if (shot) Loose(player, target);
             }
             if (ability.CalibrationGain > 0) Aim(player).Calibration = Math.Min(100, Aim(player).Calibration + ability.CalibrationGain);
+            // A taunt turns the creature on you, landed or not: it heard the challenge.
+            if (ability.TauntTicks > 0 && target is Npc taunted && !taunted.IsDead) World.Find<ThreatSystem>()?.Taunt(taunted, player, ability.TauntTicks);
 
             // Resources move whether or not it landed: the humours were spent either way.
             switch (ability.Type)

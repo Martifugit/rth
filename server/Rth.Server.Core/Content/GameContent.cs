@@ -74,6 +74,73 @@ namespace Rth.Server.Content
         public double Scale = 1.0;
 
         public int ColorRgb => int.Parse(Color.TrimStart('#'), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+
+        /// <summary>
+        /// Its special attacks, tried in order each time it could attack (<see cref="NpcMoveDef"/>);
+        /// when none is ready or none passes its chance, it makes its ordinary blow.
+        /// </summary>
+        public List<NpcMoveDef> Moves = new List<NpcMoveDef>();
+    }
+
+    /// <summary>
+    /// One of a creature's special attacks (npcs.json <c>moves</c>): a slam on the tile you stood
+    /// on, a sweep all round it, a heavy blow at its target, a mend of its own wounds. Most wind
+    /// up first, shown on the ground (the "telegraphs" state), so players can step out of it or
+    /// raise the right deflection hymn in time.
+    /// </summary>
+    public sealed class NpcMoveDef
+    {
+        public string Id = "";
+        /// <summary>Shown in messages ("Crushing slam").</summary>
+        public string Name = "";
+        /// <summary>Chance it's used when ready (0-1); otherwise the next move, or the ordinary blow, is tried.</summary>
+        public double Chance = 1;
+        /// <summary>Ticks before it can be used again.</summary>
+        public int CooldownTicks = 10;
+        /// <summary>Only used while its blood is below this percent of its max (an enrage, a last stand); 0 for always.</summary>
+        public int BelowBloodPercent;
+        /// <summary>Only once a fight (until it resets).</summary>
+        public bool OncePerFight;
+        /// <summary>How near the target must be to start it, in tiles; 0 means its ordinary attack range.</summary>
+        public int Range;
+        /// <summary>Ticks between starting it (the telegraph appears) and it landing. 0 lands at once.</summary>
+        public int WindupTicks;
+        /// <summary>
+        /// What it hits: <c>target</c> (only its target, and only if still in reach when it lands),
+        /// <c>targetTile</c> (the square of <see cref="Radius"/> round where the target stood when it
+        /// began), or <c>self</c> (the square of <see cref="Radius"/> round the creature).
+        /// </summary>
+        public string Area = Areas.Target;
+        public int Radius;
+        /// <summary>Its style, for deflection and messages; null uses the creature's.</summary>
+        public CombatStyle? Style;
+        public int MinHit;
+        public int MaxHit;
+        /// <summary>Above 0, a hit takes this percent of the target's max blood instead of <see cref="MinHit"/>-<see cref="MaxHit"/>.</summary>
+        public double HitPercent;
+        /// <summary>Rolls the creature's accuracy against each target (else, standing in it is being hit). Default: only single-target moves roll.</summary>
+        public bool? Rolls;
+        public int BleedPercent;
+        public int BleedTicks;
+        /// <summary>A hit holds the target in place this long.</summary>
+        public int PinTicks;
+        /// <summary>The creature mends this percent of its max blood when it lands.</summary>
+        public int HealPercent;
+        /// <summary>Told to players near it when it begins ("The ogre raises its club!").</summary>
+        public string? Message;
+        /// <summary>The creature's animation as it begins (a clip or role in the client's animations.json).</summary>
+        public string? Animation;
+
+        public static class Areas
+        {
+            public const string Target = "target";
+            public const string TargetTile = "targetTile";
+            public const string Self = "self";
+            public static readonly string[] All = { Target, TargetTile, Self };
+        }
+
+        public bool RollsAccuracy => Rolls ?? Area == Areas.Target;
+        public bool Damages => MaxHit > 0 || HitPercent > 0;
     }
 
     /// <summary>Where a creature lives, exported with the map (<c>&lt;map&gt;.spawns.json</c>).</summary>
@@ -405,6 +472,18 @@ namespace Rth.Server.Content
                 if (n.AttackRange < 1 || n.AttackTicks < 1) problems.Add("NPC '" + n.Id + "': attackRange and attackTicks must be at least 1.");
                 if (n.DropTable != null && !tables.ContainsKey(n.DropTable)) problems.Add("NPC '" + n.Id + "': drop table '" + n.DropTable + "' doesn't exist.");
                 if (!IsColor(n.Color)) problems.Add("NPC '" + n.Id + "': color '" + n.Color + "' isn't #RRGGBB.");
+                var moveIds = new HashSet<string>();
+                foreach (NpcMoveDef m in n.Moves)
+                {
+                    string where = "NPC '" + n.Id + "' move '" + m.Id + "'";
+                    if (string.IsNullOrEmpty(m.Id) || !moveIds.Add(m.Id)) problems.Add("NPC '" + n.Id + "': every move needs its own id.");
+                    if (Array.IndexOf(NpcMoveDef.Areas.All, m.Area) < 0) problems.Add(where + ": area must be one of " + string.Join(", ", NpcMoveDef.Areas.All) + ".");
+                    if (m.Chance <= 0 || m.Chance > 1) problems.Add(where + ": chance must be above 0 and at most 1.");
+                    if (m.CooldownTicks < 0 || m.WindupTicks < 0 || m.Radius < 0 || m.Range < 0) problems.Add(where + ": ticks, radius and range can't be negative.");
+                    if (m.MinHit > m.MaxHit) problems.Add(where + ": minHit is above maxHit.");
+                    if (!m.Damages && m.HealPercent <= 0) problems.Add(where + ": it neither hits nor heals.");
+                    if (m.Area == NpcMoveDef.Areas.Target && m.Radius > 0) problems.Add(where + ": a radius needs area targetTile or self.");
+                }
             }
 
             foreach (ItemAmount start in parts.World.StarterInventory)

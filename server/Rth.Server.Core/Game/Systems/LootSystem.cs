@@ -2,7 +2,7 @@ using Rth.Server.Content;
 
 namespace Rth.Server.Game
 {
-    /// <summary>When an NPC with a drop table dies, roll it and put the loot on the ground for the killer.</summary>
+    /// <summary>When an NPC with a drop table dies, roll it and put the loot on the ground for whoever did the most damage.</summary>
     public sealed class LootSystem : GameSystem
     {
         protected override void OnAttach() => World.Events.Subscribe<EntityDied>(OnDied);
@@ -11,7 +11,8 @@ namespace Rth.Server.Game
         {
             if (!(e.Victim is Npc npc) || npc.Def.DropTable == null) return;
             GroundItemSystem ground = World.Get<GroundItemSystem>();
-            Player? owner = e.Killer as Player;
+            // The loot is for whoever did the most damage, not whoever landed the last blow.
+            Player? owner = World.Find<ThreatSystem>()?.TopDamage(npc) ?? e.Killer as Player;
             System.Collections.Generic.List<Drop> drops = DropRoller.Roll(World.Content, npc.Def.DropTable, World.Random);
             foreach (Drop drop in drops)
                 ground.Spawn(drop.ItemId, drop.Count, npc.Plane, npc.Position, owner);

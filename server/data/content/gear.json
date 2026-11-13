@@ -13,12 +13,12 @@
     "plate": {
       "requires": "defence",
       "slots": {
-        "Head": { "ward": 0.25, "maxBlood": 3 },
-        "Body": { "ward": 0.5, "maxBlood": 6 },
-        "Legs": { "ward": 0.4, "maxBlood": 5 },
+        "Head": { "ward": 0.25, "maxBlood": 3, "evasion": 0.1 },
+        "Body": { "ward": 0.5, "maxBlood": 6, "evasion": 0.2 },
+        "Legs": { "ward": 0.4, "maxBlood": 5, "evasion": 0.15 },
         "Hands": { "ward": 0.1, "meleeAccuracy": 0.1 },
-        "Feet": { "ward": 0.1, "maxBlood": 1.5 },
-        "Offhand": { "ward": 0.4, "maxBlood": 2 }
+        "Feet": { "ward": 0.1, "maxBlood": 1.5, "evasion": 0.05 },
+        "Offhand": { "ward": 0.4, "maxBlood": 2, "evasion": 0.15 }
       }
     },
     "ranged-2h": {

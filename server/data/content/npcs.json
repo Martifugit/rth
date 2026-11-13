@@ -17,7 +17,8 @@
     "shape": "Box",
     "model": "Art/Assets/Creatures/Common/FenRat",
     "color": "#6b5a43",
-    "scale": 1.0
+    "scale": 1.0,
+    "moves": [{"id": "frenzied_bite", "name": "Frenzied bite", "chance": 0.25, "cooldownTicks": 12, "minHit": 30, "maxHit": 60, "bleedPercent": 50, "bleedTicks": 6, "message": "The fen rat lunges, teeth bared!"}]
   },
   {
     "id": "vitriol_mite",
@@ -38,7 +39,8 @@
     "tags": [ "occult-made" ],
     "shape": "Sphere",
     "color": "#c9b62f",
-    "scale": 0.7
+    "scale": 0.7,
+    "moves": [{"id": "vitriol_burst", "name": "Vitriol burst", "area": "targetTile", "radius": 1, "windupTicks": 3, "cooldownTicks": 20, "chance": 0.5, "minHit": 120, "maxHit": 180, "message": "The mite swells with vitriol. Get clear!"}]
   },
   {
     "id": "clerk_ambrose",
