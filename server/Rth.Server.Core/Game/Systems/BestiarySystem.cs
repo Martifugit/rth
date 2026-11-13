@@ -38,11 +38,12 @@ namespace Rth.Server.Game
             BuildRecipeMap();
             World.Events.Subscribe<EntityDied>(e =>
             {
-                if (e.Killer is Player p && e.Victim is Npc npc)
-                {
-                    Entry(p, npc.Def.Id).Kills++;
-                    Of(p).Dirty = true;
-                }
+                if (e.Victim is Npc npc)
+                    foreach (Player p in e.Credited)
+                    {
+                        Entry(p, npc.Def.Id).Kills++;
+                        Of(p).Dirty = true;
+                    }
             });
             World.Events.Subscribe<BossRunEnded>(e =>
             {
@@ -85,7 +86,7 @@ namespace Rth.Server.Game
             return record;
         }
 
-        private BestiaryEntry Entry(Player player, string npcId)
+        public BestiaryEntry Entry(Player player, string npcId)
         {
             Dictionary<string, BestiaryEntry> creatures = Of(player).State.Creatures;
             if (!creatures.TryGetValue(npcId, out BestiaryEntry? entry)) creatures[npcId] = entry = new BestiaryEntry();

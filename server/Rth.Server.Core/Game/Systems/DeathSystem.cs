@@ -25,9 +25,10 @@ namespace Rth.Server.Game
                 player.RespawnAtTick = World.CurrentTick + (uint)World.Rules.RespawnDelayTicks;
                 World.Tell(player, TextKind.Info, "Your humours come apart.");
             }
-            else if (e.Killer is Player winner)
+            else
             {
-                World.Tell(winner, TextKind.Info, "You have defeated the " + e.Victim.Name.ToLowerInvariant() + ".");
+                foreach (Player winner in e.Credited)
+                    World.Tell(winner, TextKind.Info, "You have defeated the " + e.Victim.Name.ToLowerInvariant() + ".");
             }
         }
 

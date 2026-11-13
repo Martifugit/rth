@@ -30,14 +30,22 @@ namespace Rth.Server.Game
     /// <summary>Something died. <see cref="Killer"/> is whoever landed the last hit, if anyone.</summary>
     public sealed class EntityDied
     {
-        public EntityDied(Entity victim, Entity? killer)
+        public EntityDied(Entity victim, Entity? killer, IReadOnlyList<Player>? credited = null)
         {
             Victim = victim;
             Killer = killer;
+            Credited = credited ?? (killer is Player p ? new[] { p } : System.Array.Empty<Player>());
         }
 
         public Entity Victim { get; }
+        /// <summary>Who landed the last blow.</summary>
         public Entity? Killer { get; }
+
+        /// <summary>
+        /// Every player who gets the kill: whoever landed the last blow and everyone else who hurt
+        /// it, so a group fight counts for all of them (quests, tasks, achievements, the bestiary).
+        /// </summary>
+        public IReadOnlyList<Player> Credited { get; }
     }
 
     /// <summary>A player began a trial (trials.json).</summary>

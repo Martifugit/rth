@@ -93,6 +93,23 @@ public class ThreatTests
     }
 
     [Fact]
+    public void EveryoneWhoHelpedGetsTheKill()
+    {
+        var fx = Arena(At("rat", 8, 5));
+        fx.Login("Alice");
+        fx.Login("Bob");
+        fx.Login("Carol");
+        Npc rat = fx.Npc("rat");
+        var credited = new List<string>();
+        fx.World.Events.Subscribe<EntityDied>(e => credited.AddRange(e.Credited.Select(p => p.Name)));
+        CombatSystem combat = fx.World.Get<CombatSystem>();
+        combat.Damage(rat, 100, fx.Player("Bob"), HitKind.Normal);
+        combat.Damage(rat, 200, fx.Player("Alice"), HitKind.Normal);
+        Assert.Equal(new[] { "Alice", "Bob" }, credited); // the last blow first; Carol never struck
+        Assert.Equal(1, fx.World.Get<BestiarySystem>().Entry(fx.Player("Bob"), "rat").Kills);
+    }
+
+    [Fact]
     public void ACreatureThatResetsForgetsEveryone()
     {
         var fx = Arena(At("ogre", 8, 5));

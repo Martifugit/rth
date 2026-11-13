@@ -686,7 +686,18 @@ namespace Rth.Server.Game
                 if (other is Player p && p.Interaction is AttackInteraction) World.StopInteraction(p);
             }
             if (victim is Player player) World.StopInteraction(player);
-            World.Events.Publish(new EntityDied(victim, killer));
+            World.Events.Publish(new EntityDied(victim, killer, Credited(victim, killer)));
+        }
+
+        /// <summary>Who gets the kill: the last blow's player and everyone else who hurt the creature.</summary>
+        private IReadOnlyList<Player> Credited(Entity victim, Entity? killer)
+        {
+            var credited = new List<Player>();
+            if (killer is Player last) credited.Add(last);
+            if (victim is Npc npc && World.Find<ThreatSystem>() is ThreatSystem threat)
+                foreach (Player helper in threat.Contributors(npc))
+                    if (!credited.Contains(helper)) credited.Add(helper);
+            return credited;
         }
 
         // ------------------------------------------------------------------ per tick

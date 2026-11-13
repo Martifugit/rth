@@ -40,7 +40,8 @@ namespace Rth.Server.Game
             World.Events.Subscribe<RecipeCompleted>(e => Progress(e.Player, "recipe", e.Recipe.Id));
             World.Events.Subscribe<EntityDied>(e =>
             {
-                if (e.Killer is Player p && e.Victim is Npc npc) Progress(p, "kill", npc.Def.Id);
+                if (e.Victim is Npc npc)
+                    foreach (Player p in e.Credited) Progress(p, "kill", npc.Def.Id);
             });
 
             DialogueSystem dialogue = World.Get<DialogueSystem>();

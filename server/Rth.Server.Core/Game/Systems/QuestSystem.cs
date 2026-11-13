@@ -55,7 +55,8 @@ namespace Rth.Server.Game
         {
             World.Events.Subscribe<EntityDied>(e =>
             {
-                if (e.Killer is Player p && e.Victim is Npc npc) Count(p, "kill", npc.Def.Id);
+                if (e.Victim is Npc npc)
+                    foreach (Player p in e.Credited) Count(p, "kill", npc.Def.Id);
             });
             World.Events.Subscribe<RecipeCompleted>(e => Count(e.Player, "recipe", e.Recipe.Id));
             World.Events.Subscribe<ItemUsedOn>(e => Count(e.Player, "use", e.Use.Id));
