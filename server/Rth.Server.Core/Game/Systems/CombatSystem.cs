@@ -609,6 +609,7 @@ namespace Rth.Server.Game
             int reflected = 0;
             if (target is Player defender && amount > 0 && kind != HitKind.Bleed)
             {
+                int raw = amount;
                 // Warding and wards lower it; choleric raises it (a negative ward).
                 double ward = defender.Stats.Get(StatIds.Ward) - Rules.BileDamageTakenPercent(defender.Bile);
                 double scaled = amount * Math.Max(0, 1 - Math.Min(90, ward) / 100.0);
@@ -618,7 +619,10 @@ namespace Rth.Server.Game
                     scaled *= 1 - Math.Min(90, deflect) / 100.0;
                     kind = HitKind.Deflected;
                 }
-                amount = TakeBlow(defender, (int)Math.Round(scaled), ref kind);
+                int beforeBlock = (int)Math.Round(scaled);
+                int blocked = beforeBlock * Math.Min(100, defender.Stats.Get(StatIds.BlockHit)) / 100;
+                amount = TakeBlow(defender, beforeBlock, ref kind);
+                if (source is Npc) Prevented(defender, Math.Max(0, raw - beforeBlock) + blocked);
                 // Riposte: part of a melee blow goes back to whoever struck it.
                 int reflect = style == CombatStyle.Melee && source != null ? Math.Min(100, defender.Stats.Get(StatIds.ReflectMelee)) : 0;
                 if (reflect > 0) reflected = amount * reflect / 100;
@@ -645,6 +649,17 @@ namespace Rth.Server.Game
             if (target.Blood <= 0) Kill(target, source);
             if (reflected > 0 && source != null && !source.IsDead) Damage(source, reflected, target, HitKind.Normal, CombatStyle.None);
             return amount;
+        }
+
+        /// <summary>
+        /// Defence learns from what it stops: XP for damage a creature's blow didn't do because of
+        /// the player's defences (<see cref="CombatRules.DefenceXpPerPrevented"/>).
+        /// </summary>
+        public void Prevented(Player player, int amount)
+        {
+            if (amount <= 0 || Rules.DefenceXpPerPrevented <= 0) return;
+            string? defence = World.Content.DefenceSkill;
+            if (defence != null) World.Find<SkillSystem>()?.AddXp(player, defence, amount * Rules.DefenceXpPerPrevented);
         }
 
         /// <summary>

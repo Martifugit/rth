@@ -382,7 +382,9 @@ your ammunition).
 
 ### 3.6 Defence
 *Built (2026-10-28, with E4): the four defensive abilities below as data, with the stats
-`reflectMelee` and `surviveLethal`. Training by damage prevented is not built.*
+`reflectMelee` and `surviveLethal`. Training by damage prevented is built (2026-11-13): wards,
+deflection, blocks and armour's evasion pay Defence XP for what they stop (combat.json
+`defenceXpPerPrevented`, provisional).*
 
 - **Gives:** the armour requirement for all three families, and **max blood**:
   `1000 + 90 x (Defence − 1)`, so 1,000 at level 1 and 9,910 at 100.

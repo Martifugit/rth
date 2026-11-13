@@ -218,11 +218,19 @@ namespace Rth.Server.Game
         private void Attack(Npc npc, Entity target)
         {
             World.AddAction(new ActionEvent { SourceId = npc.Id, TargetId = target.Id, AbilityId = "npc:" + npc.Def.Id, Pole = 0 });
-            if (World.Random.NextDouble() < HitChance(npc, target))
+            double roll = World.Random.NextDouble();
+            if (roll < HitChance(npc, target))
                 Combat.Damage(target, HitAmount(npc.Def, target), npc, HitKind.Normal, npc.Def.Style);
             else
+            {
                 Combat.Damage(target, 0, npc, HitKind.Miss, npc.Def.Style);
+                if (EvadedByArmour(npc, target, roll)) Combat.Prevented((Player)target, HitAmount(npc.Def, target));
+            }
         }
+
+        /// <summary>A miss that would have landed but for the target's evasion: a blow their armour turned.</summary>
+        internal static bool EvadedByArmour(Npc npc, Entity target, double roll) =>
+            target is Player && roll < Math.Max(0.05, npc.Def.Accuracy) && roll >= HitChance(npc, target);
 
         /// <summary>A creature's chance to land a blow: its accuracy, less the target's evasion (armour), never below 5%.</summary>
         public static double HitChance(Npc npc, Entity target)

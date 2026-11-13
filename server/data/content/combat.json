@@ -29,7 +29,8 @@
     "calibrationDamageMax": 10,
 
     "versatilityWindowTicks": 25,
-    "versatilityPercentPerStyle": 6
+    "versatilityPercentPerStyle": 6,
+    "defenceXpPerPrevented": 0.1
   },
   "autoAttack": "bile_lash",
   "autoAttacks": { "Melee": "strike", "Ranged": "loose", "Occult": "bile_lash" },

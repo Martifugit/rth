@@ -155,9 +155,12 @@ namespace Rth.Server.Game
 
         private void Strike(Npc npc, NpcMoveDef move, Entity victim, CombatStyle style)
         {
-            if (move.RollsAccuracy && World.Random.NextDouble() >= HitChance(npc, victim))
+            double roll = move.RollsAccuracy ? World.Random.NextDouble() : 0;
+            if (move.RollsAccuracy && roll >= HitChance(npc, victim))
             {
                 Combat.Damage(victim, 0, npc, HitKind.Miss, style);
+                if (EvadedByArmour(npc, victim, roll))
+                    Combat.Prevented((Player)victim, move.HitPercent > 0 ? (int)Math.Round(victim.MaxBlood * move.HitPercent / 100.0) : (move.MinHit + move.MaxHit) / 2);
                 return;
             }
             int amount = move.HitPercent > 0

@@ -63,6 +63,13 @@ namespace Rth.Shared.Combat
         public int VersatilityWindowTicks;
         public int VersatilityPercentPerStyle = 5;
 
+        /// <summary>
+        /// Defence XP for each point of a creature's blow that a player's defences took off (wards,
+        /// deflection, blocks) or that missed only because of their evasion (docs/skills.md 3.6:
+        /// "trained by damage prevented"). 0 turns it off.
+        /// </summary>
+        public double DefenceXpPerPrevented;
+
         /// <summary>A share of a full-calibration amount, in proportion to the calibration held.</summary>
         public static int Calibrated(int calibration, int atFull) => (int)Math.Round(atFull * Math.Max(0, Math.Min(100, calibration)) / 100.0);
 
