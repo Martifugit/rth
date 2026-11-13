@@ -126,8 +126,11 @@ Works like magic in RuneScape 3: the ability bar and the spellbook are separate 
 - **How spells look.** Each spell (like each ability) names its character animation; for now
   the auto-attack uses a one-handed cast and spenders and ultimates a two-handed one (see
   `client/Assets/Resources/Characters/animations.json`).
-- **Not built yet.** Today the auto-attack is the fixed `bile_lash` ability. The first spellbook
-  replaces it: active spell selection, reagent costs per cast, and the spell's animation.
+- **Built (2026-11-13, `claude/game-depth`):** spellbooks.json and `SpellSystem`. The first
+  book is the Sallow Primer: Bile Lash (1, a starter, burns nothing, so a new character can still
+  fight), Salt Sting (10), Gall Bolt (20) and Brine Lance (30), burning 1-3 crude salt a cast
+  (rendered from rat gall at Corvin's still). Corvin teaches them. Names and numbers provisional;
+  the houses' own books, and house favour, are still to come.
 
 ## Skills
 

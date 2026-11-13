@@ -643,9 +643,37 @@ items) and `AnglingLogSystem` (the fishing log). angling.json holds species, siz
 rules; trophies and fish boxes are generated per species. Perch, eel and pike with tier 1-3 tackle
 are at the `kittest` pond. Compile-checked outside Unity, not yet seen in the Editor.
 
+**Game depth (on `claude/game-depth`, 2026-11-13):** engine scale, group play, creature special
+attacks, spellbooks, social. Server tested (646 tests), client compile-checked outside Unity.
+- **Engine:** `World.Get/Find/Implementing` are cached; `TickProfiler` times every phase and system
+  (`::perf`; a tick over `ServerConfig.SlowTickMillis` is logged with its costliest systems);
+  creatures only think within `NpcActiveRadius` (32) of a player (fights, walks home and patrols
+  always run; `ZoneIndex.MarkActive`); aggression looks through the zone index; saves are written
+  behind the tick (`JsonPlayerStore` write-behind, flushed on stop); the pathfinder reuses its
+  arrays. `LoadTests`: 200 players and 3000 creatures tick in about 20 ms (debug build).
+- **Group fights:** `ThreatSystem` (threat from damage and the `threat` stat; a creature turns on
+  clearly more threat; `tauntTicks` on an ability holds it, e.g. Defence's Provoke); loot goes to
+  whoever did the most damage and is seen by their group; `EntityDied.Credited` gives the kill to
+  everyone who helped (quests, tasks, achievements, bestiary); the `evasion` stat (plate) lowers a
+  creature's chance to hit.
+- **Creature special attacks:** `moves` on an NPC (`NpcMoveDef`, `NpcSystem.Moves.cs`): chance,
+  cooldown, blood threshold, once a fight, wind-up, area (target, targetTile, self + radius),
+  damage, bleed, pin, self-heal, message. Wound-up moves show as the "telegraphs" state
+  (`TelegraphViews` drapes a coloured square). The fen rat bites, the vitriol mite bursts.
+- **Versatility:** other combat styles used within combat.json `versatilityWindowTicks` add
+  `versatilityPercentPerStyle` to every hit (GDD combat style, rule 3); the `versatile` status.
+- **Spellbooks:** spellbooks.json, `SpellSystem` (known spells saved, starter spells, the "spell"
+  intent picks the active one, dialogue `learnSpell` / `knowsSpell`), the occult auto-attack casts
+  the active spell and burns its reagents; the Sallow Primer (Bile Lash, Salt Sting, Gall Bolt,
+  Brine Lance on crude salt, taught by Corvin); `SpellbookPanel`.
+- **Social:** `SocialSystem`, all typed in chat: `/w`, `/r`, `/friend`, `/unfriend`, `/friends`,
+  `/ignore`, `/unignore`, `/invite`, `/accept`, `/decline`, `/leave`, `/kick`, `/group`, `/g` or
+  `//`, `/help`. Friends and ignores saved; the "social" state; chat colours by channel; group
+  members green on the minimap.
+
 **Next: not chosen yet.** Candidates: building out Tolling (landmarks first), more quests and
-achievements, Tailoring and Artifice content, tipped ammunition and spellbooks (the power layers
-ranged and occultism still lack).
+achievements, Tailoring and Artifice content, tipped ammunition, the houses' own spellbooks, a
+social panel (friends and group lists from the "social" state).
 
 ---
 
@@ -713,6 +741,11 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | Water beyond an instanced region's edges (so the world never ends) | `surround` (`water` colour, `level`) in its region data; Sync World adds `RegionSurround`, a sheet of water that follows the player near the region. |
 | A light on a placed piece (a candle heap, a brazier) | `light` on the piece (`color`, `intensity`, `range`, `height`, `flicker`); drawn with `Flicker`, which also fades lights out toward the fog's end. |
 | Something drawn glowing and see-through (souls, ghosts) | Its material named after a palette colour with `"soul": true` (palette.json): `NatureImporter` and `CreatureBody` draw it with `Resources/Shaders/Soul`. |
+| A creature's special attack (a slam, a sweep, an enrage, a mend) | An entry in its `moves` in npcs.json (`NpcMoveDef`: chance, cooldownTicks, belowBloodPercent, oncePerFight, range, windupTicks, area `target`/`targetTile`/`self` and radius, min/maxHit or hitPercent, rolls, bleed, pin, healPercent, message, animation). No code; a new kind of effect is a field read in `NpcSystem.Moves.cs`. Telegraphs reach clients as the "telegraphs" state. |
+| Who a creature fights in a group (threat, taunts) | `ThreatSystem`: `threat` stat (percent more threat), `tauntTicks` on an ability; `TopDamage` / `Contributors` for loot and credit. |
+| A spell (an occult auto-attack with a cost) | An occult `Auto` ability in abilities.json and an entry in spellbooks.json (spellbook, level, reagents, `starter`); taught by the dialogue action `learnSpell`. `SpellSystem`. |
+| A social command (typed in chat after "/") | `SocialSystem.Register(run, words)`; state in `SocialState`. |
+| Finding what a tick costs | `::perf` (the `TickProfiler`), the slow-tick log line, and `LoadTests` for a crowd. |
 | A conversation with no NPC in the world (a voice, the ferryman before his landing) | `DialogueSystem.Start(player, dialogueId, speaker)`; it ends when finished, closed or on death, not by walking away. |
 | What happens at death, the fee, the obol | death.json (`DeathRules`); the ferryman's conversation uses `ferryHolds` / `ferryFree` / `ferryCanPay` / `ferryObol` / `inRealm`, actions `ferryPay` / `ferryLeave`, tokens `{ferryFee}` `{ferryValue}` `{ferryHours}` `{deaths}`. Something else reacting to waking: subscribe to `PlayerRespawned`. |
 | Using an item on something ("Use X -> Y") | An entry in uses.json: the item (or `tag:`), one of `onObject` / `onNpc` / `onItem`, checks (`requirements`, dialogue `conditions`, `failMessage`) and outcomes (`consume`, `message`, `effects`, dialogue `actions`, a `recipe`, a `dialogue`). No code; a new kind of outcome is usually a dialogue action. Counted by quests and achievements as kind `use`. |
