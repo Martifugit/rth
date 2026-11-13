@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Rth.Server.Content;
 using Rth.Server.Persistence;
 using Rth.Shared.Net;
 using Rth.Shared.World;
@@ -80,6 +81,13 @@ namespace Rth.Server.Game
                     BossSystem bosses = World.Get<BossSystem>();
                     if (args[1] == "win" || args[1] == "fail") bosses.EndRun(player, args[1] == "win");
                     else if (!bosses.StartRun(player, args[1])) Say(player, "No boss '" + args[1] + "'.");
+                    break;
+                case "spawn" when args.Length >= 2:
+                    // A creature beside you, for trying fights; it respawns there until the server restarts.
+                    int many = args.Length >= 3 && int.TryParse(args[2], out int m) ? Math.Max(1, Math.Min(m, 20)) : 1;
+                    if (!World.Content.Npcs.ContainsKey(args[1])) { Say(player, "No NPC '" + args[1] + "'."); break; }
+                    for (int i = 0; i < many; i++)
+                        World.Get<NpcSystem>().Spawn(new NpcSpawn { Npc = args[1], Plane = player.Plane, X = player.Position.X + 2 + i % 3, Y = player.Position.Y + i / 3, Wander = 2 });
                     break;
                 case "devotion":
                     World.Get<ReligionSystem>().Restore(player, player.MaxDevotion);
@@ -214,6 +222,7 @@ namespace Rth.Server.Game
             "::land <x> <y>  -  stop flying and stand on a surface tile",
             "::level <skill> <level>  -  set a skill's level",
             "::give <item> <count>  -  items in your pack",
+            "::spawn <npc> <count>  -  creatures beside you (they respawn there until a restart)",
             "::devotion  -  refill devotion",
             "::die  -  die where you stand (the ferryman, the long way back)",
             "::boss <id>  -  start a boss run; ::boss win, ::boss fail end it",
