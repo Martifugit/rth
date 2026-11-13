@@ -236,6 +236,16 @@ namespace Rth.Server.Game
 
         public Group? GroupOf(Player player) => Of(player).Group;
 
+        /// <summary>Whether the player shares a group with the player of this account key (a group sees its members' loot).</summary>
+        public bool InGroupWith(Player player, string otherKey)
+        {
+            Group? group = Of(player).Group;
+            if (group == null) return false;
+            foreach (Player member in group.Members)
+                if (member.Key == otherKey && member != player) return true;
+            return false;
+        }
+
         public bool Invite(Player player, string name)
         {
             Player? to = string.IsNullOrWhiteSpace(name) ? null : World.FindPlayer(name.Trim());

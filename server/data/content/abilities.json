@@ -649,5 +649,18 @@
     "range": 9,
     "damageMin": 75,
     "damageMax": 140
+  },
+  {
+    "id": "provoke",
+    "style": "None",
+    "animation": "power_up_sword_shield",
+    "name": "Provoke",
+    "icon": "shield",
+    "description": "Call a creature's anger onto yourself. For six seconds it fights only you, and it stays angriest at you after.",
+    "type": "Builder",
+    "cooldownTicks": 15,
+    "range": 8,
+    "tauntTicks": 10,
+    "requirements": [{"skill": "defence", "level": 10}]
   }
 ]

@@ -130,6 +130,24 @@ public class ThreatTests
     }
 
     [Fact]
+    public void AGroupSeesItsMembersLoot()
+    {
+        var fx = Arena(At("rat", 8, 5));
+        FakeConnection alice = fx.Login("Alice");
+        FakeConnection bob = fx.Login("Bob");
+        fx.Login("Carol");
+        alice.FromClient(new ChatMessage { Text = "/invite bob" });
+        fx.Ticks(1);
+        bob.FromClient(new ChatMessage { Text = "/accept" });
+        fx.Ticks(1);
+        fx.World.Get<CombatSystem>().Damage(fx.Npc("rat"), 300, fx.Player("Alice"), HitKind.Normal);
+        GroundItemSystem ground = fx.World.Get<GroundItemSystem>();
+        GroundItem coins = Assert.Single(ground.Items);
+        Assert.True(ground.IsVisibleTo(coins, fx.Player("Bob")));
+        Assert.False(ground.IsVisibleTo(coins, fx.Player("Carol")));
+    }
+
+    [Fact]
     public void ArmourEvasionLowersACreaturesChanceToHit()
     {
         var fx = Arena(At("ogre", 8, 5));

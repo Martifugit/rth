@@ -92,9 +92,11 @@ namespace Rth.Server.Game
 
         public void Remove(GroundItem item) => _items.Remove(item.Id);
 
+        /// <summary>Whether a player sees (and may pick up) an item: its owner and their group at first, everyone once it goes public.</summary>
         public bool IsVisibleTo(GroundItem item, Player viewer) =>
             World.CanSee(viewer, item.Plane, item.Position) &&
-            (item.OwnerKey == null || item.OwnerKey == viewer.Key || World.CurrentTick >= item.PublicAtTick);
+            (item.OwnerKey == null || item.OwnerKey == viewer.Key || World.CurrentTick >= item.PublicAtTick ||
+             World.Find<SocialSystem>()?.InGroupWith(viewer, item.OwnerKey) == true);
 
         private void Drop(Player player, ItemUse use)
         {

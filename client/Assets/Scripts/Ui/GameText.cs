@@ -156,6 +156,7 @@ namespace Rth.Client.Ui
             if (a.CalibrationSpent > 0) lines.Add("Spends all your calibration: up to " + UiKit.Colour(a.CalibrationSpent + "% more damage", UiKit.Value) + " at a hundred");
             if (a.CalibrationGain > 0) lines.Add("Adds " + UiKit.Colour(a.CalibrationGain + " calibration", UiKit.Good));
             if (a.PinTicks > 0) lines.Add("Holds the target for " + UiKit.Colour((a.PinTicks * tickSeconds).ToString("0.#") + "s", UiKit.Value));
+            if (a.TauntTicks > 0) lines.Add("The creature fights only you for " + UiKit.Colour((a.TauntTicks * tickSeconds).ToString("0.#") + "s", UiKit.Value));
             if (a.PhlegmGain > 0) lines.Add("Builds " + UiKit.Colour(a.PhlegmGain + " phlegm", UiKit.Good));
             if (a.PhlegmRequired > 0) lines.Add("Needs " + UiKit.Colour(a.PhlegmRequired + "% phlegm", UiKit.Value) + ", spends " + a.PhlegmCost);
             if (a.BileShift != 0) lines.Add("Bile " + UiKit.Colour((a.BileShift > 0 ? "+" : "") + a.BileShift, a.BileShift > 0 ? new Color(0.95f, 0.8f, 0.2f) : new Color(0.72f, 0.55f, 0.95f)));
