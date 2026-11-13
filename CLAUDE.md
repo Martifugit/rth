@@ -643,8 +643,9 @@ items) and `AnglingLogSystem` (the fishing log). angling.json holds species, siz
 rules; trophies and fish boxes are generated per species. Perch, eel and pike with tier 1-3 tackle
 are at the `kittest` pond. Compile-checked outside Unity, not yet seen in the Editor.
 
-**Game depth (on `claude/game-depth`, 2026-11-13):** engine scale, group play, creature special
-attacks, spellbooks, social. Server tested (646 tests), client compile-checked outside Unity.
+**Game depth (merged 2026-11-13):** engine scale, group play, creature special attacks,
+spellbooks, tipped ammunition, social. Server tested (660 tests); the telegraphs and the Spellbook
+panel were checked in the Editor.
 - **Engine:** `World.Get/Find/Implementing` are cached; `TickProfiler` times every phase and system
   (`::perf`; a tick over `ServerConfig.SlowTickMillis` is logged with its costliest systems);
   creatures only think within `NpcActiveRadius` (32) of a player (fights, walks home and patrols
@@ -659,20 +660,30 @@ attacks, spellbooks, social. Server tested (646 tests), client compile-checked o
 - **Creature special attacks:** `moves` on an NPC (`NpcMoveDef`, `NpcSystem.Moves.cs`): chance,
   cooldown, blood threshold, once a fight, wind-up, area (target, targetTile, self + radius),
   damage, bleed, pin, self-heal, message. Wound-up moves show as the "telegraphs" state
-  (`TelegraphViews` drapes a coloured square). The fen rat bites, the vitriol mite bursts.
+  (`TelegraphViews` drapes a square drawn by `Resources/Shaders/Telegraph`: an outline at once, a
+  fill growing to the edge as the blow comes). The fen rat bites; the vitriol mite bursts, and its
+  shell splits when it's low; the grit skink (the dry edge's early creature, ranged, defined but not
+  placed) spits a pinning spray and sheds its tail. `::spawn <npc> <count>` for trying fights.
 - **Versatility:** other combat styles used within combat.json `versatilityWindowTicks` add
   `versatilityPercentPerStyle` to every hit (GDD combat style, rule 3); the `versatile` status.
 - **Spellbooks:** spellbooks.json, `SpellSystem` (known spells saved, starter spells, the "spell"
   intent picks the active one, dialogue `learnSpell` / `knowsSpell`), the occult auto-attack casts
   the active spell and burns its reagents; the Sallow Primer (Bile Lash, Salt Sting, Gall Bolt,
   Brine Lance on crude salt, taught by Corvin); `SpellbookPanel`.
+- **Tipped ammunition:** tips.json (`TipDef`: tips item, ammunition kinds, a chance per landed shot
+  plus more at full calibration, an effect: second hit, heal, bleed, pin, splash). Each tip
+  generates a tipped version of every plain ammunition it fits (`copper_arrow.garnet`), its recipe
+  and the use of tips on it (`TipContent`); `CombatSystem.Tips.cs` sets it off; recovered ones
+  come back plain. Garnet, amber and jet tips, cut from the gems at the net bench (provisional).
+- **Defence XP from damage prevented:** wards, deflection, blocks and armour's evasion pay
+  combat.json `defenceXpPerPrevented` for what they stop (`CombatSystem.Prevented`).
 - **Social:** `SocialSystem`, all typed in chat: `/w`, `/r`, `/friend`, `/unfriend`, `/friends`,
   `/ignore`, `/unignore`, `/invite`, `/accept`, `/decline`, `/leave`, `/kick`, `/group`, `/g` or
   `//`, `/help`. Friends and ignores saved; the "social" state; chat colours by channel; group
   members green on the minimap.
 
 **Next: not chosen yet.** Candidates: building out Tolling (landmarks first), more quests and
-achievements, Tailoring and Artifice content, tipped ammunition, the houses' own spellbooks, a
+achievements, Tailoring and Artifice content, more tips (phlegm's, tips for stones and bolts), the houses' own spellbooks, a
 social panel (friends and group lists from the "social" state).
 
 ---
@@ -743,6 +754,7 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | Something drawn glowing and see-through (souls, ghosts) | Its material named after a palette colour with `"soul": true` (palette.json): `NatureImporter` and `CreatureBody` draw it with `Resources/Shaders/Soul`. |
 | A creature's special attack (a slam, a sweep, an enrage, a mend) | An entry in its `moves` in npcs.json (`NpcMoveDef`: chance, cooldownTicks, belowBloodPercent, oncePerFight, range, windupTicks, area `target`/`targetTile`/`self` and radius, min/maxHit or hitPercent, rolls, bleed, pin, healPercent, message, animation). No code; a new kind of effect is a field read in `NpcSystem.Moves.cs`. Telegraphs reach clients as the "telegraphs" state. |
 | Who a creature fights in a group (threat, taunts) | `ThreatSystem`: `threat` stat (percent more threat), `tauntTicks` on an ability; `TopDamage` / `Contributors` for loot and credit. |
+| A tip for ammunition (ranged's power engine) | An entry in tips.json (`tip` item, `ammo` kinds, `level`, `chance`, `chanceCalibrated`, `effect`) and its tips item; the tipped ammunition, recipes and uses are generated. A new kind of effect is a field on `TipEffect` read in `CombatSystem.SetOffTip`. |
 | A spell (an occult auto-attack with a cost) | An occult `Auto` ability in abilities.json and an entry in spellbooks.json (spellbook, level, reagents, `starter`); taught by the dialogue action `learnSpell`. `SpellSystem`. |
 | A social command (typed in chat after "/") | `SocialSystem.Register(run, words)`; state in `SocialState`. |
 | Finding what a tick costs | `::perf` (the `TickProfiler`), the slow-tick log line, and `LoadTests` for a crowd. |
