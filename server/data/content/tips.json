@@ -1,0 +1,38 @@
+{
+  "_comment": "Ranged's power engine (docs/skills.md 3.4). Provisional: one tip per humour gem, names and numbers to be tuned. Each tip makes a tipped version of every plain ammunition of the kinds it fits ('copper_arrow.garnet'), tipped by using the tips on the ammunition. chance is the percent a landed shot sets it off; chanceCalibrated is added at full calibration.",
+  "tips": [
+    {
+      "id": "garnet",
+      "name": "Garnet",
+      "tip": "garnet_tips",
+      "ammo": [ "arrow" ],
+      "level": 10,
+      "xp": 2,
+      "chance": 8,
+      "chanceCalibrated": 12,
+      "effect": { "name": "Bloodletting", "message": "Your garnet tip drinks deep, and you feel it in your own veins.", "healPercent": 50, "bleedPercent": 30, "bleedTicks": 6 }
+    },
+    {
+      "id": "amber",
+      "name": "Amber",
+      "tip": "amber_tips",
+      "ammo": [ "arrow" ],
+      "level": 20,
+      "xp": 3,
+      "chance": 8,
+      "chanceCalibrated": 12,
+      "effect": { "name": "Flare", "message": "The amber tip bursts in a spray of yellow bile!", "damagePercent": 40, "splashRadius": 1, "splashPercent": 60 }
+    },
+    {
+      "id": "jet",
+      "name": "Jet",
+      "tip": "jet_tips",
+      "ammo": [ "arrow" ],
+      "level": 30,
+      "xp": 4,
+      "chance": 8,
+      "chanceCalibrated": 12,
+      "effect": { "name": "Stillness", "message": "The jet tip goes in cold. Your target stiffens.", "damagePercent": 25, "pinTicks": 3 }
+    }
+  ]
+}

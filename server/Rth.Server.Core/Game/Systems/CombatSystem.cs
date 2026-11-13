@@ -528,6 +528,7 @@ namespace Rth.Server.Game
                         target.RootedUntilTick = Math.Max(target.RootedUntilTick, World.CurrentTick + (uint)ability.PinTicks);
                         target.Waypoints.Clear();
                     }
+                    if (shot) SetOffTip(player, target, dealt, calibration); // before the shot leaves the quiver
                     if (shot) Aim(player).Calibration = Math.Min(100, Aim(player).Calibration + Rules.CalibrationPerHit);
                 }
                 else
@@ -861,6 +862,8 @@ namespace Rth.Server.Game
             ItemSystem? items = World.Find<ItemSystem>();
             string? ammo = items?.TakeAmmo(player);
             if (ammo == null) return;
+            // A tipped one comes back plain: the tip is spent on the shot.
+            ammo = World.Content.Item(ammo)?.Ammo?.Plain ?? ammo;
             if (World.Random.Next(100) < Rules.AmmoRecoverPercent)
                 World.Find<GroundItemSystem>()?.Spawn(ammo, 1, target.Plane, target.Position, player);
         }

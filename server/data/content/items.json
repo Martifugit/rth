@@ -604,6 +604,36 @@
     "tags": [ "gem", "black-bile" ]
   },
   {
+    "id": "garnet_tips",
+    "name": "Garnet tips",
+    "icon": "bead",
+    "examine": "Slivers of garnet, cut to sit on an arrowhead. They drink what they cut.",
+    "stackable": true,
+    "value": 5,
+    "color": "#8e1f2a",
+    "tags": [ "tips", "blood" ]
+  },
+  {
+    "id": "amber_tips",
+    "name": "Amber tips",
+    "icon": "bead",
+    "examine": "Slivers of amber, cut to sit on an arrowhead. Warm, and they want out.",
+    "stackable": true,
+    "value": 5,
+    "color": "#d99a2b",
+    "tags": [ "tips", "yellow-bile" ]
+  },
+  {
+    "id": "jet_tips",
+    "name": "Jet tips",
+    "icon": "bead",
+    "examine": "Slivers of jet, cut to sit on an arrowhead. Cold enough to still a heart for a moment.",
+    "stackable": true,
+    "value": 5,
+    "color": "#1f1d22",
+    "tags": [ "tips", "black-bile" ]
+  },
+  {
     "id": "tree_resin",
     "name": "Tree resin",
     "icon": "bead",

@@ -2259,5 +2259,8 @@
     "ticks": 3,
     "xp": 9
   },
-  {"id": "distil_crude_salt", "name": "rat gall", "verb": "render", "skill": "occultism", "level": 1, "station": "apothecary_still", "inputs": [{"item": "rat_gall", "count": 1}], "outputs": [{"item": "crude_salt", "count": 12}], "ticks": 3, "xp": 10}
+  {"id": "distil_crude_salt", "name": "rat gall", "verb": "render", "skill": "occultism", "level": 1, "station": "apothecary_still", "inputs": [{"item": "rat_gall", "count": 1}], "outputs": [{"item": "crude_salt", "count": 12}], "ticks": 3, "xp": 10},
+  {"id": "cut_garnet_tips", "name": "garnet tips", "verb": "cut", "skill": "artifice", "level": 10, "station": "net_bench", "group": "Tips", "inputs": [{"item": "rough_garnet", "count": 1}], "outputs": [{"item": "garnet_tips", "count": 10}], "ticks": 3, "xp": 2.5},
+  {"id": "cut_amber_tips", "name": "amber tips", "verb": "cut", "skill": "artifice", "level": 20, "station": "net_bench", "group": "Tips", "inputs": [{"item": "rough_amber", "count": 1}], "outputs": [{"item": "amber_tips", "count": 10}], "ticks": 3, "xp": 3},
+  {"id": "cut_jet_tips", "name": "jet tips", "verb": "cut", "skill": "artifice", "level": 30, "station": "net_bench", "group": "Tips", "inputs": [{"item": "rough_jet", "count": 1}], "outputs": [{"item": "jet_tips", "count": 10}], "ticks": 3, "xp": 5}
 ]

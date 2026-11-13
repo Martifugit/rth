@@ -112,6 +112,10 @@ namespace Rth.Shared.Items
         public string Kind = "";
         /// <summary>Its rung on the tier ladder (docs/skills.md 2.2).</summary>
         public int Tier = 1;
+        /// <summary>The tip it carries (tips.json), on generated tipped ammunition; null when plain.</summary>
+        public string? Tip;
+        /// <summary>The plain ammunition it was tipped from: what comes back when one is recovered (the tip is spent).</summary>
+        public string? Plain;
     }
 
     public sealed class EquipmentDef

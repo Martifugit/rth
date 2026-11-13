@@ -382,6 +382,8 @@ namespace Rth.Client
                         break;
                     case ContentInfoMessage info:
                         Content = info.Parse();
+                        ClientContent tipsFrom = Content;
+                        Ui.GameText.FindTip = id => tipsFrom.Tips.Find(t => t.Id == id);
                         ObjectRecolors.Apply(Content);
                         _abilities.Clear();
                         foreach (AbilityDef a in Content.Abilities) _abilities[a.Id] = a;

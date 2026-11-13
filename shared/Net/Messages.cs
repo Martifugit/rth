@@ -599,6 +599,7 @@ namespace Rth.Shared.Net
         public List<Rth.Shared.Progress.BossDef> Bosses = new List<Rth.Shared.Progress.BossDef>();
         public List<Rth.Shared.Combat.SpellbookDef> Spellbooks = new List<Rth.Shared.Combat.SpellbookDef>();
         public List<Rth.Shared.Combat.SpellDef> Spells = new List<Rth.Shared.Combat.SpellDef>();
+        public List<Rth.Shared.Combat.TipDef> Tips = new List<Rth.Shared.Combat.TipDef>();
         public CombatLevelDef CombatLevel = new CombatLevelDef();
         /// <summary>The world map, drawn from the continent layout (null when the server has none).</summary>
         public Rth.Shared.World.Layout.WorldChart? Chart;

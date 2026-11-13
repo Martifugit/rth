@@ -299,6 +299,8 @@ namespace Rth.Server.Content
         public List<UseDef> Uses = new List<UseDef>();
         /// <summary>Occultism's spellbooks and spells (spellbooks.json); none when left empty.</summary>
         public SpellbooksFile Spellbooks = new SpellbooksFile();
+        /// <summary>Ranged's tips (tips.json); tipped ammunition is generated from them.</summary>
+        public TipsFile Tips = new TipsFile();
         /// <summary>Gear stats by tier and family (gear.json).</summary>
         public GearRules Gear = new GearRules();
         /// <summary>Trophy angling (angling.json, docs/fishing.md).</summary>
@@ -360,6 +362,7 @@ namespace Rth.Server.Content
         public IReadOnlyList<SpellDef> SpellList { get; private set; } = new List<SpellDef>();
         public IReadOnlyDictionary<string, SpellDef> Spells { get; private set; } = new Dictionary<string, SpellDef>();
         public string SpellSkill { get; private set; } = "occultism";
+        public IReadOnlyDictionary<string, TipDef> Tips { get; private set; } = new Dictionary<string, TipDef>();
         /// <summary>The skill hymns need and train, and how much singing trains it.</summary>
         public HymnsFile HymnSettings { get; private set; } = new HymnsFile();
         public string? DefenceSkill { get; private set; }
@@ -411,6 +414,7 @@ namespace Rth.Server.Content
                 Bosses = ReadJson<List<Rth.Shared.Progress.BossDef>>(directory, "bosses.json"),
                 Uses = ReadJson<List<UseDef>>(directory, "uses.json"),
                 Spellbooks = ReadJson<SpellbooksFile>(directory, "spellbooks.json"),
+                Tips = ReadJson<TipsFile>(directory, "tips.json"),
                 Gear = ReadJson<GearRules>(directory, "gear.json"),
                 Angling = ReadJson<Rth.Shared.Angling.AnglingFile>(directory, "angling.json"),
                 Trials = ReadJson<List<TrialDef>>(directory, "trials.json"),
@@ -502,6 +506,13 @@ namespace Rth.Server.Content
             if (parts.World.RareDropChance < 0 || parts.World.RareDropChance > 1) problems.Add("World: rareDropChance must be 0-1.");
 
             Dictionary<string, SkillDef> skills = Index(parts.Skills.Skills, s => s.Id, "skill", problems);
+            // Tipped ammunition is made here, so everything after (recipes, shops, drops) can name it.
+            TipsFile tipFile = parts.Tips ?? new TipsFile();
+            int problemsBeforeTips = problems.Count;
+            TipContent.Validate(tipFile, items, skills.Keys, problems);
+            (List<RecipeDef> Recipes, List<UseDef> Uses) tipped = problems.Count == problemsBeforeTips
+                ? TipContent.Generate(tipFile, items)
+                : (new List<RecipeDef>(), new List<UseDef>());
             foreach (SkillDef s in parts.Skills.Skills)
                 foreach (string stat in s.StatsPerLevel.Keys)
                     if (!StatIds.IsKnown(stat)) problems.Add("Skill '" + s.Id + "': unknown stat '" + stat + "'.");
@@ -589,6 +600,9 @@ namespace Rth.Server.Content
                 if (r.OutputTable != null && !tables.ContainsKey(r.OutputTable)) problems.Add(where + "output table '" + r.OutputTable + "' doesn't exist.");
                 if (r.Ticks < 1) problems.Add(where + "ticks must be at least 1.");
             }
+
+            foreach (RecipeDef r in tipped.Recipes)
+                if (!recipes.ContainsKey(r.Id)) recipes[r.Id] = r;
 
             Dictionary<string, DialogueDef> dialogues = Index(parts.Dialogues, d => d.Id, "dialogue", problems);
             foreach (DialogueDef d in parts.Dialogues) ValidateDialogue(d, problems);
@@ -900,11 +914,12 @@ namespace Rth.Server.Content
                 HymnSettings = hymnFile,
                 Bosses = bosses,
                 Trials = trials,
-                Uses = parts.Uses.ToList(),
+                Uses = parts.Uses.Concat(tipped.Uses.Where(u => !parts.Uses.Any(h => h.Id == u.Id))).ToList(),
                 Spellbooks = spellbooks,
                 SpellList = spellFile.Spells.ToList(),
                 Spells = spells,
                 SpellSkill = spellFile.Skill,
+                Tips = tipFile.Tips.ToDictionary(t => t.Id),
                 DefenceSkill = parts.Skills.DefenceSkill,
                 RetiredSkills = parts.Skills.Retired,
                 CombatLevel = parts.Skills.CombatLevel,
@@ -1123,6 +1138,7 @@ namespace Rth.Server.Content
             Bosses = Bosses.Values.ToList(),
             Spellbooks = Spellbooks.Values.ToList(),
             Spells = SpellList.ToList(),
+            Tips = Tips.Values.ToList(),
             CombatLevel = CombatLevel,
             BileLimit = Rules.BileLimit,
             MaxPhlegm = Rules.MaxPhlegm,

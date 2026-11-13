@@ -92,6 +92,23 @@ namespace Rth.Client.Ui
             return "Tier " + t.Tier + " " + t.Slot.ToString().ToLowerInvariant() + (parts.Count > 0 ? ": " + string.Join(", ", parts) : "");
         }
 
+        /// <summary>Looks up a tip (tips.json) by id, for tipped ammunition's tooltip; set when content arrives.</summary>
+        public static System.Func<string, Rth.Shared.Combat.TipDef> FindTip = _ => null;
+
+        /// <summary>What a tip does, in a line: "Bloodletting, 8% a landed shot (20% at full calibration): heals you 50% of the hit..."</summary>
+        public static string TipLine(Rth.Shared.Combat.TipDef tip)
+        {
+            Rth.Shared.Combat.TipEffect e = tip.Effect;
+            var does = new List<string>();
+            if (e.DamagePercent > 0) does.Add("hits again for " + e.DamagePercent + "%");
+            if (e.SplashRadius > 0) does.Add("hits creatures within " + e.SplashRadius + " tile" + (e.SplashRadius == 1 ? "" : "s") + " for " + e.SplashPercent + "%");
+            if (e.BleedPercent > 0) does.Add("bleeds the target " + e.BleedPercent + "% over " + e.BleedTicks + " ticks");
+            if (e.PinTicks > 0) does.Add("roots the target for " + e.PinTicks + " ticks");
+            if (e.HealPercent > 0) does.Add("heals you " + e.HealPercent + "%");
+            string chance = tip.Chance.ToString("0.#") + "% a landed shot" + (tip.ChanceCalibrated > 0 ? " (" + (tip.Chance + tip.ChanceCalibrated).ToString("0.#") + "% at full calibration)" : "");
+            return e.Name + ", " + chance + ": " + string.Join(", ", does) + " (of the shot's damage)";
+        }
+
         public static string Describe(ItemDef def, int count)
         {
             var lines = new List<string> { UiKit.Title(def.Name) + (count > 1 ? UiKit.Colour("  x" + count.ToString("N0"), UiKit.Value) : "") };
@@ -103,6 +120,8 @@ namespace Rth.Client.Ui
                     + (def.Tool.Conservation > 0 ? ", " + (def.Tool.Conservation * 100).ToString("0.#") + "% conservation" : ""), UiKit.Value));
             if (def.Tackle != null) lines.Add(UiKit.Colour(TackleLine(def.Tackle), UiKit.Value));
             if (def.Ammo != null) lines.Add(UiKit.Colour("Tier " + def.Ammo.Tier + " " + def.Ammo.Kind + ", worn in the quiver; one a shot, some land to be picked up again", UiKit.Value));
+            Rth.Shared.Combat.TipDef tip = def.Ammo?.Tip != null ? FindTip(def.Ammo.Tip) : null;
+            if (tip != null) lines.Add(UiKit.Colour(TipLine(tip), UiKit.Value));
             if (def.Equipment?.Ammo != null) lines.Add(UiKit.Colour("Fires " + def.Equipment.Ammo + "s from the quiver", UiKit.Value));
             if (!string.IsNullOrEmpty(def.Examine)) lines.Add(def.Examine);
             if (def.Equipment != null && def.Equipment.Stats.Count > 0)
