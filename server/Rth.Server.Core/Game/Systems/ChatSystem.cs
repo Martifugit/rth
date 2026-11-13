@@ -6,8 +6,8 @@ namespace Rth.Server.Game
 {
     /// <summary>
     /// Players talking. Public chat reaches everyone who can see the speaker (and appears over
-    /// their head on the client). Private messages, friends and group chat become further
-    /// <see cref="ChatChannel"/>s handled here.
+    /// their head on the client), less those ignoring them. A line starting with "/" is a social
+    /// command (<see cref="SocialSystem"/>: private messages, friends, groups); "::" a dev command.
     /// </summary>
     public sealed class ChatSystem : GameSystem
     {
@@ -23,6 +23,7 @@ namespace Rth.Server.Game
                 return;
             }
             if (message.Channel != ChatChannel.Public) return;
+            if (World.Find<SocialSystem>() is SocialSystem social && social.TryCommand(player, text)) return;
 
             Say(player, text);
         }
@@ -31,8 +32,9 @@ namespace Rth.Server.Game
         public void Say(Player player, string text)
         {
             var line = new ChatLineMessage { Channel = ChatChannel.Public, EntityId = player.Id, From = player.Name, Text = text };
+            SocialSystem? social = World.Find<SocialSystem>();
             foreach (Player listener in World.Players.ToList())
-                if (World.CanSee(listener, player)) listener.Connection.Send(line);
+                if (World.CanSee(listener, player) && social?.Ignores(listener, player) != true) listener.Connection.Send(line);
         }
 
         /// <summary>Printable characters only, single spaces, trimmed, and not too long.</summary>

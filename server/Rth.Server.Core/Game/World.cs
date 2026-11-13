@@ -105,6 +105,7 @@ namespace Rth.Server.Game
             new AnglingSpotSystem(),
             new AnglingSystem(),
             new ChatSystem(),
+            new SocialSystem(),
             new DevSystem(),
             new RegionSystem(),
             new ClientStateSystem(),
@@ -195,6 +196,21 @@ namespace Rth.Server.Game
         // ------------------------------------------------------------------ entities
 
         public int NextEntityId() => _nextEntityId++;
+
+        /// <summary>Whether a character of this name exists: in the world now, or saved.</summary>
+        public bool PlayerExists(string name)
+        {
+            string key = PlayerNames.ToKey(name);
+            return _players.Values.Any(p => p.Key == key) || _store.Load(key) != null;
+        }
+
+        /// <summary>A saved (or online) character's name as they spell it, or null if there is none.</summary>
+        public string? SavedName(string name)
+        {
+            Player? online = FindPlayer(name);
+            if (online != null) return online.Name;
+            return _store.Load(PlayerNames.ToKey(name))?.Name;
+        }
 
         public Player? FindPlayer(string name)
         {

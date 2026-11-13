@@ -959,6 +959,14 @@ namespace Rth.Shared.Net
     public enum ChatChannel : byte
     {
         Public = 0,
+        /// <summary>A private message to this player (From is who sent it).</summary>
+        PrivateIn = 1,
+        /// <summary>A private message this player sent (From is who it went to), echoed back.</summary>
+        PrivateOut = 2,
+        /// <summary>Said to the player's group.</summary>
+        Group = 3,
+        /// <summary>A social notice: a friend logging in or out, a group invitation.</summary>
+        Notice = 4,
     }
 
     /// <summary>The player says something.</summary>

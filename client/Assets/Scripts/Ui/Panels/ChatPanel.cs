@@ -172,6 +172,15 @@ namespace Rth.Client.Ui.Panels
             _input.Q(className: "unity-text-field__input")?.SetEnabled(true);
         }
 
+        /// <summary>Public chat in blue, private messages in rose, the group in green.</summary>
+        private static Color ChannelColour(ChatChannel channel) => channel switch
+        {
+            ChatChannel.PrivateIn => new Color(0.95f, 0.6f, 0.75f),
+            ChatChannel.PrivateOut => new Color(0.85f, 0.55f, 0.7f),
+            ChatChannel.Group => new Color(0.55f, 0.9f, 0.55f),
+            _ => new Color(0.6f, 0.8f, 1f),
+        };
+
         private bool Passes(GameSession.LogLine line) =>
             _filter == Filter.All || (_filter == Filter.Public) == (line.From != null);
 
@@ -180,7 +189,7 @@ namespace Rth.Client.Ui.Panels
             if (!Passes(line)) return;
             if (line.From != null)
             {
-                UiKit.Text(_scroll, UiKit.Colour(Escape(line.From) + ":", UiKit.HeadingColour) + " " + UiKit.Colour(Escape(line.Text), new Color(0.6f, 0.8f, 1f)), "chat-line");
+                UiKit.Text(_scroll, UiKit.Colour(Escape(line.From) + ":", UiKit.HeadingColour) + " " + UiKit.Colour(Escape(line.Text), ChannelColour(line.Channel)), "chat-line");
                 return;
             }
             // The ferryman's remark on a death is narration with his words quoted ("Dark water, a

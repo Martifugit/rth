@@ -35,6 +35,8 @@ namespace Rth.Client
             public string Text;
             /// <summary>Who said it, for chat; null for game messages.</summary>
             public string From;
+            /// <summary>Which chat it came by (public, private, group, a social notice).</summary>
+            public ChatChannel Channel;
         }
 
         private enum State
@@ -408,10 +410,12 @@ namespace Rth.Client
                         CurrentTask = task;
                         break;
                     case ChatLineMessage chat:
-                        Log.Add(new LogLine { Kind = TextKind.Info, Text = chat.Text, From = chat.From });
+                        // Social notices read as game messages; the rest as someone talking.
+                        bool notice = chat.Channel == ChatChannel.Notice || string.IsNullOrEmpty(chat.From);
+                        Log.Add(new LogLine { Kind = TextKind.Info, Text = chat.Text, From = notice ? null : chat.From, Channel = chat.Channel });
                         LogTotal++;
                         if (Log.Count > MaxLogLines) Log.RemoveAt(0);
-                        world.ShowOverheadText(chat.EntityId, chat.Text);
+                        if (chat.Channel == ChatChannel.Public) world.ShowOverheadText(chat.EntityId, chat.Text);
                         break;
                     case RegionsMessage regionList:
                         regions.SetRegions(regionList.Regions);
