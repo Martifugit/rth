@@ -20,6 +20,16 @@
     "always": [ { "item": "vitriol_mite_carcass" } ]
   },
   {
+    "id": "grit_skink",
+    "rolls": 1,
+    "entries": [
+      { "item": "marks", "min": 3, "max": 15, "weight": 40 },
+      { "item": "sling_stone", "min": 5, "max": 15, "weight": 30 },
+      { "item": "rough_garnet", "weight": 4 }
+    ],
+    "nothingWeight": 26
+  },
+  {
     "id": "vitriol_mite_yield",
     "always": [ { "item": "mite_gland", "min": 1, "max": 2 } ],
     "rolls": 2,

@@ -24,6 +24,8 @@ public class PacingTests
     [InlineData("fen_rat", "apprentice_athame")]
     [InlineData("vitriol_mite", "watchmans_sword")]
     [InlineData("vitriol_mite", "apprentice_athame")]
+    [InlineData("grit_skink", "watchmans_sword")]
+    [InlineData("grit_skink", "apprentice_athame")]
     public void StarterFightsLastLongEnoughToMatter(string npc, string weapon)
     {
         GameContent content = GameContent.Load(Repo.ContentDirectory);

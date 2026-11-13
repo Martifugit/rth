@@ -40,7 +40,36 @@
     "shape": "Sphere",
     "color": "#c9b62f",
     "scale": 0.7,
-    "moves": [{"id": "vitriol_burst", "name": "Vitriol burst", "area": "targetTile", "radius": 1, "windupTicks": 3, "cooldownTicks": 20, "chance": 0.5, "minHit": 120, "maxHit": 180, "message": "The mite swells with vitriol. Get clear!"}]
+    "moves": [
+      {"id": "vitriol_burst", "name": "Vitriol burst", "area": "targetTile", "radius": 1, "windupTicks": 3, "cooldownTicks": 20, "chance": 0.5, "minHit": 120, "maxHit": 180, "message": "The mite swells with vitriol. Get clear!"},
+      {"id": "shell_split", "name": "Shell split", "area": "self", "radius": 1, "windupTicks": 2, "belowBloodPercent": 30, "oncePerFight": true, "minHit": 90, "maxHit": 140, "message": "The mite's shell splits. Step back!"}
+    ]
+  },
+  {
+    "id": "grit_skink",
+    "name": "Grit skink",
+    "examine": "A dry-edge lizard that fills its cheeks with grit and spits it hard. Its tail comes off; it grows another.",
+    "blood": 700,
+    "style": "Ranged",
+    "attackRange": 6,
+    "attackTicks": 4,
+    "maxHit": 70,
+    "accuracy": 0.65,
+    "evasion": 0.15,
+    "aggressive": true,
+    "aggroRadius": 5,
+    "wanderRadius": 3,
+    "leashRadius": 12,
+    "respawnTicks": 25,
+    "dropTable": "grit_skink",
+    "tags": [ "dry-edge" ],
+    "shape": "Box",
+    "color": "#a08a5c",
+    "scale": 0.6,
+    "moves": [
+      {"id": "grit_spray", "name": "Grit spray", "area": "targetTile", "radius": 1, "windupTicks": 2, "cooldownTicks": 14, "chance": 0.4, "minHit": 60, "maxHit": 100, "pinTicks": 2, "message": "The skink puffs up its cheeks..."},
+      {"id": "shed_tail", "name": "Shed tail", "area": "self", "belowBloodPercent": 40, "oncePerFight": true, "healPercent": 25, "message": "The skink sheds its tail and comes back at you!"}
+    ]
   },
   {
     "id": "clerk_ambrose",
