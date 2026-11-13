@@ -533,14 +533,29 @@ namespace Rth.Server.Game
 
         // ------------------------------------------------------------------ what clients see
 
+        // The nodes worth telling anyone about this tick (depleted, surging or burning), found once
+        // a tick rather than once a player: most of the world's nodes are simply there.
+        private readonly List<Node> _notable = new List<Node>();
+        private uint _notableTick = uint.MaxValue;
+
+        private List<Node> Notable(uint now)
+        {
+            if (_notableTick == now) return _notable;
+            _notableTick = now;
+            _notable.Clear();
+            foreach (Node n in _nodes)
+                if (n.IsDepleted(now) || n.IsSurging(now) || n.IsBurning(now)) _notable.Add(n);
+            return _notable;
+        }
+
         public override void SendState(Player player)
         {
             uint now = World.CurrentTick;
             var states = new List<NodeState>();
-            foreach (Node n in _nodes)
+            foreach (Node n in Notable(now))
             {
                 bool depleted = n.IsDepleted(now), surging = n.IsSurging(now), burning = n.IsBurning(now);
-                if ((!depleted && !surging && !burning) || !World.CanSee(player, n.Placed.Plane, n.Placed.Tile)) continue;
+                if (!World.CanSee(player, n.Placed.Plane, n.Placed.Tile)) continue;
                 states.Add(new NodeState
                 {
                     Type = n.Placed.Type, Plane = n.Placed.Plane, X = n.Placed.X, Y = n.Placed.Y, Depleted = depleted, Surging = surging, Burning = burning,

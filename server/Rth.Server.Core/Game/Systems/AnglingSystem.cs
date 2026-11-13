@@ -48,6 +48,8 @@ namespace Rth.Server.Game
             /// <summary>The last fight's state, kept until the next starts so the client can show how it ended.</summary>
             public AnglingFightState Last = new AnglingFightState();
             public string LastSent = "";
+            /// <summary>The settled state last sent, so a player not fishing costs nothing a tick.</summary>
+            public AnglingFightState? LastSentState;
         }
 
         private AnglingFile Rules => World.Content.Angling;
@@ -215,6 +217,8 @@ namespace Rth.Server.Game
         public override void SendState(Player player)
         {
             PlayerAngling angling = Of(player);
+            if (angling.Fight == null && ReferenceEquals(angling.Last, angling.LastSentState)) return;
+            angling.LastSentState = angling.Fight == null ? angling.Last : null;
             AnglingFightState state = angling.Fight?.State ?? angling.Last;
             if (angling.Fight != null) state.Steps = angling.Fight.Fight.Steps;
             JsonStateMessage message = JsonStateMessage.Of(AnglingFightState.StateKey, state);
