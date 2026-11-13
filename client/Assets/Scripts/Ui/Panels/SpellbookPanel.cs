@@ -57,7 +57,7 @@ namespace Rth.Client.Ui.Panels
             row.style.marginTop = 3f;
             string label = (active ? "» " : "") + spell.Name;
             Label name = active ? UiKit.Text(row, label, "bold") : UiKit.Text(row, label);
-            if (!known) name.style.opacity = 0.45f;
+            if (!known) row.style.opacity = 0.45f; // the whole row, level too, so unlearned spells read as such
             UiKit.El(row, "spacer");
             UiKit.Text(row, "Lv " + spell.Level, "muted", "small");
 
