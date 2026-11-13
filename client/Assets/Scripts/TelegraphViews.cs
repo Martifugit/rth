@@ -9,8 +9,9 @@ namespace Rth.Client
     /// Creatures' special attacks winding up (the "telegraphs" server state): a square draped
     /// over the ground where each will land, coloured by its style, brightening and pulsing faster
     /// as it nears the tick it lands. A blow aimed at one target follows that target round. Drawn
-    /// with the tile marker's shader (Resources/Shaders/Marker), so it reads as the same family of
-    /// ground marks. Plain on purpose: the look gets its proper pass with the new art direction.
+    /// with Resources/Shaders/Telegraph: an outline and faint floor at once, a fill growing to the
+    /// edge as the blow comes, a flash at the end. Plain on purpose: the look gets its proper pass
+    /// with the new art direction.
     /// </summary>
     public sealed class TelegraphViews : MonoBehaviour
     {
@@ -25,7 +26,8 @@ namespace Rth.Client
 
         private static readonly int ColorId = Shader.PropertyToID("_Color");
         private static readonly int AlphaId = Shader.PropertyToID("_Alpha");
-        private static readonly int AgeId = Shader.PropertyToID("_Age");
+        private static readonly int ProgressId = Shader.PropertyToID("_Progress");
+        private static readonly int SizeId = Shader.PropertyToID("_Size");
 
         private sealed class Mark
         {
@@ -77,7 +79,7 @@ namespace Rth.Client
 
         private Mark Create(Telegraph t)
         {
-            if (_shader == null) _shader = Resources.Load<Shader>("Shaders/Marker") ?? Shader.Find("Sprites/Default");
+            if (_shader == null) _shader = Resources.Load<Shader>("Shaders/Telegraph") ?? Shader.Find("Sprites/Default");
             var go = new GameObject("Telegraph " + t.Move);
             var mesh = new Mesh { name = "Telegraph" };
             go.AddComponent<MeshFilter>().sharedMesh = mesh;
@@ -108,10 +110,11 @@ namespace Rth.Client
             float span = Mathf.Max(1f, t.LandTick - t.StartTick);
             float progress = Mathf.Clamp01((tick - t.StartTick) / span);
             Color color = StyleColor(t.Style);
-            mark.Block.SetColor(ColorId, Color.Lerp(color * 0.7f, color, progress));
-            mark.Block.SetFloat(AlphaId, Mathf.Lerp(0.45f, 1f, progress));
-            // The marker's breath quickens as the blow comes: age runs faster near the end.
-            mark.Block.SetFloat(AgeId, (Time.unscaledTime - mark.Born) * (1f + 3f * progress));
+            mark.Block.SetColor(ColorId, color);
+            mark.Block.SetFloat(ProgressId, progress);
+            mark.Block.SetFloat(SizeId, 2 * t.Radius + 1);
+            // Fades in over a fifth of a second, so it arrives rather than pops.
+            mark.Block.SetFloat(AlphaId, Mathf.Clamp01((Time.unscaledTime - mark.Born) / 0.2f));
             mark.Renderer.SetPropertyBlock(mark.Block);
         }
 
