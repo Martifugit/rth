@@ -635,5 +635,19 @@
     "phlegmRequired": 100,
     "phlegmCost": 100,
     "requirements": [ { "skill": "ranged", "level": 10 } ]
+  },
+  {"id": "salt_sting", "animation": "magic_attack_1h", "name": "Salt Sting", "icon": "lash", "description": "A pinch of crude salt flung hot into an open wound. Burns 1 crude salt a cast.", "type": "Auto", "cooldownTicks": 4, "range": 8, "damageMin": 45, "damageMax": 85},
+  {"id": "gall_bolt", "animation": "magic_attack_1h", "name": "Gall Bolt", "icon": "lash", "description": "Gall and salt knotted into a bolt that bursts on contact. Burns 2 crude salt a cast.", "type": "Auto", "cooldownTicks": 4, "range": 8, "damageMin": 60, "damageMax": 110},
+  {
+    "id": "brine_lance",
+    "animation": "magic_attack_1h",
+    "name": "Brine Lance",
+    "icon": "lash",
+    "description": "A long thread of brine, drawn tight and driven through. Burns 3 crude salt a cast.",
+    "type": "Auto",
+    "cooldownTicks": 4,
+    "range": 9,
+    "damageMin": 75,
+    "damageMax": 140
   }
 ]

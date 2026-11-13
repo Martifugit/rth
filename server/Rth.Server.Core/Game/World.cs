@@ -92,6 +92,7 @@ namespace Rth.Server.Game
             new GatheringSystem(),
             new InterfaceSystem(),
             new DialogueSystem(),
+            new SpellSystem(),
             new BankSystem(),
             new FerrySystem(),
             new TrialSystem(),

@@ -494,7 +494,10 @@ public class TownTests
         Choose(fx, client, "Medicine it is.");
         Assert.StartsWith("Use it whenever you like.", LastLine(client).Text);
 
+        // Gall makes tincture or crude salt here, so the still asks which (the make window).
         client.FromClient(new ObjectActionMessage { ObjectType = "apothecary_still", X = 10, Y = 10, ActionId = "process" });
+        fx.Ticks(10); // walks over and opens it
+        client.FromClient(new IntentMessage { Kind = "make", Arg = "distil_melancholic_tincture|0" });
         fx.Ticks(15);
         Assert.Equal(tinctureBefore + 6, Count(fx, "melancholic_tincture")); // 3 per gall
         Assert.Equal(0, Count(fx, "rat_gall"));

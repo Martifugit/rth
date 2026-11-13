@@ -3180,5 +3180,6 @@
         }
       ]
     }
-  }
+  },
+  {"id": "crude_salt", "name": "Crude salt", "icon": "salts", "examine": "Grey salt rendered from gall. Sallow's spells burn it by the pinch.", "stackable": true, "value": 2, "color": "#b8b0a0", "tags": ["reagent"]}
 ]

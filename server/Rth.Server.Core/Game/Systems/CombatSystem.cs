@@ -259,8 +259,15 @@ namespace Rth.Server.Game
         /// <summary>The style the player fights with: their weapon's, or the unarmed style.</summary>
         public CombatStyle WeaponStyle(Player player) => CombatStyles.OfWeapon(Weapon(player), World.Content.UnarmedStyle);
 
-        /// <summary>The auto-attack the player makes with what they hold.</summary>
-        public AbilityDef AutoAttack(Player player) => World.Content.AutoAttackFor(Weapon(player));
+        /// <summary>
+        /// The auto-attack the player makes with what they hold: for occult, their active spell
+        /// (<see cref="SpellSystem"/>) when they have one, else the weapon's or the style's own.
+        /// </summary>
+        public AbilityDef AutoAttack(Player player)
+        {
+            if (WeaponStyle(player) == CombatStyle.Occult && World.Find<SpellSystem>()?.ActiveAbility(player) is AbilityDef spell) return spell;
+            return World.Content.AutoAttackFor(Weapon(player));
+        }
 
         // ------------------------------------------------------------------ engaging
 
@@ -410,7 +417,16 @@ namespace Rth.Server.Game
                     World.Tell(player, TextKind.Warning, ammo);
                     return false;
                 }
+                // A spell burns its reagents with every cast; out of them, the fight stops (target kept).
+                SpellSystem? spells = auto.Style == CombatStyle.Occult ? World.Find<SpellSystem>() : null;
+                string? reagents = spells?.CastProblem(player);
+                if (reagents != null)
+                {
+                    World.Tell(player, TextKind.Warning, reagents);
+                    return false;
+                }
                 UseAbility(player, target, auto);
+                spells?.PayForCast(player);
                 player.NextAttackTick = now + (uint)Math.Max(1, auto.CooldownTicks);
             }
             return true;

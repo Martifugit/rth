@@ -2258,5 +2258,6 @@
     "outputs": [ { "item": "yarrow_salve", "count": 1 } ],
     "ticks": 3,
     "xp": 9
-  }
+  },
+  {"id": "distil_crude_salt", "name": "rat gall", "verb": "render", "skill": "occultism", "level": 1, "station": "apothecary_still", "inputs": [{"item": "rat_gall", "count": 1}], "outputs": [{"item": "crude_salt", "count": 12}], "ticks": 3, "xp": 10}
 ]

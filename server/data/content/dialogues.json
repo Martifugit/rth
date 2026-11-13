@@ -134,6 +134,7 @@
             "conditions": [ { "type": "flag", "key": "corvin_still" } ],
             "actions": [ { "type": "openShop", "id": "corvins_back_room" } ]
           },
+          { "text": "Could you teach me some of your workings?", "next": "spells" },
           { "text": "Goodbye, Corvin." }
         ]
       },
@@ -176,6 +177,24 @@
         ],
         "text": "There. A dreamless draught. Give it to her yourself; she trusts you, apparently. And if she says anything as she drinks it, anything at all, you'll tell me. Won't you?",
         "next": null
+      },
+      "spells": {
+        "text": "Everything in my primer runs on crude salt: render rat gall in the still and it comes out grey and bitter. A pinch a cast, more for the bigger workings. What I'll teach depends on what you can hold.",
+        "options": [
+          { "text": "Teach me Salt Sting.", "conditions": [ { "type": "level", "skill": "occultism", "level": 10 }, { "type": "knowsSpell", "id": "salt_sting", "not": true } ], "actions": [ { "type": "learnSpell", "id": "salt_sting" } ], "next": "spells_learned" },
+          { "text": "Teach me Gall Bolt.", "conditions": [ { "type": "level", "skill": "occultism", "level": 20 }, { "type": "knowsSpell", "id": "gall_bolt", "not": true } ], "actions": [ { "type": "learnSpell", "id": "gall_bolt" } ], "next": "spells_learned" },
+          { "text": "Teach me Brine Lance.", "conditions": [ { "type": "level", "skill": "occultism", "level": 30 }, { "type": "knowsSpell", "id": "brine_lance", "not": true } ], "actions": [ { "type": "learnSpell", "id": "brine_lance" } ], "next": "spells_learned" },
+          { "text": "What can I learn later?", "next": "spells_later" },
+          { "text": "Another time.", "next": "greet" }
+        ]
+      },
+      "spells_learned": {
+        "text": "There. Choose it in your spellbook and your attacks will carry it. Keep salt on you; a working with nothing to burn is a man shouting at a wall.",
+        "next": "greet"
+      },
+      "spells_later": {
+        "text": "Salt Sting at ten, Gall Bolt at twenty, Brine Lance at thirty. Past that you'll want the houses' own books, and they don't hand them to strangers.",
+        "next": "spells"
       },
       "still_hint": {
         "text": "The humours, yes. Most folk only know bile as the thing that gives them fevers. Handled properly, it does rather more than that.",

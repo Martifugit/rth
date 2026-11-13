@@ -297,6 +297,8 @@ namespace Rth.Server.Content
         public HymnsFile Hymns = new HymnsFile();
         public List<Rth.Shared.Progress.BossDef> Bosses = new List<Rth.Shared.Progress.BossDef>();
         public List<UseDef> Uses = new List<UseDef>();
+        /// <summary>Occultism's spellbooks and spells (spellbooks.json); none when left empty.</summary>
+        public SpellbooksFile Spellbooks = new SpellbooksFile();
         /// <summary>Gear stats by tier and family (gear.json).</summary>
         public GearRules Gear = new GearRules();
         /// <summary>Trophy angling (angling.json, docs/fishing.md).</summary>
@@ -353,6 +355,11 @@ namespace Rth.Server.Content
         public IReadOnlyDictionary<string, Rth.Shared.Progress.BossDef> Bosses { get; private set; } = new Dictionary<string, Rth.Shared.Progress.BossDef>();
         /// <summary>Item-on-something uses, in file order (the first that matches and passes wins).</summary>
         public IReadOnlyList<UseDef> Uses { get; private set; } = new List<UseDef>();
+        public IReadOnlyDictionary<string, SpellbookDef> Spellbooks { get; private set; } = new Dictionary<string, SpellbookDef>();
+        /// <summary>Every spell, in the order of spellbooks.json.</summary>
+        public IReadOnlyList<SpellDef> SpellList { get; private set; } = new List<SpellDef>();
+        public IReadOnlyDictionary<string, SpellDef> Spells { get; private set; } = new Dictionary<string, SpellDef>();
+        public string SpellSkill { get; private set; } = "occultism";
         /// <summary>The skill hymns need and train, and how much singing trains it.</summary>
         public HymnsFile HymnSettings { get; private set; } = new HymnsFile();
         public string? DefenceSkill { get; private set; }
@@ -403,6 +410,7 @@ namespace Rth.Server.Content
                 Hymns = ReadJson<HymnsFile>(directory, "hymns.json"),
                 Bosses = ReadJson<List<Rth.Shared.Progress.BossDef>>(directory, "bosses.json"),
                 Uses = ReadJson<List<UseDef>>(directory, "uses.json"),
+                Spellbooks = ReadJson<SpellbooksFile>(directory, "spellbooks.json"),
                 Gear = ReadJson<GearRules>(directory, "gear.json"),
                 Angling = ReadJson<Rth.Shared.Angling.AnglingFile>(directory, "angling.json"),
                 Trials = ReadJson<List<TrialDef>>(directory, "trials.json"),
@@ -794,6 +802,25 @@ namespace Rth.Server.Content
                 if (a.Buff != null && !string.IsNullOrWhiteSpace(a.Buff.Status) && !statuses.ContainsKey(a.Buff.Status))
                     problems.Add("Ability '" + a.Id + "': buff status '" + a.Buff.Status + "' isn't in statuses.json.");
 
+            SpellbooksFile spellFile = parts.Spellbooks ?? new SpellbooksFile();
+            Dictionary<string, SpellbookDef> spellbooks = Index(spellFile.Spellbooks, b => b.Id, "spellbook", problems);
+            Dictionary<string, SpellDef> spells = Index(spellFile.Spells, sp => sp.Id, "spell", problems);
+            if (spellFile.Spells.Count > 0 && !skills.ContainsKey(spellFile.Skill)) problems.Add("Spellbooks: skill '" + spellFile.Skill + "' doesn't exist.");
+            foreach (SpellDef sp in spellFile.Spells)
+            {
+                string where = "Spell '" + sp.Id + "'";
+                if (!spellbooks.ContainsKey(sp.Spellbook)) problems.Add(where + ": spellbook '" + sp.Spellbook + "' doesn't exist.");
+                AbilityDef? cast = parts.Abilities.FirstOrDefault(a => a.Id == sp.Ability);
+                if (cast == null) problems.Add(where + ": ability '" + sp.Ability + "' doesn't exist.");
+                else if (cast.Type != AbilityType.Auto || cast.Style != CombatStyle.Occult) problems.Add(where + ": ability '" + sp.Ability + "' must be an occult auto-attack.");
+                if (sp.Level < 1) problems.Add(where + ": level must be at least 1.");
+                foreach (ItemCost r in sp.Reagents)
+                {
+                    if (!items.ContainsKey(r.Item)) problems.Add(where + ": reagent '" + r.Item + "' doesn't exist.");
+                    if (r.Count < 1) problems.Add(where + ": reagent counts must be at least 1.");
+                }
+            }
+
             HymnsFile hymnFile = parts.Hymns ?? new HymnsFile();
             Dictionary<string, HymnDef> hymns = Index(hymnFile.Hymns, h => h.Id, "hymn", problems);
             if (!skills.ContainsKey(hymnFile.Skill)) problems.Add("Hymns: skill '" + hymnFile.Skill + "' doesn't exist.");
@@ -874,6 +901,10 @@ namespace Rth.Server.Content
                 Bosses = bosses,
                 Trials = trials,
                 Uses = parts.Uses.ToList(),
+                Spellbooks = spellbooks,
+                SpellList = spellFile.Spells.ToList(),
+                Spells = spells,
+                SpellSkill = spellFile.Skill,
                 DefenceSkill = parts.Skills.DefenceSkill,
                 RetiredSkills = parts.Skills.Retired,
                 CombatLevel = parts.Skills.CombatLevel,
@@ -1090,6 +1121,8 @@ namespace Rth.Server.Content
             Statuses = Statuses.Values.ToList(),
             Hymns = Hymns.Values.ToList(),
             Bosses = Bosses.Values.ToList(),
+            Spellbooks = Spellbooks.Values.ToList(),
+            Spells = SpellList.ToList(),
             CombatLevel = CombatLevel,
             BileLimit = Rules.BileLimit,
             MaxPhlegm = Rules.MaxPhlegm,

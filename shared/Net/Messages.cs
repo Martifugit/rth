@@ -597,6 +597,8 @@ namespace Rth.Shared.Net
         public List<StatusDef> Statuses = new List<StatusDef>();
         public List<Rth.Shared.Religion.HymnDef> Hymns = new List<Rth.Shared.Religion.HymnDef>();
         public List<Rth.Shared.Progress.BossDef> Bosses = new List<Rth.Shared.Progress.BossDef>();
+        public List<Rth.Shared.Combat.SpellbookDef> Spellbooks = new List<Rth.Shared.Combat.SpellbookDef>();
+        public List<Rth.Shared.Combat.SpellDef> Spells = new List<Rth.Shared.Combat.SpellDef>();
         public CombatLevelDef CombatLevel = new CombatLevelDef();
         /// <summary>The world map, drawn from the continent layout (null when the server has none).</summary>
         public Rth.Shared.World.Layout.WorldChart? Chart;

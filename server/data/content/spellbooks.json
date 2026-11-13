@@ -1,0 +1,65 @@
+{
+  "_comment": "Occultism's spellbooks (docs/systems.md 'Spellbooks', docs/skills.md 3.5): one per house; the active spell is the occult auto-attack and burns its reagents each cast. Provisional names and numbers. Only the Sallow Primer is written so far.",
+  "skill": "occultism",
+  "spellbooks": [
+    {
+      "id": "sallow_primer",
+      "name": "The Sallow Primer",
+      "house": "Sallow",
+      "description": "Corvin Sallow's first lessons: humble workings on crude salt, taught to anyone who asks nicely and pays attention."
+    }
+  ],
+  "spells": [
+    {
+      "id": "bile_lash",
+      "name": "Bile Lash",
+      "spellbook": "sallow_primer",
+      "ability": "bile_lash",
+      "level": 1,
+      "starter": true,
+      "description": "A flick of humour at whatever you face. Costs nothing but nerve."
+    },
+    {
+      "id": "salt_sting",
+      "name": "Salt Sting",
+      "spellbook": "sallow_primer",
+      "ability": "salt_sting",
+      "level": 10,
+      "reagents": [
+        {
+          "item": "crude_salt",
+          "count": 1
+        }
+      ],
+      "description": "Crude salt, flung hot. Burns 1 crude salt a cast."
+    },
+    {
+      "id": "gall_bolt",
+      "name": "Gall Bolt",
+      "spellbook": "sallow_primer",
+      "ability": "gall_bolt",
+      "level": 20,
+      "reagents": [
+        {
+          "item": "crude_salt",
+          "count": 2
+        }
+      ],
+      "description": "A knot of gall that bursts on contact. Burns 2 crude salt a cast."
+    },
+    {
+      "id": "brine_lance",
+      "name": "Brine Lance",
+      "spellbook": "sallow_primer",
+      "ability": "brine_lance",
+      "level": 30,
+      "reagents": [
+        {
+          "item": "crude_salt",
+          "count": 3
+        }
+      ],
+      "description": "Brine drawn tight and driven through. Burns 3 crude salt a cast."
+    }
+  ]
+}
