@@ -112,13 +112,6 @@ namespace Rth.Shared.World.Data
                     if (npcIds.Count > 0 && !npcIds.Contains(n.Npc)) errors.Add($"{name}: npc '{n.Npc}' at ({n.X}, {n.Y}) isn't in npcs.json.");
                 if (e.Compiled.Errors.Count == 0) errors.AddRange(Stale(e));
             }
-            // Generated land's scenes are local (git ignores Assets/Scenes/Land/, since Sync World
-            // rebuilds them); a region taken over keeps hand work in its scene, so it moves out.
-            if (warnings != null)
-                foreach (Entry e in Regions)
-                    if (e.Region.Generated == null && e.Region.Scene != null && e.Region.Scene.StartsWith(GeneratedScenes, StringComparison.Ordinal))
-                        warnings.Add($"{e.Region.Id}: taken over, but its scene is still in {GeneratedScenes}, which git ignores: " +
-                                     "set its scene to its area's folder (Assets/Scenes/<Area>/), and Sync World moves it there.");
             // Maps without data were exported straight from a scene the old way (or are left over).
             if (warnings != null && Directory.Exists(MapsDirectory))
                 foreach (string map in Directory.GetFiles(MapsDirectory, "*.rthmap"))
@@ -133,33 +126,8 @@ namespace Rth.Shared.World.Data
                     RegionData a = Regions[i].Region, b = Regions[j].Region;
                     if (a.OriginX < b.OriginX + b.Width && b.OriginX < a.OriginX + a.Width && a.OriginY < b.OriginY + b.Height && b.OriginY < a.OriginY + a.Height)
                         errors.Add($"Regions '{a.Id}' and '{b.Id}' overlap.");
-                    else if (warnings != null && Seam(Regions[i], Regions[j]) is string seam) warnings.Add(seam);
                 }
             return errors;
-        }
-
-        /// <summary>
-        /// Where two regions side by side disagree on the height of the corners along their shared
-        /// border (a region without terrain is flat at 0): the ground would step there. Null if they
-        /// agree, aren't neighbours, or neither has terrain.
-        /// </summary>
-        public static string? Seam(Entry ea, Entry eb)
-        {
-            RegionData a = ea.Region, b = eb.Region;
-            Heightfield? ta = ea.Compiled.Terrain, tb = eb.Compiled.Terrain;
-            if (ta == null && tb == null) return null;
-            List<(int x, int y)> corners = TerrainSeams.SharedCorners(a, b);
-            if (corners.Count == 0) return null;
-            int differ = 0;
-            (int x, int y, float ha, float hb) first = default;
-            foreach ((int x, int y) in corners)
-            {
-                float ha = ta?.Corner(x, y) ?? 0f, hb = tb?.Corner(x, y) ?? 0f;
-                if (Math.Abs(ha - hb) < 0.005f) continue;
-                if (differ++ == 0) first = (x, y, ha, hb);
-            }
-            return differ == 0 ? null
-                : FormattableString.Invariant($"The ground steps at the border of '{a.Id}' and '{b.Id}': {differ} corners differ, the first at ({first.x}, {first.y}): {first.ha:0.##} against {first.hb:0.##}. `tools/world seams` mends it.");
         }
 
         /// <summary>Map files of a region that differ from what its data compiles to.</summary>

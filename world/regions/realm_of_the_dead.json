@@ -64,7 +64,7 @@
     "0*33"
   ] },
   "pieces": [
-    { "id": "ground", "kind": "tiles", "rect": [8192, 8192, 8224, 8224], "legend": { "=": { "material": "DeadPlank", "layer": "over" }, "a": { "material": "DeadAsh" }, "b": { "material": "DeadAshGrey" }, "c": { "material": "DeadCinder" }, "m": { "material": "DeadWetAsh" }, "s": { "material": "DeadSlate", "layer": "over" }, "~": { "material": "DeadWater", "water": true } }, "paint": true, "stoneLegend": { "1": { "material": "DeadBoneChips", "share": 0.03 }, "2": { "material": "DeadBoneChips", "share": 0.07 }, "3": { "material": "DeadSlateChips", "share": 0.15 } }, "rows": [
+    { "id": "ground", "kind": "tiles", "rect": [8192, 8192, 8224, 8224], "legend": { "=": { "material": "DeadPlank", "layer": "over" }, "a": { "material": "DeadAsh" }, "b": { "material": "DeadAshGrey" }, "c": { "material": "DeadCinder" }, "m": { "material": "DeadWetAsh" }, "s": { "material": "DeadSlate", "layer": "over" }, "~": { "material": "DeadWater", "water": true } }, "paint": true, "margin": 2, "stoneLegend": { "1": { "material": "DeadBoneChips", "share": 0.03 }, "2": { "material": "DeadBoneChips", "share": 0.07 }, "3": { "material": "DeadSlateChips", "share": 0.15 } }, "rows": [
       "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
       "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
       "~~~~~~~~~~~~~~mmmm~~~~~~~~~~~~~~",
@@ -97,6 +97,43 @@
       "~~~~~~~~~~~~~~msssm~~~~~~~~~~~~~",
       "~~~~~~~~~~m~~~~sss~~m~~~~~~~~~~~",
       "~~~~~~~~~~~~~~~sss~~~~~~~~~~~~~~"
+    ], "surround": [
+      "                                    ",
+      "                                    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "    ",
+      "~~~~~~~~~~~~~~~~~sss~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~sss~~~~~~~~~~~~~~~~"
     ], "stones": [
       "",
       "",

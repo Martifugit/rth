@@ -16,7 +16,6 @@
     "LandTundra": "Tundra"
   },
   "seed": 1399012283,
-  "generated": "blockout",
   "terrain": { "cliffStep": 1, "rows": [
     "0*97",
     "0*97",

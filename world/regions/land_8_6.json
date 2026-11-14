@@ -21,7 +21,6 @@
     "LandShingle": "Shingle"
   },
   "seed": 153062634,
-  "generated": "blockout",
   "terrain": { "cliffStep": 1, "rows": [
     "0*97",
     "0*97",

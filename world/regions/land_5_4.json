@@ -30,7 +30,6 @@
     "LandTundra": "Tundra"
   },
   "seed": 1767180983,
-  "generated": "blockout",
   "terrain": { "cliffStep": 1, "rows": [
     "272 266 260 254 248 245 242 239 237 234 231 227 223 218 215 211 208 204 200 195 190 184 177 169 162 153 144 134 124 113 103 93 84 76 69 62 56 51 46 41 37 33 30 27 25 24 22 21 20 19*2 18*12 19*4 20*30",
     "263 256 250 243 238 234 230 228 225 222 218 214 209 205 201 197 193 189 184 179 173 167 159 152 143 135 126 117 107 98 90 81 73 66 60 54 49 45 40 37 33 30 28 26 24 23 21 20*2 19*2 18*13 19*5 20*28",
@@ -291,10 +290,10 @@
       "vvvviiir",
       "vvvviirr",
       "vvvvirrr",
-      "vvvvllri",
-      "vvvvllii",
-      "vvvvllii",
-      "vvvvliif",
+      "vvvvPPri",
+      "vvvvPPii",
+      "vvvvPPii",
+      "vvvvPiif",
       "vvvviiff",
       "vvvvffff",
       "vvvvfffi",
@@ -329,10 +328,10 @@
       "vvvvAAA#",
       "vvvvAAAA",
       "vvvvhhAA",
-      "vvvvvvvvvvvvmllllllllllllllllllllllmvvvvvvvvvvvvvvvvvvvvAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwwwwwggggggggghh",
-      "vvvvvvvvvvvvmlllllllllllllllllllllmmvvvvvvvvvvvvvvvAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwwwwwwwwwwwwwgggggggh",
-      "vvvvvvvvvvvvmmllllllllllllllllllllmv!!vvvvvvvvvvAAAAAAAAAAAAAAAAvvvvvwwwwwwwwwwwwwwwwwwwwwwwwwwwwggggggh",
-      "vvvvvvvvvvvvvmlllllllllllllllllllmmv!!vvvvvvvvAAAAAAAAAAAvvvvvvvvvvvvwwwwwwwwwwwwwwwwwwwwwwwwwwwwggggggh"
+      "vvvvvvvvvvvvmPPPPPPPPPPPPPPPPPPPPPPmvvvvvvvvvvvvvvvvvvvvAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwwwwwggggggggghh",
+      "vvvvvvvvvvvvmPPPPPPPPPPPPPPPPPPPPPmmvvvvvvvvvvvvvvvAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwwwwwwwwwwwwwgggggggh",
+      "vvvvvvvvvvvvmmPPPPPPPPPPPPPPPPPPPPmv!!vvvvvvvvvvAAAAAAAAAAAAAAAAvvvvvwwwwwwwwwwwwwwwwwwwwwwwwwwwwggggggh",
+      "vvvvvvvvvvvvvmPPPPPPPPPPPPPPPPPPPmmv!!vvvvvvvvAAAAAAAAAAAvvvvvvvvvvvvwwwwwwwwwwwwwwwwwwwwwwwwwwwwggggggh"
     ], "stones": [
       "",
       "",

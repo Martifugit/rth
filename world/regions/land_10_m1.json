@@ -12,7 +12,6 @@
     "LandSea": "Sea"
   },
   "seed": 1000605247,
-  "generated": "blockout",
   "terrain": { "cliffStep": 1, "rows": [
     "0*97",
     "0*97",

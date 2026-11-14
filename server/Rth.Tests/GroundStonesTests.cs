@@ -21,7 +21,12 @@ public class GroundStonesTests
         return (region, piece);
     }
 
-    private static readonly GroundEdit.StoneBrush Gravel = new() { Id = "gravel", Name = "Gravel", Material = "LandStonesGravel", Colour = "#877f67" };
+    /// <summary>The character for gravel at a level of <see cref="GroundStones.Levels"/>, its colour in the region.</summary>
+    private static char Gravel(RegionData region, Piece piece, int level)
+    {
+        region.Materials["LandStonesGravel"] = "#877f67";
+        return GroundEdit.StoneCharFor(piece, "LandStonesGravel", GroundStones.Levels[level]);
+    }
 
     private static GroundCanvas Canvas(RegionData region, Piece piece) =>
         PaintedGround.Canvas(region, piece, m => region.Materials.TryGetValue(m, out string? v) ? PaintedGround.Hex(v) ?? new[] { 0.35f, 0.45f, 0.2f } : null, null);
@@ -33,7 +38,7 @@ public class GroundStonesTests
         // A path of stones three tiles wide, thickly.
         for (int x = 0; x < 16; x++)
             for (int y = 6; y < 9; y++)
-                GroundEdit.SetStone(piece, x, y, GroundEdit.StoneCharFor(region, piece, Gravel, GroundStones.Levels.Length - 1));
+                GroundEdit.SetStone(piece, x, y, Gravel(region, piece, GroundStones.Levels.Length - 1));
         List<Stone> stones = GroundStones.Scatter(Canvas(region, piece));
         Assert.True(stones.Count > 16 * 3 * 3, $"only {stones.Count} stones on 48 thick tiles");
         foreach (Stone s in stones)
@@ -45,7 +50,7 @@ public class GroundStonesTests
     public void StonesAreWrittenClearedAndPrunedAsTheirOwnLayer()
     {
         (RegionData region, Piece piece) = Region();
-        char c = GroundEdit.StoneCharFor(region, piece, Gravel, 1);
+        char c = Gravel(region, piece, 1);
         Assert.Equal('1', c);
         Assert.Equal("#877f67", region.Materials["LandStonesGravel"]);
         Assert.True(GroundEdit.SetStone(piece, 2, 15, c));

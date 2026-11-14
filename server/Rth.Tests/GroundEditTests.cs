@@ -3,7 +3,7 @@ using Rth.Shared.World.Ground;
 
 namespace Rth.Tests;
 
-/// <summary>The ground brush's edits (shared/World/Ground/GroundEdit.cs).</summary>
+/// <summary>Edits to a region's ground tile by tile (shared/World/Ground/GroundEdit.cs).</summary>
 public class GroundEditTests
 {
     private static RegionData Region(string id, int x0, string fill, int margin = 2)
@@ -76,19 +76,5 @@ public class GroundEditTests
         Assert.Equal("Dirt", east.Materials["LandDirtroad"]);
         Assert.Equal("LandGrass", e.Legend!["g"].Material);
         Assert.Empty(GroundEdit.RefreshSurrounds(new[] { west, east })); // settled
-    }
-
-    [Fact]
-    public void ARoadStrokeIsStraightOrDiagonal()
-    {
-        Assert.Equal((10, 0), GroundEdit.Snap45(0, 0, 10, 3));
-        Assert.Equal((7, 7), GroundEdit.Snap45(0, 0, 6, 7));
-        Assert.Equal((0, -9), GroundEdit.Snap45(0, 0, 2, -9));
-        HashSet<(int x, int y)> line = GroundEdit.Line(0, 0, 5, 0, 2);
-        Assert.Equal(12, line.Count); // six tiles long, two wide
-        Assert.Single(GroundEdit.Disc(4, 4, 0));
-        Assert.Equal(4, GroundEdit.Line(3, 3, 3, 3, 2).Count); // a click with a stroke two wide: two by two
-        Assert.Equal(3, GroundEdit.Line(0, 0, 2, 2, 1).Count); // a diagonal one wide: one tile a step
-        Assert.Equal(5, GroundEdit.Disc(4, 4, 1).Count()); // a radius of one: the tile and its four sides
     }
 }

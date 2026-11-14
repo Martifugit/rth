@@ -19,7 +19,6 @@
     "LandSite": "BlockoutRing"
   },
   "seed": 141652606,
-  "generated": "blockout",
   "terrain": { "cliffStep": 1, "rows": [
     "94 74 58 49 37 28 26 0*90",
     "91 71 54 42 32 27 0*91",

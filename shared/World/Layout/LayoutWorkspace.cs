@@ -8,7 +8,7 @@ namespace Rth.Shared.World.Layout
 {
     /// <summary>
     /// The layout in a checkout (docs/layout.md): world/layout/continent.json in; the zone grid
-    /// (zones.json, the terrain bake's input) and the region table (regions.txt) out. Built regions
+    /// (zones.json) and the region table (regions.txt) out. Built regions
     /// come from world/regions (instanced ones aside) and the area plan's targets from
     /// docs/areas/targets.json, so both have one source.
     /// </summary>
@@ -19,8 +19,6 @@ namespace Rth.Shared.World.Layout
         public ContinentMap Map = new ContinentMap();
         public LayoutReport Report = new LayoutReport();
         public List<BuiltRegion> Built = new List<BuiltRegion>();
-        /// <summary>Heights sculpted onto the generated land (world/layout/sculpt), which the blockout adds on top.</summary>
-        public HeightEdits Edits = new HeightEdits();
 
         public string Directory => Path.Combine(Root, "world", "layout");
         public string ContinentPath => Path.Combine(Directory, "continent.json");
@@ -33,7 +31,6 @@ namespace Rth.Shared.World.Layout
             ws.Data = ContinentData.Parse(File.ReadAllText(ws.ContinentPath));
             ApplyAreaTargets(ws.Data, Path.Combine(root, "docs", "areas", "targets.json"));
             ws.Built = BuiltRegions(Path.Combine(root, "world", "regions"));
-            ws.Edits = HeightEdits.Load(root);
             ws.Map = ContinentCompiler.Compile(ws.Data);
             ws.Report = LayoutReport.Run(ws.Map, ws.Built);
             CheckPalette(ws, Path.Combine(root, "client", "Assets", "Resources", "Art", "palette.json"));
@@ -113,8 +110,9 @@ namespace Rth.Shared.World.Layout
             {
                 if (file.EndsWith(".handmade.json", StringComparison.Ordinal)) continue;
                 JObject r = JObject.Parse(File.ReadAllText(file));
-                // Instanced places lie off the map; generated regions (the blockout) are drawn from the layout, not built.
-                if ((bool?)r["instanced"] == true || r["generated"] != null) continue;
+                // Instanced places lie off the map; the land first laid out from the layout (its scenes still in
+                // Assets/Scenes/Land/) follows the layout, so only regions made by hand count as built.
+                if ((bool?)r["instanced"] == true || ((string?)r["scene"] ?? "").StartsWith(Rth.Shared.World.Data.WorldWorkspace.GeneratedScenes, StringComparison.Ordinal)) continue;
                 int x = (int)r["origin"]![0]!, y = (int)r["origin"]![1]!;
                 Heightfield? terrain = r["terrain"] != null ? Rth.Shared.World.Data.TerrainText.Read(Rth.Shared.World.Data.RegionFiles.LoadRegion(file)) : null;
                 built.Add(new BuiltRegion { Id = (string?)r["id"] ?? Path.GetFileNameWithoutExtension(file), X0 = x, Y0 = y, X1 = x + (int)r["size"]![0]!, Y1 = y + (int)r["size"]![1]!, HasTerrain = r["terrain"] != null, Terrain = terrain });

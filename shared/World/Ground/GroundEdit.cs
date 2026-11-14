@@ -2,68 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Rth.Shared.World.Data;
-using Rth.Shared.World.Layout;
 
 namespace Rth.Shared.World.Ground
 {
     /// <summary>
-    /// Changing a region's ground tile by tile, as the Editor's ground brush does
-    /// (docs/world-guide.md section 4): the grounds there are to paint with, finding or adding the
-    /// legend character a kind is written as, setting tiles, and refreshing the ring of the
+    /// Changing a region's ground tile by tile, as writing it from the world's terrains does
+    /// (<see cref="WorldGround"/>, docs/world-guide.md section 4): finding or adding the legend
+    /// character a kind is written as, setting tiles and stones, and refreshing the ring of the
     /// neighbours' tiles a painted region keeps (<see cref="Piece.Surround"/>) so its colours blend
     /// across the border with what the neighbours really hold.
     /// </summary>
     public static class GroundEdit
     {
-        /// <summary>A ground to paint with: the tile kind it is written as, and its materials' colours.</summary>
-        public sealed class Brush
-        {
-            public string Id = "";
-            public string Name = "";
-            /// <summary>"Ground", "Surfaces" (roads, paving, fields), "Water" or "Blocked", for the brush's list.</summary>
-            public string Group = "";
-            public TileKind Kind = new TileKind();
-            public Dictionary<string, string> Materials = new Dictionary<string, string>(StringComparer.Ordinal);
-            /// <summary>The character it is written as where a region doesn't use that one already (the layout's letter).</summary>
-            public char? Letter;
-            /// <summary>The colour the brush's swatch shows (a palette name or #hex).</summary>
-            public string Colour => Materials.TryGetValue(Kind.Material, out string c) ? c : "";
-        }
-
         /// <summary>Characters a new kind may be written as, in the order they are taken.</summary>
         private const string Spare = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%&*+-=?@^~<>/|:;.,_()[]{}'`";
-
-        /// <summary>Every ground of the layout (continent.json), as the blockout draws it.</summary>
-        public static List<Brush> Brushes(ContinentData data)
-        {
-            var brushes = new List<Brush>();
-            foreach (KeyValuePair<string, GroundDef> g in data.Grounds)
-            {
-                (TileKind kind, Dictionary<string, string> materials) = Blockout.KindOf(data, g.Key);
-                brushes.Add(new Brush
-                {
-                    Id = g.Key, Name = g.Value.Name.Length > 0 ? g.Value.Name : g.Key, Group = GroupOf(kind),
-                    Kind = kind, Materials = materials, Letter = g.Value.Letter.Length == 1 ? g.Value.Letter[0] : (char?)null,
-                });
-            }
-            return brushes;
-        }
-
-        /// <summary>A brush for a kind found in a region's legend (ground the layout doesn't have).</summary>
-        public static Brush BrushOf(RegionData region, TileKind kind)
-        {
-            var b = new Brush { Id = kind.Material, Name = Readable(kind.Material), Group = GroupOf(kind), Kind = Copy(kind) };
-            foreach (string? m in new[] { kind.Material, kind.Cliff })
-                if (m != null && region.Materials.TryGetValue(m, out string c)) b.Materials[m] = c;
-            return b;
-        }
-
-        public static string GroupOf(TileKind kind) =>
-            kind.Water == true ? "Water" : kind.IsOverlay ? "Surfaces" : kind.Blocks == true ? "Blocked" : "Ground";
-
-        /// <summary>"LandDirtroad" reads as "Dirtroad".</summary>
-        private static string Readable(string material) =>
-            material.StartsWith("Land", StringComparison.Ordinal) && material.Length > 4 ? material.Substring(4) : material;
 
         /// <summary>Whether two kinds draw and behave the same.</summary>
         public static bool Same(TileKind a, TileKind b) =>
@@ -234,22 +186,6 @@ namespace Rth.Shared.World.Ground
 
         // ------------------------------------------------------------------ stones
 
-        /// <summary>A kind of stones to paint with: its material's name and colour (a palette name or #hex).</summary>
-        public sealed class StoneBrush
-        {
-            public string Id = "";
-            public string Name = "";
-            public string Material = "";
-            public string Colour = "";
-        }
-
-        /// <summary>Every kind of stones of the layout (continent.json `stones`), as the blockout scatters them.</summary>
-        public static List<StoneBrush> StoneBrushes(ContinentData data) =>
-            data.Stones.Select(s => new StoneBrush
-            {
-                Id = s.Key, Name = s.Value.Name.Length > 0 ? s.Value.Name : s.Key, Material = "LandStones" + Blockout.Pascal(s.Key), Colour = s.Value.Palette,
-            }).ToList();
-
         /// <summary>Characters stones may be written as, in the order they are taken.</summary>
         private const string StoneSpare = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!#$%&*+-=?@^~<>/|:;.,_()[]{}'`";
 
@@ -263,13 +199,6 @@ namespace Rth.Shared.World.Ground
             if (c == default) throw new InvalidOperationException($"{piece.Id}: its stones have no characters left for another kind.");
             piece.StoneLegend[c.ToString()] = new StoneKind { Material = material, Share = share };
             return c;
-        }
-
-        /// <summary>The character for a brush's stones at a level of <see cref="GroundStones.Levels"/>, its material added to the region's under a name of its colour.</summary>
-        public static char StoneCharFor(RegionData region, Piece piece, StoneBrush brush, int level)
-        {
-            string material = MaterialFor(region, brush.Material, new Dictionary<string, string> { [brush.Material] = brush.Colour });
-            return StoneCharFor(piece, material, GroundStones.Levels[Math.Max(0, Math.Min(GroundStones.Levels.Length - 1, level))]);
         }
 
         /// <summary>The stones at an absolute tile: their kind, or null for none (or outside the piece).</summary>
@@ -309,59 +238,6 @@ namespace Rth.Shared.World.Ground
             foreach (string k in piece.StoneLegend.Keys.Where(k => k.Length != 1 || !used.Contains(k[0])).ToList()) piece.StoneLegend.Remove(k);
             if (piece.StoneLegend.Count == 0) { piece.Stones = null; piece.StoneLegend = null; }
             else piece.Stones = piece.Stones.Select(s => s.TrimEnd()).ToList();
-        }
-
-        // ------------------------------------------------------------------ brush shapes
-
-        /// <summary>The tiles of a round brush: radius 0 is the one tile.</summary>
-        public static IEnumerable<(int x, int y)> Disc(int cx, int cy, float radius)
-        {
-            int r = (int)Math.Ceiling(radius);
-            for (int y = cy - r; y <= cy + r; y++)
-                for (int x = cx - r; x <= cx + r; x++)
-                    if ((x - cx) * (x - cx) + (y - cy) * (y - cy) <= radius * radius + 0.25f) yield return (x, y);
-        }
-
-        /// <summary>
-        /// The tiles of a straight stroke <paramref name="width"/> tiles wide from one tile to another,
-        /// as a road is drawn: centred on the tiles' middles, square-ended.
-        /// </summary>
-        public static HashSet<(int x, int y)> Line(int ax, int ay, int bx, int by, int width)
-        {
-            var tiles = new HashSet<(int, int)>();
-            float half = Math.Max(1, width) / 2f;
-            float dx = bx - ax, dy = by - ay, len = (float)Math.Sqrt(dx * dx + dy * dy);
-            int pad = (int)Math.Ceiling(half) + 1;
-            for (int y = Math.Min(ay, by) - pad; y <= Math.Max(ay, by) + pad; y++)
-                for (int x = Math.Min(ax, bx) - pad; x <= Math.Max(ax, bx) + pad; x++)
-                {
-                    float px = x - ax, py = y - ay;
-                    // Along and across the stroke (a click: a square). Across, the band is (-half, half],
-                    // so an even width leans to one side, as it must on tiles; the ends are square.
-                    bool point = len < 1e-4f;
-                    float along = point ? px : (px * dx + py * dy) / len;
-                    float across = point ? py : (px * dy - py * dx) / len;
-                    bool inAlong = point
-                        ? along > -half + 1e-4f && along <= half + 1e-4f
-                        : along >= -(half - 0.5f) - 1e-4f && along <= len + half - 0.5f + 1e-4f;
-                    if (inAlong && across > -half + 1e-4f && across <= half + 1e-4f) tiles.Add((x, y));
-                }
-            return tiles;
-        }
-
-        /// <summary>
-        /// The end of a stroke from (<paramref name="ax"/>, <paramref name="ay"/>) toward a tile,
-        /// turned to the nearest of the eight directions (straight or 45 degrees), as RuneScape's
-        /// roads run.
-        /// </summary>
-        public static (int x, int y) Snap45(int ax, int ay, int bx, int by)
-        {
-            int dx = bx - ax, dy = by - ay;
-            int adx = Math.Abs(dx), ady = Math.Abs(dy);
-            if (adx > 2 * ady) return (bx, ay);
-            if (ady > 2 * adx) return (ax, by);
-            int d = Math.Max(adx, ady);
-            return (ax + Math.Sign(dx) * d, ay + Math.Sign(dy) * d);
         }
     }
 }

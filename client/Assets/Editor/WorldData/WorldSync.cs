@@ -31,10 +31,12 @@ namespace Rth.Client.Editor
         /// <summary>True while Sync World is saving scenes itself (the save hook then stays out of the way).</summary>
         private static bool _busy;
 
+        /// <summary>True while Sync World is opening and saving scenes itself.</summary>
+        public static bool Busy => _busy;
+
         static WorldSync()
         {
             EditorSceneManager.sceneSaving += OnSceneSaving;
-            EditorSceneManager.sceneSaved += OnSceneSaved;
             MapExporter.DataExport = ExportIfData;
         }
 
@@ -444,6 +446,7 @@ namespace Rth.Client.Editor
                 {
                     RegionData region = RegionFiles.LoadRegion(regionPath);
                     List<string> changes = WriteBack(region, data);
+                    if (WorldTerrains.WriteGround(region)) changes.Add("wrote its ground from the terrain");
                     if (changes.Count > 0)
                     {
                         RegionFiles.SaveRegion(region, regionPath);
@@ -497,141 +500,8 @@ namespace Rth.Client.Editor
                 data.builtIds.Remove(id);
             }
 
-            // Ground sculpted in the Editor: its heights become the region's terrain.
-            foreach (TileGround ground in data.GetComponentsInChildren<TileGround>(true))
-            {
-                if (!ground.sculpted) continue;
-                Heightfield field = TerrainText.ReadOrFlat(region);
-                Heightfield sculpted = ground.Field;
-                for (int y = ground.originY; y <= ground.originY + ground.height; y++)
-                    for (int x = ground.originX; x <= ground.originX + ground.width; x++)
-                        field.SetCorner(x, y, TerrainText.Hundredths(sculpted.Corner(x, y)) * TerrainText.Step);
-                region.Terrain = TerrainText.Write(field, region.Terrain?.CliffStep ?? ground.cliffStep);
-                ground.sculpted = false;
-                Sculpted.Add(region.Id);
-                changes.Add("sculpted the ground");
-            }
-
-            // Ground painted with the brush: its tiles, kinds and ring become the region's ground.
-            foreach (TileGround ground in data.GetComponentsInChildren<TileGround>(true))
-                if (GroundPaintTool.WriteBack(region, ground)) changes.Add("painted the ground");
-
-            // Hand work on a generated region takes it over, so the generator never undoes it (docs/world-guide.md 1),
-            // and its scene goes to its area's folder (docs/world-areas.md, package 1.2), moved at the next Sync World.
-            if (changes.Count > 0 && region.Generated != null)
-            {
-                changes.Add($"taken over from the {region.Generated} generator");
-                region.Generated = null;
-                TakenOver.Add(region.Id);
-                const string generatedScenes = "Assets/Scenes/Land/";
-                WorldAreas.Area own = File.Exists(WorldAreas.PathIn(RepoRoot)) ? WorldAreas.Load(WorldAreas.PathIn(RepoRoot)).AreaOf(region.Id) : null;
-                if (own != null && region.Scene.StartsWith(generatedScenes, System.StringComparison.Ordinal))
-                {
-                    region.Scene = $"Assets/Scenes/{Rth.Shared.World.Layout.Blockout.Pascal(own.Id)}/{Path.GetFileName(region.Scene)}";
-                    changes.Add("its scene goes to " + region.Scene);
-                }
-            }
             return changes;
         }
 
-        /// <summary>
-        /// After saving sculpted ground: every built neighbour, open or not, takes up its new edge,
-        /// so the ground never steps at a border because the scene next door was closed while you
-        /// shaped (<see cref="TerrainSeams"/>); their maps are exported again and the open ones
-        /// redrawn. True when generated land beside it must follow too (the blockout).
-        /// </summary>
-        private static bool FollowSeams()
-        {
-            if (Sculpted.Count == 0) return false;
-            var written = new HashSet<string>(Sculpted);
-            Sculpted.Clear();
-            var regions = new List<RegionData>();
-            var paths = new Dictionary<string, string>();
-            foreach (string path in RegionFiles.RegionPaths(Path.Combine(RepoRoot, "world", "regions")))
-            {
-                try
-                {
-                    RegionData r = RegionFiles.LoadRegion(path);
-                    regions.Add(r);
-                    paths[r.Id] = path;
-                }
-                catch (System.FormatException) { }
-            }
-            TerrainSeams.Result seams = TerrainSeams.Follow(regions, written);
-            foreach (string m in seams.Messages) Debug.LogWarning("[R'th] " + m);
-            List<string> neighbours = seams.Changed.Where(id => !written.Contains(id)).ToList();
-            foreach (string id in seams.Changed) RegionFiles.SaveRegion(regions.First(r => r.Id == id), paths[id]);
-            if (seams.Changed.Count > 0)
-            {
-                var messages = new List<string>();
-                var errors = new List<string>();
-                TerrainEditor.RunWorldTool("export", messages, errors);
-                foreach (string e in errors) Debug.LogError("[R'th] export: " + e);
-                Debug.Log($"[R'th] The ground meets at the borders: {string.Join(", ", seams.Changed)} took up the sculpted edges.");
-                TerrainEditor.Redraw(neighbours);
-            }
-            return seams.GeneratedNeighbours.Count > 0;
-        }
-
-        /// <summary>Regions taken over by the scenes being saved: the generated land round them now blends into them.</summary>
-        private static readonly HashSet<string> TakenOver = new HashSet<string>();
-        /// <summary>Regions whose heights the scenes being saved wrote: their neighbours' edges follow (<see cref="FollowSeams"/>).</summary>
-        private static readonly HashSet<string> Sculpted = new HashSet<string>();
-
-        private static void OnSceneSaved(Scene scene)
-        {
-            if (_busy) return;
-            // Once every scene of the save is written (Ctrl+S saves them one by one).
-            EditorApplication.delayCall -= AfterSaving;
-            EditorApplication.delayCall += AfterSaving;
-        }
-
-        /// <summary>
-        /// After saving: a region just taken over changes the generated land round it, which is
-        /// pinned to its edges and blends its colours into it, so the blockout runs and the open
-        /// regions it changed are redrawn. Otherwise painted ground's neighbours take up its tiles
-        /// in their rings (<see cref="GroundPaintTool.FollowRings"/>).
-        /// </summary>
-        internal static void AfterSaving()
-        {
-            bool generatedNeighbours = FollowSeams();
-            if (TakenOver.Count == 0 && !generatedNeighbours)
-            {
-                GroundPaintTool.FollowRings();
-                return;
-            }
-            // A takeover, or sculpting beside generated land, which the blockout pins to the built edges.
-            string what = TakenOver.Count > 0 ? "Taken over: " + string.Join(", ", TakenOver.OrderBy(id => id, System.StringComparer.Ordinal)) : "Sculpted beside generated land";
-            TakenOver.Clear();
-            var open = new List<string>();
-            for (int i = 0; i < SceneManager.sceneCount; i++)
-            {
-                Scene s = SceneManager.GetSceneAt(i);
-                if (!s.isLoaded) continue;
-                foreach (MapArea area in s.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<MapArea>(true)))
-                    if (File.Exists(RegionPath(area.exportName))) open.Add(area.exportName);
-            }
-            Dictionary<string, string> before = open.ToDictionary(id => id, id => File.ReadAllText(RegionPath(id)));
-            var messages = new List<string>();
-            var errors = new List<string>();
-            try
-            {
-                EditorUtility.DisplayProgressBar(what, "The generated land round it follows (tools/world blockout)...", 0.5f);
-                TerrainEditor.RunWorldTool("blockout", messages, errors);
-            }
-            catch (System.Exception e)
-            {
-                errors.Add(e.Message);
-            }
-            finally
-            {
-                EditorUtility.ClearProgressBar();
-            }
-            GroundPaintTool.RingsFollowed(); // the blockout takes every ring from the world as it now is
-            foreach (string e in errors) Debug.LogError("[R'th] blockout: " + e);
-            Debug.Log($"[R'th] {what}. The generated land round it follows: {messages.LastOrDefault(m => m.Contains("blockout regions")) ?? "see the Console"}");
-            List<string> changed = open.Where(id => File.Exists(RegionPath(id)) && File.ReadAllText(RegionPath(id)) != before[id]).ToList();
-            TerrainEditor.Redraw(changed);
-        }
     }
 }

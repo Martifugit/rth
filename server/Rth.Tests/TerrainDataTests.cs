@@ -95,27 +95,4 @@ public class TerrainDataTests
         Assert.Contains(warnings, w => w.Contains("'field'"));
         Assert.DoesNotContain(warnings, w => w.Contains("'ground'"));
     }
-
-    [Fact]
-    public void ANeighbourAtAnotherHeightAlongTheBorderIsASeam()
-    {
-        RegionData west = Region(0, 0), east = Region(8, 0);
-        var raised = new Heightfield(0, 0, 8, 8);
-        raised.Fill((x, y) => x >= 6 ? 1f : 0f); // reaches the shared border at x = 8
-        west.Terrain = TerrainText.Write(raised);
-        WorldWorkspace.Entry E(RegionData r) => new() { Region = r, Compiled = RegionCompiler.Compile(r, null) };
-
-        string? seam = WorldWorkspace.Seam(E(west), E(east));
-        Assert.NotNull(seam);
-        Assert.Contains("9 corners differ", seam);
-
-        var lowered = new Heightfield(0, 0, 8, 8);
-        lowered.Fill((x, y) => x == 4 ? 1f : 0f); // a ridge inside, back to 0 at the border
-        west.Terrain = TerrainText.Write(lowered);
-        Assert.Null(WorldWorkspace.Seam(E(west), E(east)));
-
-        RegionData far = Region(32, 0); // not a neighbour
-        west.Terrain = TerrainText.Write(raised);
-        Assert.Null(WorldWorkspace.Seam(E(west), E(far)));
-    }
 }

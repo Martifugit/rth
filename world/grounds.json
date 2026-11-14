@@ -1,0 +1,449 @@
+{
+  "materials": {
+    "DeadAsh": "#2A2E2C",
+    "DeadAshGrey": "#383F3C",
+    "DeadBoneChips": "#4A4E4A",
+    "DeadCinder": "#202423",
+    "DeadPlank": "#3B2E22",
+    "DeadSlate": "#4D585A",
+    "DeadSlateChips": "#3B4446",
+    "DeadWater": "#0A1719",
+    "DeadWetAsh": "#1A2121",
+    "KitGrass": "Grass",
+    "KitPath": "Trodden",
+    "KitWater": "Mere",
+    "LandAsh": "AshPlain",
+    "LandAshworn": "Ashworn",
+    "LandBlacksand": "Cinder",
+    "LandBracken": "Bracken",
+    "LandBridge": "Planks",
+    "LandBroken": "Shingle",
+    "LandCauseway": "Causeway",
+    "LandChalk": "Chalk",
+    "LandCinderroad": "Cinderroad",
+    "LandCliffChalk": "Chalk",
+    "LandCliffCliffRock": "CliffRock",
+    "LandCliffDarkRock": "DarkRock",
+    "LandCliffGranite": "Granite",
+    "LandCliffMud": "Mud",
+    "LandCliffSandstone": "Sandstone",
+    "LandCobble": "Cobble",
+    "LandCrest": "CliffRock",
+    "LandDeepwood": "DeepWood",
+    "LandDirtroad": "Dirt",
+    "LandDirttrack": "Worn",
+    "LandDowns": "Downland",
+    "LandDust": "Dust",
+    "LandDustroad": "Dust",
+    "LandFarAsh": "AshPlain",
+    "LandFarAshworn": "Ashworn",
+    "LandFarBracken": "Bracken",
+    "LandFarDeepwood": "DeepWood",
+    "LandFarDust": "Dust",
+    "LandFarForest": "GraveTurf",
+    "LandFarGrass": "Grass",
+    "LandFarGravel": "Gravel",
+    "LandFarHeath": "Heath",
+    "LandFarMoor": "MoorGrass",
+    "LandFarObsidian": "Obsidian",
+    "LandFarRedrock": "RedRock",
+    "LandFarScree": "Scree",
+    "LandFarSnow": "Snow",
+    "LandFen": "Fen",
+    "LandFoothills": "Foothill",
+    "LandForest": "GraveTurf",
+    "LandFurrow": "Furrow",
+    "LandGrass": "Grass",
+    "LandGravel": "Gravel",
+    "LandHeath": "Heath",
+    "LandHighland": "Alpine",
+    "LandHighland2": "MossyStone",
+    "LandIce": "Ice",
+    "LandLake": "Mere",
+    "LandLava": "Lava",
+    "LandLey": "Ley",
+    "LandMeadow": "Meadow",
+    "LandMoonFace": "Moonlight",
+    "LandMoor": "MoorGrass",
+    "LandMud": "Mud",
+    "LandObsidian": "Obsidian",
+    "LandOlive": "Olive",
+    "LandPaving": "Paving",
+    "LandPeat": "Peat",
+    "LandPine": "PineFloor",
+    "LandRedrock": "RedRock",
+    "LandReeds": "Sedge",
+    "LandRiver": "Water",
+    "LandRoad": "Furrow",
+    "LandSaltflat": "SaltFlat",
+    "LandSand": "Sand",
+    "LandScar": "Stone",
+    "LandScree": "Scree",
+    "LandScrub": "Dirt",
+    "LandSea": "Sea",
+    "LandSettlement": "Stone",
+    "LandShingle": "Shingle",
+    "LandSite": "BlockoutRing",
+    "LandSnow": "Snow",
+    "LandSnowcap": "Snow",
+    "LandStonesGravel": "Gravel",
+    "LandSulphur": "Sulphur",
+    "LandTundra": "Tundra",
+    "LandUnmade": "Unmade",
+    "LandVolcanic": "Scorch",
+    "LandWheat": "Wheat",
+    "LandWorn": "Worn"
+  },
+  "grounds": {
+    "ash": {
+      "material": "LandAsh",
+      "cliff": "LandCliffDarkRock"
+    },
+    "ashworn": {
+      "material": "LandAshworn"
+    },
+    "blacksand": {
+      "material": "LandBlacksand"
+    },
+    "bracken": {
+      "material": "LandBracken"
+    },
+    "bridge": {
+      "material": "LandBridge",
+      "height": 0.05,
+      "layer": "over"
+    },
+    "broken": {
+      "material": "LandBroken",
+      "cliff": "LandCliffGranite"
+    },
+    "causeway": {
+      "material": "LandCauseway",
+      "layer": "over"
+    },
+    "chalk": {
+      "material": "LandChalk"
+    },
+    "cinderroad": {
+      "material": "LandCinderroad",
+      "layer": "over"
+    },
+    "cobble": {
+      "material": "LandCobble",
+      "layer": "over"
+    },
+    "crest": {
+      "material": "LandCrest",
+      "cliff": "LandCliffCliffRock"
+    },
+    "crest-2": {
+      "material": "LandCrest",
+      "blocks": true
+    },
+    "dead-ash": {
+      "material": "DeadAsh"
+    },
+    "dead-ash-grey": {
+      "material": "DeadAshGrey"
+    },
+    "dead-cinder": {
+      "material": "DeadCinder"
+    },
+    "dead-plank": {
+      "material": "DeadPlank",
+      "layer": "over"
+    },
+    "dead-slate": {
+      "material": "DeadSlate",
+      "layer": "over"
+    },
+    "dead-water": {
+      "material": "DeadWater",
+      "water": true
+    },
+    "dead-wet-ash": {
+      "material": "DeadWetAsh"
+    },
+    "deepwood": {
+      "material": "LandDeepwood"
+    },
+    "dirtroad": {
+      "material": "LandDirtroad",
+      "layer": "over"
+    },
+    "dirttrack": {
+      "material": "LandDirttrack",
+      "layer": "over"
+    },
+    "downs": {
+      "material": "LandDowns",
+      "cliff": "LandCliffChalk"
+    },
+    "dust": {
+      "material": "LandDust"
+    },
+    "dustroad": {
+      "material": "LandDustroad",
+      "layer": "over"
+    },
+    "far-ash": {
+      "material": "LandFarAsh",
+      "blocks": true,
+      "beyond": true
+    },
+    "far-ashworn": {
+      "material": "LandFarAshworn",
+      "blocks": true,
+      "beyond": true
+    },
+    "far-bracken": {
+      "material": "LandFarBracken",
+      "blocks": true,
+      "beyond": true
+    },
+    "far-deepwood": {
+      "material": "LandFarDeepwood",
+      "blocks": true,
+      "beyond": true
+    },
+    "far-dust": {
+      "material": "LandFarDust",
+      "blocks": true,
+      "beyond": true
+    },
+    "far-forest": {
+      "material": "LandFarForest",
+      "blocks": true,
+      "beyond": true
+    },
+    "far-grass": {
+      "material": "LandFarGrass",
+      "blocks": true,
+      "beyond": true
+    },
+    "far-gravel": {
+      "material": "LandFarGravel",
+      "blocks": true,
+      "beyond": true
+    },
+    "far-heath": {
+      "material": "LandFarHeath",
+      "blocks": true,
+      "beyond": true
+    },
+    "far-moor": {
+      "material": "LandFarMoor",
+      "blocks": true,
+      "beyond": true
+    },
+    "far-obsidian": {
+      "material": "LandFarObsidian",
+      "blocks": true,
+      "beyond": true
+    },
+    "far-redrock": {
+      "material": "LandFarRedrock",
+      "blocks": true,
+      "beyond": true
+    },
+    "far-scree": {
+      "material": "LandFarScree",
+      "blocks": true,
+      "beyond": true
+    },
+    "far-snow": {
+      "material": "LandFarSnow",
+      "blocks": true,
+      "beyond": true
+    },
+    "fen": {
+      "material": "LandFen",
+      "cliff": "LandCliffMud"
+    },
+    "foothills": {
+      "material": "LandFoothills",
+      "cliff": "LandCliffCliffRock"
+    },
+    "forest": {
+      "material": "LandForest",
+      "cliff": "LandCliffCliffRock"
+    },
+    "furrow": {
+      "material": "LandFurrow",
+      "layer": "over"
+    },
+    "grass": {
+      "material": "LandGrass",
+      "cliff": "LandCliffCliffRock"
+    },
+    "gravel": {
+      "material": "LandGravel",
+      "cliff": "LandCliffSandstone"
+    },
+    "heath": {
+      "material": "LandHeath",
+      "cliff": "LandCliffCliffRock"
+    },
+    "heath-2": {
+      "material": "LandHeath"
+    },
+    "highland": {
+      "material": "LandHighland",
+      "cliff": "LandCliffCliffRock"
+    },
+    "highland2": {
+      "material": "LandHighland2"
+    },
+    "ice": {
+      "material": "LandIce"
+    },
+    "kit-grass": {
+      "material": "KitGrass"
+    },
+    "kit-path": {
+      "material": "KitPath",
+      "layer": "over"
+    },
+    "kit-water": {
+      "material": "KitWater",
+      "water": true
+    },
+    "lake": {
+      "material": "LandLake",
+      "water": true,
+      "height": -0.15
+    },
+    "lava": {
+      "material": "LandLava",
+      "blocks": true,
+      "height": 1.6,
+      "cliff": "LandCliffDarkRock"
+    },
+    "ley": {
+      "material": "LandLey",
+      "layer": "over"
+    },
+    "meadow": {
+      "material": "LandMeadow"
+    },
+    "moon-face": {
+      "material": "LandMoonFace",
+      "blocks": true,
+      "cliff": "LandMoonFace"
+    },
+    "moor": {
+      "material": "LandMoor",
+      "cliff": "LandCliffGranite"
+    },
+    "mud": {
+      "material": "LandMud"
+    },
+    "obsidian": {
+      "material": "LandObsidian"
+    },
+    "olive": {
+      "material": "LandOlive"
+    },
+    "paving": {
+      "material": "LandPaving",
+      "layer": "over"
+    },
+    "peat": {
+      "material": "LandPeat"
+    },
+    "pine": {
+      "material": "LandPine",
+      "cliff": "LandCliffGranite"
+    },
+    "redrock": {
+      "material": "LandRedrock",
+      "cliff": "LandCliffSandstone"
+    },
+    "reeds": {
+      "material": "LandReeds"
+    },
+    "river": {
+      "material": "LandRiver",
+      "water": true,
+      "height": -0.15
+    },
+    "road": {
+      "material": "LandRoad",
+      "height": 0.01,
+      "layer": "over"
+    },
+    "saltflat": {
+      "material": "LandSaltflat"
+    },
+    "sand": {
+      "material": "LandSand"
+    },
+    "scar": {
+      "material": "LandScar"
+    },
+    "scar-2": {
+      "material": "LandScar",
+      "cliff": "LandMoonFace"
+    },
+    "scree": {
+      "material": "LandScree"
+    },
+    "scrub": {
+      "material": "LandScrub"
+    },
+    "sea": {
+      "material": "LandSea",
+      "water": true,
+      "height": -0.15
+    },
+    "settlement": {
+      "material": "LandSettlement",
+      "height": 0.02,
+      "layer": "over"
+    },
+    "shingle": {
+      "material": "LandShingle"
+    },
+    "site": {
+      "material": "LandSite",
+      "layer": "over"
+    },
+    "snow": {
+      "material": "LandSnow",
+      "cliff": "LandCliffGranite"
+    },
+    "snowcap": {
+      "material": "LandSnowcap"
+    },
+    "snowcap-2": {
+      "material": "LandSnowcap",
+      "blocks": true
+    },
+    "sulphur": {
+      "material": "LandSulphur"
+    },
+    "tundra": {
+      "material": "LandTundra",
+      "cliff": "LandCliffGranite"
+    },
+    "unmade": {
+      "material": "LandUnmade"
+    },
+    "volcanic": {
+      "material": "LandVolcanic",
+      "cliff": "LandCliffDarkRock"
+    },
+    "wheat": {
+      "material": "LandWheat",
+      "layer": "over"
+    },
+    "worn": {
+      "material": "LandWorn"
+    }
+  },
+  "stones": {
+    "dead-bone-chips": "DeadBoneChips",
+    "dead-slate-chips": "DeadSlateChips",
+    "gravel": "LandStonesGravel"
+  }
+}

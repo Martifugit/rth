@@ -125,27 +125,7 @@ namespace Rth.Client.Editor
                 case PieceKind.Tiles:
                 {
                     // The rows go into the scene; TileGround builds the mesh and the ground collider from them on load.
-                    int[] r = piece.Rect;
-                    List<string> keys = piece.Legend.Keys.ToList();
-                    var ground = group.gameObject.AddComponent<TileGround>();
-                    ground.originX = r[0];
-                    ground.originY = r[1];
-                    ground.width = r[2] - r[0];
-                    ground.height = r[3] - r[1];
-                    SetTiles(ground, kit, region, piece);
-                    if (terrain != null)
-                    {
-                        // The terrain's corners under this piece's rectangle, row by row from the south.
-                        var corners = new float[(ground.width + 1) * (ground.height + 1)];
-                        for (int j = 0; j <= ground.height; j++)
-                            for (int i = 0; i <= ground.width; i++)
-                                corners[j * (ground.width + 1) + i] = terrain.Corner(r[0] + i, r[1] + j);
-                        ground.corners = corners;
-                        ground.cliffStep = region.Terrain.CliffStep;
-                        ground.cliffMaterial = kit.Mat("LandCliff", Palette.TryParse("CliffRock", out Color cliff) ? cliff : new Color(0.42f, 0.4f, 0.36f));
-                        ground.cliffMaterials = keys.Select(k => piece.Legend[k].Cliff is string own ? Material(kit, region, own) : null).ToArray();
-                    }
-                    ground.Rebuild();
+                    DrawTiles(group.gameObject.AddComponent<TileGround>(), kit, region, piece, terrain);
                     break;
                 }
                 default:
@@ -344,9 +324,38 @@ namespace Rth.Client.Editor
         }
 
         /// <summary>
+        /// Gives a tile ground a tiles piece's ground and the terrain's heights under it, and rebuilds
+        /// it: when a region is drawn, and live while its terrain is sculpted or painted
+        /// (<see cref="WorldTerrains"/>).
+        /// </summary>
+        public static void DrawTiles(TileGround ground, WorldKit kit, RegionData region, Piece piece, Heightfield terrain)
+        {
+            int[] r = piece.Rect;
+            ground.originX = r[0];
+            ground.originY = r[1];
+            ground.width = r[2] - r[0];
+            ground.height = r[3] - r[1];
+            SetTiles(ground, kit, region, piece);
+            if (terrain != null)
+            {
+                // The terrain's corners under this piece's rectangle, row by row from the south.
+                List<string> keys = piece.Legend.Keys.ToList();
+                var corners = new float[(ground.width + 1) * (ground.height + 1)];
+                for (int j = 0; j <= ground.height; j++)
+                    for (int i = 0; i <= ground.width; i++)
+                        corners[j * (ground.width + 1) + i] = terrain.Corner(r[0] + i, r[1] + j);
+                ground.corners = corners;
+                ground.cliffStep = region.Terrain?.CliffStep ?? 1f;
+                ground.cliffMaterial = kit.Mat("LandCliff", Palette.TryParse("CliffRock", out Color cliff) ? cliff : new Color(0.42f, 0.4f, 0.36f));
+                ground.cliffMaterials = keys.Select(k => piece.Legend[k].Cliff is string own ? Material(kit, region, own) : null).ToArray();
+            }
+            else ground.corners = new float[0];
+            ground.Rebuild();
+        }
+
+        /// <summary>
         /// A tile ground's rows and kinds from a tiles piece: what each kind looks like and does, and
-        /// for painted ground (docs/world-plan.md section 7) the kinds' layers and the neighbours'
-        /// ring. The ground brush (<see cref="GroundPaintTool"/>) sets them the same way.
+        /// for painted ground (docs/world-plan.md section 7) the kinds' layers and the neighbours' ring.
         /// </summary>
         public static void SetTiles(TileGround ground, WorldKit kit, RegionData region, Piece piece)
         {

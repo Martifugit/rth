@@ -11,7 +11,6 @@
     "LandSea": "Sea"
   },
   "seed": 1766292805,
-  "generated": "blockout",
   "pieces": [
     { "id": "ground", "kind": "tiles", "rect": [960, 96, 1056, 192], "legend": { "~": { "material": "LandSea", "water": true, "height": -0.15 } }, "paint": true, "margin": 4, "rows": [
       "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
