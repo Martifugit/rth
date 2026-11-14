@@ -428,6 +428,12 @@ namespace Rth.Client.Editor
             if (area.GetComponentInChildren<DataRoot>(true) == null || !File.Exists(RegionPath(area.exportName))) return null;
             DataRoot data = area.GetComponentInChildren<DataRoot>(true);
             RegionData region = RegionFiles.LoadRegion(RegionPath(area.exportName));
+            // Play walks the ground as it is now, sculpted and painted or not yet saved.
+            if (WorldTerrains.WriteGround(region))
+            {
+                RegionFiles.SaveRegion(region, RegionPath(region.Id));
+                WorldWater.Rebuild(region);
+            }
             var report = new Report();
             Capture(region, area, data, report);
             ExportAndVerify(region.Id, area, report);
