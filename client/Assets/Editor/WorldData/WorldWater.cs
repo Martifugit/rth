@@ -82,7 +82,10 @@ namespace Rth.Client.Editor
             for (int y = 0; y < rows; y++)
                 for (int x = 0; x < cols; x++)
                 {
-                    var t = world.At(x0 - m + x, y0 - m + y);
+                    int ax = x0 - m + x, ay = y0 - m + y;
+                    bool inside = ax >= x0 && ay >= y0 && ax < x0 + w && ay < y0 + h;
+                    // The region's own tiles from itself (an instanced place isn't in the world's), the margin from its neighbours.
+                    var t = inside ? Own(region, ax, ay) : world.At(ax, ay);
                     if (t.HasValue && t.Value.kind.Water == true)
                     {
                         water[y * cols + x] = t.Value.kind;
@@ -236,6 +239,16 @@ namespace Rth.Client.Editor
             PrefabUtility.SaveAsPrefabAsset(go, WorldTerrains.WaterPath(region.Id));
             Object.DestroyImmediate(go);
             return true;
+        }
+
+        /// <summary>A tile of the region's own ground: its kind and its materials' colours, or null.</summary>
+        private static (TileKind kind, IReadOnlyDictionary<string, string> materials, char letter)? Own(RegionData region, int x, int y)
+        {
+            Piece piece = GroundEdit.Tiles(region);
+            if (!(GroundEdit.At(piece, x, y) is char c) || c == ' ' || !piece.Legend.TryGetValue(c.ToString(), out TileKind kind)) return null;
+            var materials = new Dictionary<string, string>();
+            if (region.Materials.TryGetValue(kind.Material, out string colour)) materials[kind.Material] = colour;
+            return (kind, materials, c);
         }
 
         private static string MeshPath(string region) => $"{WorldTerrains.WaterFolder}/{region}.asset";
