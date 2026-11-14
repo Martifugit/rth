@@ -48,20 +48,22 @@ rectangles are `[x0, y0, x1, y1]` with the far edges excluded. The kinds
 | `spawn` | Where new players appear | none |
 | `tiles` | Ground tile by tile over `rect`: `rows` of characters from the north, each one a `legend` entry (`material`, `blocks`, `water`, a drawn `height`, a `cliff` material for its steep faces); a space is no ground. Drawn by `TileGround` | ground; blocks where the legend says |
 
-**The land first laid out from the continent layout** (`land_*.json`, made by a generator retired on
-2026-11-14) is ordinary regions now. Their scenes (`Assets/Scenes/Land/`) are still ignored by git:
+**The open land** (`land_*.json`, 128-tile cells since 2026-11-14, first laid out by a generator
+since retired) is ordinary regions. Their scenes (`Assets/Scenes/Land/`) are still ignored by git:
 Sync World builds them on each machine from the data, since they hold nothing made by hand. A region
 that gets hand work in its scene needs its area's folder (`"scene": "Assets/Scenes/<Area>/Land_x_y.unity"`),
 and the next Sync World moves the scene there, where it is committed. The `Land*` materials and every
 region's snapshot are committed as usual.
 
-**Ground and terrain are Unity terrain** (decided 2026-11-14). The world's ground is sculpted and
-painted on Unity terrains, one per 128-tile square (`client/Assets/World/Terrain/Terrain_i_j.unity`
-and `.asset`): a heightmap sample on every tile corner, a paint texel on every tile, and a terrain
-layer for each kind of ground in `world/grounds.json` (stones are layers too, `stones-<id>`). A tile
-is the ground layer painted heaviest there. Saving writes each region's `tiles` piece (rows, legend,
-stones, the ring of the neighbours' tiles) and its `terrain` (corner heights in hundredths of a tile,
-one row of text per row of corners from the north) from the terrains; the compiler reads those as
+**Ground and terrain are Unity terrain** (decided 2026-11-14). Every region with ground has a Unity
+terrain (`client/Assets/World/Terrain/<region>.asset`), drawn in its scene and in the game: a power of
+two tiles square (the open land's regions are 128-tile cells), so a height sample sits on every tile
+corner and a paint texel on every tile, with a terrain layer for each kind of ground in
+`world/grounds.json` (stones are layers too, `stones-<id>`, looks only). Water is its own surface,
+`client/Assets/World/Water/<region>.prefab`. Tiles never show; the server walks them, so saving writes
+each region's `tiles` piece (each tile the ground layer painted heaviest on it) and its `terrain`
+(corner heights in hundredths of a tile, one row of text per row of corners from the north) from the
+terrain; the compiler reads those as
 before, so a tile rising more than the region's `cliffStep` across is a cliff and blocked. Never edit
 a region's tiles or terrain by hand: the next save from the terrains replaces them. A building stands
 level on the highest corner under it, on a foundation; other area kinds (patches, roads, houses) are
@@ -108,20 +110,19 @@ With Unity (the owner, or the agent with Unity):
   data, its hand-made file, its scene or the code that draws data changed, or its server maps are
   out of date (the record is `client/Library/RthSync.json`, per machine). **Sync World (no
   screenshots)** is quicker; **Sync World (everything)** redoes every region.
-- **Shaping and painting the ground:** open an area (**R'th > Open Selected Area**, Alt+Shift+O); the
-  terrains under its regions open beside them. Select a terrain and use Unity's own terrain tools:
-  Raise or Lower Terrain, Set Height, Smooth Height, Stamp, and Paint Texture with the ground layers in
-  `Assets/World/Terrain/Layers` (the Terrain Tools package adds more brushes). Brushes work across
-  terrains. The game's ground redraws a moment after each stroke, as the game draws it (blended
-  ground, crisp roads, water with banks dipping under it); **R'th > World > Show Unity Terrain** shows
-  Unity's own view of the terrain instead. Ctrl+Z undoes a stroke. Saving (Ctrl+S) writes the ground
-  of every region under the saved terrains into its data and exports the maps. A new kind of ground is
-  an entry in `world/grounds.json`; its layer is made the first time it is painted from data.
-  **R'th > World > Terrain > Write All Ground To Data** rewrites every region from the terrains.
-- **Water** is drawn as one flat surface over the water's tiles and the ring round them, with the
-  bank dipping under it by how much water lies near (`Shore`), so the waterline is curved wherever
-  the bank meets it; the surface (`Resources/Shaders/Water.shader`) goes from shallow to deep, with
-  glints that drift on lakes and run downstream on rivers. Walking stays tile by tile.
+- **Shaping and painting the ground:** open an area (**R'th > Open Selected Area**, Alt+Shift+O). Each
+  region scene holds its terrain (under `Data`); select one and use Unity's own terrain tools: Raise or
+  Lower Terrain, Set Height, Smooth Height, Stamp, and Paint Texture with the ground layers in
+  `Assets/World/Terrain/Layers` (the Terrain Tools package adds more brushes). The terrains connect,
+  so a stroke runs on across region borders. Ctrl+Z undoes a stroke. Saving (Ctrl+S) writes each
+  region's ground into its data and exports its map. Water is painted (a water layer: what blocks) and
+  drawn by the region's water surface, a prefab you can edit like any other. A new kind of ground is an
+  entry in `world/grounds.json`; a new region gets its first terrain from **R'th > World > Terrain >
+  Create Missing Terrains**. **Write All Ground To Data** rewrites every region from its terrain.
+- **Water** is each region's water surface (`Assets/World/Water/<region>.prefab`): flat over still
+  water, fitted to running water, with the bed sinking under open water, so the waterline is wherever
+  the ground rises out of it; the surface (`Resources/Shaders/Water.shader`) goes from shallow to deep
+  by the depth under it, with glints that drift on lakes and run downstream on rivers.
 - **Saving a region scene** writes back what you did to data pieces in the Editor: moving one by
   whole tiles, turning a placed one, deleting one. Then it captures `Handmade` and re-exports.
   Pressing Play and **R'th > Export Map** do the same capture and export.

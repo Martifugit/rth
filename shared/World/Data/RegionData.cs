@@ -190,7 +190,7 @@ namespace Rth.Shared.World.Data
         /// <summary>A tiles piece's ground: one string a row from the north, a character a tile from the west.</summary>
         public List<string>? Rows;
         /// <summary>
-        /// A tiles piece painted the RuneScape way (<see cref="Ground.GroundPainter"/>): underlays
+        /// A tiles piece painted the RuneScape way (the old ground drawing; the terrains replaced it): underlays
         /// blended, overlays and water crisp with diagonal half tiles. Otherwise each kind is a flat material.
         /// </summary>
         public bool? Paint;
@@ -204,7 +204,7 @@ namespace Rth.Shared.World.Data
         /// </summary>
         public List<string>? Surround;
         /// <summary>
-        /// A painted tiles piece's stones (<see cref="Ground.GroundStones"/>): small flat chips lying
+        /// A painted tiles piece's stones : small flat chips lying
         /// over the ground, painted on their own wherever they belong (along a path, round a rock),
         /// whatever ground is under them. One string a row from the north like <see cref="Rows"/>,
         /// a character a tile from <see cref="StoneLegend"/>; a space is none. Null: no stones.
@@ -296,7 +296,7 @@ namespace Rth.Shared.World.Data
     {
         /// <summary>A material name from the region's <see cref="RegionData.Materials"/>.</summary>
         public string Material = "";
-        /// <summary>How thickly they lie: about <see cref="Ground.GroundStones.PerTile"/> times this a tile (0..1).</summary>
+        /// <summary>How thickly they lie: this share of a tile (0..1).</summary>
         public float Share;
     }
 

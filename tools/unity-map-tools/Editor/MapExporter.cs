@@ -280,7 +280,7 @@ namespace Rth.MapTools.Editor
                     {
                         Transform t = hit.collider.transform;
                         if (!t.IsChildOf(scope)) continue;
-                        if (t.GetComponentInParent<MapWall>() != null || t.GetComponentInParent<MapBlocker>() != null) continue;
+                        if (t.GetComponentInParent<MapWall>() != null || t.GetComponentInParent<MapBlocker>() != null || t.GetComponentInParent<MapWater>() != null) continue;
                         int level = MapLevel.Of(hit.collider, area.plane);
                         if (level >= 0 && level < layers.Planes) layers.SetGround(level, x, y);
                     }

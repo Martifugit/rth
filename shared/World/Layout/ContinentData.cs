@@ -39,7 +39,7 @@ namespace Rth.Shared.World.Layout
         public string DefaultPower = "wild";
 
         public Dictionary<string, GroundDef> Grounds = new Dictionary<string, GroundDef>();
-        /// <summary>Kinds of stones to scatter over the ground (gravel, chalk chips), painted on their own (<see cref="Ground.GroundStones"/>).</summary>
+        /// <summary>Kinds of stones to scatter over the ground (gravel, chalk chips), painted on their own .</summary>
         public Dictionary<string, StoneDef> Stones = new Dictionary<string, StoneDef>();
         public Dictionary<string, PowerDef> Powers = new Dictionary<string, PowerDef>();
         /// <summary>Land, as shapes; everything else is sea.</summary>

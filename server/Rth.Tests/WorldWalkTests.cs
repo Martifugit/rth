@@ -1,4 +1,4 @@
-using Rth.Server.Content;
+﻿using Rth.Server.Content;
 using Rth.Shared.World;
 using Rth.Shared.World.Data;
 using Rth.Shared.World.Layout;
@@ -20,9 +20,8 @@ public class WorldWalkTests
         LayoutWorkspace lw = LayoutWorkspace.Load(Root);
         ContinentMap layout = lw.Map;
         WorldMap world = WorldLoader.Load(Path.Combine(Repo.ServerDirectory, "data", "maps"), "land_0_0").Map;
-        // Regions whose scenes were made by hand (in their area's folder) rather than laid out from the layout.
-        List<RegionData> handBuilt = RegionFiles.RegionPaths(Path.Combine(Root, "world", "regions")).Select(RegionFiles.LoadRegion)
-            .Where(r => !r.Instanced && !r.Scene.StartsWith(WorldWorkspace.GeneratedScenes, StringComparison.Ordinal)).ToList();
+        // Passes that go where a hand-built place's design takes them, not over their crest (Selenfall's breach).
+        var designed = new HashSet<string> { "pass-selenfall" };
         int x0 = layout.OriginX, y0 = layout.OriginY, w = layout.Cols * layout.ZoneTiles, h = layout.Rows * layout.ZoneTiles;
         bool[] reached = Walk(world, world.Spawn, x0, y0, w, h);
         bool Reached(float x, float y) => reached[((int)y - y0) * w + (int)x - x0];
@@ -33,7 +32,7 @@ public class WorldWalkTests
         {
             float[] crest = pass.Line[pass.Line.Count / 2];
             // A pass through a region built by hand (Selenfall's breach) goes where that region's design takes it.
-            if (handBuilt.Any(b => crest[0] >= b.OriginX && crest[0] <= b.OriginX + b.Width && crest[1] >= b.OriginY && crest[1] <= b.OriginY + b.Height)) continue;
+            if (designed.Contains(pass.Id)) continue;
             Assert.True(Reached(crest[0], crest[1]), $"The pass {pass.Id} can't be walked over at ({crest[0]}, {crest[1]}).");
         }
 

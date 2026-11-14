@@ -135,7 +135,7 @@ Unity is written back to text.
 | `world/regions/<id>.json` | A region: rectangle, title, materials, pieces (ground, roads, water, walls, houses, trees, rocks, objects, creatures) | Anyone; the Editor writes moves and deletions back |
 | `world/regions/<id>.handmade.json` | What the scene adds by hand, as collision and placements | Sync World only |
 | `world/regions/land_*.json` | The land first laid out from the layout (its generator retired 2026-11-14); ordinary regions now | Anyone, as any region |
-| `client/Assets/World/Terrain/*` | The world's ground: Unity terrains, a layer per kind of ground in `world/grounds.json` | Unity only |
+| `client/Assets/World/Terrain/*`, `client/Assets/World/Water/*` | The world's ground and water: a Unity terrain per region, a layer per kind of ground in `world/grounds.json`; water surfaces | Unity only |
 | `server/data/maps/*` | What the server loads | `tools/world export` / Sync World only |
 | `client/Assets/Scenes/...` | How a region looks | Unity only |
 
@@ -145,11 +145,13 @@ Unity is written back to text.
   and paint belong in the region's data" (2026-10-23, 2026-10-25), which had grown its own sculpting
   and painting tools. The world's heights and kinds of ground live in Unity terrains (one per
   128-tile square, a heightmap sample on every tile corner and a paint texel on every tile), shaped and
-  painted with Unity's own terrain tools. What a tile is (grass, road, sand, water) is still game
-  meaning (water blocks, cliffs block), so a tile is whichever ground layer is painted heaviest on it:
-  a soft brush still paints crisp tiles, and the look (blends, crisp roads, diagonal half tiles) is
-  drawn from them by `TileGround`. Saving writes each region's tiles and heights into its data, which
-  the server's maps are compiled from. The kinds of ground are `world/grounds.json`, a terrain layer
+  painted with Unity's own terrain tools, and drawn by Unity in the Editor and the game: one terrain per
+  region, a power of two tiles square (the open land's regions are 128-tile cells, re-cut on
+  2026-11-14), so a height sample sits on every tile corner. Tiles never show on the ground. What a
+  tile is (grass, road, water) still matters to the server (water blocks, cliffs block), so on saving
+  each tile becomes the ground layer painted heaviest on it, written with the heights into the region's
+  data, which the server's maps are compiled from. Water is its own surface over ground painted with a
+  water layer. The kinds of ground are `world/grounds.json`, a terrain layer
   each. How: [workflow.md](workflow.md).
 
 ## 5. How a place gets made

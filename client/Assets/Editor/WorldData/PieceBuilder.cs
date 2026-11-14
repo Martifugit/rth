@@ -13,7 +13,7 @@ namespace Rth.Client.Editor
     /// with the same footprints, walls and ground the C# compiler (<see cref="RegionCompiler"/>)
     /// gives the server: area kinds (patches, roads, water, walls, fences, houses) through
     /// <see cref="WorldKit"/>, buildings from their kit's models through <see cref="BuildingBuilder"/>,
-    /// tiles through <see cref="TileGround"/>; placed kinds (trees, rocks, props, creatures, the spawn) as one object
+    /// the ground as the region's Unity terrain (<see cref="WorldTerrains"/>); placed kinds (trees, rocks, props, creatures, the spawn) as one object
     /// on their tile whose look has no colliders, plus a collider over exactly their footprint.
     /// </summary>
     public static class PieceBuilder
@@ -61,6 +61,22 @@ namespace Rth.Client.Editor
                 tag.placedYaw = go.transform.eulerAngles.y;
                 tag.canTurn = PieceKind.IsPlaced(piece.Kind);
                 root.builtIds.Add(piece.Id);
+            }
+            FloatOnWater(root);
+        }
+
+        /// <summary>Placed things over water (a punt, a jetty's posts) stand on its surface, not the bed under it.</summary>
+        private static void FloatOnWater(DataRoot root)
+        {
+            Physics.SyncTransforms();
+            foreach (DataPiece tag in root.GetComponentsInChildren<DataPiece>(true))
+            {
+                if (!tag.canTurn) continue;
+                Vector3 p = tag.transform.position;
+                if (!Physics.Raycast(new Vector3(p.x, 500f, p.z), Vector3.down, out RaycastHit hit, 1000f, 1 << WorldTerrains.WaterLayer, QueryTriggerInteraction.Ignore)) continue;
+                if (hit.point.y <= p.y) continue;
+                tag.transform.position = new Vector3(p.x, hit.point.y, p.z);
+                tag.placedPosition = tag.transform.position;
             }
         }
 
@@ -124,8 +140,9 @@ namespace Rth.Client.Editor
                     break;
                 case PieceKind.Tiles:
                 {
-                    // The rows go into the scene; TileGround builds the mesh and the ground collider from them on load.
-                    DrawTiles(group.gameObject.AddComponent<TileGround>(), kit, region, piece, terrain);
+                    // The ground is the region's Unity terrain (and its water); the tiles are only what the server walks.
+                    if (!WorldTerrains.Place(group, region))
+                        Debug.LogWarning($"[R'th] {region.Id}: no terrain yet ({WorldTerrains.DataPath(region.Id)}); R'th > World > Terrain > Create Terrains From Data makes it.");
                     break;
                 }
                 default:
@@ -321,73 +338,6 @@ namespace Rth.Client.Editor
             f.transform.position = new Vector3((x0 + x1) / 2f, baseY + height / 2f, (y0 + y1) / 2f);
             f.AddComponent<BoxCollider>().size = new Vector3(x1 - x0 - 0.4f, height, y1 - y0 - 0.4f);
             if (owner.GetComponent<MapBlocker>() == null) owner.gameObject.AddComponent<MapBlocker>();
-        }
-
-        /// <summary>
-        /// Gives a tile ground a tiles piece's ground and the terrain's heights under it, and rebuilds
-        /// it: when a region is drawn, and live while its terrain is sculpted or painted
-        /// (<see cref="WorldTerrains"/>).
-        /// </summary>
-        public static void DrawTiles(TileGround ground, WorldKit kit, RegionData region, Piece piece, Heightfield terrain)
-        {
-            int[] r = piece.Rect;
-            ground.originX = r[0];
-            ground.originY = r[1];
-            ground.width = r[2] - r[0];
-            ground.height = r[3] - r[1];
-            SetTiles(ground, kit, region, piece);
-            if (terrain != null)
-            {
-                // The terrain's corners under this piece's rectangle, row by row from the south.
-                List<string> keys = piece.Legend.Keys.ToList();
-                var corners = new float[(ground.width + 1) * (ground.height + 1)];
-                for (int j = 0; j <= ground.height; j++)
-                    for (int i = 0; i <= ground.width; i++)
-                        corners[j * (ground.width + 1) + i] = terrain.Corner(r[0] + i, r[1] + j);
-                ground.corners = corners;
-                ground.cliffStep = region.Terrain?.CliffStep ?? 1f;
-                ground.cliffMaterial = kit.Mat("LandCliff", Palette.TryParse("CliffRock", out Color cliff) ? cliff : new Color(0.42f, 0.4f, 0.36f));
-                ground.cliffMaterials = keys.Select(k => piece.Legend[k].Cliff is string own ? Material(kit, region, own) : null).ToArray();
-            }
-            else ground.corners = new float[0];
-            ground.Rebuild();
-        }
-
-        /// <summary>
-        /// A tile ground's rows and kinds from a tiles piece: what each kind looks like and does, and
-        /// for painted ground (docs/world-plan.md section 7) the kinds' layers and the neighbours' ring.
-        /// </summary>
-        public static void SetTiles(TileGround ground, WorldKit kit, RegionData region, Piece piece)
-        {
-            List<string> keys = piece.Legend.Keys.ToList();
-            ground.rows = piece.Rows.ToArray();
-            ground.kinds = string.Concat(keys);
-            ground.materials = keys.Select(k => Material(kit, region, piece.Legend[k].Material)).ToArray();
-            ground.lifts = keys.Select(k => piece.Legend[k].Height ?? 0f).ToArray();
-            ground.walkable = keys.Select(k => piece.Legend[k].Walkable).ToArray();
-            ground.painted = piece.Paint == true;
-            ground.margin = piece.Margin ?? 0;
-            ground.surround = piece.Surround?.ToArray() ?? new string[0];
-            ground.overlay = keys.Select(k => piece.Legend[k].IsOverlay).ToArray();
-            ground.soft = keys.Select(k => piece.Legend[k].IsSoft).ToArray();
-            ground.water = keys.Select(k => piece.Legend[k].Water == true).ToArray();
-            ground.beyond = keys.Select(k => piece.Legend[k].Beyond == true).ToArray();
-            List<string> stoneKeys = piece.StoneLegend?.Keys.ToList() ?? new List<string>();
-            ground.stoneRows = piece.Stones?.ToArray() ?? new string[0];
-            ground.stoneKinds = string.Concat(stoneKeys);
-            ground.stoneColours = stoneKeys.Select(k => StoneColour(region, piece.StoneLegend[k])).ToArray();
-        }
-
-        /// <summary>A kind of stones: their colour from the region's materials, alpha how thickly they lie (clear: none).</summary>
-        private static Color StoneColour(RegionData region, StoneKind kind)
-        {
-            if (!region.Materials.TryGetValue(kind.Material, out string value) || !Palette.TryParse(value, out Color colour))
-            {
-                Debug.LogWarning($"[R'th] {region.Id}: stones of material '{kind.Material}' have no colour in the region's materials; left out.");
-                return Color.clear;
-            }
-            colour.a = Mathf.Clamp01(kind.Share);
-            return colour;
         }
 
         /// <summary>A material the region names, created once under Assets/Art/Materials.</summary>

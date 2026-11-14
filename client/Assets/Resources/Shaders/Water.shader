@@ -1,7 +1,7 @@
-// Water (TileGround.BuildWater): one flat surface over a region's water and the ring of tiles round
-// it. The banks dip under it, so the waterline is wherever they meet it. Cheap and chunky like the
-// painted ground (texels a tile): deep to shallow colour (vertex r: 1 at the waterline, 0 a few
-// tiles out), light glints that drift on lakes and run downstream on rivers (vertex gb: the flow's
+// Water (Assets/World/Water, WorldTerrains): flat over still water, fitted to running water and the
+// shore's ring; the banks dip under it, so the waterline is wherever the terrain meets it. Cheap and chunky like the
+// ground (texels a tile): deep to shallow colour (by how deep the ground lies under it, from the
+// camera's depth, or vertex r: 1 at the waterline, 0 a few tiles out), light glints that drift on lakes and run downstream on rivers (vertex gb: the flow's
 // direction, a: its speed), broad slow patches, see-through in the shallows so the bank shows under
 // it, lit by the sun and fogged like the ground.
 Shader "Rth/Water"
@@ -14,6 +14,7 @@ Shader "Rth/Water"
         _DeepAlpha ("Deep opacity", Range(0, 1)) = 0.93
         _ShallowAlpha ("Shallow opacity", Range(0, 1)) = 0.82
         _Texels ("Texels a tile", Float) = 8
+        _ShoreDepth ("Shallows reach (depth)", Float) = 1.2
     }
     SubShader
     {
@@ -33,6 +34,7 @@ Shader "Rth/Water"
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
 
             CBUFFER_START(UnityPerMaterial)
                 half4 _Color;
@@ -41,6 +43,7 @@ Shader "Rth/Water"
                 half _DeepAlpha;
                 half _ShallowAlpha;
                 float _Texels;
+                float _ShoreDepth;
             CBUFFER_END
 
             struct Attributes { float4 positionOS : POSITION; half4 color : COLOR; };
@@ -50,6 +53,7 @@ Shader "Rth/Water"
                 float3 positionWS : TEXCOORD0;
                 half4 color : COLOR;
                 half fog : TEXCOORD1;
+                float4 screenPos : TEXCOORD2;
             };
 
             Varyings Vert(Attributes a)
@@ -59,6 +63,7 @@ Shader "Rth/Water"
                 v.positionCS = TransformWorldToHClip(v.positionWS);
                 v.color = a.color;
                 v.fog = ComputeFogFactor(v.positionCS.z);
+                v.screenPos = ComputeScreenPos(v.positionCS);
                 return v;
             }
 
@@ -90,7 +95,10 @@ Shader "Rth/Water"
                 float glint = step(0.74 - 0.06 * speed, n);
                 float patches = Noise(world * 0.11 + t * 0.02);
 
-                half shallow = v.color.r;
+                // Shallow where the ground lies close under the surface (the camera's depth), or as the surface says.
+                float2 screen = v.screenPos.xy / v.screenPos.w;
+                float under = LinearEyeDepth(SampleSceneDepth(screen), _ZBufferParams) - LinearEyeDepth(v.positionCS.z, _ZBufferParams);
+                half shallow = max(v.color.r, saturate(1.0 - under / _ShoreDepth));
                 half3 albedo = lerp(_Color.rgb, _Shallow.rgb, shallow);
                 albedo *= 0.92 + 0.14 * patches;
                 albedo = lerp(albedo, albedo * 1.35 + 0.06, glint * _Glint);

@@ -1,10 +1,10 @@
-using Rth.Shared.World.Data;
+﻿using Rth.Shared.World.Data;
 using static Rth.WorldTool.LayoutRender;
 
 namespace Rth.WorldTool;
 
 /// <summary>
-/// An area's plan drawn over its painted ground (docs/areas/plan-template.md, stage 0.3): heights
+/// An area's plan drawn over its ground (docs/areas/plan-template.md, stage 0.3): heights
 /// and their jobs, routes, buildings, content by kind with its counts, dungeon entrances, places and
 /// the space kept for later, each labelled, so the plan is looked at rather than only read.
 /// </summary>
@@ -27,9 +27,9 @@ internal static class PlanRender
 
     public static byte[] Draw(AreaPlan plan, IReadOnlyList<RegionData> regions, int ppt)
     {
-        byte[] rgba = PaintRender.RegionsRgba(regions, ppt, out int w, out int h, out int x0, out int y0);
+        byte[] rgba = GroundRender.RegionsRgba(regions, ppt, out int w, out int h, out int x0, out int y0);
         const int legend = 64;
-        var ground = Canvas.FromRgba(rgba, w, h);   // rows from the south, as the painter writes them
+        var ground = Canvas.FromRgba(rgba, w, h);   // rows from the south
         var c = new Canvas(w, h + legend);
         for (int y = 0; y < h; y++)
             for (int x = 0; x < w; x++) c.Set(x, y, ground.Get(x, h - 1 - y));

@@ -397,10 +397,15 @@ namespace Rth.Client.Editor
             MapData data = entry.Compiled.Map;
             var differences = new List<string>();
             if (unity.Planes != data.Planes) differences.Add($"planes: scene {unity.Planes}, data {data.Planes}");
+            // Over the terrain, what blocks (water, rock, ground too steep) is read from it into the data,
+            // not from its collider, so there only walls are compared.
+            int[] ground = Rth.Shared.World.Ground.GroundEdit.Tiles(entry.Region)?.Rect;
+            bool OnTerrain(int p, int x, int y) => p == entry.Region.Plane && ground != null && x >= ground[0] && y >= ground[1] && x < ground[2] && y < ground[3];
             for (int p = 0; p < Mathf.Min(unity.Planes, data.Planes); p++)
                 for (int y = data.OriginY; y < data.OriginY + data.Height; y++)
                     for (int x = data.OriginX; x < data.OriginX + data.Width; x++)
-                        if (unity.GetFlags(p, x, y) != data.GetFlags(p, x, y))
+                        if (unity.GetFlags(p, x, y) != data.GetFlags(p, x, y) &&
+                            !(OnTerrain(p, x, y) && (unity.GetFlags(p, x, y) ^ data.GetFlags(p, x, y)) == Rth.Shared.World.CollisionFlags.Blocked))
                             differences.Add($"({x}, {y}) plane {p}: scene {unity.GetFlags(p, x, y)}, data {data.GetFlags(p, x, y)}");
             if (unity.Spawn.X != data.Spawn.X || unity.Spawn.Y != data.Spawn.Y || unity.SpawnPlane != data.SpawnPlane)
                 differences.Add($"spawn: scene {unity.Spawn}, data {data.Spawn}");

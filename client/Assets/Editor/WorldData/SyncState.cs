@@ -87,7 +87,7 @@ namespace Rth.Client.Editor
             }
             Add(Path.Combine(assets, "Editor", "WorldData"), "PieceBuilder.cs", SearchOption.TopDirectoryOnly);
             Add(Path.Combine(assets, "Editor"), "WorldKit*.cs", SearchOption.TopDirectoryOnly);
-            Add(Path.Combine(assets, "Scripts", "View"), "TileGround.cs", SearchOption.TopDirectoryOnly);
+            Add(Path.Combine(assets, "Editor", "WorldData"), "WorldTerrains.cs", SearchOption.TopDirectoryOnly);
             Add(Path.Combine(assets, "Resources", "Art"), "palette.json", SearchOption.TopDirectoryOnly);
             Add(Path.Combine(WorldSync.RepoRoot, "tools", "unity-map-tools", "Runtime"), "*.cs", SearchOption.AllDirectories);
             Add(Path.Combine(WorldSync.RepoRoot, "tools", "unity-map-tools", "Editor"), "MapExporter.cs", SearchOption.TopDirectoryOnly);

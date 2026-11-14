@@ -23,6 +23,53 @@ switch (command)
     case "check":
         return Check(ws);
 
+    case "regrid":
+    {
+        // Once: the open land re-cut into 128-tile regions (Regrid), its areas and maps following.
+        GroundTable table = GroundTable.Load(GroundTable.PathIn(root));
+        var land = ws.Regions.Where(e => e.Region.Id.StartsWith("land_", StringComparison.Ordinal)).ToList();
+        Regrid.Result cut = Regrid.Run(land.Select(e => e.Region).ToList(), table);
+        foreach (string m in cut.Messages) Console.WriteLine("note: " + m);
+        // Each area keeps the new regions mostly cut from its old ones.
+        WorldAreas areas = WorldAreas.Load(WorldAreas.PathIn(root));
+        string areasText = File.ReadAllText(WorldAreas.PathIn(root));
+        var newOf = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+        foreach (RegionData r in cut.Regions)
+        {
+            WorldAreas.Area? area = areas.AreaOf(cut.MostlyFrom[r.Id]);
+            string key = area?.Id ?? "";
+            if (!newOf.TryGetValue(key, out var list)) newOf[key] = list = new List<string>();
+            list.Add(r.Id);
+        }
+        int k = 0;
+        areasText = System.Text.RegularExpressions.Regex.Replace(areasText, "\"regions\": \\[[^\\]]*\\]", m =>
+        {
+            WorldAreas.Area a = areas.Areas[k++];
+            var kept = a.Regions.Where(id => !id.StartsWith("land_", StringComparison.Ordinal)).ToList();
+            kept.AddRange(newOf.TryGetValue(a.Id, out var got) ? got : new List<string>());
+            return "\"regions\": [" + string.Join(", ", kept.Select(id => "\"" + id + "\"")) + "]";
+        });
+        if (newOf.TryGetValue("", out var orphans)) Console.WriteLine("note: in no area: " + string.Join(", ", orphans));
+        // Out with the old regions (and their maps, snapshots and screenshots), in with the new.
+        foreach (WorldWorkspace.Entry e in land)
+        {
+            File.Delete(e.Path);
+            foreach (string f in Directory.GetFiles(ws.MapsDirectory, e.Region.Id + ".*")) File.Delete(f);
+            string snap = Path.Combine(root, "world", "snapshots", e.Region.Id + ".json");
+            if (File.Exists(snap)) File.Delete(snap);
+            string screens = Path.Combine(root, "world", "screens", e.Region.Id);
+            if (Directory.Exists(screens)) Directory.Delete(screens, true);
+        }
+        foreach (RegionData r in cut.Regions) RegionFiles.SaveRegion(r, Path.Combine(root, "world", "regions", r.Id + ".json"));
+        File.WriteAllText(WorldAreas.PathIn(root), areasText);
+        WorldWorkspace again = WorldWorkspace.Load(root);
+        foreach (string e in again.LoadErrors) Console.Error.WriteLine("error: " + e);
+        foreach (WorldWorkspace.Entry e in again.Regions) foreach (string err in e.Compiled.Errors) Console.Error.WriteLine($"error: {e.Region.Id}: {err}");
+        again.Export();
+        Console.WriteLine($"{land.Count} land regions re-cut into {cut.Regions.Count} of {Regrid.Size} tiles.");
+        return 0;
+    }
+
     case "grounds":
     {
         // The world's kinds of ground (world/grounds.json), gathered from the regions: one terrain layer each.
@@ -128,27 +175,6 @@ switch (command)
     case "plan":
         return PlanCommand(root, ws, rest);
 
-    case "paint" when rest.Length >= 2 && rest[0] == "area":
-    {
-        // An area's regions as their data paints them (the real ground, hand work and all): paint area <id> [pixels a tile]
-        WorldAreas areas = WorldAreas.Load(WorldAreas.PathIn(root));
-        WorldAreas.Area? area = areas.Areas.FirstOrDefault(a => a.Id == rest[1]);
-        if (area == null)
-        {
-            Console.Error.WriteLine($"No area '{rest[1]}' in world/areas.json.");
-            return 2;
-        }
-        MapRender.LoadPalette(root);
-        int ppt = rest.Length >= 3 ? int.Parse(rest[2]) : 4;
-        var parts = ws.Regions.Where(e => area.Regions.Contains(e.Region.Id)).Select(e => e.Region).ToList();
-        string outDir = Path.Combine(root, "world", "renders");
-        Directory.CreateDirectory(outDir);
-        string file = Path.Combine(outDir, "area-" + area.Id + ".png");
-        File.WriteAllBytes(file, PaintRender.Regions(parts, ppt));
-        Console.WriteLine($"wrote {Path.GetRelativePath(root, file).Replace('\\', '/')}");
-        return 0;
-    }
-
     default:
         Console.WriteLine("""
             R'th world data (docs/workflow.md). Commands:
@@ -157,8 +183,6 @@ switch (command)
               render [region...] draw regions to world/renders/<id>.png (and .txt), plus world.png
               format             rewrite world/regions/*.json in the standard layout
               grounds            gather the regions' kinds of ground into world/grounds.json (a terrain layer each)
-              paint area <id> [pixels a tile]
-                                 an area's regions painted as the client paints their ground, to world/renders
               layout [check]     compile world/layout/continent.json: run its checks, write zones.json and
                                  regions.txt, and draw docs/images/layout-*.png (check: only check, and that
                                  the generated files are up to date)
