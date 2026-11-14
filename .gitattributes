@@ -17,3 +17,7 @@
 server/data/maps/*.json text eol=lf
 server/data/maps/*.rthmap binary
 world/**/*.json text eol=lf
+
+# Unity writes terrain data and water meshes in binary, whatever the serialization mode
+client/Assets/World/Terrain/*.asset binary
+client/Assets/World/Water/*.asset binary
