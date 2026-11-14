@@ -48,8 +48,7 @@ approved:
   - the ties to every neighbour and the area's part in its region;
   - a walkthrough for each level band.
 - **The tools hold the gate:**
-  - `tools/world strokes` writes nothing in an area without 0.5 (`--sketch` overrides it, for a
-    throwaway branch);
+  - no ground work in an area without 0.5 (the terrains don't enforce it: check the stage first);
   - `tools/world areas` fails on any package past stage 0 ticked without it;
   - `tools/world plan check <area>` fails until the plan is complete.
 - **0.5 Approved is the owner's** alone to tick, like the walks.

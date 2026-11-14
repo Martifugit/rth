@@ -115,6 +115,13 @@ Correct for drift so ticks stay on a 600 ms grid. Allow a faster tick rate in te
   the data under each scene's `Data` root (**Sync World**), keeps hand work under `Handmade`, and
   checks its own export agrees. Never edit `server/data/maps` or the handmade files by hand. See
   `docs/workflow.md`.
+- **The ground is Unity terrain (decided 2026-11-14):** heights and kinds of ground are sculpted and
+  painted with Unity's own terrain tools on the world's terrains (`client/Assets/World/Terrain`, one
+  per 128-tile square, a heightmap sample on every tile corner and a paint texel on every tile; each
+  ground in `world/grounds.json` is a terrain layer, and a tile is the layer painted heaviest there).
+  The terrains are the truth: saving writes each region's `tiles` piece and `terrain` from them
+  (`WorldTerrains`, `WorldGround`), which the compiler and the game's ground (`TileGround`) read. Never
+  edit a region's tiles or terrain by hand; agents without Unity don't reshape the ground.
 - **Regions (decided, Milestone 7):** the world is one absolute tile grid (Tolling's south-west
   corner is (0, 0); coordinates may go negative). It is built from **regions**, each one Unity
   scene with one `MapArea`, zone-aligned (origin and size multiples of 8) and not overlapping.
@@ -566,31 +573,21 @@ walkable land, generated from the layout by `tools/world blockout` into 256 regi
 scene out of `Assets/Scenes/Land/`, which git ignores, into its area's folder): each is
 one `tiles` piece (ground tile by tile, drawn by the client's `TileGround`) with the layout's ground,
 water, rivers, the spine's rock, passes, roads and a plain square per place. Flat, no assets.
-`BlockoutTests` walk from Tolling to Cruor, over every pass and into every power. See
-`docs/layout.md` section 8.
+`WorldWalkTests` walk from Tolling to Cruor, over every pass and into every power. The generator was
+retired on 2026-11-14 (below): its regions are frozen as ordinary ones and nothing regenerates them.
 
-**Incremental sync and terrain as data (on `claude/terrain-data`):** Sync World only redoes regions
-whose data, hand-made file, scene or drawing code changed (`SyncState`, per machine in
-`client/Library/RthSync.json`; **Sync World (everything)** redoes all). A region's `terrain` holds its
-heights as text; the compiler blocks cliffs, `TileGround` drapes over it, and **Shape and Paint Ground** in the
-Scene view edits it, written back on saving (which takes a generated region over). See
-`docs/world-guide.md` and `docs/workflow.md`.
-
-**Edit Terrain (on `claude/terrain-editor`):** **R'th > World > Edit Terrain** stands one editor-only
-Unity Terrain over the whole surface world (a heightmap sample per tile corner, exactly the data's
-heights), so Unity's terrain tools shape it across regions; Ctrl+S writes it back through
-`tools/world terrain-save` (`WorldTerrain`): built regions' `terrain`, and generated land's raise in
-`world/layout/sculpt/<id>.json` (`HeightEdits`), which the blockout adds on top so the land stays
-generated. World-data generation runs on .NET, not in Unity: Mono's float maths draws a slightly
-different blockout.
+**Incremental sync:** Sync World only redoes regions whose data, hand-made file, scene or drawing
+code changed (`SyncState`, per machine in `client/Library/RthSync.json`; **Sync World (everything)**
+redoes all).
 
 **The world remade (L6, on `claude/world-remake`):** the continent laid out from the land up to
 `docs/world-plan.md` (read it before world work): landforms (`relief`: the Scarp, the spine's west
 face, mesas, cones, canyons, dunes, tors), rivers carved into valleys and lakes held level, roads
 routed over the land in each power's own surface, settlement platforms and fields, and 63 `sites`
-kept for content. `Landscape` builds it at tile scale; the ground is painted the RuneScape way
-(`shared/World/Ground`: blended underlays, crisp overlays and water with diagonal half tiles), drawn by
-`TileGround` and by `tools/world paint` alike. Waiting on Sync World and the owner's walk.
+kept for content. The ground is painted the RuneScape way (`shared/World/Ground`: blended underlays,
+crisp overlays and water with diagonal half tiles), drawn by `TileGround` and by `tools/world paint
+area` alike. (The generator that laid it out, `Landscape`, was retired on 2026-11-14; the land it
+made is now the terrains'.)
 
 **Tolling and Palmerway scrapped (2026-10-26):** their old hand-made blockouts (scenes, regions, maps)
 are gone; the blockout generates `land_0_0` and `land_1_0` there like everywhere else, with the player
@@ -612,13 +609,19 @@ each, in five waves) and a held-back frontier, and holds the standard: four stag
 ticked per area. Read `docs/world-areas.md` before world work; `tools/world areas` checks it and draws
 the coverage map; **R'th > Open Selected Area** (Alt+Shift+O) opens an area's regions together.
 
-**Shape and Paint Ground:** **R'th > World > Shape and Paint Ground** (G) shapes the heights and paints
-the ground tile by tile in the Scene view over every open region (Shape: raise, lower, flatten, smooth;
-Paint: a soft-edged brush, road strokes straight or at 45 degrees, fill, smooth, pick; its Stones layer scatters gravel or chips over any ground with the same brushes), drawn as the game
-draws it; saving writes heights and tiles to the data, takes a generated region over (its scene to its
-area's folder, then the blockout), and the neighbours' rings of tiles follow. The paint stays data (one
-character a tile), not a Unity splat map: `docs/world-guide.md` section 4. Water is one flat surface
-(`Water.shader`: shallows, glints, flow) with the banks dipping under it (`Shore`), so shores curve.
+**The ground is Unity terrain (2026-11-14, `claude/engine-native-world`):** the custom ground tools
+(Edit Terrain, Shape and Paint Ground, stroke plans, seams, `terrain-save`, the sculpt layer) and the
+blockout generator are gone. The world's ground is 211 Unity terrains (`client/Assets/World/Terrain/
+Terrain_i_j.unity` and `.asset`), made once from the regions by **R'th > World > Terrain > Create
+Terrains From Data**. Opening a region scene opens the terrains under it; select one and use Unity's
+terrain tools (Raise or Lower, Set Height, Smooth, Stamp, Paint Texture with the ground layers in
+`Assets/World/Terrain/Layers`; the Terrain Tools package adds more), across terrains. The game's ground
+redraws a moment after each stroke; **R'th > World > Show Unity Terrain** shows Unity's own view
+instead. Ctrl+S writes the ground of every region under the saved terrains into its data and exports
+the maps. A new kind of ground is an entry in `world/grounds.json` (its layer is made when first
+used). The generated regions were frozen (no `"generated"` any more); their scenes stay local in
+`Assets/Scenes/Land/`. Water is one flat surface (`Water.shader`: shallows, glints, flow) with the
+banks dipping under it (`Shore`), so shores curve.
 
 **Tolling today:** stage 2 blocked out as data (2026-11-02, branch `claude/tolling-structure`,
 `docs/areas/tolling.md` findings 11-18): Wennow reshaped; the town on its knoll (the square at the
@@ -771,22 +774,16 @@ attaching). Today: `SkillSystem`, `FlagSystem`, `ItemSystem`, `CombatSystem`, `D
 | A new kind of map placement | A marker component in tools/unity-map-tools, an export file in `MapExporter`, a field on `MapPlacements` (merged across regions by `WorldLoader`). |
 | A floor above the ground (upper storey, gallery, footbridge, tower room) | A `MapLevel` (1-3) on a group holding that floor's slab (ground collider), walls (`MapWall`), blockers, objects and spawns: the exporter writes one plane per level. `hiddenFromBelow` (default) switches the group off while the player is on a lower floor; turn it off for what must always show from outside (outer walls, an open-air deck). Planes are separate collision, and people only see people on their own plane. There is no plane below the ground: cellars, caves and dungeons are separate small regions (instanced, 1024 tiles north of the surface place) entered by a `climb` object whose landing is in that region (`trapdoor_down`/`trapdoor_up`, `cave_mouth`/`cave_exit`, or the stairs and ladders). |
 | Stairs, ladders, trapdoors | An object with a `climb` action (`stairs_up`/`stairs_down`/`ladder_up`/`ladder_down` exist) placed with `MapObject` + a collider, and its `climbTo` set to an empty object on the landing tile under the target floor's `MapLevel`. One object per end. The exporter warns about a blocked landing; `ClimbSystem` moves the player. |
-| A new region of the world | A file `world/regions/<id>.json` (id, title, scene path, zone-aligned origin and size, ground, materials, pieces); `tools/world export`, then Sync World creates its scene. No server code. Over the open land, it replaces the generated `land_*` region there at the next `tools/world blockout`. |
-| The open land between places (the blockout) | Change `world/layout/continent.json` and run `tools/world blockout` (`docs/world-plan.md` section 10); see it first with `tools/world paint` and `probe`. `Landscape` builds it: grounds, `relief` (landforms), rivers and lakes, routed roads (`RoadRouter`), platforms, painted detail. Never edit a `land_*.json` that still says `"generated"`. |
-| Work on a part of the world | Its area in `world/areas.json` (`docs/world-areas.md`). **Plan it first** (stage 0): the design document to `docs/areas/plan-template.md` and `world/plans/<area>.json` (`tools/world plan check`, `plan render`), reviewed, and approved by the owner (0.5) before any ground changes; `tools/world strokes` refuses otherwise. Then do the next package, tick it, run `tools/world areas`. A new region goes into an area too (`WorldAreasTests`). |
+| A new region of the world | A file `world/regions/<id>.json` (id, title, scene path, zone-aligned origin and size, ground, materials, pieces); `tools/world export`, then Sync World creates its scene. No server code. |
+| Shaping or painting the ground (hills, cliffs, rivers, roads, paths, grass, water) | Unity's terrain tools on the world's terrains (`WorldTerrains`; they open beside the region scenes), then Ctrl+S, which writes the regions' `tiles` and `terrain` and exports the maps. A tile is the ground layer painted heaviest there; a tile rising more than the region's `cliffStep` across is blocked. |
+| Work on a part of the world | Its area in `world/areas.json` (`docs/world-areas.md`). **Plan it first** (stage 0): the design document to `docs/areas/plan-template.md` and `world/plans/<area>.json` (`tools/world plan check`, `plan render`), reviewed, and approved by the owner (0.5) before any ground changes (nothing in the Editor enforces it: check the area's stage first). Then do the next package, tick it, run `tools/world areas`. A new region goes into an area too (`WorldAreasTests`). |
 | What an area's plan holds as data | `shared/World/Data/AreaPlan.cs`: places (`foundBy`, `hook`), buildings, content (object or npc, count, rect, skill, levels, `why`, `supports`), dungeons and their rooms, routes, heights (a `job` from `AreaPlan.HeightJobs`), reserves, neighbours. A new required question is a field and a line in `Check`; `plan built` compares the regions with it. |
-| A landform (hill, scarp, mesa, crater, dunes, canyons) | An entry in continent.json's `relief`; a new kind is a case in `Relief.Contribution`. |
 | How water and shores look | `Shore` (shared/World/Ground: how far the bank dips under the water, by how much water lies near) and `TileGround.BuildWater` (one flat surface over the water and the ring round it; per corner: shallow, flow direction and speed), drawn by `Resources/Shaders/Water.shader`. |
-| A spot kept for future content (a dungeon mouth, a boss arena) | An entry in continent.json's `sites` (kind, stage, note): marked in the blockout, never on the players' map. |
-| How a kind of ground is painted | Its ground in continent.json: `palette`, `layer` (`over` for made surfaces), `mix`, `shore`, `bank`, `scree`, `cliff`; a region's tiles piece with `"paint": true` is painted by `GroundPainter` (client and tools alike). |
-| Painting ground in the Editor (roads, paths, grass, water) | **R'th > World > Shape and Paint Ground** (`GroundPaintTool`, Paint tab): soft brush, road strokes, fill, smooth, pick over every open region; saving writes the tiles (`GroundPaintTool.WriteBack`) and the neighbours' rings (`GroundEdit.RefreshSurround`; the blockout refreshes them too). The kinds come from continent.json's grounds (`Blockout.KindOf`) and the regions' own legends. A new brush mode is a case in the tool; the edits on the data are `shared/World/Ground/GroundEdit.cs`. |
-| A path out in the land (gravel, a dirt track) | A ground in continent.json drawn crisp (`"layer": "over"`, diagonal half tiles), plain earth; `"stones": { "kind", "share" }` has the blockout scatter stones over it unevenly (`GroundStones.Spread`: patches, bare stretches, thicker where it is wide). `"layer": "soft"` instead fades a ground fully into its neighbours. Paved highways (`cobble`) are for towns, not the wild. |
-| Stones over the ground (gravel along a path, chips round a rock) | Their own layer on a tiles piece, not a ground: `stones` rows and a `stoneLegend` (material, `share`), tile by tile and never spilling beyond what is painted (`GroundStones`, a mesh in `TileGround`, drawn by the tools' renders). Kinds are continent.json's `stones`; paint them with **Shape and Paint Ground**'s Paint tab, Stones layer (thickness, uneven, Smooth spreads them). The edits are `GroundEdit.SetStone` / `StoneCharFor` / `PruneStones`. |
-| Redrawing a path or river, or shaping an island, hill, lake or square, over built regions | A plan in `world/strokes/<area>.json` (`GroundStrokes`: `shapes` fill an outline with ground rising to a peak, cliffs on a `cliffSide`, beaches round the rest; `"keepHeights": true` paints only the ground (a square); `"raise": h` only lifts the land inside (a crown on a hill, a knoll, a crag), easing in over `gentle` tiles, steep on a `cliffSide` with `rock` on what is steep; a path stroke with `"grade"` (tiles a tile) cuts its own gradient into the land, level landings at its switchbacks' turns, so any cliff can be climbed by a road drawn as zigzag points; `"water": true` makes the outline a lake at one `level`, drains the old water (`drain`, `drainGrounds` for its rim) into the land round it, eases the new shore and scatters `shore` patches, each optionally held to a `rect`; points smoothed and wound, a path drifts, a river meanders; the old line cleared and filled; a river's bed lowered, steep stretches gathered into one fall (`fall`) with a plunge pool (`pool`); `swaps` for mud at the water's edge, stranded banks, and with `smaller` scraps of field or islets), applied once with `tools/world strokes <plan>`; the tiles are the truth afterwards. |
-| Ground tile by tile (a whole region's land) | A `tiles` piece: `rect`, `rows` from the north, a `legend` of characters (`material`, `blocks`, `water`, `height`, `cliff`: its own colour for its cliff faces). The compiler gives ground or blocks; `TileGround` draws it. |
-| Heights that meet at region borders | Automatic: whatever writes a region's terrain (saving sculpted ground, `terrain`, `terrain-save`, `strokes`) calls `TerrainSeams.Follow`, so built neighbours, open or not, take up the new edge and generated ones follow at the blockout. `tools/world seams` mends every border; `check` warns and `BlockoutTests` fails on a step. A new tool that writes terrain calls it too. |
-| Shaping the land over many regions at once | **R'th > World > Edit Terrain** in Unity, then Ctrl+S (`TerrainEditor`, `WorldTerrain`); generated land's sculpting is kept in `world/layout/sculpt` (`HeightEdits`), never in its `land_*.json`. Without Unity: `WorldTerrain.WriteHeights` a field and run `tools/world terrain-save`. |
-| Terrain (hills, valleys, cliffs) in a data region | The region's `terrain` (corner heights as text rows, hundredths of a tile; `TerrainText`). The compiler blocks tiles steeper than `cliffStep`; `TileGround` drapes over it; placed pieces stand on it; `GroundHeight.TerrainAt` lifts the camera. Sculpt in Unity (**Shape and Paint Ground**'s Shape tab, over the open regions, written back on save) or start one with `tools/world terrain <region> flat` (or `layout`: the generated land's heights, which meet the neighbours). `check` warns about steps at region borders. |
+| A spot kept for future content (a dungeon mouth, a boss arena) | An entry in continent.json's `sites` (kind, stage, note): kept on the layout, never on the players' map. |
+| A kind of ground (and how it is painted) | An entry in `world/grounds.json` (a `TileKind`: `material`, `layer` (`over` for made surfaces drawn crisp with diagonal half tiles, `soft` for a path faded into its neighbours), `blocks`, `water`, `height`, `cliff`, `beyond`; its material's colour in `materials`); its terrain layer is made the first time it is used. A region's tiles piece with `"paint": true` is painted by `GroundPainter` (client and tools alike). Paths in the wild are plain earth with stones, not paved highways. |
+| Stones over the ground (gravel along a path, chips round a rock) | A stones layer on the terrains (`stones-<id>` in `Assets/World/Terrain/Layers`, ids from `world/grounds.json` `stones`): how heavily it is painted on a tile is how thickly they lie. Written into the tiles piece's `stones` rows and `stoneLegend`, drawn by `GroundStones` (a mesh in `TileGround`). |
+| Ground tile by tile (a whole region's land) | A `tiles` piece: `rect`, `rows` from the north, a `legend` of characters (`material`, `blocks`, `water`, `height`, `cliff`: its own colour for its cliff faces). The compiler gives ground or blocks; `TileGround` draws it. Written from the terrains on save: never by hand. |
+| Terrain (hills, valleys, cliffs) in a region | Sculpted on the world's Unity terrains; saving writes the region's `terrain` (corner heights as text rows, hundredths of a tile; `TerrainText`). The compiler blocks tiles steeper than `cliffStep`; `TileGround` drapes over it; placed pieces stand on it; `GroundHeight.TerrainAt` lifts the camera. Neighbouring regions share the terrains, so borders always meet. |
 | Something in a region (a house, a fence, a rock to mine, a creature) | A piece in `world/regions/<id>.json` (`docs/workflow.md` lists the kinds); `tools/world check`, `export`, `render`. Interactive with `"object"`. A model with an even footprint is centred on a grid line with `"offset": [0.5, 0]` (tiles, before `rot`; a third value raises it). |
 | A new kind of piece | A constant in `PieceKind`, its collision in `RegionCompiler.AddPiece`, its look in the client's `PieceBuilder`; Sync World checks the two agree. |
 | Something only worth making by hand | Under the scene's `Handmade` root; saving the scene captures it into `<id>.handmade.json`. |

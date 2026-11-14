@@ -129,10 +129,8 @@ switches back along it. The camera tilts up over high ground near the player
 least 2 tiles wide. Nothing below -0.3 shows (the unbuilt land under the world), so depth is carved
 into raised land: a gorge is cut into a plateau, not dug below the sea.
 
-**Tools.** Strokes plans (`world/strokes/`): `shapes` raise or lower land (`raise`, a `cliffSide` for
-one steep face, `rock` on what is steep), islands and lakes; rivers cut their beds and gather steep
-stretches into falls. In Unity: **Edit Terrain** (Unity's terrain tools over the whole world) and
-**Shape and Paint Ground**. Check a plan from the player's path in Play mode.
+**Tools.** Unity's own terrain tools on the world's terrains (`docs/workflow.md`). Check a plan from
+the player's path in Play mode.
 
 **Water** has **one sea level** for the whole world (proposed: height 0, so land is 0 and up).
 Lakes and rivers sit at their own level, which steps down only at falls and weirs, and every

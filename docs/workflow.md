@@ -48,28 +48,25 @@ rectangles are `[x0, y0, x1, y1]` with the far edges excluded. The kinds
 | `spawn` | Where new players appear | none |
 | `tiles` | Ground tile by tile over `rect`: `rows` of characters from the north, each one a `legend` entry (`material`, `blocks`, `water`, a drawn `height`, a `cliff` material for its steep faces); a space is no ground. Drawn by `TileGround` | ground; blocks where the legend says |
 
-**Generated regions** carry `"generated": "<generator>"` and are rewritten by that generator: the
-open land between places is `land_*.json`, from the continent layout (`tools/world blockout`,
-`docs/layout.md` section 8). Delete the `generated` line to take one over by hand.
-
-**Generated scenes are local.** Their scenes (`Assets/Scenes/Land/`) are ignored by git: Sync World
-builds them on each machine from the data, and every change to how ground is drawn would rewrite
-them all. A region taken over keeps hand work in its scene, so give it its area's folder
-(`"scene": "Assets/Scenes/<Area>/Land_x_y.unity"`; `tools/world check` warns until you do), and the
-next Sync World moves the scene there, where it is committed. The `Land*` materials and every
+**The land first laid out from the continent layout** (`land_*.json`, made by a generator retired on
+2026-11-14) is ordinary regions now. Their scenes (`Assets/Scenes/Land/`) are still ignored by git:
+Sync World builds them on each machine from the data, since they hold nothing made by hand. A region
+that gets hand work in its scene needs its area's folder (`"scene": "Assets/Scenes/<Area>/Land_x_y.unity"`),
+and the next Sync World moves the scene there, where it is committed. The `Land*` materials and every
 region's snapshot are committed as usual.
 
-**Terrain** is the region's `terrain`: its corner heights, one row of text per row of tile corners
-from the north, in hundredths of a tile (`125` is 1.25 tiles up; `0*40` is forty corners at 0), and
-a `cliffStep`. A tile rising more than `cliffStep` across is a cliff and blocked, in the compiler
-and in Unity alike. It is drawn by the region's `tiles` pieces and stood on by everything placed;
-a building stands level on the highest corner under it, on a foundation; other area kinds (patches,
-roads, houses) are still drawn flat and get a warning on terrain. A water tile's height is the
-water's surface, so what is placed on it (a punt, a jetty) floats.
-`check` warns where two regions side by side disagree on the heights along their border. The
-`layout` start (`tools/world terrain <region> layout`) takes the heights the blockout gives the
-generated land (`docs/layout.md` section 8: the spine's foothills, crest and passes), so a region
-taken over starts where its neighbours are and meets them at its borders.
+**Ground and terrain are Unity terrain** (decided 2026-11-14). The world's ground is sculpted and
+painted on Unity terrains, one per 128-tile square (`client/Assets/World/Terrain/Terrain_i_j.unity`
+and `.asset`): a heightmap sample on every tile corner, a paint texel on every tile, and a terrain
+layer for each kind of ground in `world/grounds.json` (stones are layers too, `stones-<id>`). A tile
+is the ground layer painted heaviest there. Saving writes each region's `tiles` piece (rows, legend,
+stones, the ring of the neighbours' tiles) and its `terrain` (corner heights in hundredths of a tile,
+one row of text per row of corners from the north) from the terrains; the compiler reads those as
+before, so a tile rising more than the region's `cliffStep` across is a cliff and blocked. Never edit
+a region's tiles or terrain by hand: the next save from the terrains replaces them. A building stands
+level on the highest corner under it, on a foundation; other area kinds (patches, roads, houses) are
+still drawn flat and get a warning on terrain. A water tile's height is the water's surface, so what is
+placed on it (a punt, a jetty) floats.
 
 Any piece placed on a tile becomes **interactive** with `"object": "<id in objects.json>"` (a rock
 you mine, a tree you cut, a counter that is a bank), and a stair or ladder adds `climbTo`.
@@ -91,12 +88,9 @@ dotnet run --project tools/world -- check     # is the data valid, and are the s
 dotnet run --project tools/world -- export    # write server/data/maps from world/regions
 dotnet run --project tools/world -- render    # draw every region to world/renders/<id>.png and .txt
 dotnet run --project tools/world -- format    # put region files in the standard layout
-dotnet run --project tools/world -- blockout  # regenerate the open land (land_*.json) and routes.json from the layout
-dotnet run --project tools/world -- paint [x0 y0 x1 y1 px name]...   # the generated land as the client paints it, to world/renders
-dotnet run --project tools/world -- probe x0 y0 x1 y1 [steps]        # heights and grounds along a line of the generated land
+dotnet run --project tools/world -- paint area <id> [px]   # an area's regions as the client paints their ground, to world/renders
+dotnet run --project tools/world -- grounds   # gather the regions' kinds of ground into world/grounds.json
 dotnet run --project tools/world -- areas [check]                    # the world's areas: check world/areas.json, each area's stage, the coverage map
-dotnet run --project tools/world -- terrain <region> flat|layout   # give a region terrain to sculpt
-dotnet run --project tools/world -- terrain-save <file>   # what Edit Terrain's save runs (WorldTerrain)
 dotnet test                                   # includes the same check (WorldDataTests)
 ```
 
@@ -114,43 +108,16 @@ With Unity (the owner, or the agent with Unity):
   data, its hand-made file, its scene or the code that draws data changed, or its server maps are
   out of date (the record is `client/Library/RthSync.json`, per machine). **Sync World (no
   screenshots)** is quicker; **Sync World (everything)** redoes every region.
-- **Editing the whole world's terrain:** **R'th > World > Edit Terrain** puts one Unity Terrain
-  over every surface region, holding exactly the data's heights (a heightmap sample on every tile
-  corner, coloured like the ground), and hides the tile ground while it is on. Shape it with
-  Unity's own terrain tools (select it, then raise or lower, set height, smooth, stamp; the Terrain
-  Tools package adds more), across region borders. **Ctrl+S** (or **R'th > World > Save Terrain**)
-  writes it back to the data through `tools/world terrain-save`: a built region's heights go into
-  its `terrain`; a generated region's go into `world/layout/sculpt/<id>.json` as a raise over the
-  layout's heights, so it stays generated and `blockout` keeps your hills; then the blockout and
-  the maps are redone. Open region scenes are redrawn at once, the rest at the next Sync World.
-  The terrain is never saved into a scene or a build. It is drawn see-through (flat-shaded facets,
-  a faint tile grid, region borders in yellow, tiles too steep to walk in red); its opacity is the
-  Opacity slider on its material (the terrain's Settings tab), kept between sessions. Ground
-  without a `tiles` piece (Tolling, Palmerway) is drawn hatched and keeps its heights, and so do
-  the corners on its edge. Turn it
-  off from the same menu item (it asks about unsaved changes); opening other scenes or pressing
-  Play keeps your unsaved heights and puts the terrain back afterwards. Saving takes a few seconds
-  (it runs on .NET: the blockout drawn by Unity's Mono would differ by a tile here and there).
-- **Shaping and painting ground:** **R'th > World > Shape and Paint Ground** (or G): one tool in the
-  Scene view, over every open region at once (open an area with **R'th > Open Selected Area**, Alt+Shift+O), with two tabs.
-  - **Shape:** raise, lower, flatten (to the height where the stroke began) or smooth with a round
-    brush (`[` and `]` change its size); tiles too steep to walk show red. A corner on a region's
-    border is shared, so both regions get the same height.
-  - **Paint:** pick a ground from the list (the layout's grounds by name, and any a region has of
-    its own; type to filter), then **Brush** (a round brush that follows the cursor, `[` and `]` for
-    its size, radius 0 is one tile; **Soft edge** scatters its rim so edges come out ragged and
-    natural instead of round), **Line** (drag from end to end: a road or path 1-8 tiles wide,
-    straight or at 45 degrees), **Fill** (the patch of one ground under the click), **Smooth** (drag
-    over ragged edges and specks: each tile becomes what most round it are) or **Pick** (Ctrl+click
-    in any mode takes the ground under the cursor).
-
-  It is drawn as the game draws it while you work: blended ground, crisp roads, water with banks
-  dipping under it, and the neighbours blend across the border. Ctrl+Z undoes a stroke. Saving
-  (Ctrl+S) writes the heights into the regions' `terrain` and the tiles into their `tiles` pieces;
-  working on a generated region takes it over, gives its scene its area's folder (moved at the next
-  Sync World) and runs the blockout so the land round it follows; the neighbours' rings of tiles
-  (`surround`) follow either way. Water and blocked ground change what can be walked, so the maps
-  are exported too. Ground drawn another way (Tolling, Palmerway) isn't shaped or painted.
+- **Shaping and painting the ground:** open an area (**R'th > Open Selected Area**, Alt+Shift+O); the
+  terrains under its regions open beside them. Select a terrain and use Unity's own terrain tools:
+  Raise or Lower Terrain, Set Height, Smooth Height, Stamp, and Paint Texture with the ground layers in
+  `Assets/World/Terrain/Layers` (the Terrain Tools package adds more brushes). Brushes work across
+  terrains. The game's ground redraws a moment after each stroke, as the game draws it (blended
+  ground, crisp roads, water with banks dipping under it); **R'th > World > Show Unity Terrain** shows
+  Unity's own view of the terrain instead. Ctrl+Z undoes a stroke. Saving (Ctrl+S) writes the ground
+  of every region under the saved terrains into its data and exports the maps. A new kind of ground is
+  an entry in `world/grounds.json`; its layer is made the first time it is painted from data.
+  **R'th > World > Terrain > Write All Ground To Data** rewrites every region from the terrains.
 - **Water** is drawn as one flat surface over the water's tiles and the ring round them, with the
   bank dipping under it by how much water lies near (`Shore`), so the waterline is curved wherever
   the bank meets it; the surface (`Resources/Shaders/Water.shader`) goes from shallow to deep, with
@@ -166,7 +133,9 @@ With Unity (the owner, or the agent with Unity):
 
 | Path | Owner | Agent with Unity | Agent without Unity |
 |---|---|---|---|
-| `world/regions/<id>.json` | yes (or in the Editor, written back on save) | yes | **yes: this is how the world changes** |
+| `world/regions/<id>.json` | yes (or in the Editor, written back on save) | yes | **yes: this is how the world changes** (except its ground: `tiles` and `terrain` are written from the terrains) |
+| `client/Assets/World/Terrain/*` (the ground) | yes, with Unity's terrain tools | yes, through the Editor | **never** |
+| `world/grounds.json` (the kinds of ground) | yes | yes | yes |
 | `world/regions/<id>.handmade.json`, `world/snapshots/`, `world/screens/` | no (Sync writes them) | via Sync | no |
 | `server/data/maps/*` | via export | via export | via `tools/world export` |
 | `server/data/content/*.json` (items, objects, npcs...) | yes | yes | yes: add entries, don't reorder |

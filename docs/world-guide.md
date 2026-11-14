@@ -134,27 +134,23 @@ Unity is written back to text.
 | `world/layout/continent.json` | The whole continent as shapes and lines | Anyone; `tools/world layout` checks it |
 | `world/regions/<id>.json` | A region: rectangle, title, materials, pieces (ground, roads, water, walls, houses, trees, rocks, objects, creatures) | Anyone; the Editor writes moves and deletions back |
 | `world/regions/<id>.handmade.json` | What the scene adds by hand, as collision and placements | Sync World only |
-| `world/regions/land_*.json` | Generated regions (the blockout), marked `"generated"` | `tools/world blockout` only, until taken over |
+| `world/regions/land_*.json` | The land first laid out from the layout (its generator retired 2026-11-14); ordinary regions now | Anyone, as any region |
+| `client/Assets/World/Terrain/*` | The world's ground: Unity terrains, a layer per kind of ground in `world/grounds.json` | Unity only |
 | `server/data/maps/*` | What the server loads | `tools/world export` / Sync World only |
 | `client/Assets/Scenes/...` | How a region looks | Unity only |
 
 - **Taking a region over:** delete its `"generated"` line. From then on it is edited like any
   other region, and the generator leaves it alone.
-- **Terrain belongs in the region's data.** *Decided* (2026-10-23), *built.* Heights per tile
-  corner, as rows of text in the region file (`terrain`), so an agent without Unity can read and
-  change them and git can merge them. The owner sculpts in Unity with **Edit Terrain** (the whole
-  world as one Unity Terrain, Unity's own tools; generated land keeps its raise in
-  `world/layout/sculpt` and stays generated) or **Shape and Paint Ground**'s Shape tab (the open regions); saving writes the
-  heights back. Regions drawn with `tiles` pieces follow it; the older `MapTerrain`
-  (the scale test region) still keeps its heights in its scene. How: [workflow.md](workflow.md).
-- **Ground paint belongs in the region's data, and is painted in Unity.** *Decided* (2026-10-25),
-  *built.* What a tile is (grass, road, sand, water) is game meaning (water blocks, roads are
-  routed), so it stays one character a tile in the region's `tiles` piece, and the look (blends,
-  crisp roads, diagonal half tiles) is drawn from it. A Unity Terrain's splat map was weighed and
-  turned down: soft blends have no tile, the server would have to read them back, and agents
-  couldn't change them. The owner paints with **Shape and Paint Ground** (R'th > World, G): a
-  brush, straight or 45-degree strokes for roads, fill and pick, over every open region at once,
-  drawn as the game draws it; saving writes the tiles back, and the neighbours' rings follow.
+- **The ground is Unity terrain.** *Decided* (2026-11-14), *built*, replacing the earlier "terrain
+  and paint belong in the region's data" (2026-10-23, 2026-10-25), which had grown its own sculpting
+  and painting tools. The world's heights and kinds of ground live in Unity terrains (one per
+  128-tile square, a heightmap sample on every tile corner and a paint texel on every tile), shaped and
+  painted with Unity's own terrain tools. What a tile is (grass, road, sand, water) is still game
+  meaning (water blocks, cliffs block), so a tile is whichever ground layer is painted heaviest on it:
+  a soft brush still paints crisp tiles, and the look (blends, crisp roads, diagonal half tiles) is
+  drawn from them by `TileGround`. Saving writes each region's tiles and heights into its data, which
+  the server's maps are compiled from. The kinds of ground are `world/grounds.json`, a terrain layer
+  each. How: [workflow.md](workflow.md).
 
 ## 5. How a place gets made
 
@@ -288,12 +284,10 @@ Use it in every brief and every review.
 | The continent layout (size, distances, passes, the cold north): [layout.md](layout.md) section 6 | Open: owner's review |
 | Sizes and camera, D1-D4: [world-scale.md](world-scale.md) | Open |
 | Incremental Sync World | Built |
-| Terrain heights in region data, sculpted in Unity and written back | Built (check the sculpting tool in the Editor) |
+| The ground as Unity terrain, sculpted and painted with Unity's tools, written to region data on save | Built (2026-11-14) |
 | Stages per area and the coverage map | Built: [world-areas.md](world-areas.md), `world/areas.json`, `tools/world areas` |
 | Entrances and exits as data; the seam check for roads, rivers and walkability | Decided, to build (the height seam check is built) |
 | Claims checked by the tools | Decided, to build |
-| A slope overlay while sculpting (tiles too steep to walk shown red) | Built, in Shape and Paint Ground |
-| Painting ground in the Editor (soft brush, road strokes, fill, smooth, pick) | Built: Shape and Paint Ground |
 | Shores that curve down to the waterline; water that reads as water | Built: `Shore`, `Water.shader` |
 | Combining static pieces at build time | Decided, after measuring |
 | The first area brief (Tolling's neighbourhood) | Next |

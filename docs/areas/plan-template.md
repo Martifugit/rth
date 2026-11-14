@@ -7,8 +7,8 @@ Every area is planned to this template **before any of its ground is changed** (
 - **The plan data,** `world/plans/<area>.json`: the same plan as things with positions, which the
   tools can check, draw and compare with what gets built.
 
-Until the owner approves the plan (package 0.5), `tools/world strokes` refuses to change the area's
-ground and no package past stage 0 counts.
+Until the owner approves the plan (package 0.5), nobody changes the area's ground and no package
+past stage 0 counts.
 
 **Concrete means physical.** A plan says what stands where and what a player does with it: a
 building, a station, 5 copper rocks in a quarry face, 8 creatures of level 12 on a hillside, a
