@@ -8,8 +8,10 @@
   "instanced": false,
   "music": "",
   "materials": {
+    "LandCliffCliffRock": "CliffRock",
     "LandCliffGranite": "Granite",
     "LandFarSnow": "Snow",
+    "LandGrass": "Grass",
     "LandMoor": "MoorGrass",
     "LandRiver": "Water",
     "LandScree": "Scree",
@@ -151,7 +153,7 @@
     "84*2 111 114 120 132 140 139 137 120 99 87 75 60 52 48 44 41*6 42*2 45 49 53 60 79 92 98*2 100 102 112 121 127 129 132 140 162 178 186 193 191 170 149 120 107 100 92 84 77 76 81 86 91 95 105 128 145 170 186 189 192 199 201 198 194 189 184 180 175 170 165 161 157 153 150 149 148*2 149 151 153 155 156 154 151 149 142 138*2 134 119 99 81 63 48 35 27 25*2 0*25"
   ] },
   "pieces": [
-    { "id": "ground", "kind": "tiles", "rect": [256, 768, 384, 896], "legend": { "a": { "material": "LandRiver", "water": true, "height": -0.15 }, "b": { "material": "LandShingle" }, "c": { "material": "LandSnow", "cliff": "LandCliffGranite" }, "d": { "material": "LandScree" }, "e": { "material": "LandMoor", "cliff": "LandCliffGranite" }, "f": { "material": "LandTundra", "cliff": "LandCliffGranite" }, "g": { "material": "LandSea", "water": true, "height": -0.15 }, "h": { "material": "LandFarSnow", "blocks": true, "beyond": true } }, "rows": [
+    { "id": "ground", "kind": "tiles", "rect": [256, 768, 384, 896], "legend": { "a": { "material": "LandRiver", "water": true, "height": -0.15 }, "g": { "material": "LandSea", "water": true, "height": -0.15 }, "h": { "material": "LandFarSnow", "blocks": true, "beyond": true }, "i": { "material": "LandGrass", "cliff": "LandCliffCliffRock" } }, "rows": [
       "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
       "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
       "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
@@ -262,24 +264,24 @@
       "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
       "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
       "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
-      "ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggbbgggggggggggggggggggggggggggggggggggggggggggggg",
-      "ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggbbbbgggggggggggggggggggggggggggggggggggggggggggggg",
-      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggbbbbbbbgggggggggggggggggggggggggggggggggggggggggggg",
-      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggbbbbggggggggbbbbbbbbbgggggggggggggggggggggggggggggggggggggggggg",
-      "ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggbbbbbbbbbbbgbbbcccbbbbbggggggggggggggggggggggggggggggggggggggggg",
-      "ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggbbbbbbbbbbbbbbbbbcccccbbbbgggggggggggggggggggggggggggggggggggggggg",
-      "gggggggggggggggggggggggggggggggggggggggggggggbbbbggggggggggbbbbbbbcccccccbbbbbcccccccbbbbbbbgggggggggggggggggggggggggggggggggggg",
-      "ggbbgggggggggggggggggggggggggggggggggggggggbbbbbbgggggggggbbbbbbccccccccccccccccccccccbbbbbbgggggggggggggggggggggggggggggggggggg",
-      "gabbbbbbbggggggggggggggggggbbgggggggggggggbbbbbbbggggggggbbbbccccccccccffffcccccccccccccccbbbbbbbggggggggggggggggggggggggggggggg",
-      "aabbbbbbbbbbgggggggggggggggbbbggggggggggggbbbeebbbgggggggbbbcccccccccfffffffccccccccccccccbbbbbbbbbggggggggggggggggggggggggggggg",
-      "aabccccbbbbbggggggggggggggbbbbbgggggggggbbbbeeebbbbggggbbbbfffcccccfffffffffcccccccccccccccccccbbbbbbbgggggggggggggggggggggggggg",
-      "aabcccccccbbbgggggggggggggbbbbbbggbbbbbbbbbbeeeebbbbgggbbbbffffffffffffffffffccccccccccccccccccccbbbbbgggggggggggggggggggggggggg",
-      "aabcccccccbbbbbggggggggggbbbcbbbbbbbbbbbbbeeeeeeebbbbgbbbfffffffffffffffffffffccccccccccceeeeeeeeeccbbbggggggggggggggggggggggggg",
-      "abbccccccccbbbbbbgggggggbbbbccbbbbbbcccceeeeeeeeefbbbbbbbffffffffffffffffffffffecccceefffeeeeeeeeeeebbbbgggggggggggggggggggggggg",
-      "abcccccccccccbbbbbbbbbbbbbbcccccccccccccceeeeeeeeffbbbbbfffffffffffffffffffffffeeeeeffffffffeeeeeeeeebbbgggggggggggggggggggggggg",
-      "abcccccccccccccbbbbbbbbbbbccccccccccccccceeeeeeefffffffffffffffffffffffffffffffeeeefffffffffffffeeeeeebbgggggggggggggggggggggggg",
-      "abcccccccccccccccccccccccccccccccccccccccceeeeeefffffffffffffffffffffffffffffffffffffffffffffffffeeeeebbgggggggggggggggggggggggg",
-      "abccccccccccccccccccccccccccccccccccccccddddeeeefffffffffffffffffffffffffffffffffffffffffffffffffeeeeebbgggggggggggggggggggggggg"
+      "ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggiigggggggggggggggggggggggggggggggggggggggggggggg",
+      "ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggiiiigggggggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggiiiiiiigggggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggiiiiggggggggiiiiiiiiigggggggggggggggggggggggggggggggggggggggggg",
+      "ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggiiiiiiiiiiigiiiiiiiiiiiggggggggggggggggggggggggggggggggggggggggg",
+      "ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggiiiiiiiiiiiiiiiiiiiiiiiiiigggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggggggiiiiggggggggggiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiigggggggggggggggggggggggggggggggggggg",
+      "ggiigggggggggggggggggggggggggggggggggggggggiiiiiigggggggggiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiigggggggggggggggggggggggggggggggggggg",
+      "gaiiiiiiiggggggggggggggggggiigggggggggggggiiiiiiiggggggggiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiggggggggggggggggggggggggggggggg",
+      "aaiiiiiiiiiigggggggggggggggiiiggggggggggggiiiiiiiigggggggiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiggggggggggggggggggggggggggggg",
+      "aaiiiiiiiiiiggggggggggggggiiiiigggggggggiiiiiiiiiiiggggiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiigggggggggggggggggggggggggg",
+      "aaiiiiiiiiiiigggggggggggggiiiiiiggiiiiiiiiiiiiiiiiiigggiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiigggggggggggggggggggggggggg",
+      "aaiiiiiiiiiiiiiggggggggggiiiiiiiiiiiiiiiiiiiiiiiiiiiigiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiggggggggggggggggggggggggg",
+      "aiiiiiiiiiiiiiiiigggggggiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiigggggggggggggggggggggggg",
+      "aiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiigggggggggggggggggggggggg",
+      "aiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiigggggggggggggggggggggggg",
+      "aiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiigggggggggggggggggggggggg",
+      "aiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiigggggggggggggggggggggggg"
     ] }
   ]
 }
