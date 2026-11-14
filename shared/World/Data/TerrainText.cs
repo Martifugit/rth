@@ -61,7 +61,7 @@ namespace Rth.Shared.World.Data
             Read(region) ?? new Heightfield(region.OriginX, region.OriginY, Math.Max(1, region.Width), Math.Max(1, region.Height));
 
         /// <summary>A terrain section for a heightfield covering the whole region.</summary>
-        public static RegionTerrain Write(Heightfield field, float cliffStep = 1f)
+        public static RegionTerrain Write(Heightfield field, float cliffStep = RegionTerrain.DefaultCliffStep)
         {
             var terrain = new RegionTerrain { CliffStep = cliffStep };
             terrain.Rows.AddRange(WriteRows(field));

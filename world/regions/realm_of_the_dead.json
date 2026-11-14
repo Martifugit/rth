@@ -28,7 +28,7 @@
     "DeadWetWood": "#241B14"
   },
   "seed": 1,
-  "terrain": { "cliffStep": 1, "rows": [
+  "terrain": { "cliffStep": 0.6, "rows": [
     "0*33",
     "0 -70*13 -63 -56*3 -63 -70*13 0",
     "0 -70*12 -63 0*5 -63 -70*12 0",

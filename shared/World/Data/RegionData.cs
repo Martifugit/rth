@@ -257,8 +257,11 @@ namespace Rth.Shared.World.Data
     /// </summary>
     public sealed class RegionTerrain
     {
-        /// <summary>A tile rising more than this many tiles across is a cliff, and blocked.</summary>
-        public float CliffStep = 1f;
+        /// <summary>A tile rising more than this many tiles across is too steep to walk (about 31 degrees at 0.6), and blocked.</summary>
+        public float CliffStep = DefaultCliffStep;
+
+        /// <summary>Gentle hills walk; mountainsides and cliffs don't.</summary>
+        public const float DefaultCliffStep = 0.6f;
         public List<string> Rows = new List<string>();
     }
 

@@ -79,7 +79,7 @@ public class TerrainDataTests
         field.SetCorner(2, 2, 0.4f);
         region.Terrain = TerrainText.Write(field);
         string text = RegionFiles.Format(region);
-        Assert.Contains("\"terrain\": { \"cliffStep\": 1, \"rows\": [\n    \"0*9\",\n", text);
+        Assert.Contains("\"terrain\": { \"cliffStep\": 0.6, \"rows\": [\n    \"0*9\",\n", text);
         RegionData again = RegionFiles.ParseRegion(text);
         Assert.Equal(region.Terrain.Rows, again.Terrain!.Rows);
         Assert.Equal(text, RegionFiles.Format(again));

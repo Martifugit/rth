@@ -216,7 +216,7 @@ namespace Rth.Shared.World.Ground
                     moved = true;
                     if (hundredths != 0) any = true;
                 }
-            if (moved && any) region.Terrain = TerrainText.Write(field, region.Terrain?.CliffStep ?? 1f);
+            if (moved && any) region.Terrain = TerrainText.Write(field, region.Terrain?.CliffStep ?? RegionTerrain.DefaultCliffStep);
 
             return RegionFiles.Format(region) != before;
         }

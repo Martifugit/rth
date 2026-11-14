@@ -16,7 +16,7 @@
     "LandSea": "Sea"
   },
   "seed": 1864001411,
-  "terrain": { "cliffStep": 1, "rows": [
+  "terrain": { "cliffStep": 0.6, "rows": [
     "25*4 0*125",
     "25*3 0*2 -63 -70*122 0",
     "25*2 0*2 -56 -70*123 0",
