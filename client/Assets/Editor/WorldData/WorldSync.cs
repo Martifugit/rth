@@ -451,7 +451,11 @@ namespace Rth.Client.Editor
                 {
                     RegionData region = RegionFiles.LoadRegion(regionPath);
                     List<string> changes = WriteBack(region, data);
-                    if (WorldTerrains.WriteGround(region)) changes.Add("wrote its ground from the terrain");
+                    if (WorldTerrains.WriteGround(region))
+                    {
+                        changes.Add("wrote its ground from the terrain");
+                        WorldWater.Rebuild(region); // where water is painted may have changed
+                    }
                     if (changes.Count > 0)
                     {
                         RegionFiles.SaveRegion(region, regionPath);
