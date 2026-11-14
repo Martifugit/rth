@@ -54,35 +54,6 @@ namespace Rth.Client.Editor
 
         // ------------------------------------------------------------------ region scenes
 
-        /// <summary>
-        /// Starts a new, empty region scene: a root with the <see cref="MapArea"/> and flat ground
-        /// over the whole rectangle. Region scenes hold only the map; the camera, light and game
-        /// objects live in the Game scene, which streams regions in around the player.
-        /// </summary>
-        public static MapArea BeginRegion(string exportName, string title, Vector2Int origin, Vector2Int size, Material ground)
-        {
-            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            var root = new GameObject(title);
-            var area = root.AddComponent<MapArea>();
-            area.exportName = exportName;
-            area.title = title;
-            area.origin = origin;
-            area.size = size;
-            if (ground != null) // null: the region brings its own ground (a MapTerrain)
-                Box("Ground", root.transform, new Vector3(origin.x + size.x / 2f, -0.1f, origin.y + size.y / 2f), new Vector3(size.x, 0.2f, size.y), ground);
-            return area;
-        }
-
-        /// <summary>Saves a region scene and exports it (which also adds it to the build).</summary>
-        public static void SaveRegion(MapArea area, string scenePath)
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(scenePath));
-            EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), scenePath);
-            MapExporter.Export(area);
-            string assets = WriteAssetList(area);
-            Debug.Log("[R'th] Built region " + area.exportName + " at " + scenePath + (assets != null ? "; its assets are listed in " + assets : ""));
-        }
-
         /// <summary>Asks before replacing a scene that already exists (rebuilding loses hand edits).</summary>
         public static bool ConfirmRebuild(string scenePath) =>
             !File.Exists(scenePath) ||
@@ -359,69 +330,6 @@ namespace Rth.Client.Editor
         {
             Box("Rock", parent, new Vector3(x + 0.5f, size * 0.35f, z + 0.5f), new Vector3(size, size * 0.7f, size), stone, yaw: (x * 37 + z * 11) % 60)
                 .AddComponent<MapBlocker>();
-        }
-
-        /// <summary>
-        /// Ground with height over a region (docs/world-scale.md, section 6): a MapTerrain with these
-        /// corner heights and tile colours. It is the region's ground, so pass null to BeginRegion.
-        /// </summary>
-        public static MapTerrain Terrain(Transform parent, Heightfield field, Color32[] colours, Material material, Color baseColor, int blend = 2)
-        {
-            var go = new GameObject("Terrain");
-            go.transform.SetParent(parent, false);
-            go.transform.position = Vector3.zero;
-            MapTerrain terrain = go.AddComponent<MapTerrain>();
-            go.GetComponent<MeshRenderer>().sharedMaterial = material;
-            terrain.baseColor = baseColor;
-            terrain.blend = blend;
-            terrain.Set(field, colours);
-            return terrain;
-        }
-
-        /// <summary>
-        /// The leaf-clump material (docs/assets.md): the 128-pixel leaf texture, alpha-clipped so
-        /// its fringe cuts out (shadows too), drawn on both sides, matte.
-        /// </summary>
-        public Material LeafMat()
-        {
-            Material m = Mat("LeafClump", Color.white);
-            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Art/Textures/LeafClump.png");
-            m.SetTexture("_BaseMap", texture);
-            m.SetFloat("_AlphaClip", 1f);
-            m.SetFloat("_Cutoff", 0.5f);
-            m.EnableKeyword("_ALPHATEST_ON");
-            m.SetFloat("_Cull", 0f); // both sides: the fringe shows from behind as well
-            m.SetOverrideTag("RenderType", "TransparentCutout");
-            m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
-            EditorUtility.SetDirty(m);
-            return m;
-        }
-
-        /// <summary>
-        /// A leafy tree (<see cref="LeafyTree"/>): blocks its footprint (1 × 1 or 2 × 2 tiles
-        /// from (x, z)), fades when it hides the player, and stands at height <paramref name="y"/>.
-        /// </summary>
-        public GameObject LeafyTree(Transform parent, int x, int z, LeafyTreeSpec spec, float y = 0f)
-        {
-            var tree = new GameObject(spec.Name);
-            tree.transform.SetParent(parent, false);
-            float half = spec.Footprint / 2f;
-            tree.transform.position = new Vector3(x + half, y, z + half);
-            tree.transform.rotation = Quaternion.Euler(0f, Range(0f, 360f), 0f);
-            tree.AddComponent<MeshFilter>().sharedMesh = global::Rth.Client.Editor.LeafyTree.MeshAsset(spec);
-            tree.AddComponent<MeshRenderer>().sharedMaterials = new[]
-            {
-                Mat("Bark", new Color(0.36f, 0.25f, 0.15f)), Mat("LeafCore", new Color(0.11f, 0.2f, 0.1f)), LeafMat(),
-            };
-            var trunk = new GameObject("Trunk collider");
-            trunk.transform.SetParent(tree.transform, false);
-            var box = trunk.AddComponent<BoxCollider>();
-            box.center = new Vector3(0f, spec.TrunkTop / 2f, 0f);
-            box.size = new Vector3(spec.Footprint - 0.4f, spec.TrunkTop, spec.Footprint - 0.4f);
-            tree.AddComponent<MapBlocker>();
-            tree.AddComponent<ArtKind>().kind = "tree";
-            Fades(tree.transform, 0.25f);
-            return tree;
         }
 
         // ------------------------------------------------------------------ map markers

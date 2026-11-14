@@ -19,18 +19,6 @@ public class WorldLayoutTests
         """);
 
     [Fact]
-    public void TheShippedLayoutParses()
-    {
-        string path = Path.Combine(Path.GetDirectoryName(Repo.ServerDirectory)!, "client", "Assets", "World", "layout.json");
-        WorldLayout layout = WorldLayout.Parse(File.ReadAllText(path));
-
-        Assert.True(layout.Columns > 100 && layout.Rows > 100);
-        Assert.Equal(0, layout.OriginX % layout.ZoneTiles);
-        Assert.Equal(0, layout.OriginY % layout.ZoneTiles);
-        Assert.False(layout.BiomeAt(48, 48).Water); // Tolling is on land
-    }
-
-    [Fact]
     public void MacroHeightPassesThroughZoneCentres()
     {
         WorldLayout layout = Small();

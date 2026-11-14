@@ -17,7 +17,6 @@ namespace Rth.MapTools.Editor
     ///  - No collider under the tile centre (ignoring walls and blockers): blocked, there is no ground.
     ///  - Overlapped by the colliders of a <see cref="MapBlocker"/>: blocked.
     ///  - <see cref="MapWall"/> colliders snap to the nearest grid line and block those tile edges.
-    ///  - A tile of a <see cref="MapTerrain"/> steeper than its cliff step (a cliff face), or marked impassable: blocked.
     ///  - A <see cref="MapLevel"/> puts everything under it on another plane (floor): a tile is walkable
     ///    on that plane only where a ground collider of that level is under its centre, and its
     ///    blockers, walls, objects and spawns land on that plane.
@@ -227,7 +226,6 @@ namespace Rth.MapTools.Editor
             var layers = new CollisionLayers(area.origin.x, area.origin.y, area.size.x, area.size.y, planes);
 
             MarkGround(area, scope, layers);
-            MarkCliffs(area, scope, layers);
 
             foreach (MapBlocker blocker in scope.GetComponentsInChildren<MapBlocker>())
             {
@@ -287,19 +285,6 @@ namespace Rth.MapTools.Editor
                         if (level >= 0 && level < layers.Planes) layers.SetGround(level, x, y);
                     }
                 }
-            }
-        }
-
-        /// <summary>Blocks cliff faces and impassable tiles of each terrain, on the plane the terrain is on.</summary>
-        private static void MarkCliffs(MapArea area, Transform scope, CollisionLayers layers)
-        {
-            foreach (MapTerrain terrain in scope.GetComponentsInChildren<MapTerrain>())
-            {
-                Heightfield field = terrain.Field;
-                int plane = MapLevel.Of(terrain, area.plane);
-                for (int y = field.OriginY; y < field.OriginY + field.Depth; y++)
-                    for (int x = field.OriginX; x < field.OriginX + field.Width; x++)
-                        if (layers.Contains(plane, x, y) && (field.IsSteep(x, y, terrain.cliffStep) || terrain.IsBlocked(x, y))) layers.Block(plane, x, y);
             }
         }
 
