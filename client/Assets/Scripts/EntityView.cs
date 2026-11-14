@@ -120,12 +120,17 @@ namespace Rth.Client
                 if (_pending.Count >= MaxPending) _pending.Dequeue();
                 // Each step stands on the ground just under the last one, so hills and stairs are
                 // followed and a roof or the floor above is never mistaken for the ground.
-                Vector3 centre = GroundHeight.Centre(step, Plane, _lastY);
+                // Up a hill steeper than a step can reach from the last height, the look from just above
+                // finds nothing: then the highest ground there is.
+                if (!GroundHeight.TryCentre(step, Plane, out Vector3 centre, _lastY)) centre = GroundHeight.Centre(step, Plane);
                 _lastY = centre.y;
                 _pending.Enqueue(centre);
                 Tile = step;
             }
         }
+
+        /// <summary>Whether a point stands on the terrain itself (not a bridge, a floor or a deck above it).</summary>
+        private static bool OnTerrain(Vector3 p) => Mathf.Abs(p.y - GroundHeight.TerrainAt(p.x, p.z)) < 0.05f;
 
         public void FaceTowards(Vector3 point)
         {
@@ -245,6 +250,9 @@ namespace Rth.Client
                 float span = Mathf.Max(Mathf.Abs(_to.x - _from.x), Mathf.Abs(_to.z - _from.z));
                 float left = Mathf.Max(Mathf.Abs(_to.x - nx), Mathf.Abs(_to.z - nz));
                 float ny = span > 0.0001f ? Mathf.Lerp(_to.y, _from.y, left / span) : _to.y;
+                // Over open ground both ends stand on the terrain: follow its surface between them, so
+                // it walks over a rise rather than through it (a bridge or a floor keeps the straight line).
+                if (Plane == 0 && OnTerrain(_from) && OnTerrain(_to)) ny = GroundHeight.TerrainAt(nx, nz);
                 float used = Mathf.Max(Mathf.Abs(nx - p.x), Mathf.Abs(nz - p.z));
                 transform.position = new Vector3(nx, ny, nz);
                 if (nx == _to.x && nz == _to.z)
