@@ -1,5 +1,10 @@
 # Art style and asset rules
 
+> **Superseded in direction (2026-11-14):** the owner moved the style target from Old School RuneScape
+> to RuneScape 3's graphically reworked regions (water: Genshin Impact). The rules below were written
+> for the old target and are being revised; don't apply the texture-size and filtering rules to new
+> ground, water or terrain work.
+
 Status: **proposed** (2026-10-22). R'th should look like Old School RuneScape (iconic, low-poly,
 simple, a bit of fantasy) and be makeable by two people. These rules come from measuring how
 the 2004-era game built its art ([research 04](research/04-osrs-assets.md)), at about three times
